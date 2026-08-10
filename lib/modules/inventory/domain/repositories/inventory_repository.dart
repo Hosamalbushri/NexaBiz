@@ -1,0 +1,30 @@
+import '../entities/inventory_item.dart';
+import '../entities/item_status.dart';
+import '../models/paged_result.dart';
+
+/// Contract for inventory persistence and queries.
+abstract class InventoryRepository {
+  Future<List<InventoryItem>> getAll();
+
+  Stream<List<InventoryItem>> watchAll();
+
+  Future<InventoryItem?> getByCode(String itemCode);
+
+  Future<void> save(InventoryItem item);
+
+  Future<void> replaceAll(List<InventoryItem> items);
+
+  Future<void> clear();
+
+  Future<List<InventoryItem>> search(String query);
+
+  Future<List<InventoryItem>> filterByStatus(ItemStatus? status);
+
+  /// Returns one page of items after optional search/status filtering.
+  Future<PagedResult<InventoryItem>> getPaged({
+    required int page,
+    required int pageSize,
+    String query = '',
+    ItemStatus? status,
+  });
+}

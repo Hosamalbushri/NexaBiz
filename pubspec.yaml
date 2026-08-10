@@ -1,0 +1,40 @@
+name: stock_count
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  flutter_riverpod: ^2.6.1
+  go_router: ^16.0.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  excel: ^4.0.6
+  file_picker: ^10.3.10
+  package_info_plus: ^8.3.1
+  path_provider: ^2.1.4
+  google_fonts: ^8.2.1
+  flex_color_scheme: ^8.2.0
+  flutter_animate: ^4.5.2
+  skeletonizer: ^2.1.0+1
+  syncfusion_flutter_charts: ^34.1.31
+  syncfusion_flutter_datagrid: ^34.1.31
+  share_plus: ^12.0.2
+  pdf: ^3.12.0
+  printing: ^5.14.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true

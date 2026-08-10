@@ -1,0 +1,183 @@
+{
+  "@@locale": "ar",
+  "appTitle": "منصة الأعمال",
+  "servicesTitle": "الخدمات",
+  "servicesSubtitle": "اختر وحدة أعمال للبدء.",
+  "moduleInventory": "المخزون",
+  "moduleInventoryDescription": "العدّ والاستيراد وتقارير المخزون.",
+  "modulePlaceholderMessage": "تم تسجيل هذه الوحدة وهي جاهزة. ستُضاف الميزات في المراحل التالية.",
+  "inventoryOverview": "نظرة عامة",
+  "inventoryCountTitle": "عدّ المخزون",
+  "inventoryCountSubtitle": "ابحث عن الأصناف وأدخل الكميات المعدودة.",
+  "searchItems": "بحث الأصناف",
+  "searchItemsHint": "ابحث بالاسم أو الرمز",
+  "searchResultsCount": "{count} نتيجة",
+  "@searchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "search": "بحث",
+  "refresh": "تحديث",
+  "noItemSelected": "لم يتم اختيار صنف",
+  "saveCount": "حفظ العدّ",
+  "editCount": "تعديل الجرد",
+  "editCountTitle": "تعديل الجرد",
+  "editCountSubtitle": "أدخل الكميات الجديدة للجرد.",
+  "countSavedSuccess": "تم حفظ العدّ بنجاح.",
+  "negativeQuantityNotAllowed": "الكميات السالبة غير مسموحة.",
+  "packSize": "حجم العبوة",
+  "packSizeMissingWarning": "هذا المنتج لا يحتوي على عبوة. أدخل حجم العبوة قبل بدء الجرد.",
+  "packSizeIncompleteMarkerWarning": "اسم المنتج يحتوي على * بدون رقم عبوة. أدخل حجم العبوة للمتابعة.",
+  "packSizeInvalidWarning": "قيمة العبوة في اسم المنتج غير صالحة. أدخل حجم عبوة صحيح.",
+  "packSizeRequiredHint": "مثال: 24",
+  "savePackSize": "حفظ العبوة",
+  "packSizeSavedSuccess": "تم حفظ العبوة بنجاح.",
+  "packSizeRequiredBeforeCount": "يجب إدخال حجم العبوة قبل إدخال الجرد.",
+  "invalidPackSize": "أدخل حجم عبوة صحيح أكبر من صفر.",
+  "codeLabel": "الرمز",
+  "barcode": "الباركود",
+  "mainQuantity": "الكمية الرئيسية",
+  "subQuantity": "الكمية الفرعية",
+  "systemQuantity": "الكمية النظامية",
+  "actualQuantity": "الكمية الفعلية",
+  "difference": "الفرق",
+  "countDetails": "تفاصيل الجرد",
+  "shortageQuantity": "كمية العجز",
+  "overageQuantity": "كمية الزيادة",
+  "totalItems": "إجمالي الأصناف",
+  "countedItems": "الأصناف المعدودة",
+  "remainingItems": "الأصناف المتبقية",
+  "matched": "مطابق",
+  "shortage": "عجز",
+  "overage": "زيادة",
+  "matchedStatus": "مطابق",
+  "shortageStatus": "عجز",
+  "overageStatus": "زيادة",
+  "notCountedStatus": "غير معدود",
+  "allItems": "كل الأصناف",
+  "matchedItems": "الأصناف المطابقة",
+  "shortageItems": "أصناف العجز",
+  "overageItems": "أصناف الزيادة",
+  "notCountedItems": "الأصناف غير المعدودة",
+  "emptyStateTitle": "لا توجد أصناف",
+  "emptyStateSubtitle": "جرّب بحثًا آخر أو استورد الأصناف أولًا.",
+  "importPageTitle": "استيراد المخزون",
+  "selectExcelFile": "اختر ملف Excel",
+  "selectedFileName": "الملف المحدد",
+  "noFileSelected": "لم يتم اختيار ملف",
+  "importButton": "استيراد",
+  "importing": "جاري الاستيراد...",
+  "importSuccess": "تم الاستيراد بنجاح.",
+  "importFailed": "فشل الاستيراد.",
+  "importedItemsCount": "تم استيراد {count} صنف",
+  "@importedItemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredRowsCount": "تم تجاهل {count} صف",
+  "@ignoredRowsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "invalidFile": "الملف المحدد ليس ملف Excel صالحًا.",
+  "fileSelectedPrompt": "يرجى اختيار ملف Excel للمتابعة.",
+  "reportsTitle": "التقارير",
+  "exportReport": "تصدير التقرير",
+  "exportSuccess": "تم تصدير التقرير بنجاح.",
+  "exportFailed": "فشل تصدير التقرير.",
+  "exportNoItems": "لا توجد أصناف للطباعة وفق التصفية الحالية.",
+  "exportDataNotReady": "بيانات المخزون غير جاهزة بعد. يرجى الانتظار ثم المحاولة.",
+  "inventoryReportTitle": "تقرير جرد المخزون",
+  "systemMainQuantity": "كمية نظامية رئيسية",
+  "systemSubQuantity": "كمية نظامية فرعية",
+  "countedMainQuantity": "كمية جرد رئيسية",
+  "countedSubQuantity": "كمية جرد فرعية",
+  "varianceQuantity": "العجز / الزيادة",
+  "varianceMainQuantity": "عجز/زيادة رئيسية",
+  "varianceSubQuantity": "عجز/زيادة فرعية",
+  "reportSection": "القسم",
+  "generatedAt": "تاريخ الإنشاء",
+  "inventorySheetName": "المخزون",
+  "settingsTitle": "الإعدادات",
+  "appearance": "المظهر",
+  "lightTheme": "الوضع الفاتح",
+  "darkTheme": "الوضع الداكن",
+  "systemTheme": "حسب النظام",
+  "language": "اللغة",
+  "english": "الإنجليزية",
+  "arabic": "العربية",
+  "about": "حول التطبيق",
+  "applicationName": "اسم التطبيق",
+  "version": "الإصدار",
+  "buildNumber": "رقم البناء",
+  "resetApplication": "إعادة ضبط الإعدادات",
+  "resetApplicationConfirmationTitle": "إعادة ضبط الإعدادات؟",
+  "resetApplicationConfirmationMessage": "ستُعاد تفضيلات المظهر واللغة إلى القيم الافتراضية.",
+  "success": "نجاح",
+  "failure": "فشل",
+  "cancel": "إلغاء",
+  "confirm": "تأكيد",
+  "exitAppTitle": "الخروج من التطبيق؟",
+  "exitAppMessage": "هل تريد إغلاق التطبيق الآن؟",
+  "exitAppConfirm": "خروج",
+  "loading": "جاري التحميل...",
+  "retry": "إعادة المحاولة",
+  "somethingWentWrong": "حدث خطأ ما",
+  "errorStateSubtitle": "حاول مرة أخرى. إذا استمرت المشكلة، تحقق من البيانات ثم عد لاحقاً.",
+  "moduleComingSoon": "قريباً",
+  "navigationHome": "الرئيسية",
+  "availableQuantity": "الكمية المتاحة",
+  "statusBreakdown": "توزيع الحالات",
+  "itemName": "اسم الصنف",
+  "status": "الحالة",
+  "exportAs": "تصدير كـ",
+  "exportExcel": "Excel (.xlsx)",
+  "exportPdf": "PDF (.pdf)",
+  "exportPath": "تم الحفظ في: {path}",
+  "@exportPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "shareExport": "مشاركة",
+  "previousPage": "الصفحة السابقة",
+  "nextPage": "الصفحة التالية",
+  "paginationPage": "صفحة {current} من {total}",
+  "@paginationPage": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "paginationRange": "{from}-{to} من {total}",
+  "@paginationRange": {
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "importParsing": "جاري تحليل ملف Excel...",
+  "importSaving": "جاري حفظ الأصناف...",
+  "emptyWorkbook": "ملف Excel فارغ أو لا يحتوي على أوراق.",
+  "noValidRows": "لم يتم العثور على صفوف مخزون صالحة في الملف.",
+  "duplicateRowsCount": "تم استبدال {count} رموز مكررة",
+  "@duplicateRowsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

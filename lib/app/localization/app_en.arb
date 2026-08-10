@@ -1,0 +1,183 @@
+{
+  "@@locale": "en",
+  "appTitle": "Business Platform",
+  "servicesTitle": "Services",
+  "servicesSubtitle": "Choose a business module to get started.",
+  "moduleInventory": "Inventory",
+  "moduleInventoryDescription": "Counting, import, and stock reports.",
+  "modulePlaceholderMessage": "This module is registered and ready. Business features will be added in the next stages.",
+  "inventoryOverview": "Overview",
+  "inventoryCountTitle": "Inventory Count",
+  "inventoryCountSubtitle": "Search items and enter counted quantities.",
+  "searchItems": "Search Items",
+  "searchItemsHint": "Search by name or code",
+  "searchResultsCount": "{count} results",
+  "@searchResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "search": "Search",
+  "refresh": "Refresh",
+  "noItemSelected": "No item selected",
+  "saveCount": "Save Count",
+  "editCount": "Edit Count",
+  "editCountTitle": "Edit Count",
+  "editCountSubtitle": "Enter the new count quantities.",
+  "countSavedSuccess": "Count saved successfully.",
+  "negativeQuantityNotAllowed": "Negative quantities are not allowed.",
+  "packSize": "Pack Size",
+  "packSizeMissingWarning": "This product has no pack size. Enter the pack size before counting.",
+  "packSizeIncompleteMarkerWarning": "The product name has * without a pack number. Enter the pack size to continue.",
+  "packSizeInvalidWarning": "The pack size in the product name is invalid. Enter a valid pack size.",
+  "packSizeRequiredHint": "e.g. 24",
+  "savePackSize": "Save Pack Size",
+  "packSizeSavedSuccess": "Pack size saved successfully.",
+  "packSizeRequiredBeforeCount": "Enter the pack size before counting.",
+  "invalidPackSize": "Enter a valid pack size greater than zero.",
+  "codeLabel": "Code",
+  "barcode": "Barcode",
+  "mainQuantity": "Main Quantity",
+  "subQuantity": "Sub Quantity",
+  "systemQuantity": "System Quantity",
+  "actualQuantity": "Actual Quantity",
+  "difference": "Difference",
+  "countDetails": "Count Details",
+  "shortageQuantity": "Shortage Quantity",
+  "overageQuantity": "Overage Quantity",
+  "totalItems": "Total Items",
+  "countedItems": "Counted Items",
+  "remainingItems": "Remaining Items",
+  "matched": "Matched",
+  "shortage": "Shortage",
+  "overage": "Overage",
+  "matchedStatus": "Matched",
+  "shortageStatus": "Shortage",
+  "overageStatus": "Overage",
+  "notCountedStatus": "Not Counted",
+  "allItems": "All Items",
+  "matchedItems": "Matched Items",
+  "shortageItems": "Shortages",
+  "overageItems": "Overages",
+  "notCountedItems": "Not Counted Items",
+  "emptyStateTitle": "No items found",
+  "emptyStateSubtitle": "Try a different search or import inventory first.",
+  "importPageTitle": "Import Inventory",
+  "selectExcelFile": "Select Excel File",
+  "selectedFileName": "Selected File",
+  "noFileSelected": "No file selected",
+  "importButton": "Import",
+  "importing": "Importing...",
+  "importSuccess": "Import completed successfully.",
+  "importFailed": "Import failed.",
+  "importedItemsCount": "Imported {count} items",
+  "@importedItemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ignoredRowsCount": "Ignored {count} rows",
+  "@ignoredRowsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "invalidFile": "The selected file is not a valid Excel file.",
+  "fileSelectedPrompt": "Please select an Excel file to continue.",
+  "reportsTitle": "Reports",
+  "exportReport": "Export Report",
+  "exportSuccess": "Report exported successfully.",
+  "exportFailed": "Report export failed.",
+  "exportNoItems": "There are no items to print for the current filter.",
+  "exportDataNotReady": "Inventory data is not ready yet. Please wait and try again.",
+  "inventoryReportTitle": "Inventory Count Report",
+  "systemMainQuantity": "System Main Qty",
+  "systemSubQuantity": "System Sub Qty",
+  "countedMainQuantity": "Counted Main Qty",
+  "countedSubQuantity": "Counted Sub Qty",
+  "varianceQuantity": "Shortage / Overage",
+  "varianceMainQuantity": "Main Shortage/Overage",
+  "varianceSubQuantity": "Sub Shortage/Overage",
+  "reportSection": "Section",
+  "generatedAt": "Generated",
+  "inventorySheetName": "Inventory",
+  "settingsTitle": "Settings",
+  "appearance": "Appearance",
+  "lightTheme": "Light Theme",
+  "darkTheme": "Dark Theme",
+  "systemTheme": "System Theme",
+  "language": "Language",
+  "english": "English",
+  "arabic": "Arabic",
+  "about": "About",
+  "applicationName": "Application Name",
+  "version": "Version",
+  "buildNumber": "Build Number",
+  "resetApplication": "Reset Settings",
+  "resetApplicationConfirmationTitle": "Reset settings?",
+  "resetApplicationConfirmationMessage": "Theme and language preferences will be restored to defaults.",
+  "success": "Success",
+  "failure": "Failure",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "exitAppTitle": "Exit the app?",
+  "exitAppMessage": "Do you want to close the application now?",
+  "exitAppConfirm": "Exit",
+  "loading": "Loading...",
+  "retry": "Retry",
+  "somethingWentWrong": "Something went wrong",
+  "errorStateSubtitle": "Please try again. If the problem continues, check your data and return later.",
+  "moduleComingSoon": "Coming soon",
+  "navigationHome": "Home",
+  "availableQuantity": "Available Quantity",
+  "statusBreakdown": "Status Breakdown",
+  "itemName": "Item Name",
+  "status": "Status",
+  "exportAs": "Export as",
+  "exportExcel": "Excel (.xlsx)",
+  "exportPdf": "PDF (.pdf)",
+  "exportPath": "Saved to: {path}",
+  "@exportPath": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "shareExport": "Share",
+  "previousPage": "Previous page",
+  "nextPage": "Next page",
+  "paginationPage": "Page {current} of {total}",
+  "@paginationPage": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "paginationRange": "{from}-{to} of {total}",
+  "@paginationRange": {
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "importParsing": "Parsing Excel file...",
+  "importSaving": "Saving items...",
+  "emptyWorkbook": "The Excel file is empty or has no sheets.",
+  "noValidRows": "No valid inventory rows were found in the file.",
+  "duplicateRowsCount": "Replaced {count} duplicate item codes",
+  "@duplicateRowsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

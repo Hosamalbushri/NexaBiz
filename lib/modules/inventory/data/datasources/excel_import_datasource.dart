@@ -1,0 +1,206 @@
+import 'dart:typed_data';
+
+import 'package:excel/excel.dart';
+
+import '../../domain/entities/inventory_item.dart';
+import '../../domain/models/import_validation_exception.dart';
+import '../../domain/services/pack_size_parser.dart';
+
+class ImportResult {
+  const ImportResult({
+    required this.items,
+    required this.importedCount,
+    required this.ignoredCount,
+    this.duplicateCount = 0,
+    this.warnings = const [],
+  });
+
+  final List<InventoryItem> items;
+  final int importedCount;
+  final int ignoredCount;
+  final int duplicateCount;
+  final List<String> warnings;
+}
+
+/// Parses inventory rows from an Excel workbook.
+class ExcelImportDatasource {
+  ExcelImportDatasource({PackSizeParser? packSizeParser})
+      : _packSizeParser = packSizeParser ?? const PackSizeParser();
+
+  final PackSizeParser _packSizeParser;
+
+  ImportResult importBytes(Uint8List bytes) {
+    if (bytes.isEmpty) {
+      throw const ImportValidationException(
+        ImportValidationException.decodeFailed,
+        'Empty file bytes',
+      );
+    }
+
+    final Excel excel;
+    try {
+      excel = Excel.decodeBytes(bytes);
+    } catch (error) {
+      throw ImportValidationException(
+        ImportValidationException.decodeFailed,
+        error.toString(),
+      );
+    }
+
+    if (excel.tables.isEmpty) {
+      throw const ImportValidationException(
+        ImportValidationException.emptyWorkbook,
+      );
+    }
+
+    final sheet = excel.tables.values.first;
+    if (sheet.rows.isEmpty) {
+      throw const ImportValidationException(
+        ImportValidationException.emptyWorkbook,
+      );
+    }
+
+    final header = sheet.rows.first;
+    final columnIndex = _resolveColumns(header);
+    final warnings = <String>[];
+
+    if (columnIndex.codeUnresolved || columnIndex.nameUnresolved) {
+      warnings.add('headers_fallback');
+    }
+
+    final itemsByCode = <String, InventoryItem>{};
+    var ignored = 0;
+    var duplicates = 0;
+
+    for (var i = 1; i < sheet.rows.length; i++) {
+      final row = sheet.rows[i];
+      final code = _cellString(row, columnIndex.code);
+      final name = _cellString(row, columnIndex.name);
+      if (code == null || code.isEmpty || name == null || name.isEmpty) {
+        ignored++;
+        continue;
+      }
+
+      final systemQty = _cellDouble(row, columnIndex.systemQuantity) ?? 0;
+      final barcode = _cellString(row, columnIndex.barcode);
+      final packSize =
+          _packSizeParser.parse(name) ?? _cellInt(row, columnIndex.packSize);
+
+      final item = InventoryItem(
+        itemCode: code,
+        itemName: name,
+        barcode: barcode,
+        packSize: packSize,
+        systemQuantity: systemQty,
+      );
+
+      if (itemsByCode.containsKey(code)) {
+        duplicates++;
+      }
+      itemsByCode[code] = item;
+    }
+
+    if (itemsByCode.isEmpty) {
+      throw const ImportValidationException(
+        ImportValidationException.noValidRows,
+      );
+    }
+
+    final items = itemsByCode.values.toList(growable: false);
+    return ImportResult(
+      items: items,
+      importedCount: items.length,
+      ignoredCount: ignored,
+      duplicateCount: duplicates,
+      warnings: warnings,
+    );
+  }
+
+  _ColumnMap _resolveColumns(List<Data?> header) {
+    int? find(List<String> aliases) {
+      for (var i = 0; i < header.length; i++) {
+        final value = header[i]?.value?.toString().trim().toLowerCase() ?? '';
+        if (aliases.contains(value)) {
+          return i;
+        }
+      }
+      return null;
+    }
+
+    final code = find(const [
+      'item code',
+      'itemcode',
+      'code',
+      'رقم السلعة',
+      'الرمز',
+    ]);
+    final name = find(const [
+      'item name',
+      'itemname',
+      'name',
+      'اسم السلعة',
+      'الاسم',
+    ]);
+    final systemQuantity = find(const [
+      'system quantity',
+      'quantity',
+      'qty',
+      'الكمية النظامية',
+      'الكمية',
+    ]);
+
+    return _ColumnMap(
+      code: code ?? 0,
+      name: name ?? 1,
+      barcode: find(const ['barcode', 'الباركود']),
+      systemQuantity: systemQuantity ?? 2,
+      packSize: find(const ['pack size', 'packsize', 'حجم العبوة']),
+      codeUnresolved: code == null,
+      nameUnresolved: name == null,
+    );
+  }
+
+  String? _cellString(List<Data?> row, int? index) {
+    if (index == null || index >= row.length) {
+      return null;
+    }
+    final value = row[index]?.value;
+    if (value == null) {
+      return null;
+    }
+    return value.toString().trim();
+  }
+
+  double? _cellDouble(List<Data?> row, int? index) {
+    final raw = _cellString(row, index);
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+    return double.tryParse(raw.replaceAll(',', ''));
+  }
+
+  int? _cellInt(List<Data?> row, int? index) {
+    final value = _cellDouble(row, index);
+    return value?.round();
+  }
+}
+
+class _ColumnMap {
+  const _ColumnMap({
+    required this.code,
+    required this.name,
+    required this.barcode,
+    required this.systemQuantity,
+    required this.packSize,
+    this.codeUnresolved = false,
+    this.nameUnresolved = false,
+  });
+
+  final int code;
+  final int name;
+  final int? barcode;
+  final int systemQuantity;
+  final int? packSize;
+  final bool codeUnresolved;
+  final bool nameUnresolved;
+}
