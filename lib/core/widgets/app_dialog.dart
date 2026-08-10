@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../app/localization/app_localizations.dart';
+import '../../app/theme/app_radius.dart';
+import '../../app/theme/app_spacing.dart';
+import 'app_button.dart';
 
 /// Shows a themed confirmation dialog. Returns `true` when confirmed.
 Future<bool> showAppDialog({
@@ -18,16 +21,23 @@ Future<bool> showAppDialog({
   final result = await showDialog<bool>(
     context: context,
     useRootNavigator: true,
-    barrierDismissible: true,
+    barrierDismissible: false,
     builder: (dialogContext) {
       final theme = Theme.of(dialogContext);
       final colorScheme = theme.colorScheme;
 
       return Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.surface),
+        ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.md,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -39,7 +49,7 @@ Future<bool> showAppDialog({
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 message,
                 textAlign: TextAlign.center,
@@ -48,25 +58,39 @@ Future<bool> showAppDialog({
                   height: 1.45,
                 ),
               ),
-              const SizedBox(height: 24),
-              FilledButton(
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                  backgroundColor:
-                      isDestructive ? colorScheme.error : colorScheme.primary,
-                  foregroundColor:
-                      isDestructive ? colorScheme.onError : colorScheme.onPrimary,
-                ),
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: Text(resolvedConfirm),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                style: TextButton.styleFrom(
-                  minimumSize: const Size.fromHeight(44),
-                ),
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: Text(resolvedCancel),
+              const SizedBox(height: AppSpacing.lg),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      label: resolvedCancel,
+                      variant: AppButtonVariant.outlined,
+                      expand: true,
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: isDestructive
+                        ? FilledButton(
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                              backgroundColor: colorScheme.error,
+                              foregroundColor: colorScheme.onError,
+                            ),
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(true),
+                            child: Text(resolvedConfirm),
+                          )
+                        : AppButton(
+                            label: resolvedConfirm,
+                            variant: AppButtonVariant.filled,
+                            expand: true,
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(true),
+                          ),
+                  ),
+                ],
               ),
             ],
           ),

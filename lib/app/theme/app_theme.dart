@@ -70,10 +70,9 @@ class AppTheme {
 
   static ThemeData _applyDesignSystem(ThemeData base, Brightness brightness) {
     final scheme = base.colorScheme;
-    final textTheme = AppTypography.textTheme(brightness).apply(
-      bodyColor: scheme.onSurface,
-      displayColor: scheme.onSurface,
-    );
+    final textTheme = AppTypography.textTheme(
+      brightness,
+    ).apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
 
     return base.copyWith(
       scaffoldBackgroundColor: brightness == Brightness.dark

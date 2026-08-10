@@ -22,7 +22,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moduleInventoryDescription =>
-      'Counting, import, and stock reports.';
+      'Inventory services including stock count, and more over time.';
+
+  @override
+  String get inventoryStockCountService => 'Stock count';
+
+  @override
+  String get inventoryStockCountServiceDescription =>
+      'Count items, import stock lists, and view count reports.';
+
+  @override
+  String get inventoryOpenStockCount => 'Open stock count';
+
+  @override
+  String get inventoryCustomizeServices => 'Customize';
+
+  @override
+  String get inventoryCustomizeServicesHint =>
+      'Choose services to show, then drag to change their order.';
+
+  @override
+  String get inventorySaveServices => 'Save';
+
+  @override
+  String get inventoryPinnedServices => 'Pinned services';
+
+  @override
+  String get inventoryAvailableServices => 'Available services';
+
+  @override
+  String get inventoryAddService => 'Add';
+
+  @override
+  String get inventoryRemoveService => 'Remove';
+
+  @override
+  String get inventoryNoServicesTitle => 'No services on inventory home';
+
+  @override
+  String get inventoryNoServicesMessage =>
+      'Customize to pin the inventory services you use most.';
+
+  @override
+  String get inventoryNoServicesAvailable =>
+      'No inventory services are available yet.';
 
   @override
   String get modulePlaceholderMessage =>
@@ -32,7 +75,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inventoryOverview => 'Overview';
 
   @override
-  String get inventoryCountTitle => 'Inventory Count';
+  String get inventoryCountTitle => 'Count';
 
   @override
   String get inventoryCountSubtitle =>
@@ -191,6 +234,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Try a different search or import inventory first.';
 
   @override
+  String get inventoryEmptyNeedsImportTitle => 'No inventory items yet';
+
+  @override
+  String get inventoryEmptyNeedsImportMessage =>
+      'Import an Excel list to start counting and viewing reports.';
+
+  @override
+  String get inventoryGoToImport => 'Go to Import';
+
+  @override
   String get importPageTitle => 'Import Inventory';
 
   @override
@@ -204,6 +257,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get importButton => 'Import';
+
+  @override
+  String get importFormatHintTitle => 'Excel file layout';
+
+  @override
+  String get importFormatHintIntro => 'First row = headers. Use .xlsx or .xls.';
+
+  @override
+  String get importFormatRequired => 'Required';
+
+  @override
+  String get importFormatOptional => 'Optional';
+
+  @override
+  String get importFormatColCode => 'Item code';
+
+  @override
+  String get importFormatColCodeAliases => 'Item Code · Code · رقم السلعة';
+
+  @override
+  String get importFormatColName => 'Item name';
+
+  @override
+  String get importFormatColNameAliases => 'Item Name · Name · اسم السلعة';
+
+  @override
+  String get importFormatColMainQty => 'Main quantity';
+
+  @override
+  String get importFormatColMainQtyAliases => 'Main Quantity · الكمية الرئيسية';
+
+  @override
+  String get importFormatColSubQty => 'Sub quantity';
+
+  @override
+  String get importFormatColSubQtyAliases => 'Sub Quantity · الكمية الفرعية';
+
+  @override
+  String get importFormatColBarcode => 'Barcode';
+
+  @override
+  String get importFormatColBarcodeAliases => 'Barcode · الباركود';
+
+  @override
+  String get importFormatColPack => 'Pack size';
+
+  @override
+  String get importFormatColPackAliases => 'Pack Size · حجم العبوة';
+
+  @override
+  String get importFormatSampleTitle => 'Sample';
+
+  @override
+  String get importFormatSampleNote =>
+      'Without headers, columns are read as: code, name, main qty, sub qty.';
+
+  @override
+  String get importFormatSampleCodeHeader => 'Item Code';
+
+  @override
+  String get importFormatSampleNameHeader => 'Item Name';
+
+  @override
+  String get importFormatSampleMainHeader => 'Main Qty';
+
+  @override
+  String get importFormatSampleSubHeader => 'Sub Qty';
+
+  @override
+  String get importFormatSamplePackHeader => 'Pack Size';
 
   @override
   String get importing => 'Importing...';
@@ -342,13 +465,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirm => 'Confirm';
 
   @override
-  String get exitAppTitle => 'Exit the app?';
+  String get exitAppTitle => 'Exit Application?';
 
   @override
-  String get exitAppMessage => 'Do you want to close the application now?';
+  String get exitAppMessage => 'Are you sure you want to exit the application?';
 
   @override
   String get exitAppConfirm => 'Exit';
+
+  @override
+  String get splashSubtitle => 'Business Management Platform';
+
+  @override
+  String get splashInitErrorTitle => 'Unable to start application';
+
+  @override
+  String get splashInitErrorMessage =>
+      'Something went wrong while initializing the application.';
 
   @override
   String get loading => 'Loading...';
@@ -368,6 +501,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navigationHome => 'Home';
+
+  @override
+  String get navigationDashboard => 'Dashboard';
+
+  @override
+  String get navigationServices => 'Services';
+
+  @override
+  String get navigationReports => 'Reports';
+
+  @override
+  String get quickActionsTitle => 'Quick actions';
+
+  @override
+  String get quickActionsEmptyMessage =>
+      'Pin shortcuts here for faster access. You will be able to customize them later.';
+
+  @override
+  String get quickActionsAddLabel => 'Add action';
+
+  @override
+  String get quickActionsComingSoon =>
+      'Quick action customization is coming soon.';
+
+  @override
+  String get dashboardTitle => 'Dashboard';
+
+  @override
+  String get dashboardSubtitle => 'Overview of your business platform.';
+
+  @override
+  String get dashboardOpenServices => 'Browse all services';
+
+  @override
+  String get dashboardOpenSettings => 'Open settings';
+
+  @override
+  String get dashboardMyServices => 'My services';
+
+  @override
+  String get dashboardCustomizeServices => 'Customize';
+
+  @override
+  String get dashboardCustomizeServicesHint =>
+      'Choose which services appear on your dashboard.';
+
+  @override
+  String get dashboardSaveServices => 'Save';
+
+  @override
+  String get dashboardNoServicesTitle => 'No services on dashboard';
+
+  @override
+  String get dashboardNoServicesMessage =>
+      'Customize your dashboard to add the services you use most.';
+
+  @override
+  String get dashboardNoModulesAvailable => 'No services are available yet.';
+
+  @override
+  String get platformReportsTitle => 'Reports';
+
+  @override
+  String get platformReportsSubtitle =>
+      'Module reports and future cross-module insights.';
+
+  @override
+  String get platformReportsInventory => 'Inventory reports';
+
+  @override
+  String get platformReportsComingSoon =>
+      'Cross-module reports will be available in a future release.';
+
+  @override
+  String get notFoundTitle => 'Page not found';
+
+  @override
+  String get notFoundMessage => 'The page you are looking for does not exist.';
+
+  @override
+  String get goToDashboard => 'Go to Dashboard';
 
   @override
   String get availableQuantity => 'Available Quantity';

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
@@ -21,9 +22,13 @@ import '../providers/inventory_providers.dart';
 import '../providers/reports_provider.dart';
 import '../widgets/report_items_data_grid.dart';
 import '../widgets/report_status_chart.dart';
+import 'inventory_routes.dart';
 
 class InventoryReportsPage extends ConsumerStatefulWidget {
-  const InventoryReportsPage({super.key});
+  const InventoryReportsPage({super.key, this.embedded = false});
+
+  /// When true, page chrome is adapted for rare embedded hosts.
+  final bool embedded;
 
   @override
   ConsumerState<InventoryReportsPage> createState() =>
@@ -70,36 +75,31 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
     final exportState = ref.watch(reportExportProvider);
     final pageIndex = ref.watch(reportPageIndexProvider);
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: localization.reportsTitle,
-        showBackButton: true,
-        actions: [
-          CustomAppBarAction(
-            icon: Icons.print_rounded,
-            tooltip: localization.exportReport,
-            onPressed: exportState.isLoading ? null : _showExportOptions,
-            isLoading: exportState.isLoading,
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
-          padding: EdgeInsets.zero,
-          labelPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          indicatorWeight: 3,
-          indicatorSize: TabBarIndicatorSize.label,
-          tabs: [
-            Tab(text: localization.allItems),
-            Tab(text: localization.matchedItems),
-            Tab(text: localization.shortageItems),
-            Tab(text: localization.overageItems),
-            Tab(text: localization.notCountedItems),
-          ],
-        ),
-      ),
-      body: itemsAsync.when(
+    final filterTabBar = TabBar(
+      controller: _tabController,
+      isScrollable: true,
+      tabAlignment: TabAlignment.start,
+      padding: EdgeInsets.zero,
+      labelPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      indicatorWeight: 3,
+      indicatorSize: TabBarIndicatorSize.label,
+      tabs: [
+        Tab(text: localization.allItems),
+        Tab(text: localization.matchedItems),
+        Tab(text: localization.shortageItems),
+        Tab(text: localization.overageItems),
+        Tab(text: localization.notCountedItems),
+      ],
+    );
+
+    final exportAction = CustomAppBarAction(
+      icon: Icons.print_rounded,
+      tooltip: localization.exportReport,
+      onPressed: exportState.isLoading ? null : _showExportOptions,
+      isLoading: exportState.isLoading,
+    );
+
+    final body = itemsAsync.when(
         loading: () => const AppLoading(style: AppLoadingStyle.skeletonList),
         error: (error, _) => AppErrorState(
           message: error.toString(),
@@ -201,6 +201,20 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
                           ),
                           data: (paged) {
                             if (paged.totalCount == 0) {
+                              if (summary.totalItems == 0) {
+                                return AppEmptyState(
+                                  title: localization
+                                      .inventoryEmptyNeedsImportTitle,
+                                  subtitle: localization
+                                      .inventoryEmptyNeedsImportMessage,
+                                  icon: Icons.upload_file_outlined,
+                                  actionLabel: localization.inventoryGoToImport,
+                                  actionIcon: Icons.upload_file_outlined,
+                                  actionVariant: AppButtonVariant.text,
+                                  onAction: () =>
+                                      context.push(InventoryRoutes.import),
+                                );
+                              }
                               return AppEmptyState(
                                 title: localization.emptyStateTitle,
                                 subtitle: localization.emptyStateSubtitle,
@@ -228,7 +242,39 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
             ],
           );
         },
+      );
+
+    if (widget.embedded) {
+      return Material(
+        color: Theme.of(context).colorScheme.surface,
+        child: Column(
+          children: [
+            Material(
+              color: Theme.of(context).colorScheme.surface,
+              child: Row(
+                children: [
+                  Expanded(child: filterTabBar),
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
+                    child: exportAction,
+                  ),
+                ],
+              ),
+            ),
+            Expanded(child: body),
+          ],
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: CustomAppBar(
+        title: localization.reportsTitle,
+        showBackButton: true,
+        actions: [exportAction],
+        bottom: filterTabBar,
       ),
+      body: body,
     );
   }
 
@@ -314,22 +360,13 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
         await showAppBottomSheet<void>(
           context: context,
           title: localization.exportSuccess,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(localization.exportPath(path)),
-              const SizedBox(height: AppSpacing.md),
-              AppButton(
-                label: localization.shareExport,
-                icon: Icons.share_outlined,
-                expand: true,
-                onPressed: () {
-                  ref
-                      .read(reportExportProvider.notifier)
-                      .shareExportedFile(path);
-                },
-              ),
-            ],
+          child: AppButton(
+            label: localization.shareExport,
+            icon: Icons.share_outlined,
+            expand: true,
+            onPressed: () {
+              ref.read(reportExportProvider.notifier).shareExportedFile(path);
+            },
           ),
         );
     }

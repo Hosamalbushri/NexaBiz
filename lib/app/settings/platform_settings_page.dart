@@ -4,7 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
-import '../theme/app_breakpoints.dart';
+import '../presentation/providers/dashboard_services_provider.dart';
 import '../theme/app_spacing.dart';
 import '../../core/di/app_providers.dart';
 import '../../core/widgets/app_card.dart';
@@ -12,10 +12,6 @@ import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import 'settings_repository.dart';
-
-final _settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
-  return SettingsRepository();
-});
 
 final packageInfoProvider = FutureProvider<PackageInfo>((ref) {
   return PackageInfo.fromPlatform();
@@ -31,14 +27,10 @@ class PlatformSettingsPage extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
     final packageInfo = ref.watch(packageInfoProvider);
-    final repository = ref.read(_settingsRepositoryProvider);
-    final isMobile = AppBreakpoints.isMobile(MediaQuery.sizeOf(context).width);
+    final repository = ref.read(settingsRepositoryProvider);
 
     return Scaffold(
-      appBar: CustomAppBar(
-        title: localization.settingsTitle,
-        showBackButton: isMobile,
-      ),
+      appBar: CustomAppBar(title: localization.settingsTitle),
       body: ListView(
         padding: const EdgeInsets.all(AppConstants.pagePadding),
         children: [
@@ -174,15 +166,12 @@ class PlatformSettingsPage extends ConsumerWidget {
     await repository.resetSettings();
     ref.read(themeModeProvider.notifier).state = ThemeMode.system;
     ref.read(localeProvider.notifier).state = null;
+    ref.invalidate(dashboardServicesProvider);
 
     if (!context.mounted) {
       return;
     }
-    showAppSnackBar(
-      context,
-      message: localization.success,
-      isSuccess: true,
-    );
+    showAppSnackBar(context, message: localization.success, isSuccess: true);
   }
 }
 
@@ -197,9 +186,9 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
       ),
     );
   }

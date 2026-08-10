@@ -21,7 +21,50 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleInventory => 'المخزون';
 
   @override
-  String get moduleInventoryDescription => 'العدّ والاستيراد وتقارير المخزون.';
+  String get moduleInventoryDescription =>
+      'خدمات المخزون بما فيها الجرد، والمزيد لاحقاً.';
+
+  @override
+  String get inventoryStockCountService => 'الجرد';
+
+  @override
+  String get inventoryStockCountServiceDescription =>
+      'عدّ الأصناف واستيراد قوائم المخزون وعرض تقارير الجرد.';
+
+  @override
+  String get inventoryOpenStockCount => 'فتح الجرد';
+
+  @override
+  String get inventoryCustomizeServices => 'تخصيص';
+
+  @override
+  String get inventoryCustomizeServicesHint =>
+      'اختر الخدمات التي تظهر، ثم اسحب لإعادة ترتيبها.';
+
+  @override
+  String get inventorySaveServices => 'حفظ';
+
+  @override
+  String get inventoryPinnedServices => 'الخدمات المثبتة';
+
+  @override
+  String get inventoryAvailableServices => 'الخدمات المتاحة';
+
+  @override
+  String get inventoryAddService => 'إضافة';
+
+  @override
+  String get inventoryRemoveService => 'إزالة';
+
+  @override
+  String get inventoryNoServicesTitle => 'لا توجد خدمات في المخزون';
+
+  @override
+  String get inventoryNoServicesMessage =>
+      'خصّص لتثبيت خدمات المخزون التي تستخدمها أكثر.';
+
+  @override
+  String get inventoryNoServicesAvailable => 'لا توجد خدمات مخزون متاحة بعد.';
 
   @override
   String get modulePlaceholderMessage =>
@@ -31,7 +74,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get inventoryOverview => 'نظرة عامة';
 
   @override
-  String get inventoryCountTitle => 'عدّ المخزون';
+  String get inventoryCountTitle => 'الجرد';
 
   @override
   String get inventoryCountSubtitle =>
@@ -188,6 +231,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get emptyStateSubtitle => 'جرّب بحثًا آخر أو استورد الأصناف أولًا.';
 
   @override
+  String get inventoryEmptyNeedsImportTitle => 'لا توجد أصناف في المخزون بعد';
+
+  @override
+  String get inventoryEmptyNeedsImportMessage =>
+      'استورد قائمة Excel للبدء في العدّ وعرض التقارير.';
+
+  @override
+  String get inventoryGoToImport => 'الانتقال إلى الاستيراد';
+
+  @override
   String get importPageTitle => 'استيراد المخزون';
 
   @override
@@ -201,6 +254,77 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get importButton => 'استيراد';
+
+  @override
+  String get importFormatHintTitle => 'شكل ملف Excel';
+
+  @override
+  String get importFormatHintIntro =>
+      'الصف الأول = عناوين الأعمدة. الصيغة ‎.xlsx أو ‎.xls.';
+
+  @override
+  String get importFormatRequired => 'مطلوب';
+
+  @override
+  String get importFormatOptional => 'اختياري';
+
+  @override
+  String get importFormatColCode => 'رمز الصنف';
+
+  @override
+  String get importFormatColCodeAliases => 'Item Code · Code · رقم السلعة';
+
+  @override
+  String get importFormatColName => 'اسم الصنف';
+
+  @override
+  String get importFormatColNameAliases => 'Item Name · Name · اسم السلعة';
+
+  @override
+  String get importFormatColMainQty => 'الكمية الرئيسية';
+
+  @override
+  String get importFormatColMainQtyAliases => 'Main Quantity · الكمية الرئيسية';
+
+  @override
+  String get importFormatColSubQty => 'الكمية الفرعية';
+
+  @override
+  String get importFormatColSubQtyAliases => 'Sub Quantity · الكمية الفرعية';
+
+  @override
+  String get importFormatColBarcode => 'الباركود';
+
+  @override
+  String get importFormatColBarcodeAliases => 'Barcode · الباركود';
+
+  @override
+  String get importFormatColPack => 'حجم العبوة';
+
+  @override
+  String get importFormatColPackAliases => 'Pack Size · حجم العبوة';
+
+  @override
+  String get importFormatSampleTitle => 'مثال';
+
+  @override
+  String get importFormatSampleNote =>
+      'بدون عناوين تُقرأ الأعمدة: الرمز، الاسم، كمية رئيسية، كمية فرعية.';
+
+  @override
+  String get importFormatSampleCodeHeader => 'رمز الصنف';
+
+  @override
+  String get importFormatSampleNameHeader => 'اسم الصنف';
+
+  @override
+  String get importFormatSampleMainHeader => 'رئيسي';
+
+  @override
+  String get importFormatSampleSubHeader => 'فرعي';
+
+  @override
+  String get importFormatSamplePackHeader => 'العبوة';
 
   @override
   String get importing => 'جاري الاستيراد...';
@@ -338,13 +462,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get confirm => 'تأكيد';
 
   @override
-  String get exitAppTitle => 'الخروج من التطبيق؟';
+  String get exitAppTitle => 'هل تريد الخروج؟';
 
   @override
-  String get exitAppMessage => 'هل تريد إغلاق التطبيق الآن؟';
+  String get exitAppMessage => 'هل أنت متأكد من أنك تريد الخروج من التطبيق؟';
 
   @override
   String get exitAppConfirm => 'خروج';
+
+  @override
+  String get splashSubtitle => 'منصة إدارة الأعمال';
+
+  @override
+  String get splashInitErrorTitle => 'تعذر تشغيل التطبيق';
+
+  @override
+  String get splashInitErrorMessage => 'حدث خطأ أثناء تهيئة التطبيق.';
 
   @override
   String get loading => 'جاري التحميل...';
@@ -364,6 +497,86 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get navigationHome => 'الرئيسية';
+
+  @override
+  String get navigationDashboard => 'لوحة التحكم';
+
+  @override
+  String get navigationServices => 'الخدمات';
+
+  @override
+  String get navigationReports => 'التقارير';
+
+  @override
+  String get quickActionsTitle => 'عمليات سريعة';
+
+  @override
+  String get quickActionsEmptyMessage =>
+      'ثبّت اختصارات هنا للوصول الأسرع. ستتمكن من تخصيصها لاحقاً.';
+
+  @override
+  String get quickActionsAddLabel => 'إضافة عملية';
+
+  @override
+  String get quickActionsComingSoon => 'تخصيص العمليات السريعة قريباً.';
+
+  @override
+  String get dashboardTitle => 'لوحة التحكم';
+
+  @override
+  String get dashboardSubtitle => 'نظرة عامة على منصة إدارة أعمالك.';
+
+  @override
+  String get dashboardOpenServices => 'تصفح كل الخدمات';
+
+  @override
+  String get dashboardOpenSettings => 'فتح الإعدادات';
+
+  @override
+  String get dashboardMyServices => 'خدماتي';
+
+  @override
+  String get dashboardCustomizeServices => 'تخصيص';
+
+  @override
+  String get dashboardCustomizeServicesHint =>
+      'اختر الخدمات التي تظهر في لوحة التحكم.';
+
+  @override
+  String get dashboardSaveServices => 'حفظ';
+
+  @override
+  String get dashboardNoServicesTitle => 'لا توجد خدمات في لوحة التحكم';
+
+  @override
+  String get dashboardNoServicesMessage =>
+      'خصّص لوحة التحكم لإضافة الخدمات التي تستخدمها أكثر.';
+
+  @override
+  String get dashboardNoModulesAvailable => 'لا توجد خدمات متاحة حالياً.';
+
+  @override
+  String get platformReportsTitle => 'التقارير';
+
+  @override
+  String get platformReportsSubtitle =>
+      'تقارير الوحدات ورؤى متعددة الوحدات مستقبلاً.';
+
+  @override
+  String get platformReportsInventory => 'تقارير المخزون';
+
+  @override
+  String get platformReportsComingSoon =>
+      'ستتوفر التقارير متعددة الوحدات في إصدار لاحق.';
+
+  @override
+  String get notFoundTitle => 'الصفحة غير موجودة';
+
+  @override
+  String get notFoundMessage => 'الصفحة التي تبحث عنها غير موجودة.';
+
+  @override
+  String get goToDashboard => 'الذهاب إلى لوحة التحكم';
 
   @override
   String get availableQuantity => 'الكمية المتاحة';

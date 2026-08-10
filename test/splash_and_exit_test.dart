@@ -1,0 +1,282 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:stock_count/app/bootstrap/app_initialization.dart';
+import 'package:stock_count/app/localization/app_localizations.dart';
+import 'package:stock_count/app/router/app_routes.dart';
+import 'package:stock_count/app/splash/splash_page.dart';
+import 'package:stock_count/app/theme/app_theme.dart';
+import 'package:stock_count/core/widgets/app_dialog.dart';
+
+void main() {
+  Widget wrapDialog({
+    required Widget child,
+    Locale locale = const Locale('en'),
+    ThemeMode themeMode = ThemeMode.light,
+  }) {
+    return ProviderScope(
+      child: MaterialApp(
+        locale: locale,
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: themeMode,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: child,
+      ),
+    );
+  }
+
+  Widget wrapSplash({required List<Override> overrides}) {
+    final router = GoRouter(
+      initialLocation: AppRoutes.splash,
+      routes: [
+        GoRoute(
+          path: AppRoutes.splash,
+          builder: (context, state) => const SplashPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.dashboard,
+          builder: (context, state) =>
+              const Scaffold(body: Text('DashboardShell')),
+        ),
+      ],
+    );
+
+    return ProviderScope(
+      overrides: overrides,
+      child: MaterialApp.router(
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+      ),
+    );
+  }
+
+  group('SplashPage', () {
+    testWidgets('shows brand and loading while initializing', (tester) async {
+      await tester.pumpWidget(
+        wrapSplash(
+          overrides: [
+            appInitializationProvider.overrideWith((ref) async {
+              await Future<void>.delayed(const Duration(milliseconds: 300));
+            }),
+          ],
+        ),
+      );
+
+      await tester.pump();
+
+      expect(find.text('Business Platform'), findsOneWidget);
+      expect(find.text('Business Management Platform'), findsOneWidget);
+      expect(find.text('Loading...'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      await tester.pumpAndSettle();
+      expect(find.text('DashboardShell'), findsOneWidget);
+    });
+
+    testWidgets('navigates to dashboard when initialization succeeds', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapSplash(
+          overrides: [appInitializationProvider.overrideWith((ref) async {})],
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('DashboardShell'), findsOneWidget);
+      expect(find.byType(SplashPage), findsNothing);
+    });
+
+    testWidgets('shows error state with retry on failure', (tester) async {
+      var attempts = 0;
+
+      await tester.pumpWidget(
+        wrapSplash(
+          overrides: [
+            appInitializationProvider.overrideWith((ref) async {
+              attempts += 1;
+              if (attempts == 1) {
+                throw StateError('bootstrap failed');
+              }
+            }),
+          ],
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unable to start application'), findsOneWidget);
+      expect(find.text('Retry'), findsOneWidget);
+
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+
+      expect(attempts, 2);
+      expect(find.text('DashboardShell'), findsOneWidget);
+    });
+  });
+
+  group('Exit confirmation dialog', () {
+    testWidgets('shows localized cancel and exit actions', (tester) async {
+      await tester.pumpWidget(
+        wrapDialog(
+          child: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: Center(
+                  child: FilledButton(
+                    onPressed: () {
+                      showAppDialog(
+                        context: context,
+                        title: AppLocalizations.of(context).exitAppTitle,
+                        message: AppLocalizations.of(context).exitAppMessage,
+                        confirmLabel: AppLocalizations.of(
+                          context,
+                        ).exitAppConfirm,
+                        isDestructive: true,
+                      );
+                    },
+                    child: const Text('Open'),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Exit Application?'), findsOneWidget);
+      expect(
+        find.text('Are you sure you want to exit the application?'),
+        findsOneWidget,
+      );
+      expect(find.text('Cancel'), findsOneWidget);
+      expect(find.text('Exit'), findsOneWidget);
+    });
+
+    testWidgets('supports Arabic RTL copy', (tester) async {
+      await tester.pumpWidget(
+        wrapDialog(
+          locale: const Locale('ar'),
+          child: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: Center(
+                  child: FilledButton(
+                    onPressed: () {
+                      showAppDialog(
+                        context: context,
+                        title: AppLocalizations.of(context).exitAppTitle,
+                        message: AppLocalizations.of(context).exitAppMessage,
+                        confirmLabel: AppLocalizations.of(
+                          context,
+                        ).exitAppConfirm,
+                        isDestructive: true,
+                      );
+                    },
+                    child: const Text('Open'),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('هل تريد الخروج؟'), findsOneWidget);
+      expect(find.text('إلغاء'), findsOneWidget);
+      expect(find.text('خروج'), findsOneWidget);
+    });
+
+    testWidgets('cancel dismisses dialog without confirming', (tester) async {
+      bool? result;
+
+      await tester.pumpWidget(
+        wrapDialog(
+          child: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: Center(
+                  child: FilledButton(
+                    onPressed: () async {
+                      result = await showAppDialog(
+                        context: context,
+                        title: 'Exit Application?',
+                        message: 'Sure?',
+                        confirmLabel: 'Exit',
+                        cancelLabel: 'Cancel',
+                        isDestructive: true,
+                      );
+                    },
+                    child: const Text('Open'),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(result, isFalse);
+    });
+
+    testWidgets('works in dark theme', (tester) async {
+      await tester.pumpWidget(
+        wrapDialog(
+          themeMode: ThemeMode.dark,
+          child: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: Center(
+                  child: FilledButton(
+                    onPressed: () {
+                      showAppDialog(
+                        context: context,
+                        title: AppLocalizations.of(context).exitAppTitle,
+                        message: AppLocalizations.of(context).exitAppMessage,
+                        confirmLabel: AppLocalizations.of(
+                          context,
+                        ).exitAppConfirm,
+                        isDestructive: true,
+                      );
+                    },
+                    child: const Text('Open'),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Exit Application?'), findsOneWidget);
+      expect(
+        Theme.of(tester.element(find.text('Exit Application?'))).brightness,
+        Brightness.dark,
+      );
+    });
+  });
+}

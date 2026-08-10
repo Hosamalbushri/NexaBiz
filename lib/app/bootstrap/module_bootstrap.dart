@@ -11,9 +11,7 @@ import '../../modules/inventory/inventory_module.dart';
 List<Override> moduleRegistryOverrides() {
   return [
     moduleRegistryProvider.overrideWithValue(
-      ModuleRegistry(const [
-        InventoryModule(),
-      ]),
+      ModuleRegistry(const [InventoryModule()]),
     ),
   ];
 }

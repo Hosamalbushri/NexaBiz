@@ -16,11 +16,12 @@
 | Type | Flutter application (modular business platform) |
 | Entry point | `lib/main.dart` |
 | Root widget | `BusinessPlatformApp` in `lib/app/app.dart` |
+| Startup | Splash (`/splash`) → `AppBootstrap` → home shell (`/`) |
 | First module | Inventory (`lib/modules/inventory/`) |
 | Platforms present in repo | **Android**, **Web** |
 | Platforms absent | iOS, macOS, Linux, Windows folders — **Unknown / Not configured** in this workspace |
 | Assets folder | **Unknown / Not configured** (no `assets/` directory) |
-| Test suite | **Unknown / Not configured** (no `test/` directory) |
+| Test suite | `test/splash_and_exit_test.dart` (splash + exit dialog) |
 
 ---
 
@@ -138,13 +139,16 @@ UI/providers call use cases / repositories; repositories talk to datasources/Hiv
 ### App (`lib/app/`)
 
 - `app.dart` — `BusinessPlatformApp`
-- `bootstrap/module_bootstrap.dart` — registers modules into `ModuleRegistry`
-- `router/` — `GoRouter` composition + `AppRoutes`
-- `shell/platform_shell.dart` — responsive chrome for home/settings
+- `bootstrap/` — `module_bootstrap.dart` (module registry), `app_bootstrap.dart` + `app_initialization.dart` (platform startup)
+- `splash/` — `SplashPage` + brand widgets (`flutter_animate`)
+- `exit/` — `AppExitPopScope` + `confirmAppExit` (Dashboard root back → exit dialog)
+- `navigation/` — `AppNavigationItem` + top-level shell destinations
+- `router/` — `GoRouter` composition + `AppRoutes` (`/splash`, `/dashboard`, `/services`, `/reports`, `/settings`)
+- `shell/app_shell.dart` — responsive chrome for StatefulShellRoute (`platform_shell.dart` re-exports)
 - `theme/` — tokens + FlexColorScheme themes + component themes
 - `localization/` — ARB + generated `AppLocalizations`
 - `settings/` — theme/locale persistence UI + repository
-- `presentation/pages/service_launcher_page.dart` — module launcher
+- `presentation/pages/` — dashboard, services launcher, platform reports, not found
 - `constants/app_constants.dart`
 
 ### Core (`lib/core/`)
@@ -162,6 +166,8 @@ UI/providers call use cases / repositories; repositories talk to datasources/Hiv
 
 ### Inventory module (`lib/modules/inventory/`)
 
+Platform module (`id: inventory`). Intra-module **Stock count** service owns count / import / reports under `/inventory/stock-count/...`.
+
 ```text
 inventory/
 ├── inventory_module.dart
@@ -177,7 +183,7 @@ inventory/
 │   ├── services/
 │   └── usecases/
 └── presentation/
-    ├── pages/
+    ├── pages/         # includes stock_count_home_page.dart
     ├── widgets/
     └── providers/
 ```
@@ -263,17 +269,25 @@ Avoid circular imports.
 
 - Library: **GoRouter** (^16).
 - Provider: `appRouterProvider` in `lib/app/router/app_router.dart`.
-- Platform routes (inside `ShellRoute` + `PlatformShell`):
-  - `/` home — Service Launcher
-  - `/settings` — Settings
-- Module routes (outside shell, from registry), Inventory:
-  - `/inventory`
-  - `/inventory/count`
-  - `/inventory/count/search`
-  - `/inventory/import`
-  - `/inventory/reports`
-- Authentication routes: **Unknown / Not configured**
-- Deep linking customization: **Unknown / Not configured** (default GoRouter behavior only)
+- Startup: `/splash` → `AppBootstrap` → `context.go('/dashboard')` (splash not kept in stack).
+- Main shell: outer `ShellRoute` + `AppShell` chrome wraps:
+  - `StatefulShellRoute.indexedStack` — `/dashboard`, `/services`, `/reports`, `/settings`
+  - Module routes from registry (e.g. `/inventory/...`) so bottom nav / rail stay visible
+- Responsive chrome: mobile `CustomBottomNav` (center quick-actions `+`), tablet `NavigationRail` (leading `+`), desktop side panel (tonal add).
+- Quick actions sheet: placeholder for user-customizable shortcuts (`showQuickActionsSheet`).
+- `/` redirects to `/dashboard`.
+- Module routes (inside shell chrome), Inventory:
+  - `/inventory` — inventory hub (customizable/reorderable service cards; Stock count first)
+  - `/inventory/stock-count` — stock-count hub (grid: count / import / reports)
+  - `/inventory/stock-count/count` (+ `/details`)
+  - `/inventory/stock-count/import`
+  - `/inventory/stock-count/reports`
+  - Legacy `/inventory/count|import|reports` redirect into stock-count
+- Module paths leave bottom-nav tabs unselected (Services is active only on `/services`).
+- Exit confirmation: system Back at **Dashboard** root only (`AppExitPopScope`); other shell branches return to Dashboard; module stacks pop normally.
+- Unknown routes: `errorBuilder` → `NotFoundPage`.
+- Typed paths: `AppRoutes` + module `*Routes` helpers (no `go_router_builder` — dynamic `AppModule.routes` composition).
+- Auth redirects: **Not configured** (router ready for future `redirect` rules).
 
 Navigation helpers: `context.go`, `context.push`, `context.pop`.
 
@@ -284,7 +298,7 @@ Navigation helpers: `context.go`, `context.push`, `context.pop`.
 | Concern | Implementation |
 | --- | --- |
 | Engine | Hive / Hive Flutter |
-| Init | `HiveInitializer.initialize()` opens settings box |
+| Init | `HiveInitializer.initialize()` via `AppBootstrap` during splash (idempotent box open) |
 | Platform box | `app_settings` (`HiveBoxes.settings`) |
 | Inventory box | `inventory_items` (`InventoryHive.boxName`) |
 | Inventory adapter | `InventoryItemAdapter` typeId `0` |
@@ -293,6 +307,8 @@ Navigation helpers: `context.go`, `context.push`, `context.pop`.
 | DAOs | Not used; datasources + repository impl |
 
 Rule: UI never accesses Hive directly.
+
+`main.dart` only ensures bindings + module registry overrides; theme/locale load inside bootstrap.
 
 ---
 
@@ -372,8 +388,8 @@ Also present (legacy / secondary — prefer App* when adding new UI):
 
 ## 19. Responsive Design
 
-- `PlatformShell`:
-  - Mobile: content only
+- `AppShell`:
+  - Mobile: `NavigationBar`
   - Tablet: `NavigationRail`
   - Desktop: side panel (~260px)
 - Service launcher / report summary grids adapt column count by width.
@@ -452,10 +468,10 @@ Treat export files as potentially sensitive business data when sharing.
 ## 25. Testing
 
 - `flutter_test` is a dev dependency.
-- No `test/` directory in the workspace at documentation time.
-- Definition of Done still requires adding/updating tests when a suite exists or when introducing critical domain logic.
+- Present: `test/splash_and_exit_test.dart`, `test/navigation_shell_test.dart`.
+- Definition of Done still requires adding/updating tests when introducing critical domain logic.
 
-Commands (when tests exist):
+Commands:
 
 ```bash
 flutter test
@@ -671,8 +687,11 @@ Launcher picks it up automatically via `enabledModules`.
 | Responsive shell | Implemented |
 | Settings (theme/locale/about/reset) | Implemented |
 | Localization EN/AR | Implemented |
+| Splash + AppBootstrap | Implemented |
+| StatefulShellRoute (Dashboard/Services/Reports/Settings) | Implemented |
+| Root exit confirmation (`AppExitPopScope`) | Implemented |
 | Network / Auth | Not configured |
-| Automated tests | Not configured |
+| Automated tests | Partial (`test/splash_and_exit_test.dart`, `test/navigation_shell_test.dart`) |
 | Assets pipeline | Not configured |
 
 ### Modules
@@ -718,8 +737,9 @@ Non-binding product direction (not scheduled in code):
 
 - Formats: `.xlsx`, `.xls` via `file_picker`
 - Parser: `ExcelImportDatasource` on isolate via `compute`
-- Header aliases include EN/AR for code, name, barcode, qty, pack size
-- Missing headers fall back to column indexes 0/1/2
+- Header aliases include EN/AR for code, name, main qty, sub qty, barcode, pack size
+- Preferred quantity columns: main + sub (legacy single system quantity still accepted)
+- Missing headers fall back to column indexes: code, name, main, sub
 - Invalid/empty rows ignored; duplicate codes last-write wins (counted)
 - Validation failures: `empty_workbook`, `no_valid_rows`, `decode_failed`
 - Progress labels: parsing → saving

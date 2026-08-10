@@ -10,6 +10,8 @@ class SettingsKeys {
 
   static const String themeMode = 'theme_mode';
   static const String locale = 'locale';
+  static const String dashboardServiceIds = 'dashboard_service_ids';
+  static const String inventoryServiceIds = 'inventory_service_ids';
 }
 
 /// Persists and loads platform settings from Hive.
@@ -59,6 +61,48 @@ class SettingsRepository {
       return;
     }
     await box.put(SettingsKeys.locale, locale.languageCode);
+  }
+
+  /// Returns `null` when the user has never customized the dashboard.
+  Future<List<String>?> loadDashboardServiceIds() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.dashboardServiceIds);
+    if (value == null) {
+      return null;
+    }
+    if (value is List) {
+      return [
+        for (final item in value)
+          if (item is String && item.isNotEmpty) item,
+      ];
+    }
+    return const [];
+  }
+
+  Future<void> saveDashboardServiceIds(List<String> ids) async {
+    final box = await _settingsBox;
+    await box.put(SettingsKeys.dashboardServiceIds, ids);
+  }
+
+  /// Returns `null` when the user has never customized inventory services.
+  Future<List<String>?> loadInventoryServiceIds() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.inventoryServiceIds);
+    if (value == null) {
+      return null;
+    }
+    if (value is List) {
+      return [
+        for (final item in value)
+          if (item is String && item.isNotEmpty) item,
+      ];
+    }
+    return const [];
+  }
+
+  Future<void> saveInventoryServiceIds(List<String> ids) async {
+    final box = await _settingsBox;
+    await box.put(SettingsKeys.inventoryServiceIds, ids);
   }
 
   Future<void> resetSettings() async {

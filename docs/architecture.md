@@ -39,12 +39,32 @@ Core ↛ Modules
 Owns:
 
 - `BusinessPlatformApp`
-- GoRouter composition (`ShellRoute` for `/` and `/settings`)
+- GoRouter composition (`StatefulShellRoute` for Dashboard / Services / Reports / Settings)
 - Module bootstrap (`module_bootstrap.dart`)
 - Theme / breakpoints / localization
 - Platform settings
-- Service launcher page
-- Responsive `PlatformShell`
+- Dashboard, Services launcher, platform reports hub, Not Found
+- Responsive `AppShell` (NavigationBar / Rail / side panel)
+- Splash bootstrap + root exit handling
+
+## Navigation
+
+```text
+/splash
+StatefulShellRoute
+  /dashboard
+  /services
+  /reports
+  /settings
+Module routes (registry)
+  /inventory/...
+errorBuilder → NotFoundPage
+```
+
+- `/` redirects to `/dashboard`
+- Modules register via `AppModule.routes`; App composes them
+- Back: nested pops first; shell non-dashboard → dashboard; dashboard → exit dialog
+- Do not add `go_router_builder` while routes are composed dynamically from modules
 
 ## Core layer
 

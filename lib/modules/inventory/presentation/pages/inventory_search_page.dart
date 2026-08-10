@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -15,13 +16,17 @@ import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/entities/item_status.dart';
 import '../providers/count_search_provider.dart';
+import '../providers/inventory_providers.dart';
 import '../providers/quantity_entry_provider.dart';
 import '../providers/selected_item_provider.dart';
 import '../widgets/search_items_data_grid.dart';
 import 'inventory_routes.dart';
 
 class InventorySearchPage extends ConsumerStatefulWidget {
-  const InventorySearchPage({super.key});
+  const InventorySearchPage({super.key, this.embedded = false});
+
+  /// When true, omit the page app bar (for rare embedded hosts).
+  final bool embedded;
 
   @override
   ConsumerState<InventorySearchPage> createState() =>
@@ -62,13 +67,10 @@ class _InventorySearchPageState extends ConsumerState<InventorySearchPage> {
     final localization = AppLocalizations.of(context);
     final pagedAsync = ref.watch(pagedCountSearchProvider);
     final pageIndex = ref.watch(countSearchPageIndexProvider);
+    final itemsAsync = ref.watch(inventoryItemsProvider);
+    final hasInventory = (itemsAsync.valueOrNull?.isNotEmpty ?? false);
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: localization.searchItems,
-        showBackButton: true,
-      ),
-      body: Column(
+    final body = Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -101,6 +103,18 @@ class _InventorySearchPageState extends ConsumerState<InventorySearchPage> {
                 ),
                 data: (paged) {
                   if (paged.totalCount == 0) {
+                    if (!hasInventory) {
+                      return AppEmptyState(
+                        title: localization.inventoryEmptyNeedsImportTitle,
+                        subtitle:
+                            localization.inventoryEmptyNeedsImportMessage,
+                        icon: Icons.upload_file_outlined,
+                        actionLabel: localization.inventoryGoToImport,
+                        actionIcon: Icons.upload_file_outlined,
+                        actionVariant: AppButtonVariant.text,
+                        onAction: () => context.push(InventoryRoutes.import),
+                      );
+                    }
                     return AppEmptyState(
                       title: localization.emptyStateTitle,
                       subtitle: localization.emptyStateSubtitle,
@@ -124,7 +138,18 @@ class _InventorySearchPageState extends ConsumerState<InventorySearchPage> {
             ),
           ),
         ],
+    );
+
+    if (widget.embedded) {
+      return Material(color: Theme.of(context).colorScheme.surface, child: body);
+    }
+
+    return Scaffold(
+      appBar: CustomAppBar(
+        title: localization.searchItems,
+        showBackButton: true,
       ),
+      body: body,
     );
   }
 

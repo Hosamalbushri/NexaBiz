@@ -81,10 +81,15 @@ class ExcelImportDatasource {
         continue;
       }
 
-      final systemQty = _cellDouble(row, columnIndex.systemQuantity) ?? 0;
       final barcode = _cellString(row, columnIndex.barcode);
       final packSize =
           _packSizeParser.parse(name) ?? _cellInt(row, columnIndex.packSize);
+
+      final systemQty = _resolveSystemQuantity(
+        row: row,
+        columns: columnIndex,
+        packSize: packSize,
+      );
 
       final item = InventoryItem(
         itemCode: code,
@@ -116,6 +121,26 @@ class ExcelImportDatasource {
     );
   }
 
+  double _resolveSystemQuantity({
+    required List<Data?> row,
+    required _ColumnMap columns,
+    required int? packSize,
+  }) {
+    final main = _cellDouble(row, columns.mainQuantity);
+    final sub = _cellDouble(row, columns.subQuantity);
+    final legacy = _cellDouble(row, columns.legacySystemQuantity);
+
+    if (main != null || sub != null) {
+      final mainValue = main ?? 0;
+      final subValue = sub ?? 0;
+      final pack = (packSize != null && packSize > 0) ? packSize : 1;
+      // Stored as main + fractional sub units (matches [InventoryItem] getters).
+      return mainValue + (subValue / pack);
+    }
+
+    return legacy ?? 0;
+  }
+
   _ColumnMap _resolveColumns(List<Data?> header) {
     int? find(List<String> aliases) {
       for (var i = 0; i < header.length; i++) {
@@ -141,7 +166,24 @@ class ExcelImportDatasource {
       'اسم السلعة',
       'الاسم',
     ]);
-    final systemQuantity = find(const [
+    final mainQuantity = find(const [
+      'main quantity',
+      'main qty',
+      'system main quantity',
+      'system main qty',
+      'الكمية الرئيسية',
+      'كمية رئيسية',
+    ]);
+    final subQuantity = find(const [
+      'sub quantity',
+      'sub qty',
+      'secondary quantity',
+      'system sub quantity',
+      'system sub qty',
+      'الكمية الفرعية',
+      'كمية فرعية',
+    ]);
+    final legacySystemQuantity = find(const [
       'system quantity',
       'quantity',
       'qty',
@@ -153,7 +195,9 @@ class ExcelImportDatasource {
       code: code ?? 0,
       name: name ?? 1,
       barcode: find(const ['barcode', 'الباركود']),
-      systemQuantity: systemQuantity ?? 2,
+      mainQuantity: mainQuantity ?? (legacySystemQuantity == null ? 2 : null),
+      subQuantity: subQuantity ?? (legacySystemQuantity == null ? 3 : null),
+      legacySystemQuantity: legacySystemQuantity,
       packSize: find(const ['pack size', 'packsize', 'حجم العبوة']),
       codeUnresolved: code == null,
       nameUnresolved: name == null,
@@ -190,7 +234,9 @@ class _ColumnMap {
     required this.code,
     required this.name,
     required this.barcode,
-    required this.systemQuantity,
+    required this.mainQuantity,
+    required this.subQuantity,
+    required this.legacySystemQuantity,
     required this.packSize,
     this.codeUnresolved = false,
     this.nameUnresolved = false,
@@ -199,7 +245,9 @@ class _ColumnMap {
   final int code;
   final int name;
   final int? barcode;
-  final int systemQuantity;
+  final int? mainQuantity;
+  final int? subQuantity;
+  final int? legacySystemQuantity;
   final int? packSize;
   final bool codeUnresolved;
   final bool nameUnresolved;

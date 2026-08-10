@@ -11,8 +11,8 @@ class AppButtonThemes {
   static const Size _minimumSize = Size(64, 48);
 
   static RoundedRectangleBorder get _shape => RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.control),
-      );
+    borderRadius: BorderRadius.circular(AppRadius.control),
+  );
 
   static ElevatedButtonThemeData elevated(ColorScheme scheme) {
     return ElevatedButtonThemeData(

@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
+import '../../../../app/theme/app_radius.dart';
+import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -14,7 +16,10 @@ import '../../domain/models/import_validation_exception.dart';
 import '../providers/import_provider.dart';
 
 class InventoryImportPage extends ConsumerWidget {
-  const InventoryImportPage({super.key});
+  const InventoryImportPage({super.key, this.embedded = false});
+
+  /// When true, omit the page app bar (for rare embedded hosts).
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,25 +27,22 @@ class InventoryImportPage extends ConsumerWidget {
     final importState = ref.watch(importProvider);
     final notifier = ref.read(importProvider.notifier);
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: localization.importPageTitle,
-        showBackButton: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.pagePadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AppButton(
-              label: localization.selectExcelFile,
-              icon: Icons.upload_file_outlined,
-              variant: AppButtonVariant.outlined,
-              expand: true,
-              onPressed: importState.isImporting
-                  ? null
-                  : () => _pickFile(context, notifier),
-            ),
+    final body = SingleChildScrollView(
+      padding: const EdgeInsets.all(AppConstants.pagePadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _ImportFormatHintCard(),
+          const SizedBox(height: 16),
+          AppButton(
+            label: localization.selectExcelFile,
+            icon: Icons.upload_file_outlined,
+            variant: AppButtonVariant.outlined,
+            expand: true,
+            onPressed: importState.isImporting
+                ? null
+                : () => _pickFile(context, notifier),
+          ),
             const SizedBox(height: 16),
             AppCard(
               child: Column(
@@ -105,7 +107,21 @@ class InventoryImportPage extends ConsumerWidget {
             ],
           ],
         ),
+    );
+
+    if (embedded) {
+      return Material(
+        color: Theme.of(context).colorScheme.surface,
+        child: body,
+      );
+    }
+
+    return Scaffold(
+      appBar: CustomAppBar(
+        title: localization.importPageTitle,
+        showBackButton: true,
       ),
+      body: body,
     );
   }
 
@@ -186,6 +202,294 @@ class InventoryImportPage extends ConsumerWidget {
         isSuccess: false,
       );
     }
+  }
+}
+
+class _ImportFormatHintCard extends StatelessWidget {
+  const _ImportFormatHintCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.55),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.08),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppRadius.lg),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.table_chart_outlined,
+                  color: colorScheme.primary,
+                  size: 22,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.importFormatHintTitle,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.importFormatHintIntro,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.importFormatRequired,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    _ColumnChip(
+                      label: l10n.importFormatColCode,
+                      detail: l10n.importFormatColCodeAliases,
+                      emphasized: true,
+                    ),
+                    _ColumnChip(
+                      label: l10n.importFormatColName,
+                      detail: l10n.importFormatColNameAliases,
+                      emphasized: true,
+                    ),
+                    _ColumnChip(
+                      label: l10n.importFormatColMainQty,
+                      detail: l10n.importFormatColMainQtyAliases,
+                      emphasized: true,
+                    ),
+                    _ColumnChip(
+                      label: l10n.importFormatColSubQty,
+                      detail: l10n.importFormatColSubQtyAliases,
+                      emphasized: true,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  l10n.importFormatOptional,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.tertiary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    _ColumnChip(
+                      label: l10n.importFormatColBarcode,
+                      detail: l10n.importFormatColBarcodeAliases,
+                    ),
+                    _ColumnChip(
+                      label: l10n.importFormatColPack,
+                      detail: l10n.importFormatColPackAliases,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  l10n.importFormatSampleTitle,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: _SampleSpreadsheet(
+                      headers: [
+                        l10n.importFormatSampleCodeHeader,
+                        l10n.importFormatSampleNameHeader,
+                        l10n.importFormatSampleMainHeader,
+                        l10n.importFormatSampleSubHeader,
+                        l10n.importFormatSamplePackHeader,
+                      ],
+                      values: const [
+                        '1001',
+                        'Milk 1L',
+                        '2',
+                        '4',
+                        '12',
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  l10n.importFormatSampleNote,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ColumnChip extends StatelessWidget {
+  const _ColumnChip({
+    required this.label,
+    required this.detail,
+    this.emphasized = false,
+  });
+
+  final String label;
+  final String detail;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final accent = emphasized ? colorScheme.primary : colorScheme.tertiary;
+
+    return Tooltip(
+      message: detail,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 220),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(color: accent.withValues(alpha: 0.22)),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: accent,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SampleSpreadsheet extends StatelessWidget {
+  const _SampleSpreadsheet({
+    required this.headers,
+    required this.values,
+  });
+
+  final List<String> headers;
+  final List<String> values;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Table(
+      border: TableBorder.all(
+        color: colorScheme.outlineVariant.withValues(alpha: 0.7),
+        width: 1,
+      ),
+      defaultColumnWidth: const IntrinsicColumnWidth(),
+      children: [
+        TableRow(
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest,
+          ),
+          children: [
+            for (final header in headers)
+              _SheetCell(text: header, isHeader: true),
+          ],
+        ),
+        TableRow(
+          decoration: BoxDecoration(color: colorScheme.surface),
+          children: [
+            for (final value in values) _SheetCell(text: value),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _SheetCell extends StatelessWidget {
+  const _SheetCell({
+    required this.text,
+    this.isHeader = false,
+  });
+
+  final String text;
+  final bool isHeader;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: Text(
+        text,
+        style: (isHeader
+                ? theme.textTheme.labelMedium
+                : theme.textTheme.bodySmall)
+            ?.copyWith(fontWeight: isHeader ? FontWeight.w800 : FontWeight.w500),
+      ),
+    );
   }
 }
 

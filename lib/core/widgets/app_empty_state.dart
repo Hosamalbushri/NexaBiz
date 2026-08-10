@@ -13,6 +13,8 @@ class AppEmptyState extends StatelessWidget {
     this.icon = Icons.inbox_outlined,
     this.actionLabel,
     this.onAction,
+    this.actionIcon = Icons.refresh_rounded,
+    this.actionVariant = AppButtonVariant.filled,
   });
 
   final String title;
@@ -20,6 +22,8 @@ class AppEmptyState extends StatelessWidget {
   final IconData icon;
   final String? actionLabel;
   final VoidCallback? onAction;
+  final IconData actionIcon;
+  final AppButtonVariant actionVariant;
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +61,8 @@ class AppEmptyState extends StatelessWidget {
               AppButton(
                 label: actionLabel!,
                 onPressed: onAction,
-                icon: Icons.refresh_rounded,
+                icon: actionIcon,
+                variant: actionVariant,
               ),
             ],
           ],

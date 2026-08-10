@@ -28,9 +28,7 @@ class AppDialogThemes {
       surfaceTintColor: Colors.transparent,
       elevation: 2,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppRadius.xl),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
       showDragHandle: true,
     );

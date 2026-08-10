@@ -42,6 +42,22 @@ Minimum registration point:
 lib/app/bootstrap/module_bootstrap.dart
 ```
 
+Navigation checklist when adding a module:
+
+1. Implement `AppModule` with `routes` + `rootRoute`
+2. Register in `module_bootstrap.dart`
+3. Add EN + AR launcher strings
+4. Open from Services via `context.push(module.rootRoute)` (fullscreen module stack)
+5. Do **not** create a second `GoRouter`
+
+## Shell destinations (App-owned)
+
+```text
+/dashboard  /services  /reports  /settings
+```
+
+Defined in `lib/app/navigation/app_navigation_items.dart` and mounted by `app_router.dart`.
+
 ## Adding a feature inside Inventory
 
 Typical touch points:

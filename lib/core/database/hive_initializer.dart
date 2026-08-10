@@ -10,6 +10,8 @@ class HiveInitializer {
 
   static Future<void> initialize() async {
     await Hive.initFlutter();
-    await Hive.openBox<dynamic>(HiveBoxes.settings);
+    if (!Hive.isBoxOpen(HiveBoxes.settings)) {
+      await Hive.openBox<dynamic>(HiveBoxes.settings);
+    }
   }
 }

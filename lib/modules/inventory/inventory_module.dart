@@ -10,8 +10,12 @@ import 'presentation/pages/inventory_import_page.dart';
 import 'presentation/pages/inventory_reports_page.dart';
 import 'presentation/pages/inventory_routes.dart';
 import 'presentation/pages/inventory_search_page.dart';
+import 'presentation/pages/stock_count_home_page.dart';
 
 /// Inventory business module — self-contained routes and features.
+///
+/// Platform service: Inventory. Intra-module service: Stock count (الجرد)
+/// owns count / import / reports as a grid hub (not tabs).
 class InventoryModule implements AppModule {
   const InventoryModule();
 
@@ -52,27 +56,53 @@ class InventoryModule implements AppModule {
           name: 'inventory',
           builder: (context, state) => const InventoryHomePage(),
           routes: [
+            // Legacy flat paths → stock-count service.
             GoRoute(
               path: 'count',
-              name: 'inventoryCount',
-              builder: (context, state) => const InventorySearchPage(),
+              redirect: (context, state) => InventoryRoutes.count,
               routes: [
                 GoRoute(
                   path: 'details',
-                  name: 'inventoryCountDetails',
-                  builder: (context, state) => const InventoryCountPage(),
+                  redirect: (context, state) => InventoryRoutes.countDetails,
                 ),
               ],
             ),
             GoRoute(
               path: 'import',
-              name: 'inventoryImport',
-              builder: (context, state) => const InventoryImportPage(),
+              redirect: (context, state) => InventoryRoutes.import,
             ),
             GoRoute(
               path: 'reports',
-              name: 'inventoryReports',
-              builder: (context, state) => const InventoryReportsPage(),
+              redirect: (context, state) => InventoryRoutes.reports,
+            ),
+            GoRoute(
+              path: 'stock-count',
+              name: 'inventoryStockCount',
+              builder: (context, state) => const StockCountHomePage(),
+              routes: [
+                GoRoute(
+                  path: 'count',
+                  name: 'inventoryStockCountSearch',
+                  builder: (context, state) => const InventorySearchPage(),
+                  routes: [
+                    GoRoute(
+                      path: 'details',
+                      name: 'inventoryStockCountDetails',
+                      builder: (context, state) => const InventoryCountPage(),
+                    ),
+                  ],
+                ),
+                GoRoute(
+                  path: 'import',
+                  name: 'inventoryStockCountImport',
+                  builder: (context, state) => const InventoryImportPage(),
+                ),
+                GoRoute(
+                  path: 'reports',
+                  name: 'inventoryStockCountReports',
+                  builder: (context, state) => const InventoryReportsPage(),
+                ),
+              ],
             ),
           ],
         ),

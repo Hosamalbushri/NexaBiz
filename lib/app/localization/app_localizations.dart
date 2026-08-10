@@ -125,8 +125,86 @@ abstract class AppLocalizations {
   /// No description provided for @moduleInventoryDescription.
   ///
   /// In en, this message translates to:
-  /// **'Counting, import, and stock reports.'**
+  /// **'Inventory services including stock count, and more over time.'**
   String get moduleInventoryDescription;
+
+  /// No description provided for @inventoryStockCountService.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock count'**
+  String get inventoryStockCountService;
+
+  /// No description provided for @inventoryStockCountServiceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Count items, import stock lists, and view count reports.'**
+  String get inventoryStockCountServiceDescription;
+
+  /// No description provided for @inventoryOpenStockCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Open stock count'**
+  String get inventoryOpenStockCount;
+
+  /// No description provided for @inventoryCustomizeServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get inventoryCustomizeServices;
+
+  /// No description provided for @inventoryCustomizeServicesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose services to show, then drag to change their order.'**
+  String get inventoryCustomizeServicesHint;
+
+  /// No description provided for @inventorySaveServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get inventorySaveServices;
+
+  /// No description provided for @inventoryPinnedServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned services'**
+  String get inventoryPinnedServices;
+
+  /// No description provided for @inventoryAvailableServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Available services'**
+  String get inventoryAvailableServices;
+
+  /// No description provided for @inventoryAddService.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get inventoryAddService;
+
+  /// No description provided for @inventoryRemoveService.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get inventoryRemoveService;
+
+  /// No description provided for @inventoryNoServicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No services on inventory home'**
+  String get inventoryNoServicesTitle;
+
+  /// No description provided for @inventoryNoServicesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize to pin the inventory services you use most.'**
+  String get inventoryNoServicesMessage;
+
+  /// No description provided for @inventoryNoServicesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No inventory services are available yet.'**
+  String get inventoryNoServicesAvailable;
 
   /// No description provided for @modulePlaceholderMessage.
   ///
@@ -143,7 +221,7 @@ abstract class AppLocalizations {
   /// No description provided for @inventoryCountTitle.
   ///
   /// In en, this message translates to:
-  /// **'Inventory Count'**
+  /// **'Count'**
   String get inventoryCountTitle;
 
   /// No description provided for @inventoryCountSubtitle.
@@ -440,6 +518,24 @@ abstract class AppLocalizations {
   /// **'Try a different search or import inventory first.'**
   String get emptyStateSubtitle;
 
+  /// No description provided for @inventoryEmptyNeedsImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No inventory items yet'**
+  String get inventoryEmptyNeedsImportTitle;
+
+  /// No description provided for @inventoryEmptyNeedsImportMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Import an Excel list to start counting and viewing reports.'**
+  String get inventoryEmptyNeedsImportMessage;
+
+  /// No description provided for @inventoryGoToImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Import'**
+  String get inventoryGoToImport;
+
   /// No description provided for @importPageTitle.
   ///
   /// In en, this message translates to:
@@ -469,6 +565,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import'**
   String get importButton;
+
+  /// No description provided for @importFormatHintTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel file layout'**
+  String get importFormatHintTitle;
+
+  /// No description provided for @importFormatHintIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'First row = headers. Use .xlsx or .xls.'**
+  String get importFormatHintIntro;
+
+  /// No description provided for @importFormatRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get importFormatRequired;
+
+  /// No description provided for @importFormatOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get importFormatOptional;
+
+  /// No description provided for @importFormatColCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Item code'**
+  String get importFormatColCode;
+
+  /// No description provided for @importFormatColCodeAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'Item Code · Code · رقم السلعة'**
+  String get importFormatColCodeAliases;
+
+  /// No description provided for @importFormatColName.
+  ///
+  /// In en, this message translates to:
+  /// **'Item name'**
+  String get importFormatColName;
+
+  /// No description provided for @importFormatColNameAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'Item Name · Name · اسم السلعة'**
+  String get importFormatColNameAliases;
+
+  /// No description provided for @importFormatColMainQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Main quantity'**
+  String get importFormatColMainQty;
+
+  /// No description provided for @importFormatColMainQtyAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'Main Quantity · الكمية الرئيسية'**
+  String get importFormatColMainQtyAliases;
+
+  /// No description provided for @importFormatColSubQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub quantity'**
+  String get importFormatColSubQty;
+
+  /// No description provided for @importFormatColSubQtyAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub Quantity · الكمية الفرعية'**
+  String get importFormatColSubQtyAliases;
+
+  /// No description provided for @importFormatColBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode'**
+  String get importFormatColBarcode;
+
+  /// No description provided for @importFormatColBarcodeAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode · الباركود'**
+  String get importFormatColBarcodeAliases;
+
+  /// No description provided for @importFormatColPack.
+  ///
+  /// In en, this message translates to:
+  /// **'Pack size'**
+  String get importFormatColPack;
+
+  /// No description provided for @importFormatColPackAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'Pack Size · حجم العبوة'**
+  String get importFormatColPackAliases;
+
+  /// No description provided for @importFormatSampleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample'**
+  String get importFormatSampleTitle;
+
+  /// No description provided for @importFormatSampleNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Without headers, columns are read as: code, name, main qty, sub qty.'**
+  String get importFormatSampleNote;
+
+  /// No description provided for @importFormatSampleCodeHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Item Code'**
+  String get importFormatSampleCodeHeader;
+
+  /// No description provided for @importFormatSampleNameHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Item Name'**
+  String get importFormatSampleNameHeader;
+
+  /// No description provided for @importFormatSampleMainHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Main Qty'**
+  String get importFormatSampleMainHeader;
+
+  /// No description provided for @importFormatSampleSubHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub Qty'**
+  String get importFormatSampleSubHeader;
+
+  /// No description provided for @importFormatSamplePackHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Pack Size'**
+  String get importFormatSamplePackHeader;
 
   /// No description provided for @importing.
   ///
@@ -731,13 +965,13 @@ abstract class AppLocalizations {
   /// No description provided for @exitAppTitle.
   ///
   /// In en, this message translates to:
-  /// **'Exit the app?'**
+  /// **'Exit Application?'**
   String get exitAppTitle;
 
   /// No description provided for @exitAppMessage.
   ///
   /// In en, this message translates to:
-  /// **'Do you want to close the application now?'**
+  /// **'Are you sure you want to exit the application?'**
   String get exitAppMessage;
 
   /// No description provided for @exitAppConfirm.
@@ -745,6 +979,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Exit'**
   String get exitAppConfirm;
+
+  /// No description provided for @splashSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Business Management Platform'**
+  String get splashSubtitle;
+
+  /// No description provided for @splashInitErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to start application'**
+  String get splashInitErrorTitle;
+
+  /// No description provided for @splashInitErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong while initializing the application.'**
+  String get splashInitErrorMessage;
 
   /// No description provided for @loading.
   ///
@@ -781,6 +1033,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Home'**
   String get navigationHome;
+
+  /// No description provided for @navigationDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get navigationDashboard;
+
+  /// No description provided for @navigationServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Services'**
+  String get navigationServices;
+
+  /// No description provided for @navigationReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get navigationReports;
+
+  /// No description provided for @quickActionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick actions'**
+  String get quickActionsTitle;
+
+  /// No description provided for @quickActionsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin shortcuts here for faster access. You will be able to customize them later.'**
+  String get quickActionsEmptyMessage;
+
+  /// No description provided for @quickActionsAddLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add action'**
+  String get quickActionsAddLabel;
+
+  /// No description provided for @quickActionsComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick action customization is coming soon.'**
+  String get quickActionsComingSoon;
+
+  /// No description provided for @dashboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get dashboardTitle;
+
+  /// No description provided for @dashboardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview of your business platform.'**
+  String get dashboardSubtitle;
+
+  /// No description provided for @dashboardOpenServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse all services'**
+  String get dashboardOpenServices;
+
+  /// No description provided for @dashboardOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get dashboardOpenSettings;
+
+  /// No description provided for @dashboardMyServices.
+  ///
+  /// In en, this message translates to:
+  /// **'My services'**
+  String get dashboardMyServices;
+
+  /// No description provided for @dashboardCustomizeServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get dashboardCustomizeServices;
+
+  /// No description provided for @dashboardCustomizeServicesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which services appear on your dashboard.'**
+  String get dashboardCustomizeServicesHint;
+
+  /// No description provided for @dashboardSaveServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get dashboardSaveServices;
+
+  /// No description provided for @dashboardNoServicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No services on dashboard'**
+  String get dashboardNoServicesTitle;
+
+  /// No description provided for @dashboardNoServicesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize your dashboard to add the services you use most.'**
+  String get dashboardNoServicesMessage;
+
+  /// No description provided for @dashboardNoModulesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No services are available yet.'**
+  String get dashboardNoModulesAvailable;
+
+  /// No description provided for @platformReportsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get platformReportsTitle;
+
+  /// No description provided for @platformReportsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Module reports and future cross-module insights.'**
+  String get platformReportsSubtitle;
+
+  /// No description provided for @platformReportsInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory reports'**
+  String get platformReportsInventory;
+
+  /// No description provided for @platformReportsComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Cross-module reports will be available in a future release.'**
+  String get platformReportsComingSoon;
+
+  /// No description provided for @notFoundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Page not found'**
+  String get notFoundTitle;
+
+  /// No description provided for @notFoundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The page you are looking for does not exist.'**
+  String get notFoundMessage;
+
+  /// No description provided for @goToDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Dashboard'**
+  String get goToDashboard;
 
   /// No description provided for @availableQuantity.
   ///

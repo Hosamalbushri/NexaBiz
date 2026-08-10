@@ -25,9 +25,7 @@ class AppInputThemes {
       focusedBorder: border.copyWith(
         borderSide: BorderSide(color: scheme.primary, width: 1.5),
       ),
-      errorBorder: border.copyWith(
-        borderSide: BorderSide(color: scheme.error),
-      ),
+      errorBorder: border.copyWith(borderSide: BorderSide(color: scheme.error)),
       focusedErrorBorder: border.copyWith(
         borderSide: BorderSide(color: scheme.error, width: 1.5),
       ),

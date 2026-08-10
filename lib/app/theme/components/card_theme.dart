@@ -14,9 +14,7 @@ class AppCardThemes {
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.md),
-        side: BorderSide(
-          color: scheme.outlineVariant.withValues(alpha: 0.55),
-        ),
+        side: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.55)),
       ),
     );
   }

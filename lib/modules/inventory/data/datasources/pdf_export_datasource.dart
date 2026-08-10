@@ -11,6 +11,9 @@ import '../../domain/models/report_export_labels.dart';
 
 /// Exports inventory report data to a localized PDF document.
 class PdfExportDatasource {
+  /// Large “all items” / “not counted” exports can exceed the MultiPage default (20).
+  static const int _maxPages = 2000;
+
   Future<String> export({
     required List<InventoryItem> items,
     required ReportExportLabels labels,
@@ -26,16 +29,55 @@ class PdfExportDatasource {
     final generatedText =
         '${labels.generatedAt}: ${generated.toLocal()}'.split('.').first;
 
+    final headers = <String>[
+      labels.code,
+      labels.name,
+      labels.systemMainQuantity,
+      labels.systemSubQuantity,
+      labels.countedMainQuantity,
+      labels.countedSubQuantity,
+      labels.varianceMainQuantity,
+      labels.varianceSubQuantity,
+      labels.status,
+    ];
+
+    final columnWidths = <int, pw.TableColumnWidth>{
+      0: const pw.FixedColumnWidth(50),
+      1: const pw.FlexColumnWidth(2.4),
+      2: const pw.FixedColumnWidth(58),
+      3: const pw.FixedColumnWidth(58),
+      4: const pw.FixedColumnWidth(58),
+      5: const pw.FixedColumnWidth(58),
+      6: const pw.FixedColumnWidth(58),
+      7: const pw.FixedColumnWidth(58),
+      8: const pw.FixedColumnWidth(56),
+    };
+
+    final resolvedHeaders =
+        labels.isRtl ? headers.reversed.toList(growable: false) : headers;
+    final resolvedWidths = labels.isRtl
+        ? <int, pw.TableColumnWidth>{
+            for (var i = 0; i < columnWidths.length; i++)
+              i: columnWidths[columnWidths.length - 1 - i]!,
+          }
+        : columnWidths;
+
+    final data = <List<String>>[
+      for (final item in items)
+        _rowCells(item: item, labels: labels, isRtl: labels.isRtl),
+    ];
+
     document.addPage(
       pw.MultiPage(
+        maxPages: _maxPages,
         pageTheme: pw.PageTheme(
           pageFormat: PdfPageFormat.a4.landscape,
           margin: const pw.EdgeInsets.all(18),
           theme: theme,
           textDirection: textDirection,
         ),
-        build: (context) => [
-          pw.Directionality(
+        header: (context) {
+          return pw.Directionality(
             textDirection: textDirection,
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.stretch,
@@ -43,17 +85,7 @@ class PdfExportDatasource {
                 pw.Text(
                   labels.reportTitle,
                   style: pw.TextStyle(
-                    fontSize: 20,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
-                  textAlign: pw.TextAlign.center,
-                  textDirection: textDirection,
-                ),
-                pw.SizedBox(height: 6),
-                pw.Text(
-                  '${labels.reportSection}: ${labels.filterLabel}',
-                  style: pw.TextStyle(
-                    fontSize: 12,
+                    fontSize: context.pageNumber == 1 ? 18 : 12,
                     fontWeight: pw.FontWeight.bold,
                   ),
                   textAlign: pw.TextAlign.center,
@@ -61,19 +93,69 @@ class PdfExportDatasource {
                 ),
                 pw.SizedBox(height: 4),
                 pw.Text(
-                  '${labels.totalItems}: ${items.length}  •  $generatedText',
-                  style: const pw.TextStyle(fontSize: 10),
+                  '${labels.reportSection}: ${labels.filterLabel}',
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
                   textAlign: pw.TextAlign.center,
                   textDirection: textDirection,
                 ),
-                pw.SizedBox(height: 16),
-                _buildItemsTable(
-                  items: items,
-                  labels: labels,
+                pw.SizedBox(height: 2),
+                pw.Text(
+                  '${labels.totalItems}: ${items.length}  •  $generatedText'
+                  '  •  ${context.pageNumber}',
+                  style: const pw.TextStyle(fontSize: 9),
+                  textAlign: pw.TextAlign.center,
                   textDirection: textDirection,
                 ),
+                pw.SizedBox(height: 10),
               ],
             ),
+          );
+        },
+        build: (context) => [
+          // Table must be a MultiPage child that can split across pages.
+          // Nesting it in Column was causing TooManyPages for large filters.
+          pw.TableHelper.fromTextArray(
+            headers: resolvedHeaders,
+            data: data,
+            headerDirection: textDirection,
+            tableDirection: textDirection,
+            headerStyle: pw.TextStyle(
+              fontSize: 7.5,
+              fontWeight: pw.FontWeight.bold,
+            ),
+            cellStyle: const pw.TextStyle(fontSize: 7.5),
+            headerDecoration: const pw.BoxDecoration(
+              color: PdfColors.grey300,
+            ),
+            headerAlignment: labels.isRtl
+                ? pw.Alignment.centerRight
+                : pw.Alignment.centerLeft,
+            cellAlignment: labels.isRtl
+                ? pw.Alignment.centerRight
+                : pw.Alignment.centerLeft,
+            cellPadding: const pw.EdgeInsets.symmetric(
+              horizontal: 3,
+              vertical: 4,
+            ),
+            border: pw.TableBorder.all(
+              color: PdfColors.grey400,
+              width: 0.4,
+            ),
+            columnWidths: resolvedWidths,
+            cellDecoration: (index, data, rowNum) {
+              final itemIndex = rowNum - 1; // header occupies row 0
+              if (itemIndex < 0 || itemIndex >= items.length) {
+                return const pw.BoxDecoration();
+              }
+              final color = _statusRowColor(items[itemIndex].status);
+              if (color == null) {
+                return const pw.BoxDecoration();
+              }
+              return pw.BoxDecoration(color: color);
+            },
           ),
         ],
       ),
@@ -88,147 +170,23 @@ class PdfExportDatasource {
     return path;
   }
 
-  pw.Widget _buildItemsTable({
-    required List<InventoryItem> items,
+  List<String> _rowCells({
+    required InventoryItem item,
     required ReportExportLabels labels,
-    required pw.TextDirection textDirection,
+    required bool isRtl,
   }) {
-    final headers = <String>[
-      labels.code,
-      labels.name,
-      labels.systemMainQuantity,
-      labels.systemSubQuantity,
-      labels.countedMainQuantity,
-      labels.countedSubQuantity,
-      labels.varianceMainQuantity,
-      labels.varianceSubQuantity,
-      labels.status,
+    final cells = <String>[
+      item.itemCode,
+      item.itemName,
+      _formatQuantity(item.systemMainQuantity),
+      _formatQuantity(item.systemSubQuantity),
+      _formatQuantity(item.mainQuantity),
+      _formatQuantity(item.subQuantity),
+      item.isCounted ? _formatSigned(item.differenceMainQuantity) : '-',
+      item.isCounted ? _formatSigned(item.differenceSubQuantity) : '-',
+      labels.statusLabel(item.status),
     ];
-
-    final widths = <int, pw.TableColumnWidth>{
-      0: const pw.FixedColumnWidth(50),
-      1: const pw.FixedColumnWidth(130),
-      2: const pw.FixedColumnWidth(62),
-      3: const pw.FixedColumnWidth(62),
-      4: const pw.FixedColumnWidth(62),
-      5: const pw.FixedColumnWidth(62),
-      6: const pw.FixedColumnWidth(62),
-      7: const pw.FixedColumnWidth(62),
-      8: const pw.FixedColumnWidth(60),
-    };
-
-    final headerCells = [
-      for (final header in headers) _headerCell(header, textDirection),
-    ];
-
-    final bodyRows = <pw.TableRow>[
-      for (final item in items)
-        pw.TableRow(
-          decoration: pw.BoxDecoration(
-            color: _statusRowColor(item.status),
-          ),
-          children: [
-            _bodyCell(item.itemCode, textDirection),
-            _nameCell(item.itemName, textDirection),
-            _bodyCell(_formatQuantity(item.systemMainQuantity), textDirection),
-            _bodyCell(_formatQuantity(item.systemSubQuantity), textDirection),
-            _bodyCell(_formatQuantity(item.mainQuantity), textDirection),
-            _bodyCell(_formatQuantity(item.subQuantity), textDirection),
-            _bodyCell(
-              item.isCounted
-                  ? _formatSigned(item.differenceMainQuantity)
-                  : '-',
-              textDirection,
-              bold: true,
-            ),
-            _bodyCell(
-              item.isCounted
-                  ? _formatSigned(item.differenceSubQuantity)
-                  : '-',
-              textDirection,
-              bold: true,
-            ),
-            _bodyCell(labels.statusLabel(item.status), textDirection),
-          ],
-        ),
-    ];
-
-    final resolvedWidths = labels.isRtl
-        ? <int, pw.TableColumnWidth>{
-            for (var i = 0; i < widths.length; i++)
-              i: widths[widths.length - 1 - i]!,
-          }
-        : widths;
-
-    return pw.Table(
-      border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.4),
-      columnWidths: resolvedWidths,
-      defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
-      children: [
-        pw.TableRow(
-          decoration: const pw.BoxDecoration(color: PdfColors.grey300),
-          children: labels.isRtl ? headerCells.reversed.toList() : headerCells,
-        ),
-        for (final row in bodyRows)
-          pw.TableRow(
-            decoration: row.decoration,
-            children: labels.isRtl
-                ? row.children.reversed.toList()
-                : row.children,
-          ),
-      ],
-    );
-  }
-
-  pw.Widget _headerCell(String text, pw.TextDirection textDirection) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 3, vertical: 6),
-      child: pw.Text(
-        text,
-        style: pw.TextStyle(fontSize: 7.5, fontWeight: pw.FontWeight.bold),
-        textAlign: textDirection == pw.TextDirection.rtl
-            ? pw.TextAlign.right
-            : pw.TextAlign.left,
-        textDirection: textDirection,
-      ),
-    );
-  }
-
-  pw.Widget _bodyCell(
-    String text,
-    pw.TextDirection textDirection, {
-    bool bold = false,
-  }) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 3, vertical: 5),
-      child: pw.Text(
-        text,
-        style: pw.TextStyle(
-          fontSize: 7.5,
-          fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
-        ),
-        textAlign: textDirection == pw.TextDirection.rtl
-            ? pw.TextAlign.right
-            : pw.TextAlign.left,
-        textDirection: textDirection,
-      ),
-    );
-  }
-
-  pw.Widget _nameCell(String text, pw.TextDirection textDirection) {
-    return pw.Container(
-      width: 130,
-      padding: const pw.EdgeInsets.symmetric(horizontal: 3, vertical: 5),
-      child: pw.Text(
-        text,
-        style: const pw.TextStyle(fontSize: 7.5),
-        softWrap: true,
-        textAlign: textDirection == pw.TextDirection.rtl
-            ? pw.TextAlign.right
-            : pw.TextAlign.left,
-        textDirection: textDirection,
-      ),
-    );
+    return isRtl ? cells.reversed.toList(growable: false) : cells;
   }
 
   PdfColor? _statusRowColor(ItemStatus status) {

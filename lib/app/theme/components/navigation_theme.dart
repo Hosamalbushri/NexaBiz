@@ -29,11 +29,11 @@ class AppNavigationThemes {
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
         return AppTypography.textTheme(Brightness.light).labelSmall?.copyWith(
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: selected
-                  ? scheme.primary
-                  : scheme.onSurface.withValues(alpha: 0.62),
-            );
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          color: selected
+              ? scheme.primary
+              : scheme.onSurface.withValues(alpha: 0.62),
+        );
       }),
       iconTheme: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
@@ -55,15 +55,12 @@ class AppNavigationThemes {
       unselectedIconTheme: IconThemeData(
         color: scheme.onSurface.withValues(alpha: 0.62),
       ),
-      selectedLabelTextStyle:
-          AppTypography.textTheme(Brightness.light).labelMedium?.copyWith(
-                color: scheme.primary,
-                fontWeight: FontWeight.w700,
-              ),
-      unselectedLabelTextStyle:
-          AppTypography.textTheme(Brightness.light).labelMedium?.copyWith(
-                color: scheme.onSurface.withValues(alpha: 0.62),
-              ),
+      selectedLabelTextStyle: AppTypography.textTheme(Brightness.light)
+          .labelMedium
+          ?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700),
+      unselectedLabelTextStyle: AppTypography.textTheme(
+        Brightness.light,
+      ).labelMedium?.copyWith(color: scheme.onSurface.withValues(alpha: 0.62)),
     );
   }
 }

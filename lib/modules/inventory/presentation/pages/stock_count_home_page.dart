@@ -1,0 +1,233 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../app/constants/app_constants.dart';
+import '../../../../app/localization/app_localizations.dart';
+import '../../../../app/theme/app_breakpoints.dart';
+import '../../../../app/theme/app_radius.dart';
+import '../../../../app/theme/app_shadows.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/widgets/custom_app_bar.dart';
+import 'inventory_routes.dart';
+
+/// Stock-count service home — grid of count / import / reports (no tabs).
+class StockCountHomePage extends StatelessWidget {
+  const StockCountHomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    final features = <_StockCountFeature>[
+      _StockCountFeature(
+        icon: Icons.fact_check_outlined,
+        title: l10n.inventoryCountTitle,
+        subtitle: l10n.inventoryCountSubtitle,
+        path: InventoryRoutes.count,
+      ),
+      _StockCountFeature(
+        icon: Icons.upload_file_outlined,
+        title: l10n.importPageTitle,
+        subtitle: l10n.selectExcelFile,
+        path: InventoryRoutes.import,
+      ),
+      _StockCountFeature(
+        icon: Icons.assessment_outlined,
+        title: l10n.reportsTitle,
+        subtitle: l10n.exportReport,
+        path: InventoryRoutes.reports,
+      ),
+    ];
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          return;
+        }
+        final router = GoRouter.of(context);
+        if (router.canPop()) {
+          router.pop();
+        } else {
+          router.go(InventoryRoutes.root);
+        }
+      },
+      child: Scaffold(
+        appBar: CustomAppBar(
+          title: l10n.inventoryStockCountService,
+          showBackButton: true,
+          onBack: () {
+            final router = GoRouter.of(context);
+            if (router.canPop()) {
+              router.pop();
+            } else {
+              router.go(InventoryRoutes.root);
+            }
+          },
+        ),
+        body: ListView(
+          padding: const EdgeInsets.all(AppConstants.pagePadding),
+          children: [
+            Text(
+              l10n.inventoryStockCountServiceDescription,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final crossAxisCount = AppBreakpoints.isDesktop(width)
+                    ? 4
+                    : AppBreakpoints.isTablet(width)
+                        ? 3
+                        : 2;
+                final childAspectRatio =
+                    AppBreakpoints.isMobile(width) ? 0.82 : 0.95;
+
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: features.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: AppSpacing.md,
+                    mainAxisSpacing: AppSpacing.md,
+                    childAspectRatio: childAspectRatio,
+                  ),
+                  itemBuilder: (context, index) {
+                    final feature = features[index];
+                    return _StockCountFeatureCard(
+                      icon: feature.icon,
+                      title: feature.title,
+                      subtitle: feature.subtitle,
+                      onTap: () => context.push(feature.path),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StockCountFeature {
+  const _StockCountFeature({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.path,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String path;
+}
+
+class _StockCountFeatureCard extends StatelessWidget {
+  const _StockCountFeatureCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final brightness = theme.brightness;
+
+    return Semantics(
+      button: true,
+      label: title,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.55),
+              ),
+              boxShadow: AppShadows.card(brightness),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          colorScheme.primary.withValues(alpha: 0.16),
+                          colorScheme.secondary.withValues(alpha: 0.10),
+                        ],
+                      ),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: colorScheme.primary.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: SizedBox(
+                      width: 64,
+                      height: 64,
+                      child: Icon(
+                        icon,
+                        color: colorScheme.primary,
+                        size: 32,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                      height: 1.15,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Flexible(
+                    child: Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -43,11 +43,19 @@ Path: `lib/modules/inventory/`
 
 | Area | Routes / entry |
 | --- | --- |
-| Hub | `/inventory` |
-| Count | `/inventory/count` |
-| Search | `/inventory/count/search` |
-| Import | `/inventory/import` |
-| Reports | `/inventory/reports` |
+| Hub | `/inventory` — customizable/reorderable service cards (Stock count first) |
+| Stock count hub | `/inventory/stock-count` — grid of count / import / reports |
+| Count | `/inventory/stock-count/count` |
+| Count details | `/inventory/stock-count/count/details` |
+| Import | `/inventory/stock-count/import` |
+| Reports | `/inventory/stock-count/reports` |
+
+Legacy redirects: `/inventory/count|import|reports` → stock-count paths.
+
+Intra-module IA:
+
+- **Inventory** (platform `AppModule`) exposes customizable service cards (order persisted); currently **Stock count (الجرد)**.
+- **Stock count** owns counting, Excel import, and count reports via a **grid hub** (not tabs).
 
 Capabilities:
 

@@ -17,6 +17,14 @@ Read this file before modifying the project. For full context see [`AI_CONTEXT.m
 - Modules must not depend on unrelated modules.
 - Prefer smallest safe change; no architecture rewrites for one feature.
 
+## Navigation Rules
+
+- One application `GoRouter` only (`appRouterProvider`).
+- Top-level shell destinations (Dashboard / Services / Reports / Settings) are App-owned via `StatefulShellRoute`.
+- Modules own their route trees and register them through `AppModule.routes`.
+- Do not create a second router inside a module.
+- Root exit confirmation belongs to the App shell — not inside business modules.
+
 ## Module Rules
 
 - Business logic lives in the owning module only.
