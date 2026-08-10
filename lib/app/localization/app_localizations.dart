@@ -140,6 +140,390 @@ abstract class AppLocalizations {
   /// **'Count items, import stock lists, and view count reports.'**
   String get inventoryStockCountServiceDescription;
 
+  /// No description provided for @inventoryProductsService.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get inventoryProductsService;
+
+  /// No description provided for @inventoryProductsServiceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage the product catalog, prices, and pack sizes.'**
+  String get inventoryProductsServiceDescription;
+
+  /// No description provided for @productsHubTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get productsHubTitle;
+
+  /// No description provided for @productsHubDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse the catalog, manage barcodes, or import from Excel.'**
+  String get productsHubDescription;
+
+  /// No description provided for @productsListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Product list'**
+  String get productsListTitle;
+
+  /// No description provided for @productsListSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search, add, edit, and delete products.'**
+  String get productsListSubtitle;
+
+  /// No description provided for @productsImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import products'**
+  String get productsImportTitle;
+
+  /// No description provided for @productsImportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import catalog rows from an Excel file.'**
+  String get productsImportSubtitle;
+
+  /// No description provided for @productsBarcodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcodes'**
+  String get productsBarcodeTitle;
+
+  /// No description provided for @productsBarcodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate, scan, preview, and print product barcodes.'**
+  String get productsBarcodeSubtitle;
+
+  /// No description provided for @productsBarcodeSelectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search or scan to select a product.'**
+  String get productsBarcodeSelectHint;
+
+  /// No description provided for @productsBarcodeSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} products'**
+  String productsBarcodeSearchResults(int count);
+
+  /// No description provided for @productsBarcodeNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No products match your search.'**
+  String get productsBarcodeNoResults;
+
+  /// No description provided for @productsBarcodeChangeProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get productsBarcodeChangeProduct;
+
+  /// No description provided for @productsBarcodeHasCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Has barcode'**
+  String get productsBarcodeHasCode;
+
+  /// No description provided for @productsBarcodeNoCode.
+  ///
+  /// In en, this message translates to:
+  /// **'No barcode'**
+  String get productsBarcodeNoCode;
+
+  /// No description provided for @productsBarcodeReplaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace barcode?'**
+  String get productsBarcodeReplaceTitle;
+
+  /// No description provided for @productsBarcodeReplaceMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This product already has a barcode. Generate a new one and save it?'**
+  String get productsBarcodeReplaceMessage;
+
+  /// No description provided for @productsBarcodeSavedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode saved successfully.'**
+  String get productsBarcodeSavedSuccess;
+
+  /// No description provided for @productsBarcodeMissingForPrint.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate or assign a barcode before printing.'**
+  String get productsBarcodeMissingForPrint;
+
+  /// No description provided for @productsBarcodePrint.
+  ///
+  /// In en, this message translates to:
+  /// **'Print'**
+  String get productsBarcodePrint;
+
+  /// No description provided for @productsBarcodeShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get productsBarcodeShare;
+
+  /// No description provided for @productsBarcodeThermalPrint.
+  ///
+  /// In en, this message translates to:
+  /// **'Thermal printer'**
+  String get productsBarcodeThermalPrint;
+
+  /// No description provided for @productsBarcodeThermalComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Thermal printing will be available in a future update.'**
+  String get productsBarcodeThermalComingSoon;
+
+  /// No description provided for @productsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by code, name, or barcode'**
+  String get productsSearchHint;
+
+  /// No description provided for @productsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No products yet'**
+  String get productsEmptyTitle;
+
+  /// No description provided for @productsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a product manually or import an Excel catalog.'**
+  String get productsEmptyMessage;
+
+  /// No description provided for @productsGoToImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to import'**
+  String get productsGoToImport;
+
+  /// No description provided for @productsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add product'**
+  String get productsAdd;
+
+  /// No description provided for @productsViewList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get productsViewList;
+
+  /// No description provided for @productsViewGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get productsViewGrid;
+
+  /// No description provided for @productsViewModeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Change product layout'**
+  String get productsViewModeTooltip;
+
+  /// No description provided for @productsEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit product'**
+  String get productsEdit;
+
+  /// No description provided for @productsDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get productsDelete;
+
+  /// No description provided for @productsDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete product?'**
+  String get productsDeleteConfirmTitle;
+
+  /// No description provided for @productsDeleteConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the product from the catalog. Stock-count data is not changed.'**
+  String get productsDeleteConfirmMessage;
+
+  /// No description provided for @productsSavedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Product saved successfully.'**
+  String get productsSavedSuccess;
+
+  /// No description provided for @productsDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Product deleted.'**
+  String get productsDeletedSuccess;
+
+  /// No description provided for @productsDuplicateCode.
+  ///
+  /// In en, this message translates to:
+  /// **'A product with this item code already exists.'**
+  String get productsDuplicateCode;
+
+  /// No description provided for @productsDuplicateBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'A product with this barcode already exists.'**
+  String get productsDuplicateBarcode;
+
+  /// No description provided for @productsInvalidForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid code, name, pack size, and price.'**
+  String get productsInvalidForm;
+
+  /// No description provided for @productsItemCodeAutoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated automatically and cannot be edited.'**
+  String get productsItemCodeAutoHint;
+
+  /// No description provided for @productsFieldLockedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This field cannot be edited.'**
+  String get productsFieldLockedHint;
+
+  /// No description provided for @price.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get price;
+
+  /// No description provided for @priceRequiredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 12.50'**
+  String get priceRequiredHint;
+
+  /// No description provided for @productsImportPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import products'**
+  String get productsImportPageTitle;
+
+  /// No description provided for @productsImportFormatHintTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Products Excel layout'**
+  String get productsImportFormatHintTitle;
+
+  /// No description provided for @productsImportFormatHintIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'First row = headers. Required columns only. Use .xlsx or .xls.'**
+  String get productsImportFormatHintIntro;
+
+  /// No description provided for @productsImportFormatColPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get productsImportFormatColPrice;
+
+  /// No description provided for @productsImportFormatColPriceAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'Price · Unit Price · السعر'**
+  String get productsImportFormatColPriceAliases;
+
+  /// No description provided for @productsImportFormatColPackAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'Pack Size · Pack · العبوة'**
+  String get productsImportFormatColPackAliases;
+
+  /// No description provided for @productsImportFormatSampleNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Without headers, columns are read as: code, name, pack size, price.'**
+  String get productsImportFormatSampleNote;
+
+  /// No description provided for @productsImportFormatSamplePriceHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get productsImportFormatSamplePriceHeader;
+
+  /// No description provided for @productsImportInsertedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Inserted {count} products'**
+  String productsImportInsertedCount(int count);
+
+  /// No description provided for @productsImportUpdatedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {count} products'**
+  String productsImportUpdatedCount(int count);
+
+  /// No description provided for @productsNoValidRows.
+  ///
+  /// In en, this message translates to:
+  /// **'No valid product rows were found in the file.'**
+  String get productsNoValidRows;
+
+  /// No description provided for @productsScanBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan barcode'**
+  String get productsScanBarcode;
+
+  /// No description provided for @productsGenerateBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get productsGenerateBarcode;
+
+  /// No description provided for @productsGenerateBarcodeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a unique barcode value'**
+  String get productsGenerateBarcodeTooltip;
+
+  /// No description provided for @productsBarcodePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode preview'**
+  String get productsBarcodePreview;
+
+  /// No description provided for @productsBarcodeNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No product found for this barcode.'**
+  String get productsBarcodeNotFound;
+
+  /// No description provided for @productsCameraPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera permission is required to scan barcodes.'**
+  String get productsCameraPermissionDenied;
+
+  /// No description provided for @productsCameraUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera is not available on this device.'**
+  String get productsCameraUnavailable;
+
+  /// No description provided for @productsEnterBarcodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the barcode manually, or use camera scan on Android/iOS after a full app restart.'**
+  String get productsEnterBarcodeHint;
+
   /// No description provided for @inventoryOpenStockCount.
   ///
   /// In en, this message translates to:
@@ -1057,6 +1441,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Quick actions'**
   String get quickActionsTitle;
+
+  /// No description provided for @quickActionsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pinned shortcuts. Customize to add or reorder.'**
+  String get quickActionsSubtitle;
+
+  /// No description provided for @quickActionsCreateProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Create product'**
+  String get quickActionsCreateProduct;
+
+  /// No description provided for @quickActionsCreateProductSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the new product form.'**
+  String get quickActionsCreateProductSubtitle;
+
+  /// No description provided for @quickActionsScanBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan barcode'**
+  String get quickActionsScanBarcode;
+
+  /// No description provided for @quickActionsScanBarcodeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan and show the product on the barcode page.'**
+  String get quickActionsScanBarcodeSubtitle;
+
+  /// No description provided for @quickActionsCustomize.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize'**
+  String get quickActionsCustomize;
+
+  /// No description provided for @quickActionsCustomizeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize quick actions'**
+  String get quickActionsCustomizeTitle;
+
+  /// No description provided for @quickActionsCustomizeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose actions to show, then drag to change their order.'**
+  String get quickActionsCustomizeHint;
+
+  /// No description provided for @quickActionsPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned actions'**
+  String get quickActionsPinned;
+
+  /// No description provided for @quickActionsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available actions'**
+  String get quickActionsAvailable;
+
+  /// No description provided for @quickActionsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get quickActionsAdd;
+
+  /// No description provided for @quickActionsRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get quickActionsRemove;
+
+  /// No description provided for @quickActionsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get quickActionsSave;
+
+  /// No description provided for @quickActionsPinnedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} / {max} pinned'**
+  String quickActionsPinnedCount(int count, int max);
+
+  /// No description provided for @quickActionsMaxReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You can pin up to {max} quick actions.'**
+  String quickActionsMaxReached(int max);
+
+  /// No description provided for @quickActionsEmptyPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'No shortcuts pinned yet. Tap Customize to add some.'**
+  String get quickActionsEmptyPinned;
 
   /// No description provided for @quickActionsEmptyMessage.
   ///

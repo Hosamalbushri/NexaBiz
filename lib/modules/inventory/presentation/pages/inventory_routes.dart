@@ -22,9 +22,21 @@ class InventoryRoutes {
   static const String import = '/inventory/stock-count/import';
   static const String reports = '/inventory/stock-count/reports';
 
+  /// Products service hub (list / import / barcode).
+  static const String products = '/inventory/products';
+
+  static const String productsList = '/inventory/products/list';
+  static const String productsNew = '/inventory/products/new';
+  static const String productsImport = '/inventory/products/import';
+  static const String productsBarcode = '/inventory/products/barcode';
+
+  static String productsEdit(int id) => '/inventory/products/$id/edit';
+
   static void goRoot(BuildContext context) => context.go(root);
 
   static void goStockCount(BuildContext context) => context.go(stockCount);
+
+  static void goProducts(BuildContext context) => context.go(products);
 
   static void pushCount(BuildContext context) => context.push(count);
 
@@ -34,4 +46,18 @@ class InventoryRoutes {
   static void pushImport(BuildContext context) => context.push(import);
 
   static void pushReports(BuildContext context) => context.push(reports);
+
+  static void pushProductsList(BuildContext context) =>
+      context.push(productsList);
+
+  static void pushProductsNew(BuildContext context) => context.push(productsNew);
+
+  static void pushProductsEdit(BuildContext context, int id) =>
+      context.push(productsEdit(id));
+
+  static void pushProductsImport(BuildContext context) =>
+      context.push(productsImport);
+
+  static void pushProductsBarcode(BuildContext context) =>
+      context.push(productsBarcode);
 }

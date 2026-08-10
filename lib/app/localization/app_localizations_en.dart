@@ -32,6 +32,225 @@ class AppLocalizationsEn extends AppLocalizations {
       'Count items, import stock lists, and view count reports.';
 
   @override
+  String get inventoryProductsService => 'Products';
+
+  @override
+  String get inventoryProductsServiceDescription =>
+      'Manage the product catalog, prices, and pack sizes.';
+
+  @override
+  String get productsHubTitle => 'Products';
+
+  @override
+  String get productsHubDescription =>
+      'Browse the catalog, manage barcodes, or import from Excel.';
+
+  @override
+  String get productsListTitle => 'Product list';
+
+  @override
+  String get productsListSubtitle => 'Search, add, edit, and delete products.';
+
+  @override
+  String get productsImportTitle => 'Import products';
+
+  @override
+  String get productsImportSubtitle =>
+      'Import catalog rows from an Excel file.';
+
+  @override
+  String get productsBarcodeTitle => 'Barcodes';
+
+  @override
+  String get productsBarcodeSubtitle =>
+      'Generate, scan, preview, and print product barcodes.';
+
+  @override
+  String get productsBarcodeSelectHint => 'Search or scan to select a product.';
+
+  @override
+  String productsBarcodeSearchResults(int count) {
+    return '$count products';
+  }
+
+  @override
+  String get productsBarcodeNoResults => 'No products match your search.';
+
+  @override
+  String get productsBarcodeChangeProduct => 'Change';
+
+  @override
+  String get productsBarcodeHasCode => 'Has barcode';
+
+  @override
+  String get productsBarcodeNoCode => 'No barcode';
+
+  @override
+  String get productsBarcodeReplaceTitle => 'Replace barcode?';
+
+  @override
+  String get productsBarcodeReplaceMessage =>
+      'This product already has a barcode. Generate a new one and save it?';
+
+  @override
+  String get productsBarcodeSavedSuccess => 'Barcode saved successfully.';
+
+  @override
+  String get productsBarcodeMissingForPrint =>
+      'Generate or assign a barcode before printing.';
+
+  @override
+  String get productsBarcodePrint => 'Print';
+
+  @override
+  String get productsBarcodeShare => 'Share';
+
+  @override
+  String get productsBarcodeThermalPrint => 'Thermal printer';
+
+  @override
+  String get productsBarcodeThermalComingSoon =>
+      'Thermal printing will be available in a future update.';
+
+  @override
+  String get productsSearchHint => 'Search by code, name, or barcode';
+
+  @override
+  String get productsEmptyTitle => 'No products yet';
+
+  @override
+  String get productsEmptyMessage =>
+      'Add a product manually or import an Excel catalog.';
+
+  @override
+  String get productsGoToImport => 'Go to import';
+
+  @override
+  String get productsAdd => 'Add product';
+
+  @override
+  String get productsViewList => 'List';
+
+  @override
+  String get productsViewGrid => 'Grid';
+
+  @override
+  String get productsViewModeTooltip => 'Change product layout';
+
+  @override
+  String get productsEdit => 'Edit product';
+
+  @override
+  String get productsDelete => 'Delete';
+
+  @override
+  String get productsDeleteConfirmTitle => 'Delete product?';
+
+  @override
+  String get productsDeleteConfirmMessage =>
+      'This removes the product from the catalog. Stock-count data is not changed.';
+
+  @override
+  String get productsSavedSuccess => 'Product saved successfully.';
+
+  @override
+  String get productsDeletedSuccess => 'Product deleted.';
+
+  @override
+  String get productsDuplicateCode =>
+      'A product with this item code already exists.';
+
+  @override
+  String get productsDuplicateBarcode =>
+      'A product with this barcode already exists.';
+
+  @override
+  String get productsInvalidForm =>
+      'Enter a valid code, name, pack size, and price.';
+
+  @override
+  String get productsItemCodeAutoHint =>
+      'Generated automatically and cannot be edited.';
+
+  @override
+  String get productsFieldLockedHint => 'This field cannot be edited.';
+
+  @override
+  String get price => 'Price';
+
+  @override
+  String get priceRequiredHint => 'e.g. 12.50';
+
+  @override
+  String get productsImportPageTitle => 'Import products';
+
+  @override
+  String get productsImportFormatHintTitle => 'Products Excel layout';
+
+  @override
+  String get productsImportFormatHintIntro =>
+      'First row = headers. Required columns only. Use .xlsx or .xls.';
+
+  @override
+  String get productsImportFormatColPrice => 'Price';
+
+  @override
+  String get productsImportFormatColPriceAliases =>
+      'Price · Unit Price · السعر';
+
+  @override
+  String get productsImportFormatColPackAliases => 'Pack Size · Pack · العبوة';
+
+  @override
+  String get productsImportFormatSampleNote =>
+      'Without headers, columns are read as: code, name, pack size, price.';
+
+  @override
+  String get productsImportFormatSamplePriceHeader => 'Price';
+
+  @override
+  String productsImportInsertedCount(int count) {
+    return 'Inserted $count products';
+  }
+
+  @override
+  String productsImportUpdatedCount(int count) {
+    return 'Updated $count products';
+  }
+
+  @override
+  String get productsNoValidRows =>
+      'No valid product rows were found in the file.';
+
+  @override
+  String get productsScanBarcode => 'Scan barcode';
+
+  @override
+  String get productsGenerateBarcode => 'Generate';
+
+  @override
+  String get productsGenerateBarcodeTooltip =>
+      'Generate a unique barcode value';
+
+  @override
+  String get productsBarcodePreview => 'Barcode preview';
+
+  @override
+  String get productsBarcodeNotFound => 'No product found for this barcode.';
+
+  @override
+  String get productsCameraPermissionDenied =>
+      'Camera permission is required to scan barcodes.';
+
+  @override
+  String get productsCameraUnavailable =>
+      'Camera is not available on this device.';
+
+  @override
+  String get productsEnterBarcodeHint =>
+      'Enter the barcode manually, or use camera scan on Android/iOS after a full app restart.';
+
+  @override
   String get inventoryOpenStockCount => 'Open stock count';
 
   @override
@@ -513,6 +732,62 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickActionsTitle => 'Quick actions';
+
+  @override
+  String get quickActionsSubtitle =>
+      'Your pinned shortcuts. Customize to add or reorder.';
+
+  @override
+  String get quickActionsCreateProduct => 'Create product';
+
+  @override
+  String get quickActionsCreateProductSubtitle => 'Open the new product form.';
+
+  @override
+  String get quickActionsScanBarcode => 'Scan barcode';
+
+  @override
+  String get quickActionsScanBarcodeSubtitle =>
+      'Scan and show the product on the barcode page.';
+
+  @override
+  String get quickActionsCustomize => 'Customize';
+
+  @override
+  String get quickActionsCustomizeTitle => 'Customize quick actions';
+
+  @override
+  String get quickActionsCustomizeHint =>
+      'Choose actions to show, then drag to change their order.';
+
+  @override
+  String get quickActionsPinned => 'Pinned actions';
+
+  @override
+  String get quickActionsAvailable => 'Available actions';
+
+  @override
+  String get quickActionsAdd => 'Add';
+
+  @override
+  String get quickActionsRemove => 'Remove';
+
+  @override
+  String get quickActionsSave => 'Save';
+
+  @override
+  String quickActionsPinnedCount(int count, int max) {
+    return '$count / $max pinned';
+  }
+
+  @override
+  String quickActionsMaxReached(int max) {
+    return 'You can pin up to $max quick actions.';
+  }
+
+  @override
+  String get quickActionsEmptyPinned =>
+      'No shortcuts pinned yet. Tap Customize to add some.';
 
   @override
   String get quickActionsEmptyMessage =>

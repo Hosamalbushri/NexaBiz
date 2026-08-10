@@ -86,6 +86,9 @@ Adding a module must not require rewriting `core/` or unrelated modules.
 | `syncfusion_flutter_datagrid` | Report data grid |
 | `pdf` | PDF report export |
 | `share_plus` | Share exported files |
+| `drift` / `drift_flutter` / `sqlite3_flutter_libs` | Products catalog SQLite |
+| `barcode_widget` | Code128 barcode preview on product form |
+| `mobile_scanner` | Camera barcode scan (products list + form) |
 
 ### Explicitly not present
 
@@ -166,24 +169,25 @@ UI/providers call use cases / repositories; repositories talk to datasources/Hiv
 
 ### Inventory module (`lib/modules/inventory/`)
 
-Platform module (`id: inventory`). Intra-module **Stock count** service owns count / import / reports under `/inventory/stock-count/...`.
+Platform module (`id: inventory`). Intra-module services: **Stock count** (`/inventory/stock-count/...`) and **Products** (`/inventory/products/...`).
 
 ```text
 inventory/
 ├── inventory_module.dart
 ├── data/
 │   ├── adapters/
-│   ├── datasources/   # excel import/export, pdf export, isolate entry
+│   ├── database/      # Drift InventoryDatabase + products table
+│   ├── datasources/   # stock-count + products excel import (separate), export, pdf
 │   ├── repositories/
 │   └── inventory_hive.dart
 ├── domain/
-│   ├── entities/
+│   ├── entities/      # InventoryItem + Product
 │   ├── models/
 │   ├── repositories/
 │   ├── services/
 │   └── usecases/
 └── presentation/
-    ├── pages/         # includes stock_count_home_page.dart
+    ├── pages/         # stock_count_home, products_home, list/form/import/barcode, barcode scanner
     ├── widgets/
     └── providers/
 ```
@@ -196,7 +200,7 @@ inventory/
 2. Modules must not import other modules.
 3. App may import Core, Shared, and Modules (composition root).
 4. Shared must not import Modules.
-5. Presentation must not open Hive boxes or parse Excel directly.
+5. Presentation must not open Hive boxes, Drift databases, or parse Excel directly.
 6. Prefer extending existing patterns over inventing new ones.
 7. Stub folders (`network`, `errors`, …) are placeholders — do not invent APIs there unless implementing for real.
 
@@ -274,14 +278,16 @@ Avoid circular imports.
   - `StatefulShellRoute.indexedStack` — `/dashboard`, `/services`, `/reports`, `/settings`
   - Module routes from registry (e.g. `/inventory/...`) so bottom nav / rail stay visible
 - Responsive chrome: mobile `CustomBottomNav` (center quick-actions `+`), tablet `NavigationRail` (leading `+`), desktop side panel (tonal add).
-- Quick actions sheet: placeholder for user-customizable shortcuts (`showQuickActionsSheet`).
+- Quick actions sheet: user-pinned shortcuts (create product, scan barcode, inventory routes) with customize + Hive persistence (`quick_action_ids`).
 - `/` redirects to `/dashboard`.
 - Module routes (inside shell chrome), Inventory:
-  - `/inventory` — inventory hub (customizable/reorderable service cards; Stock count first)
+  - `/inventory` — inventory hub (customizable/reorderable service cards; Stock count + Products)
   - `/inventory/stock-count` — stock-count hub (grid: count / import / reports)
   - `/inventory/stock-count/count` (+ `/details`)
   - `/inventory/stock-count/import`
   - `/inventory/stock-count/reports`
+  - `/inventory/products` — products hub (list / barcode / import)
+  - `/inventory/products/list`, `/new`, `/barcode`, `/:id/edit`, `/import`
   - Legacy `/inventory/count|import|reports` redirect into stock-count
 - Module paths leave bottom-nav tabs unselected (Services is active only on `/services`).
 - Exit confirmation: system Back at **Dashboard** root only (`AppExitPopScope`); other shell branches return to Dashboard; module stacks pop normally.
@@ -297,16 +303,19 @@ Navigation helpers: `context.go`, `context.push`, `context.pop`.
 
 | Concern | Implementation |
 | --- | --- |
-| Engine | Hive / Hive Flutter |
-| Init | `HiveInitializer.initialize()` via `AppBootstrap` during splash (idempotent box open) |
+| Engines | Hive (settings + stock-count items) + Drift/SQLite (products) |
+| Init | `HiveInitializer.initialize()` via `AppBootstrap`; Drift `InventoryDatabase` lazy via providers |
 | Platform box | `app_settings` (`HiveBoxes.settings`) |
-| Inventory box | `inventory_items` (`InventoryHive.boxName`) |
+| Inventory box | `inventory_items` (`InventoryHive.boxName`) — stock-count rows |
 | Inventory adapter | `InventoryItemAdapter` typeId `0` |
-| Migrations | **No formal migration system**. Corrupt inventory box is deleted and recreated on open failure |
-| Transactions | **Unknown / Not configured** (Hive put/clear patterns only) |
+| Products DB | Drift table `products` (`item_code`, `name`, `barcode?`, `pack_size`, `price`, timestamps); barcode generate + Code128 preview + camera scan lookup |
+| Migrations | Hive: no formal system (corrupt box deleted). Drift: `schemaVersion` + `MigrationStrategy` |
+| Transactions | Hive put/clear/replaceAll; Drift batch upsert for products import |
 | DAOs | Not used; datasources + repository impl |
 
-Rule: UI never accesses Hive directly.
+Rule: UI never accesses Hive or Drift directly. Stock-count import and products import stay separate.
+
+See ADR-004 (Hive) and ADR-005 (Drift products).
 
 `main.dart` only ensures bindings + module registry overrides; theme/locale load inside bootstrap.
 
@@ -709,7 +718,10 @@ Launcher picks it up automatically via `enabledModules`.
 
 ### Inventory capabilities (present)
 
-- Item persistence (Hive)
+- Item persistence (Hive stock-count + Drift products)
+- Products catalog CRUD + separate Excel import
+- Product barcode generate / Code128 preview / camera scan lookup
+- Products barcode hub page (PDF label print/share; thermal port reserved)
 - Search + counting (main/sub qty, pack size, difference, status)
 - Excel import with validation + isolate parsing + progress
 - Reports: summary cards, filters/tabs, search, Syncfusion chart + DataGrid
@@ -724,7 +736,8 @@ Non-binding product direction (not scheduled in code):
 1. Additional business modules (Sales first candidate)
 2. Formal Core error/logging packages
 3. Test suite (unit for calculators/import; widget/golden optional)
-4. Stronger Hive migrations
+4. Stronger Hive migrations / migrate stock-count to Drift
+5. Link stock-count lines to products by item_code / product id
 5. Optional remote sync / network layer when product requires it
 6. Broader platform targets (iOS/desktop) if added to the repo
 7. Replace remaining legacy widgets with App* equivalents over time

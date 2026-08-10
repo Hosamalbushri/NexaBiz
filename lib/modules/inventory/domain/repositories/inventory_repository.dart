@@ -1,5 +1,6 @@
 import '../entities/inventory_item.dart';
 import '../entities/item_status.dart';
+import '../entities/report_summary.dart';
 import '../models/paged_result.dart';
 
 /// Contract for inventory persistence and queries.
@@ -19,6 +20,12 @@ abstract class InventoryRepository {
   Future<List<InventoryItem>> search(String query);
 
   Future<List<InventoryItem>> filterByStatus(ItemStatus? status);
+
+  /// Cheap item count without materializing the full list.
+  Future<int> countAll();
+
+  /// Single-pass status totals for the reports dashboard.
+  Future<ReportSummary> getReportSummary();
 
   /// Returns one page of items after optional search/status filtering.
   Future<PagedResult<InventoryItem>> getPaged({

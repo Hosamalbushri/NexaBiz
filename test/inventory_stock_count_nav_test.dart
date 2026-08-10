@@ -11,6 +11,7 @@ import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/app/theme/app_theme.dart';
 import 'package:stock_count/modules/inventory/domain/entities/inventory_item.dart';
 import 'package:stock_count/modules/inventory/domain/entities/item_status.dart';
+import 'package:stock_count/modules/inventory/domain/entities/report_summary.dart';
 import 'package:stock_count/modules/inventory/domain/models/paged_result.dart';
 import 'package:stock_count/modules/inventory/domain/repositories/inventory_repository.dart';
 import 'package:stock_count/modules/inventory/inventory_module.dart';
@@ -46,6 +47,12 @@ class _FakeInventoryRepository implements InventoryRepository {
       const [];
 
   @override
+  Future<int> countAll() async => 0;
+
+  @override
+  Future<ReportSummary> getReportSummary() async => const ReportSummary.empty();
+
+  @override
   Future<PagedResult<InventoryItem>> getPaged({
     required int page,
     required int pageSize,
@@ -77,6 +84,12 @@ class _FakeSettingsRepository extends SettingsRepository {
 
   @override
   Future<void> saveDashboardServiceIds(List<String> ids) async {}
+
+  @override
+  Future<List<String>?> loadQuickActionIds() async => null;
+
+  @override
+  Future<void> saveQuickActionIds(List<String> ids) async {}
 }
 
 void main() {

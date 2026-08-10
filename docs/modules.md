@@ -43,26 +43,34 @@ Path: `lib/modules/inventory/`
 
 | Area | Routes / entry |
 | --- | --- |
-| Hub | `/inventory` — customizable/reorderable service cards (Stock count first) |
+| Hub | `/inventory` — customizable/reorderable service cards (Stock count, Products) |
 | Stock count hub | `/inventory/stock-count` — grid of count / import / reports |
 | Count | `/inventory/stock-count/count` |
 | Count details | `/inventory/stock-count/count/details` |
-| Import | `/inventory/stock-count/import` |
+| Stock import | `/inventory/stock-count/import` |
 | Reports | `/inventory/stock-count/reports` |
+| Products hub | `/inventory/products` — grid of list / barcode / import |
+| Product list | `/inventory/products/list` |
+| Product form | `/inventory/products/new`, `/inventory/products/:id/edit` |
+| Products barcode | `/inventory/products/barcode` — generate, scan, preview, print/share |
+| Products import | `/inventory/products/import` |
 
 Legacy redirects: `/inventory/count|import|reports` → stock-count paths.
 
 Intra-module IA:
 
-- **Inventory** (platform `AppModule`) exposes customizable service cards (order persisted); currently **Stock count (الجرد)**.
-- **Stock count** owns counting, Excel import, and count reports via a **grid hub** (not tabs).
+- **Inventory** (platform `AppModule`) exposes customizable service cards (order persisted): **Stock count (الجرد)** and **Products (المنتجات)**.
+- **Stock count** owns counting, Excel import (quantities), and count reports via a **grid hub**.
+- **Products** owns catalog CRUD + barcode hub (generate / scan / PDF label print-share) + separate Excel import (code, name, pack, price) on **Drift/SQLite**.
 
 Capabilities:
 
-- Hive persistence (`inventory_items`)
+- Hive persistence (`inventory_items`) for stock-count rows
+- Drift persistence (`products`) for the product catalog
+- Product barcode hub: generate, scan lookup, Code128 preview, PDF print/share (thermal printer port reserved)
 - Counting with main/sub quantities + pack-size conversion
 - Status: matched / shortage / overage / not counted
-- Excel import (isolate + validation + progress)
+- Separate Excel imports for stock count vs products
 - Reports (summary, filters, search, Syncfusion chart + DataGrid)
 - Excel + PDF export + share
 

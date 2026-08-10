@@ -183,23 +183,26 @@ void main() {
     expect(find.text('الخدمات'), findsWidgets);
   });
 
-  testWidgets('quick actions add opens placeholder sheet', (tester) async {
+  testWidgets('quick actions add opens pinned shortcuts and customize',
+      (tester) async {
     final router = buildTestRouter();
     await tester.pumpWidget(wrapRouter(router));
     await settle(tester);
 
     expect(find.byKey(kQuickActionsNavButtonKey), findsOneWidget);
     await tester.tap(find.byKey(kQuickActionsNavButtonKey));
-    await settle(tester);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Quick actions'), findsWidgets);
     expect(
-      find.text(
-        'Pin shortcuts here for faster access. You will be able to customize them later.',
-      ),
+      find.text('Your pinned shortcuts. Customize to add or reorder.'),
       findsOneWidget,
     );
-    expect(find.text('Add action'), findsOneWidget);
+    expect(find.text('Create product'), findsOneWidget);
+    expect(find.text('Scan barcode'), findsOneWidget);
+    expect(find.text('Customize'), findsWidgets);
   });
 
   testWidgets('bottom nav remains visible on inventory module routes', (
@@ -223,6 +226,8 @@ void main() {
 }
 
 class _FakeSettingsRepository extends SettingsRepository {
+  List<String>? quickActionIds;
+
   @override
   Future<List<String>?> loadDashboardServiceIds() async {
     return [InventoryModule.moduleId];
@@ -238,4 +243,12 @@ class _FakeSettingsRepository extends SettingsRepository {
 
   @override
   Future<void> saveInventoryServiceIds(List<String> ids) async {}
+
+  @override
+  Future<List<String>?> loadQuickActionIds() async => quickActionIds;
+
+  @override
+  Future<void> saveQuickActionIds(List<String> ids) async {
+    quickActionIds = ids;
+  }
 }

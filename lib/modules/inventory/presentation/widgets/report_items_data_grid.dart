@@ -70,7 +70,8 @@ class _ReportItemsDataGridState extends State<ReportItemsDataGrid> {
       child: Column(
         children: [
           Expanded(
-            child: SfDataGrid(
+            child: RepaintBoundary(
+              child: SfDataGrid(
               source: _source,
               allowSorting: false,
               rowHeight: 52,
@@ -105,6 +106,7 @@ class _ReportItemsDataGridState extends State<ReportItemsDataGrid> {
                   label: _header(context, localization.status),
                 ),
               ],
+            ),
             ),
           ),
           const Divider(height: 1),

@@ -2,76 +2,87 @@
 
 ## Technology
 
-- **Hive** + **hive_flutter**
-- No SQL database is configured
+- **Hive** + **hive_flutter** — platform settings and stock-count items
+- **Drift** + **SQLite** (`sqlite3_flutter_libs`) — inventory products catalog
 - No remote database is configured
+
+See [ADR-004](adr/ADR-004-local-database.md) and [ADR-005](adr/ADR-005-drift-products.md).
 
 ## Initialization
 
-`lib/main.dart` calls:
+Platform (splash / `AppBootstrap`):
 
-```dart
-await HiveInitializer.initialize();
-```
+1. `HiveInitializer.initialize()` → `Hive.initFlutter()` + open `app_settings`
 
-`HiveInitializer` (`lib/core/database/hive_initializer.dart`):
+Inventory module (lazy on first access):
 
-1. `Hive.initFlutter()`
-2. Opens platform settings box `app_settings`
+1. `InventoryHive.openBox()` → `inventory_items`
+2. `InventoryDatabase` via Drift → SQLite file for products
 
-## Boxes
+## Hive boxes
 
 | Box name | Owner | Contents |
 | --- | --- | --- |
-| `app_settings` | App / Core constants | Theme mode, locale (`SettingsRepository`) |
-| `inventory_items` | Inventory module | `InventoryItem` entities |
+| `app_settings` | App / Core | Theme mode, locale, dashboard/inventory service pins |
+| `inventory_items` | Inventory module | Stock-count `InventoryItem` entities |
 
 Constants:
 
 - Platform: `HiveBoxes.settings` in `lib/core/database/hive_boxes.dart`
 - Inventory: `InventoryHive.boxName` in `lib/modules/inventory/data/inventory_hive.dart`
 
-## Inventory persistence
-
-- Adapter: `InventoryItemAdapter` (`typeId: 0`)
-- Open path: `InventoryHive.openBox()`
-- On open failure (corrupt/incompatible data): box is **deleted from disk** and recreated
-
-### Entity fields persisted
+### Stock-count entity fields (Hive)
 
 `itemCode`, `itemName`, `barcode`, `packSize`, `systemQuantity`, `actualQuantity`, `mainQuantity`, `subQuantity`
 
-Derived (not stored): `difference`, `status`, `availableQuantity`, `isCounted`
+## Drift — products
+
+- Database class: `InventoryDatabase` in `lib/modules/inventory/data/database/`
+- Table: `products`
+
+| Column | Notes |
+| --- | --- |
+| `id` | INTEGER PK |
+| `item_code` | UNIQUE NOT NULL |
+| `name` | NOT NULL |
+| `barcode` | UNIQUE when set (nullable) |
+| `pack_size` | INTEGER NOT NULL |
+| `price` | REAL NOT NULL |
+| `created_at` / `updated_at` | epoch ms |
+
+Products Excel import upserts by `item_code` and does **not** write Hive stock-count data. Stock-count import does **not** write products.
 
 ## Repository pattern
 
-- Contract: `InventoryRepository` (domain)
-- Implementation: `InventoryRepositoryImpl` (data)
-- UI/providers depend on the contract via Riverpod
+- Stock count: `InventoryRepository` → Hive
+- Products: `ProductRepository` → Drift
 
-**Rule:** UI must never open Hive boxes directly.
+**Rule:** UI must never open Hive boxes or the Drift database directly.
 
 ## Migrations
 
-**Unknown / Not configured** as a formal migration framework.
+### Hive
 
-Practical rules:
+**Unknown / Not configured** as a formal framework. Prefer additive adapter fields; document changes here.
 
-1. Prefer additive adapter fields with safe defaults.
-2. Changing typeIds / field indexes can wipe data (current recovery deletes the box).
-3. Document any schema change here and in an ADR when significant.
-4. Do not rename boxes casually.
+### Drift
+
+Use `schemaVersion` and `MigrationStrategy` on `InventoryDatabase`. Document each bump here.
+
+Current products schema version: **1**.
 
 ## Transactions
 
-No explicit Hive transaction API usage found. Writes use `put` / `clear` / `replaceAll` style operations.
+- Hive: `put` / `clear` / `replaceAll`
+- Drift: batch upserts for products import; single-row insert/update/delete for CRUD
 
 ## Validation
 
-- Domain counting validation: `CountingCalculator`
-- Import validation: `ExcelImportDatasource` + `ImportValidationException`
-- Adapter coerces numeric types defensively when reading legacy values
+- Domain counting: `CountingCalculator`
+- Stock-count import: `ExcelImportDatasource` + `ImportValidationException`
+- Products import: `ProductExcelImportDatasource` (required: code, name, pack size, price)
+- Adapter / Drift coerce types defensively where needed
 
 ## Settings storage keys
 
-`SettingsKeys.themeMode`, `SettingsKeys.locale` in `settings_repository.dart`.
+`SettingsKeys.themeMode`, `SettingsKeys.locale`, dashboard/inventory service id lists in `settings_repository.dart`.

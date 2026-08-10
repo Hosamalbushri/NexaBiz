@@ -34,6 +34,13 @@ List<InventoryServiceDefinition> inventoryServiceCatalog() {
       titleBuilder: _stockCountTitle,
       subtitleBuilder: _stockCountSubtitle,
     ),
+    InventoryServiceDefinition(
+      id: 'products',
+      icon: Icons.inventory_2_outlined,
+      path: InventoryRoutes.products,
+      titleBuilder: _productsTitle,
+      subtitleBuilder: _productsSubtitle,
+    ),
   ];
 }
 
@@ -42,6 +49,11 @@ String _stockCountTitle(AppLocalizations l10n) =>
 
 String _stockCountSubtitle(AppLocalizations l10n) =>
     l10n.inventoryStockCountServiceDescription;
+
+String _productsTitle(AppLocalizations l10n) => l10n.inventoryProductsService;
+
+String _productsSubtitle(AppLocalizations l10n) =>
+    l10n.inventoryProductsServiceDescription;
 
 InventoryServiceDefinition? findInventoryServiceById(String id) {
   for (final service in inventoryServiceCatalog()) {

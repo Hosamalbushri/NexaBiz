@@ -13,8 +13,7 @@ final countSearchPageIndexProvider = StateProvider.autoDispose<int>((ref) => 0);
 /// One page of search results from the repository (avoids binding the full list).
 final pagedCountSearchProvider =
     FutureProvider.autoDispose<PagedResult<InventoryItem>>((ref) async {
-  // Refresh when inventory data changes (import / save).
-  ref.watch(inventoryItemsProvider);
+  ref.watch(inventoryRevisionProvider);
 
   final page = ref.watch(countSearchPageIndexProvider);
   final query = ref.watch(countSearchQueryProvider);

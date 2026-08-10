@@ -15,31 +15,41 @@ Future<T?> showAppBottomSheet<T>({
     isScrollControlled: isScrollControlled,
     useSafeArea: true,
     builder: (context) {
+      final media = MediaQuery.of(context);
+      final maxHeight = media.size.height -
+          media.viewPadding.vertical -
+          media.viewInsets.bottom;
+
       return Padding(
         padding: EdgeInsets.only(
           left: AppSpacing.md,
           right: AppSpacing.md,
           top: AppSpacing.md,
-          bottom: MediaQuery.viewInsetsOf(context).bottom + AppSpacing.md,
+          bottom: media.viewInsets.bottom + AppSpacing.md,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (title != null) ...[
-              Center(
-                child: Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-            ],
-            child,
-          ],
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (title != null) ...[
+                  Center(
+                    child: Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                child,
+              ],
+            ),
+          ),
         ),
       ).animate().fadeIn(duration: 160.ms).moveY(
             begin: 12,

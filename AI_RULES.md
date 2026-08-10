@@ -52,9 +52,10 @@ Read this file before modifying the project. For full context see [`AI_CONTEXT.m
 ## Database Rules
 
 - Platform settings: Hive box `app_settings` via `SettingsRepository`.
-- Inventory items: Hive box `inventory_items` owned by the Inventory module.
-- UI must never open Hive boxes directly.
-- Schema/adapter changes require documented migration notes.
+- Stock-count items: Hive box `inventory_items` owned by the Inventory module.
+- Products catalog: Drift/SQLite via `InventoryDatabase` / `ProductRepository`.
+- UI must never open Hive boxes or Drift databases directly.
+- Schema/adapter/migration changes require documented notes (`docs/database.md`, ADRs).
 
 ## Dependency Rules
 

@@ -16,7 +16,6 @@ import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/entities/item_status.dart';
 import '../providers/count_search_provider.dart';
-import '../providers/inventory_providers.dart';
 import '../providers/quantity_entry_provider.dart';
 import '../providers/selected_item_provider.dart';
 import '../widgets/search_items_data_grid.dart';
@@ -67,8 +66,7 @@ class _InventorySearchPageState extends ConsumerState<InventorySearchPage> {
     final localization = AppLocalizations.of(context);
     final pagedAsync = ref.watch(pagedCountSearchProvider);
     final pageIndex = ref.watch(countSearchPageIndexProvider);
-    final itemsAsync = ref.watch(inventoryItemsProvider);
-    final hasInventory = (itemsAsync.valueOrNull?.isNotEmpty ?? false);
+    final searchQuery = ref.watch(countSearchQueryProvider);
 
     final body = Column(
         children: [
@@ -103,7 +101,7 @@ class _InventorySearchPageState extends ConsumerState<InventorySearchPage> {
                 ),
                 data: (paged) {
                   if (paged.totalCount == 0) {
-                    if (!hasInventory) {
+                    if (searchQuery.isEmpty) {
                       return AppEmptyState(
                         title: localization.inventoryEmptyNeedsImportTitle,
                         subtitle:

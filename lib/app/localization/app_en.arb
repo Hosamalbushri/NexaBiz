@@ -7,6 +7,91 @@
   "moduleInventoryDescription": "Inventory services including stock count, and more over time.",
   "inventoryStockCountService": "Stock count",
   "inventoryStockCountServiceDescription": "Count items, import stock lists, and view count reports.",
+  "inventoryProductsService": "Products",
+  "inventoryProductsServiceDescription": "Manage the product catalog, prices, and pack sizes.",
+  "productsHubTitle": "Products",
+  "productsHubDescription": "Browse the catalog, manage barcodes, or import from Excel.",
+  "productsListTitle": "Product list",
+  "productsListSubtitle": "Search, add, edit, and delete products.",
+  "productsImportTitle": "Import products",
+  "productsImportSubtitle": "Import catalog rows from an Excel file.",
+  "productsBarcodeTitle": "Barcodes",
+  "productsBarcodeSubtitle": "Generate, scan, preview, and print product barcodes.",
+  "productsBarcodeSelectHint": "Search or scan to select a product.",
+  "productsBarcodeSearchResults": "{count} products",
+  "@productsBarcodeSearchResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "productsBarcodeNoResults": "No products match your search.",
+  "productsBarcodeChangeProduct": "Change",
+  "productsBarcodeHasCode": "Has barcode",
+  "productsBarcodeNoCode": "No barcode",
+  "productsBarcodeReplaceTitle": "Replace barcode?",
+  "productsBarcodeReplaceMessage": "This product already has a barcode. Generate a new one and save it?",
+  "productsBarcodeSavedSuccess": "Barcode saved successfully.",
+  "productsBarcodeMissingForPrint": "Generate or assign a barcode before printing.",
+  "productsBarcodePrint": "Print",
+  "productsBarcodeShare": "Share",
+  "productsBarcodeThermalPrint": "Thermal printer",
+  "productsBarcodeThermalComingSoon": "Thermal printing will be available in a future update.",
+  "productsSearchHint": "Search by code, name, or barcode",
+  "productsEmptyTitle": "No products yet",
+  "productsEmptyMessage": "Add a product manually or import an Excel catalog.",
+  "productsGoToImport": "Go to import",
+  "productsAdd": "Add product",
+  "productsViewList": "List",
+  "productsViewGrid": "Grid",
+  "productsViewModeTooltip": "Change product layout",
+  "productsEdit": "Edit product",
+  "productsDelete": "Delete",
+  "productsDeleteConfirmTitle": "Delete product?",
+  "productsDeleteConfirmMessage": "This removes the product from the catalog. Stock-count data is not changed.",
+  "productsSavedSuccess": "Product saved successfully.",
+  "productsDeletedSuccess": "Product deleted.",
+  "productsDuplicateCode": "A product with this item code already exists.",
+  "productsDuplicateBarcode": "A product with this barcode already exists.",
+  "productsInvalidForm": "Enter a valid code, name, pack size, and price.",
+  "productsItemCodeAutoHint": "Generated automatically and cannot be edited.",
+  "productsFieldLockedHint": "This field cannot be edited.",
+  "price": "Price",
+  "priceRequiredHint": "e.g. 12.50",
+  "productsImportPageTitle": "Import products",
+  "productsImportFormatHintTitle": "Products Excel layout",
+  "productsImportFormatHintIntro": "First row = headers. Required columns only. Use .xlsx or .xls.",
+  "productsImportFormatColPrice": "Price",
+  "productsImportFormatColPriceAliases": "Price · Unit Price · السعر",
+  "productsImportFormatColPackAliases": "Pack Size · Pack · العبوة",
+  "productsImportFormatSampleNote": "Without headers, columns are read as: code, name, pack size, price.",
+  "productsImportFormatSamplePriceHeader": "Price",
+  "productsImportInsertedCount": "Inserted {count} products",
+  "@productsImportInsertedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "productsImportUpdatedCount": "Updated {count} products",
+  "@productsImportUpdatedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "productsNoValidRows": "No valid product rows were found in the file.",
+  "productsScanBarcode": "Scan barcode",
+  "productsGenerateBarcode": "Generate",
+  "productsGenerateBarcodeTooltip": "Generate a unique barcode value",
+  "productsBarcodePreview": "Barcode preview",
+  "productsBarcodeNotFound": "No product found for this barcode.",
+  "productsCameraPermissionDenied": "Camera permission is required to scan barcodes.",
+  "productsCameraUnavailable": "Camera is not available on this device.",
+  "productsEnterBarcodeHint": "Enter the barcode manually, or use camera scan on Android/iOS after a full app restart.",
   "inventoryOpenStockCount": "Open stock count",
   "inventoryCustomizeServices": "Customize",
   "inventoryCustomizeServicesHint": "Choose services to show, then drag to change their order.",
@@ -181,6 +266,39 @@
   "navigationServices": "Services",
   "navigationReports": "Reports",
   "quickActionsTitle": "Quick actions",
+  "quickActionsSubtitle": "Your pinned shortcuts. Customize to add or reorder.",
+  "quickActionsCreateProduct": "Create product",
+  "quickActionsCreateProductSubtitle": "Open the new product form.",
+  "quickActionsScanBarcode": "Scan barcode",
+  "quickActionsScanBarcodeSubtitle": "Scan and show the product on the barcode page.",
+  "quickActionsCustomize": "Customize",
+  "quickActionsCustomizeTitle": "Customize quick actions",
+  "quickActionsCustomizeHint": "Choose actions to show, then drag to change their order.",
+  "quickActionsPinned": "Pinned actions",
+  "quickActionsAvailable": "Available actions",
+  "quickActionsAdd": "Add",
+  "quickActionsRemove": "Remove",
+  "quickActionsSave": "Save",
+  "quickActionsPinnedCount": "{count} / {max} pinned",
+  "@quickActionsPinnedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quickActionsMaxReached": "You can pin up to {max} quick actions.",
+  "@quickActionsMaxReached": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quickActionsEmptyPinned": "No shortcuts pinned yet. Tap Customize to add some.",
   "quickActionsEmptyMessage": "Pin shortcuts here for faster access. You will be able to customize them later.",
   "quickActionsAddLabel": "Add action",
   "quickActionsComingSoon": "Quick action customization is coming soon.",

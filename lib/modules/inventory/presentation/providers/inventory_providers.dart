@@ -57,12 +57,28 @@ final replaceInventoryItemsProvider = Provider<ReplaceInventoryItems>((ref) {
   return ReplaceInventoryItems(ref.watch(inventoryRepositoryProvider));
 });
 
+/// Lightweight invalidation for count/search/reports pages — avoids rebuilding
+/// from a full Hive `watchAll()` stream on every mutation.
+final inventoryRevisionProvider = StateProvider<int>((ref) => 0);
+
+void bumpInventoryRevision(Ref ref) {
+  ref.read(inventoryRevisionProvider.notifier).state++;
+}
+
+void bumpInventoryRevisionFromWidget(WidgetRef ref) {
+  ref.read(inventoryRevisionProvider.notifier).state++;
+}
+
+/// Full catalog stream — prefer [inventoryRevisionProvider] + paged queries
+/// for list UIs. Kept for callers that still need a live full list.
 final inventoryItemsProvider =
-    StreamProvider.autoDispose<List<InventoryItem>>((ref) {
+    StreamProvider<List<InventoryItem>>((ref) {
   return ref.watch(watchInventoryItemsProvider).call();
 });
 
-final reportSummaryProvider = Provider.autoDispose<ReportSummary>((ref) {
-  final items = ref.watch(inventoryItemsProvider).valueOrNull ?? const [];
-  return ReportSummary.fromItems(items);
+/// Report KPIs without materializing a full `List` in providers first.
+final reportSummaryProvider =
+    FutureProvider.autoDispose<ReportSummary>((ref) async {
+  ref.watch(inventoryRevisionProvider);
+  return ref.read(inventoryRepositoryProvider).getReportSummary();
 });

@@ -7,6 +7,91 @@
   "moduleInventoryDescription": "خدمات المخزون بما فيها الجرد، والمزيد لاحقاً.",
   "inventoryStockCountService": "الجرد",
   "inventoryStockCountServiceDescription": "عدّ الأصناف واستيراد قوائم المخزون وعرض تقارير الجرد.",
+  "inventoryProductsService": "المنتجات",
+  "inventoryProductsServiceDescription": "إدارة كتالوج المنتجات والأسعار وأحجام العبوة.",
+  "productsHubTitle": "المنتجات",
+  "productsHubDescription": "استعرض الكتالوج أو أدِر الباركود أو استورد من Excel.",
+  "productsListTitle": "قائمة المنتجات",
+  "productsListSubtitle": "ابحث وأضف وعدّل واحذف المنتجات.",
+  "productsImportTitle": "استيراد المنتجات",
+  "productsImportSubtitle": "استورد صفوف الكتالوج من ملف Excel.",
+  "productsBarcodeTitle": "الباركود",
+  "productsBarcodeSubtitle": "توليد ومسح ومعاينة وطباعة باركود المنتجات.",
+  "productsBarcodeSelectHint": "ابحث أو امسح لاختيار منتج.",
+  "productsBarcodeSearchResults": "{count} منتجاً",
+  "@productsBarcodeSearchResults": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "productsBarcodeNoResults": "لا توجد منتجات مطابقة للبحث.",
+  "productsBarcodeChangeProduct": "تغيير",
+  "productsBarcodeHasCode": "يوجد باركود",
+  "productsBarcodeNoCode": "بدون باركود",
+  "productsBarcodeReplaceTitle": "استبدال الباركود؟",
+  "productsBarcodeReplaceMessage": "هذا المنتج لديه باركود بالفعل. هل تريد توليد باركود جديد وحفظه؟",
+  "productsBarcodeSavedSuccess": "تم حفظ الباركود بنجاح.",
+  "productsBarcodeMissingForPrint": "ولّد أو عيّن باركوداً قبل الطباعة.",
+  "productsBarcodePrint": "طباعة",
+  "productsBarcodeShare": "مشاركة",
+  "productsBarcodeThermalPrint": "طابعة حرارية",
+  "productsBarcodeThermalComingSoon": "الطباعة الحرارية ستتوفر في تحديث لاحق.",
+  "productsSearchHint": "ابحث بالرمز أو الاسم أو الباركود",
+  "productsEmptyTitle": "لا توجد منتجات بعد",
+  "productsEmptyMessage": "أضف منتجاً يدوياً أو استورد كتالوج Excel.",
+  "productsGoToImport": "الذهاب للاستيراد",
+  "productsAdd": "إضافة منتج",
+  "productsViewList": "قائمة",
+  "productsViewGrid": "شبكة",
+  "productsViewModeTooltip": "تغيير عرض المنتجات",
+  "productsEdit": "تعديل منتج",
+  "productsDelete": "حذف",
+  "productsDeleteConfirmTitle": "حذف المنتج؟",
+  "productsDeleteConfirmMessage": "سيُزال المنتج من الكتالوج. بيانات الجرد لن تتأثر.",
+  "productsSavedSuccess": "تم حفظ المنتج بنجاح.",
+  "productsDeletedSuccess": "تم حذف المنتج.",
+  "productsDuplicateCode": "يوجد منتج بنفس رمز الصنف.",
+  "productsDuplicateBarcode": "يوجد منتج بنفس الباركود.",
+  "productsInvalidForm": "أدخل رمزاً واسماً وحجم عبوة وسعراً صالحاً.",
+  "productsItemCodeAutoHint": "يُنشأ تلقائياً ولا يمكن تعديله.",
+  "productsFieldLockedHint": "لا يمكن تعديل هذا الحقل.",
+  "price": "السعر",
+  "priceRequiredHint": "مثال: 12.50",
+  "productsImportPageTitle": "استيراد المنتجات",
+  "productsImportFormatHintTitle": "تخطيط Excel للمنتجات",
+  "productsImportFormatHintIntro": "الصف الأول = عناوين. الأعمدة الأربعة إلزامية. استخدم .xlsx أو .xls.",
+  "productsImportFormatColPrice": "السعر",
+  "productsImportFormatColPriceAliases": "Price · Unit Price · السعر",
+  "productsImportFormatColPackAliases": "Pack Size · Pack · العبوة",
+  "productsImportFormatSampleNote": "بدون عناوين تُقرأ الأعمدة كـ: رمز، اسم، عبوة، سعر.",
+  "productsImportFormatSamplePriceHeader": "السعر",
+  "productsImportInsertedCount": "أُضيف {count} منتجاً",
+  "@productsImportInsertedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "productsImportUpdatedCount": "حُدّث {count} منتجاً",
+  "@productsImportUpdatedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "productsNoValidRows": "لم يُعثر على صفوف منتجات صالحة في الملف.",
+  "productsScanBarcode": "مسح الباركود",
+  "productsGenerateBarcode": "توليد",
+  "productsGenerateBarcodeTooltip": "توليد قيمة باركود فريدة",
+  "productsBarcodePreview": "معاينة الباركود",
+  "productsBarcodeNotFound": "لم يُعثر على منتج بهذا الباركود.",
+  "productsCameraPermissionDenied": "يلزم إذن الكاميرا لمسح الباركود.",
+  "productsCameraUnavailable": "الكاميرا غير متاحة على هذا الجهاز.",
+  "productsEnterBarcodeHint": "أدخل الباركود يدوياً، أو استخدم المسح بالكاميرا على Android/iOS بعد إعادة تشغيل التطبيق بالكامل.",
   "inventoryOpenStockCount": "فتح الجرد",
   "inventoryCustomizeServices": "تخصيص",
   "inventoryCustomizeServicesHint": "اختر الخدمات التي تظهر، ثم اسحب لإعادة ترتيبها.",
@@ -181,6 +266,39 @@
   "navigationServices": "الخدمات",
   "navigationReports": "التقارير",
   "quickActionsTitle": "عمليات سريعة",
+  "quickActionsSubtitle": "اختصاراتك المثبتة. خصّص للإضافة أو إعادة الترتيب.",
+  "quickActionsCreateProduct": "إنشاء منتج",
+  "quickActionsCreateProductSubtitle": "فتح نموذج منتج جديد.",
+  "quickActionsScanBarcode": "مسح باركود",
+  "quickActionsScanBarcodeSubtitle": "امسح واعرض المنتج في صفحة الباركود.",
+  "quickActionsCustomize": "تخصيص",
+  "quickActionsCustomizeTitle": "تخصيص العمليات السريعة",
+  "quickActionsCustomizeHint": "اختر العمليات التي تظهر، ثم اسحب لإعادة ترتيبها.",
+  "quickActionsPinned": "العمليات المثبتة",
+  "quickActionsAvailable": "العمليات المتاحة",
+  "quickActionsAdd": "إضافة",
+  "quickActionsRemove": "إزالة",
+  "quickActionsSave": "حفظ",
+  "quickActionsPinnedCount": "{count} / {max} مثبتة",
+  "@quickActionsPinnedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quickActionsMaxReached": "يمكنك تثبيت حتى {max} عمليات سريعة.",
+  "@quickActionsMaxReached": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "quickActionsEmptyPinned": "لا توجد اختصارات مثبتة بعد. اضغط تخصيص لإضافتها.",
   "quickActionsEmptyMessage": "ثبّت اختصارات هنا للوصول الأسرع. ستتمكن من تخصيصها لاحقاً.",
   "quickActionsAddLabel": "إضافة عملية",
   "quickActionsComingSoon": "تخصيص العمليات السريعة قريباً.",

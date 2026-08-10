@@ -69,11 +69,11 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context);
-    final summary = ref.watch(reportSummaryProvider);
-    final itemsAsync = ref.watch(inventoryItemsProvider);
+    final summaryAsync = ref.watch(reportSummaryProvider);
     final pagedAsync = ref.watch(pagedReportItemsProvider);
     final exportState = ref.watch(reportExportProvider);
     final pageIndex = ref.watch(reportPageIndexProvider);
+    final searchQuery = ref.watch(reportsSearchQueryProvider);
 
     final filterTabBar = TabBar(
       controller: _tabController,
@@ -99,21 +99,30 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
       isLoading: exportState.isLoading,
     );
 
-    final body = itemsAsync.when(
+    final body = summaryAsync.when(
         loading: () => const AppLoading(style: AppLoadingStyle.skeletonList),
         error: (error, _) => AppErrorState(
           message: error.toString(),
-          onRetry: () => ref.invalidate(inventoryItemsProvider),
+          onRetry: () {
+            bumpInventoryRevisionFromWidget(ref);
+            ref.invalidate(reportSummaryProvider);
+            ref.invalidate(pagedReportItemsProvider);
+          },
         ),
-        data: (_) {
+        data: (summary) {
           return Column(
             children: [
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: () async {
-                    ref.invalidate(inventoryItemsProvider);
+                    bumpInventoryRevisionFromWidget(ref);
+                    await ref.read(reportSummaryProvider.future);
+                    await ref.read(pagedReportItemsProvider.future);
                   },
                   child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
                     padding: const EdgeInsets.all(AppConstants.pagePadding),
                     children: [
                       LayoutBuilder(
@@ -201,7 +210,8 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
                           ),
                           data: (paged) {
                             if (paged.totalCount == 0) {
-                              if (summary.totalItems == 0) {
+                              if (summary.totalItems == 0 &&
+                                  searchQuery.trim().isEmpty) {
                                 return AppEmptyState(
                                   title: localization
                                       .inventoryEmptyNeedsImportTitle,
@@ -295,7 +305,10 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
   Future<void> _showExportOptions() async {
     final localization = AppLocalizations.of(context);
     final validationError =
-        ref.read(reportExportProvider.notifier).validateBeforeExport();
+        await ref.read(reportExportProvider.notifier).validateBeforeExport();
+    if (!mounted) {
+      return;
+    }
     if (validationError != null) {
       showAppSnackBar(
         context,

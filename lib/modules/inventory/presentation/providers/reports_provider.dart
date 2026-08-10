@@ -25,32 +25,10 @@ final reportPageIndexProvider = StateProvider.autoDispose<int>((ref) {
   return 0;
 });
 
-/// Full filtered list for export only.
-final filteredReportItemsProvider =
-    Provider.autoDispose<List<InventoryItem>>((ref) {
-  final items = ref.watch(inventoryItemsProvider).valueOrNull ?? const [];
-  final query = ref.watch(reportsSearchQueryProvider).trim().toLowerCase();
-  final filter = ref.watch(reportsSelectedFilterProvider);
-
-  Iterable<InventoryItem> filtered = items;
-  final status = filter.status;
-  if (status != null) {
-    filtered = filtered.where((item) => item.status == status);
-  }
-  if (query.isNotEmpty) {
-    filtered = filtered.where((item) {
-      return item.itemName.toLowerCase().contains(query) ||
-          item.itemCode.toLowerCase().contains(query) ||
-          (item.barcode?.toLowerCase().contains(query) ?? false);
-    });
-  }
-  return filtered.toList(growable: false);
-});
-
 /// Loads one page of report rows (does not bind the full list to the grid).
 final pagedReportItemsProvider =
     FutureProvider.autoDispose<PagedResult<InventoryItem>>((ref) async {
-  ref.watch(inventoryItemsProvider);
+  ref.watch(inventoryRevisionProvider);
 
   final page = ref.watch(reportPageIndexProvider);
   final query = ref.watch(reportsSearchQueryProvider);
@@ -69,21 +47,25 @@ class ReportExportNotifier extends StateNotifier<AsyncValue<String?>> {
 
   final Ref _ref;
 
-  /// Fast validation before any loading UI is shown.
-  ReportExportValidationError? validateBeforeExport() {
-    final inventory = _ref.read(inventoryItemsProvider);
-    if (inventory.isLoading) {
-      return const ReportExportValidationError(
-        ReportExportValidationError.dataNotReady,
-      );
-    }
-    if (inventory.hasError) {
-      return const ReportExportValidationError(
-        ReportExportValidationError.dataNotReady,
-      );
-    }
+  Future<List<InventoryItem>> _loadFilteredItems() async {
+    final query = _ref.read(reportsSearchQueryProvider).trim().toLowerCase();
+    final filter = _ref.read(reportsSelectedFilterProvider);
+    final items = await _ref.read(inventoryRepositoryProvider).getAll();
 
-    final items = _ref.read(filteredReportItemsProvider);
+    return [
+      for (final item in items)
+        if ((filter.status == null || item.status == filter.status) &&
+            (query.isEmpty ||
+                item.itemName.toLowerCase().contains(query) ||
+                item.itemCode.toLowerCase().contains(query) ||
+                (item.barcode?.toLowerCase().contains(query) ?? false)))
+          item,
+    ];
+  }
+
+  /// Fast validation before any loading UI is shown.
+  Future<ReportExportValidationError?> validateBeforeExport() async {
+    final items = await _loadFilteredItems();
     if (items.isEmpty) {
       return const ReportExportValidationError(
         ReportExportValidationError.emptyItems,
@@ -96,15 +78,15 @@ class ReportExportNotifier extends StateNotifier<AsyncValue<String?>> {
     required ReportExportFormat format,
     required ReportExportLabels labels,
   }) async {
-    final validationError = validateBeforeExport();
-    if (validationError != null) {
-      state = const AsyncData(null);
-      return validationError;
-    }
-
     state = const AsyncLoading();
     try {
-      final items = _ref.read(filteredReportItemsProvider);
+      final validationError = await validateBeforeExport();
+      if (validationError != null) {
+        state = const AsyncData(null);
+        return validationError;
+      }
+
+      final items = await _loadFilteredItems();
       final path = switch (format) {
         ReportExportFormat.excel => await _ref
             .read(excelExportDatasourceProvider)

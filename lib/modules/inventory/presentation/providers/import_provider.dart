@@ -105,6 +105,7 @@ class ImportNotifier extends StateNotifier<ImportUiState> {
       );
 
       await _ref.read(replaceInventoryItemsProvider).call(imported.items);
+      bumpInventoryRevision(_ref);
 
       final result = ImportSessionResult(
         importedCount: imported.importedCount,

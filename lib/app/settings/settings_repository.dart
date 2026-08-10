@@ -12,6 +12,8 @@ class SettingsKeys {
   static const String locale = 'locale';
   static const String dashboardServiceIds = 'dashboard_service_ids';
   static const String inventoryServiceIds = 'inventory_service_ids';
+  static const String productsViewMode = 'products_view_mode';
+  static const String quickActionIds = 'quick_action_ids';
 }
 
 /// Persists and loads platform settings from Hive.
@@ -103,6 +105,42 @@ class SettingsRepository {
   Future<void> saveInventoryServiceIds(List<String> ids) async {
     final box = await _settingsBox;
     await box.put(SettingsKeys.inventoryServiceIds, ids);
+  }
+
+  /// `list` (default) or `grid`.
+  Future<String> loadProductsViewMode() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.productsViewMode) as String?;
+    if (value == 'grid' || value == 'list') {
+      return value!;
+    }
+    return 'list';
+  }
+
+  Future<void> saveProductsViewMode(String mode) async {
+    final box = await _settingsBox;
+    await box.put(SettingsKeys.productsViewMode, mode);
+  }
+
+  /// Returns `null` when the user has never customized quick actions.
+  Future<List<String>?> loadQuickActionIds() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.quickActionIds);
+    if (value == null) {
+      return null;
+    }
+    if (value is List) {
+      return [
+        for (final item in value)
+          if (item is String && item.isNotEmpty) item,
+      ];
+    }
+    return const [];
+  }
+
+  Future<void> saveQuickActionIds(List<String> ids) async {
+    final box = await _settingsBox;
+    await box.put(SettingsKeys.quickActionIds, ids);
   }
 
   Future<void> resetSettings() async {

@@ -32,6 +32,218 @@ class AppLocalizationsAr extends AppLocalizations {
       'عدّ الأصناف واستيراد قوائم المخزون وعرض تقارير الجرد.';
 
   @override
+  String get inventoryProductsService => 'المنتجات';
+
+  @override
+  String get inventoryProductsServiceDescription =>
+      'إدارة كتالوج المنتجات والأسعار وأحجام العبوة.';
+
+  @override
+  String get productsHubTitle => 'المنتجات';
+
+  @override
+  String get productsHubDescription =>
+      'استعرض الكتالوج أو أدِر الباركود أو استورد من Excel.';
+
+  @override
+  String get productsListTitle => 'قائمة المنتجات';
+
+  @override
+  String get productsListSubtitle => 'ابحث وأضف وعدّل واحذف المنتجات.';
+
+  @override
+  String get productsImportTitle => 'استيراد المنتجات';
+
+  @override
+  String get productsImportSubtitle => 'استورد صفوف الكتالوج من ملف Excel.';
+
+  @override
+  String get productsBarcodeTitle => 'الباركود';
+
+  @override
+  String get productsBarcodeSubtitle =>
+      'توليد ومسح ومعاينة وطباعة باركود المنتجات.';
+
+  @override
+  String get productsBarcodeSelectHint => 'ابحث أو امسح لاختيار منتج.';
+
+  @override
+  String productsBarcodeSearchResults(int count) {
+    return '$count منتجاً';
+  }
+
+  @override
+  String get productsBarcodeNoResults => 'لا توجد منتجات مطابقة للبحث.';
+
+  @override
+  String get productsBarcodeChangeProduct => 'تغيير';
+
+  @override
+  String get productsBarcodeHasCode => 'يوجد باركود';
+
+  @override
+  String get productsBarcodeNoCode => 'بدون باركود';
+
+  @override
+  String get productsBarcodeReplaceTitle => 'استبدال الباركود؟';
+
+  @override
+  String get productsBarcodeReplaceMessage =>
+      'هذا المنتج لديه باركود بالفعل. هل تريد توليد باركود جديد وحفظه؟';
+
+  @override
+  String get productsBarcodeSavedSuccess => 'تم حفظ الباركود بنجاح.';
+
+  @override
+  String get productsBarcodeMissingForPrint =>
+      'ولّد أو عيّن باركوداً قبل الطباعة.';
+
+  @override
+  String get productsBarcodePrint => 'طباعة';
+
+  @override
+  String get productsBarcodeShare => 'مشاركة';
+
+  @override
+  String get productsBarcodeThermalPrint => 'طابعة حرارية';
+
+  @override
+  String get productsBarcodeThermalComingSoon =>
+      'الطباعة الحرارية ستتوفر في تحديث لاحق.';
+
+  @override
+  String get productsSearchHint => 'ابحث بالرمز أو الاسم أو الباركود';
+
+  @override
+  String get productsEmptyTitle => 'لا توجد منتجات بعد';
+
+  @override
+  String get productsEmptyMessage =>
+      'أضف منتجاً يدوياً أو استورد كتالوج Excel.';
+
+  @override
+  String get productsGoToImport => 'الذهاب للاستيراد';
+
+  @override
+  String get productsAdd => 'إضافة منتج';
+
+  @override
+  String get productsViewList => 'قائمة';
+
+  @override
+  String get productsViewGrid => 'شبكة';
+
+  @override
+  String get productsViewModeTooltip => 'تغيير عرض المنتجات';
+
+  @override
+  String get productsEdit => 'تعديل منتج';
+
+  @override
+  String get productsDelete => 'حذف';
+
+  @override
+  String get productsDeleteConfirmTitle => 'حذف المنتج؟';
+
+  @override
+  String get productsDeleteConfirmMessage =>
+      'سيُزال المنتج من الكتالوج. بيانات الجرد لن تتأثر.';
+
+  @override
+  String get productsSavedSuccess => 'تم حفظ المنتج بنجاح.';
+
+  @override
+  String get productsDeletedSuccess => 'تم حذف المنتج.';
+
+  @override
+  String get productsDuplicateCode => 'يوجد منتج بنفس رمز الصنف.';
+
+  @override
+  String get productsDuplicateBarcode => 'يوجد منتج بنفس الباركود.';
+
+  @override
+  String get productsInvalidForm =>
+      'أدخل رمزاً واسماً وحجم عبوة وسعراً صالحاً.';
+
+  @override
+  String get productsItemCodeAutoHint => 'يُنشأ تلقائياً ولا يمكن تعديله.';
+
+  @override
+  String get productsFieldLockedHint => 'لا يمكن تعديل هذا الحقل.';
+
+  @override
+  String get price => 'السعر';
+
+  @override
+  String get priceRequiredHint => 'مثال: 12.50';
+
+  @override
+  String get productsImportPageTitle => 'استيراد المنتجات';
+
+  @override
+  String get productsImportFormatHintTitle => 'تخطيط Excel للمنتجات';
+
+  @override
+  String get productsImportFormatHintIntro =>
+      'الصف الأول = عناوين. الأعمدة الأربعة إلزامية. استخدم .xlsx أو .xls.';
+
+  @override
+  String get productsImportFormatColPrice => 'السعر';
+
+  @override
+  String get productsImportFormatColPriceAliases =>
+      'Price · Unit Price · السعر';
+
+  @override
+  String get productsImportFormatColPackAliases => 'Pack Size · Pack · العبوة';
+
+  @override
+  String get productsImportFormatSampleNote =>
+      'بدون عناوين تُقرأ الأعمدة كـ: رمز، اسم، عبوة، سعر.';
+
+  @override
+  String get productsImportFormatSamplePriceHeader => 'السعر';
+
+  @override
+  String productsImportInsertedCount(int count) {
+    return 'أُضيف $count منتجاً';
+  }
+
+  @override
+  String productsImportUpdatedCount(int count) {
+    return 'حُدّث $count منتجاً';
+  }
+
+  @override
+  String get productsNoValidRows => 'لم يُعثر على صفوف منتجات صالحة في الملف.';
+
+  @override
+  String get productsScanBarcode => 'مسح الباركود';
+
+  @override
+  String get productsGenerateBarcode => 'توليد';
+
+  @override
+  String get productsGenerateBarcodeTooltip => 'توليد قيمة باركود فريدة';
+
+  @override
+  String get productsBarcodePreview => 'معاينة الباركود';
+
+  @override
+  String get productsBarcodeNotFound => 'لم يُعثر على منتج بهذا الباركود.';
+
+  @override
+  String get productsCameraPermissionDenied =>
+      'يلزم إذن الكاميرا لمسح الباركود.';
+
+  @override
+  String get productsCameraUnavailable => 'الكاميرا غير متاحة على هذا الجهاز.';
+
+  @override
+  String get productsEnterBarcodeHint =>
+      'أدخل الباركود يدوياً، أو استخدم المسح بالكاميرا على Android/iOS بعد إعادة تشغيل التطبيق بالكامل.';
+
+  @override
   String get inventoryOpenStockCount => 'فتح الجرد';
 
   @override
@@ -509,6 +721,62 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quickActionsTitle => 'عمليات سريعة';
+
+  @override
+  String get quickActionsSubtitle =>
+      'اختصاراتك المثبتة. خصّص للإضافة أو إعادة الترتيب.';
+
+  @override
+  String get quickActionsCreateProduct => 'إنشاء منتج';
+
+  @override
+  String get quickActionsCreateProductSubtitle => 'فتح نموذج منتج جديد.';
+
+  @override
+  String get quickActionsScanBarcode => 'مسح باركود';
+
+  @override
+  String get quickActionsScanBarcodeSubtitle =>
+      'امسح واعرض المنتج في صفحة الباركود.';
+
+  @override
+  String get quickActionsCustomize => 'تخصيص';
+
+  @override
+  String get quickActionsCustomizeTitle => 'تخصيص العمليات السريعة';
+
+  @override
+  String get quickActionsCustomizeHint =>
+      'اختر العمليات التي تظهر، ثم اسحب لإعادة ترتيبها.';
+
+  @override
+  String get quickActionsPinned => 'العمليات المثبتة';
+
+  @override
+  String get quickActionsAvailable => 'العمليات المتاحة';
+
+  @override
+  String get quickActionsAdd => 'إضافة';
+
+  @override
+  String get quickActionsRemove => 'إزالة';
+
+  @override
+  String get quickActionsSave => 'حفظ';
+
+  @override
+  String quickActionsPinnedCount(int count, int max) {
+    return '$count / $max مثبتة';
+  }
+
+  @override
+  String quickActionsMaxReached(int max) {
+    return 'يمكنك تثبيت حتى $max عمليات سريعة.';
+  }
+
+  @override
+  String get quickActionsEmptyPinned =>
+      'لا توجد اختصارات مثبتة بعد. اضغط تخصيص لإضافتها.';
 
   @override
   String get quickActionsEmptyMessage =>

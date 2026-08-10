@@ -2,6 +2,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/entities/item_status.dart';
+import '../../domain/entities/report_summary.dart';
 import '../../domain/models/paged_result.dart';
 import '../../domain/repositories/inventory_repository.dart';
 import '../inventory_hive.dart';
@@ -51,6 +52,48 @@ class InventoryRepositoryImpl implements InventoryRepository {
   }
 
   @override
+  Future<int> countAll() async {
+    final box = await _box;
+    return box.length;
+  }
+
+  @override
+  Future<ReportSummary> getReportSummary() async {
+    final box = await _box;
+    var total = 0;
+    var counted = 0;
+    var matched = 0;
+    var shortage = 0;
+    var overage = 0;
+
+    for (final item in box.values) {
+      total++;
+      switch (item.status) {
+        case ItemStatus.matched:
+          counted++;
+          matched++;
+        case ItemStatus.shortage:
+          counted++;
+          shortage++;
+        case ItemStatus.overage:
+          counted++;
+          overage++;
+        case ItemStatus.notCounted:
+          break;
+      }
+    }
+
+    return ReportSummary(
+      totalItems: total,
+      countedItems: counted,
+      remainingItems: total - counted,
+      matched: matched,
+      shortage: shortage,
+      overage: overage,
+    );
+  }
+
+  @override
   Future<List<InventoryItem>> search(String query) async {
     final normalized = query.trim().toLowerCase();
     final items = await getAll();
@@ -67,11 +110,14 @@ class InventoryRepositoryImpl implements InventoryRepository {
 
   @override
   Future<List<InventoryItem>> filterByStatus(ItemStatus? status) async {
-    final items = await getAll();
+    final box = await _box;
     if (status == null) {
-      return items;
+      return box.values.toList(growable: false);
     }
-    return items.where((item) => item.status == status).toList(growable: false);
+    return [
+      for (final item in box.values)
+        if (item.status == status) item,
+    ];
   }
 
   @override
@@ -84,10 +130,31 @@ class InventoryRepositoryImpl implements InventoryRepository {
     final normalized = query.trim().toLowerCase();
     final safePage = page < 0 ? 0 : page;
     final safeSize = pageSize <= 0 ? 20 : pageSize;
+    final box = await _box;
 
-    final items = await getAll();
+    // Fast path: no search / status filter — page directly without a full copy.
+    if (normalized.isEmpty && status == null) {
+      final totalCount = box.length;
+      final start = safePage * safeSize;
+      if (totalCount == 0 || start >= totalCount) {
+        return PagedResult<InventoryItem>(
+          items: const [],
+          totalCount: totalCount,
+          page: safePage,
+          pageSize: safeSize,
+        );
+      }
+      final end = (start + safeSize).clamp(0, totalCount);
+      return PagedResult<InventoryItem>(
+        items: box.values.skip(start).take(end - start).toList(growable: false),
+        totalCount: totalCount,
+        page: safePage,
+        pageSize: safeSize,
+      );
+    }
+
     final filtered = <InventoryItem>[];
-    for (final item in items) {
+    for (final item in box.values) {
       if (status != null && item.status != status) {
         continue;
       }
@@ -125,8 +192,11 @@ class InventoryRepositoryImpl implements InventoryRepository {
   bool _matchesQuery(InventoryItem item, String normalized) {
     final code = item.itemCode.toLowerCase();
     final name = item.itemName.toLowerCase();
+    final barcode = item.barcode?.toLowerCase() ?? '';
 
-    return code.contains(normalized) || name.contains(normalized);
+    return code.contains(normalized) ||
+        name.contains(normalized) ||
+        barcode.contains(normalized);
   }
 
   /// Higher score = better match (exact code > prefix > contains).

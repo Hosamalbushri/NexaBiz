@@ -105,49 +105,45 @@ class _InventoryCustomizeSheetState extends State<InventoryCustomizeSheet> {
                   ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.sizeOf(context).height * 0.35,
-              ),
-              child: ReorderableListView.builder(
-                shrinkWrap: true,
-                buildDefaultDragHandles: false,
-                itemCount: selected.length,
-                onReorderItem: _onReorderItem,
-                itemBuilder: (context, index) {
-                  final service = selected[index];
-                  return Material(
-                    key: ValueKey<String>(service.id),
-                    color: colorScheme.surface,
-                    child: ListTile(
-                      leading: Icon(service.icon, color: colorScheme.primary),
-                      title: Text(service.title(l10n)),
-                      subtitle: Text(
-                        service.subtitle(l10n),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            tooltip: l10n.inventoryRemoveService,
-                            onPressed: () => _toggle(service),
-                            icon: const Icon(Icons.remove_circle_outline),
-                          ),
-                          ReorderableDragStartListener(
-                            index: index,
-                            child: const Padding(
-                              padding: EdgeInsets.all(AppSpacing.xs),
-                              child: Icon(Icons.drag_handle_rounded),
-                            ),
-                          ),
-                        ],
-                      ),
+            ReorderableListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              itemCount: selected.length,
+              onReorderItem: _onReorderItem,
+              itemBuilder: (context, index) {
+                final service = selected[index];
+                return Material(
+                  key: ValueKey<String>(service.id),
+                  color: colorScheme.surface,
+                  child: ListTile(
+                    leading: Icon(service.icon, color: colorScheme.primary),
+                    title: Text(service.title(l10n)),
+                    subtitle: Text(
+                      service.subtitle(l10n),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  );
-                },
-              ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: l10n.inventoryRemoveService,
+                          onPressed: () => _toggle(service),
+                          icon: const Icon(Icons.remove_circle_outline),
+                        ),
+                        ReorderableDragStartListener(
+                          index: index,
+                          child: const Padding(
+                            padding: EdgeInsets.all(AppSpacing.xs),
+                            child: Icon(Icons.drag_handle_rounded),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ],
           if (unselected.isNotEmpty) ...[

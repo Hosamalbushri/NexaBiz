@@ -10,12 +10,16 @@ import 'presentation/pages/inventory_import_page.dart';
 import 'presentation/pages/inventory_reports_page.dart';
 import 'presentation/pages/inventory_routes.dart';
 import 'presentation/pages/inventory_search_page.dart';
+import 'presentation/pages/product_form_page.dart';
+import 'presentation/pages/products_barcode_page.dart';
+import 'presentation/pages/products_home_page.dart';
+import 'presentation/pages/products_import_page.dart';
+import 'presentation/pages/products_list_page.dart';
 import 'presentation/pages/stock_count_home_page.dart';
 
 /// Inventory business module — self-contained routes and features.
 ///
-/// Platform service: Inventory. Intra-module service: Stock count (الجرد)
-/// owns count / import / reports as a grid hub (not tabs).
+/// Platform service: Inventory. Intra-module services: Stock count + Products.
 class InventoryModule implements AppModule {
   const InventoryModule();
 
@@ -101,6 +105,46 @@ class InventoryModule implements AppModule {
                   path: 'reports',
                   name: 'inventoryStockCountReports',
                   builder: (context, state) => const InventoryReportsPage(),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: 'products',
+              name: 'inventoryProducts',
+              builder: (context, state) => const ProductsHomePage(),
+              routes: [
+                GoRoute(
+                  path: 'list',
+                  name: 'inventoryProductsList',
+                  builder: (context, state) => const ProductsListPage(),
+                ),
+                GoRoute(
+                  path: 'new',
+                  name: 'inventoryProductsNew',
+                  builder: (context, state) => const ProductFormPage(),
+                ),
+                GoRoute(
+                  path: 'import',
+                  name: 'inventoryProductsImport',
+                  builder: (context, state) => const ProductsImportPage(),
+                ),
+                GoRoute(
+                  path: 'barcode',
+                  name: 'inventoryProductsBarcode',
+                  builder: (context, state) => ProductsBarcodePage(
+                    autoScan: state.uri.queryParameters['scan'] == '1',
+                  ),
+                ),
+                GoRoute(
+                  path: ':id/edit',
+                  name: 'inventoryProductsEdit',
+                  builder: (context, state) {
+                    final id = int.tryParse(state.pathParameters['id'] ?? '');
+                    if (id == null) {
+                      return const ProductFormPage(productId: -1);
+                    }
+                    return ProductFormPage(productId: id);
+                  },
                 ),
               ],
             ),

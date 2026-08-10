@@ -84,6 +84,7 @@ class InventorySaveNotifier extends StateNotifier<AsyncValue<void>> {
         subQuantity: preview.subQuantity,
       );
       await _ref.read(saveInventoryCountProvider).call(updated);
+      bumpInventoryRevision(_ref);
       _ref.read(selectedItemProvider.notifier).state = updated;
       _ref.read(quantityEntryProvider.notifier).setQuantities(
             mainText: normalized.mainText,
@@ -116,6 +117,7 @@ class InventorySaveNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       final updated = item.copyWith(packSize: packSize);
       await _ref.read(saveInventoryCountProvider).call(updated);
+      bumpInventoryRevision(_ref);
       _ref.read(selectedItemProvider.notifier).state = updated;
       state = const AsyncData(null);
       return const SavePackSizeSuccess();
@@ -141,6 +143,7 @@ class InventorySaveNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       final updated = item.copyWith(packSize: packSize);
       await _ref.read(saveInventoryCountProvider).call(updated);
+      bumpInventoryRevision(_ref);
       _ref.read(selectedItemProvider.notifier).state = updated;
       state = const AsyncData(null);
       return const SavePackSizeSuccess();

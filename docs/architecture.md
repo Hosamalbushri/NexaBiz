@@ -96,7 +96,7 @@ Clean-ish vertical slice:
 | Folder | Contents |
 | --- | --- |
 | `domain/` | Entities, repository contracts, use cases, calculators |
-| `data/` | Hive, adapters, Excel/PDF datasources, repository impl |
+| `data/` | Hive (stock count), Drift/SQLite (products), Excel/PDF datasources, repository impl |
 | `presentation/` | Pages, widgets, Riverpod providers |
 | `inventory_module.dart` | `AppModule` implementation + routes |
 
@@ -111,7 +111,7 @@ Riverpod throughout. See [ADR-002](adr/ADR-002-state-management.md).
 
 ## Persistence
 
-Hive local DB. See [ADR-004](adr/ADR-004-local-database.md) and [`database.md`](database.md).
+Hive for settings + stock-count items; Drift/SQLite for products. See [ADR-004](adr/ADR-004-local-database.md), [ADR-005](adr/ADR-005-drift-products.md), and [`database.md`](database.md).
 
 ## UI system
 

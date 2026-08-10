@@ -96,7 +96,8 @@ class _SearchItemsDataGridState extends State<SearchItemsDataGrid> {
             ),
           ),
           Expanded(
-            child: SfDataGrid(
+            child: RepaintBoundary(
+              child: SfDataGrid(
               source: _source,
               controller: _controller,
               allowSorting: false,
@@ -135,6 +136,7 @@ class _SearchItemsDataGridState extends State<SearchItemsDataGrid> {
                   label: _header(context, localization.status),
                 ),
               ],
+            ),
             ),
           ),
           const Divider(height: 1),

@@ -205,8 +205,7 @@ class _InventoryCountPageState extends ConsumerState<InventoryCountPage> {
   }
 
   Future<void> _refreshInventory() async {
-    ref.invalidate(inventoryItemsProvider);
-    await ref.read(inventoryItemsProvider.future);
+    bumpInventoryRevisionFromWidget(ref);
   }
 
   Future<void> _savePackSize() async {

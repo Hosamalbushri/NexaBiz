@@ -130,12 +130,16 @@ class CustomBottomNavCenterAction {
     required this.onPressed,
     required this.tooltip,
     this.icon = Icons.add_rounded,
+    this.closeIcon = Icons.close_rounded,
+    this.isOpen = false,
     this.key,
   });
 
   final VoidCallback onPressed;
   final String tooltip;
   final IconData icon;
+  final IconData closeIcon;
+  final bool isOpen;
   final Key? key;
 }
 
@@ -162,31 +166,65 @@ class _FloatingCenterButton extends StatelessWidget {
   final CustomBottomNavCenterAction action;
   final double size;
 
+  static const Duration _duration = Duration(milliseconds: 480);
+  static const Curve _curve = Curves.easeInOutCubic;
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isOpen = action.isOpen;
 
     return Semantics(
       button: true,
       label: action.tooltip,
       child: Tooltip(
         message: action.tooltip,
-        child: Material(
-          elevation: 8,
-          shadowColor: colorScheme.primary.withValues(alpha: 0.45),
-          shape: const CircleBorder(),
-          color: colorScheme.primary,
-          child: InkWell(
-            key: action.key,
-            onTap: action.onPressed,
-            customBorder: const CircleBorder(),
-            child: SizedBox(
-              width: size,
-              height: size,
-              child: Icon(
-                action.icon,
-                size: 28,
-                color: colorScheme.onPrimary,
+        child: AnimatedSlide(
+          offset: isOpen ? const Offset(0, -0.18) : Offset.zero,
+          duration: _duration,
+          curve: _curve,
+          child: AnimatedScale(
+            scale: isOpen ? 1.08 : 1,
+            duration: _duration,
+            curve: _curve,
+            child: Material(
+              elevation: isOpen ? 12 : 8,
+              shadowColor: colorScheme.primary.withValues(alpha: 0.45),
+              shape: const CircleBorder(),
+              color: colorScheme.primary,
+              child: InkWell(
+                key: action.key,
+                onTap: action.onPressed,
+                customBorder: const CircleBorder(),
+                child: SizedBox(
+                  width: size,
+                  height: size,
+                  child: AnimatedSwitcher(
+                    duration: _duration,
+                    switchInCurve: _curve,
+                    switchOutCurve: _curve,
+                    transitionBuilder: (child, animation) {
+                      return RotationTransition(
+                        turns: Tween<double>(begin: 0.75, end: 1).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: _curve,
+                          ),
+                        ),
+                        child: FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Icon(
+                      isOpen ? action.closeIcon : action.icon,
+                      key: ValueKey<bool>(isOpen),
+                      size: 28,
+                      color: colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
