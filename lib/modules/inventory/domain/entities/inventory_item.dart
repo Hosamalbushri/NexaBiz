@@ -1,8 +1,10 @@
 import 'item_status.dart';
+import '../../../../core/sync/sync_status.dart';
+import '../../../../core/utils/id_generator.dart';
 
 /// Domain entity representing a single inventory stock item.
 class InventoryItem {
-  const InventoryItem({
+  InventoryItem({
     required this.itemCode,
     required this.itemName,
     this.barcode,
@@ -11,8 +13,19 @@ class InventoryItem {
     this.actualQuantity,
     this.mainQuantity,
     this.subQuantity,
-  });
+    String? id,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    this.syncStatus = SyncStatus.synced,
+    this.lastSyncedAt,
+    this.version = 1,
+    this.deletedAt,
+  }) : id = id ?? generateUuidV4(),
+       createdAt = createdAt ?? DateTime.now().toUtc(),
+       updatedAt = updatedAt ?? DateTime.now().toUtc();
 
+  /// Globally unique client id (UUID) for offline-safe sync.
+  final String id;
   final String itemCode;
   final String itemName;
   final String? barcode;
@@ -21,6 +34,14 @@ class InventoryItem {
   final double? actualQuantity;
   final double? mainQuantity;
   final double? subQuantity;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final SyncStatus syncStatus;
+  final DateTime? lastSyncedAt;
+  final int version;
+  final DateTime? deletedAt;
+
+  bool get isDeleted => deletedAt != null;
 
   /// System / on-hand quantity from the source of truth.
   double get availableQuantity => systemQuantity;
@@ -74,9 +95,6 @@ class InventoryItem {
   }
 
   /// Counted − system variance in base units (pieces).
-  ///
-  /// Example: system 81 cartons, pack 40; counted 80 cartons + 39 pieces
-  /// → variance = -1 piece (not -1 carton).
   int get differenceBaseUnits {
     if (!isCounted) {
       return 0;
@@ -128,6 +146,7 @@ class InventoryItem {
   }
 
   InventoryItem copyWith({
+    String? id,
     String? itemCode,
     String? itemName,
     String? barcode,
@@ -139,8 +158,17 @@ class InventoryItem {
     bool clearMainQuantity = false,
     double? subQuantity,
     bool clearSubQuantity = false,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    SyncStatus? syncStatus,
+    DateTime? lastSyncedAt,
+    bool clearLastSyncedAt = false,
+    int? version,
+    DateTime? deletedAt,
+    bool clearDeletedAt = false,
   }) {
     return InventoryItem(
+      id: id ?? this.id,
       itemCode: itemCode ?? this.itemCode,
       itemName: itemName ?? this.itemName,
       barcode: barcode ?? this.barcode,
@@ -153,6 +181,14 @@ class InventoryItem {
           ? null
           : (mainQuantity ?? this.mainQuantity),
       subQuantity: clearSubQuantity ? null : (subQuantity ?? this.subQuantity),
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncedAt: clearLastSyncedAt
+          ? null
+          : (lastSyncedAt ?? this.lastSyncedAt),
+      version: version ?? this.version,
+      deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
     );
   }
 }

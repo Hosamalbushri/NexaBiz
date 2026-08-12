@@ -778,6 +778,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsTooltip => 'Notifications';
 
   @override
+  String get notificationsUnreadBadge => 'Unread';
+
+  @override
+  String notificationsSummaryTotal(int count) {
+    return '$count notifications';
+  }
+
+  @override
+  String notificationsSummaryUnread(int count) {
+    return '$count unread';
+  }
+
+  @override
+  String get notificationsSummaryAllRead => 'All caught up';
+
+  @override
+  String get notificationsTimeJustNow => 'Just now';
+
+  @override
+  String notificationsTimeMinutes(int count) {
+    return '${count}m ago';
+  }
+
+  @override
+  String notificationsTimeHours(int count) {
+    return '${count}h ago';
+  }
+
+  @override
+  String notificationsTimeDays(int count) {
+    return '${count}d ago';
+  }
+
+  @override
   String get cancel => 'Cancel';
 
   @override
@@ -1055,4 +1089,95 @@ class AppLocalizationsEn extends AppLocalizations {
   String duplicateRowsCount(int count) {
     return 'Replaced $count duplicate item codes';
   }
+
+  @override
+  String get syncSectionTitle => 'Synchronization';
+
+  @override
+  String get syncConnectionLabel => 'Connection';
+
+  @override
+  String get syncConnectionOnline => 'Online';
+
+  @override
+  String get syncConnectionOffline => 'Offline';
+
+  @override
+  String get syncLastSyncLabel => 'Last synchronization';
+
+  @override
+  String get syncLastSyncNever => 'Never';
+
+  @override
+  String get syncPendingChangesLabel => 'Pending changes';
+
+  @override
+  String get syncFailedChangesLabel => 'Failed changes';
+
+  @override
+  String get syncNowAction => 'Sync Now';
+
+  @override
+  String get syncOfflineMessage =>
+      'You\'re offline. Changes will sync automatically when an internet connection is available.';
+
+  @override
+  String get syncStatusSynced => 'Synced';
+
+  @override
+  String get syncStatusSyncing => 'Syncing…';
+
+  @override
+  String get syncStatusPending => 'Pending';
+
+  @override
+  String get syncStatusFailed => 'Sync failed';
+
+  @override
+  String get syncStatusConflict => 'Conflict';
+
+  @override
+  String get syncStatusOffline => 'Offline';
+
+  @override
+  String get syncCompletedTitle => 'Synchronization completed';
+
+  @override
+  String get syncCompletedMessage => 'All changes have been synchronized.';
+
+  @override
+  String get syncPartialTitle => 'Some changes could not be synchronized';
+
+  @override
+  String get syncFailedTitle => 'Synchronization failed';
+
+  @override
+  String get syncFailedMessage => 'Please try again later.';
+
+  @override
+  String get loadingPleaseWait => 'Please wait…';
+
+  @override
+  String get loadingProcessing => 'Processing…';
+
+  @override
+  String get loadingSaving => 'Saving…';
+
+  @override
+  String get loadingDeleting => 'Deleting…';
+
+  @override
+  String get loadingImportingProducts => 'Importing products…';
+
+  @override
+  String get loadingImportingInventory => 'Importing inventory…';
+
+  @override
+  String get loadingSavingInventory => 'Saving inventory…';
+
+  @override
+  String get loadingSynchronizing => 'Synchronizing…';
+
+  @override
+  String get loadingExportingReport => 'Preparing report…';
 }

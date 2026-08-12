@@ -1,2 +1,4 @@
-/// Core error types (populated as needed).
+/// Core error types.
 library;
+
+export 'app_failure.dart';

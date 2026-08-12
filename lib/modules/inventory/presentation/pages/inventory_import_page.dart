@@ -7,6 +7,7 @@ import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/services/loading_providers.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -179,7 +180,12 @@ class InventoryImportPage extends ConsumerWidget {
 
   Future<void> _import(BuildContext context, WidgetRef ref) async {
     final localization = AppLocalizations.of(context);
-    final result = await ref.read(importProvider.notifier).importFile();
+    final result = await ref
+        .read(loadingControllerProvider)
+        .run(
+          message: localization.loadingImportingInventory,
+          action: () => ref.read(importProvider.notifier).importFile(),
+        );
 
     if (!context.mounted) {
       return;

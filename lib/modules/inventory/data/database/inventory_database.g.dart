@@ -22,6 +22,20 @@ class $ProductsTable extends Products
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
   static const VerificationMeta _itemCodeMeta = const VerificationMeta(
     'itemCode',
   );
@@ -105,9 +119,56 @@ class $ProductsTable extends Products
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('synced'),
+  );
+  static const VerificationMeta _lastSyncedAtMeta = const VerificationMeta(
+    'lastSyncedAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastSyncedAt = GeneratedColumn<int>(
+    'last_synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    uuid,
     itemCode,
     name,
     barcode,
@@ -115,6 +176,10 @@ class $ProductsTable extends Products
     price,
     createdAt,
     updatedAt,
+    syncStatus,
+    lastSyncedAt,
+    version,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -130,6 +195,14 @@ class $ProductsTable extends Products
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
     }
     if (data.containsKey('item_code')) {
       context.handle(
@@ -185,6 +258,33 @@ class $ProductsTable extends Products
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+        _lastSyncedAtMeta,
+        lastSyncedAt.isAcceptableOrUnknown(
+          data['last_synced_at']!,
+          _lastSyncedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -197,6 +297,10 @@ class $ProductsTable extends Products
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
+      )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
       )!,
       itemCode: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -226,6 +330,22 @@ class $ProductsTable extends Products
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
       )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_synced_at'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -237,6 +357,9 @@ class $ProductsTable extends Products
 
 class ProductRow extends DataClass implements Insertable<ProductRow> {
   final int id;
+
+  /// Client-generated UUID for offline-safe identity / sync.
+  final String uuid;
   final String itemCode;
   final String name;
   final String? barcode;
@@ -244,8 +367,17 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
   final double price;
   final int createdAt;
   final int updatedAt;
+
+  /// [SyncStatus.name] string.
+  final String syncStatus;
+  final int? lastSyncedAt;
+  final int version;
+
+  /// Soft-delete tombstone (UTC epoch ms). Null = active.
+  final int? deletedAt;
   const ProductRow({
     required this.id,
+    required this.uuid,
     required this.itemCode,
     required this.name,
     this.barcode,
@@ -253,11 +385,16 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     required this.price,
     required this.createdAt,
     required this.updatedAt,
+    required this.syncStatus,
+    this.lastSyncedAt,
+    required this.version,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['item_code'] = Variable<String>(itemCode);
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || barcode != null) {
@@ -267,12 +404,21 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     map['price'] = Variable<double>(price);
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<int>(lastSyncedAt);
+    }
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
     return map;
   }
 
   ProductsCompanion toCompanion(bool nullToAbsent) {
     return ProductsCompanion(
       id: Value(id),
+      uuid: Value(uuid),
       itemCode: Value(itemCode),
       name: Value(name),
       barcode: barcode == null && nullToAbsent
@@ -282,6 +428,14 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       price: Value(price),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      syncStatus: Value(syncStatus),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+      version: Value(version),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -292,6 +446,7 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ProductRow(
       id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       itemCode: serializer.fromJson<String>(json['itemCode']),
       name: serializer.fromJson<String>(json['name']),
       barcode: serializer.fromJson<String?>(json['barcode']),
@@ -299,6 +454,10 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       price: serializer.fromJson<double>(json['price']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
+      version: serializer.fromJson<int>(json['version']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
     );
   }
   @override
@@ -306,6 +465,7 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'itemCode': serializer.toJson<String>(itemCode),
       'name': serializer.toJson<String>(name),
       'barcode': serializer.toJson<String?>(barcode),
@@ -313,11 +473,16 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       'price': serializer.toJson<double>(price),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
+      'version': serializer.toJson<int>(version),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
     };
   }
 
   ProductRow copyWith({
     int? id,
+    String? uuid,
     String? itemCode,
     String? name,
     Value<String?> barcode = const Value.absent(),
@@ -325,8 +490,13 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     double? price,
     int? createdAt,
     int? updatedAt,
+    String? syncStatus,
+    Value<int?> lastSyncedAt = const Value.absent(),
+    int? version,
+    Value<int?> deletedAt = const Value.absent(),
   }) => ProductRow(
     id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
     itemCode: itemCode ?? this.itemCode,
     name: name ?? this.name,
     barcode: barcode.present ? barcode.value : this.barcode,
@@ -334,10 +504,15 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     price: price ?? this.price,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+    version: version ?? this.version,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   ProductRow copyWithCompanion(ProductsCompanion data) {
     return ProductRow(
       id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
       itemCode: data.itemCode.present ? data.itemCode.value : this.itemCode,
       name: data.name.present ? data.name.value : this.name,
       barcode: data.barcode.present ? data.barcode.value : this.barcode,
@@ -345,6 +520,14 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       price: data.price.present ? data.price.value : this.price,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+      version: data.version.present ? data.version.value : this.version,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -352,13 +535,18 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
   String toString() {
     return (StringBuffer('ProductRow(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('itemCode: $itemCode, ')
           ..write('name: $name, ')
           ..write('barcode: $barcode, ')
           ..write('packSize: $packSize, ')
           ..write('price: $price, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('version: $version, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -366,6 +554,7 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
   @override
   int get hashCode => Object.hash(
     id,
+    uuid,
     itemCode,
     name,
     barcode,
@@ -373,23 +562,33 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     price,
     createdAt,
     updatedAt,
+    syncStatus,
+    lastSyncedAt,
+    version,
+    deletedAt,
   );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ProductRow &&
           other.id == this.id &&
+          other.uuid == this.uuid &&
           other.itemCode == this.itemCode &&
           other.name == this.name &&
           other.barcode == this.barcode &&
           other.packSize == this.packSize &&
           other.price == this.price &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.version == this.version &&
+          other.deletedAt == this.deletedAt);
 }
 
 class ProductsCompanion extends UpdateCompanion<ProductRow> {
   final Value<int> id;
+  final Value<String> uuid;
   final Value<String> itemCode;
   final Value<String> name;
   final Value<String?> barcode;
@@ -397,8 +596,13 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
   final Value<double> price;
   final Value<int> createdAt;
   final Value<int> updatedAt;
+  final Value<String> syncStatus;
+  final Value<int?> lastSyncedAt;
+  final Value<int> version;
+  final Value<int?> deletedAt;
   const ProductsCompanion({
     this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.itemCode = const Value.absent(),
     this.name = const Value.absent(),
     this.barcode = const Value.absent(),
@@ -406,9 +610,14 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     this.price = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.deletedAt = const Value.absent(),
   });
   ProductsCompanion.insert({
     this.id = const Value.absent(),
+    required String uuid,
     required String itemCode,
     required String name,
     this.barcode = const Value.absent(),
@@ -416,7 +625,12 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     required double price,
     required int createdAt,
     required int updatedAt,
-  }) : itemCode = Value(itemCode),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+  }) : uuid = Value(uuid),
+       itemCode = Value(itemCode),
        name = Value(name),
        packSize = Value(packSize),
        price = Value(price),
@@ -424,6 +638,7 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
        updatedAt = Value(updatedAt);
   static Insertable<ProductRow> custom({
     Expression<int>? id,
+    Expression<String>? uuid,
     Expression<String>? itemCode,
     Expression<String>? name,
     Expression<String>? barcode,
@@ -431,9 +646,14 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     Expression<double>? price,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
+    Expression<String>? syncStatus,
+    Expression<int>? lastSyncedAt,
+    Expression<int>? version,
+    Expression<int>? deletedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (itemCode != null) 'item_code': itemCode,
       if (name != null) 'name': name,
       if (barcode != null) 'barcode': barcode,
@@ -441,11 +661,16 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
       if (price != null) 'price': price,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (version != null) 'version': version,
+      if (deletedAt != null) 'deleted_at': deletedAt,
     });
   }
 
   ProductsCompanion copyWith({
     Value<int>? id,
+    Value<String>? uuid,
     Value<String>? itemCode,
     Value<String>? name,
     Value<String?>? barcode,
@@ -453,9 +678,14 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     Value<double>? price,
     Value<int>? createdAt,
     Value<int>? updatedAt,
+    Value<String>? syncStatus,
+    Value<int?>? lastSyncedAt,
+    Value<int>? version,
+    Value<int?>? deletedAt,
   }) {
     return ProductsCompanion(
       id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       itemCode: itemCode ?? this.itemCode,
       name: name ?? this.name,
       barcode: barcode ?? this.barcode,
@@ -463,6 +693,10 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
       price: price ?? this.price,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      version: version ?? this.version,
+      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 
@@ -471,6 +705,9 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (itemCode.present) {
       map['item_code'] = Variable<String>(itemCode.value);
@@ -493,6 +730,18 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<int>(lastSyncedAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
     return map;
   }
 
@@ -500,13 +749,18 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
   String toString() {
     return (StringBuffer('ProductsCompanion(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('itemCode: $itemCode, ')
           ..write('name: $name, ')
           ..write('barcode: $barcode, ')
           ..write('packSize: $packSize, ')
           ..write('price: $price, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('version: $version, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -526,6 +780,7 @@ abstract class _$InventoryDatabase extends GeneratedDatabase {
 typedef $$ProductsTableCreateCompanionBuilder =
     ProductsCompanion Function({
       Value<int> id,
+      required String uuid,
       required String itemCode,
       required String name,
       Value<String?> barcode,
@@ -533,10 +788,15 @@ typedef $$ProductsTableCreateCompanionBuilder =
       required double price,
       required int createdAt,
       required int updatedAt,
+      Value<String> syncStatus,
+      Value<int?> lastSyncedAt,
+      Value<int> version,
+      Value<int?> deletedAt,
     });
 typedef $$ProductsTableUpdateCompanionBuilder =
     ProductsCompanion Function({
       Value<int> id,
+      Value<String> uuid,
       Value<String> itemCode,
       Value<String> name,
       Value<String?> barcode,
@@ -544,6 +804,10 @@ typedef $$ProductsTableUpdateCompanionBuilder =
       Value<double> price,
       Value<int> createdAt,
       Value<int> updatedAt,
+      Value<String> syncStatus,
+      Value<int?> lastSyncedAt,
+      Value<int> version,
+      Value<int?> deletedAt,
     });
 
 class $$ProductsTableFilterComposer
@@ -557,6 +821,11 @@ class $$ProductsTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -594,6 +863,26 @@ class $$ProductsTableFilterComposer
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ProductsTableOrderingComposer
@@ -607,6 +896,11 @@ class $$ProductsTableOrderingComposer
   });
   ColumnOrderings<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -644,6 +938,26 @@ class $$ProductsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ProductsTableAnnotationComposer
@@ -657,6 +971,9 @@ class $$ProductsTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<String> get itemCode =>
       $composableBuilder(column: $table.itemCode, builder: (column) => column);
@@ -678,6 +995,22 @@ class $$ProductsTableAnnotationComposer
 
   GeneratedColumn<int> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$ProductsTableTableManager
@@ -712,6 +1045,7 @@ class $$ProductsTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
                 Value<String> itemCode = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> barcode = const Value.absent(),
@@ -719,8 +1053,13 @@ class $$ProductsTableTableManager
                 Value<double> price = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
               }) => ProductsCompanion(
                 id: id,
+                uuid: uuid,
                 itemCode: itemCode,
                 name: name,
                 barcode: barcode,
@@ -728,10 +1067,15 @@ class $$ProductsTableTableManager
                 price: price,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncedAt: lastSyncedAt,
+                version: version,
+                deletedAt: deletedAt,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                required String uuid,
                 required String itemCode,
                 required String name,
                 Value<String?> barcode = const Value.absent(),
@@ -739,8 +1083,13 @@ class $$ProductsTableTableManager
                 required double price,
                 required int createdAt,
                 required int updatedAt,
+                Value<String> syncStatus = const Value.absent(),
+                Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
               }) => ProductsCompanion.insert(
                 id: id,
+                uuid: uuid,
                 itemCode: itemCode,
                 name: name,
                 barcode: barcode,
@@ -748,6 +1097,10 @@ class $$ProductsTableTableManager
                 price: price,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncedAt: lastSyncedAt,
+                version: version,
+                deletedAt: deletedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

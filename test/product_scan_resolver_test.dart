@@ -89,6 +89,7 @@ void main() {
   final now = DateTime.utc(2026, 1, 1);
   final catalogProduct = Product(
     id: 125,
+    uuid: '00000000-0000-4000-8000-000000000125',
     itemCode: 'AB-001',
     name: 'عباية سوداء',
     barcode: 'AB-001',

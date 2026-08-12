@@ -1532,6 +1532,54 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get notificationsTooltip;
 
+  /// No description provided for @notificationsUnreadBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
+  String get notificationsUnreadBadge;
+
+  /// No description provided for @notificationsSummaryTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} notifications'**
+  String notificationsSummaryTotal(int count);
+
+  /// No description provided for @notificationsSummaryUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unread'**
+  String notificationsSummaryUnread(int count);
+
+  /// No description provided for @notificationsSummaryAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'All caught up'**
+  String get notificationsSummaryAllRead;
+
+  /// No description provided for @notificationsTimeJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get notificationsTimeJustNow;
+
+  /// No description provided for @notificationsTimeMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String notificationsTimeMinutes(int count);
+
+  /// No description provided for @notificationsTimeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String notificationsTimeHours(int count);
+
+  /// No description provided for @notificationsTimeDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d ago'**
+  String notificationsTimeDays(int count);
+
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
@@ -2035,6 +2083,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Replaced {count} duplicate item codes'**
   String duplicateRowsCount(int count);
+
+  /// No description provided for @syncSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization'**
+  String get syncSectionTitle;
+
+  /// No description provided for @syncConnectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection'**
+  String get syncConnectionLabel;
+
+  /// No description provided for @syncConnectionOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get syncConnectionOnline;
+
+  /// No description provided for @syncConnectionOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get syncConnectionOffline;
+
+  /// No description provided for @syncLastSyncLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last synchronization'**
+  String get syncLastSyncLabel;
+
+  /// No description provided for @syncLastSyncNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get syncLastSyncNever;
+
+  /// No description provided for @syncPendingChangesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending changes'**
+  String get syncPendingChangesLabel;
+
+  /// No description provided for @syncFailedChangesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed changes'**
+  String get syncFailedChangesLabel;
+
+  /// No description provided for @syncNowAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Now'**
+  String get syncNowAction;
+
+  /// No description provided for @syncOfflineMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline. Changes will sync automatically when an internet connection is available.'**
+  String get syncOfflineMessage;
+
+  /// No description provided for @syncStatusSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced'**
+  String get syncStatusSynced;
+
+  /// No description provided for @syncStatusSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing…'**
+  String get syncStatusSyncing;
+
+  /// No description provided for @syncStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get syncStatusPending;
+
+  /// No description provided for @syncStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed'**
+  String get syncStatusFailed;
+
+  /// No description provided for @syncStatusConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflict'**
+  String get syncStatusConflict;
+
+  /// No description provided for @syncStatusOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get syncStatusOffline;
+
+  /// No description provided for @syncCompletedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization completed'**
+  String get syncCompletedTitle;
+
+  /// No description provided for @syncCompletedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'All changes have been synchronized.'**
+  String get syncCompletedMessage;
+
+  /// No description provided for @syncPartialTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Some changes could not be synchronized'**
+  String get syncPartialTitle;
+
+  /// No description provided for @syncFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization failed'**
+  String get syncFailedTitle;
+
+  /// No description provided for @syncFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please try again later.'**
+  String get syncFailedMessage;
+
+  /// No description provided for @loadingPleaseWait.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait…'**
+  String get loadingPleaseWait;
+
+  /// No description provided for @loadingProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing…'**
+  String get loadingProcessing;
+
+  /// No description provided for @loadingSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get loadingSaving;
+
+  /// No description provided for @loadingDeleting.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting…'**
+  String get loadingDeleting;
+
+  /// No description provided for @loadingImportingProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing products…'**
+  String get loadingImportingProducts;
+
+  /// No description provided for @loadingImportingInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing inventory…'**
+  String get loadingImportingInventory;
+
+  /// No description provided for @loadingSavingInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving inventory…'**
+  String get loadingSavingInventory;
+
+  /// No description provided for @loadingSynchronizing.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronizing…'**
+  String get loadingSynchronizing;
+
+  /// No description provided for @loadingExportingReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing report…'**
+  String get loadingExportingReport;
 }
 
 class _AppLocalizationsDelegate

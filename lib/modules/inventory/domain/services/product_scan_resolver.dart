@@ -92,6 +92,7 @@ class ProductScanResolver {
     final now = DateTime.now();
     return Product(
       id: payload.id,
+      uuid: '00000000-0000-4000-8000-${payload.id.toString().padLeft(12, '0')}',
       itemCode: payload.itemCode,
       name: payload.name,
       barcode: payload.barcode,

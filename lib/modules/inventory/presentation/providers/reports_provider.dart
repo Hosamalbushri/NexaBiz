@@ -127,7 +127,18 @@ class ReportExportNotifier extends StateNotifier<AsyncValue<String?>> {
   }
 
   Future<void> shareExportedFile(String path) async {
-    await SharePlus.instance.share(ShareParams(files: [XFile(path)]));
+    final lower = path.toLowerCase();
+    final mimeType = lower.endsWith('.pdf')
+        ? 'application/pdf'
+        : lower.endsWith('.xlsx')
+        ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        : null;
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(path, mimeType: mimeType)],
+        subject: 'Inventory report',
+      ),
+    );
   }
 
   /// Opens the system print dialog for the export (PDF file, or a PDF

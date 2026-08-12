@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/di/app_providers.dart';
 import '../core/notifications/notification_type.dart';
+import '../core/sync/sync_overview.dart';
+import '../core/sync/sync_providers.dart';
 import '../core/widgets/app_snackbar.dart';
+import '../core/widgets/loading_overlay.dart';
 import 'localization/app_localizations.dart';
 import 'notifications/presentation/providers/notifications_provider.dart';
 import 'notifications/presentation/widgets/notification_toast_host.dart';
@@ -21,10 +26,58 @@ class BusinessPlatformApp extends ConsumerStatefulWidget {
 }
 
 class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
+  StreamSubscription<SyncPassResult>? _syncPassSub;
+
   @override
   void initState() {
     super.initState();
     registerAppSnackBarHandler(_bridgeSnackBar);
+    _syncPassSub = ref
+        .read(syncManagerProvider)
+        .meaningfulPasses
+        .listen(_onMeaningfulSyncPass);
+  }
+
+  @override
+  void dispose() {
+    unawaited(_syncPassSub?.cancel());
+    super.dispose();
+  }
+
+  void _onMeaningfulSyncPass(SyncPassResult result) {
+    final locale =
+        ref.read(localeProvider) ?? AppLocalizations.supportedLocales.first;
+    final l10n = lookupAppLocalizations(locale);
+    final notifications = ref.read(notificationServiceProvider);
+
+    switch (result.outcome) {
+      case SyncPassOutcome.completed:
+        unawaited(
+          notifications.showSuccess(
+            title: l10n.syncCompletedTitle,
+            message: l10n.syncCompletedMessage,
+            category: NotificationCategory.sync,
+          ),
+        );
+      case SyncPassOutcome.partialFailure:
+        unawaited(
+          notifications.showWarning(
+            title: l10n.syncPartialTitle,
+            category: NotificationCategory.sync,
+          ),
+        );
+      case SyncPassOutcome.failed:
+        unawaited(
+          notifications.showError(
+            title: l10n.syncFailedTitle,
+            message: l10n.syncFailedMessage,
+            category: NotificationCategory.sync,
+          ),
+        );
+      case SyncPassOutcome.idle:
+      case SyncPassOutcome.skippedOffline:
+        break;
+    }
   }
 
   void _bridgeSnackBar(
@@ -68,7 +121,11 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       builder: (context, child) {
-        return NotificationToastHost(child: child ?? const SizedBox.shrink());
+        return LoadingOverlayHost(
+          child: NotificationToastHost(
+            child: child ?? const SizedBox.shrink(),
+          ),
+        );
       },
     );
   }

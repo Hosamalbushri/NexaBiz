@@ -9,6 +9,7 @@ enum NotificationCategory {
   products,
   reports,
   updates,
+  sync,
 }
 
 /// Default auto-dismiss durations for floating toasts.

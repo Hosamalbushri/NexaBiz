@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/services/loading_providers.dart';
 import '../../../../core/widgets/app_bottom_sheet.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_empty_state.dart';
@@ -102,7 +103,12 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
     final exportAction = CustomAppBarAction(
       icon: Icons.print_rounded,
       tooltip: localization.exportReport,
-      onPressed: exportState.isLoading ? null : _showExportOptions,
+      onPressed: exportState.isLoading
+          ? null
+          : () {
+              // Ignore returned Future — errors are handled inside.
+              _showExportOptions();
+            },
       isLoading: exportState.isLoading,
     );
 
@@ -393,53 +399,77 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
 
   Future<void> _showExportOptions() async {
     final localization = AppLocalizations.of(context);
-    final validationError = await ref
-        .read(reportExportProvider.notifier)
-        .validateBeforeExport();
-    if (!mounted) {
-      return;
-    }
-    if (validationError != null) {
+    try {
+      final validationError = await ref
+          .read(reportExportProvider.notifier)
+          .validateBeforeExport();
+      if (!mounted) {
+        return;
+      }
+      if (validationError != null) {
+        showAppSnackBar(
+          context,
+          message: _exportValidationMessage(localization, validationError.code),
+          isSuccess: false,
+        );
+        return;
+      }
+
+      final format = await showAppBottomSheet<ReportExportFormat>(
+        context: context,
+        title: localization.exportAs,
+        child: Builder(
+          builder: (sheetContext) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.table_chart_outlined),
+                  title: Text(localization.exportExcel),
+                  onTap: () => Navigator.of(
+                    sheetContext,
+                  ).pop(ReportExportFormat.excel),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.picture_as_pdf_outlined),
+                  title: Text(localization.exportPdf),
+                  onTap: () => Navigator.of(
+                    sheetContext,
+                  ).pop(ReportExportFormat.pdf),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+
+      if (format == null || !mounted) {
+        return;
+      }
+      await _exportReport(format);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
       showAppSnackBar(
         context,
-        message: _exportValidationMessage(localization, validationError.code),
+        message: localization.exportFailed,
         isSuccess: false,
       );
-      return;
     }
-
-    final format = await showAppBottomSheet<ReportExportFormat>(
-      context: context,
-      title: localization.exportAs,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.table_chart_outlined),
-            title: Text(localization.exportExcel),
-            onTap: () => Navigator.pop(context, ReportExportFormat.excel),
-          ),
-          ListTile(
-            leading: const Icon(Icons.picture_as_pdf_outlined),
-            title: Text(localization.exportPdf),
-            onTap: () => Navigator.pop(context, ReportExportFormat.pdf),
-          ),
-        ],
-      ),
-    );
-
-    if (format == null || !mounted) {
-      return;
-    }
-    await _exportReport(format);
   }
 
   Future<void> _exportReport(ReportExportFormat format) async {
     final localization = AppLocalizations.of(context);
     final labels = _exportLabels(localization);
     final result = await ref
-        .read(reportExportProvider.notifier)
-        .exportReport(format: format, labels: labels);
+        .read(loadingControllerProvider)
+        .run(
+          message: localization.loadingExportingReport,
+          action: () => ref
+              .read(reportExportProvider.notifier)
+              .exportReport(format: format, labels: labels),
+        );
 
     if (!mounted) {
       return;
@@ -494,10 +524,21 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
                   icon: Icons.share_outlined,
                   variant: AppButtonVariant.outlined,
                   expand: true,
-                  onPressed: () {
-                    ref
-                        .read(reportExportProvider.notifier)
-                        .shareExportedFile(path);
+                  onPressed: () async {
+                    try {
+                      await ref
+                          .read(reportExportProvider.notifier)
+                          .shareExportedFile(path);
+                    } catch (_) {
+                      if (!mounted) {
+                        return;
+                      }
+                      showAppSnackBar(
+                        context,
+                        message: localization.exportFailed,
+                        isSuccess: false,
+                      );
+                    }
                   },
                 ),
               ),

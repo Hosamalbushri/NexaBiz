@@ -13,6 +13,7 @@ export 'app_search_bar.dart';
 export 'app_snackbar.dart';
 export 'app_status_badge.dart';
 export 'app_text_field.dart';
+export 'loading_overlay.dart';
 export 'notification_badge.dart';
 export 'notification_banner.dart';
 export 'notification_tile.dart';

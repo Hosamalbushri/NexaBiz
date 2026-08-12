@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/sync/sync_providers.dart';
 import '../../data/datasources/excel_export_datasource.dart';
 import '../../data/datasources/excel_import_datasource.dart';
 import '../../data/datasources/pdf_export_datasource.dart';
@@ -11,8 +12,12 @@ import '../../domain/services/counting_calculator.dart';
 import '../../domain/services/pack_size_parser.dart';
 import '../../domain/usecases/inventory_usecases.dart';
 
+final inventoryRepositoryImplProvider = Provider<InventoryRepositoryImpl>((ref) {
+  return InventoryRepositoryImpl(syncQueue: ref.watch(syncQueueProvider));
+});
+
 final inventoryRepositoryProvider = Provider<InventoryRepository>((ref) {
-  return InventoryRepositoryImpl();
+  return ref.watch(inventoryRepositoryImplProvider);
 });
 
 final packSizeParserProvider = Provider<PackSizeParser>((ref) {

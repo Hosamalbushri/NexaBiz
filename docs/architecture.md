@@ -111,7 +111,15 @@ Riverpod throughout. See [ADR-002](adr/ADR-002-state-management.md).
 
 ## Persistence
 
-Hive for settings + stock-count items; Drift/SQLite for products. See [ADR-004](adr/ADR-004-local-database.md), [ADR-005](adr/ADR-005-drift-products.md), and [`database.md`](database.md).
+Hive for settings, notifications, sync queue, and stock-count items; Drift/SQLite for products. See [ADR-004](adr/ADR-004-local-database.md), [ADR-005](adr/ADR-005-drift-products.md), [ADR-006](adr/ADR-006-offline-first-sync.md), and [`database.md`](database.md).
+
+## Offline-first sync
+
+Local database is the UI source of truth. Mutations enqueue durable `SyncOperation` rows; `SyncManager` uploads/downloads when connectivity is restored. Feature modules register `SyncEntityHandler` adapters — they do not own separate sync engines.
+
+## Global loading overlay
+
+Blocking user waits use `LoadingController` + `LoadingOverlayHost` (`lib/core/services/`, `lib/core/widgets/loading_overlay.dart`). Prefer `loadingControllerProvider.run(...)` so the overlay always clears after success or failure. Background sync must not use this overlay — only explicit user actions (Sync Now, import, export, …).
 
 ## UI system
 

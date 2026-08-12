@@ -15,7 +15,7 @@ class InventoryDatabase extends _$InventoryDatabase {
   InventoryDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -24,6 +24,41 @@ class InventoryDatabase extends _$InventoryDatabase {
       await customStatement(
         'CREATE INDEX IF NOT EXISTS idx_products_name ON products (name)',
       );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_products_sync ON products (sync_status)',
+      );
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 2) {
+        await customStatement(
+          "ALTER TABLE products ADD COLUMN uuid TEXT NOT NULL DEFAULT ''",
+        );
+        await customStatement(
+          "ALTER TABLE products ADD COLUMN sync_status TEXT NOT NULL "
+          "DEFAULT 'synced'",
+        );
+        await customStatement(
+          'ALTER TABLE products ADD COLUMN last_synced_at INTEGER NULL',
+        );
+        await customStatement(
+          'ALTER TABLE products ADD COLUMN version INTEGER NOT NULL DEFAULT 1',
+        );
+        await customStatement(
+          'ALTER TABLE products ADD COLUMN deleted_at INTEGER NULL',
+        );
+        await customStatement(
+          "UPDATE products SET uuid = printf("
+          "'00000000-0000-4000-8000-%012d', id) "
+          "WHERE uuid IS NULL OR uuid = ''",
+        );
+        await customStatement(
+          'CREATE UNIQUE INDEX IF NOT EXISTS idx_products_uuid '
+          'ON products (uuid)',
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_products_sync ON products (sync_status)',
+        );
+      }
     },
   );
 

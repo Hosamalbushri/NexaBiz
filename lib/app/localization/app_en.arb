@@ -281,6 +281,39 @@
   "notificationsEmptyMessage": "You're all caught up.",
   "notificationsMarkAllRead": "Mark all as read",
   "notificationsTooltip": "Notifications",
+  "notificationsUnreadBadge": "Unread",
+  "notificationsSummaryTotal": "{count} notifications",
+  "@notificationsSummaryTotal": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "notificationsSummaryUnread": "{count} unread",
+  "@notificationsSummaryUnread": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "notificationsSummaryAllRead": "All caught up",
+  "notificationsTimeJustNow": "Just now",
+  "notificationsTimeMinutes": "{count}m ago",
+  "@notificationsTimeMinutes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "notificationsTimeHours": "{count}h ago",
+  "@notificationsTimeHours": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "notificationsTimeDays": "{count}d ago",
+  "@notificationsTimeDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "cancel": "Cancel",
   "confirm": "Confirm",
   "exitAppTitle": "Exit Application?",
@@ -408,5 +441,35 @@
         "type": "int"
       }
     }
-  }
+  },
+  "syncSectionTitle": "Synchronization",
+  "syncConnectionLabel": "Connection",
+  "syncConnectionOnline": "Online",
+  "syncConnectionOffline": "Offline",
+  "syncLastSyncLabel": "Last synchronization",
+  "syncLastSyncNever": "Never",
+  "syncPendingChangesLabel": "Pending changes",
+  "syncFailedChangesLabel": "Failed changes",
+  "syncNowAction": "Sync Now",
+  "syncOfflineMessage": "You're offline. Changes will sync automatically when an internet connection is available.",
+  "syncStatusSynced": "Synced",
+  "syncStatusSyncing": "Syncing…",
+  "syncStatusPending": "Pending",
+  "syncStatusFailed": "Sync failed",
+  "syncStatusConflict": "Conflict",
+  "syncStatusOffline": "Offline",
+  "syncCompletedTitle": "Synchronization completed",
+  "syncCompletedMessage": "All changes have been synchronized.",
+  "syncPartialTitle": "Some changes could not be synchronized",
+  "syncFailedTitle": "Synchronization failed",
+  "syncFailedMessage": "Please try again later.",
+  "loadingPleaseWait": "Please wait…",
+  "loadingProcessing": "Processing…",
+  "loadingSaving": "Saving…",
+  "loadingDeleting": "Deleting…",
+  "loadingImportingProducts": "Importing products…",
+  "loadingImportingInventory": "Importing inventory…",
+  "loadingSavingInventory": "Saving inventory…",
+  "loadingSynchronizing": "Synchronizing…",
+  "loadingExportingReport": "Preparing report…"
 }

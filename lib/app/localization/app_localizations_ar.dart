@@ -768,6 +768,40 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationsTooltip => 'الإشعارات';
 
   @override
+  String get notificationsUnreadBadge => 'غير مقروء';
+
+  @override
+  String notificationsSummaryTotal(int count) {
+    return '$count إشعارات';
+  }
+
+  @override
+  String notificationsSummaryUnread(int count) {
+    return '$count غير مقروء';
+  }
+
+  @override
+  String get notificationsSummaryAllRead => 'الكل مقروء';
+
+  @override
+  String get notificationsTimeJustNow => 'الآن';
+
+  @override
+  String notificationsTimeMinutes(int count) {
+    return 'منذ $count د';
+  }
+
+  @override
+  String notificationsTimeHours(int count) {
+    return 'منذ $count س';
+  }
+
+  @override
+  String notificationsTimeDays(int count) {
+    return 'منذ $count ي';
+  }
+
+  @override
   String get cancel => 'إلغاء';
 
   @override
@@ -1040,4 +1074,95 @@ class AppLocalizationsAr extends AppLocalizations {
   String duplicateRowsCount(int count) {
     return 'تم استبدال $count رموز مكررة';
   }
+
+  @override
+  String get syncSectionTitle => 'المزامنة';
+
+  @override
+  String get syncConnectionLabel => 'الاتصال';
+
+  @override
+  String get syncConnectionOnline => 'متصل';
+
+  @override
+  String get syncConnectionOffline => 'غير متصل';
+
+  @override
+  String get syncLastSyncLabel => 'آخر مزامنة';
+
+  @override
+  String get syncLastSyncNever => 'لم تتم بعد';
+
+  @override
+  String get syncPendingChangesLabel => 'تغييرات معلّقة';
+
+  @override
+  String get syncFailedChangesLabel => 'تغييرات فشلت';
+
+  @override
+  String get syncNowAction => 'مزامنة الآن';
+
+  @override
+  String get syncOfflineMessage =>
+      'أنت غير متصل. ستتم مزامنة التغييرات تلقائياً عند توفر الإنترنت.';
+
+  @override
+  String get syncStatusSynced => 'تمت المزامنة';
+
+  @override
+  String get syncStatusSyncing => 'جاري المزامنة…';
+
+  @override
+  String get syncStatusPending => 'معلّق';
+
+  @override
+  String get syncStatusFailed => 'فشلت المزامنة';
+
+  @override
+  String get syncStatusConflict => 'تعارض';
+
+  @override
+  String get syncStatusOffline => 'غير متصل';
+
+  @override
+  String get syncCompletedTitle => 'اكتملت المزامنة';
+
+  @override
+  String get syncCompletedMessage => 'تمت مزامنة جميع التغييرات.';
+
+  @override
+  String get syncPartialTitle => 'تعذّرت مزامنة بعض التغييرات';
+
+  @override
+  String get syncFailedTitle => 'فشلت المزامنة';
+
+  @override
+  String get syncFailedMessage => 'يرجى المحاولة لاحقاً.';
+
+  @override
+  String get loadingPleaseWait => 'يرجى الانتظار…';
+
+  @override
+  String get loadingProcessing => 'جاري المعالجة…';
+
+  @override
+  String get loadingSaving => 'جاري الحفظ…';
+
+  @override
+  String get loadingDeleting => 'جاري الحذف…';
+
+  @override
+  String get loadingImportingProducts => 'جاري استيراد المنتجات…';
+
+  @override
+  String get loadingImportingInventory => 'جاري استيراد المخزون…';
+
+  @override
+  String get loadingSavingInventory => 'جاري حفظ الجرد…';
+
+  @override
+  String get loadingSynchronizing => 'جاري المزامنة…';
+
+  @override
+  String get loadingExportingReport => 'جاري إعداد التقرير…';
 }

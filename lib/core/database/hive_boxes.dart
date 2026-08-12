@@ -8,4 +8,7 @@ class HiveBoxes {
 
   /// Durable in-app notification history.
   static const String notifications = 'app_notifications';
+
+  /// Persistent offline-first synchronization queue.
+  static const String syncQueue = 'sync_queue';
 }

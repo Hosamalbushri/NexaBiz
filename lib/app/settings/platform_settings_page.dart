@@ -8,6 +8,8 @@ import '../localization/app_localizations.dart';
 import '../notifications/presentation/providers/notifications_provider.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
 import '../router/app_routes.dart';
+import '../sync/sync_settings_section.dart';
+import '../sync/sync_status_indicator.dart';
 import '../theme/app_spacing.dart';
 import '../../core/di/app_providers.dart';
 import '../../core/widgets/app_card.dart';
@@ -39,6 +41,7 @@ class PlatformSettingsPage extends ConsumerWidget {
         showNotifications: true,
         notificationCount: unread,
         onNotifications: () => context.push(AppRoutes.notifications),
+        actions: const [SyncStatusIndicator()],
       ),
       body: ListView(
         padding: AppConstants.pageInsets(context),
@@ -110,6 +113,8 @@ class PlatformSettingsPage extends ConsumerWidget {
               ],
             ),
           ),
+          const SizedBox(height: AppSpacing.section),
+          const SyncSettingsSection(),
           const SizedBox(height: AppSpacing.section),
           _SectionHeader(title: localization.about),
           AppCard(

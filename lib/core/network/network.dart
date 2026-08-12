@@ -1,2 +1,4 @@
-/// Core network abstractions (populated as needed).
+/// Core network abstractions.
 library;
+
+export 'remote_sync_api.dart';

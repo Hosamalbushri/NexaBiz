@@ -54,7 +54,9 @@ Read this file before modifying the project. For full context see [`AI_CONTEXT.m
 - Platform settings: Hive box `app_settings` via `SettingsRepository`.
 - Stock-count items: Hive box `inventory_items` owned by the Inventory module.
 - Products catalog: Drift/SQLite via `InventoryDatabase` / `ProductRepository`.
+- Sync queue: Hive box `sync_queue` via Core `SyncQueue` / `SyncManager`.
 - UI must never open Hive boxes or Drift databases directly.
+- UI must never call the remote API directly — only repositories + sync.
 - Schema/adapter/migration changes require documented notes (`docs/database.md`, ADRs).
 
 ## Dependency Rules

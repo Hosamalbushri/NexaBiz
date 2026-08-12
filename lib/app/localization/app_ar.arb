@@ -281,6 +281,39 @@
   "notificationsEmptyMessage": "أنت على اطلاع بكل جديد.",
   "notificationsMarkAllRead": "تعليم الكل كمقروء",
   "notificationsTooltip": "الإشعارات",
+  "notificationsUnreadBadge": "غير مقروء",
+  "notificationsSummaryTotal": "{count} إشعارات",
+  "@notificationsSummaryTotal": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "notificationsSummaryUnread": "{count} غير مقروء",
+  "@notificationsSummaryUnread": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "notificationsSummaryAllRead": "الكل مقروء",
+  "notificationsTimeJustNow": "الآن",
+  "notificationsTimeMinutes": "منذ {count} د",
+  "@notificationsTimeMinutes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "notificationsTimeHours": "منذ {count} س",
+  "@notificationsTimeHours": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "notificationsTimeDays": "منذ {count} ي",
+  "@notificationsTimeDays": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "cancel": "إلغاء",
   "confirm": "تأكيد",
   "exitAppTitle": "هل تريد الخروج؟",
@@ -408,5 +441,35 @@
         "type": "int"
       }
     }
-  }
+  },
+  "syncSectionTitle": "المزامنة",
+  "syncConnectionLabel": "الاتصال",
+  "syncConnectionOnline": "متصل",
+  "syncConnectionOffline": "غير متصل",
+  "syncLastSyncLabel": "آخر مزامنة",
+  "syncLastSyncNever": "لم تتم بعد",
+  "syncPendingChangesLabel": "تغييرات معلّقة",
+  "syncFailedChangesLabel": "تغييرات فشلت",
+  "syncNowAction": "مزامنة الآن",
+  "syncOfflineMessage": "أنت غير متصل. ستتم مزامنة التغييرات تلقائياً عند توفر الإنترنت.",
+  "syncStatusSynced": "تمت المزامنة",
+  "syncStatusSyncing": "جاري المزامنة…",
+  "syncStatusPending": "معلّق",
+  "syncStatusFailed": "فشلت المزامنة",
+  "syncStatusConflict": "تعارض",
+  "syncStatusOffline": "غير متصل",
+  "syncCompletedTitle": "اكتملت المزامنة",
+  "syncCompletedMessage": "تمت مزامنة جميع التغييرات.",
+  "syncPartialTitle": "تعذّرت مزامنة بعض التغييرات",
+  "syncFailedTitle": "فشلت المزامنة",
+  "syncFailedMessage": "يرجى المحاولة لاحقاً.",
+  "loadingPleaseWait": "يرجى الانتظار…",
+  "loadingProcessing": "جاري المعالجة…",
+  "loadingSaving": "جاري الحفظ…",
+  "loadingDeleting": "جاري الحذف…",
+  "loadingImportingProducts": "جاري استيراد المنتجات…",
+  "loadingImportingInventory": "جاري استيراد المخزون…",
+  "loadingSavingInventory": "جاري حفظ الجرد…",
+  "loadingSynchronizing": "جاري المزامنة…",
+  "loadingExportingReport": "جاري إعداد التقرير…"
 }

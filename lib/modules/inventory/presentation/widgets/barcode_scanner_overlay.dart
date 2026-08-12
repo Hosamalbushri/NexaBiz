@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 /// Visual phase for the barcode scanner overlay.
 enum ScannerOverlayStatus { scanning, processing, success, error }
@@ -6,7 +7,7 @@ enum ScannerOverlayStatus { scanning, processing, success, error }
 /// Professional scanning UI layer rendered above an existing camera preview.
 ///
 /// Does not own the camera or detection logic — only the overlay chrome,
-/// laser animation, and status messaging.
+/// QR guide animation, and status messaging.
 class BarcodeScannerOverlay extends StatefulWidget {
   const BarcodeScannerOverlay({
     super.key,
@@ -17,6 +18,9 @@ class BarcodeScannerOverlay extends StatefulWidget {
     required this.processingLabel,
     required this.errorLabel,
   });
+
+  /// Bundled Lottie guide shown inside the scan cutout.
+  static const String qrGuideAsset = 'assets/animations/scanner_qr.json';
 
   final ScannerOverlayStatus status;
   final String alignHint;
@@ -30,13 +34,10 @@ class BarcodeScannerOverlay extends StatefulWidget {
 }
 
 class _BarcodeScannerOverlayState extends State<BarcodeScannerOverlay>
-    with TickerProviderStateMixin, WidgetsBindingObserver {
-  static const _laserDuration = Duration(milliseconds: 1700);
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   static const _pulseDuration = Duration(milliseconds: 2200);
 
-  late final AnimationController _laserController;
   late final AnimationController _pulseController;
-  late final Animation<double> _laserAnimation;
   late final Animation<double> _pulseAnimation;
 
   bool get _isActivelyScanning =>
@@ -47,19 +48,11 @@ class _BarcodeScannerOverlayState extends State<BarcodeScannerOverlay>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    _laserController = AnimationController(
-      vsync: this,
-      duration: _laserDuration,
-    );
     _pulseController = AnimationController(
       vsync: this,
       duration: _pulseDuration,
     );
 
-    _laserAnimation = CurvedAnimation(
-      parent: _laserController,
-      curve: Curves.easeInOut,
-    );
     _pulseAnimation = CurvedAnimation(
       parent: _pulseController,
       curve: Curves.easeInOut,
@@ -96,18 +89,12 @@ class _BarcodeScannerOverlayState extends State<BarcodeScannerOverlay>
   }
 
   void _startAnimations() {
-    if (!_laserController.isAnimating) {
-      _laserController.repeat(reverse: true);
-    }
     if (!_pulseController.isAnimating) {
       _pulseController.repeat(reverse: true);
     }
   }
 
   void _stopAnimations() {
-    if (_laserController.isAnimating) {
-      _laserController.stop();
-    }
     if (_pulseController.isAnimating) {
       _pulseController.stop();
     }
@@ -116,7 +103,6 @@ class _BarcodeScannerOverlayState extends State<BarcodeScannerOverlay>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _laserController.dispose();
     _pulseController.dispose();
     super.dispose();
   }
@@ -157,24 +143,54 @@ class _BarcodeScannerOverlayState extends State<BarcodeScannerOverlay>
           width: cutoutSize,
           height: cutoutSize,
         );
+        final guideSize = cutoutSize * 0.42;
 
         return IgnorePointer(
           child: Stack(
             fit: StackFit.expand,
             children: [
               CustomPaint(painter: _ScannerDimPainter(cutout: cutout)),
+              if (widget.status == ScannerOverlayStatus.scanning)
+                Positioned(
+                  left: cutout.center.dx - guideSize / 2,
+                  top: cutout.center.dy - guideSize / 2,
+                  width: guideSize,
+                  height: guideSize,
+                  child: Opacity(
+                    opacity: 0.88,
+                    child: Lottie.asset(
+                      BarcodeScannerOverlay.qrGuideAsset,
+                      fit: BoxFit.contain,
+                      repeat: !reduceMotion,
+                      animate: !reduceMotion,
+                      frameRate: FrameRate.max,
+                      delegates: LottieDelegates(
+                        values: [
+                          ValueDelegate.strokeColor(
+                            const ['**'],
+                            value: Colors.white,
+                          ),
+                        ],
+                      ),
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.qr_code_2_rounded,
+                          size: guideSize * 0.7,
+                          color: accent.withValues(alpha: 0.85),
+                        );
+                      },
+                    ),
+                  ),
+                ),
               AnimatedBuilder(
-                animation: Listenable.merge([_laserAnimation, _pulseAnimation]),
+                animation: _pulseAnimation,
                 builder: (context, _) {
                   final pulse = reduceMotion ? 1.0 : _pulseAnimation.value;
-                  final laserT = reduceMotion ? 0.5 : _laserAnimation.value;
                   return CustomPaint(
                     painter: _ScannerFramePainter(
                       cutout: cutout,
                       accent: accent,
                       pulse: pulse,
-                      laserT: laserT,
-                      showLaser: widget.status == ScannerOverlayStatus.scanning,
                     ),
                   );
                 },
@@ -309,15 +325,11 @@ class _ScannerFramePainter extends CustomPainter {
     required this.cutout,
     required this.accent,
     required this.pulse,
-    required this.laserT,
-    required this.showLaser,
   });
 
   final Rect cutout;
   final Color accent;
   final double pulse;
-  final double laserT;
-  final bool showLaser;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -368,52 +380,12 @@ class _ScannerFramePainter extends CustomPainter {
       Offset(right, bottom),
       Offset(right, bottom - cornerLength),
     );
-
-    if (!showLaser) {
-      return;
-    }
-
-    final inset = 10.0;
-    final y = cutout.top + inset + (cutout.height - inset * 2) * laserT;
-    final lineLeft = cutout.left + inset;
-    final lineRight = cutout.right - inset;
-
-    final glowPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          accent.withValues(alpha: 0),
-          accent.withValues(alpha: 0.35),
-          accent.withValues(alpha: 0),
-        ],
-      ).createShader(Rect.fromLTWH(lineLeft, y - 10, lineRight - lineLeft, 20))
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-
-    canvas.drawRect(
-      Rect.fromLTRB(lineLeft, y - 8, lineRight, y + 8),
-      glowPaint,
-    );
-
-    final linePaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          accent.withValues(alpha: 0),
-          accent.withValues(alpha: 0.95),
-          accent.withValues(alpha: 0),
-        ],
-      ).createShader(Rect.fromLTWH(lineLeft, y - 1, lineRight - lineLeft, 2))
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawLine(Offset(lineLeft, y), Offset(lineRight, y), linePaint);
   }
 
   @override
   bool shouldRepaint(covariant _ScannerFramePainter oldDelegate) {
     return oldDelegate.cutout != cutout ||
         oldDelegate.accent != accent ||
-        oldDelegate.pulse != pulse ||
-        oldDelegate.laserT != laserT ||
-        oldDelegate.showLaser != showLaser;
+        oldDelegate.pulse != pulse;
   }
 }

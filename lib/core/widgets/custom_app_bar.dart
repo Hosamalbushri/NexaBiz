@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/localization/app_localizations.dart';
 import 'notification_badge.dart';
 
 /// Visual configuration for [CustomAppBar].
@@ -813,14 +814,15 @@ class _CustomAppBarNotificationButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tooltip = AppLocalizations.of(context).notificationsTooltip;
     return Semantics(
       button: true,
-      label: MaterialLocalizations.of(context).alertDialogLabel,
+      label: tooltip,
       child: NotificationBadge(
         count: count,
         child: _CustomAppBarIconButton(
           icon: icon,
-          tooltip: MaterialLocalizations.of(context).alertDialogLabel,
+          tooltip: tooltip,
           onPressed: onPressed,
           foregroundColor: foregroundColor,
           size: size,

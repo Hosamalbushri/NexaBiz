@@ -1,5 +1,9 @@
 import 'package:drift/drift.dart';
 
+import '../../../../core/sync/sync_operation.dart';
+import '../../../../core/sync/sync_queue.dart';
+import '../../../../core/sync/sync_status.dart';
+import '../../../../core/utils/id_generator.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/models/catalog_search_field.dart';
 import '../../domain/models/paged_result.dart';
@@ -8,22 +12,43 @@ import '../../domain/repositories/product_repository.dart';
 import '../database/inventory_database.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
-  ProductRepositoryImpl(this._db);
+  ProductRepositoryImpl(this._db, {SyncQueue? syncQueue})
+    : _syncQueue = syncQueue;
 
   final InventoryDatabase _db;
+  final SyncQueue? _syncQueue;
+
+  static const entityType = 'product';
 
   Product _map(ProductRow row) {
     return Product(
       id: row.id,
+      uuid: row.uuid,
       itemCode: row.itemCode,
       name: row.name,
       barcode: row.barcode,
       packSize: row.packSize,
       price: row.price,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt),
-      updatedAt: DateTime.fromMillisecondsSinceEpoch(row.updatedAt),
+      createdAt: DateTime.fromMillisecondsSinceEpoch(
+        row.createdAt,
+        isUtc: true,
+      ),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(
+        row.updatedAt,
+        isUtc: true,
+      ),
+      syncStatus: SyncStatusX.fromStorage(row.syncStatus),
+      lastSyncedAt: row.lastSyncedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(row.lastSyncedAt!, isUtc: true),
+      version: row.version,
+      deletedAt: row.deletedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),
     );
   }
+
+  Expression<bool> _notDeleted($ProductsTable t) => t.deletedAt.isNull();
 
   String _normalizeCode(String value) => value.trim();
 
@@ -60,7 +85,7 @@ class ProductRepositoryImpl implements ProductRepository {
     int? excludingId,
   }) async {
     final codeQuery = _db.select(_db.products)
-      ..where((t) => t.itemCode.equals(itemCode));
+      ..where((t) => t.itemCode.equals(itemCode) & _notDeleted(t));
     if (excludingId != null) {
       codeQuery.where((t) => t.id.isNotValue(excludingId));
     }
@@ -73,7 +98,7 @@ class ProductRepositoryImpl implements ProductRepository {
       return;
     }
     final barcodeQuery = _db.select(_db.products)
-      ..where((t) => t.barcode.equals(barcode));
+      ..where((t) => t.barcode.equals(barcode) & _notDeleted(t));
     if (excludingId != null) {
       barcodeQuery.where((t) => t.id.isNotValue(excludingId));
     }
@@ -83,17 +108,46 @@ class ProductRepositoryImpl implements ProductRepository {
     }
   }
 
+  Future<void> _enqueue(Product product, SyncOperationType type) async {
+    final queue = _syncQueue;
+    if (queue == null) {
+      return;
+    }
+    await queue.enqueue(
+      SyncOperation.create(
+        entityType: entityType,
+        entityId: product.uuid,
+        type: type,
+        baseVersion: product.version,
+        payload: {
+          'uuid': product.uuid,
+          'itemCode': product.itemCode,
+          'name': product.name,
+          'barcode': product.barcode,
+          'packSize': product.packSize,
+          'price': product.price,
+          'version': product.version,
+          'updatedAt': product.updatedAt.toUtc().millisecondsSinceEpoch,
+          'deletedAt': product.deletedAt?.toUtc().millisecondsSinceEpoch,
+        },
+      ),
+    );
+  }
+
   @override
   Future<List<Product>> getAll() async {
-    final rows = await (_db.select(
-      _db.products,
-    )..orderBy([(t) => OrderingTerm.asc(t.itemCode)])).get();
+    final rows =
+        await (_db.select(_db.products)
+              ..where(_notDeleted)
+              ..orderBy([(t) => OrderingTerm.asc(t.itemCode)]))
+            .get();
     return rows.map(_map).toList(growable: false);
   }
 
   @override
   Stream<List<Product>> watchAll() {
     final query = _db.select(_db.products)
+      ..where(_notDeleted)
       ..orderBy([(t) => OrderingTerm.asc(t.itemCode)]);
     return query.watch().map((rows) => rows.map(_map).toList(growable: false));
   }
@@ -102,7 +156,14 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<Product?> getById(int id) async {
     final row = await (_db.select(
       _db.products,
-    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    )..where((t) => t.id.equals(id) & _notDeleted(t))).getSingleOrNull();
+    return row == null ? null : _map(row);
+  }
+
+  Future<Product?> getByUuid(String uuid) async {
+    final row = await (_db.select(
+      _db.products,
+    )..where((t) => t.uuid.equals(uuid))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -112,9 +173,10 @@ class ProductRepositoryImpl implements ProductRepository {
     if (code.isEmpty) {
       return null;
     }
-    final row = await (_db.select(
-      _db.products,
-    )..where((t) => t.itemCode.equals(code))).getSingleOrNull();
+    final row =
+        await (_db.select(_db.products)
+              ..where((t) => t.itemCode.equals(code) & _notDeleted(t)))
+            .getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -124,9 +186,10 @@ class ProductRepositoryImpl implements ProductRepository {
     if (normalized == null) {
       return null;
     }
-    final row = await (_db.select(
-      _db.products,
-    )..where((t) => t.barcode.equals(normalized))).getSingleOrNull();
+    final row =
+        await (_db.select(_db.products)
+              ..where((t) => t.barcode.equals(normalized) & _notDeleted(t)))
+            .getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -173,7 +236,8 @@ class ProductRepositoryImpl implements ProductRepository {
     final safeSize = pageSize <= 0 ? 20 : pageSize;
 
     final countQuery = _db.selectOnly(_db.products)
-      ..addColumns([_db.products.id.count()]);
+      ..addColumns([_db.products.id.count()])
+      ..where(_notDeleted(_db.products));
     if (normalized.isNotEmpty) {
       countQuery.where(_matchesQuery(_db.products, normalized, searchField));
     }
@@ -191,6 +255,7 @@ class ProductRepositoryImpl implements ProductRepository {
     }
 
     final select = _db.select(_db.products)
+      ..where(_notDeleted)
       ..orderBy([(t) => OrderingTerm.asc(t.itemCode)])
       ..limit(safeSize, offset: start);
     if (normalized.isNotEmpty) {
@@ -213,24 +278,30 @@ class ProductRepositoryImpl implements ProductRepository {
     final barcode = _normalizeBarcode(draft.barcode);
     await _assertUnique(itemCode: code, barcode: barcode);
 
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
+    final nowMs = now.millisecondsSinceEpoch;
+    final uuid = generateUuidV4();
     final id = await _db
         .into(_db.products)
         .insert(
           ProductsCompanion.insert(
+            uuid: uuid,
             itemCode: code,
             name: name,
             barcode: Value(barcode),
             packSize: draft.packSize,
             price: draft.price,
-            createdAt: now,
-            updatedAt: now,
+            createdAt: nowMs,
+            updatedAt: nowMs,
+            syncStatus: const Value('pending'),
+            version: const Value(1),
           ),
         );
     final created = await getById(id);
     if (created == null) {
       throw const ProductException(ProductException.notFound);
     }
+    await _enqueue(created, SyncOperationType.create);
     return created;
   }
 
@@ -247,7 +318,8 @@ class ProductRepositoryImpl implements ProductRepository {
     final barcode = _normalizeBarcode(draft.barcode);
     await _assertUnique(itemCode: code, barcode: barcode, excludingId: id);
 
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
+    final nextVersion = existing.version + 1;
     await (_db.update(_db.products)..where((t) => t.id.equals(id))).write(
       ProductsCompanion(
         itemCode: Value(code),
@@ -255,7 +327,9 @@ class ProductRepositoryImpl implements ProductRepository {
         barcode: Value(barcode),
         packSize: Value(draft.packSize),
         price: Value(draft.price),
-        updatedAt: Value(now),
+        updatedAt: Value(now.millisecondsSinceEpoch),
+        syncStatus: const Value('pending'),
+        version: Value(nextVersion),
       ),
     );
 
@@ -263,24 +337,125 @@ class ProductRepositoryImpl implements ProductRepository {
     if (updated == null) {
       throw const ProductException(ProductException.notFound);
     }
+    await _enqueue(updated, SyncOperationType.update);
     return updated;
   }
 
   @override
   Future<void> delete(int id) async {
-    final count = await (_db.delete(
-      _db.products,
-    )..where((t) => t.id.equals(id))).go();
-    if (count == 0) {
+    final existing = await getById(id);
+    if (existing == null) {
       throw const ProductException(ProductException.notFound);
     }
+    final now = DateTime.now().toUtc();
+    final nextVersion = existing.version + 1;
+    await (_db.update(_db.products)..where((t) => t.id.equals(id))).write(
+      ProductsCompanion(
+        deletedAt: Value(now.millisecondsSinceEpoch),
+        updatedAt: Value(now.millisecondsSinceEpoch),
+        syncStatus: const Value('pending'),
+        version: Value(nextVersion),
+      ),
+    );
+    final tombstone = existing.copyWith(
+      deletedAt: now,
+      updatedAt: now,
+      syncStatus: SyncStatus.pending,
+      version: nextVersion,
+    );
+    await _enqueue(tombstone, SyncOperationType.delete);
+  }
+
+  /// Marks a product synced after server confirmation.
+  Future<void> markSynced({
+    required String uuid,
+    required int remoteVersion,
+    DateTime? syncedAt,
+  }) async {
+    final stamp = (syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch;
+    await (_db.update(_db.products)..where((t) => t.uuid.equals(uuid))).write(
+      ProductsCompanion(
+        syncStatus: const Value('synced'),
+        lastSyncedAt: Value(stamp),
+        version: Value(remoteVersion),
+      ),
+    );
+  }
+
+  Future<void> markConflict(String uuid) async {
+    await (_db.update(_db.products)..where((t) => t.uuid.equals(uuid))).write(
+      const ProductsCompanion(syncStatus: Value('conflict')),
+    );
+  }
+
+  Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
+    final uuid = payload['uuid'] as String?;
+    if (uuid == null || uuid.isEmpty) {
+      return;
+    }
+    final deletedAtMs = payload['deletedAt'] as int?;
+    final existing = await getByUuid(uuid);
+    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final updatedAt = payload['updatedAt'] as int? ?? nowMs;
+    final version = payload['version'] as int? ?? 1;
+
+    if (existing != null &&
+        (existing.syncStatus.needsUpload ||
+            existing.syncStatus == SyncStatus.conflict ||
+            existing.syncStatus == SyncStatus.syncing)) {
+      if (version > existing.version) {
+        await markConflict(uuid);
+      }
+      return;
+    }
+
+    if (existing == null) {
+      if (deletedAtMs != null) {
+        return;
+      }
+      await _db
+          .into(_db.products)
+          .insert(
+            ProductsCompanion.insert(
+              uuid: uuid,
+              itemCode: (payload['itemCode'] as String?) ?? uuid,
+              name: (payload['name'] as String?) ?? '',
+              barcode: Value(payload['barcode'] as String?),
+              packSize: (payload['packSize'] as int?) ?? 1,
+              price: (payload['price'] as num?)?.toDouble() ?? 0,
+              createdAt: payload['createdAt'] as int? ?? updatedAt,
+              updatedAt: updatedAt,
+              syncStatus: const Value('synced'),
+              lastSyncedAt: Value(nowMs),
+              version: Value(version),
+            ),
+          );
+      return;
+    }
+
+    await (_db.update(_db.products)..where((t) => t.uuid.equals(uuid))).write(
+      ProductsCompanion(
+        itemCode: Value((payload['itemCode'] as String?) ?? existing.itemCode),
+        name: Value((payload['name'] as String?) ?? existing.name),
+        barcode: Value(payload['barcode'] as String?),
+        packSize: Value((payload['packSize'] as int?) ?? existing.packSize),
+        price: Value((payload['price'] as num?)?.toDouble() ?? existing.price),
+        updatedAt: Value(updatedAt),
+        syncStatus: const Value('synced'),
+        lastSyncedAt: Value(nowMs),
+        version: Value(version),
+        deletedAt: Value(deletedAtMs),
+      ),
+    );
   }
 
   @override
   Future<ProductUpsertResult> upsertAll(List<ProductDraft> drafts) async {
     var inserted = 0;
     var updated = 0;
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = DateTime.now().toUtc();
+    final nowMs = now.millisecondsSinceEpoch;
+    final touched = <Product>[];
 
     await _db.transaction(() async {
       for (final draft in drafts) {
@@ -289,32 +464,43 @@ class ProductRepositoryImpl implements ProductRepository {
         final name = _normalizeName(draft.name);
         final barcode = _normalizeBarcode(draft.barcode);
 
-        final existing = await (_db.select(
-          _db.products,
-        )..where((t) => t.itemCode.equals(code))).getSingleOrNull();
+        final existing =
+            await (_db.select(_db.products)
+                  ..where((t) => t.itemCode.equals(code) & _notDeleted(t)))
+                .getSingleOrNull();
 
         if (existing == null) {
           if (barcode != null) {
-            final barcodeHit = await (_db.select(
-              _db.products,
-            )..where((t) => t.barcode.equals(barcode))).getSingleOrNull();
+            final barcodeHit =
+                await (_db.select(
+                      _db.products,
+                    )..where((t) => t.barcode.equals(barcode) & _notDeleted(t)))
+                    .getSingleOrNull();
             if (barcodeHit != null) {
               throw const ProductException(ProductException.duplicateBarcode);
             }
           }
-          await _db
+          final uuid = generateUuidV4();
+          final id = await _db
               .into(_db.products)
               .insert(
                 ProductsCompanion.insert(
+                  uuid: uuid,
                   itemCode: code,
                   name: name,
                   barcode: Value(barcode),
                   packSize: draft.packSize,
                   price: draft.price,
-                  createdAt: now,
-                  updatedAt: now,
+                  createdAt: nowMs,
+                  updatedAt: nowMs,
+                  syncStatus: const Value('pending'),
+                  version: const Value(1),
                 ),
               );
+          final created = await getById(id);
+          if (created != null) {
+            touched.add(created);
+          }
           inserted++;
         } else {
           if (barcode != null) {
@@ -322,13 +508,15 @@ class ProductRepositoryImpl implements ProductRepository {
                 await (_db.select(_db.products)..where(
                       (t) =>
                           t.barcode.equals(barcode) &
-                          t.id.isNotValue(existing.id),
+                          t.id.isNotValue(existing.id) &
+                          _notDeleted(t),
                     ))
                     .getSingleOrNull();
             if (barcodeHit != null) {
               throw const ProductException(ProductException.duplicateBarcode);
             }
           }
+          final nextVersion = existing.version + 1;
           await (_db.update(
             _db.products,
           )..where((t) => t.id.equals(existing.id))).write(
@@ -337,13 +525,28 @@ class ProductRepositoryImpl implements ProductRepository {
               barcode: Value(barcode),
               packSize: Value(draft.packSize),
               price: Value(draft.price),
-              updatedAt: Value(now),
+              updatedAt: Value(nowMs),
+              syncStatus: const Value('pending'),
+              version: Value(nextVersion),
             ),
           );
+          final updatedRow = await getById(existing.id);
+          if (updatedRow != null) {
+            touched.add(updatedRow);
+          }
           updated++;
         }
       }
     });
+
+    for (final product in touched) {
+      await _enqueue(
+        product,
+        product.version <= 1
+            ? SyncOperationType.create
+            : SyncOperationType.update,
+      );
+    }
 
     return ProductUpsertResult(insertedCount: inserted, updatedCount: updated);
   }

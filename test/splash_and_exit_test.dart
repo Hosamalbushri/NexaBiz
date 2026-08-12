@@ -72,7 +72,7 @@ void main() {
 
       await tester.pump();
 
-      expect(find.text('Business Platform'), findsOneWidget);
+      expect(find.text('NexaBiz'), findsOneWidget);
       expect(find.text('Business Management Platform'), findsOneWidget);
       expect(find.text('Loading...'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);

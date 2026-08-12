@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/presentation/providers/dashboard_services_provider.dart';
 import '../../../../app/settings/settings_repository.dart';
+import '../../../../core/sync/sync_providers.dart';
 import '../../data/database/inventory_database.dart';
 import '../../data/datasources/pdf_barcode_label_printer.dart';
 import '../../data/datasources/product_excel_import_datasource.dart';
@@ -27,8 +28,15 @@ final inventoryDatabaseProvider = Provider<InventoryDatabase>((ref) {
   return db;
 });
 
+final productRepositoryImplProvider = Provider<ProductRepositoryImpl>((ref) {
+  return ProductRepositoryImpl(
+    ref.watch(inventoryDatabaseProvider),
+    syncQueue: ref.watch(syncQueueProvider),
+  );
+});
+
 final productRepositoryProvider = Provider<ProductRepository>((ref) {
-  return ProductRepositoryImpl(ref.watch(inventoryDatabaseProvider));
+  return ref.watch(productRepositoryImplProvider);
 });
 
 final watchProductsUseCaseProvider = Provider<WatchProducts>((ref) {

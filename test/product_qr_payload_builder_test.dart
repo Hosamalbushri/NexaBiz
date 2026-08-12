@@ -16,6 +16,7 @@ void main() {
   }) {
     return Product(
       id: id,
+      uuid: '00000000-0000-4000-8000-${id.toString().padLeft(12, '0')}',
       itemCode: itemCode,
       name: name,
       barcode: barcode,

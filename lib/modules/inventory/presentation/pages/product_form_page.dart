@@ -50,6 +50,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   var _exportBusy = _CodeExportBusy.none;
   DateTime? _createdAt;
   DateTime? _updatedAt;
+  String? _uuid;
 
   bool get _exporting => _exportBusy != _CodeExportBusy.none;
 
@@ -111,6 +112,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     _priceController.text = product.price.toString();
     _createdAt = product.createdAt;
     _updatedAt = product.updatedAt;
+    _uuid = product.uuid;
   }
 
   Product? _productSnapshot() {
@@ -135,6 +137,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     final now = DateTime.now();
     return Product(
       id: id,
+      uuid: _uuid ?? '',
       itemCode: itemCode,
       name: name,
       barcode: barcode.isEmpty ? null : barcode,

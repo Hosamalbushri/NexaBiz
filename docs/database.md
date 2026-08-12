@@ -2,11 +2,11 @@
 
 ## Technology
 
-- **Hive** + **hive_flutter** — platform settings and stock-count items
+- **Hive** + **hive_flutter** — platform settings, notifications, sync queue, stock-count items
 - **Drift** + **SQLite** (`sqlite3_flutter_libs`) — inventory products catalog
-- No remote database is configured
+- Remote API used only through sync (`RemoteSyncApi`); UI never calls HTTP directly
 
-See [ADR-004](adr/ADR-004-local-database.md) and [ADR-005](adr/ADR-005-drift-products.md).
+See [ADR-004](adr/ADR-004-local-database.md), [ADR-005](adr/ADR-005-drift-products.md), and [ADR-006](adr/ADR-006-offline-first-sync.md).
 
 ## Initialization
 
@@ -24,6 +24,8 @@ Inventory module (lazy on first access):
 | Box name | Owner | Contents |
 | --- | --- | --- |
 | `app_settings` | App / Core | Theme mode, locale, dashboard/inventory service pins |
+| `app_notifications` | App / Core | Notification history |
+| `sync_queue` | Core sync | Durable `SyncOperation` queue |
 | `inventory_items` | Inventory module | Stock-count `InventoryItem` entities |
 
 Constants:
@@ -33,7 +35,7 @@ Constants:
 
 ### Stock-count entity fields (Hive)
 
-`itemCode`, `itemName`, `barcode`, `packSize`, `systemQuantity`, `actualQuantity`, `mainQuantity`, `subQuantity`
+`itemCode`, `itemName`, `barcode`, `packSize`, `systemQuantity`, `actualQuantity`, `mainQuantity`, `subQuantity`, plus sync metadata: `id` (UUID), `createdAt`, `updatedAt`, `syncStatus`, `lastSyncedAt`, `version`, `deletedAt`
 
 ## Drift — products
 
@@ -43,14 +45,19 @@ Constants:
 | Column | Notes |
 | --- | --- |
 | `id` | INTEGER PK |
+| `uuid` | Client UUID (unique) |
 | `item_code` | UNIQUE NOT NULL |
 | `name` | NOT NULL |
 | `barcode` | UNIQUE when set (nullable) |
 | `pack_size` | INTEGER NOT NULL |
 | `price` | REAL NOT NULL |
-| `created_at` / `updated_at` | epoch ms |
+| `created_at` / `updated_at` | UTC epoch ms |
+| `sync_status` | synced / pending / … |
+| `last_synced_at` | UTC epoch ms nullable |
+| `version` | Monotonic sync version |
+| `deleted_at` | Soft-delete tombstone |
 
-Products Excel import upserts by `item_code` and does **not** write Hive stock-count data. Stock-count import does **not** write products.
+Products Excel import upserts by `item_code` and does **not** write Hive stock-count data. Stock-count import does **not** write products. Local imports enqueue sync operations when a `SyncQueue` is wired.
 
 ## Repository pattern
 
@@ -69,7 +76,7 @@ Products Excel import upserts by `item_code` and does **not** write Hive stock-c
 
 Use `schemaVersion` and `MigrationStrategy` on `InventoryDatabase`. Document each bump here.
 
-Current products schema version: **1**.
+Current products schema version: **2** (sync columns + uuid).
 
 ## Transactions
 

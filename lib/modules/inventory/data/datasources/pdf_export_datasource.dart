@@ -18,8 +18,7 @@ class PdfExportDatasource {
     required List<InventoryItem> items,
     required ReportExportLabels labels,
   }) async {
-    final baseFont = await PdfGoogleFonts.cairoRegular();
-    final boldFont = await PdfGoogleFonts.cairoBold();
+    final (baseFont, boldFont) = await _loadFonts();
     final theme = pw.ThemeData.withFont(base: baseFont, bold: boldFont);
     final textDirection = labels.isRtl
         ? pw.TextDirection.rtl
@@ -166,6 +165,21 @@ class PdfExportDatasource {
     final file = File(path);
     await file.writeAsBytes(await document.save(), flush: true);
     return path;
+  }
+
+  /// Prefer Cairo for Arabic; fall back to Helvetica when offline / CDN fails.
+  Future<(pw.Font, pw.Font)> _loadFonts() async {
+    try {
+      final regular = await PdfGoogleFonts.cairoRegular().timeout(
+        const Duration(seconds: 8),
+      );
+      final bold = await PdfGoogleFonts.cairoBold().timeout(
+        const Duration(seconds: 8),
+      );
+      return (regular, bold);
+    } catch (_) {
+      return (pw.Font.helvetica(), pw.Font.helveticaBold());
+    }
   }
 
   List<String> _rowCells({
