@@ -71,10 +71,7 @@ class ProductImportNotifier extends StateNotifier<ProductImportUiState> {
   final Ref _ref;
 
   void setSelectedFile({required String fileName, required Uint8List bytes}) {
-    state = ProductImportUiState(
-      selectedFileName: fileName,
-      bytes: bytes,
-    );
+    state = ProductImportUiState(selectedFileName: fileName, bytes: bytes);
   }
 
   Future<ImportSessionResult?> importFile() async {
@@ -147,6 +144,7 @@ class ProductImportNotifier extends StateNotifier<ProductImportUiState> {
 }
 
 final productImportProvider =
-    StateNotifierProvider.autoDispose<ProductImportNotifier, ProductImportUiState>(
-  ProductImportNotifier.new,
-);
+    StateNotifierProvider.autoDispose<
+      ProductImportNotifier,
+      ProductImportUiState
+    >(ProductImportNotifier.new);

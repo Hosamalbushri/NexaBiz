@@ -12,12 +12,12 @@ class ReportSummary {
   });
 
   const ReportSummary.empty()
-      : totalItems = 0,
-        countedItems = 0,
-        remainingItems = 0,
-        matched = 0,
-        shortage = 0,
-        overage = 0;
+    : totalItems = 0,
+      countedItems = 0,
+      remainingItems = 0,
+      matched = 0,
+      shortage = 0,
+      overage = 0;
 
   final int totalItems;
   final int countedItems;

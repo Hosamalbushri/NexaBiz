@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../domain/entities/product.dart';
+import '../../domain/models/catalog_search_field.dart';
 import '../../domain/models/paged_result.dart';
 import '../../domain/models/product_exception.dart';
 import '../../domain/repositories/product_repository.dart';
@@ -84,9 +85,9 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<List<Product>> getAll() async {
-    final rows = await (_db.select(_db.products)
-          ..orderBy([(t) => OrderingTerm.asc(t.itemCode)]))
-        .get();
+    final rows = await (_db.select(
+      _db.products,
+    )..orderBy([(t) => OrderingTerm.asc(t.itemCode)])).get();
     return rows.map(_map).toList(growable: false);
   }
 
@@ -94,16 +95,14 @@ class ProductRepositoryImpl implements ProductRepository {
   Stream<List<Product>> watchAll() {
     final query = _db.select(_db.products)
       ..orderBy([(t) => OrderingTerm.asc(t.itemCode)]);
-    return query.watch().map(
-          (rows) => rows.map(_map).toList(growable: false),
-        );
+    return query.watch().map((rows) => rows.map(_map).toList(growable: false));
   }
 
   @override
   Future<Product?> getById(int id) async {
-    final row = await (_db.select(_db.products)
-          ..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.products,
+    )..where((t) => t.id.equals(id))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -113,9 +112,9 @@ class ProductRepositoryImpl implements ProductRepository {
     if (code.isEmpty) {
       return null;
     }
-    final row = await (_db.select(_db.products)
-          ..where((t) => t.itemCode.equals(code)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.products,
+    )..where((t) => t.itemCode.equals(code))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -125,23 +124,41 @@ class ProductRepositoryImpl implements ProductRepository {
     if (normalized == null) {
       return null;
     }
-    final row = await (_db.select(_db.products)
-          ..where((t) => t.barcode.equals(normalized)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.products,
+    )..where((t) => t.barcode.equals(normalized))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
   @override
-  Future<List<Product>> search(String query) async {
-    final paged = await getPaged(page: 0, pageSize: 100000, query: query);
+  Future<List<Product>> search(
+    String query, {
+    CatalogSearchField searchField = CatalogSearchField.all,
+  }) async {
+    final paged = await getPaged(
+      page: 0,
+      pageSize: 100000,
+      query: query,
+      searchField: searchField,
+    );
     return paged.items;
   }
 
-  Expression<bool> _matchesQuery($ProductsTable t, String normalized) {
+  Expression<bool> _matchesQuery(
+    $ProductsTable t,
+    String normalized,
+    CatalogSearchField searchField,
+  ) {
     final pattern = '%$normalized%';
-    return t.itemCode.lower().like(pattern) |
-        t.name.lower().like(pattern) |
-        t.barcode.lower().like(pattern);
+    return switch (searchField) {
+      CatalogSearchField.name => t.name.lower().like(pattern),
+      CatalogSearchField.code => t.itemCode.lower().like(pattern),
+      CatalogSearchField.barcode => t.barcode.lower().like(pattern),
+      CatalogSearchField.all =>
+        t.itemCode.lower().like(pattern) |
+            t.name.lower().like(pattern) |
+            t.barcode.lower().like(pattern),
+    };
   }
 
   @override
@@ -149,6 +166,7 @@ class ProductRepositoryImpl implements ProductRepository {
     required int page,
     required int pageSize,
     String query = '',
+    CatalogSearchField searchField = CatalogSearchField.all,
   }) async {
     final normalized = query.trim().toLowerCase();
     final safePage = page < 0 ? 0 : page;
@@ -157,7 +175,7 @@ class ProductRepositoryImpl implements ProductRepository {
     final countQuery = _db.selectOnly(_db.products)
       ..addColumns([_db.products.id.count()]);
     if (normalized.isNotEmpty) {
-      countQuery.where(_matchesQuery(_db.products, normalized));
+      countQuery.where(_matchesQuery(_db.products, normalized, searchField));
     }
     final countRow = await countQuery.getSingle();
     final totalCount = countRow.read(_db.products.id.count()) ?? 0;
@@ -176,7 +194,7 @@ class ProductRepositoryImpl implements ProductRepository {
       ..orderBy([(t) => OrderingTerm.asc(t.itemCode)])
       ..limit(safeSize, offset: start);
     if (normalized.isNotEmpty) {
-      select.where((t) => _matchesQuery(t, normalized));
+      select.where((t) => _matchesQuery(t, normalized, searchField));
     }
     final rows = await select.get();
     return PagedResult<Product>(
@@ -196,7 +214,9 @@ class ProductRepositoryImpl implements ProductRepository {
     await _assertUnique(itemCode: code, barcode: barcode);
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    final id = await _db.into(_db.products).insert(
+    final id = await _db
+        .into(_db.products)
+        .insert(
           ProductsCompanion.insert(
             itemCode: code,
             name: name,
@@ -248,8 +268,9 @@ class ProductRepositoryImpl implements ProductRepository {
 
   @override
   Future<void> delete(int id) async {
-    final count =
-        await (_db.delete(_db.products)..where((t) => t.id.equals(id))).go();
+    final count = await (_db.delete(
+      _db.products,
+    )..where((t) => t.id.equals(id))).go();
     if (count == 0) {
       throw const ProductException(ProductException.notFound);
     }
@@ -268,20 +289,22 @@ class ProductRepositoryImpl implements ProductRepository {
         final name = _normalizeName(draft.name);
         final barcode = _normalizeBarcode(draft.barcode);
 
-        final existing = await (_db.select(_db.products)
-              ..where((t) => t.itemCode.equals(code)))
-            .getSingleOrNull();
+        final existing = await (_db.select(
+          _db.products,
+        )..where((t) => t.itemCode.equals(code))).getSingleOrNull();
 
         if (existing == null) {
           if (barcode != null) {
-            final barcodeHit = await (_db.select(_db.products)
-                  ..where((t) => t.barcode.equals(barcode)))
-                .getSingleOrNull();
+            final barcodeHit = await (_db.select(
+              _db.products,
+            )..where((t) => t.barcode.equals(barcode))).getSingleOrNull();
             if (barcodeHit != null) {
               throw const ProductException(ProductException.duplicateBarcode);
             }
           }
-          await _db.into(_db.products).insert(
+          await _db
+              .into(_db.products)
+              .insert(
                 ProductsCompanion.insert(
                   itemCode: code,
                   name: name,
@@ -295,19 +318,20 @@ class ProductRepositoryImpl implements ProductRepository {
           inserted++;
         } else {
           if (barcode != null) {
-            final barcodeHit = await (_db.select(_db.products)
-                  ..where(
-                    (t) =>
-                        t.barcode.equals(barcode) & t.id.isNotValue(existing.id),
-                  ))
-                .getSingleOrNull();
+            final barcodeHit =
+                await (_db.select(_db.products)..where(
+                      (t) =>
+                          t.barcode.equals(barcode) &
+                          t.id.isNotValue(existing.id),
+                    ))
+                    .getSingleOrNull();
             if (barcodeHit != null) {
               throw const ProductException(ProductException.duplicateBarcode);
             }
           }
-          await (_db.update(_db.products)
-                ..where((t) => t.id.equals(existing.id)))
-              .write(
+          await (_db.update(
+            _db.products,
+          )..where((t) => t.id.equals(existing.id))).write(
             ProductsCompanion(
               name: Value(name),
               barcode: Value(barcode),
@@ -321,9 +345,6 @@ class ProductRepositoryImpl implements ProductRepository {
       }
     });
 
-    return ProductUpsertResult(
-      insertedCount: inserted,
-      updatedCount: updated,
-    );
+    return ProductUpsertResult(insertedCount: inserted, updatedCount: updated);
   }
 }

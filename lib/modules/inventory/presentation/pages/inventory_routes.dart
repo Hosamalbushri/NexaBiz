@@ -50,7 +50,8 @@ class InventoryRoutes {
   static void pushProductsList(BuildContext context) =>
       context.push(productsList);
 
-  static void pushProductsNew(BuildContext context) => context.push(productsNew);
+  static void pushProductsNew(BuildContext context) =>
+      context.push(productsNew);
 
   static void pushProductsEdit(BuildContext context, int id) =>
       context.push(productsEdit(id));

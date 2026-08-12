@@ -8,9 +8,5 @@ Future<bool> showConfirmationDialog({
   required String title,
   required String message,
 }) {
-  return showAppDialog(
-    context: context,
-    title: title,
-    message: message,
-  );
+  return showAppDialog(context: context, title: title, message: message);
 }

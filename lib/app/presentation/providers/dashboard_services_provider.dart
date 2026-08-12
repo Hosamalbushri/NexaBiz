@@ -12,13 +12,16 @@ final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
 /// Ordered module ids pinned on the Dashboard.
 ///
 /// Defaults to all enabled modules until the user customizes the list.
-final dashboardServicesProvider = StateNotifierProvider<
-    DashboardServicesController, AsyncValue<List<String>>>((ref) {
-  return DashboardServicesController(
-    repository: ref.watch(settingsRepositoryProvider),
-    registry: ref.watch(moduleRegistryProvider),
-  );
-});
+final dashboardServicesProvider =
+    StateNotifierProvider<
+      DashboardServicesController,
+      AsyncValue<List<String>>
+    >((ref) {
+      return DashboardServicesController(
+        repository: ref.watch(settingsRepositoryProvider),
+        registry: ref.watch(moduleRegistryProvider),
+      );
+    });
 
 class DashboardServicesController
     extends StateNotifier<AsyncValue<List<String>>> {
@@ -41,9 +44,7 @@ class DashboardServicesController
   }
 
   List<String> _defaultIds() {
-    return [
-      for (final module in _registry.enabledModules) module.id,
-    ];
+    return [for (final module in _registry.enabledModules) module.id];
   }
 
   List<String> _sanitize(List<String> ids) {

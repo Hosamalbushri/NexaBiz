@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/widgets/app_card.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/entities/item_status.dart';
 import 'status_badge.dart';
 
-/// Reference card for the selected inventory item.
-///
-/// Shows the full imported name, item code, system main/sub quantities,
-/// and count details (status + shortage/overage main/sub) after saving.
+/// Selected inventory item card — visual language matches barcode product view.
 class SelectedItemCard extends StatelessWidget {
   const SelectedItemCard({
     super.key,
@@ -23,181 +20,233 @@ class SelectedItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context);
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final barcodeValue = item.barcode?.trim() ?? '';
+    final hasBarcode = barcodeValue.isNotEmpty;
+    final hasPack = item.hasPackSize;
 
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            item.itemName,
-            softWrap: true,
-            style: textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              height: 1.35,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              item.itemName,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+                height: 1.25,
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            '${localization.codeLabel}: ${item.itemCode}',
-            style: textTheme.titleMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
+            const SizedBox(height: AppSpacing.sm),
+            Align(
+              alignment: Alignment.center,
+              child: StatusBadge(status: item.status),
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          const Divider(height: 1),
-          const SizedBox(height: AppSpacing.md),
-          _QuantityRow(
-            label: localization.mainQuantity,
-            value: _format(item.systemMainQuantity),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          _QuantityRow(
-            label: localization.subQuantity,
-            value: _format(item.systemSubQuantity),
-          ),
-          if (item.isCounted) ...[
             const SizedBox(height: AppSpacing.md),
-            const Divider(height: 1),
-            const SizedBox(height: AppSpacing.md),
-            _CountDetailsSection(item: item),
+            Divider(
+              height: 1,
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _DetailRow(
+              icon: Icons.tag_outlined,
+              label: localization.codeLabel,
+              value: item.itemCode,
+            ),
+            _DetailRow(
+              icon: Icons.qr_code_2_outlined,
+              label: localization.barcode,
+              value: hasBarcode
+                  ? barcodeValue
+                  : localization.productsBarcodeNoCode,
+              monospace: hasBarcode,
+              muted: !hasBarcode,
+            ),
+            _DetailRow(
+              icon: Icons.inventory_2_outlined,
+              label: localization.packSize,
+              value: hasPack
+                  ? '${item.packSize}'
+                  : localization.packSizeRequiredHint,
+              muted: !hasPack,
+              isLast: true,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Divider(
+              height: 1,
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              localization.systemQuantity,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _DetailRow(
+              icon: Icons.inventory_outlined,
+              label: localization.mainQuantity,
+              value: _format(item.systemMainQuantity),
+            ),
+            _DetailRow(
+              icon: Icons.layers_outlined,
+              label: localization.subQuantity,
+              value: _format(item.systemSubQuantity),
+              isLast: !item.isCounted,
+            ),
+            if (item.isCounted) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Divider(
+                height: 1,
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                localization.countDetails,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _DetailRow(
+                icon: Icons.inventory_outlined,
+                label: localization.mainQuantity,
+                value: _format(item.mainQuantity ?? 0),
+              ),
+              _DetailRow(
+                icon: Icons.layers_outlined,
+                label: localization.subQuantity,
+                value: _format(item.subQuantity ?? 0),
+                isLast: true,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Divider(
+                height: 1,
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                _varianceTitle(localization, item.status),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _DetailRow(
+                icon: Icons.inventory_outlined,
+                label: localization.mainQuantity,
+                value: _formatSigned(item.differenceMainQuantity),
+                valueColor: _varianceColor(item.status),
+              ),
+              _DetailRow(
+                icon: Icons.layers_outlined,
+                label: localization.subQuantity,
+                value: _formatSigned(item.differenceSubQuantity),
+                valueColor: _varianceColor(item.status),
+                isLast: true,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
-}
 
-class _CountDetailsSection extends StatelessWidget {
-  const _CountDetailsSection({required this.item});
-
-  final InventoryItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    final localization = AppLocalizations.of(context);
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    final String varianceTitle;
-    final Color valueColor;
-    switch (item.status) {
+  String _varianceTitle(AppLocalizations localization, ItemStatus status) {
+    switch (status) {
       case ItemStatus.shortage:
-        varianceTitle = localization.shortageQuantity;
-        valueColor = AppColors.warning;
+        return localization.shortageQuantity;
       case ItemStatus.overage:
-        varianceTitle = localization.overageQuantity;
-        valueColor = AppColors.info;
+        return localization.overageQuantity;
       case ItemStatus.matched:
       case ItemStatus.notCounted:
-        varianceTitle = localization.difference;
-        valueColor = AppColors.success;
+        return localization.difference;
     }
+  }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          localization.countDetails,
-          style: textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  localization.status,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              StatusBadge(status: item.status),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          varianceTitle,
-          style: textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        _QuantityRow(
-          label: localization.mainQuantity,
-          value: _formatSigned(item.differenceMainQuantity),
-          valueColor: valueColor,
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        _QuantityRow(
-          label: localization.subQuantity,
-          value: _formatSigned(item.differenceSubQuantity),
-          valueColor: valueColor,
-        ),
-      ],
-    );
+  Color _varianceColor(ItemStatus status) {
+    switch (status) {
+      case ItemStatus.shortage:
+        return AppColors.warning;
+      case ItemStatus.overage:
+        return AppColors.info;
+      case ItemStatus.matched:
+      case ItemStatus.notCounted:
+        return AppColors.success;
+    }
   }
 }
 
-class _QuantityRow extends StatelessWidget {
-  const _QuantityRow({
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({
+    required this.icon,
     required this.label,
     required this.value,
+    this.monospace = false,
+    this.muted = false,
+    this.isLast = false,
     this.valueColor,
   });
 
+  final IconData icon;
   final String label;
   final String value;
+  final bool monospace;
+  final bool muted;
+  final bool isLast;
   final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return Padding(
+      padding: EdgeInsets.only(bottom: isLast ? 0 : AppSpacing.sm),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
+          Icon(
+            icon,
+            size: 18,
+            color: colorScheme.primary.withValues(alpha: 0.85),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          SizedBox(
+            width: 88,
             child: Text(
               label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: valueColor,
-                ),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontFamily: monospace ? 'monospace' : null,
+                color: valueColor ??
+                    (muted
+                        ? colorScheme.onSurfaceVariant
+                        : colorScheme.onSurface),
+              ),
+            ),
           ),
         ],
       ),

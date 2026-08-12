@@ -29,9 +29,9 @@ class _QuickActionsCustomizeSheetState
   @override
   void initState() {
     super.initState();
-    _selectedIds = List<String>.from(widget.initiallySelectedIds)
-        .take(kMaxQuickActions)
-        .toList(growable: true);
+    _selectedIds = List<String>.from(
+      widget.initiallySelectedIds,
+    ).take(kMaxQuickActions).toList(growable: true);
   }
 
   void _toggle(QuickActionDefinition action) {
@@ -42,8 +42,9 @@ class _QuickActionsCustomizeSheetState
     if (_selectedIds.length >= kMaxQuickActions) {
       showAppSnackBar(
         context,
-        message: AppLocalizations.of(context)
-            .quickActionsMaxReached(kMaxQuickActions),
+        message: AppLocalizations.of(
+          context,
+        ).quickActionsMaxReached(kMaxQuickActions),
         isSuccess: false,
       );
       return;
@@ -83,40 +84,35 @@ class _QuickActionsCustomizeSheetState
           child: Text(
             l10n.quickActionsCustomizeTitle,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
           l10n.quickActionsCustomizeHint,
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          l10n.quickActionsPinnedCount(
-            _selectedIds.length,
-            kMaxQuickActions,
-          ),
+          l10n.quickActionsPinnedCount(_selectedIds.length, kMaxQuickActions),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: atLimit
-                    ? colorScheme.error
-                    : colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
+            color: atLimit ? colorScheme.error : colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         if (selected.isNotEmpty) ...[
           Text(
             l10n.quickActionsPinned,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: AppSpacing.sm),
           ReorderableListView.builder(
@@ -164,9 +160,9 @@ class _QuickActionsCustomizeSheetState
           const SizedBox(height: AppSpacing.md),
           Text(
             l10n.quickActionsAvailable,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: AppSpacing.sm),
           for (final action in unselected)

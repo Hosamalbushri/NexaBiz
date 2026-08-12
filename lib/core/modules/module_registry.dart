@@ -7,7 +7,7 @@ import 'app_module.dart';
 /// Constructed by the App composition root so Core never imports modules.
 class ModuleRegistry {
   ModuleRegistry(List<AppModule> modules)
-      : _modules = List<AppModule>.unmodifiable(modules);
+    : _modules = List<AppModule>.unmodifiable(modules);
 
   final List<AppModule> _modules;
 
@@ -15,14 +15,14 @@ class ModuleRegistry {
   List<AppModule> get modules => _modules;
 
   /// Modules shown on the Service Launcher.
-  List<AppModule> get enabledModules =>
-      [for (final module in _modules) if (module.isEnabled) module];
+  List<AppModule> get enabledModules => [
+    for (final module in _modules)
+      if (module.isEnabled) module,
+  ];
 
   /// Flat list of routes from enabled modules only.
   List<RouteBase> get routes {
-    return [
-      for (final module in enabledModules) ...module.routes,
-    ];
+    return [for (final module in enabledModules) ...module.routes];
   }
 
   AppModule? findById(String id) {

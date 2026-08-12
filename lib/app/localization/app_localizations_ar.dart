@@ -9,7 +9,7 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get appTitle => 'منصة الأعمال';
+  String get appTitle => 'NexaBiz';
 
   @override
   String get servicesTitle => 'الخدمات';
@@ -115,6 +115,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get productsSearchHint => 'ابحث بالرمز أو الاسم أو الباركود';
 
   @override
+  String get catalogSearchFieldAll => 'الكل';
+
+  @override
+  String get catalogSearchFieldName => 'الاسم';
+
+  @override
+  String get catalogSearchFieldCode => 'الرمز';
+
+  @override
+  String get catalogSearchFieldBarcode => 'الباركود';
+
+  @override
+  String get catalogSearchHintName => 'ابحث بالاسم';
+
+  @override
+  String get catalogSearchHintCode => 'ابحث بالرمز';
+
+  @override
+  String get catalogSearchHintBarcode => 'ابحث بالباركود';
+
+  @override
+  String get catalogSearchFilterLabel => 'البحث في';
+
+  @override
   String get productsEmptyTitle => 'لا توجد منتجات بعد';
 
   @override
@@ -218,7 +242,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get productsNoValidRows => 'لم يُعثر على صفوف منتجات صالحة في الملف.';
 
   @override
-  String get productsScanBarcode => 'مسح الباركود';
+  String get productsScanBarcode => 'مسح باركود أو QR';
+
+  @override
+  String get productsScanAction => 'مسح';
+
+  @override
+  String get productsScannerAlignHint => 'وجّه الكاميرا نحو الباركود أو رمز QR';
+
+  @override
+  String get productsScannerScanning => 'جاري المسح...';
+
+  @override
+  String get productsScannerDetected => 'تم اكتشاف الرمز';
+
+  @override
+  String get productsScannerProcessing => 'جاري المعالجة...';
+
+  @override
+  String get productsScannerInvalid => 'رمز غير مدعوم';
 
   @override
   String get productsGenerateBarcode => 'توليد';
@@ -228,6 +270,49 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get productsBarcodePreview => 'معاينة الباركود';
+
+  @override
+  String get productsBarcodeTypeLabel => 'نوع الباركود';
+
+  @override
+  String get productsBarcodeFormatBarcode => 'باركود';
+
+  @override
+  String get productsBarcodeFormatQr => 'رمز QR';
+
+  @override
+  String get productsQrCodePreview => 'معاينة رمز QR';
+
+  @override
+  String get productsGenerateQrCode => 'توليد رمز QR';
+
+  @override
+  String get productsSaveQrCode => 'حفظ رمز QR';
+
+  @override
+  String get productsShareQrCode => 'مشاركة رمز QR';
+
+  @override
+  String get productsInvalidProductData => 'بيانات المنتج غير صالحة';
+
+  @override
+  String get productsQrScanRecognized => 'تم تحميل المنتج من رمز QR';
+
+  @override
+  String get productsQrScanOfflineData =>
+      'عرض بيانات المنتج من رمز QR (غير موجود في الكتالوج)';
+
+  @override
+  String get productsQrProductDetails => 'تفاصيل المنتج';
+
+  @override
+  String get productsCodesSection => 'أكواد المنتج';
+
+  @override
+  String get productsPrintBarcode => 'طباعة الباركود';
+
+  @override
+  String get productsPrintQr => 'طباعة رمز QR';
 
   @override
   String get productsBarcodeNotFound => 'لم يُعثر على منتج بهذا الباركود.';
@@ -668,6 +753,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get failure => 'فشل';
 
   @override
+  String get notificationsTitle => 'الإشعارات';
+
+  @override
+  String get notificationsEmptyTitle => 'لا توجد إشعارات';
+
+  @override
+  String get notificationsEmptyMessage => 'أنت على اطلاع بكل جديد.';
+
+  @override
+  String get notificationsMarkAllRead => 'تعليم الكل كمقروء';
+
+  @override
+  String get notificationsTooltip => 'الإشعارات';
+
+  @override
   String get cancel => 'إلغاء';
 
   @override
@@ -733,11 +833,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quickActionsCreateProductSubtitle => 'فتح نموذج منتج جديد.';
 
   @override
-  String get quickActionsScanBarcode => 'مسح باركود';
+  String get quickActionsScanBarcode => 'مسح باركود أو QR';
 
   @override
   String get quickActionsScanBarcodeSubtitle =>
-      'امسح واعرض المنتج في صفحة الباركود.';
+      'امسح باركود أو QR واعرض المنتج.';
 
   @override
   String get quickActionsCustomize => 'تخصيص';
@@ -807,8 +907,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dashboardCustomizeServices => 'تخصيص';
 
   @override
+  String get dashboardCustomizeTitle => 'تخصيص خدمات لوحة التحكم';
+
+  @override
   String get dashboardCustomizeServicesHint =>
-      'اختر الخدمات التي تظهر في لوحة التحكم.';
+      'اختر الخدمات التي تظهر في لوحة التحكم، ثم اسحب لإعادة ترتيبها.';
+
+  @override
+  String get dashboardPinnedServices => 'الخدمات المثبتة';
+
+  @override
+  String get dashboardAvailableServices => 'الخدمات المتاحة';
+
+  @override
+  String get dashboardAddService => 'إضافة';
+
+  @override
+  String get dashboardRemoveService => 'إزالة';
 
   @override
   String get dashboardSaveServices => 'حفظ';
@@ -827,15 +942,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get platformReportsTitle => 'التقارير';
 
   @override
-  String get platformReportsSubtitle =>
-      'تقارير الوحدات ورؤى متعددة الوحدات مستقبلاً.';
+  String get platformReportsSubtitle => 'اختر وحدة لاستعراض تقارير خدماتها.';
 
   @override
   String get platformReportsInventory => 'تقارير المخزون';
 
   @override
+  String get platformReportsInventorySubtitle => 'تقارير الجرد والمنتجات.';
+
+  @override
   String get platformReportsComingSoon =>
       'ستتوفر التقارير متعددة الوحدات في إصدار لاحق.';
+
+  @override
+  String get platformReportsStockCountTitle => 'تقرير الجرد';
+
+  @override
+  String get platformReportsStockCountSubtitle =>
+      'ملخص الجرد والفروقات والتصدير.';
+
+  @override
+  String get platformReportsProductsTitle => 'تقرير المنتجات';
+
+  @override
+  String get platformReportsServiceComingSoon => 'تقارير هذه الخدمة قريباً.';
 
   @override
   String get notFoundTitle => 'الصفحة غير موجودة';
@@ -890,6 +1020,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String paginationRange(int from, int to, int total) {
     return '$from-$to من $total';
   }
+
+  @override
+  String get paginationItemsPerPage => 'عدد العناصر في الصفحة';
 
   @override
   String get importParsing => 'جاري تحليل ملف Excel...';

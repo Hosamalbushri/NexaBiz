@@ -6,10 +6,7 @@ import '../../../../core/widgets/app_card.dart';
 import '../../domain/services/counting_calculator.dart';
 
 class InventorySummaryCard extends StatelessWidget {
-  const InventorySummaryCard({
-    super.key,
-    required this.preview,
-  });
+  const InventorySummaryCard({super.key, required this.preview});
 
   final CountPreview preview;
 
@@ -25,11 +22,7 @@ class InventorySummaryCard extends StatelessWidget {
             localization.mainQuantity,
             _format(preview.mainQuantity),
           ),
-          _row(
-            context,
-            localization.subQuantity,
-            _format(preview.subQuantity),
-          ),
+          _row(context, localization.subQuantity, _format(preview.subQuantity)),
         ],
       ),
     );
@@ -50,9 +43,9 @@ class InventorySummaryCard extends StatelessWidget {
           Expanded(child: Text(label)),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),

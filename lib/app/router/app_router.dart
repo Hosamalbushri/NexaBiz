@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/modules/module_providers.dart';
 import '../exit/app_exit_scope.dart';
+import '../notifications/presentation/pages/notification_center_page.dart';
 import '../presentation/pages/dashboard_page.dart';
+import '../presentation/pages/module_reports_page.dart';
 import '../presentation/pages/not_found_page.dart';
 import '../presentation/pages/platform_reports_page.dart';
 import '../presentation/pages/service_launcher_page.dart';
@@ -40,10 +42,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) {
           return AppExitPopScope(
-            child: AppShell(
-              location: state.uri.path,
-              child: child,
-            ),
+            child: AppShell(location: state.uri.path, child: child),
           );
         },
         routes: [
@@ -74,6 +73,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: AppRoutes.reports,
                     name: 'reports',
                     builder: (context, state) => const PlatformReportsPage(),
+                    routes: [
+                      GoRoute(
+                        path: ':moduleId',
+                        name: 'moduleReports',
+                        builder: (context, state) {
+                          final moduleId =
+                              state.pathParameters['moduleId'] ?? '';
+                          return ModuleReportsPage(moduleId: moduleId);
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -87,6 +97,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ],
               ),
             ],
+          ),
+          GoRoute(
+            path: AppRoutes.notifications,
+            name: 'notifications',
+            builder: (context, state) => const NotificationCenterPage(),
           ),
           ...registry.routes,
         ],

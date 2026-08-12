@@ -10,8 +10,11 @@ import '../../../core/widgets/custom_app_bar.dart';
 import '../../../shared/widgets/service_grid.dart';
 import '../../constants/app_constants.dart';
 import '../../localization/app_localizations.dart';
+import '../../notifications/presentation/providers/notifications_provider.dart';
+import '../../router/app_routes.dart';
 import '../../theme/app_spacing.dart';
 import '../providers/dashboard_services_provider.dart';
+import '../providers/quick_actions_panel_provider.dart';
 import 'dashboard_customize_sheet.dart';
 
 /// Platform dashboard with user-customizable service shortcuts.
@@ -24,9 +27,15 @@ class DashboardPage extends ConsumerWidget {
     final theme = Theme.of(context);
     final servicesAsync = ref.watch(dashboardServicesProvider);
     final controller = ref.read(dashboardServicesProvider.notifier);
+    final unread = ref.watch(unreadNotificationsCountProvider);
 
     return Scaffold(
-      appBar: CustomAppBar(title: l10n.dashboardTitle),
+      appBar: CustomAppBar(
+        title: l10n.dashboardTitle,
+        showNotifications: true,
+        notificationCount: unread,
+        onNotifications: () => context.push(AppRoutes.notifications),
+      ),
       body: servicesAsync.when(
         loading: () => const AppLoading(),
         error: (error, _) => Center(
@@ -45,7 +54,7 @@ class DashboardPage extends ConsumerWidget {
         data: (_) {
           final modules = controller.resolveModules();
           return ListView(
-            padding: const EdgeInsets.all(AppConstants.pagePadding),
+            padding: AppConstants.pageInsets(context),
             children: [
               Text(
                 l10n.dashboardMyServices,
@@ -73,6 +82,13 @@ class DashboardPage extends ConsumerWidget {
   }
 
   Future<void> _openCustomize(BuildContext context, WidgetRef ref) async {
+    // Avoid fighting the shell quick-actions panel / nested sheets.
+    requestCloseQuickActions(ref);
+    await Future<void>.delayed(const Duration(milliseconds: 220));
+    if (!context.mounted) {
+      return;
+    }
+
     final registry = ref.read(moduleRegistryProvider);
     final current =
         ref.read(dashboardServicesProvider).valueOrNull ??

@@ -9,10 +9,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 
 class EditCountResult {
-  const EditCountResult({
-    required this.mainText,
-    required this.secondaryText,
-  });
+  const EditCountResult({required this.mainText, required this.secondaryText});
 
   final String mainText;
   final String secondaryText;
@@ -83,8 +80,9 @@ class _EditCountDialogState extends State<_EditCountDialog> {
   void initState() {
     super.initState();
     _mainController = TextEditingController(text: widget.initialMainText);
-    _secondaryController =
-        TextEditingController(text: widget.initialSecondaryText);
+    _secondaryController = TextEditingController(
+      text: widget.initialSecondaryText,
+    );
     _mainFocusNode = FocusNode();
     _secondaryFocusNode = FocusNode();
   }
@@ -139,21 +137,22 @@ class _EditCountDialogState extends State<_EditCountDialog> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         AppTextField(
-                          controller: _mainController,
-                          focusNode: _mainFocusNode,
-                          label: localization.mainQuantity,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'[0-9.]'),
-                            ),
-                          ],
-                          textInputAction: TextInputAction.next,
-                          onSubmitted: (_) =>
-                              _secondaryFocusNode.requestFocus(),
-                        )
+                              controller: _mainController,
+                              focusNode: _mainFocusNode,
+                              label: localization.mainQuantity,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'[0-9.]'),
+                                ),
+                              ],
+                              textInputAction: TextInputAction.next,
+                              onSubmitted: (_) =>
+                                  _secondaryFocusNode.requestFocus(),
+                            )
                             .animate()
                             .fadeIn(delay: 80.ms, duration: 220.ms)
                             .moveY(
@@ -165,20 +164,21 @@ class _EditCountDialogState extends State<_EditCountDialog> {
                             ),
                         const SizedBox(height: AppSpacing.sm),
                         AppTextField(
-                          controller: _secondaryController,
-                          focusNode: _secondaryFocusNode,
-                          label: localization.subQuantity,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'[0-9.]'),
-                            ),
-                          ],
-                          textInputAction: TextInputAction.done,
-                          onSubmitted: (_) => _submit(),
-                        )
+                              controller: _secondaryController,
+                              focusNode: _secondaryFocusNode,
+                              label: localization.subQuantity,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'[0-9.]'),
+                                ),
+                              ],
+                              textInputAction: TextInputAction.done,
+                              onSubmitted: (_) => _submit(),
+                            )
                             .animate()
                             .fadeIn(delay: 140.ms, duration: 220.ms)
                             .moveY(
@@ -199,34 +199,35 @@ class _EditCountDialogState extends State<_EditCountDialog> {
                     AppSpacing.lg,
                     AppSpacing.lg,
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: AppButton(
-                          label: localization.cancel,
-                          variant: AppButtonVariant.outlined,
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: AppButton(
-                          label: localization.saveCount,
-                          icon: Icons.save_outlined,
-                          onPressed: _submit,
-                        ),
-                      ),
-                    ],
-                  )
-                      .animate()
-                      .fadeIn(delay: 180.ms, duration: 220.ms)
-                      .moveY(
-                        begin: 8,
-                        end: 0,
-                        delay: 180.ms,
-                        duration: 220.ms,
-                        curve: Curves.easeOutCubic,
-                      ),
+                  child:
+                      Row(
+                            children: [
+                              Expanded(
+                                child: AppButton(
+                                  label: localization.cancel,
+                                  variant: AppButtonVariant.outlined,
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: AppButton(
+                                  label: localization.saveCount,
+                                  icon: Icons.save_outlined,
+                                  onPressed: _submit,
+                                ),
+                              ),
+                            ],
+                          )
+                          .animate()
+                          .fadeIn(delay: 180.ms, duration: 220.ms)
+                          .moveY(
+                            begin: 8,
+                            end: 0,
+                            delay: 180.ms,
+                            duration: 220.ms,
+                            curve: Curves.easeOutCubic,
+                          ),
                 ),
               ],
             ),

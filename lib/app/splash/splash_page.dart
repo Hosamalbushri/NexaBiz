@@ -11,7 +11,7 @@ import 'widgets/splash_brand.dart';
 
 /// Application splash: waits for [appInitializationProvider], then enters the shell.
 ///
-/// Typography-led splash only — no app icon. Success uses [GoRouter.go] to dashboard.
+/// Brand-led splash (icon + typography). Success uses [GoRouter.go] to dashboard.
 class SplashPage extends ConsumerWidget {
   const SplashPage({super.key});
 
@@ -41,11 +41,11 @@ class SplashPage extends ConsumerWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
         systemNavigationBarColor: colorScheme.surface,
-        systemNavigationBarIconBrightness:
-            isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
       child: PopScope(
         canPop: false,

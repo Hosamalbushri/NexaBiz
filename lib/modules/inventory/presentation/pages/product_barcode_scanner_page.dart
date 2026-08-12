@@ -9,8 +9,9 @@ import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../widgets/barcode_scanner_overlay.dart';
 
-/// Full-screen barcode entry: camera when supported, otherwise manual input.
+/// Full-screen barcode / QR entry: camera when supported, otherwise manual input.
 class ProductBarcodeScannerPage extends StatefulWidget {
   const ProductBarcodeScannerPage({super.key});
 
@@ -22,8 +23,7 @@ class ProductBarcodeScannerPage extends StatefulWidget {
     return switch (defaultTargetPlatform) {
       TargetPlatform.android ||
       TargetPlatform.iOS ||
-      TargetPlatform.macOS =>
-        true,
+      TargetPlatform.macOS => true,
       _ => false,
     };
   }
@@ -31,9 +31,7 @@ class ProductBarcodeScannerPage extends StatefulWidget {
   /// Opens the scanner and returns the scanned/entered value, or null if cancelled.
   static Future<String?> open(BuildContext context) {
     return Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) => const ProductBarcodeScannerPage(),
-      ),
+      MaterialPageRoute(builder: (_) => const ProductBarcodeScannerPage()),
     );
   }
 
@@ -50,6 +48,8 @@ class _ProductBarcodeScannerPageState extends State<ProductBarcodeScannerPage> {
   var _useCamera = false;
   var _cameraFailed = false;
   String? _cameraErrorKind;
+  var _overlayStatus = ScannerOverlayStatus.scanning;
+  Timer? _resultDelay;
 
   @override
   void initState() {
@@ -63,6 +63,22 @@ class _ProductBarcodeScannerPageState extends State<ProductBarcodeScannerPage> {
       autoStart: false,
       detectionSpeed: DetectionSpeed.normal,
       facing: CameraFacing.back,
+      // Explicitly accept 1D barcodes and QR / 2D codes.
+      formats: const [
+        BarcodeFormat.qrCode,
+        BarcodeFormat.dataMatrix,
+        BarcodeFormat.pdf417,
+        BarcodeFormat.aztec,
+        BarcodeFormat.code128,
+        BarcodeFormat.code39,
+        BarcodeFormat.code93,
+        BarcodeFormat.ean13,
+        BarcodeFormat.ean8,
+        BarcodeFormat.upcA,
+        BarcodeFormat.upcE,
+        BarcodeFormat.itf14,
+        BarcodeFormat.codabar,
+      ],
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_startCamera());
@@ -142,29 +158,46 @@ class _ProductBarcodeScannerPageState extends State<ProductBarcodeScannerPage> {
 
   @override
   void dispose() {
+    _resultDelay?.cancel();
     _restoreFlutterOnError();
     _manualController.dispose();
     unawaited(_disposeController());
     super.dispose();
   }
 
-  void _submitCode(String raw) {
+  void _submitCode(String raw, {bool fromCamera = false}) {
     final code = raw.trim();
     if (_handled || code.isEmpty) {
       return;
     }
     _handled = true;
-    Navigator.of(context).pop(code);
+
+    if (!fromCamera) {
+      Navigator.of(context).pop(code);
+      return;
+    }
+
+    setState(() => _overlayStatus = ScannerOverlayStatus.success);
+    unawaited(_controller?.stop());
+
+    _resultDelay?.cancel();
+    _resultDelay = Timer(const Duration(milliseconds: 320), () {
+      if (!mounted) {
+        return;
+      }
+      Navigator.of(context).pop(code);
+    });
   }
 
   void _onDetect(BarcodeCapture capture) {
     if (_handled) {
       return;
     }
+
     for (final barcode in capture.barcodes) {
       final raw = barcode.rawValue?.trim();
       if (raw != null && raw.isNotEmpty) {
-        _submitCode(raw);
+        _submitCode(raw, fromCamera: true);
         return;
       }
     }
@@ -196,9 +229,7 @@ class _ProductBarcodeScannerPageState extends State<ProductBarcodeScannerPage> {
           TextField(
             controller: _manualController,
             autofocus: true,
-            decoration: InputDecoration(
-              labelText: l10n.barcode,
-            ),
+            decoration: InputDecoration(labelText: l10n.barcode),
             textInputAction: TextInputAction.done,
             onSubmitted: _submitCode,
           ),
@@ -231,22 +262,35 @@ class _ProductBarcodeScannerPageState extends State<ProductBarcodeScannerPage> {
                   ? _cameraMessage(l10n)
                   : null,
             )
-          : MobileScanner(
-              controller: _controller,
-              onDetect: _onDetect,
-              errorBuilder: (context, error) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  unawaited(
-                    _failCamera(
-                      error.errorCode ==
-                              MobileScannerErrorCode.permissionDenied
-                          ? 'permission'
-                          : 'unavailable',
-                    ),
-                  );
-                });
-                return const SizedBox.shrink();
-              },
+          : Stack(
+              fit: StackFit.expand,
+              children: [
+                MobileScanner(
+                  controller: _controller,
+                  onDetect: _onDetect,
+                  errorBuilder: (context, error) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      unawaited(
+                        _failCamera(
+                          error.errorCode ==
+                                  MobileScannerErrorCode.permissionDenied
+                              ? 'permission'
+                              : 'unavailable',
+                        ),
+                      );
+                    });
+                    return const SizedBox.shrink();
+                  },
+                ),
+                BarcodeScannerOverlay(
+                  status: _overlayStatus,
+                  alignHint: l10n.productsScannerAlignHint,
+                  scanningLabel: l10n.productsScannerScanning,
+                  detectedLabel: l10n.productsScannerDetected,
+                  processingLabel: l10n.productsScannerProcessing,
+                  errorLabel: l10n.productsScannerInvalid,
+                ),
+              ],
             ),
     );
   }

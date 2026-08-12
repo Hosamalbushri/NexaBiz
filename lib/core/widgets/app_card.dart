@@ -33,12 +33,7 @@ class AppCard extends StatelessWidget {
       margin: margin ?? EdgeInsets.zero,
       color: color,
       clipBehavior: Clip.antiAlias,
-      child: onTap == null
-          ? content
-          : InkWell(
-              onTap: onTap,
-              child: content,
-            ),
+      child: onTap == null ? content : InkWell(onTap: onTap, child: content),
     );
 
     if (!animate) {

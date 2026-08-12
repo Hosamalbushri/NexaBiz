@@ -25,7 +25,7 @@ class ImportResult {
 /// Parses inventory rows from an Excel workbook.
 class ExcelImportDatasource {
   ExcelImportDatasource({PackSizeParser? packSizeParser})
-      : _packSizeParser = packSizeParser ?? const PackSizeParser();
+    : _packSizeParser = packSizeParser ?? const PackSizeParser();
 
   final PackSizeParser _packSizeParser;
 

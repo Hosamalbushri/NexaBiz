@@ -63,10 +63,7 @@ class ImportNotifier extends StateNotifier<ImportUiState> {
   final Ref _ref;
 
   void setSelectedFile({required String fileName, required Uint8List bytes}) {
-    state = ImportUiState(
-      selectedFileName: fileName,
-      bytes: bytes,
-    );
+    state = ImportUiState(selectedFileName: fileName, bytes: bytes);
   }
 
   Future<ImportSessionResult?> importFile() async {
@@ -92,7 +89,8 @@ class ImportNotifier extends StateNotifier<ImportUiState> {
           isImporting: false,
           progress: 0,
           clearProgressLabel: true,
-          errorMessage: outcome.errorCode ?? ImportValidationException.decodeFailed,
+          errorMessage:
+              outcome.errorCode ?? ImportValidationException.decodeFailed,
         );
         return null;
       }
@@ -133,5 +131,5 @@ class ImportNotifier extends StateNotifier<ImportUiState> {
 
 final importProvider =
     StateNotifierProvider.autoDispose<ImportNotifier, ImportUiState>((ref) {
-  return ImportNotifier(ref);
-});
+      return ImportNotifier(ref);
+    });

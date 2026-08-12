@@ -13,6 +13,7 @@ import 'package:stock_count/modules/inventory/domain/entities/inventory_item.dar
 import 'package:stock_count/modules/inventory/domain/entities/item_status.dart';
 import 'package:stock_count/modules/inventory/domain/entities/report_summary.dart';
 import 'package:stock_count/modules/inventory/domain/models/paged_result.dart';
+import 'package:stock_count/modules/inventory/domain/models/catalog_search_field.dart';
 import 'package:stock_count/modules/inventory/domain/repositories/inventory_repository.dart';
 import 'package:stock_count/modules/inventory/inventory_module.dart';
 import 'package:stock_count/modules/inventory/presentation/pages/inventory_home_page.dart';
@@ -40,7 +41,10 @@ class _FakeInventoryRepository implements InventoryRepository {
   Future<void> clear() async {}
 
   @override
-  Future<List<InventoryItem>> search(String query) async => const [];
+  Future<List<InventoryItem>> search(
+    String query, {
+    CatalogSearchField searchField = CatalogSearchField.all,
+  }) async => const [];
 
   @override
   Future<List<InventoryItem>> filterByStatus(ItemStatus? status) async =>
@@ -58,6 +62,7 @@ class _FakeInventoryRepository implements InventoryRepository {
     required int pageSize,
     String query = '',
     ItemStatus? status,
+    CatalogSearchField searchField = CatalogSearchField.all,
   }) async {
     return PagedResult<InventoryItem>(
       items: const [],
@@ -107,7 +112,9 @@ void main() {
       overrides: [
         ...moduleRegistryOverrides(),
         settingsRepositoryProvider.overrideWithValue(_FakeSettingsRepository()),
-        inventoryRepositoryProvider.overrideWithValue(_FakeInventoryRepository()),
+        inventoryRepositoryProvider.overrideWithValue(
+          _FakeInventoryRepository(),
+        ),
         inventoryItemsProvider.overrideWith((ref) => Stream.value(const [])),
       ],
       child: MaterialApp.router(

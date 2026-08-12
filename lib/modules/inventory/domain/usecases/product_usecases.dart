@@ -1,4 +1,5 @@
 import '../entities/product.dart';
+import '../models/catalog_search_field.dart';
 import '../repositories/product_repository.dart';
 
 class WatchProducts {
@@ -14,7 +15,10 @@ class SearchProducts {
 
   final ProductRepository _repository;
 
-  Future<List<Product>> call(String query) => _repository.search(query);
+  Future<List<Product>> call(
+    String query, {
+    CatalogSearchField searchField = CatalogSearchField.all,
+  }) => _repository.search(query, searchField: searchField);
 }
 
 class GetProductById {

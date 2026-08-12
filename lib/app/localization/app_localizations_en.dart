@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Business Platform';
+  String get appTitle => 'NexaBiz';
 
   @override
   String get servicesTitle => 'Services';
@@ -114,6 +114,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get productsSearchHint => 'Search by code, name, or barcode';
+
+  @override
+  String get catalogSearchFieldAll => 'All';
+
+  @override
+  String get catalogSearchFieldName => 'Name';
+
+  @override
+  String get catalogSearchFieldCode => 'Code';
+
+  @override
+  String get catalogSearchFieldBarcode => 'Barcode';
+
+  @override
+  String get catalogSearchHintName => 'Search by name';
+
+  @override
+  String get catalogSearchHintCode => 'Search by code';
+
+  @override
+  String get catalogSearchHintBarcode => 'Search by barcode';
+
+  @override
+  String get catalogSearchFilterLabel => 'Search in';
 
   @override
   String get productsEmptyTitle => 'No products yet';
@@ -223,7 +247,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'No valid product rows were found in the file.';
 
   @override
-  String get productsScanBarcode => 'Scan barcode';
+  String get productsScanBarcode => 'Scan barcode or QR';
+
+  @override
+  String get productsScanAction => 'Scan';
+
+  @override
+  String get productsScannerAlignHint => 'Align barcode or QR code here';
+
+  @override
+  String get productsScannerScanning => 'Scanning...';
+
+  @override
+  String get productsScannerDetected => 'Code detected';
+
+  @override
+  String get productsScannerProcessing => 'Processing...';
+
+  @override
+  String get productsScannerInvalid => 'Unsupported code';
 
   @override
   String get productsGenerateBarcode => 'Generate';
@@ -234,6 +276,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get productsBarcodePreview => 'Barcode preview';
+
+  @override
+  String get productsBarcodeTypeLabel => 'Barcode type';
+
+  @override
+  String get productsBarcodeFormatBarcode => 'Barcode';
+
+  @override
+  String get productsBarcodeFormatQr => 'QR Code';
+
+  @override
+  String get productsQrCodePreview => 'QR Code preview';
+
+  @override
+  String get productsGenerateQrCode => 'Generate QR Code';
+
+  @override
+  String get productsSaveQrCode => 'Save QR Code';
+
+  @override
+  String get productsShareQrCode => 'Share QR Code';
+
+  @override
+  String get productsInvalidProductData => 'Invalid product data';
+
+  @override
+  String get productsQrScanRecognized => 'Product loaded from QR Code';
+
+  @override
+  String get productsQrScanOfflineData =>
+      'Product shown from QR data (not found in catalog)';
+
+  @override
+  String get productsQrProductDetails => 'Product details';
+
+  @override
+  String get productsCodesSection => 'Product codes';
+
+  @override
+  String get productsPrintBarcode => 'Print barcode';
+
+  @override
+  String get productsPrintQr => 'Print QR Code';
 
   @override
   String get productsBarcodeNotFound => 'No product found for this barcode.';
@@ -678,6 +763,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failure => 'Failure';
 
   @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsEmptyTitle => 'No notifications';
+
+  @override
+  String get notificationsEmptyMessage => 'You\'re all caught up.';
+
+  @override
+  String get notificationsMarkAllRead => 'Mark all as read';
+
+  @override
+  String get notificationsTooltip => 'Notifications';
+
+  @override
   String get cancel => 'Cancel';
 
   @override
@@ -744,11 +844,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickActionsCreateProductSubtitle => 'Open the new product form.';
 
   @override
-  String get quickActionsScanBarcode => 'Scan barcode';
+  String get quickActionsScanBarcode => 'Scan barcode or QR';
 
   @override
   String get quickActionsScanBarcodeSubtitle =>
-      'Scan and show the product on the barcode page.';
+      'Scan a barcode or QR and open the product.';
 
   @override
   String get quickActionsCustomize => 'Customize';
@@ -819,8 +919,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardCustomizeServices => 'Customize';
 
   @override
+  String get dashboardCustomizeTitle => 'Customize dashboard services';
+
+  @override
   String get dashboardCustomizeServicesHint =>
-      'Choose which services appear on your dashboard.';
+      'Choose which services appear on your dashboard, then drag to reorder.';
+
+  @override
+  String get dashboardPinnedServices => 'Pinned services';
+
+  @override
+  String get dashboardAvailableServices => 'Available services';
+
+  @override
+  String get dashboardAddService => 'Add';
+
+  @override
+  String get dashboardRemoveService => 'Remove';
 
   @override
   String get dashboardSaveServices => 'Save';
@@ -840,14 +955,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get platformReportsSubtitle =>
-      'Module reports and future cross-module insights.';
+      'Choose a module to browse its service reports.';
 
   @override
   String get platformReportsInventory => 'Inventory reports';
 
   @override
+  String get platformReportsInventorySubtitle =>
+      'Stock count and product reports.';
+
+  @override
   String get platformReportsComingSoon =>
       'Cross-module reports will be available in a future release.';
+
+  @override
+  String get platformReportsStockCountTitle => 'Stock count report';
+
+  @override
+  String get platformReportsStockCountSubtitle =>
+      'Count summary, variances, and export.';
+
+  @override
+  String get platformReportsProductsTitle => 'Products report';
+
+  @override
+  String get platformReportsServiceComingSoon =>
+      'Reports for this service are coming soon.';
 
   @override
   String get notFoundTitle => 'Page not found';
@@ -902,6 +1035,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String paginationRange(int from, int to, int total) {
     return '$from-$to of $total';
   }
+
+  @override
+  String get paginationItemsPerPage => 'Items per page';
 
   @override
   String get importParsing => 'Parsing Excel file...';

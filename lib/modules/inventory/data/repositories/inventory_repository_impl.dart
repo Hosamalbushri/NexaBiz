@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/entities/item_status.dart';
 import '../../domain/entities/report_summary.dart';
+import '../../domain/models/catalog_search_field.dart';
 import '../../domain/models/paged_result.dart';
 import '../../domain/repositories/inventory_repository.dart';
 import '../inventory_hive.dart';
@@ -94,17 +95,24 @@ class InventoryRepositoryImpl implements InventoryRepository {
   }
 
   @override
-  Future<List<InventoryItem>> search(String query) async {
+  Future<List<InventoryItem>> search(
+    String query, {
+    CatalogSearchField searchField = CatalogSearchField.all,
+  }) async {
     final normalized = query.trim().toLowerCase();
     final items = await getAll();
     if (normalized.isEmpty) {
       return items;
     }
     final matched = items
-        .where((item) => _matchesQuery(item, normalized))
+        .where((item) => _matchesQuery(item, normalized, searchField))
         .toList(growable: true);
-    matched.sort((a, b) => _relevanceScore(b, normalized)
-        .compareTo(_relevanceScore(a, normalized)));
+    matched.sort(
+      (a, b) => _relevanceScore(
+        b,
+        normalized,
+      ).compareTo(_relevanceScore(a, normalized)),
+    );
     return matched;
   }
 
@@ -126,6 +134,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
     required int pageSize,
     String query = '',
     ItemStatus? status,
+    CatalogSearchField searchField = CatalogSearchField.all,
   }) async {
     final normalized = query.trim().toLowerCase();
     final safePage = page < 0 ? 0 : page;
@@ -158,15 +167,20 @@ class InventoryRepositoryImpl implements InventoryRepository {
       if (status != null && item.status != status) {
         continue;
       }
-      if (normalized.isNotEmpty && !_matchesQuery(item, normalized)) {
+      if (normalized.isNotEmpty &&
+          !_matchesQuery(item, normalized, searchField)) {
         continue;
       }
       filtered.add(item);
     }
 
     if (normalized.isNotEmpty) {
-      filtered.sort((a, b) => _relevanceScore(b, normalized)
-          .compareTo(_relevanceScore(a, normalized)));
+      filtered.sort(
+        (a, b) => _relevanceScore(
+          b,
+          normalized,
+        ).compareTo(_relevanceScore(a, normalized)),
+      );
     }
 
     final totalCount = filtered.length;
@@ -189,14 +203,24 @@ class InventoryRepositoryImpl implements InventoryRepository {
     );
   }
 
-  bool _matchesQuery(InventoryItem item, String normalized) {
+  bool _matchesQuery(
+    InventoryItem item,
+    String normalized,
+    CatalogSearchField searchField,
+  ) {
     final code = item.itemCode.toLowerCase();
     final name = item.itemName.toLowerCase();
     final barcode = item.barcode?.toLowerCase() ?? '';
 
-    return code.contains(normalized) ||
-        name.contains(normalized) ||
-        barcode.contains(normalized);
+    return switch (searchField) {
+      CatalogSearchField.name => name.contains(normalized),
+      CatalogSearchField.code => code.contains(normalized),
+      CatalogSearchField.barcode => barcode.contains(normalized),
+      CatalogSearchField.all =>
+        code.contains(normalized) ||
+            name.contains(normalized) ||
+            barcode.contains(normalized),
+    };
   }
 
   /// Higher score = better match (exact code > prefix > contains).

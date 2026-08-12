@@ -71,14 +71,14 @@ void bumpInventoryRevisionFromWidget(WidgetRef ref) {
 
 /// Full catalog stream — prefer [inventoryRevisionProvider] + paged queries
 /// for list UIs. Kept for callers that still need a live full list.
-final inventoryItemsProvider =
-    StreamProvider<List<InventoryItem>>((ref) {
+final inventoryItemsProvider = StreamProvider<List<InventoryItem>>((ref) {
   return ref.watch(watchInventoryItemsProvider).call();
 });
 
 /// Report KPIs without materializing a full `List` in providers first.
-final reportSummaryProvider =
-    FutureProvider.autoDispose<ReportSummary>((ref) async {
+final reportSummaryProvider = FutureProvider.autoDispose<ReportSummary>((
+  ref,
+) async {
   ref.watch(inventoryRevisionProvider);
   return ref.read(inventoryRepositoryProvider).getReportSummary();
 });

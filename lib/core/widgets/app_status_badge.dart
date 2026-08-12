@@ -37,9 +37,9 @@ class AppStatusBadge extends StatelessWidget {
         child: Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: colors.foreground,
-                fontWeight: FontWeight.w700,
-              ),
+            color: colors.foreground,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );
@@ -91,10 +91,7 @@ class AppStatusBadge extends StatelessWidget {
 }
 
 class _ToneColors {
-  const _ToneColors({
-    required this.background,
-    required this.foreground,
-  });
+  const _ToneColors({required this.background, required this.foreground});
 
   final Color background;
   final Color foreground;

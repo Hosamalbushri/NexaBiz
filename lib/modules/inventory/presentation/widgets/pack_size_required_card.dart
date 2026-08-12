@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../domain/services/pack_size_parser.dart';
 
@@ -33,61 +33,69 @@ class PackSizeRequiredCard extends StatelessWidget {
     final localization = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: AppColors.warningContainer,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  color: AppColors.warning,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    _warningMessage(localization),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                          height: 1.35,
-                        ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: AppColors.warning.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.warningContainer,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppColors.warning,
                   ),
-                ),
-              ],
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      _warningMessage(localization),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppTextField(
-            controller: controller,
-            focusNode: focusNode,
-            label: localization.packSize,
-            hint: localization.packSizeRequiredHint,
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.done,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-            ],
-            onChanged: onChanged,
-            onSubmitted: (_) => onSave(),
-            autofocus: true,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppButton(
-            label: localization.savePackSize,
-            icon: Icons.inventory_2_outlined,
-            isLoading: isSaving,
-            expand: true,
-            onPressed: onSave,
-          ),
-        ],
+            const SizedBox(height: AppSpacing.md),
+            AppTextField(
+              controller: controller,
+              focusNode: focusNode,
+              label: localization.packSize,
+              hint: localization.packSizeRequiredHint,
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onChanged: onChanged,
+              onSubmitted: (_) => onSave(),
+              autofocus: true,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
+              label: localization.savePackSize,
+              icon: Icons.inventory_2_outlined,
+              isLoading: isSaving,
+              expand: true,
+              onPressed: onSave,
+            ),
+          ],
+        ),
       ),
     );
   }

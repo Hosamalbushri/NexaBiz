@@ -276,8 +276,9 @@ Avoid circular imports.
 - Startup: `/splash` → `AppBootstrap` → `context.go('/dashboard')` (splash not kept in stack).
 - Main shell: outer `ShellRoute` + `AppShell` chrome wraps:
   - `StatefulShellRoute.indexedStack` — `/dashboard`, `/services`, `/reports`, `/settings`
-  - Module routes from registry (e.g. `/inventory/...`) so bottom nav / rail stay visible
-- Responsive chrome: mobile `CustomBottomNav` (center quick-actions `+`), tablet `NavigationRail` (leading `+`), desktop side panel (tonal add).
+  - Module routes from registry (e.g. `/inventory/...`)
+- Shell chrome (mobile bottom nav / tablet rail / desktop side panel) is shown **only** on primary shell tabs (`/dashboard`, `/services`, `/reports`, `/settings`). Module pages hide chrome and use their own back navigation.
+- Responsive chrome: mobile `BottomAppBar` (`CustomBottomNav` + rounded-square `AutomaticNotchedShape`) with center-docked `QuickActionsFab`, tablet `NavigationRail` (leading `+`), desktop side panel (tonal add).
 - Quick actions sheet: user-pinned shortcuts (create product, scan barcode, inventory routes) with customize + Hive persistence (`quick_action_ids`).
 - `/` redirects to `/dashboard`.
 - Module routes (inside shell chrome), Inventory:
@@ -720,8 +721,8 @@ Launcher picks it up automatically via `enabledModules`.
 
 - Item persistence (Hive stock-count + Drift products)
 - Products catalog CRUD + separate Excel import
-- Product barcode generate / Code128 preview / camera scan lookup
-- Products barcode hub page (PDF label print/share; thermal port reserved)
+- Product barcode generate / Code128 preview / self-contained product QR / camera scan lookup
+- Products barcode hub page (PDF label print/share for Code128 or product QR; thermal port reserved)
 - Search + counting (main/sub qty, pack size, difference, status)
 - Excel import with validation + isolate parsing + progress
 - Reports: summary cards, filters/tabs, search, Syncfusion chart + DataGrid

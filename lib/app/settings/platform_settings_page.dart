@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
+import '../notifications/presentation/providers/notifications_provider.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
+import '../router/app_routes.dart';
 import '../theme/app_spacing.dart';
 import '../../core/di/app_providers.dart';
 import '../../core/widgets/app_card.dart';
@@ -28,11 +31,17 @@ class PlatformSettingsPage extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
     final packageInfo = ref.watch(packageInfoProvider);
     final repository = ref.read(settingsRepositoryProvider);
+    final unread = ref.watch(unreadNotificationsCountProvider);
 
     return Scaffold(
-      appBar: CustomAppBar(title: localization.settingsTitle),
+      appBar: CustomAppBar(
+        title: localization.settingsTitle,
+        showNotifications: true,
+        notificationCount: unread,
+        onNotifications: () => context.push(AppRoutes.notifications),
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(AppConstants.pagePadding),
+        padding: AppConstants.pageInsets(context),
         children: [
           _SectionHeader(title: localization.appearance),
           AppCard(

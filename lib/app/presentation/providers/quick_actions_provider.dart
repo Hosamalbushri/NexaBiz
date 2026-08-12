@@ -7,18 +7,19 @@ import 'dashboard_services_provider.dart';
 /// Ordered quick-action ids pinned on the shell add sheet.
 ///
 /// Defaults to [defaultQuickActionIds] until the user customizes.
-final quickActionsProvider = StateNotifierProvider<QuickActionsController,
-    AsyncValue<List<String>>>((ref) {
-  return QuickActionsController(
-    repository: ref.watch(settingsRepositoryProvider),
-  );
-});
+final quickActionsProvider =
+    StateNotifierProvider<QuickActionsController, AsyncValue<List<String>>>((
+      ref,
+    ) {
+      return QuickActionsController(
+        repository: ref.watch(settingsRepositoryProvider),
+      );
+    });
 
 class QuickActionsController extends StateNotifier<AsyncValue<List<String>>> {
-  QuickActionsController({
-    required SettingsRepository repository,
-  })  : _repository = repository,
-        super(const AsyncValue.loading()) {
+  QuickActionsController({required SettingsRepository repository})
+    : _repository = repository,
+      super(const AsyncValue.loading()) {
     _load();
   }
 
@@ -33,9 +34,7 @@ class QuickActionsController extends StateNotifier<AsyncValue<List<String>>> {
   }
 
   List<String> _sanitize(List<String> ids) {
-    final known = {
-      for (final action in quickActionCatalog()) action.id,
-    };
+    final known = {for (final action in quickActionCatalog()) action.id};
     final seen = <String>{};
     final result = <String>[];
     for (final id in ids) {

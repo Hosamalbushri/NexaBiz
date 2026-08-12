@@ -71,18 +71,18 @@ class _InventoryCustomizeSheetState extends State<InventoryCustomizeSheet> {
           child: Text(
             l10n.inventoryCustomizeServices,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
           l10n.inventoryCustomizeServicesHint,
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.md),
         if (widget.availableServices.isEmpty)
@@ -92,17 +92,17 @@ class _InventoryCustomizeSheetState extends State<InventoryCustomizeSheet> {
               l10n.inventoryNoServicesAvailable,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           )
         else ...[
           if (selected.isNotEmpty) ...[
             Text(
               l10n.inventoryPinnedServices,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.sm),
             ReorderableListView.builder(
@@ -150,14 +150,17 @@ class _InventoryCustomizeSheetState extends State<InventoryCustomizeSheet> {
             const SizedBox(height: AppSpacing.md),
             Text(
               l10n.inventoryAvailableServices,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.sm),
             for (final service in unselected)
               ListTile(
-                leading: Icon(service.icon, color: colorScheme.onSurfaceVariant),
+                leading: Icon(
+                  service.icon,
+                  color: colorScheme.onSurfaceVariant,
+                ),
                 title: Text(service.title(l10n)),
                 subtitle: Text(
                   service.subtitle(l10n),
@@ -176,7 +179,8 @@ class _InventoryCustomizeSheetState extends State<InventoryCustomizeSheet> {
         AppButton(
           label: l10n.inventorySaveServices,
           expand: true,
-          onPressed: () => Navigator.pop(context, List<String>.from(_selectedIds)),
+          onPressed: () =>
+              Navigator.pop(context, List<String>.from(_selectedIds)),
         ),
       ],
     );

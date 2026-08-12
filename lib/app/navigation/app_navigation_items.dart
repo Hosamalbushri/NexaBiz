@@ -77,3 +77,23 @@ int selectedNavigationIndex(String path) {
   }
   return -1;
 }
+
+/// Whether [path] is one of the primary shell tabs (Dashboard / Services /
+/// Reports / Settings). Module routes and nested paths are excluded so shell
+/// chrome (bottom nav / rail) can be hidden outside the main pages.
+bool isPrimaryShellLocation(String path) {
+  final normalized = _normalizePath(path);
+  for (final item in appNavigationItems()) {
+    if (normalized == item.path) {
+      return true;
+    }
+  }
+  return false;
+}
+
+String _normalizePath(String path) {
+  if (path.length > 1 && path.endsWith('/')) {
+    return path.substring(0, path.length - 1);
+  }
+  return path;
+}

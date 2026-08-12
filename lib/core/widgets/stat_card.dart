@@ -47,7 +47,8 @@ class StatCard extends StatelessWidget {
                           title,
                           maxLines: 1,
                           softWrap: false,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                                 height: 1.15,
                                 fontWeight: FontWeight.w600,
@@ -66,9 +67,7 @@ class StatCard extends StatelessWidget {
                         maxLines: 1,
                         softWrap: false,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
+                        style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: colorScheme.onSurface,

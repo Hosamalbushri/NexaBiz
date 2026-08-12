@@ -17,22 +17,24 @@ class PackSizeNameAnalysis {
   const PackSizeNameAnalysis._(this.status, [this.packSize]);
 
   const PackSizeNameAnalysis.resolved(int packSize)
-      : this._(PackSizeNameStatus.resolved, packSize);
+    : this._(PackSizeNameStatus.resolved, packSize);
 
   const PackSizeNameAnalysis.missingMarker()
-      : this._(PackSizeNameStatus.missingMarker);
+    : this._(PackSizeNameStatus.missingMarker);
 
   const PackSizeNameAnalysis.incompleteMarker()
-      : this._(PackSizeNameStatus.incompleteMarker);
+    : this._(PackSizeNameStatus.incompleteMarker);
 
   const PackSizeNameAnalysis.invalidValue()
-      : this._(PackSizeNameStatus.invalidValue);
+    : this._(PackSizeNameStatus.invalidValue);
 
   final PackSizeNameStatus status;
   final int? packSize;
 
   bool get isResolved =>
-      status == PackSizeNameStatus.resolved && packSize != null && packSize! > 0;
+      status == PackSizeNameStatus.resolved &&
+      packSize != null &&
+      packSize! > 0;
 }
 
 /// Parses pack size hints from item names (e.g. `*24` → 24).

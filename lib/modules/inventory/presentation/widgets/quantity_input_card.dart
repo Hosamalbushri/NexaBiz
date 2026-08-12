@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../../core/widgets/app_card.dart';
-import '../../../../core/widgets/app_text_field.dart';
 import '../../../../app/localization/app_localizations.dart';
+import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/widgets/app_text_field.dart';
 
 class QuantityInputCard extends StatelessWidget {
   const QuantityInputCard({
@@ -33,38 +33,53 @@ class QuantityInputCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
 
-    return AppCard(
-      child: Column(
-        children: [
-          AppTextField(
-            controller: mainController,
-            focusNode: mainFocusNode,
-            label: localization.mainQuantity,
-            enabled: enabled,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-            ],
-            onChanged: onMainChanged,
-            onSubmitted: (_) => onMainSubmitted(),
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          AppTextField(
-            controller: secondaryController,
-            focusNode: secondaryFocusNode,
-            label: localization.subQuantity,
-            enabled: enabled,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-            ],
-            onChanged: onSecondaryChanged,
-            onSubmitted: (_) => onSave(),
-            textInputAction: TextInputAction.done,
-          ),
-        ],
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          children: [
+            AppTextField(
+              controller: mainController,
+              focusNode: mainFocusNode,
+              label: localization.mainQuantity,
+              enabled: enabled,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
+              onChanged: onMainChanged,
+              onSubmitted: (_) => onMainSubmitted(),
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            AppTextField(
+              controller: secondaryController,
+              focusNode: secondaryFocusNode,
+              label: localization.subQuantity,
+              enabled: enabled,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
+              onChanged: onSecondaryChanged,
+              onSubmitted: (_) => onSave(),
+              textInputAction: TextInputAction.done,
+            ),
+          ],
+        ),
       ),
     );
   }

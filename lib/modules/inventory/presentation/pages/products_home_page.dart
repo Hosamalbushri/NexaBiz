@@ -67,7 +67,7 @@ class ProductsHomePage extends StatelessWidget {
           },
         ),
         body: ListView(
-          padding: const EdgeInsets.all(AppConstants.pagePadding),
+          padding: AppConstants.pageInsets(context),
           children: [
             Text(
               l10n.productsHubDescription,
@@ -83,10 +83,11 @@ class ProductsHomePage extends StatelessWidget {
                 final crossAxisCount = AppBreakpoints.isDesktop(width)
                     ? 4
                     : AppBreakpoints.isTablet(width)
-                        ? 3
-                        : 2;
-                final childAspectRatio =
-                    AppBreakpoints.isMobile(width) ? 0.82 : 0.95;
+                    ? 3
+                    : 2;
+                final childAspectRatio = AppBreakpoints.isMobile(width)
+                    ? 0.82
+                    : 0.95;
 
                 return GridView.builder(
                   shrinkWrap: true,
@@ -190,11 +191,7 @@ class _ProductsFeatureCard extends StatelessWidget {
                     child: SizedBox(
                       width: 64,
                       height: 64,
-                      child: Icon(
-                        icon,
-                        color: colorScheme.primary,
-                        size: 32,
-                      ),
+                      child: Icon(icon, color: colorScheme.primary, size: 32),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),

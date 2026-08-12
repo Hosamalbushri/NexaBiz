@@ -1,6 +1,7 @@
 import '../entities/inventory_item.dart';
 import '../entities/item_status.dart';
 import '../entities/report_summary.dart';
+import '../models/catalog_search_field.dart';
 import '../models/paged_result.dart';
 
 /// Contract for inventory persistence and queries.
@@ -17,7 +18,10 @@ abstract class InventoryRepository {
 
   Future<void> clear();
 
-  Future<List<InventoryItem>> search(String query);
+  Future<List<InventoryItem>> search(
+    String query, {
+    CatalogSearchField searchField = CatalogSearchField.all,
+  });
 
   Future<List<InventoryItem>> filterByStatus(ItemStatus? status);
 
@@ -33,5 +37,6 @@ abstract class InventoryRepository {
     required int pageSize,
     String query = '',
     ItemStatus? status,
+    CatalogSearchField searchField = CatalogSearchField.all,
   });
 }

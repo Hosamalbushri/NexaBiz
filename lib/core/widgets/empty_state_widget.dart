@@ -17,10 +17,6 @@ class EmptyStateWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppEmptyState(
-      title: title,
-      subtitle: subtitle,
-      icon: icon,
-    );
+    return AppEmptyState(title: title, subtitle: subtitle, icon: icon);
   }
 }

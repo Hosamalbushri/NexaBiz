@@ -55,100 +55,100 @@ class InventoryModule implements AppModule {
 
   @override
   List<RouteBase> get routes => [
+    GoRoute(
+      path: InventoryRoutes.root,
+      name: 'inventory',
+      builder: (context, state) => const InventoryHomePage(),
+      routes: [
+        // Legacy flat paths → stock-count service.
         GoRoute(
-          path: InventoryRoutes.root,
-          name: 'inventory',
-          builder: (context, state) => const InventoryHomePage(),
+          path: 'count',
+          redirect: (context, state) => InventoryRoutes.count,
           routes: [
-            // Legacy flat paths → stock-count service.
+            GoRoute(
+              path: 'details',
+              redirect: (context, state) => InventoryRoutes.countDetails,
+            ),
+          ],
+        ),
+        GoRoute(
+          path: 'import',
+          redirect: (context, state) => InventoryRoutes.import,
+        ),
+        GoRoute(
+          path: 'reports',
+          redirect: (context, state) => InventoryRoutes.reports,
+        ),
+        GoRoute(
+          path: 'stock-count',
+          name: 'inventoryStockCount',
+          builder: (context, state) => const StockCountHomePage(),
+          routes: [
             GoRoute(
               path: 'count',
-              redirect: (context, state) => InventoryRoutes.count,
+              name: 'inventoryStockCountSearch',
+              builder: (context, state) => const InventorySearchPage(),
               routes: [
                 GoRoute(
                   path: 'details',
-                  redirect: (context, state) => InventoryRoutes.countDetails,
+                  name: 'inventoryStockCountDetails',
+                  builder: (context, state) => const InventoryCountPage(),
                 ),
               ],
             ),
             GoRoute(
               path: 'import',
-              redirect: (context, state) => InventoryRoutes.import,
+              name: 'inventoryStockCountImport',
+              builder: (context, state) => const InventoryImportPage(),
             ),
             GoRoute(
               path: 'reports',
-              redirect: (context, state) => InventoryRoutes.reports,
-            ),
-            GoRoute(
-              path: 'stock-count',
-              name: 'inventoryStockCount',
-              builder: (context, state) => const StockCountHomePage(),
-              routes: [
-                GoRoute(
-                  path: 'count',
-                  name: 'inventoryStockCountSearch',
-                  builder: (context, state) => const InventorySearchPage(),
-                  routes: [
-                    GoRoute(
-                      path: 'details',
-                      name: 'inventoryStockCountDetails',
-                      builder: (context, state) => const InventoryCountPage(),
-                    ),
-                  ],
-                ),
-                GoRoute(
-                  path: 'import',
-                  name: 'inventoryStockCountImport',
-                  builder: (context, state) => const InventoryImportPage(),
-                ),
-                GoRoute(
-                  path: 'reports',
-                  name: 'inventoryStockCountReports',
-                  builder: (context, state) => const InventoryReportsPage(),
-                ),
-              ],
-            ),
-            GoRoute(
-              path: 'products',
-              name: 'inventoryProducts',
-              builder: (context, state) => const ProductsHomePage(),
-              routes: [
-                GoRoute(
-                  path: 'list',
-                  name: 'inventoryProductsList',
-                  builder: (context, state) => const ProductsListPage(),
-                ),
-                GoRoute(
-                  path: 'new',
-                  name: 'inventoryProductsNew',
-                  builder: (context, state) => const ProductFormPage(),
-                ),
-                GoRoute(
-                  path: 'import',
-                  name: 'inventoryProductsImport',
-                  builder: (context, state) => const ProductsImportPage(),
-                ),
-                GoRoute(
-                  path: 'barcode',
-                  name: 'inventoryProductsBarcode',
-                  builder: (context, state) => ProductsBarcodePage(
-                    autoScan: state.uri.queryParameters['scan'] == '1',
-                  ),
-                ),
-                GoRoute(
-                  path: ':id/edit',
-                  name: 'inventoryProductsEdit',
-                  builder: (context, state) {
-                    final id = int.tryParse(state.pathParameters['id'] ?? '');
-                    if (id == null) {
-                      return const ProductFormPage(productId: -1);
-                    }
-                    return ProductFormPage(productId: id);
-                  },
-                ),
-              ],
+              name: 'inventoryStockCountReports',
+              builder: (context, state) => const InventoryReportsPage(),
             ),
           ],
         ),
-      ];
+        GoRoute(
+          path: 'products',
+          name: 'inventoryProducts',
+          builder: (context, state) => const ProductsHomePage(),
+          routes: [
+            GoRoute(
+              path: 'list',
+              name: 'inventoryProductsList',
+              builder: (context, state) => const ProductsListPage(),
+            ),
+            GoRoute(
+              path: 'new',
+              name: 'inventoryProductsNew',
+              builder: (context, state) => const ProductFormPage(),
+            ),
+            GoRoute(
+              path: 'import',
+              name: 'inventoryProductsImport',
+              builder: (context, state) => const ProductsImportPage(),
+            ),
+            GoRoute(
+              path: 'barcode',
+              name: 'inventoryProductsBarcode',
+              builder: (context, state) => ProductsBarcodePage(
+                autoScan: state.uri.queryParameters['scan'] == '1',
+              ),
+            ),
+            GoRoute(
+              path: ':id/edit',
+              name: 'inventoryProductsEdit',
+              builder: (context, state) {
+                final id = int.tryParse(state.pathParameters['id'] ?? '');
+                if (id == null) {
+                  return const ProductFormPage(productId: -1);
+                }
+                return ProductFormPage(productId: id);
+              },
+            ),
+          ],
+        ),
+      ],
+    ),
+  ];
 }

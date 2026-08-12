@@ -21,13 +21,15 @@ class PdfExportDatasource {
     final baseFont = await PdfGoogleFonts.cairoRegular();
     final boldFont = await PdfGoogleFonts.cairoBold();
     final theme = pw.ThemeData.withFont(base: baseFont, bold: boldFont);
-    final textDirection =
-        labels.isRtl ? pw.TextDirection.rtl : pw.TextDirection.ltr;
+    final textDirection = labels.isRtl
+        ? pw.TextDirection.rtl
+        : pw.TextDirection.ltr;
 
     final document = pw.Document(theme: theme);
     final generated = DateTime.now();
-    final generatedText =
-        '${labels.generatedAt}: ${generated.toLocal()}'.split('.').first;
+    final generatedText = '${labels.generatedAt}: ${generated.toLocal()}'
+        .split('.')
+        .first;
 
     final headers = <String>[
       labels.code,
@@ -53,8 +55,9 @@ class PdfExportDatasource {
       8: const pw.FixedColumnWidth(56),
     };
 
-    final resolvedHeaders =
-        labels.isRtl ? headers.reversed.toList(growable: false) : headers;
+    final resolvedHeaders = labels.isRtl
+        ? headers.reversed.toList(growable: false)
+        : headers;
     final resolvedWidths = labels.isRtl
         ? <int, pw.TableColumnWidth>{
             for (var i = 0; i < columnWidths.length; i++)
@@ -127,9 +130,7 @@ class PdfExportDatasource {
               fontWeight: pw.FontWeight.bold,
             ),
             cellStyle: const pw.TextStyle(fontSize: 7.5),
-            headerDecoration: const pw.BoxDecoration(
-              color: PdfColors.grey300,
-            ),
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
             headerAlignment: labels.isRtl
                 ? pw.Alignment.centerRight
                 : pw.Alignment.centerLeft,
@@ -140,10 +141,7 @@ class PdfExportDatasource {
               horizontal: 3,
               vertical: 4,
             ),
-            border: pw.TableBorder.all(
-              color: PdfColors.grey400,
-              width: 0.4,
-            ),
+            border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.4),
             columnWidths: resolvedWidths,
             cellDecoration: (index, data, rowNum) {
               final itemIndex = rowNum - 1; // header occupies row 0

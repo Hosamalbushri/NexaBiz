@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../core/database/hive_boxes.dart';
 import '../../core/database/hive_initializer.dart';
 import '../../core/di/app_providers.dart';
+import '../notifications/data/notification_hive.dart';
 import '../settings/settings_repository.dart';
 
 /// Application-level bootstrap: core services only (no business modules).
@@ -15,6 +16,7 @@ class AppBootstrap {
   /// Runs required platform initialization once per process (idempotent boxes).
   static Future<void> initialize(Ref ref) async {
     await HiveInitializer.initialize();
+    await NotificationHive.openBox();
 
     final settingsRepository = SettingsRepository();
     final themeMode = await settingsRepository.loadThemeMode();

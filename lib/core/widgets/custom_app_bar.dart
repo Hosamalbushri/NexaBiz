@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import 'notification_badge.dart';
+
 /// Visual configuration for [CustomAppBar].
 ///
 /// Use [CustomAppBarStyle.adaptive] for theme-aware defaults, or
@@ -132,6 +134,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.showSearch = false,
     this.onSearch,
     this.searchIcon = Icons.search_rounded,
+    this.showCloseSearch = false,
+    this.searching = false,
+    this.searchField,
+    this.searchBottom,
+    this.onCloseSearch,
     this.showNotifications = false,
     this.notificationCount = 0,
     this.onNotifications,
@@ -179,6 +186,26 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// Search icon override.
   final IconData searchIcon;
 
+  /// Shows a close-search action on the trailing edge (e.g. while in-page
+  /// search is expanded). Prefer this over [searching] when the field lives
+  /// in the page body rather than the title slot.
+  final bool showCloseSearch;
+
+  /// When true, replaces the title with [searchField] inside the toolbar.
+  ///
+  /// Collapsed search must stay an icon-only action so the body does not
+  /// reserve empty space for a permanently visible field.
+  final bool searching;
+
+  /// Compact search input shown in the title slot while [searching] is true.
+  final Widget? searchField;
+
+  /// Optional filters / extras shown under the toolbar only while searching.
+  final PreferredSizeWidget? searchBottom;
+
+  /// Closes an active in-bar search session.
+  final VoidCallback? onCloseSearch;
+
   /// Shows a notifications action on the trailing edge.
   final bool showNotifications;
 
@@ -210,31 +237,39 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize {
     final resolvedStyle = style ?? const CustomAppBarStyle();
     final bottomHeight = bottom?.preferredSize.height ?? 0;
-    return Size.fromHeight(resolvedStyle.height + bottomHeight);
+    final searchBottomHeight =
+        searching ? (searchBottom?.preferredSize.height ?? 0) : 0;
+    return Size.fromHeight(
+      resolvedStyle.height + bottomHeight + searchBottomHeight,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final resolvedStyle = style ?? CustomAppBarStyle.adaptive(context);
-    final foreground =
-        resolvedStyle.foregroundColor ?? colorScheme.onSurface;
+    final resolvedStyle = (style ?? CustomAppBarStyle.adaptive(context)).merge(
+      searching
+          ? const CustomAppBarStyle(centerTitle: false)
+          : null,
+    );
+    final foreground = resolvedStyle.foregroundColor ?? colorScheme.onSurface;
     final mediaWidth = MediaQuery.sizeOf(context).width;
     final isCompact = mediaWidth < 360;
-    final horizontalPadding =
-        isCompact ? 12.0 : resolvedStyle.horizontalPadding;
+    final horizontalPadding = isCompact
+        ? 12.0
+        : resolvedStyle.horizontalPadding;
 
     final background = resolvedStyle.useGradient
         ? null
         : (resolvedStyle.backgroundColor ??
-            (theme.brightness == Brightness.dark
-                ? colorScheme.surfaceContainerHigh
-                : colorScheme.surface));
+              (theme.brightness == Brightness.dark
+                  ? colorScheme.surfaceContainerHigh
+                  : colorScheme.surface));
 
     final gradient = resolvedStyle.useGradient
         ? (resolvedStyle.gradient ??
-            CustomAppBarStyle.adaptive(context).gradient)
+              CustomAppBarStyle.adaptive(context).gradient)
         : null;
 
     final overlayStyle = _systemOverlayStyle(
@@ -244,6 +279,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       gradient: gradient,
     );
 
+    final effectiveBottom = _composeBottom();
+
     final content = _CustomAppBarSurface(
       style: resolvedStyle,
       backgroundColor: background,
@@ -251,15 +288,18 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       foregroundColor: foreground,
       horizontalPadding: horizontalPadding,
       title: title,
-      bottom: bottom,
+      bottom: effectiveBottom,
       leading: _buildLeading(context, foreground, resolvedStyle),
-      titleWidget: _CustomAppBarTitle(
-        title: title,
-        foregroundColor: foreground,
-        centerTitle: resolvedStyle.centerTitle,
-        animate: animateContent,
-      ),
+      titleWidget: searching && searchField != null
+          ? searchField!
+          : _CustomAppBarTitle(
+              title: title,
+              foregroundColor: foreground,
+              centerTitle: resolvedStyle.centerTitle,
+              animate: animateContent && !searching,
+            ),
       trailing: _buildTrailing(context, foreground, resolvedStyle),
+      searching: searching,
     );
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -271,10 +311,35 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         child: Material(
           type: MaterialType.transparency,
           elevation: resolvedStyle.scrolledUnderElevation ?? 0,
-          shadowColor: resolvedStyle.shadowColor ??
+          shadowColor:
+              resolvedStyle.shadowColor ??
               colorScheme.primary.withValues(alpha: 0.12),
           child: content,
         ),
+      ),
+    );
+  }
+
+  PreferredSizeWidget? _composeBottom() {
+    final parts = <PreferredSizeWidget>[
+      if (searching && searchBottom != null) searchBottom!,
+      if (bottom != null) bottom!,
+    ];
+    if (parts.isEmpty) {
+      return null;
+    }
+    if (parts.length == 1) {
+      return parts.first;
+    }
+    final height = parts.fold<double>(
+      0,
+      (sum, part) => sum + part.preferredSize.height,
+    );
+    return PreferredSize(
+      preferredSize: Size.fromHeight(height),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: parts,
       ),
     );
   }
@@ -284,6 +349,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     Color foreground,
     CustomAppBarStyle resolvedStyle,
   ) {
+    if (searching) {
+      return _CustomAppBarIconButton(
+        icon: Icons.arrow_back_rounded,
+        tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+        onPressed: onCloseSearch,
+        foregroundColor: foreground,
+        size: resolvedStyle.actionButtonSize,
+      );
+    }
+
     if (showBackButton) {
       return _CustomAppBarIconButton(
         icon: Icons.arrow_back_rounded,
@@ -335,13 +410,29 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       widgets.addAll(actions!);
     }
 
-    if (showSearch) {
+    final canShowSearchAction =
+        (showSearch || onSearch != null) && !searching && !showCloseSearch;
+    if (canShowSearchAction) {
       widgets.add(
         _CustomAppBarIconButton(
           icon: searchIcon,
           tooltip: MaterialLocalizations.of(context).searchFieldLabel,
           onPressed: onSearch,
           foregroundColor: foreground,
+          size: resolvedStyle.actionButtonSize,
+        ),
+      );
+    }
+
+    if (showCloseSearch) {
+      final colorScheme = Theme.of(context).colorScheme;
+      widgets.add(
+        _CustomAppBarIconButton(
+          icon: Icons.close_rounded,
+          tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+          onPressed: onCloseSearch,
+          foregroundColor: foreground,
+          accentColor: colorScheme.error,
           size: resolvedStyle.actionButtonSize,
         ),
       );
@@ -391,13 +482,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     return SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness:
-          isLightBackground ? Brightness.dark : Brightness.light,
-      statusBarBrightness:
-          brightness == Brightness.dark ? Brightness.dark : Brightness.light,
+      statusBarIconBrightness: isLightBackground
+          ? Brightness.dark
+          : Brightness.light,
+      statusBarBrightness: brightness == Brightness.dark
+          ? Brightness.dark
+          : Brightness.light,
       systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarIconBrightness:
-          brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+      systemNavigationBarIconBrightness: brightness == Brightness.dark
+          ? Brightness.light
+          : Brightness.dark,
     );
   }
 }
@@ -414,6 +508,7 @@ class _CustomAppBarSurface extends StatelessWidget {
     required this.leading,
     required this.titleWidget,
     required this.trailing,
+    required this.searching,
   });
 
   final CustomAppBarStyle style;
@@ -426,9 +521,12 @@ class _CustomAppBarSurface extends StatelessWidget {
   final Widget? leading;
   final Widget titleWidget;
   final List<Widget> trailing;
+  final bool searching;
 
   @override
   Widget build(BuildContext context) {
+    final useCenteredTitle = style.centerTitle && !searching;
+
     return ClipRRect(
       borderRadius: BorderRadius.only(
         bottomLeft: Radius.circular(style.borderRadius),
@@ -440,11 +538,9 @@ class _CustomAppBarSurface extends StatelessWidget {
           gradient: gradient,
           boxShadow: [
             BoxShadow(
-              color: style.shadowColor ??
-                  Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.12),
+              color:
+                  style.shadowColor ??
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
               blurRadius: style.elevation * 2.4,
               offset: Offset(0, style.elevation * 0.45),
             ),
@@ -462,7 +558,7 @@ class _CustomAppBarSurface extends StatelessWidget {
                     start: horizontalPadding,
                     end: horizontalPadding,
                   ),
-                  child: style.centerTitle
+                  child: useCenteredTitle
                       ? Stack(
                           alignment: Alignment.center,
                           children: [
@@ -488,14 +584,9 @@ class _CustomAppBarSurface extends StatelessWidget {
                           children: [
                             if (leading != null) ...[
                               leading!,
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 8),
                             ],
-                            Expanded(
-                              child: Align(
-                                alignment: AlignmentDirectional.centerStart,
-                                child: titleWidget,
-                              ),
-                            ),
+                            Expanded(child: titleWidget),
                             if (trailing.isNotEmpty) ...[
                               const SizedBox(width: 4),
                               _CustomAppBarTrailingRow(items: trailing),
@@ -596,6 +687,7 @@ class CustomAppBarAction extends StatelessWidget {
     this.onPressed,
     this.isLoading = false,
     this.foregroundColor,
+    this.accentColor,
     this.size = 42,
   });
 
@@ -604,6 +696,9 @@ class CustomAppBarAction extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
   final Color? foregroundColor;
+
+  /// When set, tints the chip and icon (e.g. error for close-search).
+  final Color? accentColor;
   final double size;
 
   @override
@@ -616,6 +711,7 @@ class CustomAppBarAction extends StatelessWidget {
       onPressed: onPressed,
       isLoading: isLoading,
       foregroundColor: color,
+      accentColor: accentColor,
       size: size,
     );
   }
@@ -629,6 +725,7 @@ class _CustomAppBarIconButton extends StatefulWidget {
     required this.size,
     this.onPressed,
     this.isLoading = false,
+    this.accentColor,
   });
 
   final IconData icon;
@@ -637,6 +734,9 @@ class _CustomAppBarIconButton extends StatefulWidget {
   final bool isLoading;
   final Color foregroundColor;
   final double size;
+
+  /// When set, tints the chip and icon with this color instead of primary.
+  final Color? accentColor;
 
   @override
   State<_CustomAppBarIconButton> createState() =>
@@ -650,6 +750,7 @@ class _CustomAppBarIconButtonState extends State<_CustomAppBarIconButton> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final enabled = widget.onPressed != null && !widget.isLoading;
+    final accent = widget.accentColor ?? colorScheme.primary;
 
     return Semantics(
       button: true,
@@ -662,7 +763,7 @@ class _CustomAppBarIconButtonState extends State<_CustomAppBarIconButton> {
           duration: const Duration(milliseconds: 120),
           curve: Curves.easeOutCubic,
           child: Material(
-            color: colorScheme.primary.withValues(alpha: enabled ? 0.08 : 0.04),
+            color: accent.withValues(alpha: enabled ? 0.12 : 0.05),
             borderRadius: BorderRadius.circular(14),
             child: InkWell(
               onTap: enabled ? widget.onPressed : null,
@@ -676,14 +777,14 @@ class _CustomAppBarIconButtonState extends State<_CustomAppBarIconButton> {
                         padding: const EdgeInsets.all(11),
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: colorScheme.primary,
+                          color: accent,
                         ),
                       )
                     : Icon(
                         widget.icon,
                         size: 22,
                         color: enabled
-                            ? colorScheme.primary
+                            ? accent
                             : widget.foregroundColor.withValues(alpha: 0.38),
                       ),
               ),
@@ -712,58 +813,18 @@ class _CustomAppBarNotificationButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final badgeText = count > 99 ? '99+' : '$count';
-
     return Semantics(
       button: true,
       label: MaterialLocalizations.of(context).alertDialogLabel,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          _CustomAppBarIconButton(
-            icon: icon,
-            tooltip: MaterialLocalizations.of(context).alertDialogLabel,
-            onPressed: onPressed,
-            foregroundColor: foregroundColor,
-            size: size,
-          ),
-          if (count > 0)
-            PositionedDirectional(
-              top: 6,
-              end: 6,
-              child: AnimatedScale(
-                scale: 1,
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutBack,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: colorScheme.error,
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: colorScheme.surface,
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 1,
-                    ),
-                    child: Text(
-                      badgeText,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onError,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 10,
-                            height: 1,
-                          ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
+      child: NotificationBadge(
+        count: count,
+        child: _CustomAppBarIconButton(
+          icon: icon,
+          tooltip: MaterialLocalizations.of(context).alertDialogLabel,
+          onPressed: onPressed,
+          foregroundColor: foregroundColor,
+          size: size,
+        ),
       ),
     );
   }
@@ -802,10 +863,7 @@ class _CustomAppBarAvatar extends StatelessWidget {
                 ? DecoratedBox(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: image!,
-                        fit: BoxFit.cover,
-                      ),
+                      image: DecorationImage(image: image!, fit: BoxFit.cover),
                     ),
                   )
                 : Center(
@@ -814,9 +872,9 @@ class _CustomAppBarAvatar extends StatelessWidget {
                           ? '?'
                           : initials!.trim().substring(0, 1).toUpperCase(),
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.w700,
-                          ),
+                        color: colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
           ),

@@ -29,8 +29,8 @@ class ServiceGrid extends StatelessWidget {
         final crossAxisCount = AppBreakpoints.isDesktop(width)
             ? 4
             : AppBreakpoints.isTablet(width)
-                ? 3
-                : 2;
+            ? 3
+            : 2;
         final childAspectRatio = AppBreakpoints.isMobile(width) ? 0.82 : 0.95;
         final showAdd = onAddPressed != null;
         final itemCount = modules.length + (showAdd ? 1 : 0);
@@ -47,10 +47,7 @@ class ServiceGrid extends StatelessWidget {
           ),
           itemBuilder: (context, index) {
             if (showAdd && index == modules.length) {
-              return ServiceAddCard(
-                onTap: onAddPressed!,
-                label: addLabel,
-              );
+              return ServiceAddCard(onTap: onAddPressed!, label: addLabel);
             }
             final module = modules[index];
             return ServiceCard(

@@ -7,18 +7,20 @@ import '../models/inventory_service_definition.dart';
 /// Ordered inventory service ids pinned on the Inventory hub.
 ///
 /// Defaults to the full catalog until the user customizes the list.
-final inventoryServicesProvider = StateNotifierProvider<
-    InventoryServicesController, AsyncValue<List<String>>>((ref) {
-  return InventoryServicesController(
-    repository: ref.watch(settingsRepositoryProvider),
-  );
-});
+final inventoryServicesProvider =
+    StateNotifierProvider<
+      InventoryServicesController,
+      AsyncValue<List<String>>
+    >((ref) {
+      return InventoryServicesController(
+        repository: ref.watch(settingsRepositoryProvider),
+      );
+    });
 
 class InventoryServicesController
     extends StateNotifier<AsyncValue<List<String>>> {
-  InventoryServicesController({
-    required this._repository,
-  }) : super(const AsyncValue.loading()) {
+  InventoryServicesController({required this._repository})
+    : super(const AsyncValue.loading()) {
     _load();
   }
 
@@ -33,15 +35,11 @@ class InventoryServicesController
   }
 
   List<String> _defaultIds() {
-    return [
-      for (final service in inventoryServiceCatalog()) service.id,
-    ];
+    return [for (final service in inventoryServiceCatalog()) service.id];
   }
 
   List<String> _sanitize(List<String> ids) {
-    final known = {
-      for (final service in inventoryServiceCatalog()) service.id,
-    };
+    final known = {for (final service in inventoryServiceCatalog()) service.id};
     final seen = <String>{};
     final result = <String>[];
     for (final id in ids) {

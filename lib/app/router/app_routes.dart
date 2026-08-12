@@ -13,6 +13,10 @@ class AppRoutes {
   static const String services = '/services';
   static const String reports = '/reports';
   static const String settings = '/settings';
+  static const String notifications = '/notifications';
+
+  /// Reports hub for a specific module (e.g. `/reports/inventory`).
+  static String moduleReports(String moduleId) => '$reports/$moduleId';
 
   /// Legacy alias used by older call sites; prefer [dashboard].
   static const String home = dashboard;

@@ -5,18 +5,12 @@ import 'inventory_providers.dart';
 import 'selected_item_provider.dart';
 
 class QuantityEntryState {
-  const QuantityEntryState({
-    this.mainText = '',
-    this.secondaryText = '',
-  });
+  const QuantityEntryState({this.mainText = '', this.secondaryText = ''});
 
   final String mainText;
   final String secondaryText;
 
-  QuantityEntryState copyWith({
-    String? mainText,
-    String? secondaryText,
-  }) {
+  QuantityEntryState copyWith({String? mainText, String? secondaryText}) {
     return QuantityEntryState(
       mainText: mainText ?? this.mainText,
       secondaryText: secondaryText ?? this.secondaryText,
@@ -67,8 +61,8 @@ class QuantityEntryNotifier extends StateNotifier<QuantityEntryState> {
 
 final quantityEntryProvider =
     StateNotifierProvider<QuantityEntryNotifier, QuantityEntryState>((ref) {
-  return QuantityEntryNotifier(ref.watch(countingCalculatorProvider));
-});
+      return QuantityEntryNotifier(ref.watch(countingCalculatorProvider));
+    });
 
 final countPreviewProvider = Provider.autoDispose<CountPreview>((ref) {
   final entry = ref.watch(quantityEntryProvider);

@@ -38,10 +38,7 @@ void main() {
         ShellRoute(
           builder: (context, state, child) {
             return AppExitPopScope(
-              child: AppShell(
-                location: state.uri.path,
-                child: child,
-              ),
+              child: AppShell(location: state.uri.path, child: child),
             );
           },
           routes: [
@@ -183,8 +180,9 @@ void main() {
     expect(find.text('الخدمات'), findsWidgets);
   });
 
-  testWidgets('quick actions add opens pinned shortcuts and customize',
-      (tester) async {
+  testWidgets('quick actions add opens pinned shortcuts and customize', (
+    tester,
+  ) async {
     final router = buildTestRouter();
     await tester.pumpWidget(wrapRouter(router));
     await settle(tester);
@@ -201,11 +199,11 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Create product'), findsOneWidget);
-    expect(find.text('Scan barcode'), findsOneWidget);
+    expect(find.text('Scan barcode or QR'), findsOneWidget);
     expect(find.text('Customize'), findsWidgets);
   });
 
-  testWidgets('bottom nav remains visible on inventory module routes', (
+  testWidgets('bottom nav is hidden on inventory module routes', (
     tester,
   ) async {
     final view = tester.view;
@@ -220,8 +218,22 @@ void main() {
     await tester.pump(const Duration(hours: 1));
 
     expect(find.byType(InventoryHomePage), findsOneWidget);
+    expect(find.byType(CustomBottomNav), findsNothing);
+  });
+
+  testWidgets('bottom nav is visible on primary shell tabs', (tester) async {
+    final view = tester.view;
+    view.physicalSize = const Size(390, 844);
+    view.devicePixelRatio = 1.0;
+    addTearDown(view.resetPhysicalSize);
+    addTearDown(view.resetDevicePixelRatio);
+
+    final router = buildTestRouter(initialLocation: AppRoutes.dashboard);
+    await tester.pumpWidget(wrapRouter(router));
+    await settle(tester);
+
     expect(find.byType(CustomBottomNav), findsOneWidget);
-    expect(find.text('Services'), findsWidgets);
+    expect(find.byKey(kQuickActionsNavButtonKey), findsOneWidget);
   });
 }
 

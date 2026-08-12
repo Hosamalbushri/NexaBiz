@@ -4,9 +4,7 @@ import '../../localization/app_localizations.dart';
 import '../../../modules/inventory/presentation/pages/inventory_routes.dart';
 
 /// How a quick action is executed.
-enum QuickActionKind {
-  route,
-}
+enum QuickActionKind { route }
 
 /// Maximum number of pinned quick actions on the shell add sheet.
 const int kMaxQuickActions = 9;
@@ -108,9 +106,9 @@ List<QuickActionDefinition> quickActionCatalog() {
 
 /// Default pinned shortcuts until the user customizes.
 List<String> defaultQuickActionIds() => const [
-      'create_product',
-      'scan_barcode',
-    ];
+  'create_product',
+  'scan_barcode',
+];
 
 QuickActionDefinition? findQuickActionById(String id) {
   for (final action in quickActionCatalog()) {
@@ -126,8 +124,7 @@ String _createProductTitle(AppLocalizations l10n) =>
 String _createProductSubtitle(AppLocalizations l10n) =>
     l10n.quickActionsCreateProductSubtitle;
 
-String _scanBarcodeTitle(AppLocalizations l10n) =>
-    l10n.quickActionsScanBarcode;
+String _scanBarcodeTitle(AppLocalizations l10n) => l10n.quickActionsScanBarcode;
 String _scanBarcodeSubtitle(AppLocalizations l10n) =>
     l10n.quickActionsScanBarcodeSubtitle;
 
@@ -140,8 +137,7 @@ String _productsBarcodeTitle(AppLocalizations l10n) =>
 String _productsBarcodeSubtitle(AppLocalizations l10n) =>
     l10n.productsBarcodeSubtitle;
 
-String _productsImportTitle(AppLocalizations l10n) =>
-    l10n.productsImportTitle;
+String _productsImportTitle(AppLocalizations l10n) => l10n.productsImportTitle;
 String _productsImportSubtitle(AppLocalizations l10n) =>
     l10n.productsImportSubtitle;
 

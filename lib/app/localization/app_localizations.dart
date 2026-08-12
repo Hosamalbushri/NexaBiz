@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Business Platform'**
+  /// **'NexaBiz'**
   String get appTitle;
 
   /// No description provided for @servicesTitle.
@@ -289,6 +289,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search by code, name, or barcode'**
   String get productsSearchHint;
+
+  /// No description provided for @catalogSearchFieldAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get catalogSearchFieldAll;
+
+  /// No description provided for @catalogSearchFieldName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get catalogSearchFieldName;
+
+  /// No description provided for @catalogSearchFieldCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get catalogSearchFieldCode;
+
+  /// No description provided for @catalogSearchFieldBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode'**
+  String get catalogSearchFieldBarcode;
+
+  /// No description provided for @catalogSearchHintName.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name'**
+  String get catalogSearchHintName;
+
+  /// No description provided for @catalogSearchHintCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by code'**
+  String get catalogSearchHintCode;
+
+  /// No description provided for @catalogSearchHintBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by barcode'**
+  String get catalogSearchHintBarcode;
+
+  /// No description provided for @catalogSearchFilterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Search in'**
+  String get catalogSearchFilterLabel;
 
   /// No description provided for @productsEmptyTitle.
   ///
@@ -479,8 +527,44 @@ abstract class AppLocalizations {
   /// No description provided for @productsScanBarcode.
   ///
   /// In en, this message translates to:
-  /// **'Scan barcode'**
+  /// **'Scan barcode or QR'**
   String get productsScanBarcode;
+
+  /// No description provided for @productsScanAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get productsScanAction;
+
+  /// No description provided for @productsScannerAlignHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Align barcode or QR code here'**
+  String get productsScannerAlignHint;
+
+  /// No description provided for @productsScannerScanning.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning...'**
+  String get productsScannerScanning;
+
+  /// No description provided for @productsScannerDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Code detected'**
+  String get productsScannerDetected;
+
+  /// No description provided for @productsScannerProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Processing...'**
+  String get productsScannerProcessing;
+
+  /// No description provided for @productsScannerInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported code'**
+  String get productsScannerInvalid;
 
   /// No description provided for @productsGenerateBarcode.
   ///
@@ -499,6 +583,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Barcode preview'**
   String get productsBarcodePreview;
+
+  /// No description provided for @productsBarcodeTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode type'**
+  String get productsBarcodeTypeLabel;
+
+  /// No description provided for @productsBarcodeFormatBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode'**
+  String get productsBarcodeFormatBarcode;
+
+  /// No description provided for @productsBarcodeFormatQr.
+  ///
+  /// In en, this message translates to:
+  /// **'QR Code'**
+  String get productsBarcodeFormatQr;
+
+  /// No description provided for @productsQrCodePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'QR Code preview'**
+  String get productsQrCodePreview;
+
+  /// No description provided for @productsGenerateQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate QR Code'**
+  String get productsGenerateQrCode;
+
+  /// No description provided for @productsSaveQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Save QR Code'**
+  String get productsSaveQrCode;
+
+  /// No description provided for @productsShareQrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Share QR Code'**
+  String get productsShareQrCode;
+
+  /// No description provided for @productsInvalidProductData.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid product data'**
+  String get productsInvalidProductData;
+
+  /// No description provided for @productsQrScanRecognized.
+  ///
+  /// In en, this message translates to:
+  /// **'Product loaded from QR Code'**
+  String get productsQrScanRecognized;
+
+  /// No description provided for @productsQrScanOfflineData.
+  ///
+  /// In en, this message translates to:
+  /// **'Product shown from QR data (not found in catalog)'**
+  String get productsQrScanOfflineData;
+
+  /// No description provided for @productsQrProductDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Product details'**
+  String get productsQrProductDetails;
+
+  /// No description provided for @productsCodesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Product codes'**
+  String get productsCodesSection;
+
+  /// No description provided for @productsPrintBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Print barcode'**
+  String get productsPrintBarcode;
+
+  /// No description provided for @productsPrintQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Print QR Code'**
+  String get productsPrintQr;
 
   /// No description provided for @productsBarcodeNotFound.
   ///
@@ -1334,6 +1502,36 @@ abstract class AppLocalizations {
   /// **'Failure'**
   String get failure;
 
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications'**
+  String get notificationsEmptyTitle;
+
+  /// No description provided for @notificationsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up.'**
+  String get notificationsEmptyMessage;
+
+  /// No description provided for @notificationsMarkAllRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get notificationsMarkAllRead;
+
+  /// No description provided for @notificationsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTooltip;
+
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
@@ -1463,13 +1661,13 @@ abstract class AppLocalizations {
   /// No description provided for @quickActionsScanBarcode.
   ///
   /// In en, this message translates to:
-  /// **'Scan barcode'**
+  /// **'Scan barcode or QR'**
   String get quickActionsScanBarcode;
 
   /// No description provided for @quickActionsScanBarcodeSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Scan and show the product on the barcode page.'**
+  /// **'Scan a barcode or QR and open the product.'**
   String get quickActionsScanBarcodeSubtitle;
 
   /// No description provided for @quickActionsCustomize.
@@ -1592,11 +1790,41 @@ abstract class AppLocalizations {
   /// **'Customize'**
   String get dashboardCustomizeServices;
 
+  /// No description provided for @dashboardCustomizeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize dashboard services'**
+  String get dashboardCustomizeTitle;
+
   /// No description provided for @dashboardCustomizeServicesHint.
   ///
   /// In en, this message translates to:
-  /// **'Choose which services appear on your dashboard.'**
+  /// **'Choose which services appear on your dashboard, then drag to reorder.'**
   String get dashboardCustomizeServicesHint;
+
+  /// No description provided for @dashboardPinnedServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned services'**
+  String get dashboardPinnedServices;
+
+  /// No description provided for @dashboardAvailableServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Available services'**
+  String get dashboardAvailableServices;
+
+  /// No description provided for @dashboardAddService.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get dashboardAddService;
+
+  /// No description provided for @dashboardRemoveService.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get dashboardRemoveService;
 
   /// No description provided for @dashboardSaveServices.
   ///
@@ -1631,7 +1859,7 @@ abstract class AppLocalizations {
   /// No description provided for @platformReportsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Module reports and future cross-module insights.'**
+  /// **'Choose a module to browse its service reports.'**
   String get platformReportsSubtitle;
 
   /// No description provided for @platformReportsInventory.
@@ -1640,11 +1868,41 @@ abstract class AppLocalizations {
   /// **'Inventory reports'**
   String get platformReportsInventory;
 
+  /// No description provided for @platformReportsInventorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock count and product reports.'**
+  String get platformReportsInventorySubtitle;
+
   /// No description provided for @platformReportsComingSoon.
   ///
   /// In en, this message translates to:
   /// **'Cross-module reports will be available in a future release.'**
   String get platformReportsComingSoon;
+
+  /// No description provided for @platformReportsStockCountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock count report'**
+  String get platformReportsStockCountTitle;
+
+  /// No description provided for @platformReportsStockCountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Count summary, variances, and export.'**
+  String get platformReportsStockCountSubtitle;
+
+  /// No description provided for @platformReportsProductsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Products report'**
+  String get platformReportsProductsTitle;
+
+  /// No description provided for @platformReportsServiceComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports for this service are coming soon.'**
+  String get platformReportsServiceComingSoon;
 
   /// No description provided for @notFoundTitle.
   ///
@@ -1741,6 +1999,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{from}-{to} of {total}'**
   String paginationRange(int from, int to, int total);
+
+  /// No description provided for @paginationItemsPerPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Items per page'**
+  String get paginationItemsPerPage;
 
   /// No description provided for @importParsing.
   ///

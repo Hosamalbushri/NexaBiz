@@ -8,11 +8,13 @@ import '../../data/datasources/product_excel_import_datasource.dart';
 import '../../data/datasources/thermal_barcode_label_printer.dart';
 import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/entities/product.dart';
+import '../../domain/models/catalog_search_field.dart';
 import '../../domain/models/paged_result.dart';
 import '../../domain/models/product_barcode_generator.dart';
 import '../../domain/models/product_item_code_generator.dart';
 import '../../domain/repositories/barcode_label_printer.dart';
 import '../../domain/repositories/product_repository.dart';
+import '../../domain/services/product_scan_resolver.dart';
 import '../../domain/usecases/product_usecases.dart';
 import '../models/products_view_mode.dart';
 
@@ -45,13 +47,19 @@ final getProductByBarcodeUseCaseProvider = Provider<GetProductByBarcode>((ref) {
   return GetProductByBarcode(ref.watch(productRepositoryProvider));
 });
 
-final productBarcodeGeneratorProvider =
-    Provider<ProductBarcodeGenerator>((ref) {
+final productScanResolverProvider = Provider<ProductScanResolver>((ref) {
+  return ProductScanResolver(ref.watch(productRepositoryProvider));
+});
+
+final productBarcodeGeneratorProvider = Provider<ProductBarcodeGenerator>((
+  ref,
+) {
   return ProductBarcodeGenerator(ref.watch(productRepositoryProvider));
 });
 
-final productItemCodeGeneratorProvider =
-    Provider<ProductItemCodeGenerator>((ref) {
+final productItemCodeGeneratorProvider = Provider<ProductItemCodeGenerator>((
+  ref,
+) {
   return ProductItemCodeGenerator(ref.watch(productRepositoryProvider));
 });
 
@@ -60,8 +68,7 @@ final barcodeLabelPrinterProvider = Provider<BarcodeLabelPrinter>((ref) {
 });
 
 /// Future thermal backend — UI reads [BarcodeLabelPrinter.supportsThermal].
-final thermalBarcodeLabelPrinterProvider =
-    Provider<BarcodeLabelPrinter>((ref) {
+final thermalBarcodeLabelPrinterProvider = Provider<BarcodeLabelPrinter>((ref) {
   return const ThermalBarcodeLabelPrinter();
 });
 
@@ -83,8 +90,8 @@ final upsertProductsUseCaseProvider = Provider<UpsertProducts>((ref) {
 
 final productExcelImportDatasourceProvider =
     Provider<ProductExcelImportDatasource>((ref) {
-  return const ProductExcelImportDatasource();
-});
+      return const ProductExcelImportDatasource();
+    });
 
 /// Lightweight invalidation token — avoids reloading the full catalog stream
 /// on every products list rebuild / scroll frame.
@@ -105,45 +112,69 @@ final productsProvider = StreamProvider<List<Product>>((ref) {
 
 const int kProductsPageSize = 20;
 
-final productSearchQueryProvider =
-    StateProvider.autoDispose<String>((ref) => '');
+/// Allowed page sizes for the products catalog list.
+const List<int> kProductsPageSizeOptions = [10, 20, 30, 50];
 
-final productSearchPageIndexProvider =
-    StateProvider.autoDispose<int>((ref) => 0);
+final productSearchQueryProvider = StateProvider.autoDispose<String>(
+  (ref) => '',
+);
+
+final productSearchFieldProvider =
+    StateProvider.autoDispose<CatalogSearchField>(
+      (ref) => CatalogSearchField.all,
+    );
+
+final productSearchPageIndexProvider = StateProvider.autoDispose<int>(
+  (ref) => 0,
+);
+
+final productPageSizeProvider = StateProvider.autoDispose<int>(
+  (ref) => kProductsPageSize,
+);
 
 /// One page of catalog results (SQL limit/offset).
-final pagedProductsProvider =
-    FutureProvider.autoDispose<PagedResult<Product>>((ref) async {
+final pagedProductsProvider = FutureProvider.autoDispose<PagedResult<Product>>((
+  ref,
+) async {
   ref.watch(productsRevisionProvider);
 
   final page = ref.watch(productSearchPageIndexProvider);
+  final pageSize = ref.watch(productPageSizeProvider);
   final query = ref.watch(productSearchQueryProvider);
+  final searchField = ref.watch(productSearchFieldProvider);
 
-  return ref.read(productRepositoryProvider).getPaged(
+  return ref
+      .read(productRepositoryProvider)
+      .getPaged(
         page: page,
-        pageSize: kProductsPageSize,
+        pageSize: pageSize,
         query: query,
+        searchField: searchField,
       );
 });
 
-final productByIdProvider =
-    FutureProvider.autoDispose.family<Product?, int>((ref, id) {
+final productByIdProvider = FutureProvider.autoDispose.family<Product?, int>((
+  ref,
+  id,
+) {
   return ref.watch(getProductByIdUseCaseProvider).call(id);
 });
 
-final productsViewModeProvider = StateNotifierProvider<
-    ProductsViewModeController, AsyncValue<ProductsViewMode>>((ref) {
-  return ProductsViewModeController(
-    repository: ref.watch(settingsRepositoryProvider),
-  );
-});
+final productsViewModeProvider =
+    StateNotifierProvider<
+      ProductsViewModeController,
+      AsyncValue<ProductsViewMode>
+    >((ref) {
+      return ProductsViewModeController(
+        repository: ref.watch(settingsRepositoryProvider),
+      );
+    });
 
 class ProductsViewModeController
     extends StateNotifier<AsyncValue<ProductsViewMode>> {
-  ProductsViewModeController({
-    required SettingsRepository repository,
-  })  : _repository = repository,
-        super(const AsyncValue.loading()) {
+  ProductsViewModeController({required SettingsRepository repository})
+    : _repository = repository,
+      super(const AsyncValue.loading()) {
     _load();
   }
 

@@ -14,6 +14,7 @@ import 'package:stock_count/modules/inventory/domain/entities/item_status.dart';
 import 'package:stock_count/modules/inventory/domain/entities/product.dart';
 import 'package:stock_count/modules/inventory/domain/entities/report_summary.dart';
 import 'package:stock_count/modules/inventory/domain/models/paged_result.dart';
+import 'package:stock_count/modules/inventory/domain/models/catalog_search_field.dart';
 import 'package:stock_count/modules/inventory/domain/repositories/inventory_repository.dart';
 import 'package:stock_count/modules/inventory/domain/repositories/product_repository.dart';
 import 'package:stock_count/modules/inventory/inventory_module.dart';
@@ -45,7 +46,10 @@ class _FakeInventoryRepository implements InventoryRepository {
   Future<void> clear() async {}
 
   @override
-  Future<List<InventoryItem>> search(String query) async => const [];
+  Future<List<InventoryItem>> search(
+    String query, {
+    CatalogSearchField searchField = CatalogSearchField.all,
+  }) async => const [];
 
   @override
   Future<List<InventoryItem>> filterByStatus(ItemStatus? status) async =>
@@ -63,6 +67,7 @@ class _FakeInventoryRepository implements InventoryRepository {
     required int pageSize,
     String query = '',
     ItemStatus? status,
+    CatalogSearchField searchField = CatalogSearchField.all,
   }) async {
     return PagedResult<InventoryItem>(
       items: const [],
@@ -90,13 +95,17 @@ class _FakeProductRepository implements ProductRepository {
   Future<Product?> getByBarcode(String barcode) async => null;
 
   @override
-  Future<List<Product>> search(String query) async => const [];
+  Future<List<Product>> search(
+    String query, {
+    CatalogSearchField searchField = CatalogSearchField.all,
+  }) async => const [];
 
   @override
   Future<PagedResult<Product>> getPaged({
     required int page,
     required int pageSize,
     String query = '',
+    CatalogSearchField searchField = CatalogSearchField.all,
   }) async {
     return PagedResult<Product>(
       items: const [],
@@ -173,7 +182,9 @@ void main() {
       overrides: [
         ...moduleRegistryOverrides(),
         settingsRepositoryProvider.overrideWithValue(_FakeSettingsRepository()),
-        inventoryRepositoryProvider.overrideWithValue(_FakeInventoryRepository()),
+        inventoryRepositoryProvider.overrideWithValue(
+          _FakeInventoryRepository(),
+        ),
         inventoryItemsProvider.overrideWith((ref) => Stream.value(const [])),
         productRepositoryProvider.overrideWithValue(_FakeProductRepository()),
         productsProvider.overrideWith((ref) => Stream.value(const [])),
@@ -204,8 +215,9 @@ void main() {
     expect(find.text('Stock count'), findsOneWidget);
   });
 
-  testWidgets('opening products hub shows list import and barcode cards',
-      (tester) async {
+  testWidgets('opening products hub shows list import and barcode cards', (
+    tester,
+  ) async {
     final router = buildRouter(initialLocation: InventoryRoutes.products);
     await tester.pumpWidget(wrap(router));
     await settle(tester);
@@ -217,7 +229,9 @@ void main() {
   });
 
   testWidgets('products barcode route opens barcode page', (tester) async {
-    final router = buildRouter(initialLocation: InventoryRoutes.productsBarcode);
+    final router = buildRouter(
+      initialLocation: InventoryRoutes.productsBarcode,
+    );
     await tester.pumpWidget(wrap(router));
     await settle(tester);
 

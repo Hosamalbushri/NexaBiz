@@ -86,7 +86,9 @@ class InventorySaveNotifier extends StateNotifier<AsyncValue<void>> {
       await _ref.read(saveInventoryCountProvider).call(updated);
       bumpInventoryRevision(_ref);
       _ref.read(selectedItemProvider.notifier).state = updated;
-      _ref.read(quantityEntryProvider.notifier).setQuantities(
+      _ref
+          .read(quantityEntryProvider.notifier)
+          .setQuantities(
             mainText: normalized.mainText,
             secondaryText: normalized.secondaryText,
           );
@@ -173,7 +175,9 @@ class InventorySaveNotifier extends StateNotifier<AsyncValue<void>> {
       return value.toString();
     }
 
-    _ref.read(quantityEntryProvider.notifier).setQuantities(
+    _ref
+        .read(quantityEntryProvider.notifier)
+        .setQuantities(
           mainText: format(item.systemMainQuantity),
           secondaryText: format(item.systemSubQuantity),
         );
@@ -183,5 +187,5 @@ class InventorySaveNotifier extends StateNotifier<AsyncValue<void>> {
 
 final inventorySaveProvider =
     StateNotifierProvider<InventorySaveNotifier, AsyncValue<void>>((ref) {
-  return InventorySaveNotifier(ref);
-});
+      return InventorySaveNotifier(ref);
+    });

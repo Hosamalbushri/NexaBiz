@@ -24,10 +24,7 @@ Future<void> showQuickActionsSheet(BuildContext context) {
 
 /// Animated panel used by [AppShell] above the bottom navigation.
 class QuickActionsPanel extends StatelessWidget {
-  const QuickActionsPanel({
-    super.key,
-    required this.onClose,
-  });
+  const QuickActionsPanel({super.key, required this.onClose});
 
   final VoidCallback onClose;
 
@@ -50,7 +47,7 @@ class QuickActionsPanel extends StatelessWidget {
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.md,
-            AppSpacing.md,
+            AppSpacing.sm,
             AppSpacing.md,
             AppSpacing.sm,
           ),
@@ -59,12 +56,23 @@ class QuickActionsPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+              Center(
                 child: Text(
                   l10n.quickActionsTitle,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -79,15 +87,19 @@ class QuickActionsPanel extends StatelessWidget {
 
 /// Body for the quick-actions bottom sheet / overlay panel.
 class QuickActionsSheetBody extends ConsumerWidget {
-  const QuickActionsSheetBody({
-    super.key,
-    this.onClose,
-  });
+  const QuickActionsSheetBody({super.key, this.onClose});
 
   /// Called before running an action (and by the shell when dismissing).
   final VoidCallback? onClose;
 
   Future<void> _openCustomize(BuildContext context, WidgetRef ref) async {
+    // Close the shell panel first — nested bottom sheets fight its scrim/drag.
+    onClose?.call();
+    await Future<void>.delayed(const Duration(milliseconds: 220));
+    if (!context.mounted) {
+      return;
+    }
+
     final controller = ref.read(quickActionsProvider.notifier);
     final currentIds =
         ref.read(quickActionsProvider).valueOrNull ?? defaultQuickActionIds();
@@ -133,8 +145,7 @@ class QuickActionsSheetBody extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           AppButton(
             label: l10n.retry,
-            onPressed: () =>
-                ref.read(quickActionsProvider.notifier).reload(),
+            onPressed: () => ref.read(quickActionsProvider.notifier).reload(),
           ),
         ],
       ),
@@ -250,11 +261,7 @@ class _QuickActionTile extends StatelessWidget {
                   child: SizedBox(
                     width: 36,
                     height: 36,
-                    child: Icon(
-                      icon,
-                      size: 18,
-                      color: colorScheme.primary,
-                    ),
+                    child: Icon(icon, size: 18, color: colorScheme.primary),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -278,10 +285,7 @@ class _QuickActionTile extends StatelessWidget {
 }
 
 class _QuickActionCustomizeTile extends StatelessWidget {
-  const _QuickActionCustomizeTile({
-    required this.label,
-    required this.onTap,
-  });
+  const _QuickActionCustomizeTile({required this.label, required this.onTap});
 
   final String label;
   final VoidCallback onTap;
@@ -357,10 +361,7 @@ class _QuickActionCustomizeTile extends StatelessWidget {
 }
 
 class _DashedRRectPainter extends CustomPainter {
-  _DashedRRectPainter({
-    required this.color,
-    required this.radius,
-  });
+  _DashedRRectPainter({required this.color, required this.radius});
 
   final Color color;
   final double radius;

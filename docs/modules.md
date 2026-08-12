@@ -52,7 +52,7 @@ Path: `lib/modules/inventory/`
 | Products hub | `/inventory/products` — grid of list / barcode / import |
 | Product list | `/inventory/products/list` |
 | Product form | `/inventory/products/new`, `/inventory/products/:id/edit` |
-| Products barcode | `/inventory/products/barcode` — generate, scan, preview, print/share |
+| Products barcode | `/inventory/products/barcode` — generate, scan, preview, print/share; Code128 **or** self-contained product QR |
 | Products import | `/inventory/products/import` |
 
 Legacy redirects: `/inventory/count|import|reports` → stock-count paths.
@@ -67,7 +67,7 @@ Capabilities:
 
 - Hive persistence (`inventory_items`) for stock-count rows
 - Drift persistence (`products`) for the product catalog
-- Product barcode hub: generate, scan lookup, Code128 preview, PDF print/share (thermal printer port reserved)
+- Product barcode hub: generate, scan lookup, Code128 / product-QR preview, PDF print/share (thermal printer port reserved)
 - Counting with main/sub quantities + pack-size conversion
 - Status: matched / shortage / overage / not counted
 - Separate Excel imports for stock count vs products

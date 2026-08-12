@@ -43,10 +43,7 @@ class InventoryHomePage extends ConsumerWidget {
         }
       },
       child: Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.moduleInventory,
-          showBackButton: true,
-        ),
+        appBar: CustomAppBar(title: l10n.moduleInventory, showBackButton: true),
         body: servicesAsync.when(
           loading: () => const AppLoading(),
           error: (error, _) => Center(
@@ -65,7 +62,7 @@ class InventoryHomePage extends ConsumerWidget {
           data: (_) {
             final services = controller.resolveServices();
             return ListView(
-              padding: const EdgeInsets.all(AppConstants.pagePadding),
+              padding: AppConstants.pageInsets(context),
               children: [
                 Text(
                   l10n.servicesTitle,
@@ -103,7 +100,8 @@ class InventoryHomePage extends ConsumerWidget {
   }
 
   Future<void> _openCustomize(BuildContext context, WidgetRef ref) async {
-    final current = ref.read(inventoryServicesProvider).valueOrNull ??
+    final current =
+        ref.read(inventoryServicesProvider).valueOrNull ??
         [for (final service in inventoryServiceCatalog()) service.id];
 
     final result = await showAppBottomSheet<List<String>>(
@@ -185,8 +183,8 @@ class _InventoryServiceGrid extends StatelessWidget {
         final crossAxisCount = AppBreakpoints.isDesktop(width)
             ? 4
             : AppBreakpoints.isTablet(width)
-                ? 3
-                : 2;
+            ? 3
+            : 2;
         final childAspectRatio = AppBreakpoints.isMobile(width) ? 0.82 : 0.95;
         final itemCount = services.length + 1;
 
@@ -202,10 +200,7 @@ class _InventoryServiceGrid extends StatelessWidget {
           ),
           itemBuilder: (context, index) {
             if (index == services.length) {
-              return ServiceAddCard(
-                onTap: onCustomize,
-                label: customizeLabel,
-              );
+              return ServiceAddCard(onTap: onCustomize, label: customizeLabel);
             }
 
             final service = services[index];
@@ -256,11 +251,7 @@ class _DraggableInventoryServiceCard extends StatelessWidget {
       feedback: Material(
         elevation: 8,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        child: SizedBox(
-          width: 160,
-          height: 180,
-          child: card,
-        ),
+        child: SizedBox(width: 160, height: 180, child: card),
       ),
       childWhenDragging: Opacity(opacity: 0.35, child: card),
       child: DragTarget<int>(
@@ -346,11 +337,7 @@ class _InventoryServiceCard extends StatelessWidget {
                     child: SizedBox(
                       width: 64,
                       height: 64,
-                      child: Icon(
-                        icon,
-                        color: colorScheme.primary,
-                        size: 32,
-                      ),
+                      child: Icon(icon, color: colorScheme.primary, size: 32),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),

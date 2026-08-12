@@ -152,22 +152,15 @@ class ProductExcelImportDatasource {
       'العبوة',
       'عبوة',
     ]);
-    final price = find(const [
-      'price',
-      'unit price',
-      'السعر',
-      'سعر',
-    ]);
+    final price = find(const ['price', 'unit price', 'السعر', 'سعر']);
 
     return _ColumnMap(
       code: code ?? 0,
       name: name ?? 1,
       packSize: packSize ?? 2,
       price: price ?? 3,
-      unresolved: code == null ||
-          name == null ||
-          packSize == null ||
-          price == null,
+      unresolved:
+          code == null || name == null || packSize == null || price == null,
     );
   }
 

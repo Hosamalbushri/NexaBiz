@@ -57,10 +57,7 @@ class ServiceLauncher extends StatelessWidget {
             icon: Icons.apps_outage_outlined,
           )
         else
-          ServiceGrid(
-            modules: modules,
-            onModuleSelected: onModuleSelected,
-          ),
+          ServiceGrid(modules: modules, onModuleSelected: onModuleSelected),
       ],
     );
   }

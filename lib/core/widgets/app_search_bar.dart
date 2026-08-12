@@ -54,8 +54,6 @@ class _AppSearchBarState extends State<AppSearchBar> {
   }
 
   void _handleChanged(String value) {
-    // Digits are normalized by [WesternDigitsInputFormatter]; pass through
-    // without rewriting the controller (avoids IME focus churn).
     widget.onChanged(normalizeDigitsToWestern(value));
   }
 

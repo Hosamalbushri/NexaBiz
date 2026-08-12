@@ -12,13 +12,14 @@ import '../../../../core/widgets/app_dialog.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_loading.dart';
-import '../../../../core/widgets/app_search_bar.dart';
+import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/models/product_exception.dart';
 import '../models/products_view_mode.dart';
 import '../providers/product_providers.dart';
+import '../widgets/catalog_expandable_search.dart';
 import 'inventory_routes.dart';
 import 'product_barcode_scanner_page.dart';
 
@@ -31,12 +32,15 @@ class ProductsListPage extends ConsumerStatefulWidget {
 
 class _ProductsListPageState extends ConsumerState<ProductsListPage> {
   final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
   Timer? _debounce;
+  var _searchExpanded = false;
 
   @override
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -56,149 +60,153 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
     });
   }
 
+  void _setSearchExpanded(bool value) {
+    if (_searchExpanded == value) {
+      return;
+    }
+    setState(() => _searchExpanded = value);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final pagedAsync = ref.watch(pagedProductsProvider);
     final pageIndex = ref.watch(productSearchPageIndexProvider);
+    final pageSize = ref.watch(productPageSizeProvider);
     final searchQuery = ref.watch(productSearchQueryProvider);
     final viewMode =
-        ref.watch(productsViewModeProvider).valueOrNull ?? ProductsViewMode.list;
+        ref.watch(productsViewModeProvider).valueOrNull ??
+        ProductsViewMode.list;
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: l10n.productsListTitle,
-        showBackButton: true,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppConstants.pagePadding,
-              AppSpacing.md,
-              AppConstants.pagePadding,
-              AppSpacing.sm,
+    return PopScope(
+      canPop: !_searchExpanded,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) {
+          return;
+        }
+        if (_searchFocusNode.hasFocus) {
+          _searchFocusNode.unfocus();
+          return;
+        }
+        _searchController.clear();
+        _onQueryChanged('');
+        _setSearchExpanded(false);
+      },
+      child: Scaffold(
+        // Keep list layout stable while the search field is focused.
+        resizeToAvoidBottomInset: false,
+        appBar: CustomAppBar(
+          title: l10n.productsListTitle,
+          showBackButton: true,
+          showSearch: !_searchExpanded,
+          onSearch: () => _setSearchExpanded(true),
+          showCloseSearch: _searchExpanded,
+          onCloseSearch: () => _setSearchExpanded(false),
+        ),
+        body: Column(
+          children: [
+            CatalogExpandableSearchPanel(
+              expanded: _searchExpanded,
+              onExpandedChanged: _setSearchExpanded,
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              searchField: ref.watch(productSearchFieldProvider),
+              onQueryChanged: _onQueryChanged,
+              onSearchFieldChanged: (field) {
+                if (ref.read(productSearchFieldProvider) == field) {
+                  return;
+                }
+                ref.read(productSearchFieldProvider.notifier).state = field;
+                ref.read(productSearchPageIndexProvider.notifier).state = 0;
+              },
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppSearchBar(
-                  controller: _searchController,
-                  hint: l10n.productsSearchHint,
-                  onChanged: _onQueryChanged,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _ProductsToolbar(
-                  viewMode: viewMode,
-                  onViewModeChanged: (mode) {
-                    ref.read(productsViewModeProvider.notifier).setMode(mode);
-                  },
-                  onScan: () => _scanAndOpenProduct(context),
-                  onAdd: () => InventoryRoutes.pushProductsNew(context),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
+            Padding(
+              padding: EdgeInsets.fromLTRB(
                 AppConstants.pagePadding,
-                0,
+                _searchExpanded ? 0 : AppSpacing.md,
                 AppConstants.pagePadding,
-                AppConstants.pagePadding,
+                AppSpacing.sm,
               ),
-              child: pagedAsync.when(
-                loading: () => const AppLoading(),
-                error: (error, _) => AppErrorState(
-                  message: error.toString(),
-                  onRetry: () => ref.invalidate(pagedProductsProvider),
+              child: _ProductsToolbar(
+                viewMode: viewMode,
+                onViewModeChanged: (mode) {
+                  ref.read(productsViewModeProvider.notifier).setMode(mode);
+                },
+                onScan: () => _scanAndOpenProduct(context),
+                onAdd: () => InventoryRoutes.pushProductsNew(context),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppConstants.pagePadding,
+                  0,
+                  AppConstants.pagePadding,
+                  AppConstants.pagePadding,
                 ),
-                data: (paged) {
-                  if (paged.totalCount == 0) {
-                    if (searchQuery.isEmpty) {
+                child: pagedAsync.when(
+                  loading: () => const AppLoading(),
+                  error: (error, _) => AppErrorState(
+                    message: error.toString(),
+                    onRetry: () => ref.invalidate(pagedProductsProvider),
+                  ),
+                  data: (paged) {
+                    if (paged.totalCount == 0) {
+                      if (searchQuery.isEmpty) {
+                        return AppEmptyState(
+                          title: l10n.productsEmptyTitle,
+                          subtitle: l10n.productsEmptyMessage,
+                          icon: Icons.inventory_2_outlined,
+                          actionLabel: l10n.productsAdd,
+                          actionIcon: Icons.add_rounded,
+                          onAction: () =>
+                              InventoryRoutes.pushProductsNew(context),
+                        );
+                      }
                       return AppEmptyState(
-                        title: l10n.productsEmptyTitle,
-                        subtitle: l10n.productsEmptyMessage,
-                        icon: Icons.inventory_2_outlined,
-                        actionLabel: l10n.productsAdd,
-                        actionIcon: Icons.add_rounded,
-                        onAction: () =>
-                            InventoryRoutes.pushProductsNew(context),
+                        title: l10n.emptyStateTitle,
+                        subtitle: l10n.emptyStateSubtitle,
+                        icon: Icons.search_off_rounded,
                       );
                     }
-                    return AppEmptyState(
-                      title: l10n.emptyStateTitle,
-                      subtitle: l10n.emptyStateSubtitle,
-                      icon: Icons.search_off_rounded,
-                    );
-                  }
 
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: viewMode == ProductsViewMode.grid
-                            ? _ProductsGrid(
-                                products: paged.items,
-                                onEdit: (product) =>
-                                    InventoryRoutes.pushProductsEdit(
-                                  context,
-                                  product.id,
-                                ),
-                                onDelete: (product) =>
-                                    _deleteProduct(context, ref, product),
-                              )
-                            : ListView.builder(
-                                physics: const BouncingScrollPhysics(
-                                  parent: AlwaysScrollableScrollPhysics(),
-                                ),
-                                padding: const EdgeInsets.only(
-                                  bottom: AppSpacing.sm,
-                                ),
-                                itemCount: paged.items.length,
-                                itemBuilder: (context, index) {
-                                  final product = paged.items[index];
-                                  return Padding(
-                                    padding: EdgeInsets.only(
-                                      bottom: index == paged.items.length - 1
-                                          ? 0
-                                          : AppSpacing.sm,
-                                    ),
-                                    child: _ProductListCard(
-                                      key: ValueKey(product.id),
-                                      product: product,
-                                      onEdit: () =>
-                                          InventoryRoutes.pushProductsEdit(
-                                        context,
-                                        product.id,
-                                      ),
-                                      onDelete: () => _deleteProduct(
-                                        context,
-                                        ref,
-                                        product,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
+                    return _ProductsResults(
+                      key: ValueKey(
+                        '${viewMode.name}-$pageIndex-$pageSize-'
+                        '${paged.totalCount}-'
+                        '${paged.items.isEmpty ? 0 : paged.items.first.id}',
                       ),
-                      _ProductsPager(
-                        page: pageIndex,
-                        totalPages: paged.totalPages,
-                        totalCount: paged.totalCount,
-                        pageSize: kProductsPageSize,
-                        onPageChanged: (page) {
-                          ref
-                              .read(productSearchPageIndexProvider.notifier)
-                              .state = page;
-                        },
+                      products: paged.items,
+                      viewMode: viewMode,
+                      page: pageIndex,
+                      pageSize: pageSize,
+                      totalPages: paged.totalPages,
+                      totalCount: paged.totalCount,
+                      onPageChanged: (page) {
+                        ref.read(productSearchPageIndexProvider.notifier).state =
+                            page;
+                      },
+                      onPageSizeChanged: (size) {
+                        if (ref.read(productPageSizeProvider) == size) {
+                          return;
+                        }
+                        ref.read(productPageSizeProvider.notifier).state = size;
+                        ref.read(productSearchPageIndexProvider.notifier).state =
+                            0;
+                      },
+                      onEdit: (product) => InventoryRoutes.pushProductsEdit(
+                        context,
+                        product.id,
                       ),
-                    ],
-                  );
-                },
+                      onDelete: (product) =>
+                          _deleteProduct(context, ref, product),
+                    );
+                  },
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -210,20 +218,30 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
       return;
     }
 
-    final product =
-        await ref.read(getProductByBarcodeUseCaseProvider).call(code);
+    final resolution = await ref
+        .read(productScanResolverProvider)
+        .resolve(code);
     if (!context.mounted) {
       return;
     }
-    if (product == null) {
+    if (resolution == null || !resolution.fromCatalog) {
       showAppSnackBar(
         context,
-        message: l10n.productsBarcodeNotFound,
+        message: resolution?.fromProductQr == true
+            ? l10n.productsQrScanOfflineData
+            : l10n.productsBarcodeNotFound,
         isSuccess: false,
       );
       return;
     }
-    InventoryRoutes.pushProductsEdit(context, product.id);
+    if (resolution.fromProductQr) {
+      showAppSnackBar(
+        context,
+        message: l10n.productsQrScanRecognized,
+        isSuccess: true,
+      );
+    }
+    InventoryRoutes.pushProductsEdit(context, resolution.product.id);
   }
 
   Future<void> _deleteProduct(
@@ -263,12 +281,118 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
       if (!context.mounted) {
         return;
       }
-      showAppSnackBar(
-        context,
-        message: error.code,
-        isSuccess: false,
-      );
+      showAppSnackBar(context, message: error.code, isSuccess: false);
     }
+  }
+}
+
+/// Product list/grid with a fixed pagination bar at the bottom.
+class _ProductsResults extends StatefulWidget {
+  const _ProductsResults({
+    super.key,
+    required this.products,
+    required this.viewMode,
+    required this.page,
+    required this.pageSize,
+    required this.totalPages,
+    required this.totalCount,
+    required this.onPageChanged,
+    required this.onPageSizeChanged,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final List<Product> products;
+  final ProductsViewMode viewMode;
+  final int page;
+  final int pageSize;
+  final int totalPages;
+  final int totalCount;
+  final ValueChanged<int> onPageChanged;
+  final ValueChanged<int> onPageSizeChanged;
+  final ValueChanged<Product> onEdit;
+  final ValueChanged<Product> onDelete;
+
+  @override
+  State<_ProductsResults> createState() => _ProductsResultsState();
+}
+
+class _ProductsResultsState extends State<_ProductsResults> {
+  final _scrollController = ScrollController();
+
+  @override
+  void didUpdateWidget(covariant _ProductsResults oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.page != widget.page ||
+        oldWidget.pageSize != widget.pageSize ||
+        oldWidget.viewMode != widget.viewMode ||
+        oldWidget.products.length != widget.products.length) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_scrollController.hasClients) {
+          return;
+        }
+        _scrollController.jumpTo(0);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: widget.viewMode == ProductsViewMode.grid
+              ? _ProductsGrid(
+                  products: widget.products,
+                  controller: _scrollController,
+                  onEdit: widget.onEdit,
+                  onDelete: widget.onDelete,
+                )
+              : ListView.builder(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  itemCount: widget.products.length,
+                  itemBuilder: (context, index) {
+                    final product = widget.products[index];
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index == widget.products.length - 1
+                            ? 0
+                            : AppSpacing.sm,
+                      ),
+                      child: _ProductListCard(
+                        key: ValueKey(product.id),
+                        product: product,
+                        onEdit: () => widget.onEdit(product),
+                        onDelete: () => widget.onDelete(product),
+                      ),
+                    );
+                  },
+                ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.xs),
+          child: AppPaginationBar(
+            page: widget.page,
+            totalPages: widget.totalPages,
+            totalCount: widget.totalCount,
+            pageSize: widget.pageSize,
+            pageSizeOptions: kProductsPageSizeOptions,
+            onPageChanged: widget.onPageChanged,
+            onPageSizeChanged: widget.onPageSizeChanged,
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -306,10 +430,7 @@ class _ProductsToolbar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _ViewModeToggle(
-              viewMode: viewMode,
-              onChanged: onViewModeChanged,
-            ),
+            _ViewModeToggle(viewMode: viewMode, onChanged: onViewModeChanged),
             const Spacer(),
             Tooltip(
               message: l10n.productsScanBarcode,
@@ -374,10 +495,7 @@ class _ProductsToolbar extends StatelessWidget {
 }
 
 class _ViewModeToggle extends StatelessWidget {
-  const _ViewModeToggle({
-    required this.viewMode,
-    required this.onChanged,
-  });
+  const _ViewModeToggle({required this.viewMode, required this.onChanged});
 
   final ProductsViewMode viewMode;
   final ValueChanged<ProductsViewMode> onChanged;
@@ -465,11 +583,13 @@ class _ProductsGrid extends StatelessWidget {
     required this.products,
     required this.onEdit,
     required this.onDelete,
+    this.controller,
   });
 
   final List<Product> products;
   final ValueChanged<Product> onEdit;
   final ValueChanged<Product> onDelete;
+  final ScrollController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -479,11 +599,12 @@ class _ProductsGrid extends StatelessWidget {
         final crossAxisCount = AppBreakpoints.isDesktop(width)
             ? 4
             : AppBreakpoints.isTablet(width)
-                ? 3
-                : 2;
+            ? 3
+            : 2;
         final aspectRatio = AppBreakpoints.isMobile(width) ? 0.78 : 0.9;
 
         return GridView.builder(
+          controller: controller,
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
@@ -552,7 +673,7 @@ class _ProductListCard extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -582,14 +703,6 @@ class _ProductListCard extends StatelessWidget {
                             height: 1.2,
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.xxs),
-                        Text(
-                          product.itemCode,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           '${l10n.packSize} ${product.packSize} · ${l10n.price} ${_formatPrice(product.price)}',
@@ -599,6 +712,8 @@ class _ProductListCard extends StatelessWidget {
                             color: colorScheme.onSurfaceVariant,
                           ),
                         ),
+                        const SizedBox(height: AppSpacing.xs),
+                        _ProductCodeBadge(code: product.itemCode),
                       ],
                     ),
                   ),
@@ -688,42 +803,44 @@ class _ProductGridCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    product.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      height: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    product.itemCode,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '${l10n.packSize} ${product.packSize}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${l10n.price} ${_formatPrice(product.price)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w700,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          product.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            height: 1.2,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${l10n.packSize} ${product.packSize}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${l10n.price} ${_formatPrice(product.price)}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: _ProductCodeBadge(code: product.itemCode),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -736,78 +853,36 @@ class _ProductGridCard extends StatelessWidget {
   }
 }
 
-class _ProductsPager extends StatelessWidget {
-  const _ProductsPager({
-    required this.page,
-    required this.totalPages,
-    required this.totalCount,
-    required this.pageSize,
-    required this.onPageChanged,
-  });
+/// Compact product-code chip used on list and grid cards.
+class _ProductCodeBadge extends StatelessWidget {
+  const _ProductCodeBadge({required this.code});
 
-  final int page;
-  final int totalPages;
-  final int totalCount;
-  final int pageSize;
-  final ValueChanged<int> onPageChanged;
+  final String code;
 
   @override
   Widget build(BuildContext context) {
-    final localization = AppLocalizations.of(context);
-    final colorScheme = Theme.of(context).colorScheme;
-    final canPrev = page > 0;
-    final canNext = totalPages > 0 && page < totalPages - 1;
-    final from = totalCount == 0 ? 0 : page * pageSize + 1;
-    final to =
-        totalCount == 0 ? 0 : ((page + 1) * pageSize).clamp(0, totalCount);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    return Material(
-      color: colorScheme.surface,
-      elevation: 0,
-      child: Container(
-        margin: const EdgeInsets.only(top: AppSpacing.xs),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppRadius.xs),
+      ),
+      child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
+          horizontal: AppSpacing.xs,
+          vertical: 3,
         ),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.45),
+        child: Text(
+          code,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: colorScheme.onPrimaryContainer,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
           ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                localization.paginationRange(from, to, totalCount),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-            ),
-            IconButton(
-              tooltip: localization.previousPage,
-              onPressed: canPrev ? () => onPageChanged(page - 1) : null,
-              icon: const Icon(Icons.chevron_left_rounded),
-            ),
-            Text(
-              localization.paginationPage(
-                totalPages == 0 ? 0 : page + 1,
-                totalPages,
-              ),
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            IconButton(
-              tooltip: localization.nextPage,
-              onPressed: canNext ? () => onPageChanged(page + 1) : null,
-              icon: const Icon(Icons.chevron_right_rounded),
-            ),
-          ],
         ),
       ),
     );

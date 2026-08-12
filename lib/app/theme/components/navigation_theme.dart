@@ -63,4 +63,14 @@ class AppNavigationThemes {
       ).labelMedium?.copyWith(color: scheme.onSurface.withValues(alpha: 0.62)),
     );
   }
+
+  static BottomAppBarThemeData bottomAppBar(ColorScheme scheme) {
+    return BottomAppBarThemeData(
+      color: scheme.surface,
+      elevation: 8,
+      surfaceTintColor: Colors.transparent,
+      shadowColor: scheme.shadow.withValues(alpha: 0.14),
+      padding: EdgeInsets.zero,
+    );
+  }
 }

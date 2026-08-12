@@ -261,12 +261,7 @@ void main() {
       expect(await generator.generate(), 'P0001');
 
       await repository.insert(
-        const ProductDraft(
-          itemCode: 'P0001',
-          name: 'A',
-          packSize: 1,
-          price: 1,
-        ),
+        const ProductDraft(itemCode: 'P0001', name: 'A', packSize: 1, price: 1),
       );
       expect(await generator.generate(), 'P0002');
     });

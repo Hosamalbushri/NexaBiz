@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
+import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -69,9 +70,9 @@ class _InventoryCountPageState extends ConsumerState<InventoryCountPage> {
     final packWarningStatus = selectedItem == null
         ? PackSizeNameStatus.missingMarker
         : ref
-            .watch(packSizeParserProvider)
-            .analyze(selectedItem.itemName)
-            .status;
+              .watch(packSizeParserProvider)
+              .analyze(selectedItem.itemName)
+              .status;
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -87,12 +88,12 @@ class _InventoryCountPageState extends ConsumerState<InventoryCountPage> {
               onRefresh: _refreshInventory,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(AppConstants.pagePadding),
+                padding: AppConstants.pageInsets(context),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SelectedItemCard(item: selectedItem),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.md),
                     if (!canCount) ...[
                       PackSizeRequiredCard(
                         warningStatus: packWarningStatus,
@@ -102,7 +103,7 @@ class _InventoryCountPageState extends ConsumerState<InventoryCountPage> {
                         onChanged: (_) => setState(() {}),
                         onSave: _savePackSize,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
                     ],
                     QuantityInputCard(
                       mainController: _mainController,
@@ -119,7 +120,7 @@ class _InventoryCountPageState extends ConsumerState<InventoryCountPage> {
                           .read(quantityEntryProvider.notifier)
                           .setSecondaryQuantity(value),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.lg),
                     CountActionButtons(
                       isLoading: isSaving,
                       isCounted: isCounted,
@@ -148,14 +149,12 @@ class _InventoryCountPageState extends ConsumerState<InventoryCountPage> {
 
     if (selected.hasPackSize) {
       _packSizeController.clear();
-      if (!selected.isCounted) {
-        _mainFocusNode.requestFocus();
-      }
       return;
     }
 
-    final analysis =
-        ref.read(packSizeParserProvider).analyze(selected.itemName);
+    final analysis = ref
+        .read(packSizeParserProvider)
+        .analyze(selected.itemName);
     if (analysis.isResolved) {
       final result = await ref
           .read(inventorySaveProvider.notifier)
@@ -165,10 +164,6 @@ class _InventoryCountPageState extends ConsumerState<InventoryCountPage> {
       }
       if (result is SavePackSizeSuccess) {
         _packSizeController.clear();
-        final updated = ref.read(selectedItemProvider);
-        if (updated != null && !updated.isCounted) {
-          _mainFocusNode.requestFocus();
-        }
         return;
       }
     }
@@ -198,10 +193,9 @@ class _InventoryCountPageState extends ConsumerState<InventoryCountPage> {
       text: subText,
       selection: TextSelection.collapsed(offset: subText.length),
     );
-    ref.read(quantityEntryProvider.notifier).setQuantities(
-          mainText: mainText,
-          secondaryText: subText,
-        );
+    ref
+        .read(quantityEntryProvider.notifier)
+        .setQuantities(mainText: mainText, secondaryText: subText);
   }
 
   Future<void> _refreshInventory() async {
@@ -276,10 +270,9 @@ class _InventoryCountPageState extends ConsumerState<InventoryCountPage> {
     }
 
     await _handleSaveResult(
-      await ref.read(inventorySaveProvider.notifier).save(
-            mainText: result.mainText,
-            secondaryText: result.secondaryText,
-          ),
+      await ref
+          .read(inventorySaveProvider.notifier)
+          .save(mainText: result.mainText, secondaryText: result.secondaryText),
     );
   }
 
@@ -307,10 +300,6 @@ class _InventoryCountPageState extends ConsumerState<InventoryCountPage> {
           isSuccess: true,
         );
         _packSizeController.clear();
-        final item = ref.read(selectedItemProvider);
-        if (item != null && !item.isCounted) {
-          _mainFocusNode.requestFocus();
-        }
       case SaveCountNoItemSelected():
         showAppSnackBar(
           context,
@@ -328,11 +317,7 @@ class _InventoryCountPageState extends ConsumerState<InventoryCountPage> {
           _packSizeFocusNode.requestFocus();
         }
       case SaveCountFailure(:final message):
-        showAppSnackBar(
-          context,
-          message: message,
-          isSuccess: false,
-        );
+        showAppSnackBar(context, message: message, isSuccess: false);
     }
   }
 
@@ -352,10 +337,7 @@ class _InventoryCountPageState extends ConsumerState<InventoryCountPage> {
 }
 
 class _EmptySelection extends StatelessWidget {
-  const _EmptySelection({
-    required this.localization,
-    required this.onSearch,
-  });
+  const _EmptySelection({required this.localization, required this.onSearch});
 
   final AppLocalizations localization;
   final VoidCallback onSearch;

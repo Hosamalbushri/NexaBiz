@@ -62,20 +62,15 @@ class InventoryItem {
   }
 
   /// Imported system quantity in base units (pieces).
-  int get systemBaseUnits => toBaseUnits(
-        main: systemMainQuantity,
-        sub: systemSubQuantity,
-      );
+  int get systemBaseUnits =>
+      toBaseUnits(main: systemMainQuantity, sub: systemSubQuantity);
 
   /// Counted quantity in base units (pieces).
   int get countedBaseUnits {
     if (!isCounted) {
       return 0;
     }
-    return toBaseUnits(
-      main: mainQuantity ?? 0,
-      sub: subQuantity ?? 0,
-    );
+    return toBaseUnits(main: mainQuantity ?? 0, sub: subQuantity ?? 0);
   }
 
   /// Counted − system variance in base units (pieces).
@@ -151,12 +146,13 @@ class InventoryItem {
       barcode: barcode ?? this.barcode,
       packSize: packSize ?? this.packSize,
       systemQuantity: systemQuantity ?? this.systemQuantity,
-      actualQuantity:
-          clearActualQuantity ? null : (actualQuantity ?? this.actualQuantity),
-      mainQuantity:
-          clearMainQuantity ? null : (mainQuantity ?? this.mainQuantity),
-      subQuantity:
-          clearSubQuantity ? null : (subQuantity ?? this.subQuantity),
+      actualQuantity: clearActualQuantity
+          ? null
+          : (actualQuantity ?? this.actualQuantity),
+      mainQuantity: clearMainQuantity
+          ? null
+          : (mainQuantity ?? this.mainQuantity),
+      subQuantity: clearSubQuantity ? null : (subQuantity ?? this.subQuantity),
     );
   }
 }

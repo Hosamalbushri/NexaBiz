@@ -11,11 +11,7 @@ class CountPreview {
   final double subQuantity;
 }
 
-enum CountValidationError {
-  negativeQuantity,
-  missingPackSize,
-  invalidPackSize,
-}
+enum CountValidationError { negativeQuantity, missingPackSize, invalidPackSize }
 
 class CountValidationResult {
   const CountValidationResult.valid(this.preview) : error = null;

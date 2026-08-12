@@ -5,11 +5,7 @@ import '../../app/theme/app_spacing.dart';
 
 /// Empty / add placeholder matching [ServiceCard] proportions with a dashed border.
 class ServiceAddCard extends StatelessWidget {
-  const ServiceAddCard({
-    super.key,
-    required this.onTap,
-    this.label,
-  });
+  const ServiceAddCard({super.key, required this.onTap, this.label});
 
   final VoidCallback onTap;
   final String? label;
@@ -54,9 +50,9 @@ class ServiceAddCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ],
@@ -71,10 +67,7 @@ class ServiceAddCard extends StatelessWidget {
 }
 
 class _DashedRRectPainter extends CustomPainter {
-  _DashedRRectPainter({
-    required this.color,
-    required this.radius,
-  });
+  _DashedRRectPainter({required this.color, required this.radius});
 
   final Color color;
   final double radius;

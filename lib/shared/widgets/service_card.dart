@@ -81,19 +81,20 @@ class ServiceCard extends StatelessWidget {
                         final iconBox = compact
                             ? 40.0
                             : autoCompact
-                                ? 56.0
-                                : 72.0;
+                            ? 56.0
+                            : 72.0;
                         final iconSize = compact
                             ? 22.0
                             : autoCompact
-                                ? 28.0
-                                : 36.0;
+                            ? 28.0
+                            : 36.0;
                         final gap = compact
                             ? AppSpacing.xs
                             : autoCompact
-                                ? AppSpacing.sm
-                                : AppSpacing.md;
-                        final canShowSubtitle = showSubtitle &&
+                            ? AppSpacing.sm
+                            : AppSpacing.md;
+                        final canShowSubtitle =
+                            showSubtitle &&
                             !compact &&
                             subtitle != null &&
                             !autoCompact;
@@ -111,16 +112,19 @@ class ServiceCard extends StatelessWidget {
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                     colors: [
-                                      colorScheme.primary
-                                          .withValues(alpha: 0.16),
-                                      colorScheme.secondary
-                                          .withValues(alpha: 0.10),
+                                      colorScheme.primary.withValues(
+                                        alpha: 0.16,
+                                      ),
+                                      colorScheme.secondary.withValues(
+                                        alpha: 0.10,
+                                      ),
                                     ],
                                   ),
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: colorScheme.primary
-                                        .withValues(alpha: 0.12),
+                                    color: colorScheme.primary.withValues(
+                                      alpha: 0.12,
+                                    ),
                                   ),
                                 ),
                                 child: SizedBox(
@@ -146,8 +150,8 @@ class ServiceCard extends StatelessWidget {
                                   fontSize: compact
                                       ? 12
                                       : autoCompact
-                                          ? 14
-                                          : null,
+                                      ? 14
+                                      : null,
                                 ),
                               ),
                               if (canShowSubtitle) ...[

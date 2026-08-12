@@ -28,7 +28,7 @@ class InventoryImportPage extends ConsumerWidget {
     final notifier = ref.read(importProvider.notifier);
 
     final body = SingleChildScrollView(
-      padding: const EdgeInsets.all(AppConstants.pagePadding),
+      padding: AppConstants.pageInsets(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -43,70 +43,67 @@ class InventoryImportPage extends ConsumerWidget {
                 ? null
                 : () => _pickFile(context, notifier),
           ),
-            const SizedBox(height: 16),
-            AppCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    localization.selectedFileName,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    importState.selectedFileName ??
-                        localization.noFileSelected,
-                  ),
-                ],
-              ),
+          const SizedBox(height: 16),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  localization.selectedFileName,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  importState.selectedFileName ?? localization.noFileSelected,
+                ),
+              ],
             ),
+          ),
+          const SizedBox(height: 24),
+          AppButton(
+            label: localization.importButton,
+            icon: Icons.file_download_done_outlined,
+            expand: true,
+            isLoading: importState.isImporting,
+            onPressed: importState.isImporting || !importState.hasSelectedFile
+                ? null
+                : () => _import(context, ref),
+          ),
+          if (importState.isImporting) ...[
             const SizedBox(height: 24),
-            AppButton(
-              label: localization.importButton,
-              icon: Icons.file_download_done_outlined,
-              expand: true,
-              isLoading: importState.isImporting,
-              onPressed: importState.isImporting || !importState.hasSelectedFile
-                  ? null
-                  : () => _import(context, ref),
+            AppLoading(
+              style: AppLoadingStyle.linear,
+              message: _progressMessage(localization, importState),
+              progress: importState.progress,
             ),
-            if (importState.isImporting) ...[
-              const SizedBox(height: 24),
-              AppLoading(
-                style: AppLoadingStyle.linear,
-                message: _progressMessage(localization, importState),
-                progress: importState.progress,
-              ),
-            ],
-            if (importState.result != null) ...[
-              const SizedBox(height: 24),
-              _ResultBanner(
-                isSuccess: true,
-                messages: [
-                  localization.importSuccess,
-                  localization.importedItemsCount(
-                    importState.result!.importedCount,
-                  ),
-                  localization.ignoredRowsCount(
-                    importState.result!.ignoredCount,
-                  ),
-                  if (importState.duplicateCount > 0)
-                    localization.duplicateRowsCount(importState.duplicateCount),
-                ],
-              ),
-            ],
-            if (importState.errorMessage != null) ...[
-              const SizedBox(height: 24),
-              _ResultBanner(
-                isSuccess: false,
-                messages: [
-                  localization.importFailed,
-                  _errorMessage(localization, importState.errorMessage!),
-                ],
-              ),
-            ],
           ],
-        ),
+          if (importState.result != null) ...[
+            const SizedBox(height: 24),
+            _ResultBanner(
+              isSuccess: true,
+              messages: [
+                localization.importSuccess,
+                localization.importedItemsCount(
+                  importState.result!.importedCount,
+                ),
+                localization.ignoredRowsCount(importState.result!.ignoredCount),
+                if (importState.duplicateCount > 0)
+                  localization.duplicateRowsCount(importState.duplicateCount),
+              ],
+            ),
+          ],
+          if (importState.errorMessage != null) ...[
+            const SizedBox(height: 24),
+            _ResultBanner(
+              isSuccess: false,
+              messages: [
+                localization.importFailed,
+                _errorMessage(localization, importState.errorMessage!),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
 
     if (embedded) {
@@ -353,13 +350,7 @@ class _ImportFormatHintCard extends StatelessWidget {
                         l10n.importFormatSampleSubHeader,
                         l10n.importFormatSamplePackHeader,
                       ],
-                      values: const [
-                        '1001',
-                        'Milk 1L',
-                        '2',
-                        '4',
-                        '12',
-                      ],
+                      values: const ['1001', 'Milk 1L', '2', '4', '12'],
                     ),
                   ),
                 ),
@@ -425,10 +416,7 @@ class _ColumnChip extends StatelessWidget {
 }
 
 class _SampleSpreadsheet extends StatelessWidget {
-  const _SampleSpreadsheet({
-    required this.headers,
-    required this.values,
-  });
+  const _SampleSpreadsheet({required this.headers, required this.values});
 
   final List<String> headers;
   final List<String> values;
@@ -446,9 +434,7 @@ class _SampleSpreadsheet extends StatelessWidget {
       defaultColumnWidth: const IntrinsicColumnWidth(),
       children: [
         TableRow(
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest,
-          ),
+          decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest),
           children: [
             for (final header in headers)
               _SheetCell(text: header, isHeader: true),
@@ -456,9 +442,7 @@ class _SampleSpreadsheet extends StatelessWidget {
         ),
         TableRow(
           decoration: BoxDecoration(color: colorScheme.surface),
-          children: [
-            for (final value in values) _SheetCell(text: value),
-          ],
+          children: [for (final value in values) _SheetCell(text: value)],
         ),
       ],
     );
@@ -466,10 +450,7 @@ class _SampleSpreadsheet extends StatelessWidget {
 }
 
 class _SheetCell extends StatelessWidget {
-  const _SheetCell({
-    required this.text,
-    this.isHeader = false,
-  });
+  const _SheetCell({required this.text, this.isHeader = false});
 
   final String text;
   final bool isHeader;
@@ -484,28 +465,27 @@ class _SheetCell extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: (isHeader
-                ? theme.textTheme.labelMedium
-                : theme.textTheme.bodySmall)
-            ?.copyWith(fontWeight: isHeader ? FontWeight.w800 : FontWeight.w500),
+        style:
+            (isHeader ? theme.textTheme.labelMedium : theme.textTheme.bodySmall)
+                ?.copyWith(
+                  fontWeight: isHeader ? FontWeight.w800 : FontWeight.w500,
+                ),
       ),
     );
   }
 }
 
 class _ResultBanner extends StatelessWidget {
-  const _ResultBanner({
-    required this.isSuccess,
-    required this.messages,
-  });
+  const _ResultBanner({required this.isSuccess, required this.messages});
 
   final bool isSuccess;
   final List<String> messages;
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        isSuccess ? Colors.green : Theme.of(context).colorScheme.error;
+    final color = isSuccess
+        ? Colors.green
+        : Theme.of(context).colorScheme.error;
 
     return AppCard(
       color: color.withValues(alpha: 0.08),
@@ -524,9 +504,9 @@ class _ResultBanner extends StatelessWidget {
                     ? AppLocalizations.of(context).success
                     : AppLocalizations.of(context).failure,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),

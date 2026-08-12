@@ -83,6 +83,7 @@ class AppTheme {
       appBarTheme: AppNavigationThemes.appBar(scheme, brightness),
       navigationBarTheme: AppNavigationThemes.navigationBar(scheme),
       navigationRailTheme: AppNavigationThemes.navigationRail(scheme),
+      bottomAppBarTheme: AppNavigationThemes.bottomAppBar(scheme),
       cardTheme: AppCardThemes.card(scheme),
       inputDecorationTheme: AppInputThemes.input(scheme),
       elevatedButtonTheme: AppButtonThemes.elevated(scheme),

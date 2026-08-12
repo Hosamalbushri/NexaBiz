@@ -14,5 +14,6 @@ class ProductException implements Exception {
   final String? message;
 
   @override
-  String toString() => 'ProductException($code${message == null ? '' : ': $message'})';
+  String toString() =>
+      'ProductException($code${message == null ? '' : ': $message'})';
 }
