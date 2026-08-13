@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../constants/app_constants.dart';
 import '../../core/database/hive_boxes.dart';
+import 'company/company_profile.dart';
 
 /// Keys used in the settings Hive box.
 class SettingsKeys {
@@ -14,6 +15,9 @@ class SettingsKeys {
   static const String inventoryServiceIds = 'inventory_service_ids';
   static const String productsViewMode = 'products_view_mode';
   static const String quickActionIds = 'quick_action_ids';
+  static const String accountingMode = 'accounting_mode';
+  static const String customersParentAccountId = 'customers_parent_account_id';
+  static const String companyProfile = 'company_profile';
 }
 
 /// Persists and loads platform settings from Hive.
@@ -141,6 +145,59 @@ class SettingsRepository {
   Future<void> saveQuickActionIds(List<String> ids) async {
     final box = await _settingsBox;
     await box.put(SettingsKeys.quickActionIds, ids);
+  }
+
+  /// `standalone` (default) or `integrated`.
+  Future<String> loadAccountingMode() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.accountingMode) as String?;
+    if (value == 'integrated' || value == 'standalone') {
+      return value!;
+    }
+    return 'standalone';
+  }
+
+  Future<void> saveAccountingMode(String mode) async {
+    final box = await _settingsBox;
+    final normalized = mode == 'integrated' ? 'integrated' : 'standalone';
+    await box.put(SettingsKeys.accountingMode, normalized);
+  }
+
+  /// Opaque Account.uuid for the Chart of Accounts parent of customer accounts.
+  ///
+  /// `null` means “use the system Customers account when available”.
+  Future<String?> loadCustomersParentAccountId() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.customersParentAccountId) as String?;
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return trimmed;
+  }
+
+  Future<void> saveCustomersParentAccountId(String? accountId) async {
+    final box = await _settingsBox;
+    final trimmed = accountId?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      await box.delete(SettingsKeys.customersParentAccountId);
+      return;
+    }
+    await box.put(SettingsKeys.customersParentAccountId, trimmed);
+  }
+
+  Future<CompanyProfile> loadCompanyProfile() async {
+    final box = await _settingsBox;
+    final raw = box.get(SettingsKeys.companyProfile);
+    if (raw is Map) {
+      return CompanyProfile.fromMap(Map<dynamic, dynamic>.from(raw));
+    }
+    return const CompanyProfile();
+  }
+
+  Future<void> saveCompanyProfile(CompanyProfile profile) async {
+    final box = await _settingsBox;
+    await box.put(SettingsKeys.companyProfile, profile.toMap());
   }
 
   Future<void> resetSettings() async {

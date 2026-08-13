@@ -2,7 +2,7 @@
 
 This document describes the **actual** architecture of the Business Platform Flutter app.
 
-Related: [`AI_CONTEXT.md`](../AI_CONTEXT.md), ADRs under [`adr/`](adr/).
+Related: [`AI_CONTEXT.md`](../AI_CONTEXT.md), ADRs under [`adr/`](adr/) including [ADR-006](adr/ADR-006-offline-first-sync.md), [ADR-007](adr/ADR-007-accounting-chart-of-accounts.md), and [ADR-008](adr/ADR-008-accounting-operating-modes.md).
 
 ## Vision
 
@@ -15,7 +15,9 @@ lib/
 ├── app/        # Composition root
 ├── core/       # Generic infrastructure + design system + module contract
 ├── modules/    # Business modules
-│   └── inventory/
+│   ├── inventory/
+│   ├── accounting/
+│   └── customers/
 ├── shared/     # Cross-module reusable launcher UI
 └── main.dart
 ```
@@ -56,8 +58,11 @@ StatefulShellRoute
   /services
   /reports
   /settings
+  /settings/setup
 Module routes (registry)
   /inventory/...
+  /accounting/...
+  /customers/...
 errorBuilder → NotFoundPage
 ```
 
@@ -89,16 +94,17 @@ Placeholder stubs: `shared/models`, `shared/providers`.
 
 Do not dump module-specific widgets here.
 
-## Module layer (Inventory)
+## Module layer
 
-Clean-ish vertical slice:
+Clean-ish vertical slices under `lib/modules/`:
 
-| Folder | Contents |
+| Module | Contents |
 | --- | --- |
-| `domain/` | Entities, repository contracts, use cases, calculators |
-| `data/` | Hive (stock count), Drift/SQLite (products), Excel/PDF datasources, repository impl |
-| `presentation/` | Pages, widgets, Riverpod providers |
-| `inventory_module.dart` | `AppModule` implementation + routes |
+| `inventory/` | Stock count (Hive) + products catalog (Drift) |
+| `accounting/` | Chart of Accounts + currency rates + voucher books (Drift); future journals/ledger/reports |
+| `customers/` | Customer master (Drift); optional opaque Account.uuid link via App port |
+
+Each module exposes an `AppModule` implementation + routes. Modules must not import other modules.
 
 ## Navigation model
 

@@ -13,6 +13,7 @@ class AppRoutes {
   static const String services = '/services';
   static const String reports = '/reports';
   static const String settings = '/settings';
+  static const String settingsSetup = '/settings/setup';
   static const String notifications = '/notifications';
 
   /// Reports hub for a specific module (e.g. `/reports/inventory`).

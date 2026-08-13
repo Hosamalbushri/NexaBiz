@@ -543,7 +543,7 @@ Mandatory workflow:
 9. Update docs (modules.md, AI_CONTEXT status, ADR if architectural)
 ```
 
-### Concrete example: Sales (future)
+### Concrete example: Sales (implemented)
 
 ```text
 lib/modules/sales/
@@ -553,15 +553,7 @@ lib/modules/sales/
 └── presentation/
 ```
 
-```dart
-// In module_bootstrap.dart
-ModuleRegistry(const [
-  InventoryModule(),
-  SalesModule(), // add here
-]),
-```
-
-Launcher picks it up automatically via `enabledModules`.
+Registered in `module_bootstrap.dart` with App adapters for Customers, Inventory scan, and Accounting bridge. See ADR-011.
 
 ---
 
@@ -709,12 +701,12 @@ Launcher picks it up automatically via `enabledModules`.
 | Module | Status |
 | --- | --- |
 | Inventory | **Implemented** (home, count/search, import, reports, Excel+PDF export) |
-| Sales | Future |
+| Sales | **Implemented** (create/list/details, ports to Customers/Inventory/Accounting) |
 | Purchases | Future |
-| Customers | Future |
+| Customers | **Implemented** |
 | Suppliers | Future |
 | Expenses | Future |
-| Accounting | Future |
+| Accounting | **Implemented** (CoA, rates, voucher books, modes) |
 | Point of Sale | Future |
 
 ### Inventory capabilities (present)

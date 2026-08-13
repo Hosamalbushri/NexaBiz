@@ -2,7 +2,8 @@
 
 ## Module contract
 
-Every business module implements `AppModule`:
+Every business module **extends** `AppModule` (so default hooks like
+`hasSettings` / `buildSettingsSections` / `onSettingsReset` are inherited):
 
 `lib/core/modules/app_module.dart`
 
@@ -16,6 +17,9 @@ Required concepts:
 - `label(context)` / optional `description(context)`
 - `routes`
 - optional `providerOverrides`
+- optional settings: `hasSettings`, `buildSettingsSections(context)`, `onSettingsReset(ref)`
+
+Module-specific settings live in the module package and are composed by the platform Settings page through `AppModule` — the Settings page must not import concrete module settings widgets.
 
 ## Registration
 
@@ -30,6 +34,9 @@ Current registry:
 ```dart
 ModuleRegistry(const [
   InventoryModule(),
+  AccountingModule(),
+  CustomersModule(),
+  SalesModule(),
 ]);
 ```
 
@@ -74,9 +81,60 @@ Capabilities:
 - Reports (summary, filters, search, Syncfusion chart + DataGrid)
 - Excel + PDF export + share
 
+### Accounting — implemented (foundation)
+
+Path: `lib/modules/accounting/`
+
+Chart of Accounts + currency rates + voucher books (sequential numbering) + standalone/integrated mode. See ADR-007 / ADR-008 / ADR-010.
+
+### Customers — implemented
+
+Path: `lib/modules/customers/`
+
+| Area | Routes / entry |
+| --- | --- |
+| Hub | `/customers` |
+| List | `/customers/list` |
+| Import | `/customers/import` |
+| Create / edit | `/customers/new`, `/customers/:id/edit` |
+| Details | `/customers/:id` |
+
+Capabilities:
+
+- Drift persistence (`customers`) with soft delete + sync entity `customer`
+- Unique business codes sequential from customers parent CoA code (`12210001`…) — auto / manual / external
+- Excel import (`CustomerExcelImportDatasource`) — upsert by code / external id
+- Optional opaque `accountId` → Accounting Account.uuid (App `CustomerAccountLinkPort`)
+- Configurable **customers parent account** (CoA group, default system `1221` Customers)
+- Local vs external data source + `externalId` / `upsertFromExternal`
+- Does **not** auto-create Chart of Accounts rows
+
+### Sales — implemented
+
+Path: `lib/modules/sales/`
+
+| Area | Routes / entry |
+| --- | --- |
+| Hub | `/sales` |
+| List | `/sales/list` |
+| Create | `/sales/create` |
+| Details / edit | `/sales/:id`, `/sales/:id/edit` |
+
+Capabilities:
+
+- Drift persistence (`sales`, `sale_items`, `sale_payments`) + sync entity `sale`
+- Local sale numbers `INV-######` fallback; primary numbering via Accounting sales voucher books
+- Invoice header: date → cash/credit → sales book → number → customer/cash account → currency (FX from base product prices)
+- Customer / product selection via App ports (Customers + Inventory catalog + barcode scanner)
+- Item + sale discounts (fixed / %), configurable tax %, payment methods, payment status
+- Lifecycle: draft → confirmed|pending → completed; cancel; duplicate
+- Integrated mode: confirm → pending accounting + optional operational submit (no auto journals)
+- Inventory effects via `SaleInventoryEffectPort` (NoOp until stock ledger exists)
+- Customer outstanding totals foundation (`totalsForCustomer`)
+
 ### Future modules (not implemented)
 
-Sales, Purchases, Customers, Suppliers, Expenses, Accounting, Point of Sale, cross-module Reports.
+Purchases, Suppliers, Expenses, Point of Sale, cross-module Reports.
 
 ## Recommended module folder layout
 
@@ -101,7 +159,7 @@ modules/<name>/
 ## How to add `modules/sales/` (example)
 
 1. Create directory tree as above.
-2. Implement `SalesModule implements AppModule`.
+2. Implement `SalesModule extends AppModule`.
 3. Define `SalesRoutes` (e.g. `/sales`).
 4. Add providers under `presentation/providers`.
 5. Register in `module_bootstrap.dart`.

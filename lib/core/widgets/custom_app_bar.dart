@@ -524,6 +524,21 @@ class _CustomAppBarSurface extends StatelessWidget {
   final List<Widget> trailing;
   final bool searching;
 
+  /// Keeps the centered title clear of leading/trailing action chips.
+  static double _titleSideInset({
+    required bool hasLeading,
+    required int trailingCount,
+    required double actionSize,
+  }) {
+    const gap = 4.0;
+    final leadingWidth = hasLeading ? actionSize : 0.0;
+    final trailingWidth = trailingCount <= 0
+        ? 0.0
+        : (trailingCount * actionSize) + ((trailingCount - 1) * gap);
+    final occupied = leadingWidth > trailingWidth ? leadingWidth : trailingWidth;
+    return occupied + 12;
+  }
+
   @override
   Widget build(BuildContext context) {
     final useCenteredTitle = style.centerTitle && !searching;
@@ -574,7 +589,11 @@ class _CustomAppBarSurface extends StatelessWidget {
                             IgnorePointer(
                               child: Padding(
                                 padding: EdgeInsets.symmetric(
-                                  horizontal: style.actionButtonSize + 12,
+                                  horizontal: _titleSideInset(
+                                    hasLeading: leading != null,
+                                    trailingCount: trailing.length,
+                                    actionSize: style.actionButtonSize,
+                                  ),
                                 ),
                                 child: titleWidget,
                               ),

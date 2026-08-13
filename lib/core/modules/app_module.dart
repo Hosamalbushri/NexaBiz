@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Contract every business module must implement.
+/// Base contract every business module must extend.
 ///
-/// The application shell and Dashboard depend only on this abstraction—
+/// Prefer `extends AppModule` (not `implements`) so default settings / enable
+/// hooks are inherited. The application shell depends only on this abstraction—
 /// never on concrete module types.
 abstract class AppModule {
+  const AppModule();
+
   /// Stable unique identifier (e.g. `inventory`).
   String get id;
 
@@ -33,4 +36,16 @@ abstract class AppModule {
 
   /// Optional Riverpod overrides contributed at module bootstrap.
   List<Override> get providerOverrides => const [];
+
+  /// Module-owned settings blocks for the platform Settings screen.
+  ///
+  /// Keep empty when the module has no settings. The App page never imports
+  /// concrete module settings widgets — only this contract.
+  List<Widget> buildSettingsSections(BuildContext context) => const [];
+
+  /// Whether [buildSettingsSections] contributes anything.
+  bool get hasSettings => false;
+
+  /// Invalidate module settings state after a platform settings reset.
+  void onSettingsReset(WidgetRef ref) {}
 }

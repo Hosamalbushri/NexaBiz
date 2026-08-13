@@ -5,7 +5,10 @@ import '../../core/database/hive_boxes.dart';
 import '../../core/database/hive_initializer.dart';
 import '../../core/di/app_providers.dart';
 import '../../core/sync/sync_providers.dart';
+import '../../modules/accounting/data/sync/accounting_sync_bootstrap.dart';
+import '../../modules/customers/data/sync/customers_sync_bootstrap.dart';
 import '../../modules/inventory/data/sync/inventory_sync_bootstrap.dart';
+import '../../modules/sales/data/sync/sales_sync_bootstrap.dart';
 import '../notifications/data/notification_hive.dart';
 import '../settings/settings_repository.dart';
 
@@ -29,6 +32,9 @@ class AppBootstrap {
     ref.read(localeProvider.notifier).state = locale;
 
     registerInventorySyncHandlers(ref);
+    registerAccountingSyncHandlers(ref);
+    registerCustomersSyncHandlers(ref);
+    registerSalesSyncHandlers(ref);
     await ref.read(syncManagerProvider).start();
   }
 

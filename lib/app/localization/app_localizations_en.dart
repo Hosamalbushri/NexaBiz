@@ -25,6 +25,1268 @@ class AppLocalizationsEn extends AppLocalizations {
       'Inventory services including stock count, and more over time.';
 
   @override
+  String get moduleAccounting => 'Accounting';
+
+  @override
+  String get moduleAccountingDescription =>
+      'Chart of Accounts and the foundation for future ledgers and reports.';
+
+  @override
+  String get moduleCustomers => 'Customers';
+
+  @override
+  String get moduleCustomersDescription =>
+      'Customer master data with optional Chart of Accounts links and external ERP ids.';
+
+  @override
+  String get moduleSales => 'Sales';
+
+  @override
+  String get moduleSalesDescription =>
+      'Create and manage sales offline, with optional accounting and inventory hooks.';
+
+  @override
+  String get salesListTitle => 'Sales';
+
+  @override
+  String get salesListCardSubtitle =>
+      'Browse, search, and manage sales documents.';
+
+  @override
+  String get salesCreateTitle => 'New sale';
+
+  @override
+  String get salesCreateCardSubtitle =>
+      'Start a POS-style sale with products and payment.';
+
+  @override
+  String get salesEditTitle => 'Edit sale';
+
+  @override
+  String get salesDetailsTitle => 'Invoice';
+
+  @override
+  String get salesSearchHint => 'Search by number, customer, or product';
+
+  @override
+  String get salesSearchCustomerHint => 'Search customers';
+
+  @override
+  String get salesSearchProductHint => 'Type product name';
+
+  @override
+  String get salesEmptyTitle => 'No sales yet';
+
+  @override
+  String get salesEmptyMessage => 'Create your first sale to get started.';
+
+  @override
+  String get salesCustomer => 'Customer';
+
+  @override
+  String get salesSelectCustomer => 'Select customer';
+
+  @override
+  String get salesCashCustomerHint => 'Enter a name or select a customer';
+
+  @override
+  String get salesWalkInCustomer => 'Walk-in customer';
+
+  @override
+  String get salesCustomerEmpty => 'No customers found.';
+
+  @override
+  String get salesCustomerNotFound => 'Customer not found.';
+
+  @override
+  String get salesProducts => 'Products';
+
+  @override
+  String get salesProductName => 'Product';
+
+  @override
+  String get salesAddProduct => 'Add product';
+
+  @override
+  String get salesAddRow => 'Add row';
+
+  @override
+  String get salesProductsEmpty => 'No products added.';
+
+  @override
+  String get salesProductNotFound => 'Product not found.';
+
+  @override
+  String get salesRemoveItem => 'Remove item';
+
+  @override
+  String get salesScanProduct => 'Scan product';
+
+  @override
+  String get salesScanHint => 'Enter barcode or QR payload';
+
+  @override
+  String get salesUnitPrice => 'Unit price';
+
+  @override
+  String get salesSubtotal => 'Subtotal';
+
+  @override
+  String get salesDiscount => 'Discount';
+
+  @override
+  String get salesItemDiscount => 'Item discounts';
+
+  @override
+  String get salesDiscountType => 'Discount type';
+
+  @override
+  String get salesDiscountFixed => 'Fixed amount';
+
+  @override
+  String get salesDiscountPercent => 'Percentage';
+
+  @override
+  String get salesTax => 'Tax';
+
+  @override
+  String get salesTaxRate => 'Tax rate (%)';
+
+  @override
+  String get salesTotal => 'Total';
+
+  @override
+  String get salesPaid => 'Paid';
+
+  @override
+  String get salesRemaining => 'Remaining';
+
+  @override
+  String get salesPayFull => 'Pay full amount';
+
+  @override
+  String get salesPayment => 'Payment';
+
+  @override
+  String get salesPaymentMethod => 'Payment method';
+
+  @override
+  String get salesPaymentStatus => 'Payment status';
+
+  @override
+  String get salesPaymentCash => 'Cash';
+
+  @override
+  String get salesPaymentCard => 'Card';
+
+  @override
+  String get salesPaymentBankTransfer => 'Bank transfer';
+
+  @override
+  String get salesPaymentCredit => 'Credit';
+
+  @override
+  String get salesPaymentOther => 'Other';
+
+  @override
+  String get salesDate => 'Date';
+
+  @override
+  String get salesSettlementType => 'Invoice type';
+
+  @override
+  String get salesSettlementCash => 'Cash';
+
+  @override
+  String get salesSettlementCredit => 'Credit';
+
+  @override
+  String get salesSettlementCashHint => 'Collect now via cash box';
+
+  @override
+  String get salesSettlementCreditHint => 'Charge to customer account';
+
+  @override
+  String get salesVoucherBook => 'Sales book';
+
+  @override
+  String get salesSelectVoucherBook => 'Select sales book';
+
+  @override
+  String get salesVoucherBookEmpty =>
+      'No sales books found. Create one in Accounting.';
+
+  @override
+  String get salesInvoiceNumber => 'Invoice number';
+
+  @override
+  String get salesCashAccount => 'Cash box account';
+
+  @override
+  String get salesSelectCashAccount => 'Select cash box account';
+
+  @override
+  String get salesCashAccountEmpty => 'No cash box accounts found.';
+
+  @override
+  String get salesCustomerAccount => 'Customer account';
+
+  @override
+  String get salesCustomerAccountMissing =>
+      'Customer has no accounting account linked.';
+
+  @override
+  String get salesClearCustomer => 'Clear customer';
+
+  @override
+  String get salesCurrency => 'Currency';
+
+  @override
+  String get salesBaseCurrency => 'Base';
+
+  @override
+  String salesExchangeRateHint(String currency, String rate, String base) {
+    return '1 $currency = $rate $base';
+  }
+
+  @override
+  String get salesCreditHint =>
+      'Credit sale — the amount is posted to the customer account. Remaining stays outstanding.';
+
+  @override
+  String get salesSearchOrScanProduct => 'Search or scan product';
+
+  @override
+  String get salesInvoiceOptions => 'Invoice options';
+
+  @override
+  String get salesItemMore => 'More';
+
+  @override
+  String get salesAddCustomer => 'Add customer';
+
+  @override
+  String get salesAdd => 'Add';
+
+  @override
+  String get salesIncreaseQty => 'Increase quantity';
+
+  @override
+  String get salesDecreaseQty => 'Decrease quantity';
+
+  @override
+  String get salesErrorCustomerRequired =>
+      'Select a customer for credit sales.';
+
+  @override
+  String get salesErrorCustomerAccountRequired =>
+      'Link an accounting account to the customer first.';
+
+  @override
+  String get salesErrorCashAccountRequired => 'Select a cash box account.';
+
+  @override
+  String get salesErrorVoucherBookRequired => 'Select a sales voucher book.';
+
+  @override
+  String get salesErrorCurrencyRequired => 'Select a valid currency.';
+
+  @override
+  String get salesPaymentUnpaid => 'Unpaid';
+
+  @override
+  String get salesPaymentPartiallyPaid => 'Partially paid';
+
+  @override
+  String get salesPaymentPaid => 'Paid';
+
+  @override
+  String get salesStatus => 'Sale status';
+
+  @override
+  String get salesStatusDraft => 'Draft';
+
+  @override
+  String get salesStatusPending => 'Pending accounting';
+
+  @override
+  String get salesStatusConfirmed => 'Confirmed';
+
+  @override
+  String get salesStatusCompleted => 'Completed';
+
+  @override
+  String get salesStatusCancelled => 'Cancelled';
+
+  @override
+  String get salesStatusRejected => 'Rejected';
+
+  @override
+  String get salesNotes => 'Notes';
+
+  @override
+  String get salesSave => 'Save sale';
+
+  @override
+  String get salesSaveAndConfirm => 'Save & confirm';
+
+  @override
+  String get salesSaving => 'Saving sale…';
+
+  @override
+  String get salesLoadingInvoice => 'Loading invoice…';
+
+  @override
+  String get salesConfirming => 'Confirming sale…';
+
+  @override
+  String get salesSaved => 'Sale saved';
+
+  @override
+  String get salesConfirmed => 'Sale confirmed';
+
+  @override
+  String get salesCompleted => 'Sale completed';
+
+  @override
+  String get salesCancelled => 'Sale cancelled';
+
+  @override
+  String get salesDuplicated => 'Sale duplicated';
+
+  @override
+  String get salesConfirmSale => 'Confirm sale';
+
+  @override
+  String get salesCompleteSale => 'Mark completed';
+
+  @override
+  String get salesCancelSale => 'Cancel sale';
+
+  @override
+  String get salesCancelTitle => 'Cancel sale?';
+
+  @override
+  String salesCancelMessage(String saleNumber) {
+    return 'Cancel $saleNumber? Inventory effects will reverse when applicable.';
+  }
+
+  @override
+  String get salesDuplicate => 'Duplicate';
+
+  @override
+  String get salesNotFound => 'Sale not found';
+
+  @override
+  String get salesFiltersTitle => 'Filters';
+
+  @override
+  String get salesFilterAll => 'All';
+
+  @override
+  String get salesApplyFilters => 'Apply filters';
+
+  @override
+  String get salesClearFilters => 'Clear filters';
+
+  @override
+  String get salesSyncStatus => 'Sync status';
+
+  @override
+  String get salesExternalId => 'External id';
+
+  @override
+  String get salesExternalNumber => 'External document number';
+
+  @override
+  String get salesErrorEmptyItems => 'Add at least one product.';
+
+  @override
+  String get salesErrorInvalidQuantity => 'Quantity must be greater than zero.';
+
+  @override
+  String get salesErrorInvalidPrice => 'Price cannot be negative.';
+
+  @override
+  String get salesErrorPriceBelowCatalog =>
+      'Unit price cannot be lower than the product default price.';
+
+  @override
+  String get salesPriceBelowCatalogHint => 'Below default price';
+
+  @override
+  String get salesErrorInvalidDiscount => 'Discount is invalid.';
+
+  @override
+  String get salesErrorInvalidTax => 'Tax rate must be between 0 and 100.';
+
+  @override
+  String get salesErrorInvalidPayment => 'Paid amount is invalid.';
+
+  @override
+  String get salesErrorInvalidStatus =>
+      'This action is not allowed for the current status.';
+
+  @override
+  String get customersListTitle => 'Customers';
+
+  @override
+  String get customersListCardSubtitle =>
+      'Browse, create, and manage customers.';
+
+  @override
+  String get customersCreateTitle => 'New customer';
+
+  @override
+  String get customersEditTitle => 'Edit customer';
+
+  @override
+  String get customersDetailsTitle => 'Customer details';
+
+  @override
+  String get customersSearchHint => 'Search by code, name, phone, or email';
+
+  @override
+  String get customersEmptyTitle => 'No customers yet';
+
+  @override
+  String get customersEmptyMessage =>
+      'Add a customer or import an Excel list to start building your master list.';
+
+  @override
+  String get customersFieldCode => 'Customer code';
+
+  @override
+  String get customersFieldCodeHelper =>
+      'Sequential code from the customers parent CoA account (e.g. 12210001). Auto-generated, imported, or manual.';
+
+  @override
+  String get customersGenerateCode => 'Generate code';
+
+  @override
+  String get customersFieldName => 'Name';
+
+  @override
+  String get customersFieldPhone => 'Phone';
+
+  @override
+  String get customersFieldEmail => 'Email';
+
+  @override
+  String get customersFieldAddress => 'Address';
+
+  @override
+  String get customersFieldNotes => 'Notes';
+
+  @override
+  String get customersFieldActive => 'Active';
+
+  @override
+  String get customersFieldAccount => 'Accounting account';
+
+  @override
+  String get customersFieldAccountHelper =>
+      'Enter an existing posting account under the configured customers parent. No account is created automatically.';
+
+  @override
+  String customersAccountLinked(String code, String name) {
+    return 'Linked: $code · $name';
+  }
+
+  @override
+  String get customersAccountLinkInvalid =>
+      'No matching posting account found for that code.';
+
+  @override
+  String customersAccountMustBeUnderParent(String code, String name) {
+    return 'Linked account must be under parent $code · $name.';
+  }
+
+  @override
+  String get customersParentAccountSectionTitle => 'Customers parent account';
+
+  @override
+  String get customersParentAccountSectionSubtitle =>
+      'Choose the Chart of Accounts group under which customer accounts nest (default: Customers 1221).';
+
+  @override
+  String customersParentAccountCurrent(String code, String name) {
+    return 'Parent: $code · $name';
+  }
+
+  @override
+  String get customersParentAccountNotSet =>
+      'Parent account is not set. Configure it in Settings.';
+
+  @override
+  String get customersParentAccountField => 'Parent account code';
+
+  @override
+  String get customersParentAccountFieldHelper =>
+      'Enter a group account code from the Chart of Accounts (e.g. 1221).';
+
+  @override
+  String get customersParentAccountUseDefault => 'Use default';
+
+  @override
+  String get customersParentAccountSaved => 'Customers parent account saved.';
+
+  @override
+  String get customersParentAccountInvalid =>
+      'No matching group account found for that code.';
+
+  @override
+  String get customersFieldDataSource => 'Data source';
+
+  @override
+  String get customersDataSourceLocal => 'Local';
+
+  @override
+  String get customersDataSourceLocalHint => 'Created and owned in this app.';
+
+  @override
+  String get customersDataSourceExternal => 'External';
+
+  @override
+  String get customersDataSourceExternalHint =>
+      'Imported or maintained from an external accounting/ERP system.';
+
+  @override
+  String get customersFieldExternalId => 'External ID';
+
+  @override
+  String get customersFieldExternalIdHelper =>
+      'Required when the data source is external.';
+
+  @override
+  String get customersStatusActive => 'Active';
+
+  @override
+  String get customersStatusInactive => 'Inactive';
+
+  @override
+  String get customersCreated => 'Customer created.';
+
+  @override
+  String get customersUpdated => 'Customer updated.';
+
+  @override
+  String get customersDelete => 'Delete';
+
+  @override
+  String get customersDeleteTitle => 'Delete customer?';
+
+  @override
+  String customersDeleteMessage(String name) {
+    return 'Remove $name from the customer list?';
+  }
+
+  @override
+  String get customersDeleted => 'Customer deleted.';
+
+  @override
+  String get customersErrorDuplicateCode =>
+      'A customer with this code already exists.';
+
+  @override
+  String get customersErrorDuplicateExternalId =>
+      'A customer with this external ID already exists.';
+
+  @override
+  String get customersErrorInvalidCode => 'Customer code is required.';
+
+  @override
+  String get customersErrorInvalidName => 'Customer name is required.';
+
+  @override
+  String get customersErrorInvalidEmail => 'Enter a valid email address.';
+
+  @override
+  String get customersErrorExternalIdRequired =>
+      'External ID is required for external customers.';
+
+  @override
+  String get customersImportTitle => 'Import customers';
+
+  @override
+  String get customersImportSubtitle =>
+      'Import customer rows from an Excel file.';
+
+  @override
+  String get customersImportPageTitle => 'Import customers';
+
+  @override
+  String get customersImportFormatHintTitle => 'Customers Excel layout';
+
+  @override
+  String get customersImportFormatHintIntro =>
+      'First row = headers. Required: code and name. Use .xlsx or .xls.';
+
+  @override
+  String get customersImportFormatColCodeAliases =>
+      'Customer Code · Code · رمز العميل';
+
+  @override
+  String get customersImportFormatColNameAliases =>
+      'Customer Name · Name · اسم العميل';
+
+  @override
+  String get customersImportFormatColPhoneAliases => 'Phone · Mobile · الهاتف';
+
+  @override
+  String get customersImportFormatColEmailAliases => 'Email · البريد';
+
+  @override
+  String get customersImportFormatColAddressAliases => 'Address · العنوان';
+
+  @override
+  String get customersImportFormatColNotesAliases => 'Notes · ملاحظات';
+
+  @override
+  String get customersImportFormatColExternalIdAliases =>
+      'External ID · المعرف الخارجي';
+
+  @override
+  String get customersImportFormatSampleNote =>
+      'Without headers, columns are read as: code, name. Matching rows update by customer code (or external ID when present).';
+
+  @override
+  String customersImportInsertedCount(int count) {
+    return 'Inserted $count customers';
+  }
+
+  @override
+  String customersImportUpdatedCount(int count) {
+    return 'Updated $count customers';
+  }
+
+  @override
+  String get customersNoValidRows =>
+      'No valid customer rows were found in the file.';
+
+  @override
+  String get loadingImportingCustomers => 'Importing customers…';
+
+  @override
+  String get accountingModeSectionTitle => 'Accounting mode';
+
+  @override
+  String get accountingModeSectionSubtitle =>
+      'Choose whether this app owns accounting locally or complements an external ERP.';
+
+  @override
+  String get accountingModeStandalone => 'Standalone';
+
+  @override
+  String get accountingModeStandaloneDescription =>
+      'The app owns Chart of Accounts and future local accounting features.';
+
+  @override
+  String get accountingModeIntegrated => 'Integrated';
+
+  @override
+  String get accountingModeIntegratedDescription =>
+      'The app is an operational interface beside an existing accounting/ERP system.';
+
+  @override
+  String get accountingModeStandaloneHint =>
+      'Local accounting data is authoritative. Journal entries are never created automatically from operational documents.';
+
+  @override
+  String get accountingModeIntegratedHint =>
+      'Operational documents can be prepared here and posted later in the external system. Journal entries are not auto-created.';
+
+  @override
+  String get accountingModeSavedSuccess => 'Accounting mode saved.';
+
+  @override
+  String get accountingChartOfAccounts => 'Chart of Accounts';
+
+  @override
+  String get accountingChartOfAccountsDescription =>
+      'Browse and manage the hierarchical account structure.';
+
+  @override
+  String get accountingCurrencyRatesTitle => 'Currency rates';
+
+  @override
+  String get accountingCurrencyRatesCardSubtitle =>
+      'Add only the currencies you need and set their rates.';
+
+  @override
+  String get accountingCurrencyRatesSubtitle =>
+      'Add currencies on demand. Only enabled currencies (plus the company base) appear here — later used for multi-currency account balances.';
+
+  @override
+  String accountingCurrencyRatesBase(String code, String name) {
+    return 'Base currency: $code · $name';
+  }
+
+  @override
+  String get accountingCurrencyRatesBaseBadge => 'Base';
+
+  @override
+  String get accountingCurrencyRatesBaseHint =>
+      'Company base currency — rate is always 1.';
+
+  @override
+  String get accountingCurrencyRatesNotSet => 'Rate not set — tap to enter.';
+
+  @override
+  String accountingCurrencyRatesEquals(String from, String rate, String to) {
+    return '1 $from = $rate $to';
+  }
+
+  @override
+  String accountingCurrencyRatesUpdated(String when) {
+    return 'Updated $when';
+  }
+
+  @override
+  String get accountingCurrencyRatesEmptyTitle => 'No currencies enabled';
+
+  @override
+  String get accountingCurrencyRatesEmptyMessage =>
+      'Tap Add currency to enable a currency and set its rate.';
+
+  @override
+  String get accountingCurrencyRatesAdd => 'Add currency';
+
+  @override
+  String get accountingCurrencyRatesAddTitle => 'Enable currency';
+
+  @override
+  String get accountingCurrencyRatesAddHint =>
+      'Choose a currency you need for the business and enter its rate against the base currency.';
+
+  @override
+  String get accountingCurrencyRatesCurrencyField => 'Currency';
+
+  @override
+  String get accountingCurrencyRatesRemove => 'Remove';
+
+  @override
+  String get accountingCurrencyRatesRemoveTitle => 'Remove currency?';
+
+  @override
+  String accountingCurrencyRatesRemoveMessage(String name, String code) {
+    return 'Remove $name ($code)? It will no longer be available for multi-currency balances until you add it again.';
+  }
+
+  @override
+  String get accountingCurrencyRatesRemoved => 'Currency removed.';
+
+  @override
+  String accountingCurrencyRatesEditTitle(String code) {
+    return 'Edit $code rate';
+  }
+
+  @override
+  String accountingCurrencyRatesEditHint(String currency, String base) {
+    return 'How many $base equal 1 $currency?';
+  }
+
+  @override
+  String get accountingCurrencyRatesRateField => 'Rate to base';
+
+  @override
+  String accountingCurrencyRatesRateHelper(String base) {
+    return 'Example: if base is $base, enter how many $base equal 1 unit of this currency.';
+  }
+
+  @override
+  String get accountingCurrencyRatesInvalid => 'Enter a valid positive rate.';
+
+  @override
+  String get accountingCurrencyRatesSaved => 'Currency rate saved.';
+
+  @override
+  String get accountingVoucherBooksTitle => 'Voucher books';
+
+  @override
+  String get accountingVoucherBooksCardSubtitle =>
+      'Set up numbering books for sales, receipts, and other vouchers.';
+
+  @override
+  String get accountingVoucherBooksSubtitle =>
+      'Open a section, then use tabs for each type (e.g. sales and sales returns). Each type has its own list and add action.';
+
+  @override
+  String get accountingVoucherBooksEmptyTitle => 'No voucher books';
+
+  @override
+  String get accountingVoucherBooksEmptyMessage =>
+      'Add a book under a section to prepare sequential voucher numbers.';
+
+  @override
+  String get accountingVoucherBooksAdd => 'Add book';
+
+  @override
+  String accountingVoucherBooksAddOfType(String type) {
+    return 'Add $type';
+  }
+
+  @override
+  String get accountingVoucherBooksAddUnderSection =>
+      'Add book in this section';
+
+  @override
+  String accountingVoucherBooksSectionKinds(int kinds, int books) {
+    return '$kinds types · $books books';
+  }
+
+  @override
+  String accountingVoucherBooksTypeEmptyTitle(String type) {
+    return 'No $type books';
+  }
+
+  @override
+  String get accountingVoucherBooksTypeEmptyMessage =>
+      'Tap add to create a numbering book for this type.';
+
+  @override
+  String get accountingVoucherBooksEdit => 'Edit book';
+
+  @override
+  String get accountingVoucherBooksSave => 'Save book';
+
+  @override
+  String get accountingVoucherBooksName => 'Book name';
+
+  @override
+  String get accountingVoucherBooksNameHint =>
+      'e.g. Main sales / Sales returns branch A';
+
+  @override
+  String get accountingVoucherBooksParentSection => 'Section';
+
+  @override
+  String get accountingVoucherBooksType => 'Book type';
+
+  @override
+  String get accountingVoucherBooksCurrentNumber => 'Current number';
+
+  @override
+  String get accountingVoucherBooksCurrentNumberHelper =>
+      'The next voucher number that will be issued from this book.';
+
+  @override
+  String get accountingVoucherBooksEndNumber => 'End number';
+
+  @override
+  String get accountingVoucherBooksEndNumberHelper =>
+      'Last number available in this book.';
+
+  @override
+  String accountingVoucherBooksRangePreview(String current, String end) {
+    return 'Current $current · ends at $end';
+  }
+
+  @override
+  String accountingVoucherBooksSectionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count books',
+      one: '1 book',
+      zero: 'No books yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get accountingVoucherBooksSectionEmpty =>
+      'No books in this section yet. Add sales, returns, or other series as needed.';
+
+  @override
+  String get accountingVoucherBooksNotes => 'Notes';
+
+  @override
+  String get accountingVoucherBooksActive => 'Active';
+
+  @override
+  String get accountingVoucherBooksInactive => 'Inactive';
+
+  @override
+  String get accountingVoucherBooksDelete => 'Delete';
+
+  @override
+  String get accountingVoucherBooksDeleteTitle => 'Delete voucher book?';
+
+  @override
+  String accountingVoucherBooksDeleteMessage(String name) {
+    return 'Delete “$name”? This cannot be undone.';
+  }
+
+  @override
+  String get accountingVoucherBooksDeleted => 'Voucher book deleted.';
+
+  @override
+  String get accountingVoucherBooksSaved => 'Voucher book saved.';
+
+  @override
+  String get accountingVoucherBooksErrorName => 'Enter a book name.';
+
+  @override
+  String get accountingVoucherBooksErrorParent => 'Choose a parent section.';
+
+  @override
+  String get accountingVoucherBooksErrorCurrentNumber =>
+      'Current number must be at least 1.';
+
+  @override
+  String get accountingVoucherBooksErrorEndNumber =>
+      'End number must be at least 1.';
+
+  @override
+  String get accountingVoucherBooksErrorEndBeforeCurrent =>
+      'End number must be greater than or equal to current number.';
+
+  @override
+  String get accountingVoucherBookTypeSales => 'Sales';
+
+  @override
+  String get accountingVoucherBookTypeSalesReturns => 'Sales returns';
+
+  @override
+  String get accountingVoucherBookTypeReceipts => 'Receipts';
+
+  @override
+  String get accountingVoucherBookTypePayments => 'Payments';
+
+  @override
+  String get accountingVoucherBookTypePurchases => 'Purchases';
+
+  @override
+  String get accountingVoucherBookTypePurchaseReturns => 'Purchase returns';
+
+  @override
+  String get accountingVoucherBookTypeJournal => 'Journal';
+
+  @override
+  String get accountingAddAccount => 'Add account';
+
+  @override
+  String get accountingEditAccount => 'Edit account';
+
+  @override
+  String get accountingSaveAccount => 'Save account';
+
+  @override
+  String get accountingAccountDetails => 'Account details';
+
+  @override
+  String get accountingSearchHint => 'Search by name or code';
+
+  @override
+  String get accountingEmptyTitle => 'No accounts yet';
+
+  @override
+  String get accountingEmptyMessage =>
+      'Default accounts will appear after first open, or add your own.';
+
+  @override
+  String get accountingNoSearchResults => 'No matching accounts';
+
+  @override
+  String get accountingNoSearchResultsMessage =>
+      'Try a different name or account code.';
+
+  @override
+  String get accountingExpandAll => 'Expand all';
+
+  @override
+  String get accountingCollapseAll => 'Collapse all';
+
+  @override
+  String get accountingShowInactive => 'Show inactive';
+
+  @override
+  String get accountingHideInactive => 'Hide inactive';
+
+  @override
+  String get accountingFieldName => 'Account name';
+
+  @override
+  String get accountingFieldCode => 'Account code';
+
+  @override
+  String get accountingFieldParent => 'Parent account';
+
+  @override
+  String get accountingFieldType => 'Account type';
+
+  @override
+  String get accountingFieldDescription => 'Description';
+
+  @override
+  String get accountingFieldNormalBalance => 'Normal balance';
+
+  @override
+  String get accountingFieldLevel => 'Level';
+
+  @override
+  String get accountingFieldKind => 'Kind';
+
+  @override
+  String get accountingFieldStatus => 'Status';
+
+  @override
+  String get accountingFieldSystem => 'System account';
+
+  @override
+  String get accountingFieldCreatedAt => 'Created';
+
+  @override
+  String get accountingFieldUpdatedAt => 'Updated';
+
+  @override
+  String get accountingRootAccount => 'No parent (root)';
+
+  @override
+  String get accountingTypeAsset => 'Assets';
+
+  @override
+  String get accountingTypeLiability => 'Liabilities';
+
+  @override
+  String get accountingTypeEquity => 'Equity';
+
+  @override
+  String get accountingTypeRevenue => 'Revenue';
+
+  @override
+  String get accountingTypeExpense => 'Expenses';
+
+  @override
+  String get accountingTypeInheritedHint =>
+      'Type is inherited from the parent account.';
+
+  @override
+  String get accountingNormalDebit => 'Debit';
+
+  @override
+  String get accountingNormalCredit => 'Credit';
+
+  @override
+  String get accountingAccountGroup => 'Group account';
+
+  @override
+  String get accountingAccountGroupHint =>
+      'Group accounts organize the tree and are not used for posting.';
+
+  @override
+  String get accountingAccountPosting => 'Posting account';
+
+  @override
+  String get accountingAccountActive => 'Active';
+
+  @override
+  String get accountingAccountInactive => 'Inactive';
+
+  @override
+  String get accountingSystemAccount => 'System';
+
+  @override
+  String get accountingSystemAccountHint =>
+      'System accounts have protected code and type.';
+
+  @override
+  String get accountingYes => 'Yes';
+
+  @override
+  String get accountingNo => 'No';
+
+  @override
+  String get accountingComingSoonSection => 'Coming soon';
+
+  @override
+  String get accountingComingSoonHint =>
+      'Available after journal entries are implemented.';
+
+  @override
+  String get accountingCurrentBalance => 'Current balance';
+
+  @override
+  String get accountingTransactions => 'Transactions';
+
+  @override
+  String get accountingLedger => 'Ledger';
+
+  @override
+  String get accountingDeactivate => 'Deactivate';
+
+  @override
+  String get accountingSoftDelete => 'Remove account';
+
+  @override
+  String get accountingDeactivateConfirmTitle => 'Deactivate account?';
+
+  @override
+  String get accountingDeactivateConfirmMessage =>
+      'The account stays in history but cannot be selected for new activity.';
+
+  @override
+  String get accountingDeleteConfirmTitle => 'Remove account?';
+
+  @override
+  String get accountingDeleteConfirmMessage =>
+      'This soft-deletes the account. System accounts and accounts with children cannot be removed.';
+
+  @override
+  String get accountingSavedSuccess => 'Account saved successfully.';
+
+  @override
+  String get accountingDeactivatedSuccess => 'Account deactivated.';
+
+  @override
+  String get accountingDeletedSuccess => 'Account removed.';
+
+  @override
+  String get accountingAccountNotFound => 'Account not found.';
+
+  @override
+  String get accountingErrorNameRequired => 'Account name is required.';
+
+  @override
+  String get accountingErrorCodeRequired => 'Account code is required.';
+
+  @override
+  String get accountingErrorDuplicateCode =>
+      'An account with this code already exists.';
+
+  @override
+  String get accountingErrorTypeMismatch =>
+      'Account type must match the parent account.';
+
+  @override
+  String get accountingErrorInvalidParent =>
+      'Parent account is invalid or inactive.';
+
+  @override
+  String get accountingErrorCircularParent =>
+      'An account cannot be nested under itself.';
+
+  @override
+  String get accountingErrorParentMustBeGroup =>
+      'Only group accounts can have children.';
+
+  @override
+  String get accountingErrorSystemProtected =>
+      'System accounts cannot be changed this way.';
+
+  @override
+  String get accountingErrorHasChildren =>
+      'Remove or move child accounts first.';
+
+  @override
+  String get accountingErrorInUse =>
+      'This account is used in transactions and cannot be removed.';
+
+  @override
+  String accountingAccountsCount(int count) {
+    return '$count accounts';
+  }
+
+  @override
+  String accountingSectionChildrenCount(int count) {
+    return '$count accounts';
+  }
+
+  @override
+  String get accountingFilterAll => 'All';
+
+  @override
+  String get accountingFilterByType => 'Filter by type';
+
+  @override
+  String get accountingToolbarActions => 'Tree actions';
+
+  @override
+  String get accountingAccountAssets => 'Assets';
+
+  @override
+  String get accountingAccountCurrentAssets => 'Current Assets';
+
+  @override
+  String get accountingAccountCash => 'Cash';
+
+  @override
+  String get accountingAccountBank => 'Bank';
+
+  @override
+  String get accountingAccountAccountsReceivable => 'Accounts Receivable';
+
+  @override
+  String get accountingAccountCustomers => 'Customers';
+
+  @override
+  String get accountingAccountInventory => 'Inventory';
+
+  @override
+  String get accountingAccountFixedAssets => 'Fixed Assets';
+
+  @override
+  String get accountingAccountBuildings => 'Buildings';
+
+  @override
+  String get accountingAccountVehicles => 'Vehicles';
+
+  @override
+  String get accountingAccountEquipment => 'Equipment';
+
+  @override
+  String get accountingAccountLiabilities => 'Liabilities';
+
+  @override
+  String get accountingAccountCurrentLiabilities => 'Current Liabilities';
+
+  @override
+  String get accountingAccountAccountsPayable => 'Accounts Payable';
+
+  @override
+  String get accountingAccountShortTermLoans => 'Short Term Loans';
+
+  @override
+  String get accountingAccountLongTermLiabilities => 'Long Term Liabilities';
+
+  @override
+  String get accountingAccountEquity => 'Equity';
+
+  @override
+  String get accountingAccountCapital => 'Capital';
+
+  @override
+  String get accountingAccountRetainedEarnings => 'Retained Earnings';
+
+  @override
+  String get accountingAccountRevenue => 'Revenue';
+
+  @override
+  String get accountingAccountSalesRevenue => 'Sales Revenue';
+
+  @override
+  String get accountingAccountOtherRevenue => 'Other Revenue';
+
+  @override
+  String get accountingAccountExpenses => 'Expenses';
+
+  @override
+  String get accountingAccountCogs => 'Cost of Goods Sold';
+
+  @override
+  String get accountingAccountSalaries => 'Salaries';
+
+  @override
+  String get accountingAccountRent => 'Rent';
+
+  @override
+  String get accountingAccountUtilities => 'Utilities';
+
+  @override
+  String get accountingAccountOtherExpenses => 'Other Expenses';
+
+  @override
   String get inventoryStockCountService => 'Stock count';
 
   @override
@@ -712,6 +1974,127 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTitle => 'Settings';
+
+  @override
+  String get setupSettingsTitle => 'Setup settings';
+
+  @override
+  String get setupSettingsSubtitle =>
+      'Configure company identity, logo, default currency, and related business details.';
+
+  @override
+  String get setupSettingsCardSubtitle =>
+      'Company name, logo, currency, and legal details.';
+
+  @override
+  String get setupCompanyIdentitySection => 'Company identity';
+
+  @override
+  String get setupCompanyName => 'Company name';
+
+  @override
+  String get setupCompanyNameRequired => 'Company name is required.';
+
+  @override
+  String get setupLegalName => 'Legal name';
+
+  @override
+  String get setupLegalNameHelper =>
+      'Official registered name if different from the display name.';
+
+  @override
+  String get setupPickLogo => 'Choose logo';
+
+  @override
+  String get setupRemoveLogo => 'Remove logo';
+
+  @override
+  String get setupLogoUpdated => 'Company logo updated.';
+
+  @override
+  String get setupLogoRemoved => 'Company logo removed.';
+
+  @override
+  String get setupLogoFailed => 'Could not update the logo. Try another image.';
+
+  @override
+  String get setupCurrencySection => 'Currency & fiscal year';
+
+  @override
+  String get setupCurrencySectionSubtitle =>
+      'Used as the default for amounts, invoices, and reports.';
+
+  @override
+  String get setupDefaultCurrency => 'Default currency';
+
+  @override
+  String get setupFiscalYearStart => 'Fiscal year starts in';
+
+  @override
+  String get setupFiscalYearStartHelper =>
+      'First month of your accounting year.';
+
+  @override
+  String get setupLegalSection => 'Legal identifiers';
+
+  @override
+  String get setupTaxNumber => 'Tax / VAT number';
+
+  @override
+  String get setupCommercialRegister => 'Commercial registration';
+
+  @override
+  String get setupContactSection => 'Contact & address';
+
+  @override
+  String get setupPhone => 'Phone';
+
+  @override
+  String get setupEmail => 'Email';
+
+  @override
+  String get setupWebsite => 'Website';
+
+  @override
+  String get setupAddress => 'Address';
+
+  @override
+  String get setupCity => 'City';
+
+  @override
+  String get setupCountry => 'Country';
+
+  @override
+  String get setupSavedSuccess => 'Setup settings saved.';
+
+  @override
+  String get settingsGeneralSection => 'General';
+
+  @override
+  String get settingsGeneralSectionSubtitle =>
+      'Appearance and language for the whole app.';
+
+  @override
+  String get settingsDataSection => 'Data & sync';
+
+  @override
+  String get settingsDataSectionSubtitle =>
+      'Connection status and manual synchronization.';
+
+  @override
+  String get settingsModulesSection => 'Modules';
+
+  @override
+  String get settingsModulesSectionSubtitle =>
+      'Settings owned by each business module.';
+
+  @override
+  String get settingsAboutSectionSubtitle =>
+      'Application identity and maintenance.';
+
+  @override
+  String get settingsResetHint =>
+      'Restore theme, language, and module settings to defaults.';
 
   @override
   String get appearance => 'Appearance';

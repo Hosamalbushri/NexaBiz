@@ -6,15 +6,17 @@ import '../../core/services/loading_providers.dart';
 import '../../core/sync/sync_overview.dart';
 import '../../core/sync/sync_providers.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../localization/app_localizations.dart';
 import '../theme/app_spacing.dart';
 import 'sync_status_indicator.dart';
 
-/// Settings block for connection + manual sync.
+/// Platform sync settings content (category chrome owned by Settings page).
 class SyncSettingsSection extends ConsumerWidget {
-  const SyncSettingsSection({super.key});
+  const SyncSettingsSection({super.key, this.embedded = false});
+
+  /// When true, omit outer card (used inside an expansion panel).
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,64 +30,77 @@ class SyncSettingsSection extends ConsumerWidget {
             Localizations.localeOf(context).toString(),
           ).add_jm().format(overview.lastSyncedAt!.toLocal());
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final content = Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                l10n.syncSectionTitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ),
-            const SyncStatusIndicator(compact: false),
-          ],
+        ListTile(
+          contentPadding: embedded ? EdgeInsets.zero : null,
+          leading: Icon(
+            overview.isOnline
+                ? Icons.cloud_done_outlined
+                : Icons.cloud_off_outlined,
+          ),
+          title: Text(l10n.syncConnectionLabel),
+          subtitle: Text(
+            overview.isOnline
+                ? l10n.syncConnectionOnline
+                : l10n.syncConnectionOffline,
+          ),
+          trailing: const SyncStatusIndicator(compact: true),
         ),
-        const SizedBox(height: 8),
-        AppCard(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              ListTile(
-                title: Text(l10n.syncConnectionLabel),
-                subtitle: Text(
-                  overview.isOnline
-                      ? l10n.syncConnectionOnline
-                      : l10n.syncConnectionOffline,
-                ),
-              ),
-              const Divider(height: 1),
-              ListTile(
-                title: Text(l10n.syncLastSyncLabel),
-                subtitle: Text(lastSyncText),
-              ),
-              const Divider(height: 1),
-              ListTile(
-                title: Text(l10n.syncPendingChangesLabel),
-                trailing: Text('${overview.pendingCount}'),
-              ),
-              const Divider(height: 1),
-              ListTile(
-                title: Text(l10n.syncFailedChangesLabel),
-                trailing: Text('${overview.failedCount}'),
-              ),
-              const Divider(height: 1),
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: AppButton(
-                  label: l10n.syncNowAction,
-                  onPressed: overview.isSyncing
-                      ? null
-                      : () => _onSyncNow(context, ref, overview.isOnline),
-                ),
-              ),
-            ],
+        const Divider(height: 1),
+        ListTile(
+          contentPadding: embedded ? EdgeInsets.zero : null,
+          leading: const Icon(Icons.schedule_outlined),
+          title: Text(l10n.syncLastSyncLabel),
+          subtitle: Text(lastSyncText),
+        ),
+        const Divider(height: 1),
+        ListTile(
+          contentPadding: embedded ? EdgeInsets.zero : null,
+          leading: const Icon(Icons.pending_actions_outlined),
+          title: Text(l10n.syncPendingChangesLabel),
+          trailing: Text(
+            '${overview.pendingCount}',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+        ),
+        const Divider(height: 1),
+        ListTile(
+          contentPadding: embedded ? EdgeInsets.zero : null,
+          leading: const Icon(Icons.error_outline),
+          title: Text(l10n.syncFailedChangesLabel),
+          trailing: Text(
+            '${overview.failedCount}',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(
+            top: AppSpacing.md,
+            bottom: embedded ? 0 : AppSpacing.md,
+            left: embedded ? 0 : AppSpacing.md,
+            right: embedded ? 0 : AppSpacing.md,
+          ),
+          child: AppButton(
+            label: l10n.syncNowAction,
+            expand: true,
+            icon: Icons.sync,
+            onPressed: overview.isSyncing
+                ? null
+                : () => _onSyncNow(context, ref, overview.isOnline),
           ),
         ),
       ],
+    );
+
+    if (embedded) {
+      return content;
+    }
+
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: content,
     );
   }
 
@@ -108,8 +123,7 @@ class SyncSettingsSection extends ConsumerWidget {
         .read(loadingControllerProvider)
         .run(
           message: l10n.loadingSynchronizing,
-          action: () =>
-              ref.read(syncManagerProvider).syncNow(notify: true),
+          action: () => ref.read(syncManagerProvider).syncNow(notify: true),
         );
 
     if (!context.mounted) {

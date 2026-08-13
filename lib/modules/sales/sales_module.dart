@@ -1,0 +1,89 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../app/localization/app_localizations.dart';
+import '../../core/modules/app_module.dart';
+import 'presentation/pages/sale_details_page.dart';
+import 'presentation/pages/sale_form_page.dart';
+import 'presentation/pages/sales_home_page.dart';
+import 'presentation/pages/sales_list_page.dart';
+import 'presentation/pages/sales_routes.dart';
+
+/// Sales business module — operational sales documents (offline-first).
+///
+/// Customers and products are resolved via App-wired ports (modules ↛ modules).
+class SalesModule extends AppModule {
+  const SalesModule();
+
+  static const String moduleId = 'sales';
+
+  @override
+  String get id => moduleId;
+
+  @override
+  String get nameKey => 'moduleSales';
+
+  @override
+  IconData get icon => Icons.point_of_sale_outlined;
+
+  @override
+  String get rootRoute => SalesRoutes.root;
+
+  @override
+  bool get isEnabled => true;
+
+  @override
+  String label(BuildContext context) {
+    return AppLocalizations.of(context).moduleSales;
+  }
+
+  @override
+  String? description(BuildContext context) {
+    return AppLocalizations.of(context).moduleSalesDescription;
+  }
+
+  @override
+  List<RouteBase> get routes => [
+    GoRoute(
+      path: SalesRoutes.root,
+      name: 'sales',
+      builder: (context, state) => const SalesHomePage(),
+      routes: [
+        GoRoute(
+          path: 'list',
+          name: 'salesList',
+          builder: (context, state) => const SalesListPage(),
+        ),
+        GoRoute(
+          path: 'create',
+          name: 'salesCreate',
+          builder: (context, state) => const SaleFormPage(),
+        ),
+        GoRoute(
+          path: ':id',
+          name: 'salesDetails',
+          builder: (context, state) {
+            final id = int.tryParse(state.pathParameters['id'] ?? '');
+            if (id == null) {
+              return const SaleDetailsPage(saleId: -1);
+            }
+            return SaleDetailsPage(saleId: id);
+          },
+          routes: [
+            GoRoute(
+              path: 'edit',
+              name: 'salesEdit',
+              builder: (context, state) {
+                final id = int.tryParse(state.pathParameters['id'] ?? '');
+                if (id == null) {
+                  return const SaleFormPage(saleId: -1);
+                }
+                return SaleFormPage(saleId: id);
+              },
+            ),
+          ],
+        ),
+      ],
+    ),
+  ];
+}

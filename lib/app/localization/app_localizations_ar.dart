@@ -25,6 +25,1253 @@ class AppLocalizationsAr extends AppLocalizations {
       'خدمات المخزون بما فيها الجرد، والمزيد لاحقاً.';
 
   @override
+  String get moduleAccounting => 'المحاسبة';
+
+  @override
+  String get moduleAccountingDescription =>
+      'الدليل المحاسبي وأساس القيود والتقارير المستقبلية.';
+
+  @override
+  String get moduleCustomers => 'العملاء';
+
+  @override
+  String get moduleCustomersDescription =>
+      'بيانات العملاء مع ربط اختياري بالدليل المحاسبي ومعرّفات الأنظمة الخارجية.';
+
+  @override
+  String get moduleSales => 'المبيعات';
+
+  @override
+  String get moduleSalesDescription =>
+      'إنشاء وإدارة المبيعات دون اتصال، مع ربط اختياري بالمحاسبة والمخزون.';
+
+  @override
+  String get salesListTitle => 'المبيعات';
+
+  @override
+  String get salesListCardSubtitle => 'استعرض وابحث وأدر مستندات المبيعات.';
+
+  @override
+  String get salesCreateTitle => 'فاتورة جديدة';
+
+  @override
+  String get salesCreateCardSubtitle =>
+      'ابدأ عملية بيع سريعة مع المنتجات والدفع.';
+
+  @override
+  String get salesEditTitle => 'تعديل الفاتورة';
+
+  @override
+  String get salesDetailsTitle => 'فاتورة';
+
+  @override
+  String get salesSearchHint => 'ابحث برقم الفاتورة أو العميل أو المنتج';
+
+  @override
+  String get salesSearchCustomerHint => 'ابحث عن عميل';
+
+  @override
+  String get salesSearchProductHint => 'اكتب اسم المنتج';
+
+  @override
+  String get salesEmptyTitle => 'لا توجد مبيعات بعد';
+
+  @override
+  String get salesEmptyMessage => 'أنشئ أول فاتورة للبدء.';
+
+  @override
+  String get salesCustomer => 'العميل';
+
+  @override
+  String get salesSelectCustomer => 'اختر العميل';
+
+  @override
+  String get salesCashCustomerHint => 'أدخل اسماً أو اختر عميلاً';
+
+  @override
+  String get salesWalkInCustomer => 'عميل عابر';
+
+  @override
+  String get salesCustomerEmpty => 'لا يوجد عملاء.';
+
+  @override
+  String get salesCustomerNotFound => 'العميل غير موجود.';
+
+  @override
+  String get salesProducts => 'المنتجات';
+
+  @override
+  String get salesProductName => 'المنتج';
+
+  @override
+  String get salesAddProduct => 'إضافة منتج';
+
+  @override
+  String get salesAddRow => 'إضافة صف';
+
+  @override
+  String get salesProductsEmpty => 'لم تُضف منتجات.';
+
+  @override
+  String get salesProductNotFound => 'المنتج غير موجود.';
+
+  @override
+  String get salesRemoveItem => 'إزالة الصنف';
+
+  @override
+  String get salesScanProduct => 'مسح منتج';
+
+  @override
+  String get salesScanHint => 'أدخل الباركود أو رمز QR';
+
+  @override
+  String get salesUnitPrice => 'سعر الوحدة';
+
+  @override
+  String get salesSubtotal => 'المجموع الفرعي';
+
+  @override
+  String get salesDiscount => 'الخصم';
+
+  @override
+  String get salesItemDiscount => 'خصومات الأصناف';
+
+  @override
+  String get salesDiscountType => 'نوع الخصم';
+
+  @override
+  String get salesDiscountFixed => 'مبلغ ثابت';
+
+  @override
+  String get salesDiscountPercent => 'نسبة مئوية';
+
+  @override
+  String get salesTax => 'الضريبة';
+
+  @override
+  String get salesTaxRate => 'نسبة الضريبة (%)';
+
+  @override
+  String get salesTotal => 'الإجمالي';
+
+  @override
+  String get salesPaid => 'المدفوع';
+
+  @override
+  String get salesRemaining => 'المتبقي';
+
+  @override
+  String get salesPayFull => 'دفع المبلغ كاملاً';
+
+  @override
+  String get salesPayment => 'الدفع';
+
+  @override
+  String get salesPaymentMethod => 'طريقة الدفع';
+
+  @override
+  String get salesPaymentStatus => 'حالة الدفع';
+
+  @override
+  String get salesPaymentCash => 'نقداً';
+
+  @override
+  String get salesPaymentCard => 'بطاقة';
+
+  @override
+  String get salesPaymentBankTransfer => 'تحويل بنكي';
+
+  @override
+  String get salesPaymentCredit => 'آجل';
+
+  @override
+  String get salesPaymentOther => 'أخرى';
+
+  @override
+  String get salesDate => 'التاريخ';
+
+  @override
+  String get salesSettlementType => 'نوع الفاتورة';
+
+  @override
+  String get salesSettlementCash => 'نقداً';
+
+  @override
+  String get salesSettlementCredit => 'آجل';
+
+  @override
+  String get salesSettlementCashHint => 'تحصيل فوري عبر الصندوق';
+
+  @override
+  String get salesSettlementCreditHint => 'تقييد على حساب العميل';
+
+  @override
+  String get salesVoucherBook => 'دفتر المبيعات';
+
+  @override
+  String get salesSelectVoucherBook => 'اختر دفتر المبيعات';
+
+  @override
+  String get salesVoucherBookEmpty =>
+      'لا توجد دفاتر مبيعات. أنشئ دفتراً من المحاسبة.';
+
+  @override
+  String get salesInvoiceNumber => 'رقم الفاتورة';
+
+  @override
+  String get salesCashAccount => 'حساب الصندوق';
+
+  @override
+  String get salesSelectCashAccount => 'اختر حساب الصندوق';
+
+  @override
+  String get salesCashAccountEmpty => 'لا توجد حسابات صناديق.';
+
+  @override
+  String get salesCustomerAccount => 'حساب العميل';
+
+  @override
+  String get salesCustomerAccountMissing => 'العميل غير مرتبط بحساب محاسبي.';
+
+  @override
+  String get salesClearCustomer => 'إزالة العميل';
+
+  @override
+  String get salesCurrency => 'العملة';
+
+  @override
+  String get salesBaseCurrency => 'الأساسية';
+
+  @override
+  String salesExchangeRateHint(String currency, String rate, String base) {
+    return '1 $currency = $rate $base';
+  }
+
+  @override
+  String get salesCreditHint =>
+      'فاتورة آجلة — يُقيَّد المبلغ على حساب العميل ويتبقى الرصيد مستحقاً.';
+
+  @override
+  String get salesSearchOrScanProduct => 'ابحث أو امسح منتجاً';
+
+  @override
+  String get salesInvoiceOptions => 'خيارات الفاتورة';
+
+  @override
+  String get salesItemMore => 'المزيد';
+
+  @override
+  String get salesAddCustomer => 'إضافة عميل';
+
+  @override
+  String get salesAdd => 'إضافة';
+
+  @override
+  String get salesIncreaseQty => 'زيادة الكمية';
+
+  @override
+  String get salesDecreaseQty => 'إنقاص الكمية';
+
+  @override
+  String get salesErrorCustomerRequired => 'اختر عميلاً للفواتير الآجلة.';
+
+  @override
+  String get salesErrorCustomerAccountRequired =>
+      'اربط العميل بحساب محاسبي أولاً.';
+
+  @override
+  String get salesErrorCashAccountRequired => 'اختر حساب الصندوق.';
+
+  @override
+  String get salesErrorVoucherBookRequired => 'اختر دفتر المبيعات.';
+
+  @override
+  String get salesErrorCurrencyRequired => 'اختر عملة صالحة.';
+
+  @override
+  String get salesPaymentUnpaid => 'غير مدفوع';
+
+  @override
+  String get salesPaymentPartiallyPaid => 'مدفوع جزئياً';
+
+  @override
+  String get salesPaymentPaid => 'مدفوع';
+
+  @override
+  String get salesStatus => 'حالة الفاتورة';
+
+  @override
+  String get salesStatusDraft => 'مسودة';
+
+  @override
+  String get salesStatusPending => 'بانتظار المحاسبة';
+
+  @override
+  String get salesStatusConfirmed => 'مؤكدة';
+
+  @override
+  String get salesStatusCompleted => 'مكتملة';
+
+  @override
+  String get salesStatusCancelled => 'ملغاة';
+
+  @override
+  String get salesStatusRejected => 'مرفوضة';
+
+  @override
+  String get salesNotes => 'ملاحظات';
+
+  @override
+  String get salesSave => 'حفظ الفاتورة';
+
+  @override
+  String get salesSaveAndConfirm => 'حفظ وتأكيد';
+
+  @override
+  String get salesSaving => 'جاري حفظ الفاتورة…';
+
+  @override
+  String get salesLoadingInvoice => 'جاري تحميل الفاتورة…';
+
+  @override
+  String get salesConfirming => 'جاري تأكيد الفاتورة…';
+
+  @override
+  String get salesSaved => 'تم حفظ الفاتورة';
+
+  @override
+  String get salesConfirmed => 'تم تأكيد الفاتورة';
+
+  @override
+  String get salesCompleted => 'اكتملت الفاتورة';
+
+  @override
+  String get salesCancelled => 'تم إلغاء الفاتورة';
+
+  @override
+  String get salesDuplicated => 'تم تكرار الفاتورة';
+
+  @override
+  String get salesConfirmSale => 'تأكيد الفاتورة';
+
+  @override
+  String get salesCompleteSale => 'تعليم كمكتملة';
+
+  @override
+  String get salesCancelSale => 'إلغاء الفاتورة';
+
+  @override
+  String get salesCancelTitle => 'إلغاء الفاتورة؟';
+
+  @override
+  String salesCancelMessage(String saleNumber) {
+    return 'إلغاء $saleNumber؟ سيتم عكس أثر المخزون عند الحاجة.';
+  }
+
+  @override
+  String get salesDuplicate => 'تكرار';
+
+  @override
+  String get salesNotFound => 'الفاتورة غير موجودة';
+
+  @override
+  String get salesFiltersTitle => 'عوامل التصفية';
+
+  @override
+  String get salesFilterAll => 'الكل';
+
+  @override
+  String get salesApplyFilters => 'تطبيق التصفية';
+
+  @override
+  String get salesClearFilters => 'مسح التصفية';
+
+  @override
+  String get salesSyncStatus => 'حالة المزامنة';
+
+  @override
+  String get salesExternalId => 'المعرّف الخارجي';
+
+  @override
+  String get salesExternalNumber => 'رقم المستند الخارجي';
+
+  @override
+  String get salesErrorEmptyItems => 'أضف منتجاً واحداً على الأقل.';
+
+  @override
+  String get salesErrorInvalidQuantity => 'يجب أن تكون الكمية أكبر من صفر.';
+
+  @override
+  String get salesErrorInvalidPrice => 'لا يمكن أن يكون السعر سالباً.';
+
+  @override
+  String get salesErrorPriceBelowCatalog =>
+      'لا يمكن أن يكون سعر الوحدة أقل من السعر الافتراضي للمنتج.';
+
+  @override
+  String get salesPriceBelowCatalogHint => 'أقل من السعر الافتراضي';
+
+  @override
+  String get salesErrorInvalidDiscount => 'الخصم غير صالح.';
+
+  @override
+  String get salesErrorInvalidTax => 'يجب أن تكون نسبة الضريبة بين 0 و 100.';
+
+  @override
+  String get salesErrorInvalidPayment => 'المبلغ المدفوع غير صالح.';
+
+  @override
+  String get salesErrorInvalidStatus => 'هذا الإجراء غير مسموح للحالة الحالية.';
+
+  @override
+  String get customersListTitle => 'العملاء';
+
+  @override
+  String get customersListCardSubtitle => 'استعرض وأنشئ وأدر العملاء.';
+
+  @override
+  String get customersCreateTitle => 'عميل جديد';
+
+  @override
+  String get customersEditTitle => 'تعديل العميل';
+
+  @override
+  String get customersDetailsTitle => 'تفاصيل العميل';
+
+  @override
+  String get customersSearchHint => 'ابحث بالرمز أو الاسم أو الهاتف أو البريد';
+
+  @override
+  String get customersEmptyTitle => 'لا يوجد عملاء بعد';
+
+  @override
+  String get customersEmptyMessage =>
+      'أضف عميلاً أو استورد قائمة Excel لبدء بناء قائمة العملاء.';
+
+  @override
+  String get customersFieldCode => 'رمز العميل';
+
+  @override
+  String get customersFieldCodeHelper =>
+      'رمز متسلسل من حساب أصل العملاء في الدليل (مثل 12210001). تلقائي أو مستورد أو يدوي.';
+
+  @override
+  String get customersGenerateCode => 'توليد الرمز';
+
+  @override
+  String get customersFieldName => 'الاسم';
+
+  @override
+  String get customersFieldPhone => 'الهاتف';
+
+  @override
+  String get customersFieldEmail => 'البريد الإلكتروني';
+
+  @override
+  String get customersFieldAddress => 'العنوان';
+
+  @override
+  String get customersFieldNotes => 'ملاحظات';
+
+  @override
+  String get customersFieldActive => 'نشط';
+
+  @override
+  String get customersFieldAccount => 'الحساب المحاسبي';
+
+  @override
+  String get customersFieldAccountHelper =>
+      'أدخل حساب ترحيل موجوداً تحت حساب أصل العملاء المُعدّ. لا يُنشأ حساب تلقائياً.';
+
+  @override
+  String customersAccountLinked(String code, String name) {
+    return 'مرتبط: $code · $name';
+  }
+
+  @override
+  String get customersAccountLinkInvalid =>
+      'لا يوجد حساب ترحيل مطابق لهذا الرمز.';
+
+  @override
+  String customersAccountMustBeUnderParent(String code, String name) {
+    return 'يجب أن يكون الحساب المرتبط تحت الأصل $code · $name.';
+  }
+
+  @override
+  String get customersParentAccountSectionTitle => 'حساب أصل العملاء';
+
+  @override
+  String get customersParentAccountSectionSubtitle =>
+      'اختر مجموعة الدليل المحاسبي التي تندرج تحتها حسابات العملاء (الافتراضي: العملاء 1221).';
+
+  @override
+  String customersParentAccountCurrent(String code, String name) {
+    return 'الأصل: $code · $name';
+  }
+
+  @override
+  String get customersParentAccountNotSet =>
+      'لم يُحدد حساب الأصل. اضبطه من الإعدادات.';
+
+  @override
+  String get customersParentAccountField => 'رمز حساب الأصل';
+
+  @override
+  String get customersParentAccountFieldHelper =>
+      'أدخل رمز حساب مجموعة من الدليل المحاسبي (مثل 1221).';
+
+  @override
+  String get customersParentAccountUseDefault => 'استخدام الافتراضي';
+
+  @override
+  String get customersParentAccountSaved => 'تم حفظ حساب أصل العملاء.';
+
+  @override
+  String get customersParentAccountInvalid =>
+      'لا يوجد حساب مجموعة مطابق لهذا الرمز.';
+
+  @override
+  String get customersFieldDataSource => 'مصدر البيانات';
+
+  @override
+  String get customersDataSourceLocal => 'محلي';
+
+  @override
+  String get customersDataSourceLocalHint => 'أُنشئ ويُدار داخل هذا التطبيق.';
+
+  @override
+  String get customersDataSourceExternal => 'خارجي';
+
+  @override
+  String get customersDataSourceExternalHint =>
+      'مستورد أو مُدار من نظام محاسبة/ERP خارجي.';
+
+  @override
+  String get customersFieldExternalId => 'المعرّف الخارجي';
+
+  @override
+  String get customersFieldExternalIdHelper =>
+      'مطلوب عندما يكون مصدر البيانات خارجياً.';
+
+  @override
+  String get customersStatusActive => 'نشط';
+
+  @override
+  String get customersStatusInactive => 'غير نشط';
+
+  @override
+  String get customersCreated => 'تم إنشاء العميل.';
+
+  @override
+  String get customersUpdated => 'تم تحديث العميل.';
+
+  @override
+  String get customersDelete => 'حذف';
+
+  @override
+  String get customersDeleteTitle => 'حذف العميل؟';
+
+  @override
+  String customersDeleteMessage(String name) {
+    return 'إزالة $name من قائمة العملاء؟';
+  }
+
+  @override
+  String get customersDeleted => 'تم حذف العميل.';
+
+  @override
+  String get customersErrorDuplicateCode => 'يوجد عميل بهذا الرمز مسبقاً.';
+
+  @override
+  String get customersErrorDuplicateExternalId =>
+      'يوجد عميل بهذا المعرّف الخارجي مسبقاً.';
+
+  @override
+  String get customersErrorInvalidCode => 'رمز العميل مطلوب.';
+
+  @override
+  String get customersErrorInvalidName => 'اسم العميل مطلوب.';
+
+  @override
+  String get customersErrorInvalidEmail => 'أدخل بريداً إلكترونياً صالحاً.';
+
+  @override
+  String get customersErrorExternalIdRequired =>
+      'المعرّف الخارجي مطلوب للعملاء الخارجيين.';
+
+  @override
+  String get customersImportTitle => 'استيراد العملاء';
+
+  @override
+  String get customersImportSubtitle => 'استورد صفوف العملاء من ملف Excel.';
+
+  @override
+  String get customersImportPageTitle => 'استيراد العملاء';
+
+  @override
+  String get customersImportFormatHintTitle => 'تخطيط Excel للعملاء';
+
+  @override
+  String get customersImportFormatHintIntro =>
+      'الصف الأول = عناوين. المطلوب: الرمز والاسم. استخدم .xlsx أو .xls.';
+
+  @override
+  String get customersImportFormatColCodeAliases =>
+      'Customer Code · Code · رمز العميل';
+
+  @override
+  String get customersImportFormatColNameAliases =>
+      'Customer Name · Name · اسم العميل';
+
+  @override
+  String get customersImportFormatColPhoneAliases => 'Phone · Mobile · الهاتف';
+
+  @override
+  String get customersImportFormatColEmailAliases => 'Email · البريد';
+
+  @override
+  String get customersImportFormatColAddressAliases => 'Address · العنوان';
+
+  @override
+  String get customersImportFormatColNotesAliases => 'Notes · ملاحظات';
+
+  @override
+  String get customersImportFormatColExternalIdAliases =>
+      'External ID · المعرف الخارجي';
+
+  @override
+  String get customersImportFormatSampleNote =>
+      'بدون عناوين تُقرأ الأعمدة كـ: الرمز، الاسم. الصفوف المطابقة تُحدَّث حسب رمز العميل (أو المعرّف الخارجي إن وُجد).';
+
+  @override
+  String customersImportInsertedCount(int count) {
+    return 'تم إدراج $count عميل';
+  }
+
+  @override
+  String customersImportUpdatedCount(int count) {
+    return 'تم تحديث $count عميل';
+  }
+
+  @override
+  String get customersNoValidRows => 'لم يُعثر على صفوف عملاء صالحة في الملف.';
+
+  @override
+  String get loadingImportingCustomers => 'جاري استيراد العملاء…';
+
+  @override
+  String get accountingModeSectionTitle => 'وضع المحاسبة';
+
+  @override
+  String get accountingModeSectionSubtitle =>
+      'اختر ما إذا كان التطبيق يملك المحاسبة محلياً أو يكمل نظام محاسبة/ERP خارجياً.';
+
+  @override
+  String get accountingModeStandalone => 'مستقل';
+
+  @override
+  String get accountingModeStandaloneDescription =>
+      'التطبيق يملك الدليل المحاسبي وميزات المحاسبة المحلية المستقبلية.';
+
+  @override
+  String get accountingModeIntegrated => 'متكامل';
+
+  @override
+  String get accountingModeIntegratedDescription =>
+      'التطبيق واجهة تشغيلية بجانب نظام محاسبة/ERP قائم.';
+
+  @override
+  String get accountingModeStandaloneHint =>
+      'البيانات المحاسبية المحلية هي المرجع. لا تُنشأ قيود يومية تلقائياً من المستندات التشغيلية.';
+
+  @override
+  String get accountingModeIntegratedHint =>
+      'يمكن تجهيز المستندات التشغيلية هنا وترحيلها لاحقاً في النظام الخارجي. لا تُنشأ قيود يومية تلقائياً.';
+
+  @override
+  String get accountingModeSavedSuccess => 'تم حفظ وضع المحاسبة.';
+
+  @override
+  String get accountingChartOfAccounts => 'الدليل المحاسبي';
+
+  @override
+  String get accountingChartOfAccountsDescription =>
+      'استعرض وأدر الهيكل الهرمي للحسابات.';
+
+  @override
+  String get accountingCurrencyRatesTitle => 'أسعار العملات';
+
+  @override
+  String get accountingCurrencyRatesCardSubtitle =>
+      'أضف فقط العملات التي تحتاجها وحدّد أسعارها.';
+
+  @override
+  String get accountingCurrencyRatesSubtitle =>
+      'أضف العملات عند الحاجة فقط. تظهر هنا العملات المفعّلة مع العملة الأساسية — وستُستخدم لاحقاً لأرصدة الحسابات متعددة العملات.';
+
+  @override
+  String accountingCurrencyRatesBase(String code, String name) {
+    return 'العملة الأساسية: $code · $name';
+  }
+
+  @override
+  String get accountingCurrencyRatesBaseBadge => 'أساسية';
+
+  @override
+  String get accountingCurrencyRatesBaseHint =>
+      'عملة الشركة الأساسية — السعر دائماً 1.';
+
+  @override
+  String get accountingCurrencyRatesNotSet => 'السعر غير محدد — اضغط للإدخال.';
+
+  @override
+  String accountingCurrencyRatesEquals(String from, String rate, String to) {
+    return '1 $from = $rate $to';
+  }
+
+  @override
+  String accountingCurrencyRatesUpdated(String when) {
+    return 'آخر تحديث $when';
+  }
+
+  @override
+  String get accountingCurrencyRatesEmptyTitle => 'لا توجد عملات مفعّلة';
+
+  @override
+  String get accountingCurrencyRatesEmptyMessage =>
+      'اضغط «إضافة عملة» لتفعيل عملة وإدخال سعرها.';
+
+  @override
+  String get accountingCurrencyRatesAdd => 'إضافة عملة';
+
+  @override
+  String get accountingCurrencyRatesAddTitle => 'تفعيل عملة';
+
+  @override
+  String get accountingCurrencyRatesAddHint =>
+      'اختر العملة التي تحتاجها للنشاط وأدخل سعرها مقابل العملة الأساسية.';
+
+  @override
+  String get accountingCurrencyRatesCurrencyField => 'العملة';
+
+  @override
+  String get accountingCurrencyRatesRemove => 'إزالة';
+
+  @override
+  String get accountingCurrencyRatesRemoveTitle => 'إزالة العملة؟';
+
+  @override
+  String accountingCurrencyRatesRemoveMessage(String name, String code) {
+    return 'إزالة $name ($code)؟ لن تكون متاحة لأرصدة متعددة العملات حتى تضيفها مجدداً.';
+  }
+
+  @override
+  String get accountingCurrencyRatesRemoved => 'تمت إزالة العملة.';
+
+  @override
+  String accountingCurrencyRatesEditTitle(String code) {
+    return 'تعديل سعر $code';
+  }
+
+  @override
+  String accountingCurrencyRatesEditHint(String currency, String base) {
+    return 'كم من $base يساوي وحدة واحدة من $currency؟';
+  }
+
+  @override
+  String get accountingCurrencyRatesRateField => 'السعر مقابل الأساسية';
+
+  @override
+  String accountingCurrencyRatesRateHelper(String base) {
+    return 'مثال: إذا كانت الأساسية $base، أدخل كم من $base يساوي وحدة واحدة من هذه العملة.';
+  }
+
+  @override
+  String get accountingCurrencyRatesInvalid => 'أدخل سعراً موجباً صالحاً.';
+
+  @override
+  String get accountingCurrencyRatesSaved => 'تم حفظ سعر العملة.';
+
+  @override
+  String get accountingVoucherBooksTitle => 'دفاتر السندات';
+
+  @override
+  String get accountingVoucherBooksCardSubtitle =>
+      'تهيئة دفاتر الترقيم للمبيعات والمقبوضات وغيرها.';
+
+  @override
+  String get accountingVoucherBooksSubtitle =>
+      'افتح قسماً ثم استخدم التبويبات لكل نوع (مثل المبيعات ومردود المبيعات). لكل نوع قائمة وزر إضافة خاص به.';
+
+  @override
+  String get accountingVoucherBooksEmptyTitle => 'لا توجد دفاتر';
+
+  @override
+  String get accountingVoucherBooksEmptyMessage =>
+      'أضف دفتراً تحت قسم لتهيئة أرقام السندات المتسلسلة.';
+
+  @override
+  String get accountingVoucherBooksAdd => 'إضافة دفتر';
+
+  @override
+  String accountingVoucherBooksAddOfType(String type) {
+    return 'إضافة $type';
+  }
+
+  @override
+  String get accountingVoucherBooksAddUnderSection => 'إضافة دفتر في هذا القسم';
+
+  @override
+  String accountingVoucherBooksSectionKinds(int kinds, int books) {
+    return '$kinds أنواع · $books دفاتر';
+  }
+
+  @override
+  String accountingVoucherBooksTypeEmptyTitle(String type) {
+    return 'لا دفاتر $type';
+  }
+
+  @override
+  String get accountingVoucherBooksTypeEmptyMessage =>
+      'اضغط إضافة لإنشاء دفتر ترقيم لهذا النوع.';
+
+  @override
+  String get accountingVoucherBooksEdit => 'تعديل الدفتر';
+
+  @override
+  String get accountingVoucherBooksSave => 'حفظ الدفتر';
+
+  @override
+  String get accountingVoucherBooksName => 'اسم الدفتر';
+
+  @override
+  String get accountingVoucherBooksNameHint =>
+      'مثال: مبيعات رئيسي / مردود مبيعات فرع أ';
+
+  @override
+  String get accountingVoucherBooksParentSection => 'القسم';
+
+  @override
+  String get accountingVoucherBooksType => 'نوع الدفتر';
+
+  @override
+  String get accountingVoucherBooksCurrentNumber => 'الرقم الحالي';
+
+  @override
+  String get accountingVoucherBooksCurrentNumberHelper =>
+      'رقم السند التالي الذي سيُصدر من هذا الدفتر.';
+
+  @override
+  String get accountingVoucherBooksEndNumber => 'نهاية الرقم';
+
+  @override
+  String get accountingVoucherBooksEndNumberHelper =>
+      'آخر رقم متاح في هذا الدفتر.';
+
+  @override
+  String accountingVoucherBooksRangePreview(String current, String end) {
+    return 'الحالي $current · ينتهي عند $end';
+  }
+
+  @override
+  String accountingVoucherBooksSectionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count دفاتر',
+      one: 'دفتر واحد',
+      zero: 'لا دفاتر بعد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get accountingVoucherBooksSectionEmpty =>
+      'لا توجد دفاتر في هذا القسم بعد. أضف مبيعات أو مردود أو سلاسل أخرى حسب الحاجة.';
+
+  @override
+  String get accountingVoucherBooksNotes => 'ملاحظات';
+
+  @override
+  String get accountingVoucherBooksActive => 'نشط';
+
+  @override
+  String get accountingVoucherBooksInactive => 'موقوف';
+
+  @override
+  String get accountingVoucherBooksDelete => 'حذف';
+
+  @override
+  String get accountingVoucherBooksDeleteTitle => 'حذف دفتر السندات؟';
+
+  @override
+  String accountingVoucherBooksDeleteMessage(String name) {
+    return 'حذف «$name»؟ لا يمكن التراجع عن ذلك.';
+  }
+
+  @override
+  String get accountingVoucherBooksDeleted => 'تم حذف دفتر السندات.';
+
+  @override
+  String get accountingVoucherBooksSaved => 'تم حفظ دفتر السندات.';
+
+  @override
+  String get accountingVoucherBooksErrorName => 'أدخل اسم الدفتر.';
+
+  @override
+  String get accountingVoucherBooksErrorParent => 'اختر القسم الأب.';
+
+  @override
+  String get accountingVoucherBooksErrorCurrentNumber =>
+      'الرقم الحالي يجب أن يكون 1 على الأقل.';
+
+  @override
+  String get accountingVoucherBooksErrorEndNumber =>
+      'نهاية الرقم يجب أن تكون 1 على الأقل.';
+
+  @override
+  String get accountingVoucherBooksErrorEndBeforeCurrent =>
+      'نهاية الرقم يجب أن تكون أكبر من أو تساوي الرقم الحالي.';
+
+  @override
+  String get accountingVoucherBookTypeSales => 'مبيعات';
+
+  @override
+  String get accountingVoucherBookTypeSalesReturns => 'مردود المبيعات';
+
+  @override
+  String get accountingVoucherBookTypeReceipts => 'مقبوضات';
+
+  @override
+  String get accountingVoucherBookTypePayments => 'مدفوعات';
+
+  @override
+  String get accountingVoucherBookTypePurchases => 'مشتريات';
+
+  @override
+  String get accountingVoucherBookTypePurchaseReturns => 'مردود المشتريات';
+
+  @override
+  String get accountingVoucherBookTypeJournal => 'قيود يومية';
+
+  @override
+  String get accountingAddAccount => 'إضافة حساب';
+
+  @override
+  String get accountingEditAccount => 'تعديل الحساب';
+
+  @override
+  String get accountingSaveAccount => 'حفظ الحساب';
+
+  @override
+  String get accountingAccountDetails => 'تفاصيل الحساب';
+
+  @override
+  String get accountingSearchHint => 'ابحث بالاسم أو الرمز';
+
+  @override
+  String get accountingEmptyTitle => 'لا توجد حسابات بعد';
+
+  @override
+  String get accountingEmptyMessage =>
+      'ستظهر الحسابات الافتراضية عند أول فتح، أو أضف حساباتك.';
+
+  @override
+  String get accountingNoSearchResults => 'لا توجد حسابات مطابقة';
+
+  @override
+  String get accountingNoSearchResultsMessage => 'جرّب اسماً أو رمزاً مختلفاً.';
+
+  @override
+  String get accountingExpandAll => 'توسيع الكل';
+
+  @override
+  String get accountingCollapseAll => 'طي الكل';
+
+  @override
+  String get accountingShowInactive => 'إظهار غير النشطة';
+
+  @override
+  String get accountingHideInactive => 'إخفاء غير النشطة';
+
+  @override
+  String get accountingFieldName => 'اسم الحساب';
+
+  @override
+  String get accountingFieldCode => 'رمز الحساب';
+
+  @override
+  String get accountingFieldParent => 'الحساب الأب';
+
+  @override
+  String get accountingFieldType => 'نوع الحساب';
+
+  @override
+  String get accountingFieldDescription => 'الوصف';
+
+  @override
+  String get accountingFieldNormalBalance => 'الرصيد الطبيعي';
+
+  @override
+  String get accountingFieldLevel => 'المستوى';
+
+  @override
+  String get accountingFieldKind => 'التصنيف';
+
+  @override
+  String get accountingFieldStatus => 'الحالة';
+
+  @override
+  String get accountingFieldSystem => 'حساب نظام';
+
+  @override
+  String get accountingFieldCreatedAt => 'تاريخ الإنشاء';
+
+  @override
+  String get accountingFieldUpdatedAt => 'آخر تحديث';
+
+  @override
+  String get accountingRootAccount => 'بدون أب (جذر)';
+
+  @override
+  String get accountingTypeAsset => 'الأصول';
+
+  @override
+  String get accountingTypeLiability => 'الخصوم';
+
+  @override
+  String get accountingTypeEquity => 'حقوق الملكية';
+
+  @override
+  String get accountingTypeRevenue => 'الإيرادات';
+
+  @override
+  String get accountingTypeExpense => 'المصروفات';
+
+  @override
+  String get accountingTypeInheritedHint => 'يُورَّث النوع من الحساب الأب.';
+
+  @override
+  String get accountingNormalDebit => 'مدين';
+
+  @override
+  String get accountingNormalCredit => 'دائن';
+
+  @override
+  String get accountingAccountGroup => 'حساب مجموعة';
+
+  @override
+  String get accountingAccountGroupHint =>
+      'حسابات المجموعة تنظّم الشجرة ولا تُستخدم للترحيل.';
+
+  @override
+  String get accountingAccountPosting => 'حساب ترحيل';
+
+  @override
+  String get accountingAccountActive => 'نشط';
+
+  @override
+  String get accountingAccountInactive => 'غير نشط';
+
+  @override
+  String get accountingSystemAccount => 'نظام';
+
+  @override
+  String get accountingSystemAccountHint =>
+      'حسابات النظام محمية من تغيير الرمز والنوع.';
+
+  @override
+  String get accountingYes => 'نعم';
+
+  @override
+  String get accountingNo => 'لا';
+
+  @override
+  String get accountingComingSoonSection => 'قريباً';
+
+  @override
+  String get accountingComingSoonHint => 'متاح بعد تنفيذ القيود اليومية.';
+
+  @override
+  String get accountingCurrentBalance => 'الرصيد الحالي';
+
+  @override
+  String get accountingTransactions => 'الحركات';
+
+  @override
+  String get accountingLedger => 'دفتر الأستاذ';
+
+  @override
+  String get accountingDeactivate => 'تعطيل';
+
+  @override
+  String get accountingSoftDelete => 'إزالة الحساب';
+
+  @override
+  String get accountingDeactivateConfirmTitle => 'تعطيل الحساب؟';
+
+  @override
+  String get accountingDeactivateConfirmMessage =>
+      'يبقى الحساب في السجل التاريخي لكن لن يُختار للنشاط الجديد.';
+
+  @override
+  String get accountingDeleteConfirmTitle => 'إزالة الحساب؟';
+
+  @override
+  String get accountingDeleteConfirmMessage =>
+      'هذا حذف ناعم. حسابات النظام والحسابات ذات الأبناء لا يمكن إزالتها.';
+
+  @override
+  String get accountingSavedSuccess => 'تم حفظ الحساب بنجاح.';
+
+  @override
+  String get accountingDeactivatedSuccess => 'تم تعطيل الحساب.';
+
+  @override
+  String get accountingDeletedSuccess => 'تمت إزالة الحساب.';
+
+  @override
+  String get accountingAccountNotFound => 'الحساب غير موجود.';
+
+  @override
+  String get accountingErrorNameRequired => 'اسم الحساب مطلوب.';
+
+  @override
+  String get accountingErrorCodeRequired => 'رمز الحساب مطلوب.';
+
+  @override
+  String get accountingErrorDuplicateCode => 'يوجد حساب بهذا الرمز مسبقاً.';
+
+  @override
+  String get accountingErrorTypeMismatch =>
+      'يجب أن يطابق نوع الحساب نوع الحساب الأب.';
+
+  @override
+  String get accountingErrorInvalidParent => 'الحساب الأب غير صالح أو غير نشط.';
+
+  @override
+  String get accountingErrorCircularParent => 'لا يمكن وضع الحساب تحت نفسه.';
+
+  @override
+  String get accountingErrorParentMustBeGroup =>
+      'فقط حسابات المجموعة يمكن أن يكون لها أبناء.';
+
+  @override
+  String get accountingErrorSystemProtected =>
+      'حسابات النظام لا يمكن تعديلها بهذه الطريقة.';
+
+  @override
+  String get accountingErrorHasChildren =>
+      'أزل أو انقل الحسابات الفرعية أولاً.';
+
+  @override
+  String get accountingErrorInUse =>
+      'هذا الحساب مستخدم في حركات ولا يمكن إزالته.';
+
+  @override
+  String accountingAccountsCount(int count) {
+    return '$count حساباً';
+  }
+
+  @override
+  String accountingSectionChildrenCount(int count) {
+    return '$count حساباً';
+  }
+
+  @override
+  String get accountingFilterAll => 'الكل';
+
+  @override
+  String get accountingFilterByType => 'تصفية حسب النوع';
+
+  @override
+  String get accountingToolbarActions => 'إجراءات الشجرة';
+
+  @override
+  String get accountingAccountAssets => 'الأصول';
+
+  @override
+  String get accountingAccountCurrentAssets => 'الأصول المتداولة';
+
+  @override
+  String get accountingAccountCash => 'الصندوق / النقدية';
+
+  @override
+  String get accountingAccountBank => 'البنك';
+
+  @override
+  String get accountingAccountAccountsReceivable => 'الذمم المدينة';
+
+  @override
+  String get accountingAccountCustomers => 'العملاء';
+
+  @override
+  String get accountingAccountInventory => 'المخزون';
+
+  @override
+  String get accountingAccountFixedAssets => 'الأصول الثابتة';
+
+  @override
+  String get accountingAccountBuildings => 'المباني';
+
+  @override
+  String get accountingAccountVehicles => 'المركبات';
+
+  @override
+  String get accountingAccountEquipment => 'المعدات';
+
+  @override
+  String get accountingAccountLiabilities => 'الخصوم';
+
+  @override
+  String get accountingAccountCurrentLiabilities => 'الخصوم المتداولة';
+
+  @override
+  String get accountingAccountAccountsPayable => 'الذمم الدائنة';
+
+  @override
+  String get accountingAccountShortTermLoans => 'قروض قصيرة الأجل';
+
+  @override
+  String get accountingAccountLongTermLiabilities => 'الخصوم طويلة الأجل';
+
+  @override
+  String get accountingAccountEquity => 'حقوق الملكية';
+
+  @override
+  String get accountingAccountCapital => 'رأس المال';
+
+  @override
+  String get accountingAccountRetainedEarnings => 'الأرباح المحتجزة';
+
+  @override
+  String get accountingAccountRevenue => 'الإيرادات';
+
+  @override
+  String get accountingAccountSalesRevenue => 'إيرادات المبيعات';
+
+  @override
+  String get accountingAccountOtherRevenue => 'إيرادات أخرى';
+
+  @override
+  String get accountingAccountExpenses => 'المصروفات';
+
+  @override
+  String get accountingAccountCogs => 'تكلفة البضاعة المباعة';
+
+  @override
+  String get accountingAccountSalaries => 'الرواتب';
+
+  @override
+  String get accountingAccountRent => 'الإيجار';
+
+  @override
+  String get accountingAccountUtilities => 'المرافق';
+
+  @override
+  String get accountingAccountOtherExpenses => 'مصروفات أخرى';
+
+  @override
   String get inventoryStockCountService => 'الجرد';
 
   @override
@@ -702,6 +1949,122 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsTitle => 'الإعدادات';
+
+  @override
+  String get setupSettingsTitle => 'إعدادات التهيئة';
+
+  @override
+  String get setupSettingsSubtitle =>
+      'اضبط هوية الشركة وشعارها والعملة الافتراضية والبيانات المرتبطة بها.';
+
+  @override
+  String get setupSettingsCardSubtitle =>
+      'اسم الشركة والشعار والعملة والبيانات القانونية.';
+
+  @override
+  String get setupCompanyIdentitySection => 'هوية الشركة';
+
+  @override
+  String get setupCompanyName => 'اسم الشركة';
+
+  @override
+  String get setupCompanyNameRequired => 'اسم الشركة مطلوب.';
+
+  @override
+  String get setupLegalName => 'الاسم القانوني';
+
+  @override
+  String get setupLegalNameHelper =>
+      'الاسم الرسمي المسجل إن اختلف عن اسم العرض.';
+
+  @override
+  String get setupPickLogo => 'اختيار الشعار';
+
+  @override
+  String get setupRemoveLogo => 'إزالة الشعار';
+
+  @override
+  String get setupLogoUpdated => 'تم تحديث شعار الشركة.';
+
+  @override
+  String get setupLogoRemoved => 'تم إزالة شعار الشركة.';
+
+  @override
+  String get setupLogoFailed => 'تعذر تحديث الشعار. جرّب صورة أخرى.';
+
+  @override
+  String get setupCurrencySection => 'العملة والسنة المالية';
+
+  @override
+  String get setupCurrencySectionSubtitle =>
+      'تُستخدم افتراضياً للمبالغ والفواتير والتقارير.';
+
+  @override
+  String get setupDefaultCurrency => 'العملة الافتراضية';
+
+  @override
+  String get setupFiscalYearStart => 'بداية السنة المالية';
+
+  @override
+  String get setupFiscalYearStartHelper => 'أول شهر في سنتك المحاسبية.';
+
+  @override
+  String get setupLegalSection => 'المعرّفات القانونية';
+
+  @override
+  String get setupTaxNumber => 'الرقم الضريبي / VAT';
+
+  @override
+  String get setupCommercialRegister => 'السجل التجاري';
+
+  @override
+  String get setupContactSection => 'التواصل والعنوان';
+
+  @override
+  String get setupPhone => 'الهاتف';
+
+  @override
+  String get setupEmail => 'البريد الإلكتروني';
+
+  @override
+  String get setupWebsite => 'الموقع الإلكتروني';
+
+  @override
+  String get setupAddress => 'العنوان';
+
+  @override
+  String get setupCity => 'المدينة';
+
+  @override
+  String get setupCountry => 'الدولة';
+
+  @override
+  String get setupSavedSuccess => 'تم حفظ إعدادات التهيئة.';
+
+  @override
+  String get settingsGeneralSection => 'عام';
+
+  @override
+  String get settingsGeneralSectionSubtitle => 'المظهر واللغة للتطبيق بالكامل.';
+
+  @override
+  String get settingsDataSection => 'البيانات والمزامنة';
+
+  @override
+  String get settingsDataSectionSubtitle => 'حالة الاتصال والمزامنة اليدوية.';
+
+  @override
+  String get settingsModulesSection => 'الوحدات';
+
+  @override
+  String get settingsModulesSectionSubtitle => 'إعدادات تملكها كل وحدة أعمال.';
+
+  @override
+  String get settingsAboutSectionSubtitle => 'هوية التطبيق والصيانة.';
+
+  @override
+  String get settingsResetHint =>
+      'استعادة المظهر واللغة وإعدادات الوحدات إلى الافتراضي.';
 
   @override
   String get appearance => 'المظهر';

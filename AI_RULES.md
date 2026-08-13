@@ -7,6 +7,9 @@ Read this file before modifying the project. For full context see [`AI_CONTEXT.m
 - This is a **Modular Business Platform**, not an inventory-only app.
 - Pub package name is still `stock_count` (legacy); product name is **Business Platform**.
 - Inventory is the **first** business module under `lib/modules/inventory/`.
+- Accounting is the **second** business module under `lib/modules/accounting/` (Chart of Accounts, currency rates, voucher books; standalone/integrated operating modes via settings).
+- Customers is the **third** business module under `lib/modules/customers/` (master data; optional opaque link to Account.uuid).
+- Sales is the **fourth** business module under `lib/modules/sales/` (operational sales documents; ports to Customers/Inventory/Accounting).
 - Do not redesign the app around Inventory.
 
 ## Architecture Rules
@@ -30,6 +33,7 @@ Read this file before modifying the project. For full context see [`AI_CONTEXT.m
 - Business logic lives in the owning module only.
 - Register new modules in `lib/app/bootstrap/module_bootstrap.dart`.
 - Module routes live with the module (`*Routes` + `AppModule.routes`).
+- Module-specific settings live in the module and are exposed via `AppModule.buildSettingsSections` / `hasSettings` (platform Settings must not hard-import module settings widgets).
 - Implement `AppModule` (`lib/core/modules/app_module.dart`).
 
 ## UI Rules
@@ -54,6 +58,10 @@ Read this file before modifying the project. For full context see [`AI_CONTEXT.m
 - Platform settings: Hive box `app_settings` via `SettingsRepository`.
 - Stock-count items: Hive box `inventory_items` owned by the Inventory module.
 - Products catalog: Drift/SQLite via `InventoryDatabase` / `ProductRepository`.
+- Chart of Accounts: Drift/SQLite via `AccountingDatabase` / `AccountRepository`.
+- Currency rates + voucher books: same `AccountingDatabase` (local master data).
+- Customers master: Drift/SQLite via `CustomersDatabase` / `CustomerRepository`.
+- Sales documents: Drift/SQLite via `SalesDatabase` / `SaleRepository`.
 - Sync queue: Hive box `sync_queue` via Core `SyncQueue` / `SyncManager`.
 - UI must never open Hive boxes or Drift databases directly.
 - UI must never call the remote API directly — only repositories + sync.

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../core/di/app_providers.dart';
 import '../core/notifications/notification_type.dart';
@@ -99,16 +100,21 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
         );
   }
 
+  /// Kept for the [State] lifetime so hot reload / provider refresh does not
+  /// swap [MaterialApp.router] onto a second [GoRouter] that shares navigator
+  /// GlobalKeys with the instance still disposing.
+  GoRouter? _router;
+
   @override
   Widget build(BuildContext context) {
-    final router = ref.watch(appRouterProvider);
+    _router ??= ref.read(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-      routerConfig: router,
+      routerConfig: _router!,
       themeMode: themeMode,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
@@ -122,9 +128,7 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
       ],
       builder: (context, child) {
         return LoadingOverlayHost(
-          child: NotificationToastHost(
-            child: child ?? const SizedBox.shrink(),
-          ),
+          child: NotificationToastHost(child: child ?? const SizedBox.shrink()),
         );
       },
     );

@@ -20,7 +20,7 @@ import 'presentation/pages/stock_count_home_page.dart';
 /// Inventory business module — self-contained routes and features.
 ///
 /// Platform service: Inventory. Intra-module services: Stock count + Products.
-class InventoryModule implements AppModule {
+class InventoryModule extends AppModule {
   const InventoryModule();
 
   static const String moduleId = 'inventory';

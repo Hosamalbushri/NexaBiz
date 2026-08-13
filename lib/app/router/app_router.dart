@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,6 +11,7 @@ import '../presentation/pages/not_found_page.dart';
 import '../presentation/pages/platform_reports_page.dart';
 import '../presentation/pages/service_launcher_page.dart';
 import '../settings/platform_settings_page.dart';
+import '../settings/setup_settings_page.dart';
 import '../shell/app_shell.dart';
 import '../splash/splash_page.dart';
 import 'app_navigator_keys.dart';
@@ -20,9 +22,27 @@ import 'app_routes.dart';
 /// Future auth / onboarding rules can be added via [GoRouter.redirect]
 /// without changing module route ownership.
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final registry = ref.watch(moduleRegistryProvider);
+  // Modules are fixed at bootstrap — do not watch, or a registry refresh
+  // recreates GoRouter and can clash on navigator GlobalKeys.
+  final registry = ref.read(moduleRegistryProvider);
 
-  return GoRouter(
+  // Fresh keys per GoRouter instance (see app_navigator_keys.dart).
+  appRootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'app-root');
+  appShellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'app-shell');
+  final dashboardBranchKey = GlobalKey<NavigatorState>(
+    debugLabel: 'branch-dashboard',
+  );
+  final servicesBranchKey = GlobalKey<NavigatorState>(
+    debugLabel: 'branch-services',
+  );
+  final reportsBranchKey = GlobalKey<NavigatorState>(
+    debugLabel: 'branch-reports',
+  );
+  final settingsBranchKey = GlobalKey<NavigatorState>(
+    debugLabel: 'branch-settings',
+  );
+
+  final router = GoRouter(
     navigatorKey: appRootNavigatorKey,
     initialLocation: AppRoutes.splash,
     redirect: (context, state) {
@@ -40,6 +60,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SplashPage(),
       ),
       ShellRoute(
+        navigatorKey: appShellNavigatorKey,
         builder: (context, state, child) {
           return AppExitPopScope(
             child: AppShell(location: state.uri.path, child: child),
@@ -50,6 +71,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state, navigationShell) => navigationShell,
             branches: [
               StatefulShellBranch(
+                navigatorKey: dashboardBranchKey,
                 routes: [
                   GoRoute(
                     path: AppRoutes.dashboard,
@@ -59,6 +81,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ],
               ),
               StatefulShellBranch(
+                navigatorKey: servicesBranchKey,
                 routes: [
                   GoRoute(
                     path: AppRoutes.services,
@@ -68,6 +91,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ],
               ),
               StatefulShellBranch(
+                navigatorKey: reportsBranchKey,
                 routes: [
                   GoRoute(
                     path: AppRoutes.reports,
@@ -88,11 +112,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ],
               ),
               StatefulShellBranch(
+                navigatorKey: settingsBranchKey,
                 routes: [
                   GoRoute(
                     path: AppRoutes.settings,
                     name: 'settings',
                     builder: (context, state) => const PlatformSettingsPage(),
+                    routes: [
+                      GoRoute(
+                        path: 'setup',
+                        name: 'settingsSetup',
+                        builder: (context, state) => const SetupSettingsPage(),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -108,4 +140,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+
+  ref.onDispose(router.dispose);
+  return router;
 });
