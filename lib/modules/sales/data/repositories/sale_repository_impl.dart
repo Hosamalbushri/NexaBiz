@@ -564,6 +564,18 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   @override
+  Future<List<SaleListItem>> listRecent({int limit = 8}) async {
+    final safeLimit = limit <= 0 ? 8 : limit;
+    final rows =
+        await (_db.select(_db.sales)
+              ..where(_notDeleted)
+              ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)])
+              ..limit(safeLimit))
+            .get();
+    return rows.map(_mapListItem).toList(growable: false);
+  }
+
+  @override
   Stream<void> watchListChanges() {
     return (_db.select(_db.sales)..where(_notDeleted)).watch().map((_) {});
   }

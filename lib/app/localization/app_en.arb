@@ -1065,9 +1065,58 @@
   "dashboardAddService": "Add",
   "dashboardRemoveService": "Remove",
   "dashboardSaveServices": "Save",
+  "dashboardPinnedCount": "{count} / {max} pinned",
+  "@dashboardPinnedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboardServicesMaxReached": "You can pin up to {max} dashboard services.",
+  "@dashboardServicesMaxReached": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "dashboardNoServicesTitle": "No services on dashboard",
   "dashboardNoServicesMessage": "Customize your dashboard to add the services you use most.",
   "dashboardNoModulesAvailable": "No services are available yet.",
+  "dashboardStatsComingSoon": "Coming soon",
+  "dashboardStatsSlideOverviewTitle": "Inventory",
+  "dashboardStatsSlideOverviewSubtitle": "Daily performance indicators will appear here.",
+  "dashboardStatsSlideSalesTitle": "Sales",
+  "dashboardStatsSlideSalesSubtitle": "Sales summaries by period will be added later.",
+  "dashboardStatsSlideBalanceTitle": "Collections",
+  "dashboardStatsSlideBalanceSubtitle": "Customer and cash balances are coming soon.",
+  "dashboardStatsPeriodToday": "Today",
+  "dashboardStatsPeriodWeek": "This week",
+  "dashboardStatsPeriodMonth": "This month",
+  "dashboardStatsCurrencyHint": "YER",
+  "dashboardStatsItemsLabel": "items",
+  "dashboardStatsInvoicesLabel": "Invoices",
+  "dashboardStatsCustomersLabel": "Active customers",
+  "dashboardStatsLowStockLabel": "Low stock",
+  "dashboardRecentOperations": "Recent operations",
+  "dashboardRecentOperationsEmpty": "No recent sales yet.",
+  "dashboardRecentOperationsViewAll": "View all",
+  "dashboardRecentSaleInvoice": "Sales invoice",
+  "dashboardRecentSaleInvoiceLine": "Sales invoice {type} No. {number}",
+  "@dashboardRecentSaleInvoiceLine": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "number": {
+        "type": "String"
+      }
+    }
+  },
   "platformReportsTitle": "Reports",
   "platformReportsSubtitle": "Choose a module to browse its service reports.",
   "platformReportsInventory": "Inventory reports",

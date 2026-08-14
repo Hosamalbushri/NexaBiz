@@ -5,13 +5,17 @@ import '../../../core/modules/module_providers.dart';
 import '../../../core/modules/module_registry.dart';
 import '../../settings/settings_repository.dart';
 
+/// Maximum service shortcuts shown on the dashboard grid.
+const int kMaxDashboardServices = 6;
+
 final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
   return SettingsRepository();
 });
 
 /// Ordered module ids pinned on the Dashboard.
 ///
-/// Defaults to all enabled modules until the user customizes the list.
+/// Defaults to the first [kMaxDashboardServices] enabled modules until the
+/// user customizes the list.
 final dashboardServicesProvider =
     StateNotifierProvider<
       DashboardServicesController,
@@ -44,7 +48,9 @@ class DashboardServicesController
   }
 
   List<String> _defaultIds() {
-    return [for (final module in _registry.enabledModules) module.id];
+    return [
+      for (final module in _registry.enabledModules) module.id,
+    ].take(kMaxDashboardServices).toList(growable: false);
   }
 
   List<String> _sanitize(List<String> ids) {
@@ -54,6 +60,9 @@ class DashboardServicesController
     final seen = <String>{};
     final result = <String>[];
     for (final id in ids) {
+      if (result.length >= kMaxDashboardServices) {
+        break;
+      }
       if (enabledIds.contains(id) && seen.add(id)) {
         result.add(id);
       }
@@ -65,6 +74,9 @@ class DashboardServicesController
     final ids = state.valueOrNull ?? const <String>[];
     final modules = <AppModule>[];
     for (final id in ids) {
+      if (modules.length >= kMaxDashboardServices) {
+        break;
+      }
       final module = _registry.findById(id);
       if (module != null && module.isEnabled) {
         modules.add(module);

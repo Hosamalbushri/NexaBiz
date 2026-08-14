@@ -2737,6 +2737,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dashboardSaveServices => 'حفظ';
 
   @override
+  String dashboardPinnedCount(int count, int max) {
+    return '$count / $max مثبتة';
+  }
+
+  @override
+  String dashboardServicesMaxReached(int max) {
+    return 'يمكنك تثبيت حتى $max خدمات في لوحة التحكم.';
+  }
+
+  @override
   String get dashboardNoServicesTitle => 'لا توجد خدمات في لوحة التحكم';
 
   @override
@@ -2745,6 +2755,71 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dashboardNoModulesAvailable => 'لا توجد خدمات متاحة حالياً.';
+
+  @override
+  String get dashboardStatsComingSoon => 'قريباً';
+
+  @override
+  String get dashboardStatsSlideOverviewTitle => 'المخزون';
+
+  @override
+  String get dashboardStatsSlideOverviewSubtitle =>
+      'مؤشرات الأداء اليومية ستظهر هنا.';
+
+  @override
+  String get dashboardStatsSlideSalesTitle => 'المبيعات';
+
+  @override
+  String get dashboardStatsSlideSalesSubtitle =>
+      'ملخص المبيعات والفترات سيُضاف لاحقاً.';
+
+  @override
+  String get dashboardStatsSlideBalanceTitle => 'المتحصلات';
+
+  @override
+  String get dashboardStatsSlideBalanceSubtitle =>
+      'أرصدة العملاء والصناديق قادمة قريباً.';
+
+  @override
+  String get dashboardStatsPeriodToday => 'اليوم';
+
+  @override
+  String get dashboardStatsPeriodWeek => 'هذا الأسبوع';
+
+  @override
+  String get dashboardStatsPeriodMonth => 'هذا الشهر';
+
+  @override
+  String get dashboardStatsCurrencyHint => 'ر.ي';
+
+  @override
+  String get dashboardStatsItemsLabel => 'صنف';
+
+  @override
+  String get dashboardStatsInvoicesLabel => 'الفواتير';
+
+  @override
+  String get dashboardStatsCustomersLabel => 'عملاء نشطون';
+
+  @override
+  String get dashboardStatsLowStockLabel => 'أصناف منخفضة';
+
+  @override
+  String get dashboardRecentOperations => 'العمليات الأخيرة';
+
+  @override
+  String get dashboardRecentOperationsEmpty => 'لا توجد عمليات بيع حديثة بعد.';
+
+  @override
+  String get dashboardRecentOperationsViewAll => 'عرض الكل';
+
+  @override
+  String get dashboardRecentSaleInvoice => 'فاتورة بيع';
+
+  @override
+  String dashboardRecentSaleInvoiceLine(String type, String number) {
+    return 'فاتورة بيع $type برقم $number';
+  }
 
   @override
   String get platformReportsTitle => 'التقارير';

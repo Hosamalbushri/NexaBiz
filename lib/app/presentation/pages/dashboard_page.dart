@@ -7,7 +7,6 @@ import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_loading.dart';
 import '../../../core/widgets/custom_app_bar.dart';
-import '../../../shared/widgets/service_grid.dart';
 import '../../constants/app_constants.dart';
 import '../../localization/app_localizations.dart';
 import '../../notifications/presentation/providers/notifications_provider.dart';
@@ -15,6 +14,8 @@ import '../../router/app_routes.dart';
 import '../../theme/app_spacing.dart';
 import '../providers/dashboard_services_provider.dart';
 import '../providers/quick_actions_panel_provider.dart';
+import '../widgets/dashboard_recent_operations.dart';
+import '../widgets/dashboard_services_panel.dart';
 import 'dashboard_customize_sheet.dart';
 
 /// Platform dashboard with user-customizable service shortcuts.
@@ -24,7 +25,6 @@ class DashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final servicesAsync = ref.watch(dashboardServicesProvider);
     final controller = ref.read(dashboardServicesProvider.notifier);
     final unread = ref.watch(unreadNotificationsCountProvider);
@@ -53,28 +53,30 @@ class DashboardPage extends ConsumerWidget {
         ),
         data: (_) {
           final modules = controller.resolveModules();
-          return ListView(
+          return Padding(
             padding: AppConstants.pageInsets(context),
-            children: [
-              Text(
-                l10n.dashboardMyServices,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            child: SingleChildScrollView(
+              primary: false,
+              physics: const ClampingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DashboardServicesPanel(
+                    modules: modules,
+                    customizeLabel: l10n.dashboardCustomizeServices,
+                    onCustomize: () => _openCustomize(context, ref),
+                    onModuleSelected: (module) {
+                      if (!module.isEnabled) {
+                        return;
+                      }
+                      context.push(module.rootRoute);
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  const DashboardRecentOperations(),
+                ],
               ),
-              const SizedBox(height: AppSpacing.sm),
-              ServiceGrid(
-                modules: modules,
-                addLabel: l10n.dashboardCustomizeServices,
-                onAddPressed: () => _openCustomize(context, ref),
-                onModuleSelected: (module) {
-                  if (!module.isEnabled) {
-                    return;
-                  }
-                  context.push(module.rootRoute);
-                },
-              ),
-            ],
+            ),
           );
         },
       ),

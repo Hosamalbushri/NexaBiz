@@ -1065,9 +1065,58 @@
   "dashboardAddService": "إضافة",
   "dashboardRemoveService": "إزالة",
   "dashboardSaveServices": "حفظ",
+  "dashboardPinnedCount": "{count} / {max} مثبتة",
+  "@dashboardPinnedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboardServicesMaxReached": "يمكنك تثبيت حتى {max} خدمات في لوحة التحكم.",
+  "@dashboardServicesMaxReached": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
   "dashboardNoServicesTitle": "لا توجد خدمات في لوحة التحكم",
   "dashboardNoServicesMessage": "خصّص لوحة التحكم لإضافة الخدمات التي تستخدمها أكثر.",
   "dashboardNoModulesAvailable": "لا توجد خدمات متاحة حالياً.",
+  "dashboardStatsComingSoon": "قريباً",
+  "dashboardStatsSlideOverviewTitle": "المخزون",
+  "dashboardStatsSlideOverviewSubtitle": "مؤشرات الأداء اليومية ستظهر هنا.",
+  "dashboardStatsSlideSalesTitle": "المبيعات",
+  "dashboardStatsSlideSalesSubtitle": "ملخص المبيعات والفترات سيُضاف لاحقاً.",
+  "dashboardStatsSlideBalanceTitle": "المتحصلات",
+  "dashboardStatsSlideBalanceSubtitle": "أرصدة العملاء والصناديق قادمة قريباً.",
+  "dashboardStatsPeriodToday": "اليوم",
+  "dashboardStatsPeriodWeek": "هذا الأسبوع",
+  "dashboardStatsPeriodMonth": "هذا الشهر",
+  "dashboardStatsCurrencyHint": "ر.ي",
+  "dashboardStatsItemsLabel": "صنف",
+  "dashboardStatsInvoicesLabel": "الفواتير",
+  "dashboardStatsCustomersLabel": "عملاء نشطون",
+  "dashboardStatsLowStockLabel": "أصناف منخفضة",
+  "dashboardRecentOperations": "العمليات الأخيرة",
+  "dashboardRecentOperationsEmpty": "لا توجد عمليات بيع حديثة بعد.",
+  "dashboardRecentOperationsViewAll": "عرض الكل",
+  "dashboardRecentSaleInvoice": "فاتورة بيع",
+  "dashboardRecentSaleInvoiceLine": "فاتورة بيع {type} برقم {number}",
+  "@dashboardRecentSaleInvoiceLine": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "number": {
+        "type": "String"
+      }
+    }
+  },
   "platformReportsTitle": "التقارير",
   "platformReportsSubtitle": "اختر وحدة لاستعراض تقارير خدماتها.",
   "platformReportsInventory": "تقارير المخزون",

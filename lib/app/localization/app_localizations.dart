@@ -5156,6 +5156,18 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get dashboardSaveServices;
 
+  /// No description provided for @dashboardPinnedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} / {max} pinned'**
+  String dashboardPinnedCount(int count, int max);
+
+  /// No description provided for @dashboardServicesMaxReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You can pin up to {max} dashboard services.'**
+  String dashboardServicesMaxReached(int max);
+
   /// No description provided for @dashboardNoServicesTitle.
   ///
   /// In en, this message translates to:
@@ -5173,6 +5185,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No services are available yet.'**
   String get dashboardNoModulesAvailable;
+
+  /// No description provided for @dashboardStatsComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get dashboardStatsComingSoon;
+
+  /// No description provided for @dashboardStatsSlideOverviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory'**
+  String get dashboardStatsSlideOverviewTitle;
+
+  /// No description provided for @dashboardStatsSlideOverviewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily performance indicators will appear here.'**
+  String get dashboardStatsSlideOverviewSubtitle;
+
+  /// No description provided for @dashboardStatsSlideSalesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales'**
+  String get dashboardStatsSlideSalesTitle;
+
+  /// No description provided for @dashboardStatsSlideSalesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales summaries by period will be added later.'**
+  String get dashboardStatsSlideSalesSubtitle;
+
+  /// No description provided for @dashboardStatsSlideBalanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Collections'**
+  String get dashboardStatsSlideBalanceTitle;
+
+  /// No description provided for @dashboardStatsSlideBalanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer and cash balances are coming soon.'**
+  String get dashboardStatsSlideBalanceSubtitle;
+
+  /// No description provided for @dashboardStatsPeriodToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get dashboardStatsPeriodToday;
+
+  /// No description provided for @dashboardStatsPeriodWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get dashboardStatsPeriodWeek;
+
+  /// No description provided for @dashboardStatsPeriodMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get dashboardStatsPeriodMonth;
+
+  /// No description provided for @dashboardStatsCurrencyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'YER'**
+  String get dashboardStatsCurrencyHint;
+
+  /// No description provided for @dashboardStatsItemsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'items'**
+  String get dashboardStatsItemsLabel;
+
+  /// No description provided for @dashboardStatsInvoicesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoices'**
+  String get dashboardStatsInvoicesLabel;
+
+  /// No description provided for @dashboardStatsCustomersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active customers'**
+  String get dashboardStatsCustomersLabel;
+
+  /// No description provided for @dashboardStatsLowStockLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock'**
+  String get dashboardStatsLowStockLabel;
+
+  /// No description provided for @dashboardRecentOperations.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent operations'**
+  String get dashboardRecentOperations;
+
+  /// No description provided for @dashboardRecentOperationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent sales yet.'**
+  String get dashboardRecentOperationsEmpty;
+
+  /// No description provided for @dashboardRecentOperationsViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get dashboardRecentOperationsViewAll;
+
+  /// No description provided for @dashboardRecentSaleInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales invoice'**
+  String get dashboardRecentSaleInvoice;
+
+  /// No description provided for @dashboardRecentSaleInvoiceLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales invoice {type} No. {number}'**
+  String dashboardRecentSaleInvoiceLine(String type, String number);
 
   /// No description provided for @platformReportsTitle.
   ///

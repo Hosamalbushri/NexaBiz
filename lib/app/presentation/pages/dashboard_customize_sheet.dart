@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../core/modules/app_module.dart';
 import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_snackbar.dart';
 import '../../localization/app_localizations.dart';
 import '../../theme/app_spacing.dart';
+import '../providers/dashboard_services_provider.dart';
 
 /// Pick and reorder which modules appear on the Dashboard.
 ///
@@ -30,17 +32,27 @@ class _DashboardCustomizeSheetState extends State<DashboardCustomizeSheet> {
   @override
   void initState() {
     super.initState();
-    _selectedIds = List<String>.from(widget.initiallySelectedIds);
+    _selectedIds = List<String>.from(
+      widget.initiallySelectedIds,
+    ).take(kMaxDashboardServices).toList(growable: true);
   }
 
   void _toggle(AppModule module) {
-    setState(() {
-      if (_selectedIds.contains(module.id)) {
-        _selectedIds.remove(module.id);
-      } else {
-        _selectedIds.add(module.id);
-      }
-    });
+    if (_selectedIds.contains(module.id)) {
+      setState(() => _selectedIds.remove(module.id));
+      return;
+    }
+    if (_selectedIds.length >= kMaxDashboardServices) {
+      showAppSnackBar(
+        context,
+        message: AppLocalizations.of(
+          context,
+        ).dashboardServicesMaxReached(kMaxDashboardServices),
+        isSuccess: false,
+      );
+      return;
+    }
+    setState(() => _selectedIds.add(module.id));
   }
 
   void _onReorder(int oldIndex, int newIndex) {
@@ -65,6 +77,7 @@ class _DashboardCustomizeSheetState extends State<DashboardCustomizeSheet> {
       for (final module in widget.availableModules)
         if (!_selectedIds.contains(module.id)) module,
     ];
+    final atLimit = _selectedIds.length >= kMaxDashboardServices;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -86,6 +99,18 @@ class _DashboardCustomizeSheetState extends State<DashboardCustomizeSheet> {
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          l10n.dashboardPinnedCount(
+            _selectedIds.length,
+            kMaxDashboardServices,
+          ),
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: colorScheme.primary,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         if (widget.availableModules.isEmpty)
@@ -164,7 +189,9 @@ class _DashboardCustomizeSheetState extends State<DashboardCustomizeSheet> {
               ListTile(
                 leading: Icon(
                   module.icon,
-                  color: colorScheme.onSurfaceVariant,
+                  color: atLimit
+                      ? colorScheme.onSurfaceVariant.withValues(alpha: 0.45)
+                      : colorScheme.onSurfaceVariant,
                 ),
                 title: Text(module.label(context)),
                 subtitle: module.description(context) == null
@@ -176,7 +203,7 @@ class _DashboardCustomizeSheetState extends State<DashboardCustomizeSheet> {
                       ),
                 trailing: IconButton(
                   tooltip: l10n.dashboardAddService,
-                  onPressed: () => _toggle(module),
+                  onPressed: atLimit ? null : () => _toggle(module),
                   icon: const Icon(Icons.add_circle_outline),
                 ),
               ),

@@ -27,6 +27,9 @@ abstract class SaleRepository {
     int pageSize = 30,
   });
 
+  /// Latest sales by [updatedAt] for dashboard feeds.
+  Future<List<SaleListItem>> listRecent({int limit = 8});
+
   /// Emits when any sales header row changes (for list refresh).
   Stream<void> watchListChanges();
 

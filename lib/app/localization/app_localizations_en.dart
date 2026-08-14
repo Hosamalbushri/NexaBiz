@@ -2771,6 +2771,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardSaveServices => 'Save';
 
   @override
+  String dashboardPinnedCount(int count, int max) {
+    return '$count / $max pinned';
+  }
+
+  @override
+  String dashboardServicesMaxReached(int max) {
+    return 'You can pin up to $max dashboard services.';
+  }
+
+  @override
   String get dashboardNoServicesTitle => 'No services on dashboard';
 
   @override
@@ -2779,6 +2789,71 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardNoModulesAvailable => 'No services are available yet.';
+
+  @override
+  String get dashboardStatsComingSoon => 'Coming soon';
+
+  @override
+  String get dashboardStatsSlideOverviewTitle => 'Inventory';
+
+  @override
+  String get dashboardStatsSlideOverviewSubtitle =>
+      'Daily performance indicators will appear here.';
+
+  @override
+  String get dashboardStatsSlideSalesTitle => 'Sales';
+
+  @override
+  String get dashboardStatsSlideSalesSubtitle =>
+      'Sales summaries by period will be added later.';
+
+  @override
+  String get dashboardStatsSlideBalanceTitle => 'Collections';
+
+  @override
+  String get dashboardStatsSlideBalanceSubtitle =>
+      'Customer and cash balances are coming soon.';
+
+  @override
+  String get dashboardStatsPeriodToday => 'Today';
+
+  @override
+  String get dashboardStatsPeriodWeek => 'This week';
+
+  @override
+  String get dashboardStatsPeriodMonth => 'This month';
+
+  @override
+  String get dashboardStatsCurrencyHint => 'YER';
+
+  @override
+  String get dashboardStatsItemsLabel => 'items';
+
+  @override
+  String get dashboardStatsInvoicesLabel => 'Invoices';
+
+  @override
+  String get dashboardStatsCustomersLabel => 'Active customers';
+
+  @override
+  String get dashboardStatsLowStockLabel => 'Low stock';
+
+  @override
+  String get dashboardRecentOperations => 'Recent operations';
+
+  @override
+  String get dashboardRecentOperationsEmpty => 'No recent sales yet.';
+
+  @override
+  String get dashboardRecentOperationsViewAll => 'View all';
+
+  @override
+  String get dashboardRecentSaleInvoice => 'Sales invoice';
+
+  @override
+  String dashboardRecentSaleInvoiceLine(String type, String number) {
+    return 'Sales invoice $type No. $number';
+  }
 
   @override
   String get platformReportsTitle => 'Reports';
