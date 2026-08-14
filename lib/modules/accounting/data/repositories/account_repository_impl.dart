@@ -170,6 +170,21 @@ class AccountRepositoryImpl implements AccountRepository {
   }
 
   @override
+  Future<List<Account>> getByUuids(Iterable<String> uuids) async {
+    final ids = [
+      for (final uuid in {...uuids})
+        if (uuid.trim().isNotEmpty) uuid.trim(),
+    ];
+    if (ids.isEmpty) {
+      return const [];
+    }
+    final rows = await (_db.select(
+      _db.accounts,
+    )..where((t) => t.uuid.isIn(ids))).get();
+    return rows.map(_map).toList(growable: false);
+  }
+
+  @override
   Future<Account?> getByAccountCode(String accountCode) async {
     final code = _normalizeCode(accountCode);
     if (code.isEmpty) {
@@ -228,9 +243,14 @@ class AccountRepositoryImpl implements AccountRepository {
 
   @override
   Future<bool> isUsedInTransactions(String uuid) async {
-    // Journal entries are not implemented yet — always false.
-    // Hook reserved so soft-delete / deactivate can enforce history integrity.
-    return false;
+    // Any journal line counts — including lines whose entry is soft-deleted —
+    // so soft-deleting an account cannot orphan ledger history.
+    final row =
+        await (_db.select(_db.journalLines)
+              ..where((t) => t.accountUuid.equals(uuid))
+              ..limit(1))
+            .getSingleOrNull();
+    return row != null;
   }
 
   @override

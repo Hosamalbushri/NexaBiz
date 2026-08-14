@@ -6,6 +6,7 @@ import '../../domain/entities/journal_entry.dart';
 import '../../domain/models/journal_exception.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../../domain/repositories/journal_repository.dart';
+import '../../domain/services/journal_money.dart';
 import '../database/accounting_database.dart';
 
 class JournalRepositoryImpl implements JournalRepository {
@@ -23,22 +24,48 @@ class JournalRepositoryImpl implements JournalRepository {
       throw const JournalException(JournalException.emptyLines);
     }
 
-    var totalDebit = 0.0;
-    var totalCredit = 0.0;
-    for (final line in draft.lines) {
-      if (line.debit < 0 || line.credit < 0) {
-        throw const JournalException(JournalException.invalidAmount);
-      }
+    // Round at the write boundary so debit/credit stay cent-stable in REAL.
+    final lines = [
+      for (final line in draft.lines)
+        JournalLineDraft(
+          accountUuid: line.accountUuid,
+          debit: JournalMoney.clampNonNegative(line.debit),
+          credit: JournalMoney.clampNonNegative(line.credit),
+          currencyCode: line.currencyCode,
+          lineDescription: line.lineDescription,
+          sortOrder: line.sortOrder,
+        ),
+    ];
+
+    var totalDebitCents = 0;
+    var totalCreditCents = 0;
+    for (final line in lines) {
       if (line.debit > 0 && line.credit > 0) {
         throw const JournalException(JournalException.invalidAmount);
       }
       if (line.debit == 0 && line.credit == 0) {
         throw const JournalException(JournalException.invalidAmount);
       }
-      totalDebit += line.debit;
-      totalCredit += line.credit;
+      totalDebitCents += JournalMoney.toCents(line.debit);
+      totalCreditCents += JournalMoney.toCents(line.credit);
+    }
 
-      final account = await _accounts.getByUuid(line.accountUuid);
+    if (totalDebitCents != totalCreditCents) {
+      throw JournalException(
+        JournalException.unbalanced,
+        'debit=${JournalMoney.fromCents(totalDebitCents)} '
+        'credit=${JournalMoney.fromCents(totalCreditCents)}',
+      );
+    }
+
+    final byUuid = {
+      for (final account in await _accounts.getByUuids(
+        lines.map((line) => line.accountUuid),
+      ))
+        account.uuid: account,
+    };
+    for (final line in lines) {
+      final account = byUuid[line.accountUuid];
       if (account == null || account.isDeleted) {
         throw const JournalException(JournalException.accountNotFound);
       }
@@ -50,17 +77,13 @@ class JournalRepositoryImpl implements JournalRepository {
       }
     }
 
-    if ((totalDebit - totalCredit).abs() > 0.0001) {
-      throw JournalException(
-        JournalException.unbalanced,
-        'debit=$totalDebit credit=$totalCredit',
-      );
-    }
-
     final sourceType = draft.sourceType?.trim();
     final sourceId = draft.sourceId?.trim();
+    final replaceUuid = draft.uuid?.trim();
     JournalEntry? existing;
-    if (sourceType != null &&
+    if (replaceUuid != null && replaceUuid.isNotEmpty) {
+      existing = await getByUuid(replaceUuid);
+    } else if (sourceType != null &&
         sourceType.isNotEmpty &&
         sourceId != null &&
         sourceId.isNotEmpty) {
@@ -71,7 +94,7 @@ class JournalRepositoryImpl implements JournalRepository {
     }
 
     final now = DateTime.now().toUtc();
-    final entryUuid = existing?.uuid ?? generateUuidV4();
+    final entryUuid = existing?.uuid ?? replaceUuid ?? generateUuidV4();
     final entryDateMs = BusinessDate.utcDayMs(draft.entryDate);
     final createdAtMs =
         existing?.createdAt.toUtc().millisecondsSinceEpoch ??
@@ -118,7 +141,7 @@ class JournalRepositoryImpl implements JournalRepository {
       }
 
       var order = 0;
-      for (final line in draft.lines) {
+      for (final line in lines) {
         await _db
             .into(_db.journalLines)
             .insert(
@@ -144,12 +167,33 @@ class JournalRepositoryImpl implements JournalRepository {
     if (posted != null) {
       return posted;
     }
+    final loaded = await getByUuid(entryUuid);
+    if (loaded != null) {
+      return loaded;
+    }
     // Fallback when no source (shouldn't happen for sales).
     final rows =
         await (_db.select(_db.journalEntries)
               ..where((t) => t.uuid.equals(entryUuid)))
             .get();
     return _mapEntry(rows.single, await _linesFor(entryUuid));
+  }
+
+  @override
+  Future<JournalEntry?> getByUuid(String uuid) async {
+    final trimmed = uuid.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    final row =
+        await (_db.select(_db.journalEntries)..where(
+              (t) => t.uuid.equals(trimmed) & t.deletedAt.isNull(),
+            ))
+            .getSingleOrNull();
+    if (row == null) {
+      return null;
+    }
+    return _mapEntry(row, await _linesFor(row.uuid));
   }
 
   @override
@@ -180,6 +224,8 @@ class JournalRepositoryImpl implements JournalRepository {
     required String sourceType,
     required String sourceId,
   }) async {
+    // Phase-1 void: tombstone the header for both posted and unposted entries.
+    // Lines are retained for audit; all ledger reads filter deletedAt.isNull().
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
     await (_db.update(_db.journalEntries)..where(
           (t) =>
@@ -196,15 +242,134 @@ class JournalRepositoryImpl implements JournalRepository {
   }
 
   @override
+  Future<void> softDeleteByUuid(String uuid) async {
+    final trimmed = uuid.trim();
+    if (trimmed.isEmpty) {
+      return;
+    }
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+    await (_db.update(_db.journalEntries)..where(
+          (t) => t.uuid.equals(trimmed) & t.deletedAt.isNull(),
+        ))
+        .write(
+          JournalEntriesCompanion(
+            deletedAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
+  }
+
+  @override
+  Future<List<JournalEntryHeader>> listHeaders({
+    DateTime? fromDate,
+    DateTime? toDate,
+    bool? isPosted,
+    String? query,
+    int? limit,
+    int? afterId,
+  }) async {
+    final fromMs = fromDate == null ? null : BusinessDate.utcDayMs(fromDate);
+    final toMs = toDate == null ? null : BusinessDate.utcDayMs(toDate);
+    final normalizedQuery = query?.trim().toLowerCase() ?? '';
+
+    final variables = <Variable<Object>>[];
+    final sql = StringBuffer(
+      'SELECT je.id AS id, '
+      'je.uuid AS uuid, '
+      'je.entry_date AS entry_date, '
+      'je.voucher_number AS voucher_number, '
+      'je.voucher_type AS voucher_type, '
+      'je.description AS description, '
+      'je.currency_code AS currency_code, '
+      'je.is_posted AS is_posted, '
+      'je.source_type AS source_type, '
+      'je.source_id AS source_id, '
+      'COALESCE(SUM(jl.debit), 0.0) AS total_debit, '
+      'COALESCE(SUM(jl.credit), 0.0) AS total_credit '
+      'FROM journal_entries je '
+      'LEFT JOIN journal_lines jl ON jl.entry_uuid = je.uuid '
+      'WHERE je.deleted_at IS NULL ',
+    );
+
+    if (fromMs != null) {
+      sql.write('AND je.entry_date >= ? ');
+      variables.add(Variable.withInt(fromMs));
+    }
+    if (toMs != null) {
+      sql.write('AND je.entry_date <= ? ');
+      variables.add(Variable.withInt(toMs));
+    }
+    if (isPosted != null) {
+      sql.write('AND je.is_posted = ? ');
+      variables.add(Variable.withBool(isPosted));
+    }
+    if (afterId != null) {
+      sql.write('AND je.id < ? ');
+      variables.add(Variable.withInt(afterId));
+    }
+    if (normalizedQuery.isNotEmpty) {
+      sql.write(
+        'AND (LOWER(je.voucher_number) LIKE ? '
+        'OR LOWER(IFNULL(je.description, \'\')) LIKE ? '
+        'OR LOWER(je.voucher_type) LIKE ?) ',
+      );
+      final like = '%$normalizedQuery%';
+      variables
+        ..add(Variable.withString(like))
+        ..add(Variable.withString(like))
+        ..add(Variable.withString(like));
+    }
+
+    sql.write(
+      'GROUP BY je.id '
+      'ORDER BY je.entry_date DESC, je.id DESC ',
+    );
+    if (limit != null && limit > 0) {
+      sql.write('LIMIT ? ');
+      variables.add(Variable.withInt(limit));
+    }
+
+    final rows = await _db
+        .customSelect(
+          sql.toString(),
+          variables: variables,
+          readsFrom: {_db.journalEntries, _db.journalLines},
+        )
+        .get();
+
+    return [
+      for (final row in rows)
+        JournalEntryHeader(
+          id: row.read<int>('id'),
+          uuid: row.read<String>('uuid'),
+          entryDate: DateTime.fromMillisecondsSinceEpoch(
+            row.read<int>('entry_date'),
+            isUtc: true,
+          ),
+          voucherNumber: row.read<String>('voucher_number'),
+          voucherType: row.read<String>('voucher_type'),
+          description: row.readNullable<String>('description'),
+          currencyCode: row.read<String>('currency_code'),
+          isPosted: row.read<bool>('is_posted'),
+          sourceType: row.readNullable<String>('source_type'),
+          sourceId: row.readNullable<String>('source_id'),
+          totalDebit: row.read<double>('total_debit'),
+          totalCredit: row.read<double>('total_credit'),
+        ),
+    ];
+  }
+
+  @override
   Future<List<AccountLedgerMovement>> listMovementsForAccount({
     required String accountUuid,
     DateTime? fromDate,
     DateTime? toDate,
     String? currencyCode,
     bool? isPosted,
+    int? limit,
+    AccountLedgerCursor? after,
   }) async {
-    final fromMs =
-        fromDate == null ? null : BusinessDate.utcDayMs(fromDate);
+    final fromMs = fromDate == null ? null : BusinessDate.utcDayMs(fromDate);
     // Entry dates are stored as UTC midnight of the local calendar day, so
     // inclusive toDate is the same day epoch (no 23:59 pad on a shifted day).
     final toMs = toDate == null ? null : BusinessDate.utcDayMs(toDate);
@@ -235,12 +400,25 @@ class JournalRepositoryImpl implements JournalRepository {
     if (isPosted != null) {
       query.where(_db.journalEntries.isPosted.equals(isPosted));
     }
+    if (after != null) {
+      // Keyset: (entry_date, sort_order, line.id) > cursor
+      query.where(
+        _db.journalEntries.entryDate.isBiggerThanValue(after.entryDateMs) |
+            (_db.journalEntries.entryDate.equals(after.entryDateMs) &
+                (_db.journalLines.sortOrder.isBiggerThanValue(after.sortOrder) |
+                    (_db.journalLines.sortOrder.equals(after.sortOrder) &
+                        _db.journalLines.id.isBiggerThanValue(after.lineId)))),
+      );
+    }
 
     query.orderBy([
       OrderingTerm.asc(_db.journalEntries.entryDate),
       OrderingTerm.asc(_db.journalLines.sortOrder),
       OrderingTerm.asc(_db.journalLines.id),
     ]);
+    if (limit != null && limit > 0) {
+      query.limit(limit);
+    }
 
     final rows = await query.get();
     return [
@@ -265,8 +443,57 @@ class JournalRepositoryImpl implements JournalRepository {
           accountUuid: row.readTable(_db.journalLines).accountUuid,
           entryUuid: row.readTable(_db.journalEntries).uuid,
           lineUuid: row.readTable(_db.journalLines).uuid,
+          lineId: row.readTable(_db.journalLines).id,
+          sortOrder: row.readTable(_db.journalLines).sortOrder,
         ),
     ];
+  }
+
+  @override
+  Future<List<String>> listCurrencyCodesForAccount({
+    required String accountUuid,
+    DateTime? fromDate,
+    DateTime? toDate,
+    bool? isPosted,
+  }) async {
+    final fromMs = fromDate == null ? null : BusinessDate.utcDayMs(fromDate);
+    final toMs = toDate == null ? null : BusinessDate.utcDayMs(toDate);
+
+    final variables = <Variable<Object>>[
+      Variable.withString(accountUuid),
+    ];
+    final sql = StringBuffer(
+      'SELECT DISTINCT jl.currency_code AS currency_code '
+      'FROM journal_lines jl '
+      'INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid '
+      'WHERE jl.account_uuid = ? '
+      'AND je.deleted_at IS NULL ',
+    );
+    if (fromMs != null) {
+      sql.write('AND je.entry_date >= ? ');
+      variables.add(Variable.withInt(fromMs));
+    }
+    if (toMs != null) {
+      sql.write('AND je.entry_date <= ? ');
+      variables.add(Variable.withInt(toMs));
+    }
+    if (isPosted != null) {
+      sql.write('AND je.is_posted = ? ');
+      variables.add(Variable.withBool(isPosted));
+    }
+    sql.write('ORDER BY jl.currency_code COLLATE NOCASE');
+
+    final rows = await _db
+        .customSelect(
+          sql.toString(),
+          variables: variables,
+          readsFrom: {_db.journalLines, _db.journalEntries},
+        )
+        .get();
+    return [
+      for (final row in rows)
+        row.read<String>('currency_code').trim().toUpperCase(),
+    ]..removeWhere((code) => code.isEmpty);
   }
 
   @override
@@ -277,36 +504,36 @@ class JournalRepositoryImpl implements JournalRepository {
     bool? isPosted,
   }) async {
     final beforeMs = BusinessDate.utcDayMs(beforeDate);
-
-    final query = _db.select(_db.journalLines).join([
-      innerJoin(
-        _db.journalEntries,
-        _db.journalEntries.uuid.equalsExp(_db.journalLines.entryUuid),
-      ),
-    ])..where(
-      _db.journalLines.accountUuid.equals(accountUuid) &
-          _db.journalEntries.deletedAt.isNull() &
-          _db.journalEntries.entryDate.isSmallerThanValue(beforeMs),
+    final variables = <Variable<Object>>[
+      Variable.withString(accountUuid),
+      Variable.withInt(beforeMs),
+    ];
+    final sql = StringBuffer(
+      'SELECT COALESCE(SUM(jl.debit - jl.credit), 0.0) AS net '
+      'FROM journal_lines jl '
+      'INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid '
+      'WHERE jl.account_uuid = ? '
+      'AND je.deleted_at IS NULL '
+      'AND je.entry_date < ? ',
     );
-
-    if (currencyCode != null && currencyCode.trim().isNotEmpty) {
-      query.where(
-        _db.journalLines.currencyCode.equals(
-          currencyCode.trim().toUpperCase(),
-        ),
-      );
+    final code = currencyCode?.trim().toUpperCase();
+    if (code != null && code.isNotEmpty) {
+      sql.write('AND jl.currency_code = ? ');
+      variables.add(Variable.withString(code));
     }
     if (isPosted != null) {
-      query.where(_db.journalEntries.isPosted.equals(isPosted));
+      sql.write('AND je.is_posted = ? ');
+      variables.add(Variable.withBool(isPosted));
     }
 
-    final rows = await query.get();
-    var net = 0.0;
-    for (final row in rows) {
-      final line = row.readTable(_db.journalLines);
-      net += line.debit - line.credit;
-    }
-    return net;
+    final row = await _db
+        .customSelect(
+          sql.toString(),
+          variables: variables,
+          readsFrom: {_db.journalLines, _db.journalEntries},
+        )
+        .getSingle();
+    return row.read<double>('net');
   }
 
   Future<List<JournalLine>> _linesFor(String entryUuid) async {

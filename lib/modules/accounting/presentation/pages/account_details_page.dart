@@ -12,11 +12,10 @@ import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/account.dart';
-import '../../domain/entities/account_type.dart';
-import '../../domain/entities/normal_balance.dart';
 import '../../domain/models/account_exception.dart';
 import '../../domain/services/account_labels.dart';
 import '../providers/account_providers.dart';
+import '../widgets/account_exception_messages.dart';
 import 'accounting_routes.dart';
 
 /// Account details — prepared for future balance / ledger sections.
@@ -92,7 +91,7 @@ class AccountDetailsPage extends ConsumerWidget {
                     ),
                     _DetailRow(
                       label: l10n.accountingFieldType,
-                      value: _typeLabel(l10n, account.accountType),
+                      value: AccountLabels.typeLabel(l10n, account.accountType),
                     ),
                     _DetailRow(
                       label: l10n.accountingFieldParent,
@@ -108,7 +107,10 @@ class AccountDetailsPage extends ConsumerWidget {
                     ),
                     _DetailRow(
                       label: l10n.accountingFieldNormalBalance,
-                      value: _balanceLabel(l10n, account.normalBalance),
+                      value: AccountLabels.normalBalanceLabel(
+                        l10n,
+                        account.normalBalance,
+                      ),
                     ),
                     _DetailRow(
                       label: l10n.accountingFieldLevel,
@@ -151,7 +153,7 @@ class AccountDetailsPage extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               Text(
-                l10n.accountingComingSoonSection,
+                l10n.accountingJournalsTitle,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -162,28 +164,20 @@ class AccountDetailsPage extends ConsumerWidget {
                   children: [
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(
-                        Icons.account_balance_wallet_outlined,
-                      ),
-                      title: Text(l10n.accountingCurrentBalance),
-                      subtitle: Text(l10n.accountingComingSoonHint),
-                      enabled: false,
+                      leading: const Icon(Icons.menu_book_outlined),
+                      title: Text(l10n.reportsAccountStatementTitle),
+                      subtitle: Text(l10n.reportsAccountStatementSubtitle),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push('/module-reports/account-statement'),
                     ),
                     const Divider(height: 1),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.receipt_long_outlined),
-                      title: Text(l10n.accountingTransactions),
-                      subtitle: Text(l10n.accountingComingSoonHint),
-                      enabled: false,
-                    ),
-                    const Divider(height: 1),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.menu_book_outlined),
-                      title: Text(l10n.accountingLedger),
-                      subtitle: Text(l10n.accountingComingSoonHint),
-                      enabled: false,
+                      title: Text(l10n.accountingJournalsTitle),
+                      subtitle: Text(l10n.accountingJournalsSubtitle),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => AccountingRoutes.pushJournals(context),
                     ),
                   ],
                 ),
@@ -253,7 +247,11 @@ class AccountDetailsPage extends ConsumerWidget {
       if (!context.mounted) {
         return;
       }
-      showAppSnackBar(context, message: _mapError(l10n, e), isSuccess: false);
+      showAppSnackBar(
+        context,
+        message: accountExceptionMessage(l10n, e),
+        isSuccess: false,
+      );
     }
   }
 
@@ -302,35 +300,12 @@ class AccountDetailsPage extends ConsumerWidget {
       if (!context.mounted) {
         return;
       }
-      showAppSnackBar(context, message: _mapError(l10n, e), isSuccess: false);
+      showAppSnackBar(
+        context,
+        message: accountExceptionMessage(l10n, e),
+        isSuccess: false,
+      );
     }
-  }
-
-  String _typeLabel(AppLocalizations l10n, AccountType type) {
-    return switch (type) {
-      AccountType.asset => l10n.accountingTypeAsset,
-      AccountType.liability => l10n.accountingTypeLiability,
-      AccountType.equity => l10n.accountingTypeEquity,
-      AccountType.revenue => l10n.accountingTypeRevenue,
-      AccountType.expense => l10n.accountingTypeExpense,
-    };
-  }
-
-  String _balanceLabel(AppLocalizations l10n, NormalBalance balance) {
-    return switch (balance) {
-      NormalBalance.debit => l10n.accountingNormalDebit,
-      NormalBalance.credit => l10n.accountingNormalCredit,
-    };
-  }
-
-  String _mapError(AppLocalizations l10n, AccountException e) {
-    return switch (e.code) {
-      AccountException.systemAccountProtected =>
-        l10n.accountingErrorSystemProtected,
-      AccountException.hasChildren => l10n.accountingErrorHasChildren,
-      AccountException.accountInUse => l10n.accountingErrorInUse,
-      _ => l10n.somethingWentWrong,
-    };
   }
 }
 

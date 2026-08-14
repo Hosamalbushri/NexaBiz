@@ -1010,14 +1010,147 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountingModeStandaloneHint =>
-      'Local accounting data is authoritative. Journal entries are never created automatically from operational documents.';
+      'Local accounting data is authoritative. Standalone sales create local journal entries on save/post.';
 
   @override
   String get accountingModeIntegratedHint =>
-      'Operational documents can be prepared here and posted later in the external system. Journal entries are not auto-created.';
+      'Operational documents can be prepared here and posted later in the external system. Local journals are not auto-created.';
 
   @override
   String get accountingModeSavedSuccess => 'Accounting mode saved.';
+
+  @override
+  String get accountingFiscalClosedSectionTitle => 'Closed fiscal period';
+
+  @override
+  String get accountingFiscalClosedSectionSubtitle =>
+      'Journal entries on or before this date cannot be posted or changed.';
+
+  @override
+  String get accountingFiscalClosedThroughLabel => 'Closed through';
+
+  @override
+  String get accountingFiscalClosedNone => 'No closed period';
+
+  @override
+  String get accountingFiscalClosedSavedSuccess =>
+      'Closed fiscal period saved.';
+
+  @override
+  String get accountingFiscalClosedClear => 'Clear';
+
+  @override
+  String get accountingJournalsTitle => 'Journal entries';
+
+  @override
+  String get accountingJournalsSubtitle =>
+      'Browse, create, and review journal vouchers.';
+
+  @override
+  String get accountingJournalsEmptyTitle => 'No journal entries yet';
+
+  @override
+  String get accountingJournalsEmptyMessage =>
+      'Create a manual journal or post a standalone sale.';
+
+  @override
+  String get accountingJournalsSearchHint =>
+      'Search voucher number or description';
+
+  @override
+  String get accountingJournalAdd => 'New journal';
+
+  @override
+  String get accountingJournalDetails => 'Journal details';
+
+  @override
+  String get accountingJournalEdit => 'Edit journal';
+
+  @override
+  String get accountingJournalSave => 'Save journal';
+
+  @override
+  String get accountingJournalSavedSuccess => 'Journal saved.';
+
+  @override
+  String get accountingJournalVoid => 'Void entry';
+
+  @override
+  String get accountingJournalVoidConfirmTitle => 'Void this journal?';
+
+  @override
+  String get accountingJournalVoidConfirmMessage =>
+      'The entry will be soft-deleted and removed from ledgers. Lines are kept for audit.';
+
+  @override
+  String get accountingJournalVoidedSuccess => 'Journal voided.';
+
+  @override
+  String get accountingJournalNotFound => 'Journal entry not found.';
+
+  @override
+  String get accountingJournalFieldDate => 'Date';
+
+  @override
+  String get accountingJournalFieldVoucherNumber => 'Voucher number';
+
+  @override
+  String get accountingJournalFieldVoucherType => 'Voucher type';
+
+  @override
+  String get accountingJournalFieldDescription => 'Description';
+
+  @override
+  String get accountingJournalFieldCurrency => 'Currency';
+
+  @override
+  String get accountingJournalFieldStatus => 'Status';
+
+  @override
+  String get accountingJournalPosted => 'Posted';
+
+  @override
+  String get accountingJournalUnposted => 'Unposted';
+
+  @override
+  String accountingJournalSourceLinked(String source) {
+    return 'Linked to $source';
+  }
+
+  @override
+  String get accountingJournalLines => 'Lines';
+
+  @override
+  String get accountingJournalAddLine => 'Add line';
+
+  @override
+  String get accountingJournalAccount => 'Account';
+
+  @override
+  String get accountingJournalDebit => 'Debit';
+
+  @override
+  String get accountingJournalCredit => 'Credit';
+
+  @override
+  String get accountingJournalTotals => 'Totals';
+
+  @override
+  String get accountingJournalPickAccount => 'Select account';
+
+  @override
+  String get accountingJournalErrorUnbalanced =>
+      'Total debit must equal total credit.';
+
+  @override
+  String get accountingJournalErrorPeriodClosed =>
+      'This date falls in a closed fiscal period.';
+
+  @override
+  String get accountingJournalErrorLines => 'Add at least two balanced lines.';
+
+  @override
+  String get accountingJournalManualType => 'Manual journal';
 
   @override
   String get accountingChartOfAccounts => 'Chart of Accounts';

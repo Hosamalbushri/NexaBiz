@@ -12,16 +12,17 @@ import 'presentation/pages/accounting_reports_page.dart';
 import 'presentation/pages/accounting_routes.dart';
 import 'presentation/pages/chart_of_accounts_page.dart';
 import 'presentation/pages/currency_rates_page.dart';
+import 'presentation/pages/journal_entries_page.dart';
+import 'presentation/pages/journal_entry_details_page.dart';
+import 'presentation/pages/journal_entry_form_page.dart';
 import 'presentation/pages/voucher_book_form_page.dart';
 import 'presentation/pages/voucher_book_section_page.dart';
 import 'presentation/pages/voucher_books_page.dart';
 import 'presentation/providers/accounting_mode_providers.dart';
+import 'presentation/providers/journal_providers.dart';
 import 'presentation/widgets/accounting_settings_panel.dart';
 
-/// Accounting business module — Chart of Accounts foundation.
-///
-/// Future: Journal Entries, Ledger, Suppliers, Reports.
-/// Customers live in the dedicated Customers module.
+/// Accounting business module — COA, journals, rates, voucher books.
 class AccountingModule extends AppModule {
   const AccountingModule();
 
@@ -66,6 +67,7 @@ class AccountingModule extends AppModule {
   @override
   void onSettingsReset(WidgetRef ref) {
     ref.invalidate(accountingModeProvider);
+    ref.invalidate(accountingFiscalClosedThroughProvider);
   }
 
   @override
@@ -84,6 +86,36 @@ class AccountingModule extends AppModule {
           path: 'reports',
           name: 'accountingReports',
           builder: (context, state) => const AccountingReportsPage(),
+        ),
+        GoRoute(
+          path: 'journals',
+          name: 'accountingJournals',
+          builder: (context, state) => const JournalEntriesPage(),
+          routes: [
+            GoRoute(
+              path: 'new',
+              name: 'accountingJournalsCreate',
+              builder: (context, state) => const JournalEntryFormPage(),
+            ),
+            GoRoute(
+              path: ':uuid',
+              name: 'accountingJournalDetails',
+              builder: (context, state) {
+                final uuid = state.pathParameters['uuid'] ?? '';
+                return JournalEntryDetailsPage(entryUuid: uuid);
+              },
+              routes: [
+                GoRoute(
+                  path: 'edit',
+                  name: 'accountingJournalEdit',
+                  builder: (context, state) {
+                    final uuid = state.pathParameters['uuid'] ?? '';
+                    return JournalEntryFormPage(entryUuid: uuid);
+                  },
+                ),
+              ],
+            ),
+          ],
         ),
         GoRoute(
           path: 'voucher-books',

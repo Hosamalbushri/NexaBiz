@@ -60,7 +60,7 @@ class Account {
 
   bool get isDeleted => deletedAt != null;
 
-  /// Posting accounts may be used on future journal entry lines.
+  /// Posting accounts may appear on journal entry lines (groups may not).
   bool get isPostingAccount => !isGroup;
 
   bool get canPost => isPostingAccount && isActive && !isDeleted;

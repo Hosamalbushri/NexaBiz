@@ -13,6 +13,7 @@ import '../../domain/entities/account_type.dart';
 import '../../domain/models/account_exception.dart';
 import '../../domain/services/account_labels.dart';
 import '../providers/account_providers.dart';
+import '../widgets/account_exception_messages.dart';
 import 'accounting_routes.dart';
 
 /// Create / edit Chart of Accounts node.
@@ -208,7 +209,7 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
                 for (final type in AccountType.values)
                   DropdownMenuItem(
                     value: type,
-                    child: Text(_typeLabel(l10n, type)),
+                    child: Text(AccountLabels.typeLabel(l10n, type)),
                   ),
               ],
               onChanged: systemLocked || _parentId != null
@@ -312,40 +313,15 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
       if (!mounted) {
         return;
       }
-      showAppSnackBar(context, message: _mapError(l10n, e), isSuccess: false);
+      showAppSnackBar(
+        context,
+        message: accountExceptionMessage(l10n, e),
+        isSuccess: false,
+      );
     } finally {
       if (mounted) {
         setState(() => _saving = false);
       }
     }
-  }
-
-  String _typeLabel(AppLocalizations l10n, AccountType type) {
-    return switch (type) {
-      AccountType.asset => l10n.accountingTypeAsset,
-      AccountType.liability => l10n.accountingTypeLiability,
-      AccountType.equity => l10n.accountingTypeEquity,
-      AccountType.revenue => l10n.accountingTypeRevenue,
-      AccountType.expense => l10n.accountingTypeExpense,
-    };
-  }
-
-  String _mapError(AppLocalizations l10n, AccountException e) {
-    return switch (e.code) {
-      AccountException.duplicateAccountCode =>
-        l10n.accountingErrorDuplicateCode,
-      AccountException.invalidAccountCode => l10n.accountingErrorCodeRequired,
-      AccountException.invalidName => l10n.accountingErrorNameRequired,
-      AccountException.typeMismatch => l10n.accountingErrorTypeMismatch,
-      AccountException.invalidParent => l10n.accountingErrorInvalidParent,
-      AccountException.parentInactive => l10n.accountingErrorInvalidParent,
-      AccountException.parentDeleted => l10n.accountingErrorInvalidParent,
-      AccountException.circularParent => l10n.accountingErrorCircularParent,
-      AccountException.groupRequiredForChildren =>
-        l10n.accountingErrorParentMustBeGroup,
-      AccountException.systemAccountProtected =>
-        l10n.accountingErrorSystemProtected,
-      _ => l10n.somethingWentWrong,
-    };
   }
 }

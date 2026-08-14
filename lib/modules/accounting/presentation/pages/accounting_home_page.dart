@@ -103,12 +103,27 @@ class AccountingHomePage extends ConsumerWidget {
                 ),
             const SizedBox(height: AppSpacing.md),
             _ServiceCard(
+                  icon: Icons.receipt_long_outlined,
+                  title: l10n.accountingJournalsTitle,
+                  subtitle: l10n.accountingJournalsSubtitle,
+                  onTap: () => AccountingRoutes.pushJournals(context),
+                )
+                .animate(delay: 40.ms)
+                .fadeIn(duration: 220.ms)
+                .moveY(
+                  begin: 8,
+                  end: 0,
+                  duration: 240.ms,
+                  curve: Curves.easeOutCubic,
+                ),
+            const SizedBox(height: AppSpacing.md),
+            _ServiceCard(
                   icon: Icons.currency_exchange_outlined,
                   title: l10n.accountingCurrencyRatesTitle,
                   subtitle: l10n.accountingCurrencyRatesCardSubtitle,
                   onTap: () => AccountingRoutes.pushCurrencyRates(context),
                 )
-                .animate(delay: 60.ms)
+                .animate(delay: 80.ms)
                 .fadeIn(duration: 220.ms)
                 .moveY(
                   begin: 8,
@@ -138,7 +153,7 @@ class AccountingHomePage extends ConsumerWidget {
                   subtitle: l10n.accountingReportsSubtitle,
                   onTap: () => AccountingRoutes.pushReports(context),
                 )
-                .animate(delay: 180.ms)
+                .animate(delay: 160.ms)
                 .fadeIn(duration: 220.ms)
                 .moveY(
                   begin: 8,

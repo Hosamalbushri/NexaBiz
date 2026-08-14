@@ -27,7 +27,7 @@ class AccountingDatabase extends _$AccountingDatabase {
   AccountingDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -90,6 +90,12 @@ class AccountingDatabase extends _$AccountingDatabase {
         await m.createTable(journalLines);
         await _createJournalIndexes();
       }
+      if (from < 7) {
+        await _createJournalSourceUniqueIndex();
+      }
+      if (from < 8) {
+        await _createJournalLedgerIndexes();
+      }
     },
   );
 
@@ -109,6 +115,32 @@ class AccountingDatabase extends _$AccountingDatabase {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_journal_lines_entry '
       'ON journal_lines (entry_uuid)',
+    );
+    await _createJournalSourceUniqueIndex();
+    await _createJournalLedgerIndexes();
+  }
+
+  /// One active (non-deleted) journal per operational source document.
+  /// Soft-deleted rows may reuse the same source pair after void.
+  Future<void> _createJournalSourceUniqueIndex() async {
+    await customStatement(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_journal_entries_source_active '
+      'ON journal_entries (source_type, source_id) '
+      'WHERE deleted_at IS NULL '
+      'AND source_type IS NOT NULL '
+      'AND source_id IS NOT NULL',
+    );
+  }
+
+  /// Speeds account-statement / ledger filters by account + currency / id.
+  Future<void> _createJournalLedgerIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_journal_lines_account_currency '
+      'ON journal_lines (account_uuid, currency_code)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_journal_lines_account_id '
+      'ON journal_lines (account_uuid, id)',
     );
   }
 

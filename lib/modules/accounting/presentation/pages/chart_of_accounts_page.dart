@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -25,12 +27,16 @@ class ChartOfAccountsPage extends ConsumerStatefulWidget {
 }
 
 class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
+  static const _searchDebounce = Duration(milliseconds: 300);
+
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
   var _searchExpanded = false;
+  Timer? _searchDebounceTimer;
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
@@ -42,21 +48,23 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
     }
     setState(() => _searchExpanded = value);
     if (!value) {
+      _searchDebounceTimer?.cancel();
       _searchController.clear();
       ref.read(accountSearchQueryProvider.notifier).state = '';
     }
   }
 
   void _onQueryChanged(String value) {
-    ref.read(accountSearchQueryProvider.notifier).state = value;
-    if (value.trim().isEmpty) {
-      return;
-    }
-    // Expand groups so search hits are visible in the tree.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _searchDebounceTimer?.cancel();
+    _searchDebounceTimer = Timer(_searchDebounce, () {
       if (!mounted) {
         return;
       }
+      ref.read(accountSearchQueryProvider.notifier).state = value;
+      if (value.trim().isEmpty) {
+        return;
+      }
+      // Expand groups so search hits are visible in the tree.
       final accounts = ref.read(accountsProvider).valueOrNull;
       if (accounts == null) {
         return;

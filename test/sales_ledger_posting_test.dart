@@ -17,7 +17,11 @@ import 'package:stock_count/modules/accounting/data/repositories/journal_reposit
 import 'package:stock_count/modules/accounting/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/domain/entities/account_type.dart';
 import 'package:stock_count/modules/accounting/domain/entities/journal_entry.dart';
+import 'package:stock_count/modules/accounting/domain/models/account_exception.dart';
 import 'package:stock_count/modules/accounting/domain/models/journal_exception.dart';
+import 'package:stock_count/modules/accounting/domain/repositories/journal_repository.dart';
+import 'package:stock_count/modules/accounting/domain/services/fiscal_period_policy.dart';
+import 'package:stock_count/modules/accounting/domain/services/journal_posting_service.dart';
 import 'package:stock_count/modules/reports/domain/services/account_statement_report_data_port.dart';
 import 'package:stock_count/modules/sales/domain/entities/discount_type.dart';
 import 'package:stock_count/modules/sales/domain/entities/payment_method.dart';
@@ -83,6 +87,23 @@ void main() {
     return child.uuid;
   }
 
+  JournalPostingService postingService({DateTime? closedThrough}) {
+    return JournalPostingService(
+      journals: journals,
+      fiscalPolicyReader: () => FiscalPeriodPolicy(
+        fiscalYearStartMonth: 1,
+        closedThrough: closedThrough,
+      ),
+    );
+  }
+
+  AccountingSaleLedgerAdapter saleAdapter({DateTime? closedThrough}) {
+    return AccountingSaleLedgerAdapter(
+      posting: postingService(closedThrough: closedThrough),
+      accounts: accounts,
+    );
+  }
+
   group('JournalRepository', () {
     test('posts balanced entry and rejects unbalanced', () async {
       final cash = await accounts.getByAccountCode('1211');
@@ -143,6 +164,249 @@ void main() {
           ),
         ),
       );
+    });
+
+    test('rounds line amounts to cents before persist', () async {
+      final cash = (await accounts.getByAccountCode('1211'))!;
+      final revenue = (await accounts.getByAccountCode('4100'))!;
+      final entry = await journals.post(
+        JournalEntryDraft(
+          entryDate: DateTime.utc(2026, 8, 1),
+          voucherNumber: 'JV-round',
+          voucherType: 'قيود يومية',
+          currencyCode: 'YER',
+          lines: [
+            JournalLineDraft(
+              accountUuid: cash.uuid,
+              debit: 10.004,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: revenue.uuid,
+              debit: 0,
+              credit: 10.004,
+              currencyCode: 'YER',
+            ),
+          ],
+        ),
+      );
+      expect(entry.lines.map((l) => l.debit).where((d) => d > 0).single, 10.0);
+      expect(entry.lines.map((l) => l.credit).where((c) => c > 0).single, 10.0);
+
+      await expectLater(
+        journals.post(
+          JournalEntryDraft(
+            entryDate: DateTime.utc(2026, 8, 1),
+            voucherNumber: 'JV-round-bad',
+            voucherType: 'قيود يومية',
+            currencyCode: 'YER',
+            lines: [
+              JournalLineDraft(
+                accountUuid: cash.uuid,
+                debit: 10.006,
+                credit: 0,
+                currencyCode: 'YER',
+              ),
+              JournalLineDraft(
+                accountUuid: revenue.uuid,
+                debit: 0,
+                credit: 10.004,
+                currencyCode: 'YER',
+              ),
+            ],
+          ),
+        ),
+        throwsA(
+          isA<JournalException>().having(
+            (e) => e.code,
+            'code',
+            JournalException.unbalanced,
+          ),
+        ),
+      );
+    });
+
+    test('blocks soft-delete of account used on journal lines', () async {
+      final cash = (await accounts.getByAccountCode('1211'))!;
+      final revenue = (await accounts.getByAccountCode('4100'))!;
+      final customerUuid = await customerAccountUuid();
+
+      await journals.post(
+        JournalEntryDraft(
+          entryDate: DateTime.utc(2026, 8, 3),
+          voucherNumber: 'S-use',
+          voucherType: 'بيع آجل',
+          currencyCode: 'YER',
+          sourceType: 'sale',
+          sourceId: 'sale-in-use',
+          lines: [
+            JournalLineDraft(
+              accountUuid: customerUuid,
+              debit: 15,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: revenue.uuid,
+              debit: 0,
+              credit: 15,
+              currencyCode: 'YER',
+            ),
+          ],
+        ),
+      );
+
+      expect(await accounts.isUsedInTransactions(customerUuid), isTrue);
+      expect(await accounts.isUsedInTransactions(cash.uuid), isFalse);
+
+      final customer = (await accounts.getByUuid(customerUuid))!;
+      await expectLater(
+        accounts.softDelete(customer.id),
+        throwsA(
+          isA<AccountException>().having(
+            (e) => e.code,
+            'code',
+            AccountException.accountInUse,
+          ),
+        ),
+      );
+
+      // Soft-deleted journals still block account soft-delete (audit history).
+      await journals.softDeleteBySource(
+        sourceType: 'sale',
+        sourceId: 'sale-in-use',
+      );
+      expect(await accounts.isUsedInTransactions(customerUuid), isTrue);
+      await expectLater(
+        accounts.softDelete(customer.id),
+        throwsA(
+          isA<AccountException>().having(
+            (e) => e.code,
+            'code',
+            AccountException.accountInUse,
+          ),
+        ),
+      );
+    });
+
+    test('sumNetBefore aggregates in SQL and listCurrencyCodes is distinct',
+        () async {
+      final cash = (await accounts.getByAccountCode('1211'))!;
+      final revenue = (await accounts.getByAccountCode('4100'))!;
+
+      await journals.post(
+        JournalEntryDraft(
+          entryDate: DateTime.utc(2026, 7, 1),
+          voucherNumber: 'JV-open',
+          voucherType: 'قيود يومية',
+          currencyCode: 'YER',
+          lines: [
+            JournalLineDraft(
+              accountUuid: cash.uuid,
+              debit: 100,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: revenue.uuid,
+              debit: 0,
+              credit: 100,
+              currencyCode: 'YER',
+            ),
+          ],
+        ),
+      );
+      await journals.post(
+        JournalEntryDraft(
+          entryDate: DateTime.utc(2026, 8, 5),
+          voucherNumber: 'JV-usd',
+          voucherType: 'قيود يومية',
+          currencyCode: 'USD',
+          lines: [
+            JournalLineDraft(
+              accountUuid: cash.uuid,
+              debit: 10,
+              credit: 0,
+              currencyCode: 'USD',
+            ),
+            JournalLineDraft(
+              accountUuid: revenue.uuid,
+              debit: 0,
+              credit: 10,
+              currencyCode: 'USD',
+            ),
+          ],
+        ),
+      );
+
+      expect(
+        await journals.sumNetBefore(
+          accountUuid: cash.uuid,
+          beforeDate: DateTime.utc(2026, 8, 1),
+          currencyCode: 'YER',
+        ),
+        100,
+      );
+      expect(
+        await journals.sumNetBefore(
+          accountUuid: cash.uuid,
+          beforeDate: DateTime.utc(2026, 8, 1),
+          currencyCode: 'USD',
+        ),
+        0,
+      );
+
+      final codes = await journals.listCurrencyCodesForAccount(
+        accountUuid: cash.uuid,
+        toDate: DateTime.utc(2026, 8, 5),
+      );
+      expect(codes, containsAll(<String>['USD', 'YER']));
+    });
+
+    test('listMovementsForAccount supports keyset pagination', () async {
+      final cash = (await accounts.getByAccountCode('1211'))!;
+      final revenue = (await accounts.getByAccountCode('4100'))!;
+
+      for (var i = 1; i <= 3; i++) {
+        await journals.post(
+          JournalEntryDraft(
+            entryDate: DateTime.utc(2026, 8, i),
+            voucherNumber: 'JV-p$i',
+            voucherType: 'قيود يومية',
+            currencyCode: 'YER',
+            lines: [
+              JournalLineDraft(
+                accountUuid: cash.uuid,
+                debit: i.toDouble(),
+                credit: 0,
+                currencyCode: 'YER',
+              ),
+              JournalLineDraft(
+                accountUuid: revenue.uuid,
+                debit: 0,
+                credit: i.toDouble(),
+                currencyCode: 'YER',
+              ),
+            ],
+          ),
+        );
+      }
+
+      final page1 = await journals.listMovementsForAccount(
+        accountUuid: cash.uuid,
+        limit: 2,
+      );
+      expect(page1, hasLength(2));
+      expect(page1.map((m) => m.debit).toList(), [1.0, 2.0]);
+
+      final page2 = await journals.listMovementsForAccount(
+        accountUuid: cash.uuid,
+        limit: 2,
+        after: AccountLedgerCursor.fromMovement(page1.last),
+      );
+      expect(page2, hasLength(1));
+      expect(page2.single.debit, 3.0);
     });
 
     test('keeps same uuid by sourceType + sourceId and replaces lines', () async {
@@ -209,16 +473,87 @@ void main() {
       expect(found?.uuid, first.uuid);
       expect(found?.lines, hasLength(2));
     });
+
+    test('listHeaders returns lightweight totals without requiring line load',
+        () async {
+      final cash = (await accounts.getByAccountCode('1211'))!;
+      final revenue = (await accounts.getByAccountCode('4100'))!;
+      await journals.post(
+        JournalEntryDraft(
+          entryDate: DateTime.utc(2026, 8, 8),
+          voucherNumber: 'JV-H1',
+          voucherType: 'قيود يومية',
+          currencyCode: 'YER',
+          lines: [
+            JournalLineDraft(
+              accountUuid: cash.uuid,
+              debit: 40,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: revenue.uuid,
+              debit: 0,
+              credit: 40,
+              currencyCode: 'YER',
+            ),
+          ],
+        ),
+      );
+
+      final headers = await journals.listHeaders(limit: 10);
+      expect(headers, isNotEmpty);
+      final hit = headers.firstWhere((h) => h.voucherNumber == 'JV-H1');
+      expect(hit.totalDebit, 40);
+      expect(hit.totalCredit, 40);
+    });
+  });
+
+  group('JournalPostingService', () {
+    test('rejects posting into a closed fiscal period', () async {
+      final cash = (await accounts.getByAccountCode('1211'))!;
+      final revenue = (await accounts.getByAccountCode('4100'))!;
+      final posting = postingService(closedThrough: DateTime.utc(2026, 8, 15));
+
+      await expectLater(
+        posting.post(
+          JournalEntryDraft(
+            entryDate: DateTime.utc(2026, 8, 10),
+            voucherNumber: 'JV-closed',
+            voucherType: 'قيود يومية',
+            currencyCode: 'YER',
+            lines: [
+              JournalLineDraft(
+                accountUuid: cash.uuid,
+                debit: 5,
+                credit: 0,
+                currencyCode: 'YER',
+              ),
+              JournalLineDraft(
+                accountUuid: revenue.uuid,
+                debit: 0,
+                credit: 5,
+                currencyCode: 'YER',
+              ),
+            ],
+          ),
+        ),
+        throwsA(
+          isA<JournalException>().having(
+            (e) => e.code,
+            'code',
+            JournalException.periodClosed,
+          ),
+        ),
+      );
+    });
   });
 
   group('AccountingSaleLedgerAdapter', () {
     late AccountingSaleLedgerAdapter adapter;
 
     setUp(() {
-      adapter = AccountingSaleLedgerAdapter(
-        journals: journals,
-        accounts: accounts,
-      );
+      adapter = saleAdapter();
     });
 
     test('credit sale syncs Dr customer / Cr 4100 linked to sale uuid', () async {
@@ -370,10 +705,7 @@ void main() {
   group('AccountStatementReportDataAdapter', () {
     test('shows customer movement after credit sync', () async {
       final customerAccount = await customerAccountUuid();
-      final adapter = AccountingSaleLedgerAdapter(
-        journals: journals,
-        accounts: accounts,
-      );
+      final adapter = saleAdapter();
       final sale = _sale(
         settlement: SaleSettlementType.credit,
         customerAccountId: customerAccount,
@@ -546,10 +878,7 @@ void main() {
     test('shows unposted credit sale on statement with all/unposted filters',
         () async {
       final customerAccount = await customerAccountUuid();
-      final adapter = AccountingSaleLedgerAdapter(
-        journals: journals,
-        accounts: accounts,
-      );
+      final adapter = saleAdapter();
       // Mimic composer DateTime.now() (local wall clock with time-of-day).
       final nowLocal = DateTime.now();
       final sale = _sale(
@@ -634,10 +963,7 @@ void main() {
         journals: journals,
         loadCompanyProfile: () async => const CompanyProfile(),
         loadSalesForAccount: (_) async => [sale],
-        ledger: AccountingSaleLedgerAdapter(
-          journals: journals,
-          accounts: accounts,
-        ),
+        ledger: saleAdapter(),
       );
 
       final payload = await statement.load(

@@ -5,7 +5,8 @@ import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_shadows.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../domain/entities/account_type.dart';
-import '../widgets/account_tree.dart';
+import '../../domain/services/account_labels.dart';
+import 'account_type_style.dart';
 
 /// Compact browse toolbar for Chart of Accounts (filters + tree actions).
 class AccountBrowseToolbar extends StatelessWidget {
@@ -180,10 +181,10 @@ class AccountBrowseToolbar extends StatelessWidget {
                       for (final type in AccountType.values) ...[
                         const SizedBox(width: 8),
                         _TypePill(
-                          label: accountTypeLabel(l10n, type),
+                          label: AccountLabels.typeLabel(l10n, type),
                           selected: typeFilter == type,
                           color: accountTypeColor(scheme, type),
-                          icon: _iconFor(type),
+                          icon: accountTypeIcon(type),
                           onTap: () => onTypeFilterChanged(type),
                         ),
                       ],
@@ -196,16 +197,6 @@ class AccountBrowseToolbar extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  IconData _iconFor(AccountType type) {
-    return switch (type) {
-      AccountType.asset => Icons.account_balance_wallet_outlined,
-      AccountType.liability => Icons.receipt_long_outlined,
-      AccountType.equity => Icons.pie_chart_outline_rounded,
-      AccountType.revenue => Icons.trending_up_rounded,
-      AccountType.expense => Icons.trending_down_rounded,
-    };
   }
 }
 

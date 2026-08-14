@@ -1955,13 +1955,13 @@ abstract class AppLocalizations {
   /// No description provided for @accountingModeStandaloneHint.
   ///
   /// In en, this message translates to:
-  /// **'Local accounting data is authoritative. Journal entries are never created automatically from operational documents.'**
+  /// **'Local accounting data is authoritative. Standalone sales create local journal entries on save/post.'**
   String get accountingModeStandaloneHint;
 
   /// No description provided for @accountingModeIntegratedHint.
   ///
   /// In en, this message translates to:
-  /// **'Operational documents can be prepared here and posted later in the external system. Journal entries are not auto-created.'**
+  /// **'Operational documents can be prepared here and posted later in the external system. Local journals are not auto-created.'**
   String get accountingModeIntegratedHint;
 
   /// No description provided for @accountingModeSavedSuccess.
@@ -1969,6 +1969,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accounting mode saved.'**
   String get accountingModeSavedSuccess;
+
+  /// No description provided for @accountingFiscalClosedSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed fiscal period'**
+  String get accountingFiscalClosedSectionTitle;
+
+  /// No description provided for @accountingFiscalClosedSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal entries on or before this date cannot be posted or changed.'**
+  String get accountingFiscalClosedSectionSubtitle;
+
+  /// No description provided for @accountingFiscalClosedThroughLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed through'**
+  String get accountingFiscalClosedThroughLabel;
+
+  /// No description provided for @accountingFiscalClosedNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No closed period'**
+  String get accountingFiscalClosedNone;
+
+  /// No description provided for @accountingFiscalClosedSavedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed fiscal period saved.'**
+  String get accountingFiscalClosedSavedSuccess;
+
+  /// No description provided for @accountingFiscalClosedClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get accountingFiscalClosedClear;
+
+  /// No description provided for @accountingJournalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal entries'**
+  String get accountingJournalsTitle;
+
+  /// No description provided for @accountingJournalsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse, create, and review journal vouchers.'**
+  String get accountingJournalsSubtitle;
+
+  /// No description provided for @accountingJournalsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No journal entries yet'**
+  String get accountingJournalsEmptyTitle;
+
+  /// No description provided for @accountingJournalsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a manual journal or post a standalone sale.'**
+  String get accountingJournalsEmptyMessage;
+
+  /// No description provided for @accountingJournalsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search voucher number or description'**
+  String get accountingJournalsSearchHint;
+
+  /// No description provided for @accountingJournalAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'New journal'**
+  String get accountingJournalAdd;
+
+  /// No description provided for @accountingJournalDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal details'**
+  String get accountingJournalDetails;
+
+  /// No description provided for @accountingJournalEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit journal'**
+  String get accountingJournalEdit;
+
+  /// No description provided for @accountingJournalSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save journal'**
+  String get accountingJournalSave;
+
+  /// No description provided for @accountingJournalSavedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal saved.'**
+  String get accountingJournalSavedSuccess;
+
+  /// No description provided for @accountingJournalVoid.
+  ///
+  /// In en, this message translates to:
+  /// **'Void entry'**
+  String get accountingJournalVoid;
+
+  /// No description provided for @accountingJournalVoidConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Void this journal?'**
+  String get accountingJournalVoidConfirmTitle;
+
+  /// No description provided for @accountingJournalVoidConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The entry will be soft-deleted and removed from ledgers. Lines are kept for audit.'**
+  String get accountingJournalVoidConfirmMessage;
+
+  /// No description provided for @accountingJournalVoidedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal voided.'**
+  String get accountingJournalVoidedSuccess;
+
+  /// No description provided for @accountingJournalNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal entry not found.'**
+  String get accountingJournalNotFound;
+
+  /// No description provided for @accountingJournalFieldDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get accountingJournalFieldDate;
+
+  /// No description provided for @accountingJournalFieldVoucherNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher number'**
+  String get accountingJournalFieldVoucherNumber;
+
+  /// No description provided for @accountingJournalFieldVoucherType.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher type'**
+  String get accountingJournalFieldVoucherType;
+
+  /// No description provided for @accountingJournalFieldDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get accountingJournalFieldDescription;
+
+  /// No description provided for @accountingJournalFieldCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get accountingJournalFieldCurrency;
+
+  /// No description provided for @accountingJournalFieldStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get accountingJournalFieldStatus;
+
+  /// No description provided for @accountingJournalPosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted'**
+  String get accountingJournalPosted;
+
+  /// No description provided for @accountingJournalUnposted.
+  ///
+  /// In en, this message translates to:
+  /// **'Unposted'**
+  String get accountingJournalUnposted;
+
+  /// No description provided for @accountingJournalSourceLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked to {source}'**
+  String accountingJournalSourceLinked(String source);
+
+  /// No description provided for @accountingJournalLines.
+  ///
+  /// In en, this message translates to:
+  /// **'Lines'**
+  String get accountingJournalLines;
+
+  /// No description provided for @accountingJournalAddLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Add line'**
+  String get accountingJournalAddLine;
+
+  /// No description provided for @accountingJournalAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get accountingJournalAccount;
+
+  /// No description provided for @accountingJournalDebit.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit'**
+  String get accountingJournalDebit;
+
+  /// No description provided for @accountingJournalCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get accountingJournalCredit;
+
+  /// No description provided for @accountingJournalTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'Totals'**
+  String get accountingJournalTotals;
+
+  /// No description provided for @accountingJournalPickAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Select account'**
+  String get accountingJournalPickAccount;
+
+  /// No description provided for @accountingJournalErrorUnbalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Total debit must equal total credit.'**
+  String get accountingJournalErrorUnbalanced;
+
+  /// No description provided for @accountingJournalErrorPeriodClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'This date falls in a closed fiscal period.'**
+  String get accountingJournalErrorPeriodClosed;
+
+  /// No description provided for @accountingJournalErrorLines.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least two balanced lines.'**
+  String get accountingJournalErrorLines;
+
+  /// No description provided for @accountingJournalManualType.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual journal'**
+  String get accountingJournalManualType;
 
   /// No description provided for @accountingChartOfAccounts.
   ///

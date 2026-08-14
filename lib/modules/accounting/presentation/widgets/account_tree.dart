@@ -9,6 +9,7 @@ import '../../domain/entities/account.dart';
 import '../../domain/entities/account_type.dart';
 import '../../domain/models/account_tree_node.dart';
 import '../../domain/services/account_labels.dart';
+import 'account_type_style.dart';
 
 /// Reusable hierarchical Chart of Accounts tree.
 ///
@@ -167,7 +168,10 @@ class _AccountSection extends StatelessWidget {
                               children: [
                                 Flexible(
                                   child: Text(
-                                    accountTypeLabel(l10n, account.accountType),
+                                    AccountLabels.typeLabel(
+                                      l10n,
+                                      account.accountType,
+                                    ),
                                     style: theme.textTheme.labelMedium
                                         ?.copyWith(
                                           color: typeColor,
@@ -443,18 +447,8 @@ class _TypeAvatar extends StatelessWidget {
         color: color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
-      child: Icon(_iconFor(type), color: color, size: 22),
+      child: Icon(accountTypeIcon(type), color: color, size: 22),
     );
-  }
-
-  IconData _iconFor(AccountType type) {
-    return switch (type) {
-      AccountType.asset => Icons.account_balance_wallet_outlined,
-      AccountType.liability => Icons.receipt_long_outlined,
-      AccountType.equity => Icons.pie_chart_outline_rounded,
-      AccountType.revenue => Icons.trending_up_rounded,
-      AccountType.expense => Icons.trending_down_rounded,
-    };
   }
 }
 
@@ -496,24 +490,4 @@ class _TrailingCode extends StatelessWidget {
       ),
     );
   }
-}
-
-Color accountTypeColor(ColorScheme scheme, AccountType type) {
-  return switch (type) {
-    AccountType.asset => scheme.primary,
-    AccountType.liability => scheme.tertiary,
-    AccountType.equity => scheme.secondary,
-    AccountType.revenue => const Color(0xFF2E7D32),
-    AccountType.expense => scheme.error,
-  };
-}
-
-String accountTypeLabel(AppLocalizations l10n, AccountType type) {
-  return switch (type) {
-    AccountType.asset => l10n.accountingTypeAsset,
-    AccountType.liability => l10n.accountingTypeLiability,
-    AccountType.equity => l10n.accountingTypeEquity,
-    AccountType.revenue => l10n.accountingTypeRevenue,
-    AccountType.expense => l10n.accountingTypeExpense,
-  };
 }

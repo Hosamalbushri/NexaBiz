@@ -16,6 +16,8 @@ class SettingsKeys {
   static const String productsViewMode = 'products_view_mode';
   static const String quickActionIds = 'quick_action_ids';
   static const String accountingMode = 'accounting_mode';
+  static const String accountingFiscalClosedThrough =
+      'accounting_fiscal_closed_through';
   static const String customersParentAccountId = 'customers_parent_account_id';
   static const String customersAutoLinkAccount = 'customers_auto_link_account';
   static const String companyProfile = 'company_profile';
@@ -162,6 +164,29 @@ class SettingsRepository {
     final box = await _settingsBox;
     final normalized = mode == 'integrated' ? 'integrated' : 'standalone';
     await box.put(SettingsKeys.accountingMode, normalized);
+  }
+
+  /// Last closed fiscal business day (UTC date-only epoch ms), or null if none.
+  Future<DateTime?> loadAccountingFiscalClosedThrough() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.accountingFiscalClosedThrough);
+    if (value is! int) {
+      return null;
+    }
+    return DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
+  }
+
+  Future<void> saveAccountingFiscalClosedThrough(DateTime? day) async {
+    final box = await _settingsBox;
+    if (day == null) {
+      await box.delete(SettingsKeys.accountingFiscalClosedThrough);
+      return;
+    }
+    final utcDay = DateTime.utc(day.year, day.month, day.day);
+    await box.put(
+      SettingsKeys.accountingFiscalClosedThrough,
+      utcDay.millisecondsSinceEpoch,
+    );
   }
 
   /// Opaque Account.uuid for the Chart of Accounts parent of customer accounts.

@@ -17,9 +17,10 @@ class AccountingModePolicy {
   /// May forward operational docs toward an accountant / ERP workflow.
   bool get mayExportOperationalDocuments => mode.isIntegrated;
 
-  /// Journal entries are never created automatically from operational docs.
-  bool get autoCreatesJournalEntries => false;
+  /// Standalone sales (cash/credit) upsert local journals on save/post.
+  /// Integrated mode does not auto-create local journals (ERP owns the ledger).
+  bool get autoCreatesJournalEntries => mode.isStandalone;
 
-  /// Future local journals/reports are enabled for standalone ownership.
+  /// Local journals/reports are enabled for standalone ownership.
   bool get supportsLocalLedgerFeatures => mode.isStandalone;
 }

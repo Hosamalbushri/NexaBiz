@@ -89,6 +89,7 @@ class JournalEntryDraft {
     this.isPosted = true,
     this.sourceType,
     this.sourceId,
+    this.uuid,
   });
 
   final DateTime entryDate;
@@ -98,6 +99,40 @@ class JournalEntryDraft {
   final List<JournalLineDraft> lines;
   final String? description;
   final bool isPosted;
+  final String? sourceType;
+  final String? sourceId;
+
+  /// When set, replaces that existing non-deleted entry in place.
+  final String? uuid;
+}
+
+/// Lightweight journal list row (no lines loaded).
+class JournalEntryHeader {
+  const JournalEntryHeader({
+    required this.id,
+    required this.uuid,
+    required this.entryDate,
+    required this.voucherNumber,
+    required this.voucherType,
+    required this.currencyCode,
+    required this.isPosted,
+    required this.totalDebit,
+    required this.totalCredit,
+    this.description,
+    this.sourceType,
+    this.sourceId,
+  });
+
+  final int id;
+  final String uuid;
+  final DateTime entryDate;
+  final String voucherNumber;
+  final String voucherType;
+  final String currencyCode;
+  final bool isPosted;
+  final double totalDebit;
+  final double totalCredit;
+  final String? description;
   final String? sourceType;
   final String? sourceId;
 }
@@ -116,6 +151,8 @@ class AccountLedgerMovement {
     required this.accountUuid,
     required this.entryUuid,
     required this.lineUuid,
+    required this.lineId,
+    required this.sortOrder,
   });
 
   final DateTime entryDate;
@@ -129,4 +166,8 @@ class AccountLedgerMovement {
   final String accountUuid;
   final String entryUuid;
   final String lineUuid;
+
+  /// Stable keyset fields for paginated ledger reads.
+  final int lineId;
+  final int sortOrder;
 }

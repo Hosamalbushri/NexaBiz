@@ -2,8 +2,9 @@ import '../../modules/accounting/domain/entities/account.dart';
 import '../../modules/accounting/domain/entities/journal_entry.dart';
 import '../../modules/accounting/domain/models/journal_exception.dart';
 import '../../modules/accounting/domain/repositories/account_repository.dart';
-import '../../modules/accounting/domain/repositories/journal_repository.dart';
 import '../../modules/accounting/domain/services/account_labels.dart';
+import '../../modules/accounting/domain/services/journal_money.dart';
+import '../../modules/accounting/domain/services/journal_posting_service.dart';
 import '../../modules/sales/domain/entities/sale.dart';
 import '../../modules/sales/domain/entities/sale_settlement_type.dart';
 import '../../modules/sales/domain/entities/sale_status.dart';
@@ -16,12 +17,12 @@ import '../../modules/sales/domain/services/sale_ledger_posting_port.dart';
 /// - Discount (item + sale): Dr 5170 / extra Cr 4100 so revenue is gross
 class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
   AccountingSaleLedgerAdapter({
-    required JournalRepository journals,
+    required JournalPostingService posting,
     required AccountRepository accounts,
-  }) : _journals = journals,
+  }) : _posting = posting,
        _accounts = accounts;
 
-  final JournalRepository _journals;
+  final JournalPostingService _posting;
   final AccountRepository _accounts;
 
   static const sourceType = 'sale';
@@ -110,7 +111,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
       ),
     ];
 
-    await _journals.post(
+    await _posting.post(
       JournalEntryDraft(
         entryDate: sale.saleDate,
         voucherNumber: sale.saleNumber,
@@ -127,7 +128,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
 
   @override
   Future<void> voidSale(Sale sale) async {
-    await _journals.softDeleteBySource(
+    await _posting.softDeleteBySource(
       sourceType: sourceType,
       sourceId: sale.uuid,
     );
@@ -138,8 +139,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
     if (raw <= 0) {
       return 0;
     }
-    // Cent-round to match sale money math.
-    return (raw * 100).round() / 100.0;
+    return JournalMoney.round(raw);
   }
 
   Future<Account?> _resolveSystemAccount({

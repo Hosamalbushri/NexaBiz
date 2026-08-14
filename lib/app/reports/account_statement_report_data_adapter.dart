@@ -1,7 +1,5 @@
 import '../../core/reporting/arabic_amount_words.dart';
-import '../../core/utils/business_date.dart';
 import '../../modules/accounting/domain/entities/account.dart';
-import '../../modules/accounting/domain/entities/journal_entry.dart';
 import '../../modules/accounting/domain/repositories/account_repository.dart';
 import '../../modules/accounting/domain/repositories/currency_rate_repository.dart';
 import '../../modules/accounting/domain/repositories/journal_repository.dart';
@@ -119,8 +117,7 @@ class AccountStatementReportDataAdapter
     final currencyCodes = await _resolveCurrencyCodes(
       accountUuid: accountUuid,
       singleCurrency: singleCurrency,
-      fromDate: fromDate,
-      periodMoves: periodMoves,
+      toDate: toDate,
       isPosted: postedFilter,
       baseCurrencyCode: baseCurrency,
     );
@@ -254,13 +251,12 @@ class AccountStatementReportDataAdapter
     );
   }
 
-  /// Currencies to render: the selected one, or every currency with activity.
-  /// Default company currency is listed first, then the rest alphabetically.
+  /// Currencies to render: the selected one, or every currency with activity
+  /// up to [toDate] (DB DISTINCT — does not load prior movement rows).
   Future<List<String>> _resolveCurrencyCodes({
     required String accountUuid,
     required String? singleCurrency,
-    required DateTime? fromDate,
-    required List<AccountLedgerMovement> periodMoves,
+    required DateTime? toDate,
     required bool? isPosted,
     required String baseCurrencyCode,
   }) async {
@@ -268,22 +264,11 @@ class AccountStatementReportDataAdapter
       return [singleCurrency];
     }
 
-    final codes = <String>{
-      for (final m in periodMoves) m.currencyCode.trim().toUpperCase(),
-    };
-
-    if (fromDate != null) {
-      final prior = await journals.listMovementsForAccount(
-        accountUuid: accountUuid,
-        toDate: BusinessDate.utcDay(fromDate).subtract(const Duration(days: 1)),
-        isPosted: isPosted,
-      );
-      for (final m in prior) {
-        codes.add(m.currencyCode.trim().toUpperCase());
-      }
-    }
-
-    final sorted = codes.where((c) => c.isNotEmpty).toList()..sort();
+    final sorted = await journals.listCurrencyCodesForAccount(
+      accountUuid: accountUuid,
+      toDate: toDate,
+      isPosted: isPosted,
+    );
     final base = baseCurrencyCode.trim().toUpperCase();
     if (base.isNotEmpty && sorted.remove(base)) {
       return [base, ...sorted];

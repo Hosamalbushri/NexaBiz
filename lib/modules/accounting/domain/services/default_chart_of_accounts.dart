@@ -6,7 +6,7 @@ import '../entities/account_type.dart';
 /// Names are English seed values; UI labels use localization by [systemKey]
 /// where needed. Do not hardcode this list in widgets.
 ///
-/// Module → system key map (for future journal wiring; no auto-post yet):
+/// Module → system key map (sale journals resolve revenue/discounts/cash/customer):
 /// - Sales / Treasury: `cash`, `bank`, `petty_cash`, `sales_revenue`,
 ///   `sales_returns`, `sales_discounts`, `vat_output`, `cost_of_goods_sold`,
 ///   `customer_advances`

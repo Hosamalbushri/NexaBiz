@@ -1,5 +1,7 @@
 import '../../../../app/localization/app_localizations.dart';
 import '../entities/account.dart';
+import '../entities/account_type.dart';
+import '../entities/normal_balance.dart';
 
 /// Resolves user-facing account labels (system seeds stay English in DB).
 class AccountLabels {
@@ -22,6 +24,26 @@ class AccountLabels {
       return account.name;
     }
     return systemName(l10n, key) ?? account.name;
+  }
+
+  static String typeLabel(AppLocalizations l10n, AccountType type) {
+    return switch (type) {
+      AccountType.asset => l10n.accountingTypeAsset,
+      AccountType.liability => l10n.accountingTypeLiability,
+      AccountType.equity => l10n.accountingTypeEquity,
+      AccountType.revenue => l10n.accountingTypeRevenue,
+      AccountType.expense => l10n.accountingTypeExpense,
+    };
+  }
+
+  static String normalBalanceLabel(
+    AppLocalizations l10n,
+    NormalBalance balance,
+  ) {
+    return switch (balance) {
+      NormalBalance.debit => l10n.accountingNormalDebit,
+      NormalBalance.credit => l10n.accountingNormalCredit,
+    };
   }
 
   /// Whether [query] matches code, stored name, or localized system name.

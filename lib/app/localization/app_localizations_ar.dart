@@ -1000,14 +1000,145 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get accountingModeStandaloneHint =>
-      'البيانات المحاسبية المحلية هي المرجع. لا تُنشأ قيود يومية تلقائياً من المستندات التشغيلية.';
+      'البيانات المحاسبية المحلية هي المرجع. فواتير البيع في الوضع المستقل تنشئ قيوداً يومية محلية عند الحفظ/الترحيل.';
 
   @override
   String get accountingModeIntegratedHint =>
-      'يمكن تجهيز المستندات التشغيلية هنا وترحيلها لاحقاً في النظام الخارجي. لا تُنشأ قيود يومية تلقائياً.';
+      'يمكن تجهيز المستندات التشغيلية هنا وترحيلها لاحقاً في النظام الخارجي. لا تُنشأ قيود يومية محلية تلقائياً.';
 
   @override
   String get accountingModeSavedSuccess => 'تم حفظ وضع المحاسبة.';
+
+  @override
+  String get accountingFiscalClosedSectionTitle => 'الفترة المالية المغلقة';
+
+  @override
+  String get accountingFiscalClosedSectionSubtitle =>
+      'لا يمكن ترحيل أو تعديل قيود يومية في أو قبل هذا التاريخ.';
+
+  @override
+  String get accountingFiscalClosedThroughLabel => 'مغلقة حتى';
+
+  @override
+  String get accountingFiscalClosedNone => 'لا توجد فترة مغلقة';
+
+  @override
+  String get accountingFiscalClosedSavedSuccess =>
+      'تم حفظ الفترة المالية المغلقة.';
+
+  @override
+  String get accountingFiscalClosedClear => 'مسح';
+
+  @override
+  String get accountingJournalsTitle => 'القيود اليومية';
+
+  @override
+  String get accountingJournalsSubtitle => 'استعرض وأنشئ وراجع سندات القيود.';
+
+  @override
+  String get accountingJournalsEmptyTitle => 'لا توجد قيود بعد';
+
+  @override
+  String get accountingJournalsEmptyMessage =>
+      'أنشئ قيداً يدوياً أو رحّل فاتورة بيع في الوضع المستقل.';
+
+  @override
+  String get accountingJournalsSearchHint => 'ابحث برقم السند أو الوصف';
+
+  @override
+  String get accountingJournalAdd => 'قيد جديد';
+
+  @override
+  String get accountingJournalDetails => 'تفاصيل القيد';
+
+  @override
+  String get accountingJournalEdit => 'تعديل القيد';
+
+  @override
+  String get accountingJournalSave => 'حفظ القيد';
+
+  @override
+  String get accountingJournalSavedSuccess => 'تم حفظ القيد.';
+
+  @override
+  String get accountingJournalVoid => 'إلغاء القيد';
+
+  @override
+  String get accountingJournalVoidConfirmTitle => 'إلغاء هذا القيد؟';
+
+  @override
+  String get accountingJournalVoidConfirmMessage =>
+      'سيتم حذف القيد بشكل ناعم وإزالته من الدفاتر. تُحفظ الأسطر للمراجعة.';
+
+  @override
+  String get accountingJournalVoidedSuccess => 'تم إلغاء القيد.';
+
+  @override
+  String get accountingJournalNotFound => 'القيد غير موجود.';
+
+  @override
+  String get accountingJournalFieldDate => 'التاريخ';
+
+  @override
+  String get accountingJournalFieldVoucherNumber => 'رقم السند';
+
+  @override
+  String get accountingJournalFieldVoucherType => 'نوع السند';
+
+  @override
+  String get accountingJournalFieldDescription => 'الوصف';
+
+  @override
+  String get accountingJournalFieldCurrency => 'العملة';
+
+  @override
+  String get accountingJournalFieldStatus => 'الحالة';
+
+  @override
+  String get accountingJournalPosted => 'مرحّل';
+
+  @override
+  String get accountingJournalUnposted => 'غير مرحّل';
+
+  @override
+  String accountingJournalSourceLinked(String source) {
+    return 'مرتبط بـ $source';
+  }
+
+  @override
+  String get accountingJournalLines => 'الأسطر';
+
+  @override
+  String get accountingJournalAddLine => 'إضافة سطر';
+
+  @override
+  String get accountingJournalAccount => 'الحساب';
+
+  @override
+  String get accountingJournalDebit => 'مدين';
+
+  @override
+  String get accountingJournalCredit => 'دائن';
+
+  @override
+  String get accountingJournalTotals => 'الإجماليات';
+
+  @override
+  String get accountingJournalPickAccount => 'اختر حساباً';
+
+  @override
+  String get accountingJournalErrorUnbalanced =>
+      'يجب أن يتساوى إجمالي المدين مع إجمالي الدائن.';
+
+  @override
+  String get accountingJournalErrorPeriodClosed =>
+      'هذا التاريخ ضمن فترة مالية مغلقة.';
+
+  @override
+  String get accountingJournalErrorLines => 'أضف سطرين متوازنين على الأقل.';
+
+  @override
+  String get accountingJournalManualType => 'قيد يدوي';
 
   @override
   String get accountingChartOfAccounts => 'الدليل المحاسبي';

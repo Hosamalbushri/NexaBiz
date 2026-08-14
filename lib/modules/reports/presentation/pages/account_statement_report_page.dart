@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +19,7 @@ import '../../../../core/reporting/report_exception.dart';
 import '../../../../core/reporting/report_page_format.dart';
 import '../../../../core/reporting/report_pdf_theme.dart';
 import '../../../../core/services/loading_providers.dart';
+import '../../../../core/utils/async_search_token.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -527,8 +530,12 @@ class _AccountPickerSheet extends ConsumerStatefulWidget {
 }
 
 class _AccountPickerSheetState extends ConsumerState<_AccountPickerSheet> {
+  static const _searchDebounce = Duration(milliseconds: 300);
+
   final _controller = TextEditingController();
   var _loading = true;
+  final _searchToken = AsyncSearchToken();
+  Timer? _debounce;
   List<AccountStatementAccountRef> _accounts = const [];
 
   @override
@@ -539,16 +546,23 @@ class _AccountPickerSheetState extends ConsumerState<_AccountPickerSheet> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
+  void _onQueryChanged(String query) {
+    _debounce?.cancel();
+    _debounce = Timer(_searchDebounce, () => _search(query));
+  }
+
   Future<void> _search(String query) async {
+    final token = _searchToken.next();
     setState(() => _loading = true);
     final list = await ref
         .read(accountStatementReportDataPortProvider)
         .searchAccounts(query);
-    if (!mounted) {
+    if (!mounted || !_searchToken.isCurrent(token)) {
       return;
     }
     setState(() {
@@ -583,7 +597,7 @@ class _AccountPickerSheetState extends ConsumerState<_AccountPickerSheet> {
                     prefixIcon: const Icon(Icons.search),
                     border: const OutlineInputBorder(),
                   ),
-                  onChanged: _search,
+                  onChanged: _onQueryChanged,
                 ),
               ],
             ),

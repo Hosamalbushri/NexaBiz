@@ -75,7 +75,7 @@ List<Override> moduleRegistryOverrides() {
     }),
     saleLedgerPostingPortProvider.overrideWith((ref) {
       return AccountingSaleLedgerAdapter(
-        journals: ref.watch(journalRepositoryProvider),
+        posting: ref.watch(journalPostingServiceProvider),
         accounts: ref.watch(accountRepositoryProvider),
       );
     }),

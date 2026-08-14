@@ -9,6 +9,10 @@ import 'package:stock_count/modules/accounting/domain/entities/accounting_mode.d
 import 'package:stock_count/modules/accounting/domain/entities/operational_accounting_status.dart';
 import 'package:stock_count/modules/accounting/domain/services/accounting_integration_port.dart';
 import 'package:stock_count/modules/accounting/domain/services/accounting_mode_policy.dart';
+import 'package:stock_count/modules/accounting/domain/services/fiscal_period_policy.dart';
+import 'package:stock_count/modules/accounting/domain/services/journal_money.dart';
+import 'package:stock_count/modules/accounting/domain/entities/fiscal_period.dart';
+import 'package:stock_count/modules/accounting/domain/models/journal_exception.dart';
 
 void main() {
   group('AccountingMode', () {
@@ -22,13 +26,58 @@ void main() {
     });
   });
 
+  group('FiscalPeriod', () {
+    test('containing spans fiscal year from start month', () {
+      final period = FiscalPeriod.containing(
+        DateTime.utc(2026, 3, 15),
+        fiscalYearStartMonth: 4,
+      );
+      expect(period.start, DateTime.utc(2025, 4, 1));
+      expect(period.endInclusive, DateTime.utc(2026, 3, 31));
+      expect(period.contains(DateTime.utc(2026, 3, 15)), isTrue);
+      expect(period.contains(DateTime.utc(2026, 4, 1)), isFalse);
+    });
+  });
+
+  group('FiscalPeriodPolicy', () {
+    test('rejects entry on or before closedThrough', () {
+      final policy = FiscalPeriodPolicy(
+        fiscalYearStartMonth: 1,
+        closedThrough: DateTime.utc(2026, 8, 1),
+      );
+      expect(
+        () => policy.assertEntryAllowed(DateTime.utc(2026, 8, 1)),
+        throwsA(
+          isA<JournalException>().having(
+            (e) => e.code,
+            'code',
+            JournalException.periodClosed,
+          ),
+        ),
+      );
+      expect(
+        () => policy.assertEntryAllowed(DateTime.utc(2026, 8, 2)),
+        returnsNormally,
+      );
+    });
+  });
+
+  group('JournalMoney', () {
+    test('rounds to cents and clamps negatives', () {
+      expect(JournalMoney.round(10.006), 10.01);
+      expect(JournalMoney.round(10.004), 10.0);
+      expect(JournalMoney.clampNonNegative(-0.5), 0);
+      expect(JournalMoney.toCents(1.23), 123);
+    });
+  });
+
   group('AccountingModePolicy', () {
-    test('standalone owns local data and never auto-journals', () {
+    test('standalone owns local data and auto-journals sales', () {
       const policy = AccountingModePolicy(AccountingMode.standalone);
       expect(policy.ownsLocalAccountingData, isTrue);
       expect(policy.mayImportExternalMasterData, isFalse);
       expect(policy.mayExportOperationalDocuments, isFalse);
-      expect(policy.autoCreatesJournalEntries, isFalse);
+      expect(policy.autoCreatesJournalEntries, isTrue);
       expect(policy.supportsLocalLedgerFeatures, isTrue);
     });
 

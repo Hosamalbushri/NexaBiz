@@ -14,6 +14,8 @@ class AccountingRoutes {
   static const String voucherBooks = '/accounting/voucher-books';
   static const String voucherBooksCreate = '/accounting/voucher-books/new';
   static const String reports = '/accounting/reports';
+  static const String journals = '/accounting/journals';
+  static const String journalsCreate = '/accounting/journals/new';
 
   static String accountDetails(int id) => '/accounting/accounts/$id';
 
@@ -24,9 +26,15 @@ class AccountingRoutes {
   static String voucherBookSection(VoucherBookType section) =>
       '/accounting/voucher-books/section/${section.section.storageValue}';
 
+  static String journalDetails(String uuid) => '/accounting/journals/$uuid';
+
+  static String journalEdit(String uuid) => '/accounting/journals/$uuid/edit';
+
   static void goRoot(BuildContext context) => context.go(root);
 
   static void goAccounts(BuildContext context) => context.go(accounts);
+
+  static void goJournals(BuildContext context) => context.go(journals);
 
   static void goCurrencyRates(BuildContext context) =>
       context.go(currencyRates);
@@ -38,6 +46,17 @@ class AccountingRoutes {
       context.push(voucherBooks);
 
   static void pushReports(BuildContext context) => context.push(reports);
+
+  static void pushJournals(BuildContext context) => context.push(journals);
+
+  static void pushJournalCreate(BuildContext context) =>
+      context.push(journalsCreate);
+
+  static void pushJournalDetails(BuildContext context, String uuid) =>
+      context.push(journalDetails(uuid));
+
+  static void pushJournalEdit(BuildContext context, String uuid) =>
+      context.push(journalEdit(uuid));
 
   static void pushVoucherBookSection(
     BuildContext context,

@@ -6,7 +6,7 @@ Accepted — 2026-08-12
 
 ## Context
 
-The platform needs a reusable Accounting module. The first slice is Chart of Accounts (COA), which future journals, ledger, and financial reports will reference by stable account UUID.
+The platform needs a reusable Accounting module. Chart of Accounts (COA) is the foundation; journals, ledger movements, and financial reports reference accounts by stable UUID.
 
 ## Decision
 
@@ -23,6 +23,7 @@ Seed catalog: `DefaultChartOfAccounts` (`system:<key>` in `description`). Existi
 
 ## Consequences
 
-- Journal lines FK `account.uuid` (`journal_entries` / `journal_lines`, schema v6).
-- Reports can aggregate by type / parent / code / hierarchy on the same table; account statement loads ledger movements from journals.
+- Journal lines FK `account.uuid` (`journal_entries` / `journal_lines`; Accounting Drift schema v8 — unique active source, ledger indexes).
+- Manual journals and sale-linked journals post through the same repository path; soft-delete does not remove lines used for `isUsedInTransactions`.
+- Reports can aggregate by type / parent / code / hierarchy on the same table; account statement loads ledger movements from journals (keyset pagination + SQL net-before).
 - Inventory and Accounting remain independent modules; no cross-module imports.
