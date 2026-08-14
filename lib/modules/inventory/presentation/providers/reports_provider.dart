@@ -126,6 +126,33 @@ class ReportExportNotifier extends StateNotifier<AsyncValue<String?>> {
     }
   }
 
+  /// Builds PDF for shared [PdfDocumentPreviewPage] (no blocking print dialog).
+  Future<ReportExportResult> preparePdfPreview({
+    required ReportExportLabels labels,
+  }) async {
+    state = const AsyncLoading();
+    try {
+      final validationError = await validateBeforeExport();
+      if (validationError != null) {
+        state = const AsyncData(null);
+        return validationError;
+      }
+
+      final items = await _loadFilteredItems();
+      final prepared = await _ref
+          .read(pdfExportDatasourceProvider)
+          .buildPdf(items: items, labels: labels);
+      state = AsyncData(prepared.fileName);
+      return ReportExportPdfReady(
+        bytes: prepared.bytes,
+        fileName: prepared.fileName,
+      );
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      return ReportExportFailure(error.toString());
+    }
+  }
+
   Future<void> shareExportedFile(String path) async {
     final lower = path.toLowerCase();
     final mimeType = lower.endsWith('.pdf')

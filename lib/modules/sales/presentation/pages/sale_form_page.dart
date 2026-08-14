@@ -10,7 +10,6 @@ import '../../../../core/services/loading_providers.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
-import '../../domain/entities/discount_type.dart';
 import '../../domain/entities/sale_settlement_type.dart';
 import '../../domain/services/sale_currency_port.dart';
 import '../../domain/services/sale_customer_lookup_port.dart';
@@ -19,11 +18,12 @@ import '../../domain/services/sale_voucher_book_port.dart';
 import '../providers/sale_barcode_capture_provider.dart';
 import '../providers/sale_composer_provider.dart';
 import '../providers/sale_providers.dart';
+import '../providers/sales_list_provider.dart';
 import '../widgets/cash_account_selector.dart';
 import '../widgets/sale_account_labels.dart';
 import '../widgets/sale_customer_search_field.dart';
 import '../widgets/sale_error_messages.dart';
-import '../widgets/sale_item_card.dart';
+import '../widgets/sale_summary_widgets.dart';
 import '../widgets/sale_products_table.dart';
 import '../widgets/sale_settlement_type_selector.dart';
 import '../widgets/voucher_book_selector.dart';
@@ -44,6 +44,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
   final _customerNameController = TextEditingController();
   var _loading = true;
   var _loaded = false;
+  var _saving = false;
   String? _loadError;
   List<SaleCurrencyRef> _currencies = const [];
   List<SaleVoucherBookRef> _voucherBooks = const [];
@@ -195,9 +196,22 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
     }
   }
 
-  void _onCustomerSelected(SaleCustomerRef selected) {
-    ref.read(saleComposerProvider.notifier).setCustomer(selected);
-    _customerNameController.text = selected.name;
+  Future<void> _onCustomerSelected(SaleCustomerRef selected) async {
+    final linked = await ref
+        .read(saleCustomerLookupPortProvider)
+        .ensureAccountLinked(selected);
+    if (!mounted) {
+      return;
+    }
+    ref.read(saleComposerProvider.notifier).setCustomer(linked);
+    _customerNameController.text = linked.name;
+    if (ref.read(saleComposerProvider).isCredit && !linked.hasAccount) {
+      showAppSnackBar(
+        context,
+        message: AppLocalizations.of(context).salesErrorCustomerAccountRequired,
+        isSuccess: false,
+      );
+    }
   }
 
   void _clearCustomerParty() {
@@ -206,6 +220,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
   }
 
   void _onProductSelected(SaleProductRef product) {
+    FocusManager.instance.primaryFocus?.unfocus();
     ref.read(saleComposerProvider.notifier).addProduct(product);
   }
 
@@ -230,6 +245,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
         );
         return;
       }
+      FocusManager.instance.primaryFocus?.unfocus();
       ref.read(saleComposerProvider.notifier).addProduct(product);
     } catch (e) {
       if (!mounted) {
@@ -244,10 +260,14 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
   }
 
   Future<void> _save({bool confirmAfter = false}) async {
+    if (_saving) {
+      return;
+    }
     final l10n = AppLocalizations.of(context);
     final state = ref.read(saleComposerProvider);
     final loading = ref.read(loadingControllerProvider);
 
+    _saving = true;
     await loading.run(
       message: l10n.salesSaving,
       action: () async {
@@ -265,12 +285,15 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
           if (!mounted) {
             return;
           }
+          ref.invalidate(saleByIdProvider(sale.id));
+          ref.invalidate(salesListProvider);
+          ref.invalidate(salesProvider);
           showAppSnackBar(
             context,
             message: confirmAfter ? l10n.salesConfirmed : l10n.salesSaved,
             isSuccess: true,
           );
-          SalesRoutes.pushDetails(context, sale.id);
+          SalesRoutes.goDetails(context, sale.id);
         } catch (e) {
           if (!mounted) {
             return;
@@ -283,6 +306,9 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
         }
       },
     );
+    if (mounted) {
+      _saving = false;
+    }
   }
 
   Widget _shell({required Widget body, List<Widget>? actions}) {
@@ -390,7 +416,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
       },
       discountController: _discountController,
       onDiscountChanged: (value) => composer.setDiscount(
-        type: DiscountType.fixed,
+        type: state.discountType,
         value: value,
       ),
     );

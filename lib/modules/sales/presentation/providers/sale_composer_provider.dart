@@ -168,7 +168,11 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
        _converter = converter,
        super(
          SaleComposerState(
-           saleDate: DateTime.now(),
+           saleDate: DateTime(
+             DateTime.now().year,
+             DateTime.now().month,
+             DateTime.now().day,
+           ),
            taxRate: defaultTaxRate,
            currencyCode: baseCurrencyCode,
            baseCurrencyCode: baseCurrencyCode,
@@ -284,7 +288,7 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
             discountValue: item.discountValue,
           ),
       ],
-      discountType: DiscountType.fixed,
+      discountType: sale.discountType,
       discountValue: sale.discountValue,
       taxRate: sale.taxRate,
       paidAmount: sale.paidAmount,
@@ -295,7 +299,10 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
   }
 
   void setSaleDate(DateTime date) {
-    state = state.copyWith(saleDate: date);
+    final local = date.isUtc ? date.toLocal() : date;
+    state = state.copyWith(
+      saleDate: DateTime(local.year, local.month, local.day),
+    );
   }
 
   void setSettlementType(SaleSettlementType type) {
@@ -410,12 +417,6 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
     // Always append a new line — do not merge duplicates by quantity.
     state = state.copyWith(items: [...state.items, draft]);
   }
-
-  /// Alias kept for existing call sites.
-  void addOrIncrementProduct(
-    SaleProductRef product, {
-    double mainQuantity = 1,
-  }) => addProduct(product, mainQuantity: mainQuantity);
 
   void updateItemAt(int index, SaleItemDraft item) {
     if (index < 0 || index >= state.items.length) {

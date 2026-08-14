@@ -37,6 +37,8 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
   final _cityController = TextEditingController();
   final _countryController = TextEditingController();
   final _websiteController = TextEditingController();
+  final _invoiceHeaderRightController = TextEditingController();
+  final _invoiceHeaderLeftController = TextEditingController();
 
   var _hydrated = false;
   var _saving = false;
@@ -57,6 +59,8 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
     _cityController.dispose();
     _countryController.dispose();
     _websiteController.dispose();
+    _invoiceHeaderRightController.dispose();
+    _invoiceHeaderLeftController.dispose();
     super.dispose();
   }
 
@@ -75,6 +79,8 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
     _cityController.text = profile.city ?? '';
     _countryController.text = profile.country ?? '';
     _websiteController.text = profile.website ?? '';
+    _invoiceHeaderRightController.text = profile.invoiceHeaderRight ?? '';
+    _invoiceHeaderLeftController.text = profile.invoiceHeaderLeft ?? '';
     _currencyCode = profile.defaultCurrencyCode;
     _fiscalMonth = profile.fiscalYearStartMonth;
     _logoPath = profile.logoPath;
@@ -151,6 +157,8 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
         country: _countryController.text.trim(),
         website: _websiteController.text.trim(),
         fiscalYearStartMonth: _fiscalMonth,
+        invoiceHeaderRight: _invoiceHeaderRightController.text.trim(),
+        invoiceHeaderLeft: _invoiceHeaderLeftController.text.trim(),
       );
       await ref.read(companyProfileProvider.notifier).save(profile);
       if (!mounted) {
@@ -272,6 +280,49 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
                         decoration: InputDecoration(
                           labelText: l10n.setupLegalName,
                           helperText: l10n.setupLegalNameHelper,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.setupInvoiceHeaderSection,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        l10n.setupInvoiceHeaderSectionSubtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _invoiceHeaderRightController,
+                        maxLines: 4,
+                        textAlign: TextAlign.start,
+                        decoration: InputDecoration(
+                          labelText: l10n.setupInvoiceHeaderRight,
+                          helperText: l10n.setupInvoiceHeaderHelper,
+                          alignLabelWithHint: true,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _invoiceHeaderLeftController,
+                        maxLines: 4,
+                        textAlign: TextAlign.start,
+                        decoration: InputDecoration(
+                          labelText: l10n.setupInvoiceHeaderLeft,
+                          helperText: l10n.setupInvoiceHeaderHelper,
+                          alignLabelWithHint: true,
                         ),
                       ),
                     ],

@@ -11,7 +11,7 @@ The platform needs an operational Sales module that:
 - Works offline-first
 - Reuses Customers and Inventory catalog data without importing those modules
 - Supports standalone operation and optional integrated accounting workflow
-- Does **not** auto-create journal entries
+- Does **not** skip cash journals; **standalone cash/credit save** upserts via App `SaleLedgerPostingPort` (see ADR-008 amendment); **post** marks sale+journal posted
 
 ## Decision
 
@@ -22,9 +22,10 @@ The platform needs an operational Sales module that:
    - `SaleProductCatalogPort` → Inventory + scan resolver
    - `SaleBarcodeCapture` → Inventory camera scanner
    - `SaleAccountingBridgePort` → Accounting mode + integration port
+   - `SaleLedgerPostingPort` → local journal sync/void for standalone cash + credit sales
    - `SaleInventoryEffectPort` → NoOp until a stock ledger exists
 4. **Numbering**: local `INV-######` allocator by default; App may later override with voucher-book allocation (`VoucherBookType.sales`).
-5. **Lifecycle**: Draft → Confirmed (standalone) or Pending (integrated) → Completed; Cancel reverses inventory effects when applicable.
+5. **Lifecycle**: Unposted → Posted; Cancel voids journal + soft-deletes (reverses inventory when posted).
 6. **Sync**: entity type `sale` via shared SyncManager.
 7. **Money**: cent-rounded `double` math in `SaleCalculationService` / `SaleMoney` (matches Product.price).
 

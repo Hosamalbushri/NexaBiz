@@ -208,6 +208,62 @@ void main() {
       expect(second.length, first.length);
     });
 
+    test('seeds trading VAT and operational system accounts', () async {
+      await repo.ensureDefaultChartSeeded();
+
+      Future<void> expectSystem({
+        required String code,
+        required bool isGroup,
+      }) async {
+        final account = await repo.getByAccountCode(code);
+        expect(account, isNotNull, reason: 'missing $code');
+        expect(account!.isSystemAccount, isTrue);
+        expect(account.isGroup, isGroup, reason: code);
+      }
+
+      await expectSystem(code: '1213', isGroup: false); // petty cash
+      await expectSystem(code: '1235', isGroup: false); // inventory in transit
+      await expectSystem(code: '1250', isGroup: false); // VAT input
+      await expectSystem(code: '1260', isGroup: false); // prepaid
+      await expectSystem(code: '1290', isGroup: false); // other current assets
+      await expectSystem(code: '2111', isGroup: true); // suppliers group
+      await expectSystem(code: '2130', isGroup: false); // VAT output
+      await expectSystem(code: '2140', isGroup: false); // accrued expenses
+      await expectSystem(code: '2150', isGroup: false); // customer advances
+      await expectSystem(code: '2210', isGroup: false); // long-term loans
+      await expectSystem(code: '4200', isGroup: true); // other revenue group
+      await expectSystem(code: '4210', isGroup: false); // purchase discounts
+      await expectSystem(code: '5150', isGroup: false); // inventory adjustments
+      await expectSystem(code: '5160', isGroup: false); // sales returns
+      await expectSystem(code: '5170', isGroup: false); // sales discounts
+      await expectSystem(code: '5500', isGroup: false); // bank charges
+
+      final purchaseDiscounts = await repo.getByAccountCode('4210');
+      final otherRevenue = await repo.getByAccountCode('4200');
+      expect(purchaseDiscounts!.parentId, otherRevenue!.uuid);
+
+      final suppliers = await repo.getByAccountCode('2111');
+      final currentLiabilities = await repo.getByAccountCode('2100');
+      expect(suppliers!.parentId, currentLiabilities!.uuid);
+    });
+
+    test('inserts missing trading seeds on existing charts', () async {
+      await repo.ensureDefaultChartSeeded();
+      final before = await repo.getAll();
+      await db.customStatement(
+        "DELETE FROM accounts WHERE account_code IN ('1250','2130','2111')",
+      );
+      final mid = await repo.getAll();
+      expect(mid.length, before.length - 3);
+
+      await repo.ensureDefaultChartSeeded();
+      expect(await repo.getByAccountCode('1250'), isNotNull);
+      expect(await repo.getByAccountCode('2130'), isNotNull);
+      expect(await repo.getByAccountCode('2111'), isNotNull);
+      final after = await repo.getAll();
+      expect(after.length, before.length);
+    });
+
     test('creates posting account under group with pending sync', () async {
       await repo.ensureDefaultChartSeeded();
       final currentAssets = await repo.getByAccountCode('1200');

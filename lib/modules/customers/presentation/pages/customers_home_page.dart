@@ -104,6 +104,21 @@ class CustomersHomePage extends ConsumerWidget {
                 .animate()
                 .fadeIn(delay: 60.ms, duration: 280.ms)
                 .slideY(begin: 0.04, end: 0, delay: 60.ms, duration: 280.ms),
+            const SizedBox(height: AppSpacing.md),
+            _CustomersHubCard(
+                  icon: Icons.settings_outlined,
+                  title: l10n.customersSettingsTitle,
+                  subtitle: l10n.customersSettingsCardSubtitle,
+                  onTap: () => CustomersRoutes.pushSettings(context),
+                )
+                .animate()
+                .fadeIn(delay: 120.ms, duration: 280.ms)
+                .slideY(
+                  begin: 0.04,
+                  end: 0,
+                  delay: 120.ms,
+                  duration: 280.ms,
+                ),
           ],
         ),
       ),

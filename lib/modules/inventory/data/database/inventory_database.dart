@@ -15,18 +15,13 @@ class InventoryDatabase extends _$InventoryDatabase {
   InventoryDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
-      await customStatement(
-        'CREATE INDEX IF NOT EXISTS idx_products_name ON products (name)',
-      );
-      await customStatement(
-        'CREATE INDEX IF NOT EXISTS idx_products_sync ON products (sync_status)',
-      );
+      await _createSearchIndexes();
     },
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
@@ -59,8 +54,24 @@ class InventoryDatabase extends _$InventoryDatabase {
           'CREATE INDEX IF NOT EXISTS idx_products_sync ON products (sync_status)',
         );
       }
+      if (from < 3) {
+        await _createSearchIndexes();
+      }
     },
   );
+
+  Future<void> _createSearchIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_products_name ON products (name)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_products_sync ON products (sync_status)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_products_alive '
+      'ON products (item_code) WHERE deleted_at IS NULL',
+    );
+  }
 
   static QueryExecutor _openConnection() {
     // Avoid shareAcrossIsolates — it can leave the first watch hung before

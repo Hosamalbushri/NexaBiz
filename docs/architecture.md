@@ -101,7 +101,7 @@ Clean-ish vertical slices under `lib/modules/`:
 | Module | Contents |
 | --- | --- |
 | `inventory/` | Stock count (Hive) + products catalog (Drift) |
-| `accounting/` | Chart of Accounts + currency rates + voucher books (Drift); future journals/ledger/reports |
+| `accounting/` | Chart of Accounts + currency rates + voucher books + local journals (Drift); reports via Reports module |
 | `customers/` | Customer master (Drift); optional opaque Account.uuid link via App port |
 
 Each module exposes an `AppModule` implementation + routes. Modules must not import other modules.

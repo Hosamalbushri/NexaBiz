@@ -92,12 +92,16 @@ class _FakeProductRepository implements ProductRepository {
   Future<Product?> getByItemCode(String itemCode) async => null;
 
   @override
+  Future<Product?> getByUuid(String uuid) async => null;
+
+  @override
   Future<Product?> getByBarcode(String barcode) async => null;
 
   @override
   Future<List<Product>> search(
     String query, {
     CatalogSearchField searchField = CatalogSearchField.all,
+    int? limit,
   }) async => const [];
 
   @override

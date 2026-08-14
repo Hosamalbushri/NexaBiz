@@ -10,6 +10,7 @@ import 'presentation/pages/customers_home_page.dart';
 import 'presentation/pages/customers_import_page.dart';
 import 'presentation/pages/customers_list_page.dart';
 import 'presentation/pages/customers_routes.dart';
+import 'presentation/pages/customers_settings_page.dart';
 import 'presentation/providers/customer_providers.dart';
 import 'presentation/widgets/customers_settings_panel.dart';
 
@@ -61,6 +62,7 @@ class CustomersModule extends AppModule {
   @override
   void onSettingsReset(WidgetRef ref) {
     ref.invalidate(customersParentAccountProvider);
+    ref.invalidate(customersAutoLinkAccountProvider);
   }
 
   @override
@@ -79,6 +81,19 @@ class CustomersModule extends AppModule {
           path: 'import',
           name: 'customersImport',
           builder: (context, state) => const CustomersImportPage(),
+        ),
+        GoRoute(
+          path: 'settings',
+          name: 'customersSettings',
+          builder: (context, state) => const CustomersSettingsPage(),
+          routes: [
+            GoRoute(
+              path: 'parent-account',
+              name: 'customersParentAccountSettings',
+              builder: (context, state) =>
+                  const CustomersParentAccountSettingsPage(),
+            ),
+          ],
         ),
         GoRoute(
           path: 'new',

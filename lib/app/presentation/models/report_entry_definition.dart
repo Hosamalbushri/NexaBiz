@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../modules/inventory/inventory_module.dart';
 import '../../../modules/inventory/presentation/pages/inventory_routes.dart';
+import '../../../modules/reports/presentation/pages/reports_routes.dart';
+import '../../../modules/reports/reports_module.dart';
 import '../../localization/app_localizations.dart';
 import '../../router/app_routes.dart';
 
@@ -63,6 +65,12 @@ List<ReportModuleDefinition> platformReportModules() {
       titleBuilder: _inventoryReportsTitle,
       subtitleBuilder: _inventoryReportsSubtitle,
     ),
+    ReportModuleDefinition(
+      moduleId: ReportsModule.moduleId,
+      icon: Icons.assessment_outlined,
+      titleBuilder: _platformReportsModuleTitle,
+      subtitleBuilder: _platformReportsModuleSubtitle,
+    ),
   ];
 }
 
@@ -101,6 +109,30 @@ List<ReportEntryDefinition> _allReportEntries() {
       titleBuilder: _productsReportTitle,
       subtitleBuilder: _productsReportComingSoon,
     ),
+    ReportEntryDefinition(
+      id: 'reports_sales_period',
+      moduleId: ReportsModule.moduleId,
+      icon: Icons.receipt_long_outlined,
+      path: ReportsRoutes.salesPeriod,
+      titleBuilder: _salesPeriodReportTitle,
+      subtitleBuilder: _salesPeriodReportSubtitle,
+    ),
+    ReportEntryDefinition(
+      id: 'reports_account_statement',
+      moduleId: ReportsModule.moduleId,
+      icon: Icons.menu_book_outlined,
+      path: ReportsRoutes.accountStatement,
+      titleBuilder: _accountStatementReportTitle,
+      subtitleBuilder: _accountStatementReportSubtitle,
+    ),
+    ReportEntryDefinition(
+      id: 'reports_catalog',
+      moduleId: ReportsModule.moduleId,
+      icon: Icons.folder_open_outlined,
+      path: ReportsRoutes.root,
+      titleBuilder: _reportsCatalogTitle,
+      subtitleBuilder: _reportsCatalogSubtitle,
+    ),
   ];
 }
 
@@ -109,6 +141,12 @@ String _inventoryReportsTitle(AppLocalizations l10n) =>
 
 String _inventoryReportsSubtitle(AppLocalizations l10n) =>
     l10n.platformReportsInventorySubtitle;
+
+String _platformReportsModuleTitle(AppLocalizations l10n) =>
+    l10n.platformReportsBusiness;
+
+String _platformReportsModuleSubtitle(AppLocalizations l10n) =>
+    l10n.platformReportsBusinessSubtitle;
 
 String _stockCountReportTitle(AppLocalizations l10n) =>
     l10n.platformReportsStockCountTitle;
@@ -121,3 +159,21 @@ String _productsReportTitle(AppLocalizations l10n) =>
 
 String _productsReportComingSoon(AppLocalizations l10n) =>
     l10n.platformReportsServiceComingSoon;
+
+String _salesPeriodReportTitle(AppLocalizations l10n) =>
+    l10n.reportsSalesPeriodTitle;
+
+String _salesPeriodReportSubtitle(AppLocalizations l10n) =>
+    l10n.reportsSalesPeriodSubtitle;
+
+String _accountStatementReportTitle(AppLocalizations l10n) =>
+    l10n.reportsAccountStatementTitle;
+
+String _accountStatementReportSubtitle(AppLocalizations l10n) =>
+    l10n.reportsAccountStatementSubtitle;
+
+String _reportsCatalogTitle(AppLocalizations l10n) =>
+    l10n.reportsCatalogTitle;
+
+String _reportsCatalogSubtitle(AppLocalizations l10n) =>
+    l10n.reportsCatalogSubtitle;

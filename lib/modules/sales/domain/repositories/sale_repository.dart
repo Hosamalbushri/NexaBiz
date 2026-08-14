@@ -1,6 +1,8 @@
 import '../entities/sale.dart';
+import '../entities/sale_list_item.dart';
 import '../entities/sale_status.dart';
 import '../models/sale_list_filter.dart';
+import '../models/sale_paged_result.dart';
 
 /// Persistence + sync enqueue for sales documents.
 abstract class SaleRepository {
@@ -18,6 +20,16 @@ abstract class SaleRepository {
 
   Stream<List<Sale>> watchFiltered(SaleListFilter filter);
 
+  /// Header-only paged list query (no per-sale items/payments load).
+  Future<SalePagedResult<SaleListItem>> searchListPaged(
+    SaleListFilter filter, {
+    int page = 0,
+    int pageSize = 30,
+  });
+
+  /// Emits when any sales header row changes (for list refresh).
+  Stream<void> watchListChanges();
+
   /// Next integer sequence for local `INV-######` numbering.
   Future<int> nextLocalSequence();
 
@@ -31,6 +43,9 @@ abstract class SaleRepository {
 
   /// Aggregate helpers for future customer balance / reports.
   Future<CustomerSaleTotals> totalsForCustomer(String customerId);
+
+  /// Sales whose snapshot links [accountUuid] as customer AR or cash account.
+  Future<List<Sale>> listByAccountLink(String accountUuid);
 }
 
 class SaleStatusUpdate {
@@ -43,6 +58,10 @@ class SaleStatusUpdate {
     this.externalId,
     this.externalDocumentNumber,
     this.externalStatus,
+    this.clearSubmittedAt = false,
+    this.clearConfirmedAt = false,
+    this.clearCompletedAt = false,
+    this.clearCancelledAt = false,
   });
 
   final SaleStatus saleStatus;
@@ -53,6 +72,10 @@ class SaleStatusUpdate {
   final String? externalId;
   final String? externalDocumentNumber;
   final String? externalStatus;
+  final bool clearSubmittedAt;
+  final bool clearConfirmedAt;
+  final bool clearCompletedAt;
+  final bool clearCancelledAt;
 }
 
 class CustomerSaleTotals {

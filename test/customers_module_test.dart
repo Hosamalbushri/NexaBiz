@@ -221,6 +221,35 @@ void main() {
       expect(byCode.single.customerCode, 'CUS-0200');
     });
 
+    test('search limit is applied in SQL and ranks exact code first', () async {
+      await repository.insert(
+        const CustomerDraft(customerCode: 'AHMED', name: 'Walk-in'),
+      );
+      await repository.insert(
+        const CustomerDraft(customerCode: 'CUS-A1', name: 'Ahmed Ali'),
+      );
+      await repository.insert(
+        const CustomerDraft(customerCode: 'CUS-A2', name: 'Ahmed Saleh'),
+      );
+      await repository.insert(
+        const CustomerDraft(customerCode: 'CUS-A3', name: 'Ahmed Omar'),
+      );
+
+      final limited = await repository.search('ahmed', limit: 2);
+      expect(limited, hasLength(2));
+      expect(limited.first.customerCode, 'AHMED');
+    });
+
+    test('empty search with limit returns capped browse list', () async {
+      for (var i = 0; i < 5; i++) {
+        await repository.insert(
+          CustomerDraft(customerCode: 'CUS-B$i', name: 'Buyer $i'),
+        );
+      }
+      final limited = await repository.search('', limit: 3);
+      expect(limited, hasLength(3));
+    });
+
     test('upsertAll inserts then updates by customer code', () async {
       final first = await repository.upsertAll([
         const CustomerDraft(

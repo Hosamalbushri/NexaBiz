@@ -15,28 +15,44 @@ class CustomersDatabase extends _$CustomersDatabase {
   CustomersDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
-      await customStatement(
-        'CREATE INDEX IF NOT EXISTS idx_customers_name ON customers (name)',
-      );
-      await customStatement(
-        'CREATE INDEX IF NOT EXISTS idx_customers_sync ON customers (sync_status)',
-      );
-      await customStatement(
-        'CREATE INDEX IF NOT EXISTS idx_customers_external '
-        'ON customers (external_id)',
-      );
-      await customStatement(
-        'CREATE INDEX IF NOT EXISTS idx_customers_account '
-        'ON customers (account_id)',
-      );
+      await _createIndexes();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 2) {
+        await _createIndexes();
+      }
     },
   );
+
+  Future<void> _createIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_customers_name ON customers (name)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_customers_sync ON customers (sync_status)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_customers_external '
+      'ON customers (external_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_customers_account '
+      'ON customers (account_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers (phone)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_customers_active_alive '
+      'ON customers (is_active) WHERE deleted_at IS NULL',
+    );
+  }
 
   static QueryExecutor _openConnection() {
     return driftDatabase(name: 'customers_master');

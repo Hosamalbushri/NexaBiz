@@ -49,7 +49,6 @@ Future modules (not implemented):
 - Expenses
 - Accounting
 - Point of Sale
-- Cross-module Reports
 - Other business services
 
 Adding a module must not require rewriting `core/` or unrelated modules.
@@ -707,6 +706,7 @@ Registered in `module_bootstrap.dart` with App adapters for Customers, Inventory
 | Suppliers | Future |
 | Expenses | Future |
 | Accounting | **Implemented** (CoA, rates, voucher books, modes) |
+| Reports | **Implemented** (PDF kit in `core/reporting`, catalog, sales-period report, PdfPreview) |
 | Point of Sale | Future |
 
 ### Inventory capabilities (present)

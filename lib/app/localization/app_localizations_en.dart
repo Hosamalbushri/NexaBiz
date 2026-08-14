@@ -46,6 +46,239 @@ class AppLocalizationsEn extends AppLocalizations {
       'Create and manage sales offline, with optional accounting and inventory hooks.';
 
   @override
+  String get moduleReports => 'Reports';
+
+  @override
+  String get moduleReportsDescription =>
+      'Generate, preview, print, and share professional PDF reports.';
+
+  @override
+  String get reportsSalesPeriodTitle => 'Sales by period';
+
+  @override
+  String get reportsSalesPeriodSubtitle =>
+      'List sales in a date range with status filter, then preview as PDF.';
+
+  @override
+  String get reportsAccountStatementTitle => 'Account statement';
+
+  @override
+  String get reportsAccountStatementSubtitle =>
+      'Print a cumulative Chart of Accounts statement in the account currency (classic layout).';
+
+  @override
+  String get reportsAccountStatementFilters => 'Statement filters';
+
+  @override
+  String get reportsAccountStatementAccount => 'Account';
+
+  @override
+  String get reportsAccountStatementAccountHint => 'Select an account';
+
+  @override
+  String get reportsAccountStatementAccountSearch => 'Search by code or name';
+
+  @override
+  String get reportsAccountStatementAccountEmpty =>
+      'No posting accounts found.';
+
+  @override
+  String get reportsAccountStatementAccountRequired =>
+      'Select an account first.';
+
+  @override
+  String get reportsAccountStatementAccountName => 'Account name';
+
+  @override
+  String get reportsAccountStatementAccountNumber => 'Account number';
+
+  @override
+  String get reportsAccountStatementCurrency => 'Currency';
+
+  @override
+  String get reportsAccountStatementCurrencyAll => 'All currencies';
+
+  @override
+  String get reportsAccountStatementType => 'Statement type';
+
+  @override
+  String get reportsAccountStatementTypeCumulative =>
+      'Cumulative statement (account currency)';
+
+  @override
+  String get reportsAccountStatementTypeDetailed => 'Detailed statement';
+
+  @override
+  String get reportsAccountStatementTypeSummary => 'Summary statement';
+
+  @override
+  String get reportsAccountStatementPostingStatus => 'Posting status';
+
+  @override
+  String get reportsAccountStatementPostingAll => 'All';
+
+  @override
+  String get reportsAccountStatementPostingPosted => 'Posted';
+
+  @override
+  String get reportsAccountStatementPostingUnposted => 'Unposted';
+
+  @override
+  String get reportsAccountStatementFromDate => 'From date';
+
+  @override
+  String get reportsAccountStatementToDate => 'To date';
+
+  @override
+  String get reportsAccountStatementColSide => 'D/C';
+
+  @override
+  String get reportsAccountStatementColVoucherType => 'Voucher type';
+
+  @override
+  String get reportsAccountStatementColVoucherNumber => 'No.';
+
+  @override
+  String get reportsAccountStatementColDescription => 'Details';
+
+  @override
+  String get reportsAccountStatementColDebit => 'Debit';
+
+  @override
+  String get reportsAccountStatementColCredit => 'Credit';
+
+  @override
+  String get reportsAccountStatementColBalance => 'Balance';
+
+  @override
+  String get reportsAccountStatementColCurrency => 'Currency';
+
+  @override
+  String get reportsAccountStatementColInCurrency => 'In currency';
+
+  @override
+  String get reportsAccountStatementTotalsDebit => 'Debit';
+
+  @override
+  String get reportsAccountStatementTotalsCredit => 'Credit';
+
+  @override
+  String get reportsAccountStatementFinalBalanceByCurrency =>
+      'Final balance by currency';
+
+  @override
+  String get reportsAccountStatementDisclaimer =>
+      'This account statement is considered correct unless an objection is received within two weeks from its date.';
+
+  @override
+  String get reportsAccountStatementAccountant => 'Accountant';
+
+  @override
+  String get reportsAccountStatementReviewer => 'Reviewer';
+
+  @override
+  String get reportsAccountStatementFinanceManager => 'Finance manager:';
+
+  @override
+  String get reportsAccountStatementPrintedBy => 'NexaBiz';
+
+  @override
+  String get reportsAccountStatementEmpty =>
+      'No ledger movements for this account yet. Journal entries will appear here when available.';
+
+  @override
+  String get reportsCatalogTitle => 'All PDF reports';
+
+  @override
+  String get reportsCatalogSubtitle =>
+      'Open the reports catalog to generate and preview PDFs.';
+
+  @override
+  String get reportsPreviewTitle => 'Report preview';
+
+  @override
+  String get reportsPreviewMissing =>
+      'No report is ready to preview. Generate a report first.';
+
+  @override
+  String get reportsActionPrint => 'Print';
+
+  @override
+  String get reportsActionShare => 'Share';
+
+  @override
+  String get reportsGeneratePreview => 'Generate & preview';
+
+  @override
+  String get reportsGenerating => 'Generating report…';
+
+  @override
+  String get reportsGeneratedAt => 'Generated';
+
+  @override
+  String get reportsPeriod => 'Period';
+
+  @override
+  String get reportsPeriodAll => 'All dates';
+
+  @override
+  String get reportsFromDate => 'From date';
+
+  @override
+  String get reportsToDate => 'To date';
+
+  @override
+  String get reportsDateAny => 'Any';
+
+  @override
+  String get reportsStatusAll => 'All statuses';
+
+  @override
+  String get reportsGrandTotal => 'Grand total';
+
+  @override
+  String get reportsRowCount => 'Rows';
+
+  @override
+  String get reportsColSaleNumber => 'Number';
+
+  @override
+  String get reportsColDate => 'Date';
+
+  @override
+  String get reportsColCustomer => 'Customer';
+
+  @override
+  String get reportsColSettlement => 'Settlement';
+
+  @override
+  String get reportsColStatus => 'Status';
+
+  @override
+  String get reportsColCurrency => 'Currency';
+
+  @override
+  String get reportsColTotal => 'Total';
+
+  @override
+  String get reportsEmptySales => 'No sales match the selected filters.';
+
+  @override
+  String get reportsErrorGeneric => 'Could not generate the report.';
+
+  @override
+  String get reportsErrorPrint => 'Printing failed.';
+
+  @override
+  String get reportsErrorShare => 'Sharing failed.';
+
+  @override
+  String get reportsErrorFile => 'Could not save the PDF file.';
+
+  @override
+  String get reportsErrorFont => 'Could not load report fonts.';
+
+  @override
   String get salesListTitle => 'Sales';
 
   @override
@@ -115,6 +348,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get salesProductNotFound => 'Product not found.';
+
+  @override
+  String get salesAutocompleteSearchFailed =>
+      'Unable to load results. Try again.';
 
   @override
   String get salesRemoveItem => 'Remove item';
@@ -304,16 +541,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesStatus => 'Sale status';
 
   @override
-  String get salesStatusDraft => 'Draft';
+  String get salesStatusUnposted => 'Unposted';
 
   @override
-  String get salesStatusPending => 'Pending accounting';
+  String get salesStatusPosted => 'Posted';
 
   @override
-  String get salesStatusConfirmed => 'Confirmed';
+  String get salesStatusDraft => 'Unposted';
 
   @override
-  String get salesStatusCompleted => 'Completed';
+  String get salesStatusPending => 'Unposted';
+
+  @override
+  String get salesStatusConfirmed => 'Posted';
+
+  @override
+  String get salesStatusCompleted => 'Posted';
 
   @override
   String get salesStatusCancelled => 'Cancelled';
@@ -328,7 +571,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesSave => 'Save sale';
 
   @override
-  String get salesSaveAndConfirm => 'Save & confirm';
+  String get salesSaveAndConfirm => 'Save & post';
 
   @override
   String get salesSaving => 'Saving sale…';
@@ -337,13 +580,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesLoadingInvoice => 'Loading invoice…';
 
   @override
-  String get salesConfirming => 'Confirming sale…';
+  String get salesConfirming => 'Posting sale…';
+
+  @override
+  String get salesPosting => 'Posting…';
 
   @override
   String get salesSaved => 'Sale saved';
 
   @override
-  String get salesConfirmed => 'Sale confirmed';
+  String get salesConfirmed => 'Sale posted';
+
+  @override
+  String get salesPosted => 'Sale posted';
 
   @override
   String get salesCompleted => 'Sale completed';
@@ -355,7 +604,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesDuplicated => 'Sale duplicated';
 
   @override
-  String get salesConfirmSale => 'Confirm sale';
+  String get salesConfirmSale => 'Post';
+
+  @override
+  String get salesPostSale => 'Post';
 
   @override
   String get salesCompleteSale => 'Mark completed';
@@ -373,6 +625,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get salesDuplicate => 'Duplicate';
+
+  @override
+  String get salesPrintInvoice => 'Print';
+
+  @override
+  String get salesPreviewInvoice => 'Preview & print';
+
+  @override
+  String get salesPrintingInvoice => 'Preparing invoice preview…';
+
+  @override
+  String get salesPrintFailed => 'Could not print the invoice.';
+
+  @override
+  String get salesShareInvoice => 'Share';
+
+  @override
+  String get salesSharingInvoice => 'Preparing share…';
+
+  @override
+  String get salesShareFailed => 'Could not share the invoice.';
+
+  @override
+  String get salesInvoiceSaved => 'Invoice saved to the invoices folder.';
 
   @override
   String get salesNotFound => 'Sale not found';
@@ -486,7 +762,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customersFieldAccountHelper =>
-      'Enter an existing posting account under the configured customers parent. No account is created automatically.';
+      'Optional. Leave empty to auto-create under the customers parent when auto-link is on, or enter an existing posting account code.';
+
+  @override
+  String get customersFieldAccountHelperAuto =>
+      'Leave empty to auto-create a Chart of Accounts account under the customers parent (same code as the customer).';
 
   @override
   String customersAccountLinked(String code, String name) {
@@ -498,8 +778,48 @@ class AppLocalizationsEn extends AppLocalizations {
       'No matching posting account found for that code.';
 
   @override
+  String get customersAccountAutoLinkFailed =>
+      'Could not create or link the Chart of Accounts account for this customer.';
+
+  @override
   String customersAccountMustBeUnderParent(String code, String name) {
     return 'Linked account must be under parent $code · $name.';
+  }
+
+  @override
+  String get customersSettingsTitle => 'Customers settings';
+
+  @override
+  String get customersSettingsSubtitle =>
+      'Configure Chart of Accounts linking and other customer options.';
+
+  @override
+  String get customersSettingsCardSubtitle =>
+      'Parent account, auto-link, and more';
+
+  @override
+  String get customersAutoLinkSectionTitle => 'Auto-link Chart of Accounts';
+
+  @override
+  String get customersAutoLinkSectionSubtitle =>
+      'When enabled, saving a customer without an account creates a posting account under the customers parent group.';
+
+  @override
+  String get customersAutoLinkToggle => 'Create CoA account automatically';
+
+  @override
+  String get customersLinkMissingAccountsTitle => 'Link existing customers';
+
+  @override
+  String get customersLinkMissingAccountsSubtitle =>
+      'Create Chart of Accounts accounts for customers imported or saved without a link.';
+
+  @override
+  String get customersLinkMissingAccountsAction => 'Link missing accounts now';
+
+  @override
+  String customersLinkMissingAccountsDone(int count) {
+    return 'Linked $count customers to the Chart of Accounts.';
   }
 
   @override
@@ -516,7 +836,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customersParentAccountNotSet =>
-      'Parent account is not set. Configure it in Settings.';
+      'Parent account is not set. Configure it in Customers settings.';
 
   @override
   String get customersParentAccountField => 'Parent account code';
@@ -705,6 +1025,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get accountingChartOfAccountsDescription =>
       'Browse and manage the hierarchical account structure.';
+
+  @override
+  String get accountingReportsTitle => 'Accounting reports';
+
+  @override
+  String get accountingReportsSubtitle =>
+      'Statements and financial reports built on the Chart of Accounts.';
+
+  @override
+  String get accountingReportTrialBalanceTitle => 'Trial balance';
+
+  @override
+  String get accountingReportJournalTitle => 'Journal';
+
+  @override
+  String get accountingReportComingSoonSubtitle => 'Coming in a later release.';
+
+  @override
+  String get accountingReportComingSoonBadge => 'Soon';
 
   @override
   String get accountingCurrencyRatesTitle => 'Currency rates';
@@ -1215,6 +1554,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountingAccountBank => 'Bank';
 
   @override
+  String get accountingAccountPettyCash => 'Petty Cash';
+
+  @override
   String get accountingAccountAccountsReceivable => 'Accounts Receivable';
 
   @override
@@ -1222,6 +1564,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountingAccountInventory => 'Inventory';
+
+  @override
+  String get accountingAccountInventoryInTransit => 'Inventory in Transit';
+
+  @override
+  String get accountingAccountVatInput => 'VAT Input';
+
+  @override
+  String get accountingAccountPrepaidExpenses => 'Prepaid Expenses';
+
+  @override
+  String get accountingAccountOtherCurrentAssets => 'Other Current Assets';
 
   @override
   String get accountingAccountFixedAssets => 'Fixed Assets';
@@ -1245,10 +1599,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountingAccountAccountsPayable => 'Accounts Payable';
 
   @override
+  String get accountingAccountSuppliers => 'Suppliers';
+
+  @override
   String get accountingAccountShortTermLoans => 'Short Term Loans';
 
   @override
+  String get accountingAccountVatOutput => 'VAT Output Payable';
+
+  @override
+  String get accountingAccountAccruedExpenses => 'Accrued Expenses';
+
+  @override
+  String get accountingAccountCustomerAdvances => 'Customer Advances';
+
+  @override
   String get accountingAccountLongTermLiabilities => 'Long Term Liabilities';
+
+  @override
+  String get accountingAccountLongTermLoans => 'Long Term Loans';
 
   @override
   String get accountingAccountEquity => 'Equity';
@@ -1269,10 +1638,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountingAccountOtherRevenue => 'Other Revenue';
 
   @override
+  String get accountingAccountPurchaseDiscounts => 'Purchase Discounts';
+
+  @override
   String get accountingAccountExpenses => 'Expenses';
 
   @override
   String get accountingAccountCogs => 'Cost of Goods Sold';
+
+  @override
+  String get accountingAccountInventoryAdjustments => 'Inventory Adjustments';
+
+  @override
+  String get accountingAccountSalesReturns => 'Sales Returns';
+
+  @override
+  String get accountingAccountSalesDiscounts => 'Sales Discounts';
 
   @override
   String get accountingAccountSalaries => 'Salaries';
@@ -1282,6 +1663,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountingAccountUtilities => 'Utilities';
+
+  @override
+  String get accountingAccountBankCharges => 'Bank Charges';
+
+  @override
+  String get accountingAccountDepreciation => 'Depreciation';
+
+  @override
+  String get accountingAccountAdvertising => 'Advertising';
+
+  @override
+  String get accountingAccountShippingDelivery => 'Shipping and Delivery';
+
+  @override
+  String get accountingAccountMaintenance => 'Maintenance';
 
   @override
   String get accountingAccountOtherExpenses => 'Other Expenses';
@@ -2065,6 +2461,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get setupCountry => 'Country';
 
   @override
+  String get setupInvoiceHeaderSection => 'Sales invoice header';
+
+  @override
+  String get setupInvoiceHeaderSectionSubtitle =>
+      'Text for the right and left columns around the company logo on printed invoices.';
+
+  @override
+  String get setupInvoiceHeaderRight => 'Right column text';
+
+  @override
+  String get setupInvoiceHeaderLeft => 'Left column text';
+
+  @override
+  String get setupInvoiceHeaderHelper =>
+      'You can enter multiple lines (e.g. address or phone).';
+
+  @override
   String get setupSavedSuccess => 'Setup settings saved.';
 
   @override
@@ -2380,6 +2793,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get platformReportsInventorySubtitle =>
       'Stock count and product reports.';
+
+  @override
+  String get platformReportsBusiness => 'Business PDF reports';
+
+  @override
+  String get platformReportsBusinessSubtitle =>
+      'Sales and cross-module PDF reports with preview.';
 
   @override
   String get platformReportsComingSoon =>

@@ -164,6 +164,450 @@ abstract class AppLocalizations {
   /// **'Create and manage sales offline, with optional accounting and inventory hooks.'**
   String get moduleSalesDescription;
 
+  /// No description provided for @moduleReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get moduleReports;
+
+  /// No description provided for @moduleReportsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate, preview, print, and share professional PDF reports.'**
+  String get moduleReportsDescription;
+
+  /// No description provided for @reportsSalesPeriodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales by period'**
+  String get reportsSalesPeriodTitle;
+
+  /// No description provided for @reportsSalesPeriodSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'List sales in a date range with status filter, then preview as PDF.'**
+  String get reportsSalesPeriodSubtitle;
+
+  /// No description provided for @reportsAccountStatementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account statement'**
+  String get reportsAccountStatementTitle;
+
+  /// No description provided for @reportsAccountStatementSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Print a cumulative Chart of Accounts statement in the account currency (classic layout).'**
+  String get reportsAccountStatementSubtitle;
+
+  /// No description provided for @reportsAccountStatementFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement filters'**
+  String get reportsAccountStatementFilters;
+
+  /// No description provided for @reportsAccountStatementAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get reportsAccountStatementAccount;
+
+  /// No description provided for @reportsAccountStatementAccountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an account'**
+  String get reportsAccountStatementAccountHint;
+
+  /// No description provided for @reportsAccountStatementAccountSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by code or name'**
+  String get reportsAccountStatementAccountSearch;
+
+  /// No description provided for @reportsAccountStatementAccountEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No posting accounts found.'**
+  String get reportsAccountStatementAccountEmpty;
+
+  /// No description provided for @reportsAccountStatementAccountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an account first.'**
+  String get reportsAccountStatementAccountRequired;
+
+  /// No description provided for @reportsAccountStatementAccountName.
+  ///
+  /// In en, this message translates to:
+  /// **'Account name'**
+  String get reportsAccountStatementAccountName;
+
+  /// No description provided for @reportsAccountStatementAccountNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Account number'**
+  String get reportsAccountStatementAccountNumber;
+
+  /// No description provided for @reportsAccountStatementCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get reportsAccountStatementCurrency;
+
+  /// No description provided for @reportsAccountStatementCurrencyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All currencies'**
+  String get reportsAccountStatementCurrencyAll;
+
+  /// No description provided for @reportsAccountStatementType.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement type'**
+  String get reportsAccountStatementType;
+
+  /// No description provided for @reportsAccountStatementTypeCumulative.
+  ///
+  /// In en, this message translates to:
+  /// **'Cumulative statement (account currency)'**
+  String get reportsAccountStatementTypeCumulative;
+
+  /// No description provided for @reportsAccountStatementTypeDetailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Detailed statement'**
+  String get reportsAccountStatementTypeDetailed;
+
+  /// No description provided for @reportsAccountStatementTypeSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary statement'**
+  String get reportsAccountStatementTypeSummary;
+
+  /// No description provided for @reportsAccountStatementPostingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Posting status'**
+  String get reportsAccountStatementPostingStatus;
+
+  /// No description provided for @reportsAccountStatementPostingAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get reportsAccountStatementPostingAll;
+
+  /// No description provided for @reportsAccountStatementPostingPosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted'**
+  String get reportsAccountStatementPostingPosted;
+
+  /// No description provided for @reportsAccountStatementPostingUnposted.
+  ///
+  /// In en, this message translates to:
+  /// **'Unposted'**
+  String get reportsAccountStatementPostingUnposted;
+
+  /// No description provided for @reportsAccountStatementFromDate.
+  ///
+  /// In en, this message translates to:
+  /// **'From date'**
+  String get reportsAccountStatementFromDate;
+
+  /// No description provided for @reportsAccountStatementToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'To date'**
+  String get reportsAccountStatementToDate;
+
+  /// No description provided for @reportsAccountStatementColSide.
+  ///
+  /// In en, this message translates to:
+  /// **'D/C'**
+  String get reportsAccountStatementColSide;
+
+  /// No description provided for @reportsAccountStatementColVoucherType.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher type'**
+  String get reportsAccountStatementColVoucherType;
+
+  /// No description provided for @reportsAccountStatementColVoucherNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'No.'**
+  String get reportsAccountStatementColVoucherNumber;
+
+  /// No description provided for @reportsAccountStatementColDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get reportsAccountStatementColDescription;
+
+  /// No description provided for @reportsAccountStatementColDebit.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit'**
+  String get reportsAccountStatementColDebit;
+
+  /// No description provided for @reportsAccountStatementColCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get reportsAccountStatementColCredit;
+
+  /// No description provided for @reportsAccountStatementColBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get reportsAccountStatementColBalance;
+
+  /// No description provided for @reportsAccountStatementColCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get reportsAccountStatementColCurrency;
+
+  /// No description provided for @reportsAccountStatementColInCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'In currency'**
+  String get reportsAccountStatementColInCurrency;
+
+  /// No description provided for @reportsAccountStatementTotalsDebit.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit'**
+  String get reportsAccountStatementTotalsDebit;
+
+  /// No description provided for @reportsAccountStatementTotalsCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get reportsAccountStatementTotalsCredit;
+
+  /// No description provided for @reportsAccountStatementFinalBalanceByCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Final balance by currency'**
+  String get reportsAccountStatementFinalBalanceByCurrency;
+
+  /// No description provided for @reportsAccountStatementDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'This account statement is considered correct unless an objection is received within two weeks from its date.'**
+  String get reportsAccountStatementDisclaimer;
+
+  /// No description provided for @reportsAccountStatementAccountant.
+  ///
+  /// In en, this message translates to:
+  /// **'Accountant'**
+  String get reportsAccountStatementAccountant;
+
+  /// No description provided for @reportsAccountStatementReviewer.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewer'**
+  String get reportsAccountStatementReviewer;
+
+  /// No description provided for @reportsAccountStatementFinanceManager.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance manager:'**
+  String get reportsAccountStatementFinanceManager;
+
+  /// No description provided for @reportsAccountStatementPrintedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'NexaBiz'**
+  String get reportsAccountStatementPrintedBy;
+
+  /// No description provided for @reportsAccountStatementEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No ledger movements for this account yet. Journal entries will appear here when available.'**
+  String get reportsAccountStatementEmpty;
+
+  /// No description provided for @reportsCatalogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'All PDF reports'**
+  String get reportsCatalogTitle;
+
+  /// No description provided for @reportsCatalogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the reports catalog to generate and preview PDFs.'**
+  String get reportsCatalogSubtitle;
+
+  /// No description provided for @reportsPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report preview'**
+  String get reportsPreviewTitle;
+
+  /// No description provided for @reportsPreviewMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'No report is ready to preview. Generate a report first.'**
+  String get reportsPreviewMissing;
+
+  /// No description provided for @reportsActionPrint.
+  ///
+  /// In en, this message translates to:
+  /// **'Print'**
+  String get reportsActionPrint;
+
+  /// No description provided for @reportsActionShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get reportsActionShare;
+
+  /// No description provided for @reportsGeneratePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate & preview'**
+  String get reportsGeneratePreview;
+
+  /// No description provided for @reportsGenerating.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating report…'**
+  String get reportsGenerating;
+
+  /// No description provided for @reportsGeneratedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated'**
+  String get reportsGeneratedAt;
+
+  /// No description provided for @reportsPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get reportsPeriod;
+
+  /// No description provided for @reportsPeriodAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All dates'**
+  String get reportsPeriodAll;
+
+  /// No description provided for @reportsFromDate.
+  ///
+  /// In en, this message translates to:
+  /// **'From date'**
+  String get reportsFromDate;
+
+  /// No description provided for @reportsToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'To date'**
+  String get reportsToDate;
+
+  /// No description provided for @reportsDateAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any'**
+  String get reportsDateAny;
+
+  /// No description provided for @reportsStatusAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All statuses'**
+  String get reportsStatusAll;
+
+  /// No description provided for @reportsGrandTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Grand total'**
+  String get reportsGrandTotal;
+
+  /// No description provided for @reportsRowCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Rows'**
+  String get reportsRowCount;
+
+  /// No description provided for @reportsColSaleNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get reportsColSaleNumber;
+
+  /// No description provided for @reportsColDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get reportsColDate;
+
+  /// No description provided for @reportsColCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get reportsColCustomer;
+
+  /// No description provided for @reportsColSettlement.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement'**
+  String get reportsColSettlement;
+
+  /// No description provided for @reportsColStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get reportsColStatus;
+
+  /// No description provided for @reportsColCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get reportsColCurrency;
+
+  /// No description provided for @reportsColTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get reportsColTotal;
+
+  /// No description provided for @reportsEmptySales.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales match the selected filters.'**
+  String get reportsEmptySales;
+
+  /// No description provided for @reportsErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not generate the report.'**
+  String get reportsErrorGeneric;
+
+  /// No description provided for @reportsErrorPrint.
+  ///
+  /// In en, this message translates to:
+  /// **'Printing failed.'**
+  String get reportsErrorPrint;
+
+  /// No description provided for @reportsErrorShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing failed.'**
+  String get reportsErrorShare;
+
+  /// No description provided for @reportsErrorFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the PDF file.'**
+  String get reportsErrorFile;
+
+  /// No description provided for @reportsErrorFont.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load report fonts.'**
+  String get reportsErrorFont;
+
   /// No description provided for @salesListTitle.
   ///
   /// In en, this message translates to:
@@ -301,6 +745,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Product not found.'**
   String get salesProductNotFound;
+
+  /// No description provided for @salesAutocompleteSearchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load results. Try again.'**
+  String get salesAutocompleteSearchFailed;
 
   /// No description provided for @salesRemoveItem.
   ///
@@ -662,28 +1112,40 @@ abstract class AppLocalizations {
   /// **'Sale status'**
   String get salesStatus;
 
+  /// No description provided for @salesStatusUnposted.
+  ///
+  /// In en, this message translates to:
+  /// **'Unposted'**
+  String get salesStatusUnposted;
+
+  /// No description provided for @salesStatusPosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted'**
+  String get salesStatusPosted;
+
   /// No description provided for @salesStatusDraft.
   ///
   /// In en, this message translates to:
-  /// **'Draft'**
+  /// **'Unposted'**
   String get salesStatusDraft;
 
   /// No description provided for @salesStatusPending.
   ///
   /// In en, this message translates to:
-  /// **'Pending accounting'**
+  /// **'Unposted'**
   String get salesStatusPending;
 
   /// No description provided for @salesStatusConfirmed.
   ///
   /// In en, this message translates to:
-  /// **'Confirmed'**
+  /// **'Posted'**
   String get salesStatusConfirmed;
 
   /// No description provided for @salesStatusCompleted.
   ///
   /// In en, this message translates to:
-  /// **'Completed'**
+  /// **'Posted'**
   String get salesStatusCompleted;
 
   /// No description provided for @salesStatusCancelled.
@@ -713,7 +1175,7 @@ abstract class AppLocalizations {
   /// No description provided for @salesSaveAndConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Save & confirm'**
+  /// **'Save & post'**
   String get salesSaveAndConfirm;
 
   /// No description provided for @salesSaving.
@@ -731,8 +1193,14 @@ abstract class AppLocalizations {
   /// No description provided for @salesConfirming.
   ///
   /// In en, this message translates to:
-  /// **'Confirming sale…'**
+  /// **'Posting sale…'**
   String get salesConfirming;
+
+  /// No description provided for @salesPosting.
+  ///
+  /// In en, this message translates to:
+  /// **'Posting…'**
+  String get salesPosting;
 
   /// No description provided for @salesSaved.
   ///
@@ -743,8 +1211,14 @@ abstract class AppLocalizations {
   /// No description provided for @salesConfirmed.
   ///
   /// In en, this message translates to:
-  /// **'Sale confirmed'**
+  /// **'Sale posted'**
   String get salesConfirmed;
+
+  /// No description provided for @salesPosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale posted'**
+  String get salesPosted;
 
   /// No description provided for @salesCompleted.
   ///
@@ -767,8 +1241,14 @@ abstract class AppLocalizations {
   /// No description provided for @salesConfirmSale.
   ///
   /// In en, this message translates to:
-  /// **'Confirm sale'**
+  /// **'Post'**
   String get salesConfirmSale;
+
+  /// No description provided for @salesPostSale.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get salesPostSale;
 
   /// No description provided for @salesCompleteSale.
   ///
@@ -799,6 +1279,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Duplicate'**
   String get salesDuplicate;
+
+  /// No description provided for @salesPrintInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Print'**
+  String get salesPrintInvoice;
+
+  /// No description provided for @salesPreviewInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview & print'**
+  String get salesPreviewInvoice;
+
+  /// No description provided for @salesPrintingInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing invoice preview…'**
+  String get salesPrintingInvoice;
+
+  /// No description provided for @salesPrintFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not print the invoice.'**
+  String get salesPrintFailed;
+
+  /// No description provided for @salesShareInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get salesShareInvoice;
+
+  /// No description provided for @salesSharingInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing share…'**
+  String get salesSharingInvoice;
+
+  /// No description provided for @salesShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not share the invoice.'**
+  String get salesShareFailed;
+
+  /// No description provided for @salesInvoiceSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice saved to the invoices folder.'**
+  String get salesInvoiceSaved;
 
   /// No description provided for @salesNotFound.
   ///
@@ -1013,8 +1541,14 @@ abstract class AppLocalizations {
   /// No description provided for @customersFieldAccountHelper.
   ///
   /// In en, this message translates to:
-  /// **'Enter an existing posting account under the configured customers parent. No account is created automatically.'**
+  /// **'Optional. Leave empty to auto-create under the customers parent when auto-link is on, or enter an existing posting account code.'**
   String get customersFieldAccountHelper;
+
+  /// No description provided for @customersFieldAccountHelperAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to auto-create a Chart of Accounts account under the customers parent (same code as the customer).'**
+  String get customersFieldAccountHelperAuto;
 
   /// No description provided for @customersAccountLinked.
   ///
@@ -1028,11 +1562,77 @@ abstract class AppLocalizations {
   /// **'No matching posting account found for that code.'**
   String get customersAccountLinkInvalid;
 
+  /// No description provided for @customersAccountAutoLinkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create or link the Chart of Accounts account for this customer.'**
+  String get customersAccountAutoLinkFailed;
+
   /// No description provided for @customersAccountMustBeUnderParent.
   ///
   /// In en, this message translates to:
   /// **'Linked account must be under parent {code} · {name}.'**
   String customersAccountMustBeUnderParent(String code, String name);
+
+  /// No description provided for @customersSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers settings'**
+  String get customersSettingsTitle;
+
+  /// No description provided for @customersSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure Chart of Accounts linking and other customer options.'**
+  String get customersSettingsSubtitle;
+
+  /// No description provided for @customersSettingsCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent account, auto-link, and more'**
+  String get customersSettingsCardSubtitle;
+
+  /// No description provided for @customersAutoLinkSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-link Chart of Accounts'**
+  String get customersAutoLinkSectionTitle;
+
+  /// No description provided for @customersAutoLinkSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When enabled, saving a customer without an account creates a posting account under the customers parent group.'**
+  String get customersAutoLinkSectionSubtitle;
+
+  /// No description provided for @customersAutoLinkToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create CoA account automatically'**
+  String get customersAutoLinkToggle;
+
+  /// No description provided for @customersLinkMissingAccountsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Link existing customers'**
+  String get customersLinkMissingAccountsTitle;
+
+  /// No description provided for @customersLinkMissingAccountsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Chart of Accounts accounts for customers imported or saved without a link.'**
+  String get customersLinkMissingAccountsSubtitle;
+
+  /// No description provided for @customersLinkMissingAccountsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Link missing accounts now'**
+  String get customersLinkMissingAccountsAction;
+
+  /// No description provided for @customersLinkMissingAccountsDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked {count} customers to the Chart of Accounts.'**
+  String customersLinkMissingAccountsDone(int count);
 
   /// No description provided for @customersParentAccountSectionTitle.
   ///
@@ -1055,7 +1655,7 @@ abstract class AppLocalizations {
   /// No description provided for @customersParentAccountNotSet.
   ///
   /// In en, this message translates to:
-  /// **'Parent account is not set. Configure it in Settings.'**
+  /// **'Parent account is not set. Configure it in Customers settings.'**
   String get customersParentAccountNotSet;
 
   /// No description provided for @customersParentAccountField.
@@ -1381,6 +1981,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Browse and manage the hierarchical account structure.'**
   String get accountingChartOfAccountsDescription;
+
+  /// No description provided for @accountingReportsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounting reports'**
+  String get accountingReportsTitle;
+
+  /// No description provided for @accountingReportsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Statements and financial reports built on the Chart of Accounts.'**
+  String get accountingReportsSubtitle;
+
+  /// No description provided for @accountingReportTrialBalanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial balance'**
+  String get accountingReportTrialBalanceTitle;
+
+  /// No description provided for @accountingReportJournalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal'**
+  String get accountingReportJournalTitle;
+
+  /// No description provided for @accountingReportComingSoonSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming in a later release.'**
+  String get accountingReportComingSoonSubtitle;
+
+  /// No description provided for @accountingReportComingSoonBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Soon'**
+  String get accountingReportComingSoonBadge;
 
   /// No description provided for @accountingCurrencyRatesTitle.
   ///
@@ -2258,6 +2894,12 @@ abstract class AppLocalizations {
   /// **'Bank'**
   String get accountingAccountBank;
 
+  /// No description provided for @accountingAccountPettyCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Petty Cash'**
+  String get accountingAccountPettyCash;
+
   /// No description provided for @accountingAccountAccountsReceivable.
   ///
   /// In en, this message translates to:
@@ -2275,6 +2917,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Inventory'**
   String get accountingAccountInventory;
+
+  /// No description provided for @accountingAccountInventoryInTransit.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory in Transit'**
+  String get accountingAccountInventoryInTransit;
+
+  /// No description provided for @accountingAccountVatInput.
+  ///
+  /// In en, this message translates to:
+  /// **'VAT Input'**
+  String get accountingAccountVatInput;
+
+  /// No description provided for @accountingAccountPrepaidExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Prepaid Expenses'**
+  String get accountingAccountPrepaidExpenses;
+
+  /// No description provided for @accountingAccountOtherCurrentAssets.
+  ///
+  /// In en, this message translates to:
+  /// **'Other Current Assets'**
+  String get accountingAccountOtherCurrentAssets;
 
   /// No description provided for @accountingAccountFixedAssets.
   ///
@@ -2318,17 +2984,47 @@ abstract class AppLocalizations {
   /// **'Accounts Payable'**
   String get accountingAccountAccountsPayable;
 
+  /// No description provided for @accountingAccountSuppliers.
+  ///
+  /// In en, this message translates to:
+  /// **'Suppliers'**
+  String get accountingAccountSuppliers;
+
   /// No description provided for @accountingAccountShortTermLoans.
   ///
   /// In en, this message translates to:
   /// **'Short Term Loans'**
   String get accountingAccountShortTermLoans;
 
+  /// No description provided for @accountingAccountVatOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'VAT Output Payable'**
+  String get accountingAccountVatOutput;
+
+  /// No description provided for @accountingAccountAccruedExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'Accrued Expenses'**
+  String get accountingAccountAccruedExpenses;
+
+  /// No description provided for @accountingAccountCustomerAdvances.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer Advances'**
+  String get accountingAccountCustomerAdvances;
+
   /// No description provided for @accountingAccountLongTermLiabilities.
   ///
   /// In en, this message translates to:
   /// **'Long Term Liabilities'**
   String get accountingAccountLongTermLiabilities;
+
+  /// No description provided for @accountingAccountLongTermLoans.
+  ///
+  /// In en, this message translates to:
+  /// **'Long Term Loans'**
+  String get accountingAccountLongTermLoans;
 
   /// No description provided for @accountingAccountEquity.
   ///
@@ -2366,6 +3062,12 @@ abstract class AppLocalizations {
   /// **'Other Revenue'**
   String get accountingAccountOtherRevenue;
 
+  /// No description provided for @accountingAccountPurchaseDiscounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase Discounts'**
+  String get accountingAccountPurchaseDiscounts;
+
   /// No description provided for @accountingAccountExpenses.
   ///
   /// In en, this message translates to:
@@ -2377,6 +3079,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cost of Goods Sold'**
   String get accountingAccountCogs;
+
+  /// No description provided for @accountingAccountInventoryAdjustments.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory Adjustments'**
+  String get accountingAccountInventoryAdjustments;
+
+  /// No description provided for @accountingAccountSalesReturns.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Returns'**
+  String get accountingAccountSalesReturns;
+
+  /// No description provided for @accountingAccountSalesDiscounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Discounts'**
+  String get accountingAccountSalesDiscounts;
 
   /// No description provided for @accountingAccountSalaries.
   ///
@@ -2395,6 +3115,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Utilities'**
   String get accountingAccountUtilities;
+
+  /// No description provided for @accountingAccountBankCharges.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank Charges'**
+  String get accountingAccountBankCharges;
+
+  /// No description provided for @accountingAccountDepreciation.
+  ///
+  /// In en, this message translates to:
+  /// **'Depreciation'**
+  String get accountingAccountDepreciation;
+
+  /// No description provided for @accountingAccountAdvertising.
+  ///
+  /// In en, this message translates to:
+  /// **'Advertising'**
+  String get accountingAccountAdvertising;
+
+  /// No description provided for @accountingAccountShippingDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipping and Delivery'**
+  String get accountingAccountShippingDelivery;
+
+  /// No description provided for @accountingAccountMaintenance.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance'**
+  String get accountingAccountMaintenance;
 
   /// No description provided for @accountingAccountOtherExpenses.
   ///
@@ -3848,6 +4598,36 @@ abstract class AppLocalizations {
   /// **'Country'**
   String get setupCountry;
 
+  /// No description provided for @setupInvoiceHeaderSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales invoice header'**
+  String get setupInvoiceHeaderSection;
+
+  /// No description provided for @setupInvoiceHeaderSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Text for the right and left columns around the company logo on printed invoices.'**
+  String get setupInvoiceHeaderSectionSubtitle;
+
+  /// No description provided for @setupInvoiceHeaderRight.
+  ///
+  /// In en, this message translates to:
+  /// **'Right column text'**
+  String get setupInvoiceHeaderRight;
+
+  /// No description provided for @setupInvoiceHeaderLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Left column text'**
+  String get setupInvoiceHeaderLeft;
+
+  /// No description provided for @setupInvoiceHeaderHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'You can enter multiple lines (e.g. address or phone).'**
+  String get setupInvoiceHeaderHelper;
+
   /// No description provided for @setupSavedSuccess.
   ///
   /// In en, this message translates to:
@@ -4417,6 +5197,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stock count and product reports.'**
   String get platformReportsInventorySubtitle;
+
+  /// No description provided for @platformReportsBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Business PDF reports'**
+  String get platformReportsBusiness;
+
+  /// No description provided for @platformReportsBusinessSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales and cross-module PDF reports with preview.'**
+  String get platformReportsBusinessSubtitle;
 
   /// No description provided for @platformReportsComingSoon.
   ///

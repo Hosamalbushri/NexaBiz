@@ -14,11 +14,12 @@ import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/payment_status.dart';
-import '../../domain/entities/sale.dart';
+import '../../domain/entities/sale_list_item.dart';
 import '../../domain/entities/sale_settlement_type.dart';
 import '../../domain/entities/sale_status.dart';
 import '../../domain/models/sale_list_filter.dart';
 import '../providers/sale_providers.dart';
+import '../providers/sales_list_provider.dart';
 import '../widgets/sale_error_messages.dart';
 import '../widgets/sale_status_badge.dart';
 import '../widgets/sales_page_loader.dart';
@@ -33,35 +34,35 @@ class SalesListPage extends ConsumerStatefulWidget {
 
 class _SalesListPageState extends ConsumerState<SalesListPage> {
   final _searchController = TextEditingController();
+  final _scrollController = ScrollController();
   final _loader = SalesPageLoaderBinding();
   bool? _lastLoading;
   Timer? _debounce;
-  ProviderSubscription<AsyncValue<List<Sale>>>? _salesSub;
-  AsyncValue<List<Sale>> _salesAsync = const AsyncLoading();
 
   @override
   void initState() {
     super.initState();
-    _salesSub = ref.listenManual<AsyncValue<List<Sale>>>(
-      salesProvider,
-      (previous, next) {
-        if (!mounted) {
-          return;
-        }
-        setState(() => _salesAsync = next);
-      },
-      fireImmediately: true,
-    );
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _salesSub?.close();
-    _salesSub = null;
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _loader.dispose();
     _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+    final pos = _scrollController.position;
+    if (pos.pixels >= pos.maxScrollExtent - 240) {
+      ref.read(salesListProvider.notifier).loadMore();
+    }
   }
 
   void _syncLoader(bool isLoading, String message) {
@@ -221,13 +222,16 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final asyncSales = _salesAsync;
+    final asyncList = ref.watch(salesListProvider);
     final filter = ref.watch(saleListFilterProvider);
     final hasFilters = filter.saleStatus != null ||
         filter.paymentStatus != null ||
         filter.paymentMethod != null;
 
-    _syncLoader(asyncSales.isLoading, l10n.salesLoadingInvoice);
+    _syncLoader(
+      asyncList.isLoading && !asyncList.hasValue,
+      l10n.salesLoadingInvoice,
+    );
 
     return Scaffold(
       backgroundColor: scheme.surfaceContainerLowest,
@@ -319,13 +323,14 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
                 AppConstants.pagePadding,
                 AppConstants.pagePadding,
               ),
-              child: asyncSales.when(
+              child: asyncList.when(
                 loading: () => const SizedBox.expand(),
                 error: (error, _) => AppErrorState(
                   message: saleErrorMessage(l10n, error),
-                  onRetry: () => ref.invalidate(salesProvider),
+                  onRetry: () => ref.read(salesListProvider.notifier).reload(),
                 ),
-                data: (sales) {
+                data: (listState) {
+                  final sales = listState.items;
                   if (sales.isEmpty) {
                     return AppEmptyState(
                       title: l10n.salesEmptyTitle,
@@ -335,11 +340,25 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
                       onAction: () => SalesRoutes.pushCreate(context),
                     );
                   }
+                  final footer = listState.hasMore ? 1 : 0;
                   return ListView.separated(
-                    itemCount: sales.length,
+                    controller: _scrollController,
+                    itemCount: sales.length + footer,
                     separatorBuilder: (_, _) =>
                         const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (context, index) {
+                      if (index >= sales.length) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
+                          child: Center(
+                            child: SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      }
                       return _SaleListTile(sale: sales[index]);
                     },
                   );
@@ -356,7 +375,7 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
 class _SaleListTile extends StatelessWidget {
   const _SaleListTile({required this.sale});
 
-  final Sale sale;
+  final SaleListItem sale;
 
   @override
   Widget build(BuildContext context) {
@@ -527,20 +546,8 @@ class _SaleListTile extends StatelessWidget {
 
 String _saleStatusLabel(AppLocalizations l10n, SaleStatus status) {
   return switch (status) {
-    SaleStatus.draft => l10n.salesStatusDraft,
-    SaleStatus.pending => l10n.salesStatusPending,
-    SaleStatus.confirmed => l10n.salesStatusConfirmed,
-    SaleStatus.completed => l10n.salesStatusCompleted,
-    SaleStatus.cancelled => l10n.salesStatusCancelled,
-    SaleStatus.rejected => l10n.salesStatusRejected,
-  };
-}
-
-String _paymentStatusLabel(AppLocalizations l10n, PaymentStatus status) {
-  return switch (status) {
-    PaymentStatus.unpaid => l10n.salesPaymentUnpaid,
-    PaymentStatus.partiallyPaid => l10n.salesPaymentPartiallyPaid,
-    PaymentStatus.paid => l10n.salesPaymentPaid,
+    SaleStatus.unposted => l10n.salesStatusUnposted,
+    SaleStatus.posted => l10n.salesStatusPosted,
   };
 }
 
@@ -551,5 +558,13 @@ String _paymentMethodLabel(AppLocalizations l10n, PaymentMethod method) {
     PaymentMethod.bankTransfer => l10n.salesPaymentBankTransfer,
     PaymentMethod.credit => l10n.salesPaymentCredit,
     PaymentMethod.other => l10n.salesPaymentOther,
+  };
+}
+
+String _paymentStatusLabel(AppLocalizations l10n, PaymentStatus status) {
+  return switch (status) {
+    PaymentStatus.unpaid => l10n.salesPaymentUnpaid,
+    PaymentStatus.partiallyPaid => l10n.salesPaymentPartiallyPaid,
+    PaymentStatus.paid => l10n.salesPaymentPaid,
   };
 }

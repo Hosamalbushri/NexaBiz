@@ -18,7 +18,9 @@ import 'package:stock_count/modules/sales/domain/entities/sale_item.dart';
 import 'package:stock_count/modules/sales/domain/entities/sale_settlement_type.dart';
 import 'package:stock_count/modules/sales/domain/entities/sale_status.dart';
 import 'package:stock_count/modules/sales/domain/models/sale_exception.dart';
+import 'package:stock_count/modules/sales/domain/models/sale_list_filter.dart';
 import 'package:stock_count/modules/sales/domain/repositories/sale_repository.dart';
+import 'package:stock_count/modules/sales/domain/services/sale_accounting_bridge_port.dart';
 import 'package:stock_count/modules/sales/domain/services/sale_calculation_service.dart';
 import 'package:stock_count/modules/sales/domain/services/sale_currency_converter.dart';
 import 'package:stock_count/modules/sales/domain/services/sale_inventory_effect_port.dart';
@@ -322,7 +324,7 @@ void main() {
       expect(await syncQueue.countByStatus(SyncStatus.pending), greaterThan(0));
     });
 
-    test('cancels a confirmed sale', () async {
+    test('cancels a posted sale by soft-delete', () async {
       final create = CreateSale(
         repository: repository,
         numberAllocator: LocalSaleNumberAllocator(
@@ -348,39 +350,221 @@ void main() {
 
       await repository.updateStatus(
         sale.id,
-        const SaleStatusUpdate(saleStatus: SaleStatus.confirmed),
+        const SaleStatusUpdate(saleStatus: SaleStatus.posted),
       );
       final cancel = CancelSale(
         repository: repository,
         inventoryEffect: const NoOpSaleInventoryEffectPort(),
       );
-      final cancelled = await cancel(sale.id);
-      expect(cancelled.saleStatus, SaleStatus.cancelled);
+      await cancel(sale.id);
+      expect(await repository.getById(sale.id), isNull);
+    });
+
+    test('date filter uses saleDate not createdAt', () async {
+      final create = CreateSale(
+        repository: repository,
+        numberAllocator: LocalSaleNumberAllocator(
+          nextSequence: repository.nextLocalSequence,
+        ),
+        voucherBookPort: _FakeVoucherBookPort(),
+      );
+      final sale = await create(
+        _cashDraft(
+          paidAmount: 10,
+          items: const [
+            SaleItemDraft(
+              productId: 'p',
+              productName: 'P',
+              productCode: 'P',
+              mainQuantity: 1,
+              unitPrice: 10,
+              baseUnitPrice: 10,
+            ),
+          ],
+        ),
+      );
+      expect(sale.saleDate, DateTime.utc(2026, 8, 13));
+
+      final inRange = await repository.search(
+        SaleListFilter(
+          fromDate: DateTime.utc(2026, 8, 13),
+          toDate: DateTime.utc(2026, 8, 13),
+        ),
+      );
+      expect(inRange.map((s) => s.id), contains(sale.id));
+
+      final outOfRange = await repository.search(
+        SaleListFilter(
+          fromDate: DateTime.utc(2026, 8, 14),
+          toDate: DateTime.utc(2026, 8, 20),
+        ),
+      );
+      expect(outOfRange.map((s) => s.id), isNot(contains(sale.id)));
+    });
+
+    test('searchListPaged returns header rows without loading all sales', () async {
+      final create = CreateSale(
+        repository: repository,
+        numberAllocator: LocalSaleNumberAllocator(
+          nextSequence: repository.nextLocalSequence,
+        ),
+        voucherBookPort: _FakeVoucherBookPort(),
+      );
+      for (var i = 0; i < 5; i++) {
+        await create(
+          _cashDraft(
+            paidAmount: 10,
+            items: [
+              SaleItemDraft(
+                productId: 'p$i',
+                productName: 'Product $i',
+                productCode: 'SKU-$i',
+                mainQuantity: 1,
+                unitPrice: 10,
+                baseUnitPrice: 10,
+              ),
+            ],
+          ),
+        );
+      }
+
+      final page0 = await repository.searchListPaged(
+        const SaleListFilter(),
+        page: 0,
+        pageSize: 2,
+      );
+      expect(page0.totalCount, 5);
+      expect(page0.items, hasLength(2));
+      expect(page0.hasNext, isTrue);
+
+      final page1 = await repository.searchListPaged(
+        const SaleListFilter(),
+        page: 1,
+        pageSize: 2,
+      );
+      expect(page1.items, hasLength(2));
+
+      final byProduct = await repository.searchListPaged(
+        const SaleListFilter(query: 'Product 4'),
+        page: 0,
+        pageSize: 10,
+      );
+      expect(byProduct.totalCount, 1);
+      expect(byProduct.items.single.saleNumber, isNotEmpty);
+    });
+
+    test('post leaves unposted when accounting bridge fails', () async {
+      final create = CreateSale(
+        repository: repository,
+        numberAllocator: LocalSaleNumberAllocator(
+          nextSequence: repository.nextLocalSequence,
+        ),
+        voucherBookPort: _FakeVoucherBookPort(),
+      );
+      final sale = await create(
+        _cashDraft(
+          paidAmount: 10,
+          items: const [
+            SaleItemDraft(
+              productId: 'p',
+              productName: 'P',
+              productCode: 'P',
+              mainQuantity: 1,
+              unitPrice: 10,
+              baseUnitPrice: 10,
+            ),
+          ],
+        ),
+      );
+
+      final confirm = ConfirmSale(
+        repository: repository,
+        accountingBridge: const _FailingAccountingBridge(),
+        inventoryEffect: const NoOpSaleInventoryEffectPort(),
+      );
+
+      await expectLater(
+        confirm(sale.id),
+        throwsA(
+          isA<SaleException>().having(
+            (e) => e.code,
+            'code',
+            SaleException.externalIntegrationFailed,
+          ),
+        ),
+      );
+
+      final reloaded = await repository.getById(sale.id);
+      expect(reloaded?.saleStatus, SaleStatus.unposted);
+      expect(reloaded?.confirmedAt, isNull);
+      expect(reloaded?.submittedAt, isNull);
+    });
+
+    test('post reverts when inventory effect fails', () async {
+      final create = CreateSale(
+        repository: repository,
+        numberAllocator: LocalSaleNumberAllocator(
+          nextSequence: repository.nextLocalSequence,
+        ),
+        voucherBookPort: _FakeVoucherBookPort(),
+      );
+      final sale = await create(
+        _cashDraft(
+          paidAmount: 10,
+          items: const [
+            SaleItemDraft(
+              productId: 'p',
+              productName: 'P',
+              productCode: 'P',
+              mainQuantity: 1,
+              unitPrice: 10,
+              baseUnitPrice: 10,
+            ),
+          ],
+        ),
+      );
+
+      final confirm = ConfirmSale(
+        repository: repository,
+        accountingBridge: const NoOpSaleAccountingBridgePort(),
+        inventoryEffect: const _FailingInventoryEffect(),
+      );
+
+      await expectLater(confirm(sale.id), throwsA(isA<StateError>()));
+
+      final reloaded = await repository.getById(sale.id);
+      expect(reloaded?.saleStatus, SaleStatus.unposted);
+      expect(reloaded?.confirmedAt, isNull);
     });
   });
 
   group('workflow', () {
     const workflow = SaleWorkflowService();
-    test('confirm goes pending in integrated mode', () {
-      expect(workflow.nextOnConfirm(integratedMode: true), SaleStatus.pending);
+    test('post goes posted in both modes', () {
+      expect(workflow.nextOnConfirm(integratedMode: true), SaleStatus.posted);
       expect(
         workflow.nextOnConfirm(integratedMode: false),
-        SaleStatus.confirmed,
+        SaleStatus.posted,
       );
     });
   });
 }
 
 class _FakeVoucherBookPort implements SaleVoucherBookPort {
+  var _seq = 41;
+
   @override
-  Future<String> allocateSaleNumber(String bookId) async => '42';
+  Future<String> allocateSaleNumber(String bookId) async {
+    _seq += 1;
+    return '$_seq';
+  }
 
   @override
   Future<SaleVoucherBookRef?> findById(String bookId) async {
     return SaleVoucherBookRef(
       bookId: bookId,
       name: 'Main',
-      nextNumber: 42,
+      nextNumber: _seq + 1,
       canAllocate: true,
     );
   }
@@ -388,14 +572,46 @@ class _FakeVoucherBookPort implements SaleVoucherBookPort {
   @override
   Future<List<SaleVoucherBookRef>> listActiveSalesBooks() async {
     return [
-      const SaleVoucherBookRef(
+      SaleVoucherBookRef(
         bookId: 'book-1',
         name: 'Main',
-        nextNumber: 42,
+        nextNumber: _seq + 1,
         canAllocate: true,
       ),
     ];
   }
+}
+
+class _FailingAccountingBridge implements SaleAccountingBridgePort {
+  const _FailingAccountingBridge();
+
+  @override
+  Future<bool> get isIntegratedMode async => true;
+
+  @override
+  Future<void> submitOperationalSale(Sale sale) async {
+    throw StateError('bridge down');
+  }
+
+  @override
+  Future<void> attachExternalReference({
+    required String saleUuid,
+    required String externalId,
+    String? externalDocumentNumber,
+    String? externalStatus,
+  }) async {}
+}
+
+class _FailingInventoryEffect implements SaleInventoryEffectPort {
+  const _FailingInventoryEffect();
+
+  @override
+  Future<void> onConfirmed(Sale sale) async {
+    throw StateError('stock effect failed');
+  }
+
+  @override
+  Future<void> onCancelled(Sale sale) async {}
 }
 
 extension on SaleDraft {

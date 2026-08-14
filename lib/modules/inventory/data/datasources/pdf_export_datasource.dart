@@ -1,24 +1,27 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 
+import '../../../../core/reporting/report_fonts.dart';
+import '../../../../core/reporting/report_table.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/entities/item_status.dart';
 import '../../domain/models/report_export_labels.dart';
 
-/// Exports inventory report data to a localized PDF document.
+/// Builds inventory report PDFs (shared reporting fonts / table helpers).
 class PdfExportDatasource {
   /// Large “all items” / “not counted” exports can exceed the MultiPage default (20).
   static const int _maxPages = 2000;
 
-  Future<String> export({
+  /// Builds PDF bytes for in-app preview (reports kit).
+  Future<({Uint8List bytes, String fileName})> buildPdf({
     required List<InventoryItem> items,
     required ReportExportLabels labels,
   }) async {
-    final (baseFont, boldFont) = await _loadFonts();
+    final (baseFont, boldFont) = await _loadReportFonts();
     final theme = pw.ThemeData.withFont(base: baseFont, bold: boldFont);
     final textDirection = labels.isRtl
         ? pw.TextDirection.rtl
@@ -54,20 +57,15 @@ class PdfExportDatasource {
       8: const pw.FixedColumnWidth(56),
     };
 
-    final resolvedHeaders = labels.isRtl
-        ? headers.reversed.toList(growable: false)
-        : headers;
-    final resolvedWidths = labels.isRtl
-        ? <int, pw.TableColumnWidth>{
-            for (var i = 0; i < columnWidths.length; i++)
-              i: columnWidths[columnWidths.length - 1 - i]!,
-          }
-        : columnWidths;
-
-    final data = <List<String>>[
-      for (final item in items)
-        _rowCells(item: item, labels: labels, isRtl: labels.isRtl),
-    ];
+    final resolved = ReportTable.resolveRtl(
+      headers: headers,
+      rows: [
+        for (final item in items)
+          _rowCells(item: item, labels: labels, isRtl: false),
+      ],
+      widths: columnWidths,
+      isRtl: labels.isRtl,
+    );
 
     document.addPage(
       pw.MultiPage(
@@ -117,11 +115,9 @@ class PdfExportDatasource {
           );
         },
         build: (context) => [
-          // Table must be a MultiPage child that can split across pages.
-          // Nesting it in Column was causing TooManyPages for large filters.
           pw.TableHelper.fromTextArray(
-            headers: resolvedHeaders,
-            data: data,
+            headers: resolved.headers,
+            data: resolved.rows,
             headerDirection: textDirection,
             tableDirection: textDirection,
             headerStyle: pw.TextStyle(
@@ -141,9 +137,9 @@ class PdfExportDatasource {
               vertical: 4,
             ),
             border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.4),
-            columnWidths: resolvedWidths,
+            columnWidths: resolved.widths,
             cellDecoration: (index, data, rowNum) {
-              final itemIndex = rowNum - 1; // header occupies row 0
+              final itemIndex = rowNum - 1;
               if (itemIndex < 0 || itemIndex >= items.length) {
                 return const pw.BoxDecoration();
               }
@@ -158,25 +154,29 @@ class PdfExportDatasource {
       ),
     );
 
-    final directory = await getApplicationDocumentsDirectory();
     final timestamp = DateTime.now().toIso8601String().replaceAll(':', '-');
-    final path =
-        '${directory.path}/inventory_report_${labels.localeCode}_$timestamp.pdf';
+    final fileName = 'inventory_report_${labels.localeCode}_$timestamp.pdf';
+    final bytes = await document.save();
+    return (bytes: bytes, fileName: fileName);
+  }
+
+  /// Writes PDF to app documents and returns the path (Excel print fallback).
+  Future<String> export({
+    required List<InventoryItem> items,
+    required ReportExportLabels labels,
+  }) async {
+    final prepared = await buildPdf(items: items, labels: labels);
+    final directory = await getApplicationDocumentsDirectory();
+    final path = '${directory.path}/${prepared.fileName}';
     final file = File(path);
-    await file.writeAsBytes(await document.save(), flush: true);
+    await file.writeAsBytes(prepared.bytes, flush: true);
     return path;
   }
 
-  /// Prefer Cairo for Arabic; fall back to Helvetica when offline / CDN fails.
-  Future<(pw.Font, pw.Font)> _loadFonts() async {
+  /// Prefer Amiri (reports kit); fall back to Helvetica when fonts fail.
+  Future<(pw.Font, pw.Font)> _loadReportFonts() async {
     try {
-      final regular = await PdfGoogleFonts.cairoRegular().timeout(
-        const Duration(seconds: 8),
-      );
-      final bold = await PdfGoogleFonts.cairoBold().timeout(
-        const Duration(seconds: 8),
-      );
-      return (regular, bold);
+      return await ReportFontLoader.loadAmiri();
     } catch (_) {
       return (pw.Font.helvetica(), pw.Font.helveticaBold());
     }

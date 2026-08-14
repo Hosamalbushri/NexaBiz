@@ -9,6 +9,9 @@ class CustomersRoutes {
   static const String list = '/customers/list';
   static const String create = '/customers/new';
   static const String importPath = '/customers/import';
+  static const String settings = '/customers/settings';
+  static const String parentAccountSettings =
+      '/customers/settings/parent-account';
 
   static String edit(int id) => '/customers/$id/edit';
 
@@ -21,6 +24,11 @@ class CustomersRoutes {
   static void pushCreate(BuildContext context) => context.push(create);
 
   static void pushImport(BuildContext context) => context.push(importPath);
+
+  static void pushSettings(BuildContext context) => context.push(settings);
+
+  static void pushParentAccountSettings(BuildContext context) =>
+      context.push(parentAccountSettings);
 
   static void pushEdit(BuildContext context, int id) => context.push(edit(id));
 

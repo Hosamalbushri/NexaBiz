@@ -160,10 +160,11 @@ class ProductRepositoryImpl implements ProductRepository {
     return row == null ? null : _map(row);
   }
 
+  @override
   Future<Product?> getByUuid(String uuid) async {
     final row = await (_db.select(
       _db.products,
-    )..where((t) => t.uuid.equals(uuid))).getSingleOrNull();
+    )..where((t) => t.uuid.equals(uuid) & _notDeleted(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -193,35 +194,126 @@ class ProductRepositoryImpl implements ProductRepository {
     return row == null ? null : _map(row);
   }
 
-  @override
-  Future<List<Product>> search(
-    String query, {
-    CatalogSearchField searchField = CatalogSearchField.all,
-  }) async {
-    final paged = await getPaged(
-      page: 0,
-      pageSize: 100000,
-      query: query,
-      searchField: searchField,
-    );
-    return paged.items;
-  }
-
   Expression<bool> _matchesQuery(
     $ProductsTable t,
     String normalized,
     CatalogSearchField searchField,
   ) {
-    final pattern = '%$normalized%';
+    final contains = '%$normalized%';
     return switch (searchField) {
-      CatalogSearchField.name => t.name.lower().like(pattern),
-      CatalogSearchField.code => t.itemCode.lower().like(pattern),
-      CatalogSearchField.barcode => t.barcode.lower().like(pattern),
+      CatalogSearchField.name =>
+        t.name.collate(Collate.noCase).like(contains),
+      CatalogSearchField.code =>
+        t.itemCode.collate(Collate.noCase).like(contains),
+      CatalogSearchField.barcode =>
+        t.barcode.collate(Collate.noCase).like(contains),
       CatalogSearchField.all =>
-        t.itemCode.lower().like(pattern) |
-            t.name.lower().like(pattern) |
-            t.barcode.lower().like(pattern),
+        t.itemCode.collate(Collate.noCase).like(contains) |
+            t.name.collate(Collate.noCase).like(contains) |
+            t.barcode.collate(Collate.noCase).like(contains),
     };
+  }
+
+  Expression<int> _relevance(
+    $ProductsTable t,
+    String normalized,
+    CatalogSearchField searchField,
+  ) {
+    final prefix = '$normalized%';
+    if (searchField == CatalogSearchField.name) {
+      return CaseWhenExpression<int>(
+        cases: [
+          CaseWhen(
+            t.name.collate(Collate.noCase).equals(normalized),
+            then: const Constant(0),
+          ),
+          CaseWhen(
+            t.name.collate(Collate.noCase).like(prefix),
+            then: const Constant(1),
+          ),
+        ],
+        orElse: const Constant(2),
+      );
+    }
+    if (searchField == CatalogSearchField.code) {
+      return CaseWhenExpression<int>(
+        cases: [
+          CaseWhen(
+            t.itemCode.collate(Collate.noCase).equals(normalized),
+            then: const Constant(0),
+          ),
+          CaseWhen(
+            t.itemCode.collate(Collate.noCase).like(prefix),
+            then: const Constant(1),
+          ),
+        ],
+        orElse: const Constant(2),
+      );
+    }
+    if (searchField == CatalogSearchField.barcode) {
+      return CaseWhenExpression<int>(
+        cases: [
+          CaseWhen(
+            t.barcode.collate(Collate.noCase).equals(normalized),
+            then: const Constant(0),
+          ),
+          CaseWhen(
+            t.barcode.collate(Collate.noCase).like(prefix),
+            then: const Constant(1),
+          ),
+        ],
+        orElse: const Constant(2),
+      );
+    }
+    return CaseWhenExpression<int>(
+      cases: [
+        CaseWhen(
+          t.barcode.collate(Collate.noCase).equals(normalized),
+          then: const Constant(0),
+        ),
+        CaseWhen(
+          t.itemCode.collate(Collate.noCase).equals(normalized),
+          then: const Constant(1),
+        ),
+        CaseWhen(
+          t.itemCode.collate(Collate.noCase).like(prefix),
+          then: const Constant(2),
+        ),
+        CaseWhen(
+          t.name.collate(Collate.noCase).equals(normalized),
+          then: const Constant(3),
+        ),
+        CaseWhen(
+          t.name.collate(Collate.noCase).like(prefix),
+          then: const Constant(4),
+        ),
+      ],
+      orElse: const Constant(5),
+    );
+  }
+
+  @override
+  Future<List<Product>> search(
+    String query, {
+    CatalogSearchField searchField = CatalogSearchField.all,
+    int? limit,
+  }) async {
+    final normalized = query.trim().toLowerCase();
+    final select = _db.select(_db.products)..where(_notDeleted);
+    if (normalized.isNotEmpty) {
+      select.where((t) => _matchesQuery(t, normalized, searchField));
+      select.orderBy([
+        (t) => OrderingTerm.asc(_relevance(t, normalized, searchField)),
+        (t) => OrderingTerm.asc(t.itemCode),
+      ]);
+    } else {
+      select.orderBy([(t) => OrderingTerm.asc(t.itemCode)]);
+    }
+    if (limit != null && limit > 0) {
+      select.limit(limit);
+    }
+    final rows = await select.get();
+    return rows.map(_map).toList(growable: false);
   }
 
   @override
@@ -256,7 +348,11 @@ class ProductRepositoryImpl implements ProductRepository {
 
     final select = _db.select(_db.products)
       ..where(_notDeleted)
-      ..orderBy([(t) => OrderingTerm.asc(t.itemCode)])
+      ..orderBy([
+        if (normalized.isNotEmpty)
+          (t) => OrderingTerm.asc(_relevance(t, normalized, searchField)),
+        (t) => OrderingTerm.asc(t.itemCode),
+      ])
       ..limit(safeSize, offset: start);
     if (normalized.isNotEmpty) {
       select.where((t) => _matchesQuery(t, normalized, searchField));

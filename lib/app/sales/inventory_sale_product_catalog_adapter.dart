@@ -1,6 +1,7 @@
 import '../../modules/inventory/domain/entities/product.dart';
 import '../../modules/inventory/domain/repositories/product_repository.dart';
 import '../../modules/inventory/domain/services/product_scan_resolver.dart';
+import '../../modules/sales/domain/sale_autocomplete_defaults.dart';
 import '../../modules/sales/domain/services/sale_product_catalog_port.dart';
 
 /// App adapter: Sales product catalog → Inventory products + scan resolver.
@@ -27,13 +28,11 @@ class InventorySaleProductCatalogAdapter implements SaleProductCatalogPort {
 
   @override
   Future<SaleProductRef?> findById(String productId) async {
-    final all = await _repository.getAll();
-    for (final p in all) {
-      if (p.uuid == productId && !p.isDeleted) {
-        return _map(p);
-      }
+    final product = await _repository.getByUuid(productId);
+    if (product == null || product.isDeleted) {
+      return null;
     }
-    return null;
+    return _map(product);
   }
 
   @override
@@ -64,11 +63,20 @@ class InventorySaleProductCatalogAdapter implements SaleProductCatalogPort {
   }
 
   @override
-  Future<List<SaleProductRef>> search(String query, {int limit = 40}) async {
-    final results = await _repository.search(query);
+  Future<List<SaleProductRef>> search(
+    String query, {
+    int limit = SaleAutocompleteDefaults.resultLimit,
+  }) async {
+    final safeLimit =
+        limit <= 0 ? SaleAutocompleteDefaults.resultLimit : limit;
+    final normalized = query.trim();
+    // Empty query: limited browse (selector sheets), never full-table load.
+    final results = await _repository.search(
+      normalized,
+      limit: safeLimit,
+    );
     return results
         .where((p) => !p.isDeleted)
-        .take(limit)
         .map(_map)
         .toList(growable: false);
   }

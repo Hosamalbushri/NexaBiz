@@ -16,21 +16,11 @@ class SaleStatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final (Color bg, Color fg) = switch (status) {
-      SaleStatus.draft => (scheme.surfaceContainerHighest, scheme.onSurface),
-      SaleStatus.pending => (
-        scheme.tertiaryContainer,
-        scheme.onTertiaryContainer,
-      ),
-      SaleStatus.confirmed => (
+      SaleStatus.unposted => (scheme.surfaceContainerHighest, scheme.onSurface),
+      SaleStatus.posted => (
         scheme.primaryContainer,
         scheme.onPrimaryContainer,
       ),
-      SaleStatus.completed => (
-        scheme.secondaryContainer,
-        scheme.onSecondaryContainer,
-      ),
-      SaleStatus.cancelled ||
-      SaleStatus.rejected => (scheme.errorContainer, scheme.onErrorContainer),
     };
     return _Badge(label: label, background: bg, foreground: fg);
   }

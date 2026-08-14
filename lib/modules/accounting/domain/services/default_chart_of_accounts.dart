@@ -5,12 +5,24 @@ import '../entities/account_type.dart';
 ///
 /// Names are English seed values; UI labels use localization by [systemKey]
 /// where needed. Do not hardcode this list in widgets.
+///
+/// Module → system key map (for future journal wiring; no auto-post yet):
+/// - Sales / Treasury: `cash`, `bank`, `petty_cash`, `sales_revenue`,
+///   `sales_returns`, `sales_discounts`, `vat_output`, `cost_of_goods_sold`,
+///   `customer_advances`
+/// - Customers: `customers` (group `1221`)
+/// - Inventory: `inventory`, `inventory_in_transit`, `inventory_adjustments`,
+///   `cost_of_goods_sold`
+/// - Purchases / Suppliers (future): `suppliers`, `accounts_payable`,
+///   `vat_input`, `purchase_discounts`
 class DefaultChartOfAccounts {
   const DefaultChartOfAccounts._();
 
   /// Seed drafts with temporary parent keys resolved during seeding.
   ///
   /// [parentKey] refers to another entry's [systemKey], not a UUID.
+  /// Existing codes used by modules (`1211`, `1221`, `1230`, `4100`, …) stay
+  /// stable; new trading/VAT accounts are additive only.
   static List<DefaultAccountSeed> seeds() => const [
     // Assets — Fixed Assets first, then Current Assets
     DefaultAccountSeed(
@@ -77,6 +89,14 @@ class DefaultChartOfAccounts {
       isGroup: false,
     ),
     DefaultAccountSeed(
+      systemKey: 'petty_cash',
+      parentKey: 'current_assets',
+      accountCode: '1213',
+      name: 'Petty Cash',
+      accountType: AccountType.asset,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
       systemKey: 'accounts_receivable',
       parentKey: 'current_assets',
       accountCode: '1220',
@@ -98,6 +118,38 @@ class DefaultChartOfAccounts {
       parentKey: 'current_assets',
       accountCode: '1230',
       name: 'Inventory',
+      accountType: AccountType.asset,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'inventory_in_transit',
+      parentKey: 'current_assets',
+      accountCode: '1235',
+      name: 'Inventory in Transit',
+      accountType: AccountType.asset,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'vat_input',
+      parentKey: 'current_assets',
+      accountCode: '1250',
+      name: 'VAT Input',
+      accountType: AccountType.asset,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'prepaid_expenses',
+      parentKey: 'current_assets',
+      accountCode: '1260',
+      name: 'Prepaid Expenses',
+      accountType: AccountType.asset,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'other_current_assets',
+      parentKey: 'current_assets',
+      accountCode: '1290',
+      name: 'Other Current Assets',
       accountType: AccountType.asset,
       isGroup: false,
     ),
@@ -126,10 +178,43 @@ class DefaultChartOfAccounts {
       isGroup: false,
     ),
     DefaultAccountSeed(
+      systemKey: 'suppliers',
+      parentKey: 'current_liabilities',
+      accountCode: '2111',
+      name: 'Suppliers',
+      accountType: AccountType.liability,
+      // Group parent for per-supplier payable accounts.
+      isGroup: true,
+    ),
+    DefaultAccountSeed(
       systemKey: 'short_term_loans',
       parentKey: 'current_liabilities',
       accountCode: '2120',
       name: 'Short Term Loans',
+      accountType: AccountType.liability,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'vat_output',
+      parentKey: 'current_liabilities',
+      accountCode: '2130',
+      name: 'VAT Output Payable',
+      accountType: AccountType.liability,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'accrued_expenses',
+      parentKey: 'current_liabilities',
+      accountCode: '2140',
+      name: 'Accrued Expenses',
+      accountType: AccountType.liability,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'customer_advances',
+      parentKey: 'current_liabilities',
+      accountCode: '2150',
+      name: 'Customer Advances',
       accountType: AccountType.liability,
       isGroup: false,
     ),
@@ -140,6 +225,14 @@ class DefaultChartOfAccounts {
       name: 'Long Term Liabilities',
       accountType: AccountType.liability,
       isGroup: true,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'long_term_loans',
+      parentKey: 'long_term_liabilities',
+      accountCode: '2210',
+      name: 'Long Term Loans',
+      accountType: AccountType.liability,
+      isGroup: false,
     ),
     // Equity
     DefaultAccountSeed(
@@ -187,6 +280,15 @@ class DefaultChartOfAccounts {
       accountCode: '4200',
       name: 'Other Revenue',
       accountType: AccountType.revenue,
+      // Group for other income posting children (e.g. purchase discounts).
+      isGroup: true,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'purchase_discounts',
+      parentKey: 'other_revenue',
+      accountCode: '4210',
+      name: 'Purchase Discounts',
+      accountType: AccountType.revenue,
       isGroup: false,
     ),
     // Expenses
@@ -202,6 +304,31 @@ class DefaultChartOfAccounts {
       parentKey: 'expenses',
       accountCode: '5100',
       name: 'Cost of Goods Sold',
+      accountType: AccountType.expense,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'inventory_adjustments',
+      parentKey: 'expenses',
+      accountCode: '5150',
+      name: 'Inventory Adjustments',
+      accountType: AccountType.expense,
+      isGroup: false,
+    ),
+    // Treated as expense (debit) until contra-revenue AccountType exists.
+    DefaultAccountSeed(
+      systemKey: 'sales_returns',
+      parentKey: 'expenses',
+      accountCode: '5160',
+      name: 'Sales Returns',
+      accountType: AccountType.expense,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'sales_discounts',
+      parentKey: 'expenses',
+      accountCode: '5170',
+      name: 'Sales Discounts',
       accountType: AccountType.expense,
       isGroup: false,
     ),
@@ -226,6 +353,46 @@ class DefaultChartOfAccounts {
       parentKey: 'expenses',
       accountCode: '5400',
       name: 'Utilities',
+      accountType: AccountType.expense,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'bank_charges',
+      parentKey: 'expenses',
+      accountCode: '5500',
+      name: 'Bank Charges',
+      accountType: AccountType.expense,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'depreciation',
+      parentKey: 'expenses',
+      accountCode: '5600',
+      name: 'Depreciation',
+      accountType: AccountType.expense,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'advertising',
+      parentKey: 'expenses',
+      accountCode: '5700',
+      name: 'Advertising',
+      accountType: AccountType.expense,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'shipping_delivery',
+      parentKey: 'expenses',
+      accountCode: '5800',
+      name: 'Shipping and Delivery',
+      accountType: AccountType.expense,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'maintenance',
+      parentKey: 'expenses',
+      accountCode: '5850',
+      name: 'Maintenance',
       accountType: AccountType.expense,
       isGroup: false,
     ),

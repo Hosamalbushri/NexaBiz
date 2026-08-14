@@ -203,28 +203,70 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   Expression<bool> _matchesQuery($CustomersTable t, String normalized) {
-    final pattern = '%$normalized%';
-    return t.customerCode.lower().like(pattern) |
-        t.name.lower().like(pattern) |
-        t.phone.lower().like(pattern) |
-        t.email.lower().like(pattern) |
-        t.externalId.lower().like(pattern);
+    final contains = '%$normalized%';
+    // COLLATE NOCASE avoids wrapping columns in lower(), which blocks indexes.
+    return t.customerCode.collate(Collate.noCase).like(contains) |
+        t.name.collate(Collate.noCase).like(contains) |
+        t.phone.collate(Collate.noCase).like(contains) |
+        t.email.collate(Collate.noCase).like(contains) |
+        t.externalId.collate(Collate.noCase).like(contains);
+  }
+
+  Expression<int> _relevance($CustomersTable t, String normalized) {
+    final prefix = '$normalized%';
+    return CaseWhenExpression<int>(
+      cases: [
+        CaseWhen(
+          t.customerCode.collate(Collate.noCase).equals(normalized),
+          then: const Constant(0),
+        ),
+        CaseWhen(
+          t.externalId.collate(Collate.noCase).equals(normalized),
+          then: const Constant(1),
+        ),
+        CaseWhen(
+          t.phone.collate(Collate.noCase).equals(normalized),
+          then: const Constant(2),
+        ),
+        CaseWhen(
+          t.customerCode.collate(Collate.noCase).like(prefix),
+          then: const Constant(3),
+        ),
+        CaseWhen(
+          t.name.collate(Collate.noCase).equals(normalized),
+          then: const Constant(4),
+        ),
+        CaseWhen(
+          t.name.collate(Collate.noCase).like(prefix),
+          then: const Constant(5),
+        ),
+      ],
+      orElse: const Constant(6),
+    );
   }
 
   @override
   Future<List<Customer>> search(
     String query, {
     bool includeInactive = false,
+    int? limit,
   }) async {
     final normalized = query.trim().toLowerCase();
-    final select = _db.select(_db.customers)
-      ..where(_notDeleted)
-      ..orderBy([(t) => OrderingTerm.asc(t.customerCode)]);
+    final select = _db.select(_db.customers)..where(_notDeleted);
     if (!includeInactive) {
       select.where((t) => t.isActive.equals(true));
     }
     if (normalized.isNotEmpty) {
       select.where((t) => _matchesQuery(t, normalized));
+      select.orderBy([
+        (t) => OrderingTerm.asc(_relevance(t, normalized)),
+        (t) => OrderingTerm.asc(t.customerCode),
+      ]);
+    } else {
+      select.orderBy([(t) => OrderingTerm.asc(t.customerCode)]);
+    }
+    if (limit != null && limit > 0) {
+      select.limit(limit);
     }
     final rows = await select.get();
     return rows.map(_map).toList(growable: false);

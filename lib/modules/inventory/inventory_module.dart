@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/reporting/pdf_document_preview_page.dart';
 import 'presentation/pages/inventory_count_page.dart';
 import 'presentation/pages/inventory_home_page.dart';
 import 'presentation/pages/inventory_import_page.dart';
@@ -105,6 +106,11 @@ class InventoryModule extends AppModule {
               path: 'reports',
               name: 'inventoryStockCountReports',
               builder: (context, state) => const InventoryReportsPage(),
+            ),
+            GoRoute(
+              path: 'report-preview',
+              name: 'inventoryStockCountReportPreview',
+              builder: (context, state) => const PdfDocumentPreviewPage(),
             ),
           ],
         ),

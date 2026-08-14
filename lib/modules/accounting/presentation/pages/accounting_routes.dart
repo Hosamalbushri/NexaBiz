@@ -13,6 +13,7 @@ class AccountingRoutes {
   static const String currencyRates = '/accounting/currency-rates';
   static const String voucherBooks = '/accounting/voucher-books';
   static const String voucherBooksCreate = '/accounting/voucher-books/new';
+  static const String reports = '/accounting/reports';
 
   static String accountDetails(int id) => '/accounting/accounts/$id';
 
@@ -35,6 +36,8 @@ class AccountingRoutes {
 
   static void pushVoucherBooks(BuildContext context) =>
       context.push(voucherBooks);
+
+  static void pushReports(BuildContext context) => context.push(reports);
 
   static void pushVoucherBookSection(
     BuildContext context,

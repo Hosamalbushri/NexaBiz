@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -12,6 +11,7 @@ import '../../domain/entities/sale_item.dart';
 import '../../domain/services/sale_calculation_service.dart';
 import '../../domain/services/sale_product_catalog_port.dart';
 import '../providers/sale_providers.dart';
+import '../utils/sale_autocomplete.dart';
 import 'sale_status_badge.dart';
 
 /// Fixed multi-column widths for the products spreadsheet.
@@ -163,12 +163,10 @@ class SaleProductsTable extends ConsumerStatefulWidget {
 class _SaleProductsTableState extends ConsumerState<SaleProductsTable> {
   final List<int> _draftRowIds = [];
   var _nextDraftId = 0;
-  final _verticalScroll = ScrollController();
   final _horizontalScroll = ScrollController();
 
   @override
   void dispose() {
-    _verticalScroll.dispose();
     _horizontalScroll.dispose();
     super.dispose();
   }
@@ -182,6 +180,7 @@ class _SaleProductsTableState extends ConsumerState<SaleProductsTable> {
   }
 
   void _onDraftProductSelected(int draftId, SaleProductRef product) {
+    FocusManager.instance.primaryFocus?.unfocus();
     widget.onProductSelected(product);
     _removeDraftRow(draftId);
   }
@@ -242,53 +241,23 @@ class _SaleProductsTableState extends ConsumerState<SaleProductsTable> {
                         child: Column(
                           children: [
                             _TableHeader(theme: theme, l10n: l10n),
-                            ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxHeight:
-                                    MediaQuery.sizeOf(context).height * 0.42,
-                              ),
-                              child: Scrollbar(
-                                controller: _verticalScroll,
-                                thumbVisibility: true,
-                                radius: const Radius.circular(8),
-                                child: SingleChildScrollView(
-                                  controller: _verticalScroll,
-                                  child: Column(
-                                    children: [
-                                      for (
-                                        var i = 0;
-                                        i < widget.items.length;
-                                        i++
-                                      )
-                                        _FilledProductRow(
-                                          index: i,
-                                          item: widget.items[i],
-                                          striped: i.isOdd,
-                                          minUnitPrice: widget.minUnitPriceOf(
-                                            widget.items[i],
-                                          ),
-                                          onQuantitiesChanged: (main, sub) {
-                                            widget.onQuantitiesChanged(
-                                              i,
-                                              main,
-                                              sub,
-                                            );
-                                          },
-                                          onUnitPriceChanged: (price) {
-                                            return widget.onUnitPriceChanged(
-                                              i,
-                                              price,
-                                            );
-                                          },
-                                          onUnitPriceBelowMin:
-                                              widget.onUnitPriceBelowMin,
-                                          onRemove: () => widget.onRemove(i),
-                                        ),
-                                    ],
-                                  ),
+                            for (var i = 0; i < widget.items.length; i++)
+                              _FilledProductRow(
+                                index: i,
+                                item: widget.items[i],
+                                striped: i.isOdd,
+                                minUnitPrice: widget.minUnitPriceOf(
+                                  widget.items[i],
                                 ),
+                                onQuantitiesChanged: (main, sub) {
+                                  widget.onQuantitiesChanged(i, main, sub);
+                                },
+                                onUnitPriceChanged: (price) {
+                                  return widget.onUnitPriceChanged(i, price);
+                                },
+                                onUnitPriceBelowMin: widget.onUnitPriceBelowMin,
+                                onRemove: () => widget.onRemove(i),
                               ),
-                            ),
                           ],
                         ),
                       ),
@@ -1091,9 +1060,10 @@ class _DraftProductRow extends ConsumerStatefulWidget {
 class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode(skipTraversal: true);
-  Timer? _debounce;
+  final _session = AutocompleteSearchSession();
   var _loading = false;
   var _showResults = false;
+  var _searchFailed = false;
   List<SaleProductRef> _results = const [];
 
   @override
@@ -1111,7 +1081,8 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
             setState(() => _showResults = false);
           }
         });
-      } else if (_controller.text.trim().isNotEmpty) {
+      } else if (normalizeDigitsToWestern(_controller.text).trim().length >=
+          SaleAutocompleteDefaults.productMinLength) {
         setState(() => _showResults = true);
       }
     });
@@ -1119,45 +1090,57 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
 
   @override
   void dispose() {
-    _debounce?.cancel();
+    _session.dispose();
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
   void _onChanged(String value) {
-    _debounce?.cancel();
     final query = normalizeDigitsToWestern(value).trim();
-    if (query.isEmpty) {
+    if (query.length < SaleAutocompleteDefaults.productMinLength) {
+      _session.invalidate();
       setState(() {
         _results = const [];
         _loading = false;
         _showResults = false;
+        _searchFailed = false;
       });
       return;
     }
     setState(() {
       _loading = true;
       _showResults = true;
+      _searchFailed = false;
     });
-    _debounce = Timer(const Duration(milliseconds: 220), () {
-      _search(query);
-    });
+    _session.schedule(run: (token) => _search(query, token));
   }
 
-  Future<void> _search(String query) async {
-    final results = await ref
-        .read(saleProductCatalogPortProvider)
-        .search(query, limit: 30);
-    if (!mounted ||
-        normalizeDigitsToWestern(_controller.text).trim() != query) {
-      return;
+  Future<void> _search(String query, int token) async {
+    try {
+      final results = await ref
+          .read(saleProductCatalogPortProvider)
+          .search(query, limit: SaleAutocompleteDefaults.resultLimit);
+      if (!mounted || !_session.isCurrent(token)) {
+        return;
+      }
+      setState(() {
+        _results = results;
+        _loading = false;
+        _showResults = true;
+        _searchFailed = false;
+      });
+    } catch (_) {
+      if (!mounted || !_session.isCurrent(token)) {
+        return;
+      }
+      setState(() {
+        _results = const [];
+        _loading = false;
+        _showResults = true;
+        _searchFailed = true;
+      });
     }
-    setState(() {
-      _results = results;
-      _loading = false;
-      _showResults = true;
-    });
   }
 
   @override
@@ -1165,7 +1148,7 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final query = _controller.text.trim();
+    final query = normalizeDigitsToWestern(_controller.text).trim();
 
     return ColoredBox(
       color: scheme.primaryContainer.withValues(alpha: 0.18),
@@ -1194,14 +1177,24 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
                   Icons.search_rounded,
                   color: scheme.primary,
                 ),
-                suffixIcon: IconButton(
-                  tooltip: MaterialLocalizations.of(context).cancelButtonLabel,
-                  onPressed: widget.onCancel,
-                  icon: Icon(
-                    Icons.close_rounded,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
+                suffixIcon: _loading
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : IconButton(
+                        tooltip: MaterialLocalizations.of(context)
+                            .cancelButtonLabel,
+                        onPressed: widget.onCancel,
+                        icon: Icon(
+                          Icons.close_rounded,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppRadius.sm),
                   borderSide: BorderSide.none,
@@ -1226,7 +1219,8 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
               ),
             ),
           ),
-          if (_showResults && query.isNotEmpty)
+          if (_showResults &&
+              query.length >= SaleAutocompleteDefaults.productMinLength)
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.md,
@@ -1253,6 +1247,17 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
                             ),
                           ),
                         )
+                      : _searchFailed
+                      ? Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Text(
+                            l10n.salesAutocompleteSearchFailed,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: scheme.error,
+                            ),
+                          ),
+                        )
                       : _results.isEmpty
                       ? Padding(
                           padding: const EdgeInsets.all(AppSpacing.md),
@@ -1276,7 +1281,11 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
                           itemBuilder: (context, index) {
                             final product = _results[index];
                             return InkWell(
-                              onTap: () => widget.onProductSelected(product),
+                              onTap: () {
+                                _focusNode.unfocus();
+                                FocusManager.instance.primaryFocus?.unfocus();
+                                widget.onProductSelected(product);
+                              },
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: AppSpacing.md,

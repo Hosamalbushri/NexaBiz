@@ -43,7 +43,10 @@ class Customer {
   final String? notes;
   final bool isActive;
 
-  /// Opaque Account.uuid when linked to Chart of Accounts; never auto-created.
+/// Opaque Account.uuid when linked to Chart of Accounts.
+  ///
+  /// When auto-link is enabled in settings, App creates a posting account under
+  /// the customers parent group on save if this is null.
   final String? accountId;
 
   /// External ERP/accounting system id when [dataSource] is external.
@@ -139,4 +142,31 @@ class CustomerDraft {
   final String? accountId;
   final String? externalId;
   final CustomerDataSource dataSource;
+
+  CustomerDraft copyWith({
+    String? customerCode,
+    String? name,
+    String? phone,
+    String? email,
+    String? address,
+    String? notes,
+    bool? isActive,
+    String? accountId,
+    bool clearAccountId = false,
+    String? externalId,
+    CustomerDataSource? dataSource,
+  }) {
+    return CustomerDraft(
+      customerCode: customerCode ?? this.customerCode,
+      name: name ?? this.name,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      address: address ?? this.address,
+      notes: notes ?? this.notes,
+      isActive: isActive ?? this.isActive,
+      accountId: clearAccountId ? null : (accountId ?? this.accountId),
+      externalId: externalId ?? this.externalId,
+      dataSource: dataSource ?? this.dataSource,
+    );
+  }
 }

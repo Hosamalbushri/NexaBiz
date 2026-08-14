@@ -42,8 +42,10 @@ class SyncQueue {
 
   Future<void> enqueue(SyncOperation operation) async {
     final box = await _ensureBox();
-    // Coalesce: replace older pending/failed ops for the same entity.
+    // Coalesce: replace older pending/failed/conflict ops for the same entity.
     final existingKeys = <dynamic>[];
+    var hadCreate = false;
+    var earliestCreatedAt = operation.createdAt;
     for (final entry in box.toMap().entries) {
       final op = entry.value;
       if (op.entityType == operation.entityType &&
@@ -52,12 +54,43 @@ class SyncQueue {
               op.status == SyncStatus.failed ||
               op.status == SyncStatus.conflict)) {
         existingKeys.add(entry.key);
+        if (op.type == SyncOperationType.create) {
+          hadCreate = true;
+        }
+        if (op.createdAt.isBefore(earliestCreatedAt)) {
+          earliestCreatedAt = op.createdAt;
+        }
       }
     }
+
+    // Never-uploaded create + local delete → drop queue entry (nothing to push).
+    if (hadCreate && operation.type == SyncOperationType.delete) {
+      for (final key in existingKeys) {
+        await box.delete(key);
+      }
+      _changes.add(null);
+      return;
+    }
+
     for (final key in existingKeys) {
       await box.delete(key);
     }
-    await box.put(operation.id, operation);
+
+    // create then update before remote ack → keep create with latest payload.
+    final effectiveType =
+        hadCreate && operation.type == SyncOperationType.update
+        ? SyncOperationType.create
+        : operation.type;
+
+    final coalesced = operation.copyWith(
+      type: effectiveType,
+      createdAt: earliestCreatedAt,
+      attemptCount: 0,
+      clearLastError: true,
+      clearNextRetryAt: true,
+      status: SyncStatus.pending,
+    );
+    await box.put(coalesced.id, coalesced);
     _changes.add(null);
   }
 

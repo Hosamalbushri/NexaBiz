@@ -2,7 +2,7 @@ import '../entities/sale.dart';
 
 /// Whether Sales should use the integrated accounting operational workflow.
 abstract class SaleAccountingBridgePort {
-  /// When true, confirm moves the sale to [SaleStatus.pending] and may submit.
+  /// When true, post may submit an operational document (no local journal).
   Future<bool> get isIntegratedMode;
 
   /// Never creates journal entries; may forward an operational document.

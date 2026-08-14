@@ -7,19 +7,25 @@ import '../../modules/accounting/domain/entities/accounting_mode.dart';
 import '../../modules/accounting/presentation/providers/account_providers.dart';
 import '../../modules/accounting/presentation/providers/accounting_mode_providers.dart';
 import '../../modules/accounting/presentation/providers/currency_rate_providers.dart';
+import '../../modules/accounting/presentation/providers/journal_providers.dart';
 import '../../modules/accounting/presentation/providers/voucher_book_providers.dart';
 import '../../modules/customers/customers_module.dart';
 import '../../modules/customers/presentation/providers/customer_providers.dart';
 import '../../modules/inventory/inventory_module.dart';
 import '../../modules/inventory/presentation/pages/product_barcode_scanner_page.dart';
 import '../../modules/inventory/presentation/providers/product_providers.dart';
+import '../../modules/reports/presentation/providers/reports_providers.dart';
+import '../../modules/reports/reports_module.dart';
 import '../../modules/sales/presentation/providers/sale_barcode_capture_provider.dart';
 import '../../modules/sales/presentation/providers/sale_providers.dart';
 import '../../modules/sales/sales_module.dart';
 import '../customers/accounting_customer_account_link_adapter.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
+import '../reports/account_statement_report_data_adapter.dart';
+import '../reports/sales_period_report_data_adapter.dart';
 import '../sales/accounting_sale_bridge_adapter.dart';
 import '../sales/accounting_sale_currency_adapter.dart';
+import '../sales/accounting_sale_ledger_adapter.dart';
 import '../sales/accounting_sale_treasury_adapter.dart';
 import '../sales/accounting_sale_voucher_book_adapter.dart';
 import '../sales/customers_sale_lookup_adapter.dart';
@@ -37,6 +43,7 @@ List<Override> moduleRegistryOverrides() {
         AccountingModule(),
         CustomersModule(),
         SalesModule(),
+        ReportsModule(),
       ]),
     ),
     // Modules must not import each other — App wires cross-module ports.
@@ -46,7 +53,11 @@ List<Override> moduleRegistryOverrides() {
       );
     }),
     saleCustomerLookupPortProvider.overrideWith((ref) {
-      return CustomersSaleLookupAdapter(ref.watch(customerRepositoryProvider));
+      return CustomersSaleLookupAdapter(
+        repository: ref.watch(customerRepositoryProvider),
+        accountLinkPort: ref.watch(customerAccountLinkPortProvider),
+        settings: ref.watch(settingsRepositoryProvider),
+      );
     }),
     saleProductCatalogPortProvider.overrideWith((ref) {
       return InventorySaleProductCatalogAdapter(
@@ -60,6 +71,12 @@ List<Override> moduleRegistryOverrides() {
             ref.read(accountingModeProvider).valueOrNull ??
             AccountingMode.standalone,
         integration: ref.watch(accountingIntegrationPortProvider),
+      );
+    }),
+    saleLedgerPostingPortProvider.overrideWith((ref) {
+      return AccountingSaleLedgerAdapter(
+        journals: ref.watch(journalRepositoryProvider),
+        accounts: ref.watch(accountRepositoryProvider),
       );
     }),
     saleVoucherBookPortProvider.overrideWith((ref) {
@@ -86,5 +103,22 @@ List<Override> moduleRegistryOverrides() {
     saleBarcodeCaptureProvider.overrideWithValue(
       (context) => ProductBarcodeScannerPage.open(context),
     ),
+    salesPeriodReportDataPortProvider.overrideWith((ref) {
+      return SalesPeriodReportDataAdapter(
+        ref.watch(saleRepositoryProvider),
+      );
+    }),
+    accountStatementReportDataPortProvider.overrideWith((ref) {
+      return AccountStatementReportDataAdapter(
+        accounts: ref.watch(accountRepositoryProvider),
+        currencyRates: ref.watch(currencyRateRepositoryProvider),
+        journals: ref.watch(journalRepositoryProvider),
+        loadCompanyProfile: () =>
+            ref.read(settingsRepositoryProvider).loadCompanyProfile(),
+        loadSalesForAccount: (accountUuid) =>
+            ref.read(saleRepositoryProvider).listByAccountLink(accountUuid),
+        ledger: ref.watch(saleLedgerPostingPortProvider),
+      );
+    }),
   ];
 }

@@ -16,6 +16,8 @@ class CompanyProfile {
     this.country,
     this.website,
     this.fiscalYearStartMonth = 1,
+    this.invoiceHeaderRight,
+    this.invoiceHeaderLeft,
   });
 
   final String name;
@@ -38,6 +40,12 @@ class CompanyProfile {
 
   /// Calendar month (1–12) when the fiscal year starts.
   final int fiscalYearStartMonth;
+
+  /// Free-form text shown in the sales invoice PDF header (visual right).
+  final String? invoiceHeaderRight;
+
+  /// Free-form text shown in the sales invoice PDF header (visual left).
+  final String? invoiceHeaderLeft;
 
   AppCurrency get defaultCurrency => AppCurrencies.byCode(defaultCurrencyCode);
 
@@ -67,6 +75,10 @@ class CompanyProfile {
     String? website,
     bool clearWebsite = false,
     int? fiscalYearStartMonth,
+    String? invoiceHeaderRight,
+    bool clearInvoiceHeaderRight = false,
+    String? invoiceHeaderLeft,
+    bool clearInvoiceHeaderLeft = false,
   }) {
     return CompanyProfile(
       name: name ?? this.name,
@@ -84,6 +96,12 @@ class CompanyProfile {
       country: clearCountry ? null : (country ?? this.country),
       website: clearWebsite ? null : (website ?? this.website),
       fiscalYearStartMonth: fiscalYearStartMonth ?? this.fiscalYearStartMonth,
+      invoiceHeaderRight: clearInvoiceHeaderRight
+          ? null
+          : (invoiceHeaderRight ?? this.invoiceHeaderRight),
+      invoiceHeaderLeft: clearInvoiceHeaderLeft
+          ? null
+          : (invoiceHeaderLeft ?? this.invoiceHeaderLeft),
     );
   }
 
@@ -102,6 +120,8 @@ class CompanyProfile {
       'country': country,
       'website': website,
       'fiscalYearStartMonth': fiscalYearStartMonth,
+      'invoiceHeaderRight': invoiceHeaderRight,
+      'invoiceHeaderLeft': invoiceHeaderLeft,
     };
   }
 
@@ -129,6 +149,8 @@ class CompanyProfile {
       country: _optionalString(map['country']),
       website: _optionalString(map['website']),
       fiscalYearStartMonth: parsedMonth.clamp(1, 12),
+      invoiceHeaderRight: _optionalString(map['invoiceHeaderRight']),
+      invoiceHeaderLeft: _optionalString(map['invoiceHeaderLeft']),
     );
   }
 

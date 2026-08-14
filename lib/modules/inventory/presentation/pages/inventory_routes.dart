@@ -21,6 +21,7 @@ class InventoryRoutes {
 
   static const String import = '/inventory/stock-count/import';
   static const String reports = '/inventory/stock-count/reports';
+  static const String reportPreview = '/inventory/stock-count/report-preview';
 
   /// Products service hub (list / import / barcode).
   static const String products = '/inventory/products';
@@ -46,6 +47,10 @@ class InventoryRoutes {
   static void pushImport(BuildContext context) => context.push(import);
 
   static void pushReports(BuildContext context) => context.push(reports);
+
+  static Future<void> pushReportPreview(BuildContext context) async {
+    await context.push(reportPreview);
+  }
 
   static void pushProductsList(BuildContext context) =>
       context.push(productsList);

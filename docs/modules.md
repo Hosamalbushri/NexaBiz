@@ -37,6 +37,7 @@ ModuleRegistry(const [
   AccountingModule(),
   CustomersModule(),
   SalesModule(),
+  ReportsModule(),
 ]);
 ```
 
@@ -85,7 +86,7 @@ Capabilities:
 
 Path: `lib/modules/accounting/`
 
-Chart of Accounts + currency rates + voucher books (sequential numbering) + standalone/integrated mode. See ADR-007 / ADR-008 / ADR-010.
+Chart of Accounts + currency rates + voucher books (sequential numbering) + local journals (`journal_entries` / `journal_lines`) + standalone/integrated mode. See ADR-007 / ADR-008 / ADR-010.
 
 ### Customers — implemented
 
@@ -105,9 +106,9 @@ Capabilities:
 - Unique business codes sequential from customers parent CoA code (`12210001`…) — auto / manual / external
 - Excel import (`CustomerExcelImportDatasource`) — upsert by code / external id
 - Optional opaque `accountId` → Accounting Account.uuid (App `CustomerAccountLinkPort`)
-- Configurable **customers parent account** (CoA group, default system `1221` Customers)
+- **Auto-link** (default on): create/reuse posting CoA account under parent on save when account empty
+- Configurable **customers parent account** (CoA group, default system `1221` Customers) + settings hub `/customers/settings`
 - Local vs external data source + `externalId` / `upsertFromExternal`
-- Does **not** auto-create Chart of Accounts rows
 
 ### Sales — implemented
 
@@ -127,14 +128,34 @@ Capabilities:
 - Invoice header: date → cash/credit → sales book → number → customer/cash account → currency (FX from base product prices)
 - Customer / product selection via App ports (Customers + Inventory catalog + barcode scanner)
 - Item + sale discounts (fixed / %), configurable tax %, payment methods, payment status
-- Lifecycle: draft → confirmed|pending → completed; cancel; duplicate
-- Integrated mode: confirm → pending accounting + optional operational submit (no auto journals)
+- Lifecycle: unposted → posted; cancel (void journal + soft-delete); duplicate
+- Integrated mode: post → operational submit (no local journals)
+- Standalone cash/credit save: App `SaleLedgerPostingPort.syncSale` upserts journal with `isPosted` matching sale status (Dr customer or cash for net; Dr `5170` for discounts; Cr `4100` for gross); post marks both sale+journal posted; account statement backfills missing sale journals for the selected account
 - Inventory effects via `SaleInventoryEffectPort` (NoOp until stock ledger exists)
 - Customer outstanding totals foundation (`totalsForCustomer`)
 
+### Reports — implemented (foundation)
+
+Path: `lib/modules/reports/` + shared kit `lib/core/reporting/`
+
+| Area | Routes / entry |
+| --- | --- |
+| Catalog | `/module-reports` |
+| Sales by period | `/module-reports/sales-period` |
+| PDF preview | `/module-reports/preview` |
+| Platform hub | `/reports` → Business PDF reports |
+
+Capabilities:
+
+- Generic `ReportDefinition` + `ReportRunner` (no DB access in PDF layer)
+- `PdfPreview` + print/share via `ReportFileActions`
+- Sales period report via App `SalesPeriodReportDataAdapter` → `SaleRepository.searchListPaged`
+- Account statement via App `AccountStatementReportDataAdapter` → COA + `JournalRepository` movements
+- See ADR-012
+
 ### Future modules (not implemented)
 
-Purchases, Suppliers, Expenses, Point of Sale, cross-module Reports.
+Purchases, Suppliers, Expenses, Point of Sale.
 
 ## Recommended module folder layout
 

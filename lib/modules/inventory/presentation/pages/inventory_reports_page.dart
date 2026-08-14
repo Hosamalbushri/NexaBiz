@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/reporting/pdf_document_preview_page.dart';
 import '../../../../core/services/loading_providers.dart';
 import '../../../../core/widgets/app_bottom_sheet.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -446,7 +447,11 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
       if (format == null || !mounted) {
         return;
       }
-      await _exportReport(format);
+      if (format == ReportExportFormat.pdf) {
+        await _previewPdfReport();
+      } else {
+        await _exportReport(format);
+      }
     } catch (_) {
       if (!mounted) {
         return;
@@ -456,6 +461,45 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
         message: localization.exportFailed,
         isSuccess: false,
       );
+    }
+  }
+
+  Future<void> _previewPdfReport() async {
+    final localization = AppLocalizations.of(context);
+    final labels = _exportLabels(localization);
+    final result = await ref.read(loadingControllerProvider).run(
+      message: localization.loadingExportingReport,
+      action: () => ref
+          .read(reportExportProvider.notifier)
+          .preparePdfPreview(labels: labels),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    switch (result) {
+      case ReportExportValidationError(:final code):
+        showAppSnackBar(
+          context,
+          message: _exportValidationMessage(localization, code),
+          isSuccess: false,
+        );
+      case ReportExportFailure():
+        showAppSnackBar(
+          context,
+          message: localization.exportFailed,
+          isSuccess: false,
+        );
+      case ReportExportPdfReady(:final bytes, :final fileName):
+        PdfDocumentPreviewArgs.holder = PdfDocumentPreviewArgs(
+          bytes: bytes,
+          title: labels.reportTitle,
+          fileName: fileName,
+        );
+        await InventoryRoutes.pushReportPreview(context);
+      case ReportExportSuccess():
+        break;
     }
   }
 
@@ -488,6 +532,8 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
           message: localization.exportFailed,
           isSuccess: false,
         );
+      case ReportExportPdfReady():
+        break;
       case ReportExportSuccess(:final path):
         await showAppBottomSheet<void>(
           context: context,
@@ -501,9 +547,27 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
                   expand: true,
                   onPressed: () async {
                     try {
-                      await ref
+                      final preview = await ref
                           .read(reportExportProvider.notifier)
-                          .printExportedFile(path, labels: labels);
+                          .preparePdfPreview(labels: labels);
+                      if (!mounted) {
+                        return;
+                      }
+                      if (preview is! ReportExportPdfReady) {
+                        showAppSnackBar(
+                          context,
+                          message: localization.exportFailed,
+                          isSuccess: false,
+                        );
+                        return;
+                      }
+                      Navigator.of(context).pop();
+                      PdfDocumentPreviewArgs.holder = PdfDocumentPreviewArgs(
+                        bytes: preview.bytes,
+                        title: labels.reportTitle,
+                        fileName: preview.fileName,
+                      );
+                      await InventoryRoutes.pushReportPreview(context);
                     } catch (_) {
                       if (!mounted) {
                         return;

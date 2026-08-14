@@ -8,6 +8,7 @@ import 'domain/entities/voucher_book_type.dart';
 import 'presentation/pages/account_details_page.dart';
 import 'presentation/pages/account_form_page.dart';
 import 'presentation/pages/accounting_home_page.dart';
+import 'presentation/pages/accounting_reports_page.dart';
 import 'presentation/pages/accounting_routes.dart';
 import 'presentation/pages/chart_of_accounts_page.dart';
 import 'presentation/pages/currency_rates_page.dart';
@@ -78,6 +79,11 @@ class AccountingModule extends AppModule {
           path: 'currency-rates',
           name: 'accountingCurrencyRates',
           builder: (context, state) => const CurrencyRatesPage(),
+        ),
+        GoRoute(
+          path: 'reports',
+          name: 'accountingReports',
+          builder: (context, state) => const AccountingReportsPage(),
         ),
         GoRoute(
           path: 'voucher-books',

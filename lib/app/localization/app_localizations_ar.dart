@@ -46,6 +46,237 @@ class AppLocalizationsAr extends AppLocalizations {
       'إنشاء وإدارة المبيعات دون اتصال، مع ربط اختياري بالمحاسبة والمخزون.';
 
   @override
+  String get moduleReports => 'التقارير';
+
+  @override
+  String get moduleReportsDescription =>
+      'إنشاء ومعاينة وطباعة ومشاركة تقارير PDF احترافية.';
+
+  @override
+  String get reportsSalesPeriodTitle => 'المبيعات حسب الفترة';
+
+  @override
+  String get reportsSalesPeriodSubtitle =>
+      'اعرض المبيعات ضمن فترة وحالة ثم عاينها كملف PDF.';
+
+  @override
+  String get reportsAccountStatementTitle => 'كشف حساب';
+
+  @override
+  String get reportsAccountStatementSubtitle =>
+      'اطبع كشف حساب تراكمي بعملة الحساب وفق النموذج المحاسبي الكلاسيكي.';
+
+  @override
+  String get reportsAccountStatementFilters => 'معايير الكشف';
+
+  @override
+  String get reportsAccountStatementAccount => 'الحساب';
+
+  @override
+  String get reportsAccountStatementAccountHint => 'اختر الحساب';
+
+  @override
+  String get reportsAccountStatementAccountSearch => 'ابحث بالرمز أو الاسم';
+
+  @override
+  String get reportsAccountStatementAccountEmpty => 'لا توجد حسابات ترحيل.';
+
+  @override
+  String get reportsAccountStatementAccountRequired => 'اختر الحساب أولاً.';
+
+  @override
+  String get reportsAccountStatementAccountName => 'إسم الحساب';
+
+  @override
+  String get reportsAccountStatementAccountNumber => 'رقم الحساب';
+
+  @override
+  String get reportsAccountStatementCurrency => 'العملة';
+
+  @override
+  String get reportsAccountStatementCurrencyAll => 'كل العملات';
+
+  @override
+  String get reportsAccountStatementType => 'نوع الكشف';
+
+  @override
+  String get reportsAccountStatementTypeCumulative =>
+      'كشف حساب تراكمي بعملة الحساب';
+
+  @override
+  String get reportsAccountStatementTypeDetailed => 'كشف تفصيلي';
+
+  @override
+  String get reportsAccountStatementTypeSummary => 'كشف إجمالي';
+
+  @override
+  String get reportsAccountStatementPostingStatus => 'حالة الترحيل';
+
+  @override
+  String get reportsAccountStatementPostingAll => 'الكل';
+
+  @override
+  String get reportsAccountStatementPostingPosted => 'مرحل';
+
+  @override
+  String get reportsAccountStatementPostingUnposted => 'غير مرحل';
+
+  @override
+  String get reportsAccountStatementFromDate => 'من تاريخ';
+
+  @override
+  String get reportsAccountStatementToDate => 'إلى تاريخ';
+
+  @override
+  String get reportsAccountStatementColSide => 'م/د';
+
+  @override
+  String get reportsAccountStatementColVoucherType => 'نوع السند';
+
+  @override
+  String get reportsAccountStatementColVoucherNumber => 'الرقم';
+
+  @override
+  String get reportsAccountStatementColDescription => 'التفاصيل';
+
+  @override
+  String get reportsAccountStatementColDebit => 'المدين';
+
+  @override
+  String get reportsAccountStatementColCredit => 'الدائن';
+
+  @override
+  String get reportsAccountStatementColBalance => 'الرصيد';
+
+  @override
+  String get reportsAccountStatementColCurrency => 'العملة';
+
+  @override
+  String get reportsAccountStatementColInCurrency => 'بالعملة';
+
+  @override
+  String get reportsAccountStatementTotalsDebit => 'مدين';
+
+  @override
+  String get reportsAccountStatementTotalsCredit => 'دائن';
+
+  @override
+  String get reportsAccountStatementFinalBalanceByCurrency =>
+      'الرصيد النهائي على مستوى العملة';
+
+  @override
+  String get reportsAccountStatementDisclaimer =>
+      'يعتبر كشف الحساب هذا صحيحاً ما لم يردنا عليه أي اعتراض خلال فترة أسبوعين من تاريخه .';
+
+  @override
+  String get reportsAccountStatementAccountant => 'المحاسب';
+
+  @override
+  String get reportsAccountStatementReviewer => 'المراجع';
+
+  @override
+  String get reportsAccountStatementFinanceManager => 'المدير المالي:';
+
+  @override
+  String get reportsAccountStatementPrintedBy => 'NexaBiz';
+
+  @override
+  String get reportsAccountStatementEmpty =>
+      'لا توجد حركات دفترية لهذا الحساب بعد. ستظهر القيود اليومية هنا عند توفرها.';
+
+  @override
+  String get reportsCatalogTitle => 'كل تقارير PDF';
+
+  @override
+  String get reportsCatalogSubtitle =>
+      'افتح كتالوج التقارير لإنشاء ومعاينة ملفات PDF.';
+
+  @override
+  String get reportsPreviewTitle => 'معاينة التقرير';
+
+  @override
+  String get reportsPreviewMissing =>
+      'لا يوجد تقرير جاهز للمعاينة. أنشئ تقريراً أولاً.';
+
+  @override
+  String get reportsActionPrint => 'طباعة';
+
+  @override
+  String get reportsActionShare => 'مشاركة';
+
+  @override
+  String get reportsGeneratePreview => 'إنشاء ومعاينة';
+
+  @override
+  String get reportsGenerating => 'جاري إنشاء التقرير…';
+
+  @override
+  String get reportsGeneratedAt => 'تاريخ الإنشاء';
+
+  @override
+  String get reportsPeriod => 'الفترة';
+
+  @override
+  String get reportsPeriodAll => 'كل التواريخ';
+
+  @override
+  String get reportsFromDate => 'من تاريخ';
+
+  @override
+  String get reportsToDate => 'إلى تاريخ';
+
+  @override
+  String get reportsDateAny => 'أي';
+
+  @override
+  String get reportsStatusAll => 'كل الحالات';
+
+  @override
+  String get reportsGrandTotal => 'الإجمالي';
+
+  @override
+  String get reportsRowCount => 'الصفوف';
+
+  @override
+  String get reportsColSaleNumber => 'الرقم';
+
+  @override
+  String get reportsColDate => 'التاريخ';
+
+  @override
+  String get reportsColCustomer => 'العميل';
+
+  @override
+  String get reportsColSettlement => 'التسوية';
+
+  @override
+  String get reportsColStatus => 'الحالة';
+
+  @override
+  String get reportsColCurrency => 'العملة';
+
+  @override
+  String get reportsColTotal => 'المبلغ';
+
+  @override
+  String get reportsEmptySales => 'لا توجد مبيعات مطابقة للفلاتر المحددة.';
+
+  @override
+  String get reportsErrorGeneric => 'تعذر إنشاء التقرير.';
+
+  @override
+  String get reportsErrorPrint => 'فشلت الطباعة.';
+
+  @override
+  String get reportsErrorShare => 'فشلت المشاركة.';
+
+  @override
+  String get reportsErrorFile => 'تعذر حفظ ملف PDF.';
+
+  @override
+  String get reportsErrorFont => 'تعذر تحميل خطوط التقرير.';
+
+  @override
   String get salesListTitle => 'المبيعات';
 
   @override
@@ -114,6 +345,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get salesProductNotFound => 'المنتج غير موجود.';
+
+  @override
+  String get salesAutocompleteSearchFailed =>
+      'تعذر تحميل النتائج. حاول مرة أخرى.';
 
   @override
   String get salesRemoveItem => 'إزالة الصنف';
@@ -301,16 +536,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesStatus => 'حالة الفاتورة';
 
   @override
-  String get salesStatusDraft => 'مسودة';
+  String get salesStatusUnposted => 'غير مرحل';
 
   @override
-  String get salesStatusPending => 'بانتظار المحاسبة';
+  String get salesStatusPosted => 'مرحل';
 
   @override
-  String get salesStatusConfirmed => 'مؤكدة';
+  String get salesStatusDraft => 'غير مرحل';
 
   @override
-  String get salesStatusCompleted => 'مكتملة';
+  String get salesStatusPending => 'غير مرحل';
+
+  @override
+  String get salesStatusConfirmed => 'مرحل';
+
+  @override
+  String get salesStatusCompleted => 'مرحل';
 
   @override
   String get salesStatusCancelled => 'ملغاة';
@@ -325,7 +566,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesSave => 'حفظ الفاتورة';
 
   @override
-  String get salesSaveAndConfirm => 'حفظ وتأكيد';
+  String get salesSaveAndConfirm => 'حفظ وترحيل';
 
   @override
   String get salesSaving => 'جاري حفظ الفاتورة…';
@@ -334,13 +575,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesLoadingInvoice => 'جاري تحميل الفاتورة…';
 
   @override
-  String get salesConfirming => 'جاري تأكيد الفاتورة…';
+  String get salesConfirming => 'جاري ترحيل الفاتورة…';
+
+  @override
+  String get salesPosting => 'جاري الترحيل…';
 
   @override
   String get salesSaved => 'تم حفظ الفاتورة';
 
   @override
-  String get salesConfirmed => 'تم تأكيد الفاتورة';
+  String get salesConfirmed => 'تم ترحيل الفاتورة';
+
+  @override
+  String get salesPosted => 'تم ترحيل الفاتورة';
 
   @override
   String get salesCompleted => 'اكتملت الفاتورة';
@@ -352,7 +599,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesDuplicated => 'تم تكرار الفاتورة';
 
   @override
-  String get salesConfirmSale => 'تأكيد الفاتورة';
+  String get salesConfirmSale => 'ترحيل';
+
+  @override
+  String get salesPostSale => 'ترحيل';
 
   @override
   String get salesCompleteSale => 'تعليم كمكتملة';
@@ -370,6 +620,30 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get salesDuplicate => 'تكرار';
+
+  @override
+  String get salesPrintInvoice => 'طباعة';
+
+  @override
+  String get salesPreviewInvoice => 'معاينة وطباعة';
+
+  @override
+  String get salesPrintingInvoice => 'جاري تجهيز معاينة الفاتورة…';
+
+  @override
+  String get salesPrintFailed => 'تعذر طباعة الفاتورة.';
+
+  @override
+  String get salesShareInvoice => 'مشاركة';
+
+  @override
+  String get salesSharingInvoice => 'جاري تجهيز المشاركة…';
+
+  @override
+  String get salesShareFailed => 'تعذر مشاركة الفاتورة.';
+
+  @override
+  String get salesInvoiceSaved => 'تم حفظ الفاتورة في مجلد الفواتير.';
 
   @override
   String get salesNotFound => 'الفاتورة غير موجودة';
@@ -481,7 +755,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get customersFieldAccountHelper =>
-      'أدخل حساب ترحيل موجوداً تحت حساب أصل العملاء المُعدّ. لا يُنشأ حساب تلقائياً.';
+      'اختياري. اتركه فارغاً لإنشاء الحساب تلقائياً تحت أصل العملاء عند تفعيل الربط التلقائي، أو أدخل رمز حساب ترحيل موجود.';
+
+  @override
+  String get customersFieldAccountHelperAuto =>
+      'اتركه فارغاً لإنشاء حساب في الدليل المحاسبي تلقائياً تحت أصل العملاء (بنفس رمز العميل).';
 
   @override
   String customersAccountLinked(String code, String name) {
@@ -493,8 +771,48 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يوجد حساب ترحيل مطابق لهذا الرمز.';
 
   @override
+  String get customersAccountAutoLinkFailed =>
+      'تعذر إنشاء أو ربط حساب الدليل المحاسبي لهذا العميل.';
+
+  @override
   String customersAccountMustBeUnderParent(String code, String name) {
     return 'يجب أن يكون الحساب المرتبط تحت الأصل $code · $name.';
+  }
+
+  @override
+  String get customersSettingsTitle => 'إعدادات العملاء';
+
+  @override
+  String get customersSettingsSubtitle =>
+      'ضبط الربط بالدليل المحاسبي وخيارات العملاء الأخرى.';
+
+  @override
+  String get customersSettingsCardSubtitle =>
+      'حساب الأصل، الربط التلقائي، والمزيد';
+
+  @override
+  String get customersAutoLinkSectionTitle => 'ربط تلقائي بالدليل المحاسبي';
+
+  @override
+  String get customersAutoLinkSectionSubtitle =>
+      'عند التفعيل، حفظ عميل بلا حساب ينشئ حساب ترحيل تحت مجموعة أصل العملاء.';
+
+  @override
+  String get customersAutoLinkToggle => 'إنشاء حساب الدليل تلقائياً';
+
+  @override
+  String get customersLinkMissingAccountsTitle => 'ربط العملاء الحاليين';
+
+  @override
+  String get customersLinkMissingAccountsSubtitle =>
+      'إنشاء حسابات في الدليل المحاسبي للعملاء المستوردين أو المحفوظين بلا ربط.';
+
+  @override
+  String get customersLinkMissingAccountsAction => 'ربط الحسابات الناقصة الآن';
+
+  @override
+  String customersLinkMissingAccountsDone(int count) {
+    return 'تم ربط $count عميل/عملاء بالدليل المحاسبي.';
   }
 
   @override
@@ -511,7 +829,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get customersParentAccountNotSet =>
-      'لم يُحدد حساب الأصل. اضبطه من الإعدادات.';
+      'لم يُحدد حساب الأصل. اضبطه من إعدادات العملاء.';
 
   @override
   String get customersParentAccountField => 'رمز حساب الأصل';
@@ -697,6 +1015,25 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get accountingChartOfAccountsDescription =>
       'استعرض وأدر الهيكل الهرمي للحسابات.';
+
+  @override
+  String get accountingReportsTitle => 'التقارير المحاسبية';
+
+  @override
+  String get accountingReportsSubtitle =>
+      'كشوفات وتقارير مالية مبنية على الدليل المحاسبي.';
+
+  @override
+  String get accountingReportTrialBalanceTitle => 'ميزان المراجعة';
+
+  @override
+  String get accountingReportJournalTitle => 'اليومية';
+
+  @override
+  String get accountingReportComingSoonSubtitle => 'ستتوفر في إصدار لاحق.';
+
+  @override
+  String get accountingReportComingSoonBadge => 'قريباً';
 
   @override
   String get accountingCurrencyRatesTitle => 'أسعار العملات';
@@ -1200,6 +1537,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountingAccountBank => 'البنك';
 
   @override
+  String get accountingAccountPettyCash => 'العهدة النقدية';
+
+  @override
   String get accountingAccountAccountsReceivable => 'الذمم المدينة';
 
   @override
@@ -1207,6 +1547,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get accountingAccountInventory => 'المخزون';
+
+  @override
+  String get accountingAccountInventoryInTransit => 'بضاعة بالطريق';
+
+  @override
+  String get accountingAccountVatInput => 'ضريبة مدخلات';
+
+  @override
+  String get accountingAccountPrepaidExpenses => 'مصروفات مدفوعة مقدماً';
+
+  @override
+  String get accountingAccountOtherCurrentAssets => 'أصول متداولة أخرى';
 
   @override
   String get accountingAccountFixedAssets => 'الأصول الثابتة';
@@ -1230,10 +1582,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountingAccountAccountsPayable => 'الذمم الدائنة';
 
   @override
+  String get accountingAccountSuppliers => 'الموردون';
+
+  @override
   String get accountingAccountShortTermLoans => 'قروض قصيرة الأجل';
 
   @override
+  String get accountingAccountVatOutput => 'ضريبة مخرجات مستحقة';
+
+  @override
+  String get accountingAccountAccruedExpenses => 'مصروفات مستحقة';
+
+  @override
+  String get accountingAccountCustomerAdvances => 'دفعات مقدمة من العملاء';
+
+  @override
   String get accountingAccountLongTermLiabilities => 'الخصوم طويلة الأجل';
+
+  @override
+  String get accountingAccountLongTermLoans => 'قروض طويلة الأجل';
 
   @override
   String get accountingAccountEquity => 'حقوق الملكية';
@@ -1254,10 +1621,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountingAccountOtherRevenue => 'إيرادات أخرى';
 
   @override
+  String get accountingAccountPurchaseDiscounts => 'خصم مكتسب على المشتريات';
+
+  @override
   String get accountingAccountExpenses => 'المصروفات';
 
   @override
   String get accountingAccountCogs => 'تكلفة البضاعة المباعة';
+
+  @override
+  String get accountingAccountInventoryAdjustments => 'تسويات / عجز مخزون';
+
+  @override
+  String get accountingAccountSalesReturns => 'مردودات المبيعات';
+
+  @override
+  String get accountingAccountSalesDiscounts => 'خصم مسموح به للعملاء';
 
   @override
   String get accountingAccountSalaries => 'الرواتب';
@@ -1267,6 +1646,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get accountingAccountUtilities => 'المرافق';
+
+  @override
+  String get accountingAccountBankCharges => 'عمولات ورسوم بنكية';
+
+  @override
+  String get accountingAccountDepreciation => 'إهلاك';
+
+  @override
+  String get accountingAccountAdvertising => 'دعاية وإعلان';
+
+  @override
+  String get accountingAccountShippingDelivery => 'نقل وتوصيل';
+
+  @override
+  String get accountingAccountMaintenance => 'صيانة';
 
   @override
   String get accountingAccountOtherExpenses => 'مصروفات أخرى';
@@ -2039,6 +2433,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get setupCountry => 'الدولة';
 
   @override
+  String get setupInvoiceHeaderSection => 'رأس فاتورة البيع';
+
+  @override
+  String get setupInvoiceHeaderSectionSubtitle =>
+      'نص العمودين الأيمن والأيسر حول شعار الشركة في رأس الفاتورة المطبوعة.';
+
+  @override
+  String get setupInvoiceHeaderRight => 'نص العمود الأيمن';
+
+  @override
+  String get setupInvoiceHeaderLeft => 'نص العمود الأيسر';
+
+  @override
+  String get setupInvoiceHeaderHelper =>
+      'يمكن كتابة عدة أسطر (مثل العنوان أو الهاتف).';
+
+  @override
   String get setupSavedSuccess => 'تم حفظ إعدادات التهيئة.';
 
   @override
@@ -2346,6 +2757,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get platformReportsInventorySubtitle => 'تقارير الجرد والمنتجات.';
+
+  @override
+  String get platformReportsBusiness => 'تقارير الأعمال PDF';
+
+  @override
+  String get platformReportsBusinessSubtitle =>
+      'تقارير المبيعات والتقارير المشتركة مع معاينة PDF.';
 
   @override
   String get platformReportsComingSoon =>

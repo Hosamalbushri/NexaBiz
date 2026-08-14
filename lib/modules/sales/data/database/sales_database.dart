@@ -17,7 +17,7 @@ class SalesDatabase extends _$SalesDatabase {
   SalesDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -36,7 +36,6 @@ class SalesDatabase extends _$SalesDatabase {
         await m.addColumn(sales, sales.baseCurrencyCode);
         await m.addColumn(sales, sales.exchangeRate);
         await m.addColumn(saleItems, saleItems.baseUnitPrice);
-        // Backfill sale_date from created_at for existing rows.
         await customStatement(
           'UPDATE sales SET sale_date = created_at '
           'WHERE sale_date IS NULL OR sale_date = 0',
@@ -51,6 +50,9 @@ class SalesDatabase extends _$SalesDatabase {
           'sub_quantity = 0, pack_size = 1 '
           'WHERE main_quantity = 0 AND sub_quantity = 0',
         );
+      }
+      if (from < 4) {
+        await _createIndexes();
       }
     },
   );
@@ -79,11 +81,18 @@ class SalesDatabase extends _$SalesDatabase {
       'CREATE INDEX IF NOT EXISTS idx_sales_date ON sales (sale_date)',
     );
     await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_sales_customer_name '
+      'ON sales (customer_name)',
+    );
+    await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_sale_items_sale ON sale_items (sale_uuid)',
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_sale_items_product '
       'ON sale_items (product_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_sale_items_name ON sale_items (product_name)',
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_sale_payments_sale '

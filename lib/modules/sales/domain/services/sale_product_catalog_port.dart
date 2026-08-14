@@ -1,3 +1,5 @@
+import '../sale_autocomplete_defaults.dart';
+
 /// Product snapshot for sale line selection (opaque Inventory identity).
 class SaleProductRef {
   const SaleProductRef({
@@ -31,7 +33,10 @@ abstract class SaleProductCatalogPort {
   /// Resolves barcode, item code, or product QR payload when supported.
   Future<SaleProductRef?> resolveScan(String raw);
 
-  Future<List<SaleProductRef>> search(String query, {int limit = 40});
+  Future<List<SaleProductRef>> search(
+    String query, {
+    int limit = SaleAutocompleteDefaults.resultLimit,
+  });
 }
 
 class NoOpSaleProductCatalogPort implements SaleProductCatalogPort {
@@ -50,7 +55,10 @@ class NoOpSaleProductCatalogPort implements SaleProductCatalogPort {
   Future<SaleProductRef?> resolveScan(String raw) async => null;
 
   @override
-  Future<List<SaleProductRef>> search(String query, {int limit = 40}) async {
+  Future<List<SaleProductRef>> search(
+    String query, {
+    int limit = SaleAutocompleteDefaults.resultLimit,
+  }) async {
     return const [];
   }
 }

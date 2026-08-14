@@ -15,7 +15,13 @@ abstract class CustomerRepository {
 
   Future<Customer?> getByExternalId(String externalId);
 
-  Future<List<Customer>> search(String query, {bool includeInactive = false});
+  /// Multi-field contains search. When [limit] is set, filtering and capping
+  /// happen in SQL (never load the full match set into Dart).
+  Future<List<Customer>> search(
+    String query, {
+    bool includeInactive = false,
+    int? limit,
+  });
 
   Future<Customer> insert(CustomerDraft draft);
 

@@ -7,6 +7,7 @@ import '../repositories/sale_repository.dart';
 import '../services/sale_accounting_bridge_port.dart';
 import '../services/sale_calculation_service.dart';
 import '../services/sale_inventory_effect_port.dart';
+import '../services/sale_ledger_posting_port.dart';
 import '../services/sale_number_allocator_port.dart';
 import '../services/sale_validator.dart';
 import '../services/sale_voucher_book_port.dart';
@@ -35,17 +36,24 @@ class CreateSale {
     required SaleRepository repository,
     required SaleNumberAllocatorPort numberAllocator,
     SaleVoucherBookPort voucherBookPort = const NoOpSaleVoucherBookPort(),
+    SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
+    SaleAccountingBridgePort accountingBridge =
+        const NoOpSaleAccountingBridgePort(),
     SaleValidator validator = const SaleValidator(),
     SaleCalculationService calculator = const SaleCalculationService(),
   }) : _repository = repository,
        _numberAllocator = numberAllocator,
        _voucherBookPort = voucherBookPort,
+       _ledgerPosting = ledgerPosting,
+       _accountingBridge = accountingBridge,
        _validator = validator,
        _calculator = calculator;
 
   final SaleRepository _repository;
   final SaleNumberAllocatorPort _numberAllocator;
   final SaleVoucherBookPort _voucherBookPort;
+  final SaleLedgerPostingPort _ledgerPosting;
+  final SaleAccountingBridgePort _accountingBridge;
   final SaleValidator _validator;
   final SaleCalculationService _calculator;
 
@@ -67,7 +75,18 @@ class CreateSale {
     final saleNumber = (bookId != null && bookId.isNotEmpty)
         ? await _voucherBookPort.allocateSaleNumber(bookId)
         : await _numberAllocator.allocateNext();
-    return _repository.insert(merged, saleNumber: saleNumber);
+    final sale = await _repository.insert(merged, saleNumber: saleNumber);
+
+    final integrated = await _accountingBridge.isIntegratedMode;
+    if (!integrated) {
+      try {
+        await _ledgerPosting.syncSale(sale);
+      } catch (_) {
+        await _repository.softDelete(sale.id);
+        throw const SaleException(SaleException.ledgerPostingFailed);
+      }
+    }
+    return sale;
   }
 
   SaleDraft _normalize(SaleDraft draft) {
@@ -108,15 +127,22 @@ class UpdateSale {
     SaleValidator validator = const SaleValidator(),
     SaleCalculationService calculator = const SaleCalculationService(),
     SaleWorkflowService workflow = const SaleWorkflowService(),
+    SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
+    SaleAccountingBridgePort accountingBridge =
+        const NoOpSaleAccountingBridgePort(),
   }) : _repository = repository,
        _validator = validator,
        _calculator = calculator,
-       _workflow = workflow;
+       _workflow = workflow,
+       _ledgerPosting = ledgerPosting,
+       _accountingBridge = accountingBridge;
 
   final SaleRepository _repository;
   final SaleValidator _validator;
   final SaleCalculationService _calculator;
   final SaleWorkflowService _workflow;
+  final SaleLedgerPostingPort _ledgerPosting;
+  final SaleAccountingBridgePort _accountingBridge;
 
   Future<Sale> call(int id, SaleDraft draft) async {
     final existing = await _repository.getById(id);
@@ -164,24 +190,34 @@ class UpdateSale {
       total: summary.total,
       paidAmount: merged.paidAmount,
     );
-    return _repository.update(id, merged);
+    final updated = await _repository.update(id, merged);
+
+    final integrated = await _accountingBridge.isIntegratedMode;
+    if (!integrated) {
+      await _ledgerPosting.syncSale(updated);
+    }
+    return updated;
   }
 }
 
+/// Posts an unposted sale (UI label: Post / ترحيل).
 class ConfirmSale {
   ConfirmSale({
     required SaleRepository repository,
     required SaleAccountingBridgePort accountingBridge,
     required SaleInventoryEffectPort inventoryEffect,
+    SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
     SaleWorkflowService workflow = const SaleWorkflowService(),
   }) : _repository = repository,
        _accountingBridge = accountingBridge,
        _inventoryEffect = inventoryEffect,
+       _ledgerPosting = ledgerPosting,
        _workflow = workflow;
 
   final SaleRepository _repository;
   final SaleAccountingBridgePort _accountingBridge;
   final SaleInventoryEffectPort _inventoryEffect;
+  final SaleLedgerPostingPort _ledgerPosting;
   final SaleWorkflowService _workflow;
 
   Future<Sale> call(int id) async {
@@ -189,10 +225,26 @@ class ConfirmSale {
     if (sale == null) {
       throw const SaleException(SaleException.notFound);
     }
-    _workflow.assertCanConfirm(sale);
+    _workflow.assertCanPost(sale);
     final integrated = await _accountingBridge.isIntegratedMode;
-    final next = _workflow.nextOnConfirm(integratedMode: integrated);
+    final next = _workflow.nextOnPost(integratedMode: integrated);
     final now = DateTime.now().toUtc();
+
+    // Submit accounting against the projected post document first so a
+    // bridge failure leaves the sale editable (still unposted).
+    if (integrated) {
+      final projected = sale.copyWith(
+        saleStatus: next,
+        confirmedAt: now,
+        submittedAt: now,
+      );
+      try {
+        await _accountingBridge.submitOperationalSale(projected);
+      } catch (_) {
+        throw const SaleException(SaleException.externalIntegrationFailed);
+      }
+    }
+
     final updated = await _repository.updateStatus(
       id,
       SaleStatusUpdate(
@@ -201,12 +253,42 @@ class ConfirmSale {
         submittedAt: integrated ? now : null,
       ),
     );
-    await _inventoryEffect.onConfirmed(updated);
-    if (integrated) {
+
+    try {
+      await _inventoryEffect.onConfirmed(updated);
+    } catch (_) {
+      // Roll back post so the document stays editable if stock effect fails.
+      await _repository.updateStatus(
+        id,
+        SaleStatusUpdate(
+          saleStatus: sale.saleStatus,
+          clearConfirmedAt: true,
+          clearSubmittedAt: true,
+        ),
+      );
+      rethrow;
+    }
+
+    // Standalone sales upsert local journal as posted.
+    // Integrated mode keeps operational submit only — no local ledger entry.
+    if (!integrated) {
       try {
-        await _accountingBridge.submitOperationalSale(updated);
+        await _ledgerPosting.syncSale(updated);
       } catch (_) {
-        throw const SaleException(SaleException.externalIntegrationFailed);
+        await _repository.updateStatus(
+          id,
+          SaleStatusUpdate(
+            saleStatus: sale.saleStatus,
+            clearConfirmedAt: true,
+            clearSubmittedAt: true,
+          ),
+        );
+        try {
+          await _inventoryEffect.onCancelled(updated);
+        } catch (_) {
+          // Best-effort reverse; surface ledger failure to the caller.
+        }
+        throw const SaleException(SaleException.ledgerPostingFailed);
       }
     }
     return updated;
@@ -217,59 +299,46 @@ class CancelSale {
   CancelSale({
     required SaleRepository repository,
     required SaleInventoryEffectPort inventoryEffect,
+    SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
     SaleWorkflowService workflow = const SaleWorkflowService(),
   }) : _repository = repository,
        _inventoryEffect = inventoryEffect,
+       _ledgerPosting = ledgerPosting,
        _workflow = workflow;
 
   final SaleRepository _repository;
   final SaleInventoryEffectPort _inventoryEffect;
+  final SaleLedgerPostingPort _ledgerPosting;
   final SaleWorkflowService _workflow;
 
-  Future<Sale> call(int id) async {
+  Future<void> call(int id) async {
     final sale = await _repository.getById(id);
     if (sale == null) {
       throw const SaleException(SaleException.notFound);
     }
     _workflow.assertCanCancel(sale);
     final hadInventoryEffect = sale.saleStatus.affectsInventory;
-    final updated = await _repository.updateStatus(
-      id,
-      SaleStatusUpdate(
-        saleStatus: SaleStatus.cancelled,
-        cancelledAt: DateTime.now().toUtc(),
-      ),
-    );
+
+    await _ledgerPosting.voidSale(sale);
+
     if (hadInventoryEffect) {
-      await _inventoryEffect.onCancelled(updated);
+      await _inventoryEffect.onCancelled(sale);
     }
-    return updated;
+
+    await _repository.softDelete(id);
   }
 }
 
+/// Complete is removed from the unposted/posted lifecycle.
 class CompleteSale {
-  CompleteSale({
-    required SaleRepository repository,
-    SaleWorkflowService workflow = const SaleWorkflowService(),
-  }) : _repository = repository,
-       _workflow = workflow;
+  CompleteSale({required SaleRepository repository}) : _repository = repository;
 
+  // Kept so existing providers/tests can construct the use case.
+  // ignore: unused_field
   final SaleRepository _repository;
-  final SaleWorkflowService _workflow;
 
   Future<Sale> call(int id) async {
-    final sale = await _repository.getById(id);
-    if (sale == null) {
-      throw const SaleException(SaleException.notFound);
-    }
-    _workflow.assertCanComplete(sale);
-    return _repository.updateStatus(
-      id,
-      SaleStatusUpdate(
-        saleStatus: SaleStatus.completed,
-        completedAt: DateTime.now().toUtc(),
-      ),
-    );
+    throw const SaleException(SaleException.invalidStatusTransition);
   }
 }
 

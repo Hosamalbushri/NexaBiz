@@ -25,6 +25,16 @@ class _FakeProductRepository implements ProductRepository {
   }
 
   @override
+  Future<Product?> getByUuid(String uuid) async {
+    for (final product in products) {
+      if (product.uuid == uuid) {
+        return product;
+      }
+    }
+    return null;
+  }
+
+  @override
   Future<Product?> getByBarcode(String barcode) async {
     final trimmed = barcode.trim();
     for (final product in products) {
@@ -53,7 +63,14 @@ class _FakeProductRepository implements ProductRepository {
   Future<List<Product>> search(
     String query, {
     CatalogSearchField searchField = CatalogSearchField.all,
-  }) async => products;
+    int? limit,
+  }) async {
+    final items = products;
+    if (limit == null || limit <= 0) {
+      return items;
+    }
+    return items.take(limit).toList(growable: false);
+  }
 
   @override
   Future<PagedResult<Product>> getPaged({

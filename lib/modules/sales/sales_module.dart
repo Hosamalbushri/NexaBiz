@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/reporting/pdf_document_preview_page.dart';
 import 'presentation/pages/sale_details_page.dart';
 import 'presentation/pages/sale_form_page.dart';
 import 'presentation/pages/sales_home_page.dart';
@@ -58,6 +59,11 @@ class SalesModule extends AppModule {
           path: 'create',
           name: 'salesCreate',
           builder: (context, state) => const SaleFormPage(),
+        ),
+        GoRoute(
+          path: 'invoice-preview',
+          name: 'salesInvoicePreview',
+          builder: (context, state) => const PdfDocumentPreviewPage(),
         ),
         GoRoute(
           path: ':id',

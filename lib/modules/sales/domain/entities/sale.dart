@@ -269,7 +269,7 @@ class SaleDraft {
     this.paidAmount = 0,
     this.paymentMethod = PaymentMethod.cash,
     this.notes,
-    this.saleStatus = SaleStatus.draft,
+    this.saleStatus = SaleStatus.unposted,
     this.dataSource = SaleDataSource.local,
     this.externalId,
     this.externalDocumentNumber,

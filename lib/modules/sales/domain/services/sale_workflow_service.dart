@@ -6,24 +6,26 @@ import '../models/sale_exception.dart';
 class SaleWorkflowService {
   const SaleWorkflowService();
 
-  SaleStatus nextOnConfirm({required bool integratedMode}) {
-    return integratedMode ? SaleStatus.pending : SaleStatus.confirmed;
+  SaleStatus nextOnPost({required bool integratedMode}) {
+    // Integrated vs standalone differs by bridge/journal side effects, not status.
+    return SaleStatus.posted;
   }
 
-  void assertCanConfirm(Sale sale) {
-    if (!sale.saleStatus.canConfirm) {
+  /// Legacy name used by older call sites.
+  SaleStatus nextOnConfirm({required bool integratedMode}) =>
+      nextOnPost(integratedMode: integratedMode);
+
+  void assertCanPost(Sale sale) {
+    if (!sale.saleStatus.canPost) {
       throw const SaleException(SaleException.invalidStatusTransition);
     }
   }
+
+  /// Compatibility alias for confirm → post rename.
+  void assertCanConfirm(Sale sale) => assertCanPost(sale);
 
   void assertCanCancel(Sale sale) {
     if (!sale.saleStatus.canCancel) {
-      throw const SaleException(SaleException.invalidStatusTransition);
-    }
-  }
-
-  void assertCanComplete(Sale sale) {
-    if (!sale.saleStatus.canComplete) {
       throw const SaleException(SaleException.invalidStatusTransition);
     }
   }

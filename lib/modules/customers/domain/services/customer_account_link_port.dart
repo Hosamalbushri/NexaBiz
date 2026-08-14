@@ -48,6 +48,17 @@ abstract class CustomerAccountLinkPort {
     required String accountId,
     required String parentId,
   });
+
+  /// Creates (or reuses) a posting account under [parentId] for a customer.
+  ///
+  /// Reuses an existing posting account with the same [accountCode] when it
+  /// already sits under [parentId]. Returns `null` when the port cannot create
+  /// accounts (e.g. [NoOpCustomerAccountLinkPort]).
+  Future<LinkedAccountRef?> ensurePostingUnderParent({
+    required String parentId,
+    required String accountCode,
+    required String name,
+  });
 }
 
 /// Safe default until App wires Accounting.
@@ -85,5 +96,14 @@ class NoOpCustomerAccountLinkPort implements CustomerAccountLinkPort {
     required String parentId,
   }) async {
     return false;
+  }
+
+  @override
+  Future<LinkedAccountRef?> ensurePostingUnderParent({
+    required String parentId,
+    required String accountCode,
+    required String name,
+  }) async {
+    return null;
   }
 }

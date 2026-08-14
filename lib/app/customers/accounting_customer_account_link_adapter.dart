@@ -1,11 +1,12 @@
 import '../../modules/accounting/domain/entities/account.dart';
+import '../../modules/accounting/domain/models/account_exception.dart';
 import '../../modules/accounting/domain/repositories/account_repository.dart';
 import '../../modules/customers/domain/services/customer_account_link_port.dart';
 
 /// App-layer bridge: Customers → Accounting accounts without module coupling.
 ///
 /// Customers stores opaque [LinkedAccountRef.accountId] (= Account.uuid).
-/// Never creates Chart of Accounts rows — only resolves existing accounts.
+/// May create posting accounts under the configured customers parent group.
 class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
   const AccountingCustomerAccountLinkAdapter(this._accounts);
 
@@ -147,5 +148,68 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
       guard++;
     }
     return false;
+  }
+
+  @override
+  Future<LinkedAccountRef?> ensurePostingUnderParent({
+    required String parentId,
+    required String accountCode,
+    required String name,
+  }) async {
+    await _ensureChart();
+    final code = accountCode.trim();
+    final displayName = name.trim();
+    final parentUuid = parentId.trim();
+    if (code.isEmpty || displayName.isEmpty || parentUuid.isEmpty) {
+      return null;
+    }
+
+    final parent = await _accounts.getByUuid(parentUuid);
+    final parentRef = _map(parent, requirePosting: false, requireGroup: true);
+    if (parentRef == null || parent == null) {
+      return null;
+    }
+
+    final existing = await _accounts.getByAccountCode(code);
+    if (existing != null && !existing.isDeleted) {
+      final underParent = await isUnderParent(
+        accountId: existing.uuid,
+        parentId: parentUuid,
+      );
+      if (underParent && existing.canPost) {
+        if (existing.name != displayName) {
+          await _accounts.update(
+            existing.id,
+            AccountDraft(
+              parentId: existing.parentId,
+              accountCode: existing.accountCode,
+              name: displayName,
+              accountType: existing.accountType,
+              isGroup: false,
+              isActive: existing.isActive,
+              isSystemAccount: existing.isSystemAccount,
+              description: existing.description,
+            ),
+          );
+          final refreshed = await _accounts.getByUuid(existing.uuid);
+          return _map(refreshed, requirePosting: true, requireGroup: false);
+        }
+        return _map(existing, requirePosting: true, requireGroup: false);
+      }
+      throw const AccountException(AccountException.duplicateAccountCode);
+    }
+
+    final created = await _accounts.insert(
+      AccountDraft(
+        parentId: parentUuid,
+        accountCode: code,
+        name: displayName,
+        accountType: parent.accountType,
+        isGroup: false,
+        isActive: true,
+        isSystemAccount: false,
+      ),
+    );
+    return _map(created, requirePosting: true, requireGroup: false);
   }
 }

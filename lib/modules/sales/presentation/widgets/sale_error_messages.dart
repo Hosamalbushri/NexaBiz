@@ -27,6 +27,7 @@ String saleErrorMessage(AppLocalizations l10n, Object error) {
       SaleException.insufficientStock => l10n.salesErrorInvalidQuantity,
       SaleException.syncFailed => l10n.somethingWentWrong,
       SaleException.externalIntegrationFailed => l10n.somethingWentWrong,
+      SaleException.ledgerPostingFailed => l10n.somethingWentWrong,
       _ => l10n.somethingWentWrong,
     };
   }

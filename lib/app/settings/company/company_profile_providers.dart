@@ -63,6 +63,8 @@ class CompanyProfileController
       country: opt(profile.country),
       website: opt(profile.website),
       fiscalYearStartMonth: profile.fiscalYearStartMonth.clamp(1, 12),
+      invoiceHeaderRight: opt(profile.invoiceHeaderRight),
+      invoiceHeaderLeft: opt(profile.invoiceHeaderLeft),
     );
     await _repository.saveCompanyProfile(normalized);
     state = AsyncValue.data(normalized);

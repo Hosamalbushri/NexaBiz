@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/sync/sync_providers.dart';
 import '../../data/database/sales_database.dart';
+import '../../data/datasources/sale_invoice_pdf_printer.dart';
 import '../../data/repositories/sale_repository_impl.dart';
 import '../../domain/entities/sale.dart';
 import '../../domain/models/sale_list_filter.dart';
@@ -11,6 +12,7 @@ import '../../domain/services/sale_calculation_service.dart';
 import '../../domain/services/sale_currency_port.dart';
 import '../../domain/services/sale_customer_lookup_port.dart';
 import '../../domain/services/sale_inventory_effect_port.dart';
+import '../../domain/services/sale_ledger_posting_port.dart';
 import '../../domain/services/sale_number_allocator_port.dart';
 import '../../domain/services/sale_product_catalog_port.dart';
 import '../../domain/services/sale_treasury_account_port.dart';
@@ -61,6 +63,11 @@ final saleAccountingBridgePortProvider = Provider<SaleAccountingBridgePort>((
   return const NoOpSaleAccountingBridgePort();
 });
 
+/// Override in App with Accounting journal adapter (standalone credit sales).
+final saleLedgerPostingPortProvider = Provider<SaleLedgerPostingPort>((ref) {
+  return const NoOpSaleLedgerPostingPort();
+});
+
 /// Override in App with Accounting voucher-book adapter.
 final saleVoucherBookPortProvider = Provider<SaleVoucherBookPort>((ref) {
   return const NoOpSaleVoucherBookPort();
@@ -99,11 +106,17 @@ final createSaleUseCaseProvider = Provider<CreateSale>((ref) {
     repository: ref.watch(saleRepositoryProvider),
     numberAllocator: ref.watch(saleNumberAllocatorPortProvider),
     voucherBookPort: ref.watch(saleVoucherBookPortProvider),
+    ledgerPosting: ref.watch(saleLedgerPostingPortProvider),
+    accountingBridge: ref.watch(saleAccountingBridgePortProvider),
   );
 });
 
 final updateSaleUseCaseProvider = Provider<UpdateSale>((ref) {
-  return UpdateSale(repository: ref.watch(saleRepositoryProvider));
+  return UpdateSale(
+    repository: ref.watch(saleRepositoryProvider),
+    ledgerPosting: ref.watch(saleLedgerPostingPortProvider),
+    accountingBridge: ref.watch(saleAccountingBridgePortProvider),
+  );
 });
 
 final confirmSaleUseCaseProvider = Provider<ConfirmSale>((ref) {
@@ -111,6 +124,7 @@ final confirmSaleUseCaseProvider = Provider<ConfirmSale>((ref) {
     repository: ref.watch(saleRepositoryProvider),
     accountingBridge: ref.watch(saleAccountingBridgePortProvider),
     inventoryEffect: ref.watch(saleInventoryEffectPortProvider),
+    ledgerPosting: ref.watch(saleLedgerPostingPortProvider),
   );
 });
 
@@ -118,6 +132,7 @@ final cancelSaleUseCaseProvider = Provider<CancelSale>((ref) {
   return CancelSale(
     repository: ref.watch(saleRepositoryProvider),
     inventoryEffect: ref.watch(saleInventoryEffectPortProvider),
+    ledgerPosting: ref.watch(saleLedgerPostingPortProvider),
   );
 });
 
@@ -140,6 +155,7 @@ final saleListFilterProvider = StateProvider<SaleListFilter>(
   (ref) => const SaleListFilter(),
 );
 
+/// Full-sale stream (details/workflows). Prefer [salesListProvider] for the list UI.
 final salesProvider = StreamProvider.autoDispose<List<Sale>>((ref) {
   final filter = ref.watch(saleListFilterProvider);
   return ref.watch(watchSalesUseCaseProvider).call(filter);
@@ -154,3 +170,7 @@ final saleByIdProvider = FutureProvider.autoDispose.family<Sale?, int>((
 
 /// Default tax rate (%) for new sales — configurable later via settings.
 final salesDefaultTaxRateProvider = StateProvider<double>((ref) => 0);
+
+final saleInvoicePdfPrinterProvider = Provider<SaleInvoicePdfPrinter>((ref) {
+  return const SaleInvoicePdfPrinter();
+});

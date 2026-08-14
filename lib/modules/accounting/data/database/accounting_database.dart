@@ -4,11 +4,21 @@ import 'package:drift_flutter/drift_flutter.dart';
 
 import 'tables/accounts_table.dart';
 import 'tables/currency_rates_table.dart';
+import 'tables/journal_entries_table.dart';
+import 'tables/journal_lines_table.dart';
 import 'tables/voucher_books_table.dart';
 
 part 'accounting_database.g.dart';
 
-@DriftDatabase(tables: [Accounts, CurrencyRates, VoucherBooks])
+@DriftDatabase(
+  tables: [
+    Accounts,
+    CurrencyRates,
+    VoucherBooks,
+    JournalEntries,
+    JournalLines,
+  ],
+)
 class AccountingDatabase extends _$AccountingDatabase {
   AccountingDatabase([QueryExecutor? executor])
     : super(executor ?? _openConnection());
@@ -17,7 +27,7 @@ class AccountingDatabase extends _$AccountingDatabase {
   AccountingDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -47,6 +57,7 @@ class AccountingDatabase extends _$AccountingDatabase {
         'CREATE INDEX IF NOT EXISTS idx_voucher_books_parent '
         'ON voucher_books (parent_id)',
       );
+      await _createJournalIndexes();
     },
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
@@ -74,8 +85,32 @@ class AccountingDatabase extends _$AccountingDatabase {
       if (from < 5) {
         await m.addColumn(voucherBooks, voucherBooks.endNumber);
       }
+      if (from < 6) {
+        await m.createTable(journalEntries);
+        await m.createTable(journalLines);
+        await _createJournalIndexes();
+      }
     },
   );
+
+  Future<void> _createJournalIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_journal_entries_date '
+      'ON journal_entries (entry_date)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_journal_entries_source '
+      'ON journal_entries (source_type, source_id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_journal_lines_account '
+      'ON journal_lines (account_uuid)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_journal_lines_entry '
+      'ON journal_lines (entry_uuid)',
+    );
+  }
 
   static QueryExecutor _openConnection() {
     return driftDatabase(name: 'accounting_accounts');

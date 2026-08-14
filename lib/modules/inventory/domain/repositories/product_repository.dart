@@ -12,12 +12,17 @@ abstract class ProductRepository {
 
   Future<Product?> getByItemCode(String itemCode);
 
+  Future<Product?> getByUuid(String uuid);
+
   /// Exact match on normalized barcode (trim); null if empty or missing.
   Future<Product?> getByBarcode(String barcode);
 
+  /// Multi-field contains search. Prefer [limit] for autocomplete so SQLite
+  /// applies `LIMIT` (avoids loading huge match sets into Dart).
   Future<List<Product>> search(
     String query, {
     CatalogSearchField searchField = CatalogSearchField.all,
+    int? limit,
   });
 
   /// One page of products after optional search (code / name / barcode).

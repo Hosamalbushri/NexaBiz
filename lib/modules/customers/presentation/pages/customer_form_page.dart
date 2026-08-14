@@ -204,6 +204,51 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
             return;
           }
         }
+      } else {
+        final autoLink =
+            ref.read(customersAutoLinkAccountProvider).valueOrNull ?? true;
+        if (autoLink) {
+          var parent = ref.read(customersParentAccountProvider).valueOrNull;
+          if (parent == null) {
+            await ref.read(customersParentAccountProvider.notifier).refresh();
+            if (!mounted) {
+              return;
+            }
+            parent = ref.read(customersParentAccountProvider).valueOrNull;
+          }
+          if (parent == null) {
+            if (!mounted) {
+              return;
+            }
+            showAppSnackBar(
+              context,
+              message: l10n.customersParentAccountNotSet,
+              isSuccess: false,
+            );
+            return;
+          }
+          final created = await ref
+              .read(customerAccountLinkPortProvider)
+              .ensurePostingUnderParent(
+                parentId: parent.accountId,
+                accountCode: _codeController.text.trim(),
+                name: _nameController.text.trim(),
+              );
+          if (created == null) {
+            if (!mounted) {
+              return;
+            }
+            showAppSnackBar(
+              context,
+              message: l10n.customersAccountAutoLinkFailed,
+              isSuccess: false,
+            );
+            return;
+          }
+          accountId = created.accountId;
+          _linkedAccount = created;
+          _accountController.text = created.code;
+        }
       }
 
       final draft = CustomerDraft(
@@ -244,6 +289,15 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
       showAppSnackBar(
         context,
         message: _localizeException(l10n, e),
+        isSuccess: false,
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      showAppSnackBar(
+        context,
+        message: l10n.customersAccountAutoLinkFailed,
         isSuccess: false,
       );
     } finally {
@@ -416,7 +470,7 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
               decoration: InputDecoration(
                 labelText: l10n.customersFieldAccount,
                 helperText: _linkedAccount == null
-                    ? l10n.customersFieldAccountHelper
+                    ? l10n.customersFieldAccountHelperAuto
                     : l10n.customersAccountLinked(
                         _linkedAccount!.code,
                         _linkedAccount!.name,

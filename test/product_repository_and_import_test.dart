@@ -99,6 +99,41 @@ void main() {
       expect(await repository.getById(created.id), isNull);
     });
 
+    test('search limit and barcode exact rank first', () async {
+      await repository.insert(
+        const ProductDraft(
+          itemCode: 'MILK-BOX',
+          name: 'Other milk',
+          packSize: 1,
+          price: 1,
+        ),
+      );
+      await repository.insert(
+        const ProductDraft(
+          itemCode: 'X1',
+          name: 'Milk powder',
+          packSize: 1,
+          price: 2,
+        ),
+      );
+      await repository.insert(
+        const ProductDraft(
+          itemCode: 'X2',
+          name: 'Fresh milk',
+          packSize: 1,
+          price: 3,
+          barcode: 'MILK',
+        ),
+      );
+
+      final limited = await repository.search('milk', limit: 2);
+      expect(limited, hasLength(2));
+      expect(limited.first.barcode, 'MILK');
+
+      final byUuid = await repository.getByUuid(limited.first.uuid);
+      expect(byUuid?.itemCode, limited.first.itemCode);
+    });
+
     test('upsertAll inserts then updates by item code', () async {
       final first = await repository.upsertAll([
         const ProductDraft(

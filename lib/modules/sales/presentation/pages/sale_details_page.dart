@@ -6,6 +6,9 @@ import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/settings/company/app_currency.dart';
+import '../../../../app/settings/company/company_profile_providers.dart';
+import '../../../../core/reporting/pdf_document_preview_page.dart';
 import '../../../../core/services/loading_providers.dart';
 import '../../../../core/widgets/app_dialog.dart';
 import '../../../../core/widgets/app_error_state.dart';
@@ -18,8 +21,9 @@ import '../../domain/entities/sale_settlement_type.dart';
 import '../../domain/entities/sale_status.dart';
 import '../../domain/entities/sale_summary.dart';
 import '../providers/sale_providers.dart';
+import '../providers/sales_list_provider.dart';
 import '../widgets/sale_error_messages.dart';
-import '../widgets/sale_item_card.dart';
+import '../widgets/sale_summary_widgets.dart';
 import '../widgets/sale_products_table.dart';
 import '../widgets/sale_status_badge.dart';
 import '../widgets/sales_page_loader.dart';
@@ -131,15 +135,64 @@ class _SaleDetailsBody extends ConsumerWidget {
 
   final Sale sale;
 
+  Future<void> _previewInvoice(
+    BuildContext context,
+    WidgetRef ref,
+    Sale sale,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    final loading = ref.read(loadingControllerProvider);
+    try {
+      final prepared = await loading.run(
+        message: l10n.salesPrintingInvoice,
+        action: () async {
+          final company = ref.read(companyProfileProvider).asData?.value;
+          final currencyNameAr =
+              AppCurrencies.byCode(sale.currencyCode).nameAr;
+          return ref.read(saleInvoicePdfPrinterProvider).prepareSale(
+                sale: sale,
+                logoPath: company?.logoPath,
+                headerRightText: company?.invoiceHeaderRight,
+                headerLeftText: company?.invoiceHeaderLeft,
+                currencyNameAr: currencyNameAr,
+              );
+        },
+      );
+      if (!context.mounted) {
+        return;
+      }
+      PdfDocumentPreviewArgs.holder = PdfDocumentPreviewArgs(
+        bytes: prepared.bytes,
+        title: sale.saleNumber,
+        fileName: prepared.fileName,
+      );
+      await SalesRoutes.pushInvoicePreview(context);
+    } catch (e) {
+      if (!context.mounted) {
+        return;
+      }
+      showAppSnackBar(
+        context,
+        message: saleErrorMessage(l10n, e),
+        isSuccess: false,
+      );
+    }
+  }
+
   Future<void> _runAction(
     BuildContext context,
     WidgetRef ref, {
     required String loadingMessage,
     required Future<void> Function() action,
     required String successMessage,
+    VoidCallback? afterSuccess,
   }) async {
     final l10n = AppLocalizations.of(context);
     final loading = ref.read(loadingControllerProvider);
+    // Prevent double-submit while an action overlay is already running.
+    if (loading.isVisible) {
+      return;
+    }
     await loading.run(
       message: loadingMessage,
       action: () async {
@@ -150,6 +203,8 @@ class _SaleDetailsBody extends ConsumerWidget {
           }
           showAppSnackBar(context, message: successMessage, isSuccess: true);
           ref.invalidate(saleByIdProvider(sale.id));
+          ref.invalidate(salesListProvider);
+          afterSuccess?.call();
         } catch (e) {
           if (!context.mounted) {
             return;
@@ -176,8 +231,7 @@ class _SaleDetailsBody extends ConsumerWidget {
     final settlementLabel = sale.settlementType == SaleSettlementType.cash
         ? l10n.salesSettlementCash
         : l10n.salesSettlementCredit;
-    final showConfirm = sale.saleStatus.canConfirm;
-    final showComplete = sale.saleStatus.canComplete;
+    final showPost = sale.saleStatus.canPost;
 
     return PopScope(
       canPop: false,
@@ -205,29 +259,17 @@ class _SaleDetailsBody extends ConsumerWidget {
               offset: const Offset(0, 8),
               onSelected: (value) async {
                 switch (value) {
-                  case 'confirm':
+                  case 'post':
                     await _runAction(
                       context,
                       ref,
-                      loadingMessage: l10n.salesConfirming,
+                      loadingMessage: l10n.salesPosting,
                       action: () async {
                         await ref
                             .read(confirmSaleUseCaseProvider)
                             .call(sale.id);
                       },
-                      successMessage: l10n.salesConfirmed,
-                    );
-                  case 'complete':
-                    await _runAction(
-                      context,
-                      ref,
-                      loadingMessage: l10n.salesSaving,
-                      action: () async {
-                        await ref
-                            .read(completeSaleUseCaseProvider)
-                            .call(sale.id);
-                      },
-                      successMessage: l10n.salesCompleted,
+                      successMessage: l10n.salesPosted,
                     );
                   case 'duplicate':
                     await _runAction(
@@ -266,19 +308,19 @@ class _SaleDetailsBody extends ConsumerWidget {
                             .call(sale.id);
                       },
                       successMessage: l10n.salesCancelled,
+                      afterSuccess: () {
+                        if (context.mounted) {
+                          SalesRoutes.backToList(context);
+                        }
+                      },
                     );
                 }
               },
               itemBuilder: (context) => [
-                if (showConfirm)
+                if (showPost)
                   PopupMenuItem(
-                    value: 'confirm',
-                    child: Text(l10n.salesConfirmSale),
-                  ),
-                if (showComplete)
-                  PopupMenuItem(
-                    value: 'complete',
-                    child: Text(l10n.salesCompleteSale),
+                    value: 'post',
+                    child: Text(l10n.salesPostSale),
                   ),
                 PopupMenuItem(
                   value: 'duplicate',
@@ -306,7 +348,7 @@ class _SaleDetailsBody extends ConsumerWidget {
             ),
           ],
         ),
-        bottomNavigationBar: (showConfirm || showComplete)
+        bottomNavigationBar: showPost
             ? Material(
                 color: scheme.surface,
                 elevation: 8,
@@ -319,72 +361,23 @@ class _SaleDetailsBody extends ConsumerWidget {
                       AppSpacing.md,
                       AppSpacing.sm,
                     ),
-                    child: Row(
-                      children: [
-                        if (showConfirm)
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: () => _runAction(
-                                context,
-                                ref,
-                                loadingMessage: l10n.salesConfirming,
-                                action: () async {
-                                  await ref
-                                      .read(confirmSaleUseCaseProvider)
-                                      .call(sale.id);
-                                },
-                                successMessage: l10n.salesConfirmed,
-                              ),
-                              icon: const Icon(Icons.check_circle_outline),
-                              label: Text(l10n.salesConfirmSale),
-                              style: FilledButton.styleFrom(
-                                minimumSize: const Size.fromHeight(48),
-                              ),
-                            ),
-                          ),
-                        if (showConfirm && showComplete)
-                          const SizedBox(width: AppSpacing.sm),
-                        if (showComplete)
-                          Expanded(
-                            child: showConfirm
-                                ? OutlinedButton.icon(
-                                    onPressed: () => _runAction(
-                                      context,
-                                      ref,
-                                      loadingMessage: l10n.salesSaving,
-                                      action: () async {
-                                        await ref
-                                            .read(completeSaleUseCaseProvider)
-                                            .call(sale.id);
-                                      },
-                                      successMessage: l10n.salesCompleted,
-                                    ),
-                                    icon: const Icon(Icons.done_all_rounded),
-                                    label: Text(l10n.salesCompleteSale),
-                                    style: OutlinedButton.styleFrom(
-                                      minimumSize: const Size.fromHeight(48),
-                                    ),
-                                  )
-                                : FilledButton.icon(
-                                    onPressed: () => _runAction(
-                                      context,
-                                      ref,
-                                      loadingMessage: l10n.salesSaving,
-                                      action: () async {
-                                        await ref
-                                            .read(completeSaleUseCaseProvider)
-                                            .call(sale.id);
-                                      },
-                                      successMessage: l10n.salesCompleted,
-                                    ),
-                                    icon: const Icon(Icons.done_all_rounded),
-                                    label: Text(l10n.salesCompleteSale),
-                                    style: FilledButton.styleFrom(
-                                      minimumSize: const Size.fromHeight(48),
-                                    ),
-                                  ),
-                          ),
-                      ],
+                    child: FilledButton.icon(
+                      onPressed: () => _runAction(
+                        context,
+                        ref,
+                        loadingMessage: l10n.salesPosting,
+                        action: () async {
+                          await ref
+                              .read(confirmSaleUseCaseProvider)
+                              .call(sale.id);
+                        },
+                        successMessage: l10n.salesPosted,
+                      ),
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: Text(l10n.salesPostSale),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                      ),
                     ),
                   ),
                 ),
@@ -401,6 +394,10 @@ class _SaleDetailsBody extends ConsumerWidget {
               saleStatusLabel: _saleStatusLabel(l10n, sale.saleStatus),
               paymentStatus: sale.paymentStatus,
               paymentStatusLabel: _paymentStatusLabel(l10n, sale.paymentStatus),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _InvoiceDocumentActions(
+              onPreview: () => _previewInvoice(context, ref, sale),
             ),
             const SizedBox(height: AppSpacing.md),
             IntrinsicHeight(
@@ -549,6 +546,161 @@ class _SaleDetailsBody extends ConsumerWidget {
             ],
             const SizedBox(height: AppSpacing.xl),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Opens the shared PDF preview (print / share from there).
+class _InvoiceDocumentActions extends StatelessWidget {
+  const _InvoiceDocumentActions({required this.onPreview});
+
+  final VoidCallback onPreview;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            scheme.surfaceContainerHighest.withValues(alpha: 0.35),
+            scheme.surface.withValues(alpha: 0.9),
+          ],
+        ),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.28),
+        ),
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        child: _DocumentActionTile(
+          icon: Icons.picture_as_pdf_outlined,
+          label: l10n.salesPreviewInvoice,
+          emphasized: true,
+          onTap: onPreview,
+        ),
+      ),
+    );
+  }
+}
+
+class _DocumentActionTile extends StatelessWidget {
+  const _DocumentActionTile({
+    required this.icon,
+    required this.label,
+    required this.emphasized,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool emphasized;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    final Color iconColor;
+    final Color labelColor;
+    final List<Color> fill;
+
+    if (emphasized) {
+      iconColor = scheme.onPrimary;
+      labelColor = scheme.primary;
+      fill = [
+        scheme.primary,
+        Color.lerp(scheme.primary, scheme.tertiary, 0.18) ?? scheme.primary,
+      ];
+    } else {
+      iconColor = scheme.primary;
+      labelColor = scheme.onSurface;
+      fill = [
+        scheme.surface,
+        scheme.surfaceContainerLow,
+      ];
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: emphasized
+                  ? [
+                      scheme.primary.withValues(alpha: 0.10),
+                      scheme.primary.withValues(alpha: 0.04),
+                    ]
+                  : [
+                      scheme.surface.withValues(alpha: 0.95),
+                      scheme.surfaceContainerLowest,
+                    ],
+            ),
+            border: Border.all(
+              color: emphasized
+                  ? scheme.primary.withValues(alpha: 0.18)
+                  : scheme.outlineVariant.withValues(alpha: 0.35),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: fill,
+                    ),
+                    boxShadow: emphasized
+                        ? [
+                            BoxShadow(
+                              color: scheme.primary.withValues(alpha: 0.24),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Icon(icon, size: 16, color: iconColor),
+                ),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.15,
+                      color: labelColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -851,12 +1003,8 @@ class _InfoRow extends StatelessWidget {
 
 String _saleStatusLabel(AppLocalizations l10n, SaleStatus status) {
   return switch (status) {
-    SaleStatus.draft => l10n.salesStatusDraft,
-    SaleStatus.pending => l10n.salesStatusPending,
-    SaleStatus.confirmed => l10n.salesStatusConfirmed,
-    SaleStatus.completed => l10n.salesStatusCompleted,
-    SaleStatus.cancelled => l10n.salesStatusCancelled,
-    SaleStatus.rejected => l10n.salesStatusRejected,
+    SaleStatus.unposted => l10n.salesStatusUnposted,
+    SaleStatus.posted => l10n.salesStatusPosted,
   };
 }
 

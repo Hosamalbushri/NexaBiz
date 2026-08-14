@@ -2179,12 +2179,1383 @@ class VoucherBooksCompanion extends UpdateCompanion<VoucherBookRow> {
   }
 }
 
+class $JournalEntriesTable extends JournalEntries
+    with TableInfo<$JournalEntriesTable, JournalEntryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $JournalEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _entryDateMeta = const VerificationMeta(
+    'entryDate',
+  );
+  @override
+  late final GeneratedColumn<int> entryDate = GeneratedColumn<int>(
+    'entry_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _voucherNumberMeta = const VerificationMeta(
+    'voucherNumber',
+  );
+  @override
+  late final GeneratedColumn<String> voucherNumber = GeneratedColumn<String>(
+    'voucher_number',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _voucherTypeMeta = const VerificationMeta(
+    'voucherType',
+  );
+  @override
+  late final GeneratedColumn<String> voucherType = GeneratedColumn<String>(
+    'voucher_type',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 3,
+      maxTextLength: 8,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isPostedMeta = const VerificationMeta(
+    'isPosted',
+  );
+  @override
+  late final GeneratedColumn<bool> isPosted = GeneratedColumn<bool>(
+    'is_posted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_posted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _sourceTypeMeta = const VerificationMeta(
+    'sourceType',
+  );
+  @override
+  late final GeneratedColumn<String> sourceType = GeneratedColumn<String>(
+    'source_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceIdMeta = const VerificationMeta(
+    'sourceId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceId = GeneratedColumn<String>(
+    'source_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    uuid,
+    entryDate,
+    voucherNumber,
+    voucherType,
+    description,
+    currencyCode,
+    isPosted,
+    sourceType,
+    sourceId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'journal_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<JournalEntryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('entry_date')) {
+      context.handle(
+        _entryDateMeta,
+        entryDate.isAcceptableOrUnknown(data['entry_date']!, _entryDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entryDateMeta);
+    }
+    if (data.containsKey('voucher_number')) {
+      context.handle(
+        _voucherNumberMeta,
+        voucherNumber.isAcceptableOrUnknown(
+          data['voucher_number']!,
+          _voucherNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_voucherNumberMeta);
+    }
+    if (data.containsKey('voucher_type')) {
+      context.handle(
+        _voucherTypeMeta,
+        voucherType.isAcceptableOrUnknown(
+          data['voucher_type']!,
+          _voucherTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_voucherTypeMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyCodeMeta);
+    }
+    if (data.containsKey('is_posted')) {
+      context.handle(
+        _isPostedMeta,
+        isPosted.isAcceptableOrUnknown(data['is_posted']!, _isPostedMeta),
+      );
+    }
+    if (data.containsKey('source_type')) {
+      context.handle(
+        _sourceTypeMeta,
+        sourceType.isAcceptableOrUnknown(data['source_type']!, _sourceTypeMeta),
+      );
+    }
+    if (data.containsKey('source_id')) {
+      context.handle(
+        _sourceIdMeta,
+        sourceId.isAcceptableOrUnknown(data['source_id']!, _sourceIdMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  JournalEntryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return JournalEntryRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      entryDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}entry_date'],
+      )!,
+      voucherNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}voucher_number'],
+      )!,
+      voucherType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}voucher_type'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      )!,
+      isPosted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_posted'],
+      )!,
+      sourceType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_type'],
+      ),
+      sourceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $JournalEntriesTable createAlias(String alias) {
+    return $JournalEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
+  final int id;
+  final String uuid;
+
+  /// Business date (UTC epoch ms, date portion).
+  final int entryDate;
+  final String voucherNumber;
+
+  /// Display type e.g. بيع آجل
+  final String voucherType;
+  final String? description;
+  final String currencyCode;
+  final bool isPosted;
+
+  /// Origin module document type (`sale`, …).
+  final String? sourceType;
+
+  /// Origin document UUID.
+  final String? sourceId;
+  final int createdAt;
+  final int updatedAt;
+  final int? deletedAt;
+  const JournalEntryRow({
+    required this.id,
+    required this.uuid,
+    required this.entryDate,
+    required this.voucherNumber,
+    required this.voucherType,
+    this.description,
+    required this.currencyCode,
+    required this.isPosted,
+    this.sourceType,
+    this.sourceId,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
+    map['entry_date'] = Variable<int>(entryDate);
+    map['voucher_number'] = Variable<String>(voucherNumber);
+    map['voucher_type'] = Variable<String>(voucherType);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['currency_code'] = Variable<String>(currencyCode);
+    map['is_posted'] = Variable<bool>(isPosted);
+    if (!nullToAbsent || sourceType != null) {
+      map['source_type'] = Variable<String>(sourceType);
+    }
+    if (!nullToAbsent || sourceId != null) {
+      map['source_id'] = Variable<String>(sourceId);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
+    return map;
+  }
+
+  JournalEntriesCompanion toCompanion(bool nullToAbsent) {
+    return JournalEntriesCompanion(
+      id: Value(id),
+      uuid: Value(uuid),
+      entryDate: Value(entryDate),
+      voucherNumber: Value(voucherNumber),
+      voucherType: Value(voucherType),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      currencyCode: Value(currencyCode),
+      isPosted: Value(isPosted),
+      sourceType: sourceType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceType),
+      sourceId: sourceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory JournalEntryRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return JournalEntryRow(
+      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      entryDate: serializer.fromJson<int>(json['entryDate']),
+      voucherNumber: serializer.fromJson<String>(json['voucherNumber']),
+      voucherType: serializer.fromJson<String>(json['voucherType']),
+      description: serializer.fromJson<String?>(json['description']),
+      currencyCode: serializer.fromJson<String>(json['currencyCode']),
+      isPosted: serializer.fromJson<bool>(json['isPosted']),
+      sourceType: serializer.fromJson<String?>(json['sourceType']),
+      sourceId: serializer.fromJson<String?>(json['sourceId']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
+      'entryDate': serializer.toJson<int>(entryDate),
+      'voucherNumber': serializer.toJson<String>(voucherNumber),
+      'voucherType': serializer.toJson<String>(voucherType),
+      'description': serializer.toJson<String?>(description),
+      'currencyCode': serializer.toJson<String>(currencyCode),
+      'isPosted': serializer.toJson<bool>(isPosted),
+      'sourceType': serializer.toJson<String?>(sourceType),
+      'sourceId': serializer.toJson<String?>(sourceId),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
+    };
+  }
+
+  JournalEntryRow copyWith({
+    int? id,
+    String? uuid,
+    int? entryDate,
+    String? voucherNumber,
+    String? voucherType,
+    Value<String?> description = const Value.absent(),
+    String? currencyCode,
+    bool? isPosted,
+    Value<String?> sourceType = const Value.absent(),
+    Value<String?> sourceId = const Value.absent(),
+    int? createdAt,
+    int? updatedAt,
+    Value<int?> deletedAt = const Value.absent(),
+  }) => JournalEntryRow(
+    id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
+    entryDate: entryDate ?? this.entryDate,
+    voucherNumber: voucherNumber ?? this.voucherNumber,
+    voucherType: voucherType ?? this.voucherType,
+    description: description.present ? description.value : this.description,
+    currencyCode: currencyCode ?? this.currencyCode,
+    isPosted: isPosted ?? this.isPosted,
+    sourceType: sourceType.present ? sourceType.value : this.sourceType,
+    sourceId: sourceId.present ? sourceId.value : this.sourceId,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  JournalEntryRow copyWithCompanion(JournalEntriesCompanion data) {
+    return JournalEntryRow(
+      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      entryDate: data.entryDate.present ? data.entryDate.value : this.entryDate,
+      voucherNumber: data.voucherNumber.present
+          ? data.voucherNumber.value
+          : this.voucherNumber,
+      voucherType: data.voucherType.present
+          ? data.voucherType.value
+          : this.voucherType,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
+      isPosted: data.isPosted.present ? data.isPosted.value : this.isPosted,
+      sourceType: data.sourceType.present
+          ? data.sourceType.value
+          : this.sourceType,
+      sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('JournalEntryRow(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('entryDate: $entryDate, ')
+          ..write('voucherNumber: $voucherNumber, ')
+          ..write('voucherType: $voucherType, ')
+          ..write('description: $description, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('isPosted: $isPosted, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    uuid,
+    entryDate,
+    voucherNumber,
+    voucherType,
+    description,
+    currencyCode,
+    isPosted,
+    sourceType,
+    sourceId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is JournalEntryRow &&
+          other.id == this.id &&
+          other.uuid == this.uuid &&
+          other.entryDate == this.entryDate &&
+          other.voucherNumber == this.voucherNumber &&
+          other.voucherType == this.voucherType &&
+          other.description == this.description &&
+          other.currencyCode == this.currencyCode &&
+          other.isPosted == this.isPosted &&
+          other.sourceType == this.sourceType &&
+          other.sourceId == this.sourceId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
+  final Value<int> id;
+  final Value<String> uuid;
+  final Value<int> entryDate;
+  final Value<String> voucherNumber;
+  final Value<String> voucherType;
+  final Value<String?> description;
+  final Value<String> currencyCode;
+  final Value<bool> isPosted;
+  final Value<String?> sourceType;
+  final Value<String?> sourceId;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<int?> deletedAt;
+  const JournalEntriesCompanion({
+    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.entryDate = const Value.absent(),
+    this.voucherNumber = const Value.absent(),
+    this.voucherType = const Value.absent(),
+    this.description = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.isPosted = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.sourceId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+  });
+  JournalEntriesCompanion.insert({
+    this.id = const Value.absent(),
+    required String uuid,
+    required int entryDate,
+    required String voucherNumber,
+    required String voucherType,
+    this.description = const Value.absent(),
+    required String currencyCode,
+    this.isPosted = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.sourceId = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.deletedAt = const Value.absent(),
+  }) : uuid = Value(uuid),
+       entryDate = Value(entryDate),
+       voucherNumber = Value(voucherNumber),
+       voucherType = Value(voucherType),
+       currencyCode = Value(currencyCode),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<JournalEntryRow> custom({
+    Expression<int>? id,
+    Expression<String>? uuid,
+    Expression<int>? entryDate,
+    Expression<String>? voucherNumber,
+    Expression<String>? voucherType,
+    Expression<String>? description,
+    Expression<String>? currencyCode,
+    Expression<bool>? isPosted,
+    Expression<String>? sourceType,
+    Expression<String>? sourceId,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? deletedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
+      if (entryDate != null) 'entry_date': entryDate,
+      if (voucherNumber != null) 'voucher_number': voucherNumber,
+      if (voucherType != null) 'voucher_type': voucherType,
+      if (description != null) 'description': description,
+      if (currencyCode != null) 'currency_code': currencyCode,
+      if (isPosted != null) 'is_posted': isPosted,
+      if (sourceType != null) 'source_type': sourceType,
+      if (sourceId != null) 'source_id': sourceId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+    });
+  }
+
+  JournalEntriesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? uuid,
+    Value<int>? entryDate,
+    Value<String>? voucherNumber,
+    Value<String>? voucherType,
+    Value<String?>? description,
+    Value<String>? currencyCode,
+    Value<bool>? isPosted,
+    Value<String?>? sourceType,
+    Value<String?>? sourceId,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+    Value<int?>? deletedAt,
+  }) {
+    return JournalEntriesCompanion(
+      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
+      entryDate: entryDate ?? this.entryDate,
+      voucherNumber: voucherNumber ?? this.voucherNumber,
+      voucherType: voucherType ?? this.voucherType,
+      description: description ?? this.description,
+      currencyCode: currencyCode ?? this.currencyCode,
+      isPosted: isPosted ?? this.isPosted,
+      sourceType: sourceType ?? this.sourceType,
+      sourceId: sourceId ?? this.sourceId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (entryDate.present) {
+      map['entry_date'] = Variable<int>(entryDate.value);
+    }
+    if (voucherNumber.present) {
+      map['voucher_number'] = Variable<String>(voucherNumber.value);
+    }
+    if (voucherType.present) {
+      map['voucher_type'] = Variable<String>(voucherType.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
+    if (isPosted.present) {
+      map['is_posted'] = Variable<bool>(isPosted.value);
+    }
+    if (sourceType.present) {
+      map['source_type'] = Variable<String>(sourceType.value);
+    }
+    if (sourceId.present) {
+      map['source_id'] = Variable<String>(sourceId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('JournalEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('entryDate: $entryDate, ')
+          ..write('voucherNumber: $voucherNumber, ')
+          ..write('voucherType: $voucherType, ')
+          ..write('description: $description, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('isPosted: $isPosted, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('sourceId: $sourceId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $JournalLinesTable extends JournalLines
+    with TableInfo<$JournalLinesTable, JournalLineRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $JournalLinesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _entryUuidMeta = const VerificationMeta(
+    'entryUuid',
+  );
+  @override
+  late final GeneratedColumn<String> entryUuid = GeneratedColumn<String>(
+    'entry_uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _accountUuidMeta = const VerificationMeta(
+    'accountUuid',
+  );
+  @override
+  late final GeneratedColumn<String> accountUuid = GeneratedColumn<String>(
+    'account_uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _debitMeta = const VerificationMeta('debit');
+  @override
+  late final GeneratedColumn<double> debit = GeneratedColumn<double>(
+    'debit',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _creditMeta = const VerificationMeta('credit');
+  @override
+  late final GeneratedColumn<double> credit = GeneratedColumn<double>(
+    'credit',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lineDescriptionMeta = const VerificationMeta(
+    'lineDescription',
+  );
+  @override
+  late final GeneratedColumn<String> lineDescription = GeneratedColumn<String>(
+    'line_description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 3,
+      maxTextLength: 8,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    uuid,
+    entryUuid,
+    accountUuid,
+    debit,
+    credit,
+    lineDescription,
+    currencyCode,
+    sortOrder,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'journal_lines';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<JournalLineRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('entry_uuid')) {
+      context.handle(
+        _entryUuidMeta,
+        entryUuid.isAcceptableOrUnknown(data['entry_uuid']!, _entryUuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entryUuidMeta);
+    }
+    if (data.containsKey('account_uuid')) {
+      context.handle(
+        _accountUuidMeta,
+        accountUuid.isAcceptableOrUnknown(
+          data['account_uuid']!,
+          _accountUuidMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_accountUuidMeta);
+    }
+    if (data.containsKey('debit')) {
+      context.handle(
+        _debitMeta,
+        debit.isAcceptableOrUnknown(data['debit']!, _debitMeta),
+      );
+    }
+    if (data.containsKey('credit')) {
+      context.handle(
+        _creditMeta,
+        credit.isAcceptableOrUnknown(data['credit']!, _creditMeta),
+      );
+    }
+    if (data.containsKey('line_description')) {
+      context.handle(
+        _lineDescriptionMeta,
+        lineDescription.isAcceptableOrUnknown(
+          data['line_description']!,
+          _lineDescriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyCodeMeta);
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  JournalLineRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return JournalLineRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      entryUuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entry_uuid'],
+      )!,
+      accountUuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_uuid'],
+      )!,
+      debit: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}debit'],
+      )!,
+      credit: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}credit'],
+      )!,
+      lineDescription: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}line_description'],
+      ),
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+    );
+  }
+
+  @override
+  $JournalLinesTable createAlias(String alias) {
+    return $JournalLinesTable(attachedDatabase, alias);
+  }
+}
+
+class JournalLineRow extends DataClass implements Insertable<JournalLineRow> {
+  final int id;
+  final String uuid;
+
+  /// Parent [JournalEntries.uuid].
+  final String entryUuid;
+
+  /// Posting account UUID ([Accounts.uuid]).
+  final String accountUuid;
+  final double debit;
+  final double credit;
+  final String? lineDescription;
+  final String currencyCode;
+  final int sortOrder;
+  const JournalLineRow({
+    required this.id,
+    required this.uuid,
+    required this.entryUuid,
+    required this.accountUuid,
+    required this.debit,
+    required this.credit,
+    this.lineDescription,
+    required this.currencyCode,
+    required this.sortOrder,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
+    map['entry_uuid'] = Variable<String>(entryUuid);
+    map['account_uuid'] = Variable<String>(accountUuid);
+    map['debit'] = Variable<double>(debit);
+    map['credit'] = Variable<double>(credit);
+    if (!nullToAbsent || lineDescription != null) {
+      map['line_description'] = Variable<String>(lineDescription);
+    }
+    map['currency_code'] = Variable<String>(currencyCode);
+    map['sort_order'] = Variable<int>(sortOrder);
+    return map;
+  }
+
+  JournalLinesCompanion toCompanion(bool nullToAbsent) {
+    return JournalLinesCompanion(
+      id: Value(id),
+      uuid: Value(uuid),
+      entryUuid: Value(entryUuid),
+      accountUuid: Value(accountUuid),
+      debit: Value(debit),
+      credit: Value(credit),
+      lineDescription: lineDescription == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lineDescription),
+      currencyCode: Value(currencyCode),
+      sortOrder: Value(sortOrder),
+    );
+  }
+
+  factory JournalLineRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return JournalLineRow(
+      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      entryUuid: serializer.fromJson<String>(json['entryUuid']),
+      accountUuid: serializer.fromJson<String>(json['accountUuid']),
+      debit: serializer.fromJson<double>(json['debit']),
+      credit: serializer.fromJson<double>(json['credit']),
+      lineDescription: serializer.fromJson<String?>(json['lineDescription']),
+      currencyCode: serializer.fromJson<String>(json['currencyCode']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
+      'entryUuid': serializer.toJson<String>(entryUuid),
+      'accountUuid': serializer.toJson<String>(accountUuid),
+      'debit': serializer.toJson<double>(debit),
+      'credit': serializer.toJson<double>(credit),
+      'lineDescription': serializer.toJson<String?>(lineDescription),
+      'currencyCode': serializer.toJson<String>(currencyCode),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+    };
+  }
+
+  JournalLineRow copyWith({
+    int? id,
+    String? uuid,
+    String? entryUuid,
+    String? accountUuid,
+    double? debit,
+    double? credit,
+    Value<String?> lineDescription = const Value.absent(),
+    String? currencyCode,
+    int? sortOrder,
+  }) => JournalLineRow(
+    id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
+    entryUuid: entryUuid ?? this.entryUuid,
+    accountUuid: accountUuid ?? this.accountUuid,
+    debit: debit ?? this.debit,
+    credit: credit ?? this.credit,
+    lineDescription: lineDescription.present
+        ? lineDescription.value
+        : this.lineDescription,
+    currencyCode: currencyCode ?? this.currencyCode,
+    sortOrder: sortOrder ?? this.sortOrder,
+  );
+  JournalLineRow copyWithCompanion(JournalLinesCompanion data) {
+    return JournalLineRow(
+      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      entryUuid: data.entryUuid.present ? data.entryUuid.value : this.entryUuid,
+      accountUuid: data.accountUuid.present
+          ? data.accountUuid.value
+          : this.accountUuid,
+      debit: data.debit.present ? data.debit.value : this.debit,
+      credit: data.credit.present ? data.credit.value : this.credit,
+      lineDescription: data.lineDescription.present
+          ? data.lineDescription.value
+          : this.lineDescription,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('JournalLineRow(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('entryUuid: $entryUuid, ')
+          ..write('accountUuid: $accountUuid, ')
+          ..write('debit: $debit, ')
+          ..write('credit: $credit, ')
+          ..write('lineDescription: $lineDescription, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('sortOrder: $sortOrder')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    uuid,
+    entryUuid,
+    accountUuid,
+    debit,
+    credit,
+    lineDescription,
+    currencyCode,
+    sortOrder,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is JournalLineRow &&
+          other.id == this.id &&
+          other.uuid == this.uuid &&
+          other.entryUuid == this.entryUuid &&
+          other.accountUuid == this.accountUuid &&
+          other.debit == this.debit &&
+          other.credit == this.credit &&
+          other.lineDescription == this.lineDescription &&
+          other.currencyCode == this.currencyCode &&
+          other.sortOrder == this.sortOrder);
+}
+
+class JournalLinesCompanion extends UpdateCompanion<JournalLineRow> {
+  final Value<int> id;
+  final Value<String> uuid;
+  final Value<String> entryUuid;
+  final Value<String> accountUuid;
+  final Value<double> debit;
+  final Value<double> credit;
+  final Value<String?> lineDescription;
+  final Value<String> currencyCode;
+  final Value<int> sortOrder;
+  const JournalLinesCompanion({
+    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.entryUuid = const Value.absent(),
+    this.accountUuid = const Value.absent(),
+    this.debit = const Value.absent(),
+    this.credit = const Value.absent(),
+    this.lineDescription = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+  });
+  JournalLinesCompanion.insert({
+    this.id = const Value.absent(),
+    required String uuid,
+    required String entryUuid,
+    required String accountUuid,
+    this.debit = const Value.absent(),
+    this.credit = const Value.absent(),
+    this.lineDescription = const Value.absent(),
+    required String currencyCode,
+    this.sortOrder = const Value.absent(),
+  }) : uuid = Value(uuid),
+       entryUuid = Value(entryUuid),
+       accountUuid = Value(accountUuid),
+       currencyCode = Value(currencyCode);
+  static Insertable<JournalLineRow> custom({
+    Expression<int>? id,
+    Expression<String>? uuid,
+    Expression<String>? entryUuid,
+    Expression<String>? accountUuid,
+    Expression<double>? debit,
+    Expression<double>? credit,
+    Expression<String>? lineDescription,
+    Expression<String>? currencyCode,
+    Expression<int>? sortOrder,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
+      if (entryUuid != null) 'entry_uuid': entryUuid,
+      if (accountUuid != null) 'account_uuid': accountUuid,
+      if (debit != null) 'debit': debit,
+      if (credit != null) 'credit': credit,
+      if (lineDescription != null) 'line_description': lineDescription,
+      if (currencyCode != null) 'currency_code': currencyCode,
+      if (sortOrder != null) 'sort_order': sortOrder,
+    });
+  }
+
+  JournalLinesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? uuid,
+    Value<String>? entryUuid,
+    Value<String>? accountUuid,
+    Value<double>? debit,
+    Value<double>? credit,
+    Value<String?>? lineDescription,
+    Value<String>? currencyCode,
+    Value<int>? sortOrder,
+  }) {
+    return JournalLinesCompanion(
+      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
+      entryUuid: entryUuid ?? this.entryUuid,
+      accountUuid: accountUuid ?? this.accountUuid,
+      debit: debit ?? this.debit,
+      credit: credit ?? this.credit,
+      lineDescription: lineDescription ?? this.lineDescription,
+      currencyCode: currencyCode ?? this.currencyCode,
+      sortOrder: sortOrder ?? this.sortOrder,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (entryUuid.present) {
+      map['entry_uuid'] = Variable<String>(entryUuid.value);
+    }
+    if (accountUuid.present) {
+      map['account_uuid'] = Variable<String>(accountUuid.value);
+    }
+    if (debit.present) {
+      map['debit'] = Variable<double>(debit.value);
+    }
+    if (credit.present) {
+      map['credit'] = Variable<double>(credit.value);
+    }
+    if (lineDescription.present) {
+      map['line_description'] = Variable<String>(lineDescription.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('JournalLinesCompanion(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('entryUuid: $entryUuid, ')
+          ..write('accountUuid: $accountUuid, ')
+          ..write('debit: $debit, ')
+          ..write('credit: $credit, ')
+          ..write('lineDescription: $lineDescription, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('sortOrder: $sortOrder')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AccountingDatabase extends GeneratedDatabase {
   _$AccountingDatabase(QueryExecutor e) : super(e);
   $AccountingDatabaseManager get managers => $AccountingDatabaseManager(this);
   late final $AccountsTable accounts = $AccountsTable(this);
   late final $CurrencyRatesTable currencyRates = $CurrencyRatesTable(this);
   late final $VoucherBooksTable voucherBooks = $VoucherBooksTable(this);
+  late final $JournalEntriesTable journalEntries = $JournalEntriesTable(this);
+  late final $JournalLinesTable journalLines = $JournalLinesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2193,6 +3564,8 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
     accounts,
     currencyRates,
     voucherBooks,
+    journalEntries,
+    journalLines,
   ];
 }
 
@@ -3217,6 +4590,658 @@ typedef $$VoucherBooksTableProcessedTableManager =
       VoucherBookRow,
       PrefetchHooks Function()
     >;
+typedef $$JournalEntriesTableCreateCompanionBuilder =
+    JournalEntriesCompanion Function({
+      Value<int> id,
+      required String uuid,
+      required int entryDate,
+      required String voucherNumber,
+      required String voucherType,
+      Value<String?> description,
+      required String currencyCode,
+      Value<bool> isPosted,
+      Value<String?> sourceType,
+      Value<String?> sourceId,
+      required int createdAt,
+      required int updatedAt,
+      Value<int?> deletedAt,
+    });
+typedef $$JournalEntriesTableUpdateCompanionBuilder =
+    JournalEntriesCompanion Function({
+      Value<int> id,
+      Value<String> uuid,
+      Value<int> entryDate,
+      Value<String> voucherNumber,
+      Value<String> voucherType,
+      Value<String?> description,
+      Value<String> currencyCode,
+      Value<bool> isPosted,
+      Value<String?> sourceType,
+      Value<String?> sourceId,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+      Value<int?> deletedAt,
+    });
+
+class $$JournalEntriesTableFilterComposer
+    extends Composer<_$AccountingDatabase, $JournalEntriesTable> {
+  $$JournalEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get entryDate => $composableBuilder(
+    column: $table.entryDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get voucherNumber => $composableBuilder(
+    column: $table.voucherNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get voucherType => $composableBuilder(
+    column: $table.voucherType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isPosted => $composableBuilder(
+    column: $table.isPosted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$JournalEntriesTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $JournalEntriesTable> {
+  $$JournalEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get entryDate => $composableBuilder(
+    column: $table.entryDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get voucherNumber => $composableBuilder(
+    column: $table.voucherNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get voucherType => $composableBuilder(
+    column: $table.voucherType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isPosted => $composableBuilder(
+    column: $table.isPosted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceId => $composableBuilder(
+    column: $table.sourceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$JournalEntriesTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $JournalEntriesTable> {
+  $$JournalEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<int> get entryDate =>
+      $composableBuilder(column: $table.entryDate, builder: (column) => column);
+
+  GeneratedColumn<String> get voucherNumber => $composableBuilder(
+    column: $table.voucherNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get voucherType => $composableBuilder(
+    column: $table.voucherType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isPosted =>
+      $composableBuilder(column: $table.isPosted, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceId =>
+      $composableBuilder(column: $table.sourceId, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$JournalEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$AccountingDatabase,
+          $JournalEntriesTable,
+          JournalEntryRow,
+          $$JournalEntriesTableFilterComposer,
+          $$JournalEntriesTableOrderingComposer,
+          $$JournalEntriesTableAnnotationComposer,
+          $$JournalEntriesTableCreateCompanionBuilder,
+          $$JournalEntriesTableUpdateCompanionBuilder,
+          (
+            JournalEntryRow,
+            BaseReferences<
+              _$AccountingDatabase,
+              $JournalEntriesTable,
+              JournalEntryRow
+            >,
+          ),
+          JournalEntryRow,
+          PrefetchHooks Function()
+        > {
+  $$JournalEntriesTableTableManager(
+    _$AccountingDatabase db,
+    $JournalEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$JournalEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$JournalEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$JournalEntriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
+                Value<int> entryDate = const Value.absent(),
+                Value<String> voucherNumber = const Value.absent(),
+                Value<String> voucherType = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
+                Value<bool> isPosted = const Value.absent(),
+                Value<String?> sourceType = const Value.absent(),
+                Value<String?> sourceId = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
+              }) => JournalEntriesCompanion(
+                id: id,
+                uuid: uuid,
+                entryDate: entryDate,
+                voucherNumber: voucherNumber,
+                voucherType: voucherType,
+                description: description,
+                currencyCode: currencyCode,
+                isPosted: isPosted,
+                sourceType: sourceType,
+                sourceId: sourceId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String uuid,
+                required int entryDate,
+                required String voucherNumber,
+                required String voucherType,
+                Value<String?> description = const Value.absent(),
+                required String currencyCode,
+                Value<bool> isPosted = const Value.absent(),
+                Value<String?> sourceType = const Value.absent(),
+                Value<String?> sourceId = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+                Value<int?> deletedAt = const Value.absent(),
+              }) => JournalEntriesCompanion.insert(
+                id: id,
+                uuid: uuid,
+                entryDate: entryDate,
+                voucherNumber: voucherNumber,
+                voucherType: voucherType,
+                description: description,
+                currencyCode: currencyCode,
+                isPosted: isPosted,
+                sourceType: sourceType,
+                sourceId: sourceId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$JournalEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AccountingDatabase,
+      $JournalEntriesTable,
+      JournalEntryRow,
+      $$JournalEntriesTableFilterComposer,
+      $$JournalEntriesTableOrderingComposer,
+      $$JournalEntriesTableAnnotationComposer,
+      $$JournalEntriesTableCreateCompanionBuilder,
+      $$JournalEntriesTableUpdateCompanionBuilder,
+      (
+        JournalEntryRow,
+        BaseReferences<
+          _$AccountingDatabase,
+          $JournalEntriesTable,
+          JournalEntryRow
+        >,
+      ),
+      JournalEntryRow,
+      PrefetchHooks Function()
+    >;
+typedef $$JournalLinesTableCreateCompanionBuilder =
+    JournalLinesCompanion Function({
+      Value<int> id,
+      required String uuid,
+      required String entryUuid,
+      required String accountUuid,
+      Value<double> debit,
+      Value<double> credit,
+      Value<String?> lineDescription,
+      required String currencyCode,
+      Value<int> sortOrder,
+    });
+typedef $$JournalLinesTableUpdateCompanionBuilder =
+    JournalLinesCompanion Function({
+      Value<int> id,
+      Value<String> uuid,
+      Value<String> entryUuid,
+      Value<String> accountUuid,
+      Value<double> debit,
+      Value<double> credit,
+      Value<String?> lineDescription,
+      Value<String> currencyCode,
+      Value<int> sortOrder,
+    });
+
+class $$JournalLinesTableFilterComposer
+    extends Composer<_$AccountingDatabase, $JournalLinesTable> {
+  $$JournalLinesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entryUuid => $composableBuilder(
+    column: $table.entryUuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountUuid => $composableBuilder(
+    column: $table.accountUuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get debit => $composableBuilder(
+    column: $table.debit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get credit => $composableBuilder(
+    column: $table.credit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lineDescription => $composableBuilder(
+    column: $table.lineDescription,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$JournalLinesTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $JournalLinesTable> {
+  $$JournalLinesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entryUuid => $composableBuilder(
+    column: $table.entryUuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountUuid => $composableBuilder(
+    column: $table.accountUuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get debit => $composableBuilder(
+    column: $table.debit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get credit => $composableBuilder(
+    column: $table.credit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lineDescription => $composableBuilder(
+    column: $table.lineDescription,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$JournalLinesTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $JournalLinesTable> {
+  $$JournalLinesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get entryUuid =>
+      $composableBuilder(column: $table.entryUuid, builder: (column) => column);
+
+  GeneratedColumn<String> get accountUuid => $composableBuilder(
+    column: $table.accountUuid,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get debit =>
+      $composableBuilder(column: $table.debit, builder: (column) => column);
+
+  GeneratedColumn<double> get credit =>
+      $composableBuilder(column: $table.credit, builder: (column) => column);
+
+  GeneratedColumn<String> get lineDescription => $composableBuilder(
+    column: $table.lineDescription,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+}
+
+class $$JournalLinesTableTableManager
+    extends
+        RootTableManager<
+          _$AccountingDatabase,
+          $JournalLinesTable,
+          JournalLineRow,
+          $$JournalLinesTableFilterComposer,
+          $$JournalLinesTableOrderingComposer,
+          $$JournalLinesTableAnnotationComposer,
+          $$JournalLinesTableCreateCompanionBuilder,
+          $$JournalLinesTableUpdateCompanionBuilder,
+          (
+            JournalLineRow,
+            BaseReferences<
+              _$AccountingDatabase,
+              $JournalLinesTable,
+              JournalLineRow
+            >,
+          ),
+          JournalLineRow,
+          PrefetchHooks Function()
+        > {
+  $$JournalLinesTableTableManager(
+    _$AccountingDatabase db,
+    $JournalLinesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$JournalLinesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$JournalLinesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$JournalLinesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
+                Value<String> entryUuid = const Value.absent(),
+                Value<String> accountUuid = const Value.absent(),
+                Value<double> debit = const Value.absent(),
+                Value<double> credit = const Value.absent(),
+                Value<String?> lineDescription = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+              }) => JournalLinesCompanion(
+                id: id,
+                uuid: uuid,
+                entryUuid: entryUuid,
+                accountUuid: accountUuid,
+                debit: debit,
+                credit: credit,
+                lineDescription: lineDescription,
+                currencyCode: currencyCode,
+                sortOrder: sortOrder,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String uuid,
+                required String entryUuid,
+                required String accountUuid,
+                Value<double> debit = const Value.absent(),
+                Value<double> credit = const Value.absent(),
+                Value<String?> lineDescription = const Value.absent(),
+                required String currencyCode,
+                Value<int> sortOrder = const Value.absent(),
+              }) => JournalLinesCompanion.insert(
+                id: id,
+                uuid: uuid,
+                entryUuid: entryUuid,
+                accountUuid: accountUuid,
+                debit: debit,
+                credit: credit,
+                lineDescription: lineDescription,
+                currencyCode: currencyCode,
+                sortOrder: sortOrder,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$JournalLinesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AccountingDatabase,
+      $JournalLinesTable,
+      JournalLineRow,
+      $$JournalLinesTableFilterComposer,
+      $$JournalLinesTableOrderingComposer,
+      $$JournalLinesTableAnnotationComposer,
+      $$JournalLinesTableCreateCompanionBuilder,
+      $$JournalLinesTableUpdateCompanionBuilder,
+      (
+        JournalLineRow,
+        BaseReferences<
+          _$AccountingDatabase,
+          $JournalLinesTable,
+          JournalLineRow
+        >,
+      ),
+      JournalLineRow,
+      PrefetchHooks Function()
+    >;
 
 class $AccountingDatabaseManager {
   final _$AccountingDatabase _db;
@@ -3227,4 +5252,8 @@ class $AccountingDatabaseManager {
       $$CurrencyRatesTableTableManager(_db, _db.currencyRates);
   $$VoucherBooksTableTableManager get voucherBooks =>
       $$VoucherBooksTableTableManager(_db, _db.voucherBooks);
+  $$JournalEntriesTableTableManager get journalEntries =>
+      $$JournalEntriesTableTableManager(_db, _db.journalEntries);
+  $$JournalLinesTableTableManager get journalLines =>
+      $$JournalLinesTableTableManager(_db, _db.journalLines);
 }

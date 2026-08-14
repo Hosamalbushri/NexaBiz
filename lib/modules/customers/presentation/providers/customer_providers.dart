@@ -10,6 +10,7 @@ import '../../domain/repositories/customer_repository.dart';
 import '../../domain/services/customer_account_link_port.dart';
 import '../../domain/services/customer_code_generator.dart';
 import '../../domain/usecases/customer_usecases.dart';
+import '../../domain/usecases/ensure_customer_account_links.dart';
 
 final customersDatabaseProvider = Provider<CustomersDatabase>((ref) {
   final db = CustomersDatabase();
@@ -68,6 +69,103 @@ final upsertCustomersUseCaseProvider = Provider<UpsertCustomers>((ref) {
   return UpsertCustomers(ref.watch(customerRepositoryProvider));
 });
 
+final ensureCustomerAccountLinksProvider = Provider<EnsureCustomerAccountLinks>((
+  ref,
+) {
+  return EnsureCustomerAccountLinks(ref.watch(customerAccountLinkPortProvider));
+});
+
+/// Creates CoA posting accounts for customers that have no [Customer.accountId].
+final linkMissingCustomerAccountsProvider = Provider<LinkMissingCustomerAccounts>((
+  ref,
+) {
+  return LinkMissingCustomerAccounts(
+    repository: ref.watch(customerRepositoryProvider),
+    ensureLinks: ref.watch(ensureCustomerAccountLinksProvider),
+    linkPort: ref.watch(customerAccountLinkPortProvider),
+    settings: ref.watch(settingsRepositoryProvider),
+  );
+});
+
+class LinkMissingCustomerAccounts {
+  const LinkMissingCustomerAccounts({
+    required CustomerRepository repository,
+    required EnsureCustomerAccountLinks ensureLinks,
+    required CustomerAccountLinkPort linkPort,
+    required SettingsRepository settings,
+  }) : _repository = repository,
+       _ensureLinks = ensureLinks,
+       _linkPort = linkPort,
+       _settings = settings;
+
+  final CustomerRepository _repository;
+  final EnsureCustomerAccountLinks _ensureLinks;
+  final CustomerAccountLinkPort _linkPort;
+  final SettingsRepository _settings;
+
+  Future<LinkedAccountRef?> resolveParent() async {
+    final savedId = await _settings.loadCustomersParentAccountId();
+    if (savedId != null) {
+      final linked = await _linkPort.findById(savedId);
+      if (linked != null) {
+        return linked;
+      }
+    }
+    return _linkPort.findSystemCustomersParent();
+  }
+
+  /// Returns how many customers were newly linked.
+  Future<int> call() async {
+    final parent = await resolveParent();
+    if (parent == null) {
+      return 0;
+    }
+    final all = await _repository.getAll(includeInactive: true);
+    var linkedCount = 0;
+    for (final customer in all) {
+      final existing = customer.accountId?.trim();
+      if (existing != null && existing.isNotEmpty) {
+        continue;
+      }
+      final draft = await _ensureLinks.apply(
+        CustomerDraft(
+          customerCode: customer.customerCode,
+          name: customer.name,
+          phone: customer.phone,
+          email: customer.email,
+          address: customer.address,
+          notes: customer.notes,
+          isActive: customer.isActive,
+          externalId: customer.externalId,
+          dataSource: customer.dataSource,
+        ),
+        parentId: parent.accountId,
+      );
+      final accountId = draft.accountId?.trim();
+      if (accountId == null || accountId.isEmpty) {
+        continue;
+      }
+      await _repository.update(
+        customer.id,
+        CustomerDraft(
+          customerCode: customer.customerCode,
+          name: customer.name,
+          phone: customer.phone,
+          email: customer.email,
+          address: customer.address,
+          notes: customer.notes,
+          isActive: customer.isActive,
+          accountId: accountId,
+          externalId: customer.externalId,
+          dataSource: customer.dataSource,
+        ),
+      );
+      linkedCount++;
+    }
+    return linkedCount;
+  }
+}
+
 final customersProvider = StreamProvider<List<Customer>>((ref) {
   return ref.watch(watchCustomersUseCaseProvider).call(includeInactive: true);
 });
@@ -104,6 +202,39 @@ final linkedAccountByIdProvider =
     FutureProvider.family<LinkedAccountRef?, String>((ref, accountId) async {
       return ref.watch(customerAccountLinkPortProvider).findById(accountId);
     });
+
+/// Whether customer save auto-creates a CoA posting account when none is set.
+final customersAutoLinkAccountProvider =
+    StateNotifierProvider<CustomersAutoLinkAccountController, AsyncValue<bool>>(
+      (ref) {
+        return CustomersAutoLinkAccountController(
+          repository: ref.watch(settingsRepositoryProvider),
+        );
+      },
+    );
+
+class CustomersAutoLinkAccountController
+    extends StateNotifier<AsyncValue<bool>> {
+  CustomersAutoLinkAccountController({required SettingsRepository repository})
+    : _repository = repository,
+      super(const AsyncValue.loading()) {
+    _load();
+  }
+
+  final SettingsRepository _repository;
+
+  Future<void> _load() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(_repository.loadCustomersAutoLinkAccount);
+  }
+
+  Future<void> refresh() => _load();
+
+  Future<void> setEnabled(bool enabled) async {
+    await _repository.saveCustomersAutoLinkAccount(enabled);
+    state = AsyncValue.data(enabled);
+  }
+}
 
 /// Chart of Accounts group under which customer accounts nest.
 final customersParentAccountProvider =

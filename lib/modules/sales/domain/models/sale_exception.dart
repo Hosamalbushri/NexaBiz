@@ -23,6 +23,7 @@ class SaleException implements Exception {
   static const insufficientStock = 'insufficient_stock';
   static const syncFailed = 'sync_failed';
   static const externalIntegrationFailed = 'external_integration_failed';
+  static const ledgerPostingFailed = 'ledger_posting_failed';
 
   final String code;
   final String? message;

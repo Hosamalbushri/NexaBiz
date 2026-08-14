@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../../../core/sync/sync_operation.dart';
 import '../../../../core/sync/sync_queue.dart';
 import '../../../../core/sync/sync_status.dart';
+import '../../../../core/utils/business_date.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../domain/entities/discount_type.dart';
 import '../../domain/entities/payment_method.dart';
@@ -10,11 +11,13 @@ import '../../domain/entities/payment_status.dart';
 import '../../domain/entities/sale.dart';
 import '../../domain/entities/sale_data_source.dart';
 import '../../domain/entities/sale_item.dart';
+import '../../domain/entities/sale_list_item.dart';
 import '../../domain/entities/sale_payment.dart';
 import '../../domain/entities/sale_settlement_type.dart';
 import '../../domain/entities/sale_status.dart';
 import '../../domain/models/sale_exception.dart';
 import '../../domain/models/sale_list_filter.dart';
+import '../../domain/models/sale_paged_result.dart';
 import '../../domain/repositories/sale_repository.dart';
 import '../../domain/services/sale_calculation_service.dart';
 import '../../domain/services/sale_quantity_math.dart';
@@ -183,7 +186,20 @@ class SaleRepositoryImpl implements SaleRepository {
   Expression<bool> _matchesFilter($SalesTable t, SaleListFilter filter) {
     var expr = _notDeleted(t);
     if (filter.saleStatus != null) {
-      expr = expr & t.saleStatus.equals(filter.saleStatus!.storageValue);
+      final status = filter.saleStatus!;
+      if (status == SaleStatus.unposted) {
+        expr = expr &
+            t.saleStatus.isIn(const [
+              'unposted',
+              'draft',
+              'pending',
+              'cancelled',
+              'rejected',
+            ]);
+      } else {
+        expr = expr &
+            t.saleStatus.isIn(const ['posted', 'confirmed', 'completed']);
+      }
     }
     if (filter.paymentStatus != null) {
       expr = expr & t.paymentStatus.equals(filter.paymentStatus!.storageValue);
@@ -203,7 +219,7 @@ class SaleRepositoryImpl implements SaleRepository {
     if (filter.fromDate != null) {
       expr =
           expr &
-          t.createdAt.isBiggerOrEqualValue(
+          t.saleDate.isBiggerOrEqualValue(
             filter.fromDate!.toUtc().millisecondsSinceEpoch,
           );
     }
@@ -218,34 +234,51 @@ class SaleRepositoryImpl implements SaleRepository {
         999,
       );
       expr =
-          expr & t.createdAt.isSmallerOrEqualValue(end.millisecondsSinceEpoch);
+          expr & t.saleDate.isSmallerOrEqualValue(end.millisecondsSinceEpoch);
+    }
+    final q = filter.query.trim().toLowerCase();
+    if (q.isNotEmpty) {
+      expr = expr & _matchesTextQuery(t, q);
     }
     return expr;
   }
 
-  Future<bool> _matchesQuery(Sale sale, String query) async {
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) {
-      return true;
-    }
-    if (sale.saleNumber.toLowerCase().contains(q)) {
-      return true;
-    }
-    if ((sale.customerName ?? '').toLowerCase().contains(q)) {
-      return true;
-    }
-    if ((sale.customerCode ?? '').toLowerCase().contains(q)) {
-      return true;
-    }
-    for (final item in sale.items) {
-      if (item.productName.toLowerCase().contains(q) ||
-          item.productCode.toLowerCase().contains(q) ||
-          (item.barcode?.toLowerCase().contains(q) ?? false)) {
-        return true;
-      }
-    }
-    // Customer phone is not on the sale snapshot — search via items/name only.
-    return false;
+  /// SQL text match on header + line snapshots (no Dart hydrate).
+  Expression<bool> _matchesTextQuery($SalesTable t, String normalized) {
+    final contains = '%$normalized%';
+    final header =
+        t.saleNumber.collate(Collate.noCase).like(contains) |
+        t.customerName.collate(Collate.noCase).like(contains) |
+        t.customerCode.collate(Collate.noCase).like(contains);
+    final itemMatch = existsQuery(
+      _db.select(_db.saleItems)
+        ..where(
+          (i) =>
+              i.saleUuid.equalsExp(t.uuid) &
+              (i.productName.collate(Collate.noCase).like(contains) |
+                  i.productCode.collate(Collate.noCase).like(contains) |
+                  i.barcode.collate(Collate.noCase).like(contains)),
+        ),
+    );
+    return header | itemMatch;
+  }
+
+  SaleListItem _mapListItem(SaleRow row) {
+    final createdAt = _fromEpoch(row.createdAt);
+    final saleDateMs = row.saleDate;
+    final saleDate = saleDateMs <= 0 ? createdAt : _fromEpoch(saleDateMs);
+    return SaleListItem(
+      id: row.id,
+      uuid: row.uuid,
+      saleNumber: row.saleNumber,
+      saleDate: saleDate,
+      settlementType: SaleSettlementTypeX.fromStorage(row.settlementType),
+      customerName: row.customerName,
+      currencyCode: row.currencyCode,
+      total: row.total,
+      saleStatus: SaleStatusX.fromStorage(row.saleStatus),
+      paymentStatus: PaymentStatusX.fromStorage(row.paymentStatus),
+    );
   }
 
   Future<void> _enqueue(Sale sale, SyncOperationType type) async {
@@ -477,52 +510,74 @@ class SaleRepositoryImpl implements SaleRepository {
   Future<List<Sale>> search(SaleListFilter filter) async {
     final query = _db.select(_db.sales)
       ..where((t) => _matchesFilter(t, filter))
-      ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
+      ..orderBy([(t) => OrderingTerm.desc(t.saleDate)]);
     final rows = await query.get();
-    final sales = await _mapSales(rows);
-    final q = filter.query.trim();
-    if (q.isEmpty) {
-      return sales;
-    }
-    final out = <Sale>[];
-    for (final sale in sales) {
-      if (await _matchesQuery(sale, q)) {
-        out.add(sale);
-      }
-    }
-    return out;
+    return _mapSales(rows);
   }
 
   @override
   Stream<List<Sale>> watchFiltered(SaleListFilter filter) async* {
     final query = _db.select(_db.sales)
       ..where((t) => _matchesFilter(t, filter))
-      ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
+      ..orderBy([(t) => OrderingTerm.desc(t.saleDate)]);
     await for (final rows in query.watch()) {
-      final sales = await _mapSales(rows);
-      final q = filter.query.trim();
-      if (q.isEmpty) {
-        yield sales;
-        continue;
-      }
-      final out = <Sale>[];
-      for (final sale in sales) {
-        if (await _matchesQuery(sale, q)) {
-          out.add(sale);
-        }
-      }
-      yield out;
+      yield await _mapSales(rows);
     }
   }
 
   @override
+  Future<SalePagedResult<SaleListItem>> searchListPaged(
+    SaleListFilter filter, {
+    int page = 0,
+    int pageSize = 30,
+  }) async {
+    final safePage = page < 0 ? 0 : page;
+    final safeSize = pageSize <= 0 ? 30 : pageSize;
+
+    final countQuery = _db.selectOnly(_db.sales)
+      ..addColumns([_db.sales.id.count()])
+      ..where(_matchesFilter(_db.sales, filter));
+    final countRow = await countQuery.getSingle();
+    final totalCount = countRow.read(_db.sales.id.count()) ?? 0;
+
+    final start = safePage * safeSize;
+    if (totalCount == 0 || start >= totalCount) {
+      return SalePagedResult<SaleListItem>(
+        items: const [],
+        totalCount: totalCount,
+        page: safePage,
+        pageSize: safeSize,
+      );
+    }
+
+    final select = _db.select(_db.sales)
+      ..where((t) => _matchesFilter(t, filter))
+      ..orderBy([(t) => OrderingTerm.desc(t.saleDate)])
+      ..limit(safeSize, offset: start);
+    final rows = await select.get();
+    return SalePagedResult<SaleListItem>(
+      items: rows.map(_mapListItem).toList(growable: false),
+      totalCount: totalCount,
+      page: safePage,
+      pageSize: safeSize,
+    );
+  }
+
+  @override
+  Stream<void> watchListChanges() {
+    return (_db.select(_db.sales)..where(_notDeleted)).watch().map((_) {});
+  }
+
+  @override
   Future<int> nextLocalSequence() async {
-    final rows = await (_db.select(_db.sales)).get();
+    final rows = await (_db.selectOnly(_db.sales)
+          ..addColumns([_db.sales.saleNumber]))
+        .get();
     var maxSeq = 0;
     final plain = RegExp(r'^(\d+)$');
     final legacyInv = RegExp(r'^INV-(\d+)$', caseSensitive: false);
     for (final row in rows) {
-      final raw = row.saleNumber.trim();
+      final raw = (row.read(_db.sales.saleNumber) ?? '').trim();
       final match = plain.firstMatch(raw) ?? legacyInv.firstMatch(raw);
       if (match != null) {
         final n = int.tryParse(match.group(1)!) ?? 0;
@@ -565,7 +620,7 @@ class SaleRepositoryImpl implements SaleRepository {
             SalesCompanion.insert(
               uuid: uuid,
               saleNumber: normalizedNumber,
-              saleDate: Value(draft.saleDate.toUtc().millisecondsSinceEpoch),
+              saleDate: Value(BusinessDate.utcDayMs(draft.saleDate)),
               settlementType: Value(draft.settlementType.storageValue),
               voucherBookId: Value(draft.voucherBookId),
               customerId: Value(draft.customerId),
@@ -641,7 +696,7 @@ class SaleRepositoryImpl implements SaleRepository {
     await _db.transaction(() async {
       await (_db.update(_db.sales)..where((t) => t.id.equals(id))).write(
         SalesCompanion(
-          saleDate: Value(draft.saleDate.toUtc().millisecondsSinceEpoch),
+          saleDate: Value(BusinessDate.utcDayMs(draft.saleDate)),
           settlementType: Value(draft.settlementType.storageValue),
           voucherBookId: Value(draft.voucherBookId),
           customerId: Value(draft.customerId),
@@ -703,16 +758,24 @@ class SaleRepositoryImpl implements SaleRepository {
     await (_db.update(_db.sales)..where((t) => t.id.equals(id))).write(
       SalesCompanion(
         saleStatus: Value(update.saleStatus.storageValue),
-        submittedAt: update.submittedAt != null
+        submittedAt: update.clearSubmittedAt
+            ? const Value(null)
+            : update.submittedAt != null
             ? Value(_toEpoch(update.submittedAt))
             : const Value.absent(),
-        confirmedAt: update.confirmedAt != null
+        confirmedAt: update.clearConfirmedAt
+            ? const Value(null)
+            : update.confirmedAt != null
             ? Value(_toEpoch(update.confirmedAt))
             : const Value.absent(),
-        completedAt: update.completedAt != null
+        completedAt: update.clearCompletedAt
+            ? const Value(null)
+            : update.completedAt != null
             ? Value(_toEpoch(update.completedAt))
             : const Value.absent(),
-        cancelledAt: update.cancelledAt != null
+        cancelledAt: update.clearCancelledAt
+            ? const Value(null)
+            : update.cancelledAt != null
             ? Value(_toEpoch(update.cancelledAt))
             : const Value.absent(),
         externalId: update.externalId != null
@@ -760,27 +823,40 @@ class SaleRepositoryImpl implements SaleRepository {
 
   @override
   Future<CustomerSaleTotals> totalsForCustomer(String customerId) async {
-    final sales = await search(SaleListFilter(customerId: customerId));
-    var totalSales = 0.0;
-    var paid = 0.0;
-    var outstanding = 0.0;
-    var count = 0;
-    for (final sale in sales) {
-      if (sale.saleStatus == SaleStatus.cancelled ||
-          sale.saleStatus == SaleStatus.rejected) {
-        continue;
-      }
-      count++;
-      totalSales += sale.total;
-      paid += sale.paidAmount;
-      outstanding += sale.remainingAmount;
-    }
+    final query = _db.selectOnly(_db.sales)
+      ..addColumns([
+        _db.sales.id.count(),
+        _db.sales.total.sum(),
+        _db.sales.paidAmount.sum(),
+        _db.sales.remainingAmount.sum(),
+      ])
+      ..where(_notDeleted(_db.sales) & _db.sales.customerId.equals(customerId));
+    final row = await query.getSingle();
     return CustomerSaleTotals(
-      totalSales: totalSales,
-      paidAmount: paid,
-      outstandingAmount: outstanding,
-      saleCount: count,
+      totalSales: row.read(_db.sales.total.sum()) ?? 0,
+      paidAmount: row.read(_db.sales.paidAmount.sum()) ?? 0,
+      outstandingAmount: row.read(_db.sales.remainingAmount.sum()) ?? 0,
+      saleCount: row.read(_db.sales.id.count()) ?? 0,
     );
+  }
+
+  @override
+  Future<List<Sale>> listByAccountLink(String accountUuid) async {
+    final id = accountUuid.trim();
+    if (id.isEmpty) {
+      return const [];
+    }
+    final rows =
+        await (_db.select(_db.sales)
+              ..where(
+                (t) =>
+                    _notDeleted(t) &
+                    (t.customerAccountId.equals(id) |
+                        t.cashAccountId.equals(id)),
+              )
+              ..orderBy([(t) => OrderingTerm.asc(t.saleDate)]))
+            .get();
+    return _mapSales(rows);
   }
 
   Future<void> markSynced({
@@ -809,241 +885,254 @@ class SaleRepositoryImpl implements SaleRepository {
     if (uuid == null || uuid.isEmpty) {
       return;
     }
-    final existing = await getByUuid(uuid);
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final deletedAt = payload['deletedAt'] as int?;
 
-    if (existing == null) {
-      await _db
-          .into(_db.sales)
-          .insert(
-            SalesCompanion.insert(
-              uuid: uuid,
-              saleNumber: (payload['saleNumber'] as String?) ?? uuid,
-              saleDate: Value((payload['saleDate'] as int?) ?? now),
-              settlementType: Value(
-                (payload['settlementType'] as String?) ?? 'cash',
-              ),
-              voucherBookId: Value(payload['voucherBookId'] as String?),
-              customerId: Value(payload['customerId'] as String?),
-              customerCode: Value(payload['customerCode'] as String?),
-              customerName: Value(payload['customerName'] as String?),
-              customerAccountId: Value(payload['customerAccountId'] as String?),
-              cashAccountId: Value(payload['cashAccountId'] as String?),
-              currencyCode: Value(
-                (payload['currencyCode'] as String?) ?? 'SAR',
-              ),
-              baseCurrencyCode: Value(
-                (payload['baseCurrencyCode'] as String?) ?? 'SAR',
-              ),
-              exchangeRate: Value(
-                (payload['exchangeRate'] as num?)?.toDouble() ?? 1,
-              ),
-              subtotal: (payload['subtotal'] as num?)?.toDouble() ?? 0,
-              itemDiscountTotal:
-                  (payload['itemDiscountTotal'] as num?)?.toDouble() ?? 0,
-              discountType: Value(
-                (payload['discountType'] as String?) ?? 'fixed',
-              ),
-              discountValue: Value(
-                (payload['discountValue'] as num?)?.toDouble() ?? 0,
-              ),
-              discountAmount: Value(
-                (payload['discountAmount'] as num?)?.toDouble() ?? 0,
-              ),
-              taxRate: Value((payload['taxRate'] as num?)?.toDouble() ?? 0),
-              taxAmount: Value((payload['taxAmount'] as num?)?.toDouble() ?? 0),
-              total: (payload['total'] as num?)?.toDouble() ?? 0,
-              paidAmount: Value(
-                (payload['paidAmount'] as num?)?.toDouble() ?? 0,
-              ),
-              remainingAmount: Value(
-                (payload['remainingAmount'] as num?)?.toDouble() ?? 0,
-              ),
-              paymentStatus: Value(
-                (payload['paymentStatus'] as String?) ?? 'unpaid',
-              ),
-              paymentMethod: Value(
-                (payload['paymentMethod'] as String?) ?? 'cash',
-              ),
-              saleStatus: Value((payload['saleStatus'] as String?) ?? 'draft'),
-              notes: Value(payload['notes'] as String?),
-              createdAt: (payload['updatedAt'] as int?) ?? now,
-              updatedAt: (payload['updatedAt'] as int?) ?? now,
-              submittedAt: Value(payload['submittedAt'] as int?),
-              confirmedAt: Value(payload['confirmedAt'] as int?),
-              completedAt: Value(payload['completedAt'] as int?),
-              cancelledAt: Value(payload['cancelledAt'] as int?),
-              externalId: Value(payload['externalId'] as String?),
-              externalDocumentNumber: Value(
-                payload['externalDocumentNumber'] as String?,
-              ),
-              externalStatus: Value(payload['externalStatus'] as String?),
-              dataSource: Value(
-                (payload['dataSource'] as String?) ?? 'synchronized',
-              ),
-              syncStatus: const Value('synced'),
-              lastSyncedAt: Value(now),
-              version: Value((payload['version'] as int?) ?? 1),
-              deletedAt: Value(deletedAt),
-            ),
-          );
-    } else {
-      await (_db.update(_db.sales)..where((t) => t.uuid.equals(uuid))).write(
-        SalesCompanion(
-          saleNumber: Value(
-            (payload['saleNumber'] as String?) ?? existing.saleNumber,
-          ),
-          saleDate: Value(
-            (payload['saleDate'] as int?) ??
-                existing.saleDate.toUtc().millisecondsSinceEpoch,
-          ),
-          settlementType: Value(
-            (payload['settlementType'] as String?) ??
-                existing.settlementType.storageValue,
-          ),
-          voucherBookId: Value(payload['voucherBookId'] as String?),
-          customerId: Value(payload['customerId'] as String?),
-          customerCode: Value(payload['customerCode'] as String?),
-          customerName: Value(payload['customerName'] as String?),
-          customerAccountId: Value(payload['customerAccountId'] as String?),
-          cashAccountId: Value(payload['cashAccountId'] as String?),
-          currencyCode: Value(
-            (payload['currencyCode'] as String?) ?? existing.currencyCode,
-          ),
-          baseCurrencyCode: Value(
-            (payload['baseCurrencyCode'] as String?) ??
-                existing.baseCurrencyCode,
-          ),
-          exchangeRate: Value(
-            (payload['exchangeRate'] as num?)?.toDouble() ??
-                existing.exchangeRate,
-          ),
-          subtotal: Value((payload['subtotal'] as num?)?.toDouble() ?? 0),
-          itemDiscountTotal: Value(
-            (payload['itemDiscountTotal'] as num?)?.toDouble() ?? 0,
-          ),
-          discountType: Value((payload['discountType'] as String?) ?? 'fixed'),
-          discountValue: Value(
-            (payload['discountValue'] as num?)?.toDouble() ?? 0,
-          ),
-          discountAmount: Value(
-            (payload['discountAmount'] as num?)?.toDouble() ?? 0,
-          ),
-          taxRate: Value((payload['taxRate'] as num?)?.toDouble() ?? 0),
-          taxAmount: Value((payload['taxAmount'] as num?)?.toDouble() ?? 0),
-          total: Value((payload['total'] as num?)?.toDouble() ?? 0),
-          paidAmount: Value((payload['paidAmount'] as num?)?.toDouble() ?? 0),
-          remainingAmount: Value(
-            (payload['remainingAmount'] as num?)?.toDouble() ?? 0,
-          ),
-          paymentStatus: Value(
-            (payload['paymentStatus'] as String?) ?? 'unpaid',
-          ),
-          paymentMethod: Value((payload['paymentMethod'] as String?) ?? 'cash'),
-          saleStatus: Value((payload['saleStatus'] as String?) ?? 'draft'),
-          notes: Value(payload['notes'] as String?),
-          updatedAt: Value((payload['updatedAt'] as int?) ?? now),
-          submittedAt: Value(payload['submittedAt'] as int?),
-          confirmedAt: Value(payload['confirmedAt'] as int?),
-          completedAt: Value(payload['completedAt'] as int?),
-          cancelledAt: Value(payload['cancelledAt'] as int?),
-          externalId: Value(payload['externalId'] as String?),
-          externalDocumentNumber: Value(
-            payload['externalDocumentNumber'] as String?,
-          ),
-          externalStatus: Value(payload['externalStatus'] as String?),
-          dataSource: Value(
-            (payload['dataSource'] as String?) ?? 'synchronized',
-          ),
-          syncStatus: const Value('synced'),
-          lastSyncedAt: Value(now),
-          version: Value((payload['version'] as int?) ?? existing.version),
-          deletedAt: Value(deletedAt),
-        ),
-      );
-      await (_db.delete(
-        _db.saleItems,
-      )..where((t) => t.saleUuid.equals(uuid))).go();
-      await (_db.delete(
-        _db.salePayments,
-      )..where((t) => t.saleUuid.equals(uuid))).go();
-    }
+    await _db.transaction(() async {
+      final existing = await getByUuid(uuid);
+      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+      final deletedAt = payload['deletedAt'] as int?;
 
-    final items = payload['items'];
-    if (items is List) {
-      var order = 0;
-      for (final raw in items) {
-        if (raw is! Map) {
-          continue;
-        }
-        final map = Map<String, dynamic>.from(raw);
-        final unitPrice = (map['unitPrice'] as num?)?.toDouble() ?? 0;
+      if (existing == null) {
         await _db
-            .into(_db.saleItems)
+            .into(_db.sales)
             .insert(
-              SaleItemsCompanion.insert(
-                uuid: (map['uuid'] as String?) ?? generateUuidV4(),
-                saleUuid: uuid,
-                productId: (map['productId'] as String?) ?? '',
-                productName: (map['productName'] as String?) ?? '',
-                productCode: (map['productCode'] as String?) ?? '',
-                barcode: Value(map['barcode'] as String?),
-                quantity: (map['quantity'] as num?)?.toDouble() ?? 0,
-                mainQuantity: Value(
-                  (map['mainQuantity'] as num?)?.toDouble() ??
-                      (map['quantity'] as num?)?.toDouble() ??
-                      0,
+              SalesCompanion.insert(
+                uuid: uuid,
+                saleNumber: (payload['saleNumber'] as String?) ?? uuid,
+                saleDate: Value((payload['saleDate'] as int?) ?? now),
+                settlementType: Value(
+                  (payload['settlementType'] as String?) ?? 'cash',
                 ),
-                subQuantity: Value(
-                  (map['subQuantity'] as num?)?.toDouble() ?? 0,
+                voucherBookId: Value(payload['voucherBookId'] as String?),
+                customerId: Value(payload['customerId'] as String?),
+                customerCode: Value(payload['customerCode'] as String?),
+                customerName: Value(payload['customerName'] as String?),
+                customerAccountId: Value(
+                  payload['customerAccountId'] as String?,
                 ),
-                packSize: Value((map['packSize'] as int?) ?? 1),
-                unitPrice: unitPrice,
-                baseUnitPrice: Value(
-                  (map['baseUnitPrice'] as num?)?.toDouble() ?? unitPrice,
+                cashAccountId: Value(payload['cashAccountId'] as String?),
+                currencyCode: Value(
+                  (payload['currencyCode'] as String?) ?? 'SAR',
                 ),
+                baseCurrencyCode: Value(
+                  (payload['baseCurrencyCode'] as String?) ?? 'SAR',
+                ),
+                exchangeRate: Value(
+                  (payload['exchangeRate'] as num?)?.toDouble() ?? 1,
+                ),
+                subtotal: (payload['subtotal'] as num?)?.toDouble() ?? 0,
+                itemDiscountTotal:
+                    (payload['itemDiscountTotal'] as num?)?.toDouble() ?? 0,
                 discountType: Value(
-                  (map['discountType'] as String?) ?? 'fixed',
+                  (payload['discountType'] as String?) ?? 'fixed',
                 ),
                 discountValue: Value(
-                  (map['discountValue'] as num?)?.toDouble() ?? 0,
+                  (payload['discountValue'] as num?)?.toDouble() ?? 0,
                 ),
                 discountAmount: Value(
-                  (map['discountAmount'] as num?)?.toDouble() ?? 0,
+                  (payload['discountAmount'] as num?)?.toDouble() ?? 0,
                 ),
-                taxAmount: Value((map['taxAmount'] as num?)?.toDouble() ?? 0),
-                subtotal: (map['subtotal'] as num?)?.toDouble() ?? 0,
-                total: (map['total'] as num?)?.toDouble() ?? 0,
-                lineOrder: Value((map['lineOrder'] as int?) ?? order),
+                taxRate: Value((payload['taxRate'] as num?)?.toDouble() ?? 0),
+                taxAmount: Value(
+                  (payload['taxAmount'] as num?)?.toDouble() ?? 0,
+                ),
+                total: (payload['total'] as num?)?.toDouble() ?? 0,
+                paidAmount: Value(
+                  (payload['paidAmount'] as num?)?.toDouble() ?? 0,
+                ),
+                remainingAmount: Value(
+                  (payload['remainingAmount'] as num?)?.toDouble() ?? 0,
+                ),
+                paymentStatus: Value(
+                  (payload['paymentStatus'] as String?) ?? 'unpaid',
+                ),
+                paymentMethod: Value(
+                  (payload['paymentMethod'] as String?) ?? 'cash',
+                ),
+                saleStatus: Value(
+                  (payload['saleStatus'] as String?) ?? 'unposted',
+                ),
+                notes: Value(payload['notes'] as String?),
+                createdAt: (payload['updatedAt'] as int?) ?? now,
+                updatedAt: (payload['updatedAt'] as int?) ?? now,
+                submittedAt: Value(payload['submittedAt'] as int?),
+                confirmedAt: Value(payload['confirmedAt'] as int?),
+                completedAt: Value(payload['completedAt'] as int?),
+                cancelledAt: Value(payload['cancelledAt'] as int?),
+                externalId: Value(payload['externalId'] as String?),
+                externalDocumentNumber: Value(
+                  payload['externalDocumentNumber'] as String?,
+                ),
+                externalStatus: Value(payload['externalStatus'] as String?),
+                dataSource: Value(
+                  (payload['dataSource'] as String?) ?? 'synchronized',
+                ),
+                syncStatus: const Value('synced'),
+                lastSyncedAt: Value(now),
+                version: Value((payload['version'] as int?) ?? 1),
+                deletedAt: Value(deletedAt),
               ),
             );
-        order++;
+      } else {
+        await (_db.update(_db.sales)..where((t) => t.uuid.equals(uuid))).write(
+          SalesCompanion(
+            saleNumber: Value(
+              (payload['saleNumber'] as String?) ?? existing.saleNumber,
+            ),
+            saleDate: Value(
+              (payload['saleDate'] as int?) ??
+                  existing.saleDate.toUtc().millisecondsSinceEpoch,
+            ),
+            settlementType: Value(
+              (payload['settlementType'] as String?) ??
+                  existing.settlementType.storageValue,
+            ),
+            voucherBookId: Value(payload['voucherBookId'] as String?),
+            customerId: Value(payload['customerId'] as String?),
+            customerCode: Value(payload['customerCode'] as String?),
+            customerName: Value(payload['customerName'] as String?),
+            customerAccountId: Value(payload['customerAccountId'] as String?),
+            cashAccountId: Value(payload['cashAccountId'] as String?),
+            currencyCode: Value(
+              (payload['currencyCode'] as String?) ?? existing.currencyCode,
+            ),
+            baseCurrencyCode: Value(
+              (payload['baseCurrencyCode'] as String?) ??
+                  existing.baseCurrencyCode,
+            ),
+            exchangeRate: Value(
+              (payload['exchangeRate'] as num?)?.toDouble() ??
+                  existing.exchangeRate,
+            ),
+            subtotal: Value((payload['subtotal'] as num?)?.toDouble() ?? 0),
+            itemDiscountTotal: Value(
+              (payload['itemDiscountTotal'] as num?)?.toDouble() ?? 0,
+            ),
+            discountType: Value(
+              (payload['discountType'] as String?) ?? 'fixed',
+            ),
+            discountValue: Value(
+              (payload['discountValue'] as num?)?.toDouble() ?? 0,
+            ),
+            discountAmount: Value(
+              (payload['discountAmount'] as num?)?.toDouble() ?? 0,
+            ),
+            taxRate: Value((payload['taxRate'] as num?)?.toDouble() ?? 0),
+            taxAmount: Value((payload['taxAmount'] as num?)?.toDouble() ?? 0),
+            total: Value((payload['total'] as num?)?.toDouble() ?? 0),
+            paidAmount: Value((payload['paidAmount'] as num?)?.toDouble() ?? 0),
+            remainingAmount: Value(
+              (payload['remainingAmount'] as num?)?.toDouble() ?? 0,
+            ),
+            paymentStatus: Value(
+              (payload['paymentStatus'] as String?) ?? 'unpaid',
+            ),
+            paymentMethod: Value(
+              (payload['paymentMethod'] as String?) ?? 'cash',
+            ),
+            saleStatus: Value((payload['saleStatus'] as String?) ?? 'unposted'),
+            notes: Value(payload['notes'] as String?),
+            updatedAt: Value((payload['updatedAt'] as int?) ?? now),
+            submittedAt: Value(payload['submittedAt'] as int?),
+            confirmedAt: Value(payload['confirmedAt'] as int?),
+            completedAt: Value(payload['completedAt'] as int?),
+            cancelledAt: Value(payload['cancelledAt'] as int?),
+            externalId: Value(payload['externalId'] as String?),
+            externalDocumentNumber: Value(
+              payload['externalDocumentNumber'] as String?,
+            ),
+            externalStatus: Value(payload['externalStatus'] as String?),
+            dataSource: Value(
+              (payload['dataSource'] as String?) ?? 'synchronized',
+            ),
+            syncStatus: const Value('synced'),
+            lastSyncedAt: Value(now),
+            version: Value((payload['version'] as int?) ?? existing.version),
+            deletedAt: Value(deletedAt),
+          ),
+        );
+        await (_db.delete(
+          _db.saleItems,
+        )..where((t) => t.saleUuid.equals(uuid))).go();
+        await (_db.delete(
+          _db.salePayments,
+        )..where((t) => t.saleUuid.equals(uuid))).go();
       }
-    }
 
-    final payments = payload['payments'];
-    if (payments is List) {
-      for (final raw in payments) {
-        if (raw is! Map) {
-          continue;
+      final items = payload['items'];
+      if (items is List) {
+        var order = 0;
+        for (final raw in items) {
+          if (raw is! Map) {
+            continue;
+          }
+          final map = Map<String, dynamic>.from(raw);
+          final unitPrice = (map['unitPrice'] as num?)?.toDouble() ?? 0;
+          await _db
+              .into(_db.saleItems)
+              .insert(
+                SaleItemsCompanion.insert(
+                  uuid: (map['uuid'] as String?) ?? generateUuidV4(),
+                  saleUuid: uuid,
+                  productId: (map['productId'] as String?) ?? '',
+                  productName: (map['productName'] as String?) ?? '',
+                  productCode: (map['productCode'] as String?) ?? '',
+                  barcode: Value(map['barcode'] as String?),
+                  quantity: (map['quantity'] as num?)?.toDouble() ?? 0,
+                  mainQuantity: Value(
+                    (map['mainQuantity'] as num?)?.toDouble() ??
+                        (map['quantity'] as num?)?.toDouble() ??
+                        0,
+                  ),
+                  subQuantity: Value(
+                    (map['subQuantity'] as num?)?.toDouble() ?? 0,
+                  ),
+                  packSize: Value((map['packSize'] as int?) ?? 1),
+                  unitPrice: unitPrice,
+                  baseUnitPrice: Value(
+                    (map['baseUnitPrice'] as num?)?.toDouble() ?? unitPrice,
+                  ),
+                  discountType: Value(
+                    (map['discountType'] as String?) ?? 'fixed',
+                  ),
+                  discountValue: Value(
+                    (map['discountValue'] as num?)?.toDouble() ?? 0,
+                  ),
+                  discountAmount: Value(
+                    (map['discountAmount'] as num?)?.toDouble() ?? 0,
+                  ),
+                  taxAmount: Value((map['taxAmount'] as num?)?.toDouble() ?? 0),
+                  subtotal: (map['subtotal'] as num?)?.toDouble() ?? 0,
+                  total: (map['total'] as num?)?.toDouble() ?? 0,
+                  lineOrder: Value((map['lineOrder'] as int?) ?? order),
+                ),
+              );
+          order++;
         }
-        final map = Map<String, dynamic>.from(raw);
-        await _db
-            .into(_db.salePayments)
-            .insert(
-              SalePaymentsCompanion.insert(
-                uuid: (map['uuid'] as String?) ?? generateUuidV4(),
-                saleUuid: uuid,
-                amount: (map['amount'] as num?)?.toDouble() ?? 0,
-                method: Value((map['method'] as String?) ?? 'cash'),
-                paidAt: (map['paidAt'] as int?) ?? now,
-                createdAt: now,
-                notes: Value(map['notes'] as String?),
-                externalId: Value(map['externalId'] as String?),
-              ),
-            );
       }
-    }
+
+      final payments = payload['payments'];
+      if (payments is List) {
+        for (final raw in payments) {
+          if (raw is! Map) {
+            continue;
+          }
+          final map = Map<String, dynamic>.from(raw);
+          await _db
+              .into(_db.salePayments)
+              .insert(
+                SalePaymentsCompanion.insert(
+                  uuid: (map['uuid'] as String?) ?? generateUuidV4(),
+                  saleUuid: uuid,
+                  amount: (map['amount'] as num?)?.toDouble() ?? 0,
+                  method: Value((map['method'] as String?) ?? 'cash'),
+                  paidAt: (map['paidAt'] as int?) ?? now,
+                  createdAt: now,
+                  notes: Value(map['notes'] as String?),
+                  externalId: Value(map['externalId'] as String?),
+                ),
+              );
+        }
+      }
+    });
   }
 }

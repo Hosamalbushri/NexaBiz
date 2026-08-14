@@ -17,6 +17,7 @@ class SettingsKeys {
   static const String quickActionIds = 'quick_action_ids';
   static const String accountingMode = 'accounting_mode';
   static const String customersParentAccountId = 'customers_parent_account_id';
+  static const String customersAutoLinkAccount = 'customers_auto_link_account';
   static const String companyProfile = 'company_profile';
 }
 
@@ -184,6 +185,22 @@ class SettingsRepository {
       return;
     }
     await box.put(SettingsKeys.customersParentAccountId, trimmed);
+  }
+
+  /// When true (default), creating/updating a customer without an account link
+  /// auto-creates a posting CoA account under the customers parent group.
+  Future<bool> loadCustomersAutoLinkAccount() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.customersAutoLinkAccount);
+    if (value is bool) {
+      return value;
+    }
+    return true;
+  }
+
+  Future<void> saveCustomersAutoLinkAccount(bool enabled) async {
+    final box = await _settingsBox;
+    await box.put(SettingsKeys.customersAutoLinkAccount, enabled);
   }
 
   Future<CompanyProfile> loadCompanyProfile() async {

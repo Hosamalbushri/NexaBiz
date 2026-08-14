@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/presentation/providers/dashboard_services_provider.dart';
 import '../../data/datasources/customer_excel_import_isolate.dart';
 import '../../domain/models/import_session.dart';
 import '../../domain/models/import_validation_exception.dart';
@@ -107,14 +108,29 @@ class CustomerImportNotifier extends StateNotifier<CustomerImportUiState> {
 
       final imported = outcome.result!;
       state = state.copyWith(
-        progress: 0.65,
+        progress: 0.55,
         progressLabelKey: 'saving',
         duplicateCount: imported.duplicateCount,
       );
 
+      var drafts = imported.drafts;
+      final autoLink = await _ref
+          .read(settingsRepositoryProvider)
+          .loadCustomersAutoLinkAccount();
+      if (autoLink) {
+        final parent = await _ref
+            .read(linkMissingCustomerAccountsProvider)
+            .resolveParent();
+        if (parent != null) {
+          drafts = await _ref
+              .read(ensureCustomerAccountLinksProvider)
+              .applyAll(drafts, parentId: parent.accountId);
+        }
+      }
+
       final upsert = await _ref
           .read(upsertCustomersUseCaseProvider)
-          .call(imported.drafts);
+          .call(drafts);
 
       final result = ImportSessionResult(
         importedCount: upsert.totalCount,

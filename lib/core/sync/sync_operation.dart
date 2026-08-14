@@ -59,8 +59,10 @@ class SyncOperation {
   final int baseVersion;
 
   SyncOperation copyWith({
+    SyncOperationType? type,
     SyncStatus? status,
     Map<String, dynamic>? payload,
+    DateTime? createdAt,
     DateTime? updatedAt,
     int? attemptCount,
     String? lastError,
@@ -73,10 +75,10 @@ class SyncOperation {
       id: id,
       entityType: entityType,
       entityId: entityId,
-      type: type,
+      type: type ?? this.type,
       status: status ?? this.status,
       payload: payload ?? Map<String, dynamic>.from(this.payload),
-      createdAt: createdAt,
+      createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       attemptCount: attemptCount ?? this.attemptCount,
       lastError: clearLastError ? null : (lastError ?? this.lastError),

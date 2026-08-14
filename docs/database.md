@@ -75,14 +75,14 @@ Products Excel import upserts by `item_code` and does **not** write Hive stock-c
 ## Drift — accounts (Accounting)
 
 - Database class: `AccountingDatabase` in `lib/modules/accounting/data/database/`
-- Tables: `accounts`, `currency_rates`, `voucher_books`
-- Schema version: **5**
-- Sync entity type: `account` (rates and voucher books are local master data for now)
+- Tables: `accounts`, `currency_rates`, `voucher_books`, `journal_entries`, `journal_lines`
+- Schema version: **6**
+- Sync entity type: `account` (rates, voucher books, and journals are local for now)
 
 | Column | Notes |
 | --- | --- |
 | `id` | INTEGER PK |
-| `uuid` | Client UUID (unique); future journal lines reference this |
+| `uuid` | Client UUID (unique); journal lines reference this |
 | `parent_id` | Parent account UUID (nullable for roots) |
 | `account_code` | UNIQUE business code (not the DB id) |
 | `name` / `description` | Display fields |
@@ -95,6 +95,8 @@ Products Excel import upserts by `item_code` and does **not** write Hive stock-c
 | `sync_status` / `last_synced_at` / `version` / `deleted_at` | Offline-first metadata |
 
 Default system accounts are seeded locally as `synced` (no queue flood). User mutations enqueue `SyncOperation` rows via Core `SyncQueue`.
+
+Trading + VAT system leaves (additive; see `DefaultChartOfAccounts`): petty cash `1213`, inventory in transit `1235`, VAT input `1250`, prepaid `1260`, other current assets `1290`, suppliers group `2111`, VAT output `2130`, accrued expenses `2140`, customer advances `2150`, long-term loans `2210`, other revenue group `4200` + purchase discounts `4210`, inventory adjustments `5150`, sales returns `5160`, sales discounts `5170`, bank charges `5500`, depreciation `5600`, advertising `5700`, shipping `5800`, maintenance `5850`. Re-running seed inserts any missing `system:*` rows.
 
 ### Drift — currency rates (Accounting)
 
@@ -128,6 +130,17 @@ Currencies are **enabled on demand**: the rates list shows the base currency plu
 | `created_at` / `updated_at` | UTC epoch ms |
 
 Default section groups (Sales / Receipts / Payments / Purchases / Journal) are ensured on open, and **one default leaf book per kind** is seeded when missing (see `DefaultVoucherBooks`). UI: section list → section page with **tabs per leaf type** (e.g. Sales / Sales returns), each with its own list + add action. Each section may have **many** child books. Setup UI: `/accounting/voucher-books`. Allocation via `VoucherBookRepository.allocateNextNumber` (atomic, leaf only). See ADR-010.
+
+### Drift — journal entries / lines (Accounting)
+
+Schema bump **5 → 6**. Local ledger only in this slice (no cloud sync yet).
+
+| Table | Notes |
+| --- | --- |
+| `journal_entries` | Header: `entry_date`, `voucher_number`, `voucher_type`, description, currency, `is_posted`, `source_type`/`source_id` (e.g. `sale` + sale uuid), soft `deleted_at` |
+| `journal_lines` | `entry_uuid`, `account_uuid`, `debit`/`credit`, line description, currency, `sort_order` |
+
+Indexes: entry date, source pair, line account, line entry. Upsert by `source_type` + `source_id` (replace in place). Standalone credit sales sync `Dr` customer / `Cr` `4100` on save with `is_posted` matching sale status; post marks both posted (ADR-008). Account statement reads these lines for opening + running balance.
 
 ## Drift — customers (Customers)
 
