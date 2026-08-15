@@ -26,7 +26,7 @@ def _uuid() -> uuid.UUID:
 
 
 class Company(Base):
-    """Minimal tenant for experimental multi-device isolation."""
+    """Tenant / company for multi-device isolation and RBAC scope."""
 
     __tablename__ = "companies"
 
@@ -34,8 +34,16 @@ class Company(Base):
         UUID(as_uuid=True), primary_key=True, default=_uuid
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
+    code: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="active")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )
 
 

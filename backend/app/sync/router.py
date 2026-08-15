@@ -6,7 +6,10 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
+from app.auth.authorization import require_permissions, require_sync_operation_permission
 from app.auth.deps import AuthContext, get_auth_context
+from app.auth.permissions_catalog import SYNC_EXECUTE, SYNC_VIEW
+from app.audit.service import write_audit
 from app.core.config import Settings, get_settings
 from app.core.database import get_db
 from app.core.exceptions import AppError, ConflictError, ValidationAppError
@@ -51,9 +54,9 @@ def push_one(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(get_auth_context),
 ) -> SyncUploadAckOut:
+    company_id = auth.require_company_id
     op = body.operation
     if op.entity_type != body.entity_type:
-        # Allow entity_type only on wrapper; normalize.
         op = SyncOperationIn(
             operation_id=op.operation_id,
             entity_type=body.entity_type,
@@ -62,12 +65,36 @@ def push_one(
             payload=op.payload,
             base_version=op.base_version,
         )
+    try:
+        require_sync_operation_permission(
+            auth.permissions,
+            entity_type=op.entity_type,
+            operation=op.type.value,
+        )
+    except AppError as exc:
+        write_audit(
+            db,
+            action="sync.authorization_failure",
+            user_id=auth.user_id,
+            company_id=company_id,
+            device_id=auth.device_id,
+            entity_type=op.entity_type,
+            entity_id=str(op.entity_id),
+            metadata={
+                "operation": op.type.value,
+                "error": exc.code,
+                "message": exc.message,
+            },
+        )
+        db.commit()
+        raise
+
     service = SyncService(db)
     try:
         ack = service.push_operation(
-            company_id=auth.company_id,
+            company_id=company_id,
             user_id=auth.user_id,
-            device_id=auth.device_id,
+            device_id=auth.device_id or auth.user_id,
             op=op,
         )
         db.commit()
@@ -90,17 +117,21 @@ def push_batch(
     if not body.operations:
         raise ValidationAppError("operations must not be empty")
 
+    company_id = auth.require_company_id
     service = SyncService(db)
     results: list[SyncPushResultItem] = []
 
     for op in body.operations:
-        # Each operation commits independently so one failure does not
-        # incorrectly mark siblings as successful after a full rollback.
         try:
+            require_sync_operation_permission(
+                auth.permissions,
+                entity_type=op.entity_type,
+                operation=op.type.value,
+            )
             ack = service.push_operation(
-                company_id=auth.company_id,
+                company_id=company_id,
                 user_id=auth.user_id,
-                device_id=auth.device_id,
+                device_id=auth.device_id or auth.user_id,
                 op=op,
             )
             db.commit()
@@ -123,6 +154,22 @@ def push_batch(
             )
         except AppError as exc:
             db.rollback()
+            if exc.code == "permission_denied":
+                write_audit(
+                    db,
+                    action="sync.authorization_failure",
+                    user_id=auth.user_id,
+                    company_id=company_id,
+                    device_id=auth.device_id,
+                    entity_type=op.entity_type,
+                    entity_id=str(op.entity_id),
+                    metadata={
+                        "operation": op.type.value,
+                        "error": exc.code,
+                        "message": exc.message,
+                    },
+                )
+                db.commit()
             results.append(
                 SyncPushResultItem(
                     operation_id=str(op.operation_id),
@@ -171,10 +218,12 @@ def pull(
     auth: AuthContext = Depends(get_auth_context),
     settings: Settings = Depends(get_settings),
 ) -> SyncPullResponse:
+    company_id = auth.require_company_id
+    require_permissions(auth.permissions, SYNC_EXECUTE, SYNC_VIEW, any_of=True)
     service = SyncService(db)
     page_limit = limit or settings.sync_pull_limit
     changes, next_cursor, has_more = service.pull(
-        company_id=auth.company_id,
+        company_id=company_id,
         entity_type=entity_type,
         cursor=cursor,
         since=since,
@@ -198,9 +247,11 @@ def get_meta(
     db: Session = Depends(get_db),
     auth: AuthContext = Depends(get_auth_context),
 ) -> RemoteEntityMetaOut | None:
+    company_id = auth.require_company_id
+    require_permissions(auth.permissions, SYNC_EXECUTE, SYNC_VIEW, any_of=True)
     service = SyncService(db)
     entity = service.get_meta(
-        company_id=auth.company_id,
+        company_id=company_id,
         entity_type=entity_type,
         entity_id=entity_id,
     )

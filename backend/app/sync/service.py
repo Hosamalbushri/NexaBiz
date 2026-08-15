@@ -46,14 +46,16 @@ class SyncService:
         self.db = db
 
     def ensure_company(self, company_id: uuid.UUID) -> Company:
+        """Require an existing tenant — never create companies from client input."""
         company = self.db.get(Company, company_id)
-        if company is not None:
-            return company
-        company = Company(id=company_id, name=f"Dev Company {company_id}")
-        self.db.add(company)
-        self.db.flush()
-        self.db.add(SyncSequence(company_id=company_id, next_value=1))
-        self.db.flush()
+        if company is None:
+            raise NotFoundError("Company not found")
+        if getattr(company, "status", "active") != "active":
+            raise ValidationAppError("Company is not active")
+        seq = self.db.get(SyncSequence, company_id)
+        if seq is None:
+            self.db.add(SyncSequence(company_id=company_id, next_value=1))
+            self.db.flush()
         return company
 
     def _next_sequence(self, company_id: uuid.UUID) -> int:

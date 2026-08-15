@@ -18,6 +18,30 @@ Flutter SyncManager
 Generic storage: entity payloads are JSONB keyed by `(company_id, entity_type, entity_uuid)`.
 The sync layer is not duplicated per business module.
 
+## Authentication (experimental identity layer)
+
+Prefer JWT sessions over the legacy shared bearer:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "email":"ahmed@example.com",
+    "password":"AhmedSales!123",
+    "company_id":"00000000-0000-4000-8000-000000000001",
+    "device_id":"<uuid>",
+    "device_name":"Phone",
+    "platform":"android"
+  }'
+```
+
+Seed users: `admin@example.com` / `ChangeMeAdmin!123`, `ahmed@example.com` / `AhmedSales!123`.
+
+See `docs/authentication.md`, `docs/authorization.md`, `docs/sync-security.md`.
+
+Legacy shared bearer (`DEV_API_TOKEN`) still works when `ALLOW_DEV_TOKEN=true`
+and seed identity exists — JWT is preferred.
+
 ## Quick start
 
 ```bash
