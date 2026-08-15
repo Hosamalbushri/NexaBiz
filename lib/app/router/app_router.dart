@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,6 +13,8 @@ import '../settings/platform_settings_page.dart';
 import '../settings/setup_settings_page.dart';
 import '../shell/app_shell.dart';
 import '../splash/splash_page.dart';
+import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
+import '../../modules/system_setup/presentation/pages/system_setup_wizard_page.dart';
 import 'app_navigator_keys.dart';
 import 'app_routes.dart';
 
@@ -25,22 +26,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   // Modules are fixed at bootstrap — do not watch, or a registry refresh
   // recreates GoRouter and can clash on navigator GlobalKeys.
   final registry = ref.read(moduleRegistryProvider);
-
-  // Fresh keys per GoRouter instance (see app_navigator_keys.dart).
-  appRootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'app-root');
-  appShellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'app-shell');
-  final dashboardBranchKey = GlobalKey<NavigatorState>(
-    debugLabel: 'branch-dashboard',
-  );
-  final servicesBranchKey = GlobalKey<NavigatorState>(
-    debugLabel: 'branch-services',
-  );
-  final reportsBranchKey = GlobalKey<NavigatorState>(
-    debugLabel: 'branch-reports',
-  );
-  final settingsBranchKey = GlobalKey<NavigatorState>(
-    debugLabel: 'branch-settings',
-  );
 
   final router = GoRouter(
     navigatorKey: appRootNavigatorKey,
@@ -61,9 +46,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       ShellRoute(
         navigatorKey: appShellNavigatorKey,
-        builder: (context, state, child) {
-          return AppExitPopScope(
-            child: AppShell(location: state.uri.path, child: child),
+        // pageBuilder avoids duplicate GlobalKey on ShellRoute+navigatorKey
+        // during hot reload (Flutter #148712); builder does not.
+        pageBuilder: (context, state, child) {
+          return NoTransitionPage<void>(
+            child: AppExitPopScope(
+              child: AppShell(location: state.uri.path, child: child),
+            ),
           );
         },
         routes: [
@@ -71,7 +60,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state, navigationShell) => navigationShell,
             branches: [
               StatefulShellBranch(
-                navigatorKey: dashboardBranchKey,
+                navigatorKey: appDashboardBranchKey,
                 routes: [
                   GoRoute(
                     path: AppRoutes.dashboard,
@@ -81,7 +70,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ],
               ),
               StatefulShellBranch(
-                navigatorKey: servicesBranchKey,
+                navigatorKey: appServicesBranchKey,
                 routes: [
                   GoRoute(
                     path: AppRoutes.services,
@@ -91,7 +80,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ],
               ),
               StatefulShellBranch(
-                navigatorKey: reportsBranchKey,
+                navigatorKey: appReportsBranchKey,
                 routes: [
                   GoRoute(
                     path: AppRoutes.reports,
@@ -112,7 +101,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ],
               ),
               StatefulShellBranch(
-                navigatorKey: settingsBranchKey,
+                navigatorKey: appSettingsBranchKey,
                 routes: [
                   GoRoute(
                     path: AppRoutes.settings,
@@ -134,6 +123,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.notifications,
             name: 'notifications',
             builder: (context, state) => const NotificationCenterPage(),
+          ),
+          // Same shell level as other modules; launchers open via go (not push)
+          // to avoid duplicate StatefulShellRoute page keys (go_router #140586).
+          GoRoute(
+            path: SystemSetupRoutes.root,
+            name: 'systemSetup',
+            builder: (context, state) => const SystemSetupWizardPage(),
           ),
           ...registry.routes,
         ],

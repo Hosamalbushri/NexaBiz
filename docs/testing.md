@@ -12,6 +12,7 @@ Accounting-focused coverage:
 | Chart of Accounts CRUD / seed / tree | `test/accounting_chart_of_accounts_test.dart` |
 | Journals, sale posting, statements | `test/sales_ledger_posting_test.dart` |
 | Phase 5 integrity, race token, scale, COA widget | `test/accounting_phase5_coverage_test.dart` |
+| System Setup coordinator / persistence | `test/system_setup_test.dart` |
 
 ## Expectations going forward
 

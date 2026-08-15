@@ -18,7 +18,6 @@ import 'presentation/pages/journal_entry_form_page.dart';
 import 'presentation/pages/voucher_book_form_page.dart';
 import 'presentation/pages/voucher_book_section_page.dart';
 import 'presentation/pages/voucher_books_page.dart';
-import 'presentation/providers/accounting_mode_providers.dart';
 import 'presentation/providers/journal_providers.dart';
 import 'presentation/widgets/accounting_settings_panel.dart';
 
@@ -66,7 +65,6 @@ class AccountingModule extends AppModule {
 
   @override
   void onSettingsReset(WidgetRef ref) {
-    ref.invalidate(accountingModeProvider);
     ref.invalidate(accountingFiscalClosedThroughProvider);
   }
 

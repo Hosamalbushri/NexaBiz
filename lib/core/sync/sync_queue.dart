@@ -137,6 +137,27 @@ class SyncQueue {
     _changes.add(null);
   }
 
+  /// Drop queued ops for an entity (used when remapping local UUID → remote).
+  Future<void> removeForEntity({
+    required String entityType,
+    required String entityId,
+  }) async {
+    final box = await _ensureBox();
+    final keys = <dynamic>[];
+    for (final entry in box.toMap().entries) {
+      final op = entry.value;
+      if (op.entityType == entityType && op.entityId == entityId) {
+        keys.add(entry.key);
+      }
+    }
+    for (final key in keys) {
+      await box.delete(key);
+    }
+    if (keys.isNotEmpty) {
+      _changes.add(null);
+    }
+  }
+
   Future<void> clearSynced() async {
     final box = await _ensureBox();
     final keys = <dynamic>[];

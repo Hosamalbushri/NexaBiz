@@ -704,6 +704,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get customersListCardSubtitle => 'استعرض وأنشئ وأدر العملاء.';
 
   @override
+  String get customersAccountsTitle => 'حسابات العملاء';
+
+  @override
+  String get customersAccountsCardSubtitle =>
+      'عرض حسابات الدليل تحت أصل العملاء كما في شجرة الدليل.';
+
+  @override
+  String customersAccountsUnderParent(String code, String name) {
+    return 'تحت $code · $name';
+  }
+
+  @override
+  String get customersAccountsEmptyTitle => 'لا توجد حسابات بعد';
+
+  @override
+  String get customersAccountsEmptyMessage =>
+      'عند إنشاء عميل مع الربط التلقائي يظهر حسابه هنا وتحت الدليل المحاسبي.';
+
+  @override
+  String get customersAccountGroupBadge => 'مجموعة';
+
+  @override
+  String get customersAccountNonPostingBadge => 'غير ترحيلي';
+
+  @override
+  String get customersAccountMissingInChart => 'الحساب غير موجود في الدليل';
+
+  @override
   String get customersCreateTitle => 'عميل جديد';
 
   @override
@@ -2487,6 +2515,186 @@ class AppLocalizationsAr extends AppLocalizations {
       'اسم الشركة والشعار والعملة والبيانات القانونية.';
 
   @override
+  String get moduleSystemSetup => 'الإعدادات';
+
+  @override
+  String get moduleSystemSetupDescription =>
+      'الشركة والوحدات واللغة والعملة وتهيئة النظام.';
+
+  @override
+  String get systemSettingsHubSubtitle =>
+      'إدارة بيانات الشركة وإعدادات كل وحدات العمل.';
+
+  @override
+  String get systemSetupInitializationSection => 'تهيئة النظام';
+
+  @override
+  String get systemSetupReviewSteps => 'مراجعة خطوات التهيئة';
+
+  @override
+  String get systemSetupTitle => 'الإعدادات';
+
+  @override
+  String get systemSetupSubtitle =>
+      'اضبط بيئة عملك. يمكنك المتابعة لاحقاً من حيث توقفت.';
+
+  @override
+  String get systemSetupProgressLabel => 'تقدم التهيئة';
+
+  @override
+  String systemSetupPercent(int percent) {
+    return 'اكتمل $percent%';
+  }
+
+  @override
+  String get systemSetupRequiredSection => 'خطوات مطلوبة';
+
+  @override
+  String get systemSetupOptionalSection => 'خطوات اختيارية';
+
+  @override
+  String get systemSetupContinue => 'متابعة';
+
+  @override
+  String get systemSetupRetry => 'إعادة المحاولة';
+
+  @override
+  String get systemSetupSkip => 'تخطي الآن';
+
+  @override
+  String get systemSetupFinish => 'الانتقال للتطبيق';
+
+  @override
+  String get systemSetupEditCompany => 'بيانات الشركة';
+
+  @override
+  String get systemSetupOpenFromSettings => 'تهيئة النظام';
+
+  @override
+  String get systemSetupOpenFromSettingsSubtitle =>
+      'راجع تقدم التهيئة أو أعد تشغيل خطوات الإعداد.';
+
+  @override
+  String get systemSetupStepWelcome => 'وضع التشغيل';
+
+  @override
+  String get systemSetupStepWelcomeHint =>
+      'اختر محاسبة محلية مستقلة أو الربط بنظام خارجي.';
+
+  @override
+  String get systemSetupStepCompany => 'ملف الشركة';
+
+  @override
+  String get systemSetupStepCompanyHint => 'اسم الشركة وبداية السنة المالية.';
+
+  @override
+  String get systemSetupStepLocale => 'اللغة';
+
+  @override
+  String get systemSetupStepLocaleHint =>
+      'اختر لغة التطبيق أو أبقِ لغة الجهاز.';
+
+  @override
+  String get systemSetupStepPrimaryCurrency => 'العملة الرئيسية';
+
+  @override
+  String get systemSetupStepPrimaryCurrencyHint =>
+      'اختر العملة الأساسية للنظام. لا يمكن تغييرها لاحقاً.';
+
+  @override
+  String get systemSetupCurrencyLocked =>
+      'العملة الرئيسية مقفلة ولا يمكن تغييرها.';
+
+  @override
+  String get systemSetupStepSeed => 'البيانات الافتراضية';
+
+  @override
+  String get systemSetupStepSeedHint =>
+      'إنشاء دليل الحسابات ودفاتر السندات الافتراضية.';
+
+  @override
+  String get systemSetupStepExternal => 'الاتصال الخارجي';
+
+  @override
+  String get systemSetupStepExternalHint =>
+      'إعداد اتصال ERP عند استخدام الوضع المتكامل.';
+
+  @override
+  String get systemSetupStepSync => 'المزامنة الأولية';
+
+  @override
+  String get systemSetupStepSyncHint => 'تشغيل مزامنة عند توفر خادم بعيد.';
+
+  @override
+  String get systemSetupModeStandalone => 'مستقل';
+
+  @override
+  String get systemSetupModeStandaloneHint =>
+      'يملك التطبيق بيانات المحاسبة والقيود محلياً.';
+
+  @override
+  String get systemSetupModeIntegrated => 'متكامل';
+
+  @override
+  String get systemSetupModeIntegratedHint =>
+      'يعمل بجانب نظام محاسبة/ERP قائم.';
+
+  @override
+  String get systemSetupLocaleSystem => 'استخدام لغة الجهاز';
+
+  @override
+  String get systemSetupLocaleEnglish => 'الإنجليزية';
+
+  @override
+  String get systemSetupLocaleArabic => 'العربية';
+
+  @override
+  String get systemSetupSeedRunning => 'جارٍ تجهيز البيانات الافتراضية…';
+
+  @override
+  String get systemSetupSeedDone => 'دليل الحسابات ودفاتر السندات جاهزة.';
+
+  @override
+  String get systemSetupExternalPlaceholder =>
+      'محولات ERP تُسجَّل من طبقة التطبيق. يمكنك التخطي والربط لاحقاً من الإعدادات.';
+
+  @override
+  String get systemSetupSyncRunning => 'جارٍ المزامنة…';
+
+  @override
+  String get systemSetupSyncDone => 'اكتملت المزامنة.';
+
+  @override
+  String get systemSetupSyncSkippedHint =>
+      'يمكنك المزامنة في أي وقت من الإعدادات.';
+
+  @override
+  String get systemSetupStatusPending => 'قيد الانتظار';
+
+  @override
+  String get systemSetupStatusInProgress => 'قيد التنفيذ';
+
+  @override
+  String get systemSetupStatusCompleted => 'مكتمل';
+
+  @override
+  String get systemSetupStatusFailed => 'فشل';
+
+  @override
+  String get systemSetupStatusSkipped => 'تم التخطي';
+
+  @override
+  String get systemSetupReadyTitle => 'أصبحت جاهزاً';
+
+  @override
+  String get systemSetupReadyMessage =>
+      'اكتملت الخطوات المطلوبة. يمكن إكمال الاختيارية لاحقاً.';
+
+  @override
+  String get systemSetupErrorGeneric =>
+      'فشلت هذه الخطوة. عالج المشكلة ثم أعد المحاولة.';
+
+  @override
   String get setupCompanyIdentitySection => 'هوية الشركة';
 
   @override
@@ -3064,6 +3272,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get syncSectionTitle => 'المزامنة';
+
+  @override
+  String get syncBackendLabel => 'خادم المزامنة';
 
   @override
   String get syncConnectionLabel => 'الاتصال';

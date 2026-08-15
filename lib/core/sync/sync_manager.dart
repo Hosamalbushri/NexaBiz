@@ -107,7 +107,13 @@ class SyncManager {
     var conflicts = 0;
 
     try {
-      // 1) Upload pending local changes.
+      // 1) Download remote changes first so multi-device charts/customers merge
+      // before we push local creates (avoids divergent system-account UUIDs).
+      final pull = await _pullAllHandlers();
+      downloaded = pull.downloaded;
+      failed = pull.failed;
+
+      // 2) Upload pending local changes.
       final ready = await _queue.peekReady(now: _clock());
       for (final op in ready) {
         final handler = _handlers[op.entityType];
@@ -148,7 +154,7 @@ class SyncManager {
           }
 
           if (decision == ConflictDecision.applyRemote) {
-            // Pull path below will refresh; drop this upload.
+            // Pull path above refreshed; drop this upload.
             await _queue.remove(op.id);
             continue;
           }
@@ -189,19 +195,6 @@ class SyncManager {
         }
       }
 
-      // 2) Download remote changes per handler.
-      for (final handler in _handlers.values) {
-        try {
-          final changes = await handler.pull(since: _lastSyncedAt);
-          for (final change in changes) {
-            await handler.applyRemoteChange(change);
-            downloaded++;
-          }
-        } catch (_) {
-          failed++;
-        }
-      }
-
       if (uploaded > 0 || downloaded > 0) {
         _lastSyncedAt = _clock();
       }
@@ -231,6 +224,36 @@ class SyncManager {
       _syncing = false;
       await _refreshOverview();
     }
+  }
+
+  Future<({int downloaded, int failed})> _pullAllHandlers() async {
+    var downloaded = 0;
+    var failed = 0;
+    for (final handler in _handlers.values) {
+      try {
+        final changes = await handler.pull(since: _lastSyncedAt);
+        var appliedAll = true;
+        for (final change in changes) {
+          try {
+            await handler.applyRemoteChange(change);
+            downloaded++;
+          } catch (_) {
+            // Keep applying remaining changes; one bad row must not drop the batch.
+            failed++;
+            appliedAll = false;
+          }
+        }
+        if (appliedAll) {
+          await handler.confirmPull();
+        } else {
+          await handler.abandonPull();
+        }
+      } catch (_) {
+        failed++;
+        await handler.abandonPull();
+      }
+    }
+    return (downloaded: downloaded, failed: failed);
   }
 
   SyncPassOutcome _outcome({

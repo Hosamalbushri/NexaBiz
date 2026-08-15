@@ -34,7 +34,7 @@ abstract class SaleRepository {
   Stream<void> watchListChanges();
 
   /// Next integer sequence for local `INV-######` numbering.
-  Future<int> nextLocalSequence();
+  Future<int> nextLocalSequence({int? minExclusive});
 
   Future<Sale> insert(SaleDraft draft, {required String saleNumber});
 

@@ -10,12 +10,16 @@ class CustomerSyncHandler implements SyncEntityHandler {
     required CustomerRepositoryImpl repository,
     required RemoteSyncApi remote,
     this.conflictResolver = const ConflictResolver(),
+    Future<void> Function(Map<String, dynamic> payload)? ensureLinkedAccount,
   }) : _repository = repository,
-       _remote = remote;
+       _remote = remote,
+       _ensureLinkedAccount = ensureLinkedAccount;
 
   final CustomerRepositoryImpl _repository;
   final RemoteSyncApi _remote;
   final ConflictResolver conflictResolver;
+  final Future<void> Function(Map<String, dynamic> payload)?
+  _ensureLinkedAccount;
 
   @override
   String get entityType => CustomerRepositoryImpl.entityType;
@@ -52,6 +56,12 @@ class CustomerSyncHandler implements SyncEntityHandler {
   }
 
   @override
+  Future<void> confirmPull() async => _remote.acknowledgePull(entityType);
+
+  @override
+  Future<void> abandonPull() async => _remote.abandonPull(entityType);
+
+  @override
   Future<void> applyRemoteChange(SyncRemoteChange change) async {
     final payload = Map<String, dynamic>.from(change.payload);
     payload['uuid'] = change.entityId;
@@ -62,6 +72,10 @@ class CustomerSyncHandler implements SyncEntityHandler {
           payload['deletedAt'] ?? change.updatedAt.millisecondsSinceEpoch;
     }
     await _repository.applyRemotePayload(payload);
+    final ensure = _ensureLinkedAccount;
+    if (ensure != null) {
+      await ensure(payload);
+    }
   }
 
   @override

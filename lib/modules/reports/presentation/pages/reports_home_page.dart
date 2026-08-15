@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
+import '../../../../app/sync/app_bar_sync_actions.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -21,7 +22,11 @@ class ReportsHomePage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(title: l10n.moduleReports, showBackButton: true),
+      appBar: CustomAppBar(
+        title: l10n.moduleReports,
+        showBackButton: true,
+        actions: const [AppBarSyncActions()],
+      ),
       body: ListView(
         padding: AppConstants.pageInsets(context),
         children: [

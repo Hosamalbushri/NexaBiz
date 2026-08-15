@@ -1,0 +1,154 @@
+import '../entities/system_setup_state.dart';
+import '../ports/system_setup_seed_port.dart';
+import '../repositories/system_setup_state_repository.dart';
+
+/// Determines readiness and advances versioned setup steps.
+class SystemInitializationCoordinator {
+  SystemInitializationCoordinator({
+    required SystemSetupStateRepository stateRepository,
+    required SystemSetupSeedPort seedPort,
+  }) : _stateRepository = stateRepository,
+       _seedPort = seedPort;
+
+  final SystemSetupStateRepository _stateRepository;
+  final SystemSetupSeedPort _seedPort;
+
+  Future<SetupProgress> loadProgress() => _stateRepository.load();
+
+  Future<bool> isReady() async {
+    final progress = await loadProgress();
+    return progress.isReady;
+  }
+
+  /// Marks a step in-progress, runs [action], then completes or fails.
+  Future<SetupProgress> runStep(
+    SetupStepId id,
+    Future<void> Function() action,
+  ) async {
+    var progress = await loadProgress();
+    progress = _withStatus(progress, SystemSetupStatus.inProgress);
+    progress = _updateStep(
+      progress,
+      id,
+      SetupStepStatus.inProgress,
+      clearError: true,
+    );
+    await _stateRepository.save(progress);
+
+    try {
+      await action();
+      progress = await loadProgress();
+      progress = _updateStep(
+        progress,
+        id,
+        SetupStepStatus.completed,
+        clearError: true,
+      );
+      progress = _maybeMarkReady(progress);
+      await _stateRepository.save(progress);
+      return progress;
+    } catch (e) {
+      progress = await loadProgress();
+      progress = _updateStep(
+        progress,
+        id,
+        SetupStepStatus.failed,
+        errorMessage: e.toString(),
+      );
+      await _stateRepository.save(progress);
+      rethrow;
+    }
+  }
+
+  Future<SetupProgress> skipOptionalStep(SetupStepId id) async {
+    if (id.isRequired) {
+      throw StateError('Cannot skip required setup step: ${id.name}');
+    }
+    var progress = await loadProgress();
+    progress = _withStatus(progress, SystemSetupStatus.inProgress);
+    progress = _updateStep(
+      progress,
+      id,
+      SetupStepStatus.skipped,
+      clearError: true,
+    );
+    progress = _maybeMarkReady(progress);
+    await _stateRepository.save(progress);
+    return progress;
+  }
+
+  Future<SetupProgress> markStepCompleted(SetupStepId id) async {
+    var progress = await loadProgress();
+    progress = _withStatus(progress, SystemSetupStatus.inProgress);
+    progress = _updateStep(
+      progress,
+      id,
+      SetupStepStatus.completed,
+      clearError: true,
+    );
+    progress = _maybeMarkReady(progress);
+    await _stateRepository.save(progress);
+    return progress;
+  }
+
+  /// Runs the local seed step via [SystemSetupSeedPort].
+  Future<SetupProgress> runSeedLocal() {
+    return runStep(SetupStepId.seedLocal, _seedPort.ensureLocalDefaults);
+  }
+
+  /// After all required steps succeed, mark application ready.
+  Future<SetupProgress> completeRequiredAndContinue() async {
+    var progress = await loadProgress();
+    if (!progress.allRequiredComplete) {
+      throw StateError('Required setup steps are incomplete');
+    }
+    progress = _maybeMarkReady(progress);
+    await _stateRepository.save(progress);
+    return progress;
+  }
+
+  SetupProgress _maybeMarkReady(SetupProgress progress) {
+    if (!progress.allRequiredComplete) {
+      return _withStatus(progress, SystemSetupStatus.inProgress);
+    }
+    return SetupProgress(
+      schemaVersion: SystemSetupSchema.currentVersion,
+      status: SystemSetupStatus.ready,
+      steps: progress.steps,
+      lastUpdated: DateTime.now().toUtc(),
+    );
+  }
+
+  SetupProgress _withStatus(SetupProgress progress, SystemSetupStatus status) {
+    return SetupProgress(
+      schemaVersion: SystemSetupSchema.currentVersion,
+      status: status,
+      steps: progress.steps,
+      lastUpdated: DateTime.now().toUtc(),
+    );
+  }
+
+  SetupProgress _updateStep(
+    SetupProgress progress,
+    SetupStepId id,
+    SetupStepStatus status, {
+    String? errorMessage,
+    bool clearError = false,
+  }) {
+    final steps = Map<SetupStepId, SetupStepState>.from(progress.steps);
+    final previous = steps[id] ??
+        SetupStepState(id: id, status: SetupStepStatus.pending);
+    steps[id] = previous.copyWith(
+      status: status,
+      updatedAt: DateTime.now().toUtc(),
+      errorMessage: errorMessage,
+      clearError: clearError,
+    );
+    return SetupProgress(
+      schemaVersion: SystemSetupSchema.currentVersion,
+      status: progress.status,
+      steps: steps,
+      lastUpdated: DateTime.now().toUtc(),
+    );
+  }
+}

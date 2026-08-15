@@ -215,4 +215,4 @@ Current products schema version: **2** (sync columns + uuid).
 
 ## Settings storage keys
 
-`SettingsKeys.themeMode`, `SettingsKeys.locale`, `SettingsKeys.accountingMode` (`standalone` | `integrated`), dashboard/inventory service id lists in `settings_repository.dart`.
+`SettingsKeys.themeMode`, `SettingsKeys.locale`, dashboard/inventory service id lists in `settings_repository.dart`. Accounting mode key is legacy/unused (always local).

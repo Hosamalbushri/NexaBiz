@@ -181,6 +181,12 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
                                                     .onSurfaceVariant,
                                               ),
                                         ),
+                                        if (customer.accountId != null) ...[
+                                          const SizedBox(height: 2),
+                                          _LinkedAccountLine(
+                                            accountId: customer.accountId!,
+                                          ),
+                                        ],
                                         if (customer.phone != null) ...[
                                           const SizedBox(height: 2),
                                           Text(
@@ -233,6 +239,51 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _LinkedAccountLine extends ConsumerWidget {
+  const _LinkedAccountLine({required this.accountId});
+
+  final String accountId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final linkedAsync = ref.watch(linkedAccountByIdProvider(accountId));
+
+    return linkedAsync.when(
+      loading: () => Text(
+        l10n.customersFieldAccount,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
+      error: (_, _) => Text(
+        accountId,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.error,
+        ),
+      ),
+      data: (linked) {
+        if (linked == null) {
+          return Text(
+            l10n.customersAccountMissingInChart,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.error,
+            ),
+          );
+        }
+        return Text(
+          '${linked.code} · ${linked.name}',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        );
+      },
     );
   }
 }

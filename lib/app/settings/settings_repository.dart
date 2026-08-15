@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../constants/app_constants.dart';
 import '../../core/database/hive_boxes.dart';
+import '../../core/utils/id_generator.dart';
 import 'company/company_profile.dart';
 
 /// Keys used in the settings Hive box.
@@ -21,6 +22,14 @@ class SettingsKeys {
   static const String customersParentAccountId = 'customers_parent_account_id';
   static const String customersAutoLinkAccount = 'customers_auto_link_account';
   static const String companyProfile = 'company_profile';
+  static const String systemSetupVersion = 'system_setup_version';
+  static const String systemSetupStatus = 'system_setup_status';
+  static const String systemSetupSteps = 'system_setup_steps';
+  static const String systemSetupLastUpdated = 'system_setup_last_updated';
+  /// When true, company default currency cannot be changed.
+  static const String systemBaseCurrencyLocked = 'system_base_currency_locked';
+  /// Stable per-install device id for experimental multi-device sync.
+  static const String syncDeviceId = 'sync_device_id';
 }
 
 /// Persists and loads platform settings from Hive.
@@ -150,21 +159,11 @@ class SettingsRepository {
     await box.put(SettingsKeys.quickActionIds, ids);
   }
 
-  /// `standalone` (default) or `integrated`.
-  Future<String> loadAccountingMode() async {
-    final box = await _settingsBox;
-    final value = box.get(SettingsKeys.accountingMode) as String?;
-    if (value == 'integrated' || value == 'standalone') {
-      return value!;
-    }
-    return 'standalone';
-  }
+  /// Always local/standalone. Mode switch was removed; kept for settings compat.
+  Future<String> loadAccountingMode() async => 'standalone';
 
-  Future<void> saveAccountingMode(String mode) async {
-    final box = await _settingsBox;
-    final normalized = mode == 'integrated' ? 'integrated' : 'standalone';
-    await box.put(SettingsKeys.accountingMode, normalized);
-  }
+  /// No-op — accounting always runs as local/standalone.
+  Future<void> saveAccountingMode(String mode) async {}
 
   /// Last closed fiscal business day (UTC date-only epoch ms), or null if none.
   Future<DateTime?> loadAccountingFiscalClosedThrough() async {
@@ -240,6 +239,106 @@ class SettingsRepository {
   Future<void> saveCompanyProfile(CompanyProfile profile) async {
     final box = await _settingsBox;
     await box.put(SettingsKeys.companyProfile, profile.toMap());
+  }
+
+  /// Base/system currency chosen during System Setup — immutable once locked.
+  Future<bool> loadSystemBaseCurrencyLocked() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.systemBaseCurrencyLocked);
+    return value == true;
+  }
+
+  Future<void> saveSystemBaseCurrencyLocked(bool locked) async {
+    final box = await _settingsBox;
+    await box.put(SettingsKeys.systemBaseCurrencyLocked, locked);
+  }
+
+  /// Per-install UUID used as X-Device-Id for experimental sync.
+  Future<String> loadOrCreateSyncDeviceId() async {
+    final box = await _settingsBox;
+    final existing = box.get(SettingsKeys.syncDeviceId) as String?;
+    if (existing != null && existing.isNotEmpty) {
+      return existing;
+    }
+    final created = generateUuidV4();
+    await box.put(SettingsKeys.syncDeviceId, created);
+    return created;
+  }
+
+  /// True when the settings box already has runtime configuration keys.
+  ///
+  /// Used to grandfather System Setup for upgrades without forcing the wizard.
+  Future<bool> appearsPreviouslyConfigured() async {
+    final box = await _settingsBox;
+    return box.containsKey(SettingsKeys.companyProfile) ||
+        box.containsKey(SettingsKeys.themeMode) ||
+        box.containsKey(SettingsKeys.locale) ||
+        box.containsKey(SettingsKeys.accountingMode) ||
+        box.containsKey(SettingsKeys.dashboardServiceIds) ||
+        box.containsKey(SettingsKeys.quickActionIds) ||
+        box.containsKey(SettingsKeys.inventoryServiceIds);
+  }
+
+  /// Raw System Setup persistence (owned conceptually by System Setup module).
+  Future<bool> hasSystemSetupState() async {
+    final box = await _settingsBox;
+    return box.containsKey(SettingsKeys.systemSetupVersion);
+  }
+
+  Future<int?> loadSystemSetupVersion() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.systemSetupVersion);
+    return value is int ? value : null;
+  }
+
+  Future<String?> loadSystemSetupStatus() async {
+    final box = await _settingsBox;
+    return box.get(SettingsKeys.systemSetupStatus) as String?;
+  }
+
+  Future<Map<String, Map<String, Object?>>> loadSystemSetupSteps() async {
+    final box = await _settingsBox;
+    final raw = box.get(SettingsKeys.systemSetupSteps);
+    if (raw is! Map) {
+      return const {};
+    }
+    final result = <String, Map<String, Object?>>{};
+    raw.forEach((key, value) {
+      if (key is! String || value is! Map) {
+        return;
+      }
+      result[key] = {
+        for (final entry in value.entries)
+          if (entry.key is String)
+            entry.key as String: entry.value as Object?,
+      };
+    });
+    return result;
+  }
+
+  Future<DateTime?> loadSystemSetupLastUpdated() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.systemSetupLastUpdated);
+    if (value is! int) {
+      return null;
+    }
+    return DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
+  }
+
+  Future<void> saveSystemSetupState({
+    required int version,
+    required String status,
+    required Map<String, Map<String, Object?>> steps,
+    required DateTime lastUpdated,
+  }) async {
+    final box = await _settingsBox;
+    await box.put(SettingsKeys.systemSetupVersion, version);
+    await box.put(SettingsKeys.systemSetupStatus, status);
+    await box.put(SettingsKeys.systemSetupSteps, steps);
+    await box.put(
+      SettingsKeys.systemSetupLastUpdated,
+      lastUpdated.toUtc().millisecondsSinceEpoch,
+    );
   }
 
   Future<void> resetSettings() async {

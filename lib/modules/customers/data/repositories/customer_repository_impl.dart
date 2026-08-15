@@ -545,32 +545,90 @@ class CustomerRepositoryImpl implements CustomerRepository {
     );
   }
 
+  /// Point customer CoA links at a remapped account UUID after sync merge.
+  Future<void> remapAccountId({
+    required String fromUuid,
+    required String toUuid,
+  }) async {
+    if (fromUuid == toUuid) {
+      return;
+    }
+    await (_db.update(_db.customers)
+          ..where((t) => t.accountId.equals(fromUuid)))
+        .write(CustomersCompanion(accountId: Value(toUuid)));
+  }
+
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
-    final uuid = payload['uuid'] as String?;
+    final uuid = payload['uuid']?.toString();
     if (uuid == null || uuid.isEmpty) {
       return;
     }
-    final deletedAtMs = payload['deletedAt'] as int?;
-    final existing = await getByUuid(uuid);
+    final deletedAtMs = (payload['deletedAt'] as num?)?.toInt();
+    final existingByUuid = await getByUuid(uuid);
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final updatedAt = payload['updatedAt'] as int? ?? nowMs;
-    final version = payload['version'] as int? ?? 1;
+    final updatedAt = (payload['updatedAt'] as num?)?.toInt() ?? nowMs;
+    final version = (payload['version'] as num?)?.toInt() ?? 1;
+    final code =
+        (payload['customerCode']?.toString())?.toUpperCase() ?? uuid;
+    final dataSource = CustomerDataSourceX.fromStorage(
+      payload['dataSource']?.toString(),
+    );
 
-    if (existing != null &&
-        (existing.syncStatus.needsUpload ||
-            existing.syncStatus == SyncStatus.conflict ||
-            existing.syncStatus == SyncStatus.syncing)) {
-      if (version > existing.version) {
+    // Same UUID, local still dirty → conflict marker (do not clobber local edit).
+    if (existingByUuid != null &&
+        (existingByUuid.syncStatus.needsUpload ||
+            existingByUuid.syncStatus == SyncStatus.conflict ||
+            existingByUuid.syncStatus == SyncStatus.syncing)) {
+      if (version > existingByUuid.version) {
         await markConflict(uuid);
       }
       return;
     }
 
-    final dataSource = CustomerDataSourceX.fromStorage(
-      payload['dataSource'] as String?,
-    );
+    // Business-key merge: both devices imported the same customerCode with
+    // different UUIDs. Prefer the remote UUID so pull can insert/update.
+    if (existingByUuid == null && deletedAtMs == null) {
+      final byCode = await getByCustomerCode(code);
+      if (byCode != null && byCode.uuid != uuid) {
+        final oldUuid = byCode.uuid;
+        await (_db.update(_db.customers)..where((t) => t.id.equals(byCode.id)))
+            .write(
+              CustomersCompanion(
+                uuid: Value(uuid),
+                customerCode: Value(code),
+                name: Value(payload['name']?.toString() ?? byCode.name),
+                phone: Value(payload['phone']?.toString()),
+                email: Value(payload['email']?.toString()),
+                address: Value(payload['address']?.toString()),
+                notes: Value(payload['notes']?.toString()),
+                isActive: Value(payload['isActive'] as bool? ?? byCode.isActive),
+                accountId: Value(
+                  payload['accountId']?.toString() ?? byCode.accountId,
+                ),
+                externalId: Value(
+                  payload['externalId']?.toString() ?? byCode.externalId,
+                ),
+                dataSource: Value(dataSource.storageValue),
+                updatedAt: Value(updatedAt),
+                syncStatus: const Value('synced'),
+                lastSyncedAt: Value(nowMs),
+                version: Value(version),
+                deletedAt: const Value(null),
+              ),
+            );
+        await _syncQueue?.removeForEntity(
+          entityType: entityType,
+          entityId: oldUuid,
+        );
+        await _syncQueue?.removeForEntity(
+          entityType: entityType,
+          entityId: uuid,
+        );
+        return;
+      }
+    }
 
-    if (existing == null) {
+    if (existingByUuid == null) {
       if (deletedAtMs != null) {
         return;
       }
@@ -579,18 +637,17 @@ class CustomerRepositoryImpl implements CustomerRepository {
           .insert(
             CustomersCompanion.insert(
               uuid: uuid,
-              customerCode:
-                  (payload['customerCode'] as String?)?.toUpperCase() ?? uuid,
-              name: (payload['name'] as String?) ?? '',
-              phone: Value(payload['phone'] as String?),
-              email: Value(payload['email'] as String?),
-              address: Value(payload['address'] as String?),
-              notes: Value(payload['notes'] as String?),
+              customerCode: code,
+              name: payload['name']?.toString() ?? '',
+              phone: Value(payload['phone']?.toString()),
+              email: Value(payload['email']?.toString()),
+              address: Value(payload['address']?.toString()),
+              notes: Value(payload['notes']?.toString()),
               isActive: Value(payload['isActive'] as bool? ?? true),
-              accountId: Value(payload['accountId'] as String?),
-              externalId: Value(payload['externalId'] as String?),
+              accountId: Value(payload['accountId']?.toString()),
+              externalId: Value(payload['externalId']?.toString()),
               dataSource: Value(dataSource.storageValue),
-              createdAt: payload['createdAt'] as int? ?? updatedAt,
+              createdAt: (payload['createdAt'] as num?)?.toInt() ?? updatedAt,
               updatedAt: updatedAt,
               syncStatus: const Value('synced'),
               lastSyncedAt: Value(nowMs),
@@ -602,18 +659,17 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
     await (_db.update(_db.customers)..where((t) => t.uuid.equals(uuid))).write(
       CustomersCompanion(
-        customerCode: Value(
-          (payload['customerCode'] as String?)?.toUpperCase() ??
-              existing.customerCode,
+        customerCode: Value(code),
+        name: Value(payload['name']?.toString() ?? existingByUuid.name),
+        phone: Value(payload['phone']?.toString()),
+        email: Value(payload['email']?.toString()),
+        address: Value(payload['address']?.toString()),
+        notes: Value(payload['notes']?.toString()),
+        isActive: Value(
+          payload['isActive'] as bool? ?? existingByUuid.isActive,
         ),
-        name: Value((payload['name'] as String?) ?? existing.name),
-        phone: Value(payload['phone'] as String?),
-        email: Value(payload['email'] as String?),
-        address: Value(payload['address'] as String?),
-        notes: Value(payload['notes'] as String?),
-        isActive: Value(payload['isActive'] as bool? ?? existing.isActive),
-        accountId: Value(payload['accountId'] as String?),
-        externalId: Value(payload['externalId'] as String?),
+        accountId: Value(payload['accountId']?.toString()),
+        externalId: Value(payload['externalId']?.toString()),
         dataSource: Value(dataSource.storageValue),
         updatedAt: Value(updatedAt),
         syncStatus: const Value('synced'),

@@ -6,7 +6,9 @@ import '../../core/sync/sync_overview.dart';
 import '../../core/sync/sync_providers.dart';
 import '../../core/sync/sync_status.dart';
 
-/// Subtle global sync status chip for app bars / headers.
+/// Compact sync phase chip for settings / dense layouts.
+///
+/// Prefer [AppBarSyncActions] on shell app bars (Wi‑Fi + conditional sync).
 class SyncStatusIndicator extends ConsumerWidget {
   const SyncStatusIndicator({super.key, this.compact = true});
 

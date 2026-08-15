@@ -4,8 +4,9 @@ import '../sync/sync_operation.dart';
 
 /// Minimal remote sync API used by feature handlers.
 ///
-/// Replace [InMemoryRemoteSyncApi] with an HTTP implementation when the
-/// backend is available — SyncManager and queue stay unchanged.
+/// Use [HttpRemoteSyncApi] against the experimental FastAPI backend
+/// (`SYNC_API_ENABLED=true`), or [InMemoryRemoteSyncApi] for offline tests.
+/// SyncManager and queue stay unchanged.
 abstract class RemoteSyncApi {
   Future<SyncUploadAck> push({
     required String entityType,
@@ -21,6 +22,12 @@ abstract class RemoteSyncApi {
     required String entityType,
     required String entityId,
   });
+
+  /// Persist the staged pull cursor after local applies succeeded.
+  void acknowledgePull(String entityType) {}
+
+  /// Discard staged pull cursor when local applies failed.
+  void abandonPull(String entityType) {}
 }
 
 class RemoteEntityMeta {
@@ -137,4 +144,10 @@ class InMemoryRemoteSyncApi implements RemoteSyncApi {
   void seed(String entityType, RemoteEntityMeta meta) {
     _bucket(entityType)[meta.entityId] = meta;
   }
+
+  @override
+  void acknowledgePull(String entityType) {}
+
+  @override
+  void abandonPull(String entityType) {}
 }

@@ -485,15 +485,15 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
-    final uuid = payload['uuid'] as String?;
+    final uuid = payload['uuid']?.toString();
     if (uuid == null || uuid.isEmpty) {
       return;
     }
-    final deletedAtMs = payload['deletedAt'] as int?;
+    final deletedAtMs = (payload['deletedAt'] as num?)?.toInt();
     final existing = await getByUuid(uuid);
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final updatedAt = payload['updatedAt'] as int? ?? nowMs;
-    final version = payload['version'] as int? ?? 1;
+    final updatedAt = (payload['updatedAt'] as num?)?.toInt() ?? nowMs;
+    final version = (payload['version'] as num?)?.toInt() ?? 1;
 
     if (existing != null &&
         (existing.syncStatus.needsUpload ||
@@ -514,12 +514,12 @@ class ProductRepositoryImpl implements ProductRepository {
           .insert(
             ProductsCompanion.insert(
               uuid: uuid,
-              itemCode: (payload['itemCode'] as String?) ?? uuid,
-              name: (payload['name'] as String?) ?? '',
-              barcode: Value(payload['barcode'] as String?),
-              packSize: (payload['packSize'] as int?) ?? 1,
+              itemCode: payload['itemCode']?.toString() ?? uuid,
+              name: payload['name']?.toString() ?? '',
+              barcode: Value(payload['barcode']?.toString()),
+              packSize: (payload['packSize'] as num?)?.toInt() ?? 1,
               price: (payload['price'] as num?)?.toDouble() ?? 0,
-              createdAt: payload['createdAt'] as int? ?? updatedAt,
+              createdAt: (payload['createdAt'] as num?)?.toInt() ?? updatedAt,
               updatedAt: updatedAt,
               syncStatus: const Value('synced'),
               lastSyncedAt: Value(nowMs),
@@ -531,10 +531,12 @@ class ProductRepositoryImpl implements ProductRepository {
 
     await (_db.update(_db.products)..where((t) => t.uuid.equals(uuid))).write(
       ProductsCompanion(
-        itemCode: Value((payload['itemCode'] as String?) ?? existing.itemCode),
-        name: Value((payload['name'] as String?) ?? existing.name),
-        barcode: Value(payload['barcode'] as String?),
-        packSize: Value((payload['packSize'] as int?) ?? existing.packSize),
+        itemCode: Value(payload['itemCode']?.toString() ?? existing.itemCode),
+        name: Value(payload['name']?.toString() ?? existing.name),
+        barcode: Value(payload['barcode']?.toString()),
+        packSize: Value(
+          (payload['packSize'] as num?)?.toInt() ?? existing.packSize,
+        ),
         price: Value((payload['price'] as num?)?.toDouble() ?? existing.price),
         updatedAt: Value(updatedAt),
         syncStatus: const Value('synced'),

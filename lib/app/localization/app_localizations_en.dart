@@ -711,6 +711,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'Browse, create, and manage customers.';
 
   @override
+  String get customersAccountsTitle => 'Customer accounts';
+
+  @override
+  String get customersAccountsCardSubtitle =>
+      'Chart of Accounts entries under the customers parent, same as the CoA tree.';
+
+  @override
+  String customersAccountsUnderParent(String code, String name) {
+    return 'Under $code · $name';
+  }
+
+  @override
+  String get customersAccountsEmptyTitle => 'No accounts yet';
+
+  @override
+  String get customersAccountsEmptyMessage =>
+      'When you create a customer with auto-link, their posting account appears here and in the Chart of Accounts.';
+
+  @override
+  String get customersAccountGroupBadge => 'Group';
+
+  @override
+  String get customersAccountNonPostingBadge => 'Non-posting';
+
+  @override
+  String get customersAccountMissingInChart => 'Account missing from chart';
+
+  @override
   String get customersCreateTitle => 'New customer';
 
   @override
@@ -2516,6 +2544,189 @@ class AppLocalizationsEn extends AppLocalizations {
       'Company name, logo, currency, and legal details.';
 
   @override
+  String get moduleSystemSetup => 'Settings';
+
+  @override
+  String get moduleSystemSetupDescription =>
+      'Company, modules, language, currency, and system initialization.';
+
+  @override
+  String get systemSettingsHubSubtitle =>
+      'Manage company details and settings for every business module.';
+
+  @override
+  String get systemSetupInitializationSection => 'System initialization';
+
+  @override
+  String get systemSetupReviewSteps => 'Review setup steps';
+
+  @override
+  String get systemSetupTitle => 'Settings';
+
+  @override
+  String get systemSetupSubtitle =>
+      'Configure your business environment. You can resume anytime.';
+
+  @override
+  String get systemSetupProgressLabel => 'Setup progress';
+
+  @override
+  String systemSetupPercent(int percent) {
+    return '$percent% complete';
+  }
+
+  @override
+  String get systemSetupRequiredSection => 'Required steps';
+
+  @override
+  String get systemSetupOptionalSection => 'Optional steps';
+
+  @override
+  String get systemSetupContinue => 'Continue';
+
+  @override
+  String get systemSetupRetry => 'Retry';
+
+  @override
+  String get systemSetupSkip => 'Skip for now';
+
+  @override
+  String get systemSetupFinish => 'Go to app';
+
+  @override
+  String get systemSetupEditCompany => 'Company details';
+
+  @override
+  String get systemSetupOpenFromSettings => 'System initialization';
+
+  @override
+  String get systemSetupOpenFromSettingsSubtitle =>
+      'Review setup progress or re-run initialization steps.';
+
+  @override
+  String get systemSetupStepWelcome => 'Deployment mode';
+
+  @override
+  String get systemSetupStepWelcomeHint =>
+      'Choose standalone local accounting or connection to an external system.';
+
+  @override
+  String get systemSetupStepCompany => 'Company profile';
+
+  @override
+  String get systemSetupStepCompanyHint =>
+      'Company name and fiscal year start.';
+
+  @override
+  String get systemSetupStepLocale => 'Language';
+
+  @override
+  String get systemSetupStepLocaleHint =>
+      'Choose the app language or keep the device default.';
+
+  @override
+  String get systemSetupStepPrimaryCurrency => 'Base currency';
+
+  @override
+  String get systemSetupStepPrimaryCurrencyHint =>
+      'Choose the main system currency. This cannot be changed later.';
+
+  @override
+  String get systemSetupCurrencyLocked =>
+      'Base currency is locked and cannot be changed.';
+
+  @override
+  String get systemSetupStepSeed => 'Local defaults';
+
+  @override
+  String get systemSetupStepSeedHint =>
+      'Create the default chart of accounts and voucher books.';
+
+  @override
+  String get systemSetupStepExternal => 'External connection';
+
+  @override
+  String get systemSetupStepExternalHint =>
+      'Configure an ERP connection when using integrated mode.';
+
+  @override
+  String get systemSetupStepSync => 'Initial sync';
+
+  @override
+  String get systemSetupStepSyncHint =>
+      'Run a synchronization pass when a remote backend is available.';
+
+  @override
+  String get systemSetupModeStandalone => 'Standalone';
+
+  @override
+  String get systemSetupModeStandaloneHint =>
+      'This app owns local accounting data and journals.';
+
+  @override
+  String get systemSetupModeIntegrated => 'Integrated';
+
+  @override
+  String get systemSetupModeIntegratedHint =>
+      'Operate beside an existing accounting/ERP system.';
+
+  @override
+  String get systemSetupLocaleSystem => 'Use device language';
+
+  @override
+  String get systemSetupLocaleEnglish => 'English';
+
+  @override
+  String get systemSetupLocaleArabic => 'Arabic';
+
+  @override
+  String get systemSetupSeedRunning => 'Preparing local defaults…';
+
+  @override
+  String get systemSetupSeedDone =>
+      'Default accounts and voucher books are ready.';
+
+  @override
+  String get systemSetupExternalPlaceholder =>
+      'External ERP adapters are registered by the App layer. You can skip this and connect later from Settings.';
+
+  @override
+  String get systemSetupSyncRunning => 'Synchronizing…';
+
+  @override
+  String get systemSetupSyncDone => 'Sync finished.';
+
+  @override
+  String get systemSetupSyncSkippedHint =>
+      'You can sync anytime from Settings.';
+
+  @override
+  String get systemSetupStatusPending => 'Pending';
+
+  @override
+  String get systemSetupStatusInProgress => 'In progress';
+
+  @override
+  String get systemSetupStatusCompleted => 'Completed';
+
+  @override
+  String get systemSetupStatusFailed => 'Failed';
+
+  @override
+  String get systemSetupStatusSkipped => 'Skipped';
+
+  @override
+  String get systemSetupReadyTitle => 'You\'re ready';
+
+  @override
+  String get systemSetupReadyMessage =>
+      'Required setup is complete. Optional steps can be finished later.';
+
+  @override
+  String get systemSetupErrorGeneric =>
+      'This step failed. Fix the issue and retry.';
+
+  @override
   String get setupCompanyIdentitySection => 'Company identity';
 
   @override
@@ -3103,6 +3314,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncSectionTitle => 'Synchronization';
+
+  @override
+  String get syncBackendLabel => 'Sync backend';
 
   @override
   String get syncConnectionLabel => 'Connection';

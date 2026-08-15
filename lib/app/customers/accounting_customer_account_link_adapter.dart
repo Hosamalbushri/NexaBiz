@@ -212,4 +212,31 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     );
     return _map(created, requirePosting: true, requireGroup: false);
   }
+
+  @override
+  Future<List<LinkedAccountRef>> listUnderParent(String parentId) async {
+    await _ensureChart();
+    final trimmed = parentId.trim();
+    if (trimmed.isEmpty) {
+      return const [];
+    }
+    final children = await _accounts.getChildren(trimmed);
+    final refs = <LinkedAccountRef>[];
+    for (final account in children) {
+      if (account.isDeleted || !account.isActive) {
+        continue;
+      }
+      refs.add(
+        LinkedAccountRef(
+          accountId: account.uuid,
+          code: account.accountCode,
+          name: account.name,
+          isPosting: account.isPostingAccount,
+          isGroup: account.isGroup,
+        ),
+      );
+    }
+    refs.sort((a, b) => a.code.compareTo(b.code));
+    return refs;
+  }
 }

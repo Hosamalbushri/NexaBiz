@@ -7,6 +7,7 @@ class CustomersRoutes {
 
   static const String root = '/customers';
   static const String list = '/customers/list';
+  static const String accounts = '/customers/accounts';
   static const String create = '/customers/new';
   static const String importPath = '/customers/import';
   static const String settings = '/customers/settings';
@@ -20,6 +21,8 @@ class CustomersRoutes {
   static void goRoot(BuildContext context) => context.go(root);
 
   static void goList(BuildContext context) => context.go(list);
+
+  static void pushAccounts(BuildContext context) => context.push(accounts);
 
   static void pushCreate(BuildContext context) => context.push(create);
 

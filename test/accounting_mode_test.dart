@@ -16,13 +16,15 @@ import 'package:stock_count/modules/accounting/domain/models/journal_exception.d
 
 void main() {
   group('AccountingMode', () {
-    test('defaults unknown storage to standalone', () {
+    test('always resolves to standalone', () {
       expect(AccountingMode.fromStorage(null), AccountingMode.standalone);
       expect(AccountingMode.fromStorage('nope'), AccountingMode.standalone);
       expect(
         AccountingMode.fromStorage('integrated'),
-        AccountingMode.integrated,
+        AccountingMode.standalone,
       );
+      expect(AccountingMode.standalone.isStandalone, isTrue);
+      expect(AccountingMode.standalone.isIntegrated, isFalse);
     });
   });
 
@@ -72,22 +74,17 @@ void main() {
   });
 
   group('AccountingModePolicy', () {
-    test('standalone owns local data and auto-journals sales', () {
+    test('local product always owns ledger and auto-journals sales', () {
       const policy = AccountingModePolicy(AccountingMode.standalone);
       expect(policy.ownsLocalAccountingData, isTrue);
       expect(policy.mayImportExternalMasterData, isFalse);
       expect(policy.mayExportOperationalDocuments, isFalse);
       expect(policy.autoCreatesJournalEntries, isTrue);
       expect(policy.supportsLocalLedgerFeatures, isTrue);
-    });
 
-    test('integrated may exchange with ERP and never auto-journals', () {
-      const policy = AccountingModePolicy(AccountingMode.integrated);
-      expect(policy.ownsLocalAccountingData, isFalse);
-      expect(policy.mayImportExternalMasterData, isTrue);
-      expect(policy.mayExportOperationalDocuments, isTrue);
-      expect(policy.autoCreatesJournalEntries, isFalse);
-      expect(policy.supportsLocalLedgerFeatures, isFalse);
+      const legacy = AccountingModePolicy(AccountingMode.integrated);
+      expect(legacy.ownsLocalAccountingData, isTrue);
+      expect(legacy.autoCreatesJournalEntries, isTrue);
     });
   });
 
@@ -133,11 +130,9 @@ void main() {
       }
     });
 
-    test('defaults to standalone and persists integrated', () async {
+    test('accounting mode is fixed to standalone', () async {
       expect(await repository.loadAccountingMode(), 'standalone');
       await repository.saveAccountingMode('integrated');
-      expect(await repository.loadAccountingMode(), 'integrated');
-      await repository.saveAccountingMode('invalid');
       expect(await repository.loadAccountingMode(), 'standalone');
     });
   });

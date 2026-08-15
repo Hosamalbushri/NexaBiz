@@ -90,6 +90,31 @@ void main() {
     );
   });
 
+  test('reserveNumberBlock claims exclusive range', () async {
+    final salesBook = (await repo.getSectionTree())
+        .firstWhere((n) => n.group.bookType == VoucherBookType.sales)
+        .children
+        .firstWhere((b) => b.bookType == VoucherBookType.sales);
+
+    await repo.update(
+      salesBook.id,
+      VoucherBookDraft(
+        name: salesBook.name,
+        bookType: salesBook.bookType,
+        parentId: salesBook.parentId,
+        currentNumber: 10,
+        endNumber: 100,
+      ),
+    );
+
+    final block = await repo.reserveNumberBlock(salesBook.id, 50);
+    expect(block.start, 10);
+    expect(block.end, 59);
+    final again = await repo.reserveNumberBlock(salesBook.id, 10);
+    expect(again.start, 60);
+    expect(again.end, 69);
+  });
+
   test('validator rejects end before current', () async {
     final salesUuid = (await repo.getSectionTree())
         .firstWhere((n) => n.group.bookType == VoucherBookType.sales)

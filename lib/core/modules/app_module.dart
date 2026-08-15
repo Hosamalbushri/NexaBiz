@@ -25,6 +25,12 @@ abstract class AppModule {
   /// Whether the module is available in the launcher.
   bool get isEnabled => true;
 
+  /// Whether the module appears on Dashboard / Services grids.
+  ///
+  /// Defaults to [isEnabled]. Infrastructure modules (e.g. System Setup) can
+  /// keep routes enabled while staying off the launcher.
+  bool get showInLauncher => isEnabled;
+
   /// Localized display name for UI surfaces.
   String label(BuildContext context);
 

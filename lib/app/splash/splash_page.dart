@@ -4,14 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/app_error_state.dart';
+import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
+import '../../modules/system_setup/presentation/providers/system_setup_providers.dart';
 import '../bootstrap/app_initialization.dart';
 import '../localization/app_localizations.dart';
 import '../router/app_routes.dart';
 import 'widgets/splash_brand.dart';
 
-/// Application splash: waits for [appInitializationProvider], then enters the shell.
+/// Application splash: waits for [appInitializationProvider], then enters app.
 ///
-/// Brand-led splash (icon + typography). Success uses [GoRouter.go] to dashboard.
+/// Routes to System Setup when initialization is incomplete; otherwise dashboard.
 class SplashPage extends ConsumerWidget {
   const SplashPage({super.key});
 
@@ -25,14 +27,23 @@ class SplashPage extends ConsumerWidget {
     ref.listen<AsyncValue<void>>(appInitializationProvider, (previous, next) {
       next.whenOrNull(
         data: (_) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (!context.mounted) {
               return;
             }
             final location = GoRouterState.of(context).uri.path;
-            if (location == AppRoutes.splash) {
-              context.go(AppRoutes.dashboard);
+            if (location != AppRoutes.splash) {
+              return;
             }
+            final ready = await ref
+                .read(systemInitializationCoordinatorProvider)
+                .isReady();
+            if (!context.mounted) {
+              return;
+            }
+            context.go(
+              ready ? AppRoutes.dashboard : SystemSetupRoutes.root,
+            );
           });
         },
       );

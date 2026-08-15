@@ -203,6 +203,19 @@ final linkedAccountByIdProvider =
       return ref.watch(customerAccountLinkPortProvider).findById(accountId);
     });
 
+/// Posting / group accounts nested under the configured customers parent CoA.
+final customerAccountsUnderParentProvider =
+    FutureProvider<List<LinkedAccountRef>>((ref) async {
+      final parentAsync = ref.watch(customersParentAccountProvider);
+      final parent = parentAsync.valueOrNull;
+      if (parent == null) {
+        return const [];
+      }
+      return ref
+          .watch(customerAccountLinkPortProvider)
+          .listUnderParent(parent.accountId);
+    });
+
 /// Whether customer save auto-creates a CoA posting account when none is set.
 final customersAutoLinkAccountProvider =
     StateNotifierProvider<CustomersAutoLinkAccountController, AsyncValue<bool>>(

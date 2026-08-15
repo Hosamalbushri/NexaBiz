@@ -9,6 +9,72 @@ import 'package:stock_count/app/router/app_routes.dart';
 import 'package:stock_count/app/splash/splash_page.dart';
 import 'package:stock_count/app/theme/app_theme.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
+import 'package:stock_count/modules/system_setup/domain/entities/system_setup_state.dart';
+import 'package:stock_count/modules/system_setup/domain/ports/system_setup_seed_port.dart';
+import 'package:stock_count/modules/system_setup/domain/repositories/system_setup_state_repository.dart';
+import 'package:stock_count/modules/system_setup/domain/services/system_initialization_coordinator.dart';
+import 'package:stock_count/modules/system_setup/presentation/pages/system_setup_routes.dart';
+import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
+
+class _FixedSetupStateRepository implements SystemSetupStateRepository {
+  _FixedSetupStateRepository(this.progress);
+
+  final SetupProgress progress;
+
+  @override
+  Future<SetupProgress> load() async => progress;
+
+  @override
+  Future<void> save(SetupProgress progress) async {}
+}
+
+SetupProgress _readyProgress() {
+  final now = DateTime.utc(2026, 8, 14);
+  return SetupProgress(
+    schemaVersion: SystemSetupSchema.currentVersion,
+    status: SystemSetupStatus.ready,
+    steps: {
+      for (final id in SetupStepId.requiredIds)
+        id: SetupStepState(
+          id: id,
+          status: SetupStepStatus.completed,
+          updatedAt: now,
+        ),
+      for (final id in SetupStepId.optionalIds)
+        id: SetupStepState(
+          id: id,
+          status: SetupStepStatus.skipped,
+          updatedAt: now,
+        ),
+    },
+    lastUpdated: now,
+  );
+}
+
+SetupProgress _freshProgress() {
+  return SetupProgress(
+    schemaVersion: SystemSetupSchema.currentVersion,
+    status: SystemSetupStatus.notStarted,
+    steps: {
+      for (final id in SetupStepId.allIds)
+        id: SetupStepState(id: id, status: SetupStepStatus.pending),
+    },
+  );
+}
+
+List<Override> setupOverrides(SetupProgress progress) {
+  return [
+    systemSetupStateRepositoryProvider.overrideWithValue(
+      _FixedSetupStateRepository(progress),
+    ),
+    systemInitializationCoordinatorProvider.overrideWith((ref) {
+      return SystemInitializationCoordinator(
+        stateRepository: ref.watch(systemSetupStateRepositoryProvider),
+        seedPort: const NoOpSystemSetupSeedPort(),
+      );
+    }),
+  ];
+}
 
 void main() {
   Widget wrapDialog({
@@ -42,6 +108,11 @@ void main() {
           builder: (context, state) =>
               const Scaffold(body: Text('DashboardShell')),
         ),
+        GoRoute(
+          path: SystemSetupRoutes.root,
+          builder: (context, state) =>
+              const Scaffold(body: Text('SystemSetupShell')),
+        ),
       ],
     );
 
@@ -63,6 +134,7 @@ void main() {
       await tester.pumpWidget(
         wrapSplash(
           overrides: [
+            ...setupOverrides(_readyProgress()),
             appInitializationProvider.overrideWith((ref) async {
               await Future<void>.delayed(const Duration(milliseconds: 300));
             }),
@@ -86,7 +158,10 @@ void main() {
     ) async {
       await tester.pumpWidget(
         wrapSplash(
-          overrides: [appInitializationProvider.overrideWith((ref) async {})],
+          overrides: [
+            ...setupOverrides(_readyProgress()),
+            appInitializationProvider.overrideWith((ref) async {}),
+          ],
         ),
       );
 
@@ -96,12 +171,29 @@ void main() {
       expect(find.byType(SplashPage), findsNothing);
     });
 
+    testWidgets('navigates to system setup when not ready', (tester) async {
+      await tester.pumpWidget(
+        wrapSplash(
+          overrides: [
+            ...setupOverrides(_freshProgress()),
+            appInitializationProvider.overrideWith((ref) async {}),
+          ],
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('SystemSetupShell'), findsOneWidget);
+      expect(find.text('DashboardShell'), findsNothing);
+    });
+
     testWidgets('shows error state with retry on failure', (tester) async {
       var attempts = 0;
 
       await tester.pumpWidget(
         wrapSplash(
           overrides: [
+            ...setupOverrides(_readyProgress()),
             appInitializationProvider.overrideWith((ref) async {
               attempts += 1;
               if (attempts == 1) {

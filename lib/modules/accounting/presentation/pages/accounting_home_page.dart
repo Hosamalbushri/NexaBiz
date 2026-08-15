@@ -6,12 +6,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/sync/app_bar_sync_actions.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/widgets/app_status_badge.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
-import '../../domain/entities/accounting_mode.dart';
-import '../providers/accounting_mode_providers.dart';
 import 'accounting_routes.dart';
 
 /// Accounting module hub.
@@ -22,9 +20,6 @@ class AccountingHomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final mode =
-        ref.watch(accountingModeProvider).valueOrNull ??
-        AccountingMode.standalone;
 
     return PopScope(
       canPop: false,
@@ -44,6 +39,7 @@ class AccountingHomePage extends ConsumerWidget {
         appBar: CustomAppBar(
           title: l10n.moduleAccounting,
           showBackButton: true,
+          actions: const [AppBarSyncActions()],
         ),
         body: ListView(
           padding: AppConstants.pageInsets(context),
@@ -61,29 +57,6 @@ class AccountingHomePage extends ConsumerWidget {
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 height: 1.4,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: AppStatusBadge(
-                label: mode.isIntegrated
-                    ? l10n.accountingModeIntegrated
-                    : l10n.accountingModeStandalone,
-                tone: mode.isIntegrated
-                    ? AppStatusTone.info
-                    : AppStatusTone.success,
-                animate: false,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              mode.isIntegrated
-                  ? l10n.accountingModeIntegratedHint
-                  : l10n.accountingModeStandaloneHint,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.35,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),

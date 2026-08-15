@@ -124,7 +124,9 @@ class _NotificationToastHostState extends ConsumerState<NotificationToastHost> {
     final route = notification.actionRoute;
     final navigator = appRootNavigatorKey.currentContext;
     if (route != null && route.isNotEmpty && navigator != null) {
-      GoRouter.of(navigator).push(route);
+      // Prefer go so notification deep-links never stack a second
+      // StatefulShellRoute page onto an existing shell match.
+      GoRouter.of(navigator).go(route);
     }
   }
 

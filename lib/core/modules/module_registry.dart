@@ -14,15 +14,18 @@ class ModuleRegistry {
   /// All registered modules (including disabled).
   List<AppModule> get modules => _modules;
 
-  /// Modules shown on the Service Launcher.
+  /// Modules shown on the Service Launcher / Dashboard grids.
   List<AppModule> get enabledModules => [
     for (final module in _modules)
-      if (module.isEnabled) module,
+      if (module.isEnabled && module.showInLauncher) module,
   ];
 
-  /// Flat list of routes from enabled modules only.
+  /// Flat list of routes from every enabled module (including non-launcher).
   List<RouteBase> get routes {
-    return [for (final module in enabledModules) ...module.routes];
+    return [
+      for (final module in _modules)
+        if (module.isEnabled) ...module.routes,
+    ];
   }
 
   AppModule? findById(String id) {

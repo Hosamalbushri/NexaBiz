@@ -1,4 +1,3 @@
-import '../../modules/accounting/domain/entities/accounting_mode.dart';
 import '../../modules/accounting/domain/entities/external_accounting_reference.dart';
 import '../../modules/accounting/domain/services/accounting_integration_port.dart';
 import '../../modules/sales/domain/entities/payment_status.dart';
@@ -6,23 +5,20 @@ import '../../modules/sales/domain/entities/sale.dart';
 import '../../modules/sales/domain/entities/sale_status.dart';
 import '../../modules/sales/domain/services/sale_accounting_bridge_port.dart';
 
-/// App adapter: Sales operational docs → Accounting integration (no journals).
+/// App adapter: optional ERP operational submit (local journals are always on).
 class AccountingSaleBridgeAdapter implements SaleAccountingBridgePort {
   AccountingSaleBridgeAdapter({
-    required AccountingMode Function() modeReader,
     required AccountingIntegrationPort integration,
-  }) : _modeReader = modeReader,
-       _integration = integration;
+  }) : _integration = integration;
 
-  final AccountingMode Function() _modeReader;
   final AccountingIntegrationPort _integration;
 
   @override
-  Future<bool> get isIntegratedMode async => _modeReader().isIntegrated;
+  Future<bool> get isIntegratedMode async => false;
 
   @override
   Future<void> submitOperationalSale(Sale sale) async {
-    if (!_modeReader().isIntegrated || !_integration.isConfigured) {
+    if (!_integration.isConfigured) {
       return;
     }
     await _integration.submitOperationalDocument(

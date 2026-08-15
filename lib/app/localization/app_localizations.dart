@@ -1442,6 +1442,54 @@ abstract class AppLocalizations {
   /// **'Browse, create, and manage customers.'**
   String get customersListCardSubtitle;
 
+  /// No description provided for @customersAccountsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer accounts'**
+  String get customersAccountsTitle;
+
+  /// No description provided for @customersAccountsCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart of Accounts entries under the customers parent, same as the CoA tree.'**
+  String get customersAccountsCardSubtitle;
+
+  /// No description provided for @customersAccountsUnderParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Under {code} · {name}'**
+  String customersAccountsUnderParent(String code, String name);
+
+  /// No description provided for @customersAccountsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts yet'**
+  String get customersAccountsEmptyTitle;
+
+  /// No description provided for @customersAccountsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'When you create a customer with auto-link, their posting account appears here and in the Chart of Accounts.'**
+  String get customersAccountsEmptyMessage;
+
+  /// No description provided for @customersAccountGroupBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get customersAccountGroupBadge;
+
+  /// No description provided for @customersAccountNonPostingBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Non-posting'**
+  String get customersAccountNonPostingBadge;
+
+  /// No description provided for @customersAccountMissingInChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Account missing from chart'**
+  String get customersAccountMissingInChart;
+
   /// No description provided for @customersCreateTitle.
   ///
   /// In en, this message translates to:
@@ -4694,6 +4742,330 @@ abstract class AppLocalizations {
   /// **'Company name, logo, currency, and legal details.'**
   String get setupSettingsCardSubtitle;
 
+  /// No description provided for @moduleSystemSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get moduleSystemSetup;
+
+  /// No description provided for @moduleSystemSetupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Company, modules, language, currency, and system initialization.'**
+  String get moduleSystemSetupDescription;
+
+  /// No description provided for @systemSettingsHubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage company details and settings for every business module.'**
+  String get systemSettingsHubSubtitle;
+
+  /// No description provided for @systemSetupInitializationSection.
+  ///
+  /// In en, this message translates to:
+  /// **'System initialization'**
+  String get systemSetupInitializationSection;
+
+  /// No description provided for @systemSetupReviewSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Review setup steps'**
+  String get systemSetupReviewSteps;
+
+  /// No description provided for @systemSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get systemSetupTitle;
+
+  /// No description provided for @systemSetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure your business environment. You can resume anytime.'**
+  String get systemSetupSubtitle;
+
+  /// No description provided for @systemSetupProgressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup progress'**
+  String get systemSetupProgressLabel;
+
+  /// No description provided for @systemSetupPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% complete'**
+  String systemSetupPercent(int percent);
+
+  /// No description provided for @systemSetupRequiredSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Required steps'**
+  String get systemSetupRequiredSection;
+
+  /// No description provided for @systemSetupOptionalSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional steps'**
+  String get systemSetupOptionalSection;
+
+  /// No description provided for @systemSetupContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get systemSetupContinue;
+
+  /// No description provided for @systemSetupRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get systemSetupRetry;
+
+  /// No description provided for @systemSetupSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get systemSetupSkip;
+
+  /// No description provided for @systemSetupFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to app'**
+  String get systemSetupFinish;
+
+  /// No description provided for @systemSetupEditCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Company details'**
+  String get systemSetupEditCompany;
+
+  /// No description provided for @systemSetupOpenFromSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'System initialization'**
+  String get systemSetupOpenFromSettings;
+
+  /// No description provided for @systemSetupOpenFromSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Review setup progress or re-run initialization steps.'**
+  String get systemSetupOpenFromSettingsSubtitle;
+
+  /// No description provided for @systemSetupStepWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Deployment mode'**
+  String get systemSetupStepWelcome;
+
+  /// No description provided for @systemSetupStepWelcomeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose standalone local accounting or connection to an external system.'**
+  String get systemSetupStepWelcomeHint;
+
+  /// No description provided for @systemSetupStepCompany.
+  ///
+  /// In en, this message translates to:
+  /// **'Company profile'**
+  String get systemSetupStepCompany;
+
+  /// No description provided for @systemSetupStepCompanyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Company name and fiscal year start.'**
+  String get systemSetupStepCompanyHint;
+
+  /// No description provided for @systemSetupStepLocale.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get systemSetupStepLocale;
+
+  /// No description provided for @systemSetupStepLocaleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the app language or keep the device default.'**
+  String get systemSetupStepLocaleHint;
+
+  /// No description provided for @systemSetupStepPrimaryCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Base currency'**
+  String get systemSetupStepPrimaryCurrency;
+
+  /// No description provided for @systemSetupStepPrimaryCurrencyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the main system currency. This cannot be changed later.'**
+  String get systemSetupStepPrimaryCurrencyHint;
+
+  /// No description provided for @systemSetupCurrencyLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Base currency is locked and cannot be changed.'**
+  String get systemSetupCurrencyLocked;
+
+  /// No description provided for @systemSetupStepSeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Local defaults'**
+  String get systemSetupStepSeed;
+
+  /// No description provided for @systemSetupStepSeedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create the default chart of accounts and voucher books.'**
+  String get systemSetupStepSeedHint;
+
+  /// No description provided for @systemSetupStepExternal.
+  ///
+  /// In en, this message translates to:
+  /// **'External connection'**
+  String get systemSetupStepExternal;
+
+  /// No description provided for @systemSetupStepExternalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure an ERP connection when using integrated mode.'**
+  String get systemSetupStepExternalHint;
+
+  /// No description provided for @systemSetupStepSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Initial sync'**
+  String get systemSetupStepSync;
+
+  /// No description provided for @systemSetupStepSyncHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Run a synchronization pass when a remote backend is available.'**
+  String get systemSetupStepSyncHint;
+
+  /// No description provided for @systemSetupModeStandalone.
+  ///
+  /// In en, this message translates to:
+  /// **'Standalone'**
+  String get systemSetupModeStandalone;
+
+  /// No description provided for @systemSetupModeStandaloneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This app owns local accounting data and journals.'**
+  String get systemSetupModeStandaloneHint;
+
+  /// No description provided for @systemSetupModeIntegrated.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrated'**
+  String get systemSetupModeIntegrated;
+
+  /// No description provided for @systemSetupModeIntegratedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Operate beside an existing accounting/ERP system.'**
+  String get systemSetupModeIntegratedHint;
+
+  /// No description provided for @systemSetupLocaleSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Use device language'**
+  String get systemSetupLocaleSystem;
+
+  /// No description provided for @systemSetupLocaleEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get systemSetupLocaleEnglish;
+
+  /// No description provided for @systemSetupLocaleArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get systemSetupLocaleArabic;
+
+  /// No description provided for @systemSetupSeedRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing local defaults…'**
+  String get systemSetupSeedRunning;
+
+  /// No description provided for @systemSetupSeedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Default accounts and voucher books are ready.'**
+  String get systemSetupSeedDone;
+
+  /// No description provided for @systemSetupExternalPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'External ERP adapters are registered by the App layer. You can skip this and connect later from Settings.'**
+  String get systemSetupExternalPlaceholder;
+
+  /// No description provided for @systemSetupSyncRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronizing…'**
+  String get systemSetupSyncRunning;
+
+  /// No description provided for @systemSetupSyncDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync finished.'**
+  String get systemSetupSyncDone;
+
+  /// No description provided for @systemSetupSyncSkippedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can sync anytime from Settings.'**
+  String get systemSetupSyncSkippedHint;
+
+  /// No description provided for @systemSetupStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get systemSetupStatusPending;
+
+  /// No description provided for @systemSetupStatusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get systemSetupStatusInProgress;
+
+  /// No description provided for @systemSetupStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get systemSetupStatusCompleted;
+
+  /// No description provided for @systemSetupStatusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get systemSetupStatusFailed;
+
+  /// No description provided for @systemSetupStatusSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped'**
+  String get systemSetupStatusSkipped;
+
+  /// No description provided for @systemSetupReadyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re ready'**
+  String get systemSetupReadyTitle;
+
+  /// No description provided for @systemSetupReadyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Required setup is complete. Optional steps can be finished later.'**
+  String get systemSetupReadyMessage;
+
+  /// No description provided for @systemSetupErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'This step failed. Fix the issue and retry.'**
+  String get systemSetupErrorGeneric;
+
   /// No description provided for @setupCompanyIdentitySection.
   ///
   /// In en, this message translates to:
@@ -5755,6 +6127,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Synchronization'**
   String get syncSectionTitle;
+
+  /// No description provided for @syncBackendLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync backend'**
+  String get syncBackendLabel;
 
   /// No description provided for @syncConnectionLabel.
   ///

@@ -8,6 +8,7 @@ import '../../constants/app_constants.dart';
 import '../../localization/app_localizations.dart';
 import '../../notifications/presentation/providers/notifications_provider.dart';
 import '../../router/app_routes.dart';
+import '../../sync/app_bar_sync_actions.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../models/report_entry_definition.dart';
@@ -27,9 +28,11 @@ class PlatformReportsPage extends ConsumerWidget {
     return Scaffold(
       appBar: CustomAppBar(
         title: l10n.platformReportsTitle,
+        centerTitle: false,
         showNotifications: true,
         notificationCount: unread,
         onNotifications: () => context.push(AppRoutes.notifications),
+        actions: const [AppBarSyncActions()],
       ),
       body: ListView(
         padding: AppConstants.pageInsets(context),
@@ -63,7 +66,7 @@ class _ModuleReportsHubTile extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return AppCard(
-      onTap: () => context.push(module.hubPath),
+      onTap: () => context.go(module.hubPath),
       child: Row(
         children: [
           DecoratedBox(

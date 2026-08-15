@@ -149,6 +149,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onProfileTap,
     this.automaticSystemOverlay = true,
     this.animateContent = true,
+    /// When set, overrides [CustomAppBarStyle.centerTitle].
+    ///
+    /// Use `false` on primary shell tabs so the title sits on the start edge
+    /// (right in Arabic RTL).
+    this.centerTitle,
   });
 
   /// Primary title text.
@@ -234,6 +239,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// Enables subtle entrance animation for title and actions.
   final bool animateContent;
 
+  /// Optional override for title centering. See constructor docs.
+  final bool? centerTitle;
+
   @override
   Size get preferredSize {
     final resolvedStyle = style ?? const CustomAppBarStyle();
@@ -249,11 +257,17 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final resolvedStyle = (style ?? CustomAppBarStyle.adaptive(context)).merge(
-      searching
-          ? const CustomAppBarStyle(centerTitle: false)
-          : null,
-    );
+    final resolvedStyle = (style ?? CustomAppBarStyle.adaptive(context))
+        .merge(
+          searching
+              ? const CustomAppBarStyle(centerTitle: false)
+              : null,
+        )
+        .merge(
+          centerTitle != null
+              ? CustomAppBarStyle(centerTitle: centerTitle!)
+              : null,
+        );
     final foreground = resolvedStyle.foregroundColor ?? colorScheme.onSurface;
     final mediaWidth = MediaQuery.sizeOf(context).width;
     final isCompact = mediaWidth < 360;

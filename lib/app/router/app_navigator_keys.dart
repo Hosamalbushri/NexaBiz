@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 
-/// Shared navigator keys for the platform GoRouter.
+/// Stable navigator keys for the platform [GoRouter].
 ///
-/// Reassigned whenever [appRouterProvider] creates a new [GoRouter] so
-/// go_router's `GlobalObjectKey(navigatorKey.hashCode)` cannot collide while
-/// an old router is still disposing (hot reload / provider refresh).
-GlobalKey<NavigatorState> appRootNavigatorKey = GlobalKey<NavigatorState>(
-  debugLabel: 'app-root',
-);
+/// These must remain the same instance for the process lifetime. Recreating
+/// them while a [Navigator] is still mounted (provider refresh / hot reload)
+/// causes "GlobalKey was used multiple times" under [HeroControllerScope].
+final GlobalKey<NavigatorState> appRootNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'app-root');
 
-GlobalKey<NavigatorState> appShellNavigatorKey = GlobalKey<NavigatorState>(
-  debugLabel: 'app-shell',
-);
+final GlobalKey<NavigatorState> appShellNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'app-shell');
+
+final GlobalKey<NavigatorState> appDashboardBranchKey =
+    GlobalKey<NavigatorState>(debugLabel: 'branch-dashboard');
+
+final GlobalKey<NavigatorState> appServicesBranchKey =
+    GlobalKey<NavigatorState>(debugLabel: 'branch-services');
+
+final GlobalKey<NavigatorState> appReportsBranchKey =
+    GlobalKey<NavigatorState>(debugLabel: 'branch-reports');
+
+final GlobalKey<NavigatorState> appSettingsBranchKey =
+    GlobalKey<NavigatorState>(debugLabel: 'branch-settings');

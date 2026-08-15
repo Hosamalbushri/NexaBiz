@@ -7,7 +7,7 @@ import '../../../../core/widgets/app_snackbar.dart';
 import '../pages/customers_settings_page.dart';
 import '../providers/customer_providers.dart';
 
-/// Customers module settings bundle (embedded in platform Settings).
+/// Customers module settings bundle (embedded in the Settings module hub).
 class CustomersSettingsPanel extends ConsumerWidget {
   const CustomersSettingsPanel({super.key});
 

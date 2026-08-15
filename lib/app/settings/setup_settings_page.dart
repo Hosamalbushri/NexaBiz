@@ -43,6 +43,7 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
   var _hydrated = false;
   var _saving = false;
   var _logoBusy = false;
+  var _currencyLocked = false;
   String _currencyCode = AppCurrencies.sar.code;
   int _fiscalMonth = 1;
   String? _logoPath;
@@ -200,6 +201,15 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
       ),
       data: (profile) {
         _hydrate(profile);
+        final currencyLocked =
+            ref.watch(systemBaseCurrencyLockedProvider).valueOrNull ?? false;
+        if (_currencyLocked != currencyLocked) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() => _currencyLocked = currencyLocked);
+            }
+          });
+        }
         return Scaffold(
           backgroundColor: theme.colorScheme.surfaceContainerLowest,
           appBar: CustomAppBar(
@@ -351,6 +361,9 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
                         value: _currencyCode,
                         decoration: InputDecoration(
                           labelText: l10n.setupDefaultCurrency,
+                          helperText: _currencyLocked
+                              ? l10n.systemSetupCurrencyLocked
+                              : null,
                         ),
                         items: [
                           for (final currency in AppCurrencies.all)
@@ -361,12 +374,14 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
                               ),
                             ),
                         ],
-                        onChanged: (value) {
-                          if (value == null) {
-                            return;
-                          }
-                          setState(() => _currencyCode = value);
-                        },
+                        onChanged: _currencyLocked
+                            ? null
+                            : (value) {
+                                if (value == null) {
+                                  return;
+                                }
+                                setState(() => _currencyCode = value);
+                              },
                       ),
                       const SizedBox(height: AppSpacing.md),
                       DropdownButtonFormField<int>(

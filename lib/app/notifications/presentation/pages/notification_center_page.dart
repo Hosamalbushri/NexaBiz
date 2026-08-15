@@ -109,7 +109,7 @@ class NotificationCenterPage extends ConsumerWidget {
     ref.read(notificationServiceProvider).markAsRead(notification.id);
     final route = notification.actionRoute;
     if (route != null && route.isNotEmpty) {
-      context.push(route);
+      context.go(route);
     }
   }
 }

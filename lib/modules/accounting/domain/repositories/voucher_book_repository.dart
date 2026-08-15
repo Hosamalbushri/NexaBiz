@@ -33,4 +33,10 @@ abstract class VoucherBookRepository {
   /// Only valid for active leaf books (not section groups).
   /// Fails when the book is exhausted (`currentNumber` > `endNumber`).
   Future<int> allocateNextNumber(int id);
+
+  /// Reserves [size] consecutive numbers for offline device blocks.
+  ///
+  /// Returns `(start, end)` inclusive. May return a smaller range when the
+  /// book is nearly exhausted. Fails when no numbers remain.
+  Future<({int start, int end})> reserveNumberBlock(int id, int size);
 }

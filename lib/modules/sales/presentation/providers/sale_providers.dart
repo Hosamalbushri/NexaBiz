@@ -17,6 +17,7 @@ import '../../domain/services/sale_number_allocator_port.dart';
 import '../../domain/services/sale_product_catalog_port.dart';
 import '../../domain/services/sale_treasury_account_port.dart';
 import '../../domain/services/sale_voucher_book_port.dart';
+import '../../domain/services/device_sale_number.dart';
 import '../../domain/usecases/sale_usecases.dart';
 
 final salesDatabaseProvider = Provider<SalesDatabase>((ref) {
@@ -85,12 +86,17 @@ final saleTreasuryAccountPortProvider = Provider<SaleTreasuryAccountPort>((
   return const NoOpSaleTreasuryAccountPort();
 });
 
-/// Default: local INV-######. Used when draft has no voucher book.
+/// Default: plain integer in this device's numeric lane (no device label).
 final saleNumberAllocatorPortProvider = Provider<SaleNumberAllocatorPort>((
   ref,
 ) {
   final repo = ref.watch(saleRepositoryProvider);
-  return LocalSaleNumberAllocator(nextSequence: repo.nextLocalSequence);
+  final base = deviceSaleNumberBase(
+    ref.watch(syncApiConfigProvider).deviceId,
+  );
+  return LocalSaleNumberAllocator(
+    nextSequence: () => repo.nextLocalSequence(minExclusive: base),
+  );
 });
 
 final watchSalesUseCaseProvider = Provider<WatchSales>((ref) {

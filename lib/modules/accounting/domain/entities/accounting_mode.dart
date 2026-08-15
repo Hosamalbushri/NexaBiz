@@ -1,8 +1,7 @@
 /// How the platform relates to accounting data ownership.
 ///
-/// - [standalone]: the app owns local accounting master data and future ledger.
-/// - [integrated]: the app is an operational interface beside an external ERP;
-///   master data may be pulled, and operational docs are posted externally later.
+/// The product always runs as [standalone] (local CoA + journals).
+/// [integrated] remains only for legacy storage compatibility.
 enum AccountingMode {
   standalone,
   integrated;
@@ -10,13 +9,11 @@ enum AccountingMode {
   String get storageValue => name;
 
   static AccountingMode fromStorage(String? value) {
-    return AccountingMode.values.firstWhere(
-      (mode) => mode.name == value,
-      orElse: () => AccountingMode.standalone,
-    );
+    // Integrated mode is retired — always treat as standalone.
+    return AccountingMode.standalone;
   }
 
-  bool get isStandalone => this == AccountingMode.standalone;
+  bool get isStandalone => true;
 
-  bool get isIntegrated => this == AccountingMode.integrated;
+  bool get isIntegrated => false;
 }

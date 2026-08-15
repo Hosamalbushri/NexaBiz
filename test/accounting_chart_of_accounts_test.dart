@@ -8,6 +8,7 @@ import 'package:stock_count/core/sync/sync_operation.dart';
 import 'package:stock_count/core/sync/sync_operation_adapter.dart';
 import 'package:stock_count/core/sync/sync_queue.dart';
 import 'package:stock_count/core/sync/sync_status.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
 import 'package:stock_count/modules/accounting/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/domain/entities/account.dart';
@@ -264,6 +265,27 @@ void main() {
       expect(after.length, before.length);
     });
 
+    test('seeds default chart with pending sync queue entries', () async {
+      await repo.ensureDefaultChartSeeded();
+      final cash = await repo.getByAccountCode('1211');
+      expect(cash, isNotNull);
+      expect(cash!.syncStatus, SyncStatus.pending);
+      expect(cash.isSystemAccount, isTrue);
+
+      final pending = await queue.peekReady();
+      expect(pending.where((op) => op.entityType == 'account'), isNotEmpty);
+      expect(
+        pending.any((op) => op.entityId == cash.uuid),
+        isTrue,
+      );
+    });
+
+    test('system account UUIDs are stable across installs', () async {
+      await repo.ensureDefaultChartSeeded();
+      final cash = await repo.getByAccountCode('1211');
+      expect(cash!.uuid, systemAccountUuid('cash'));
+    });
+
     test('creates posting account under group with pending sync', () async {
       await repo.ensureDefaultChartSeeded();
       final currentAssets = await repo.getByAccountCode('1200');
@@ -287,8 +309,12 @@ void main() {
 
       final pending = await queue.peekReady();
       expect(pending, isNotEmpty);
-      expect(pending.first.entityType, 'account');
-      expect(pending.first.entityId, created.uuid);
+      expect(
+        pending.any(
+          (op) => op.entityType == 'account' && op.entityId == created.uuid,
+        ),
+        isTrue,
+      );
     });
 
     test('rejects duplicate account codes', () async {

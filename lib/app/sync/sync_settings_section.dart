@@ -13,10 +13,17 @@ import 'sync_status_indicator.dart';
 
 /// Platform sync settings content (category chrome owned by Settings page).
 class SyncSettingsSection extends ConsumerWidget {
-  const SyncSettingsSection({super.key, this.embedded = false});
+  const SyncSettingsSection({
+    super.key,
+    this.embedded = false,
+    this.compactHeader = false,
+  });
 
   /// When true, omit outer card (used inside an expansion panel).
   final bool embedded;
+
+  /// When true, skip the top connection row (shown by the parent page).
+  final bool compactHeader;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,8 +37,8 @@ class SyncSettingsSection extends ConsumerWidget {
             Localizations.localeOf(context).toString(),
           ).add_jm().format(overview.lastSyncedAt!.toLocal());
 
-    final content = Column(
-      children: [
+    final rows = <Widget>[
+      if (!compactHeader) ...[
         ListTile(
           contentPadding: embedded ? EdgeInsets.zero : null,
           leading: Icon(
@@ -48,50 +55,56 @@ class SyncSettingsSection extends ConsumerWidget {
           trailing: const SyncStatusIndicator(compact: true),
         ),
         const Divider(height: 1),
-        ListTile(
-          contentPadding: embedded ? EdgeInsets.zero : null,
-          leading: const Icon(Icons.schedule_outlined),
-          title: Text(l10n.syncLastSyncLabel),
-          subtitle: Text(lastSyncText),
-        ),
-        const Divider(height: 1),
-        ListTile(
-          contentPadding: embedded ? EdgeInsets.zero : null,
-          leading: const Icon(Icons.pending_actions_outlined),
-          title: Text(l10n.syncPendingChangesLabel),
-          trailing: Text(
-            '${overview.pendingCount}',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-        ),
-        const Divider(height: 1),
-        ListTile(
-          contentPadding: embedded ? EdgeInsets.zero : null,
-          leading: const Icon(Icons.error_outline),
-          title: Text(l10n.syncFailedChangesLabel),
-          trailing: Text(
-            '${overview.failedCount}',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.only(
-            top: AppSpacing.md,
-            bottom: embedded ? 0 : AppSpacing.md,
-            left: embedded ? 0 : AppSpacing.md,
-            right: embedded ? 0 : AppSpacing.md,
-          ),
-          child: AppButton(
-            label: l10n.syncNowAction,
-            expand: true,
-            icon: Icons.sync,
-            onPressed: overview.isSyncing
-                ? null
-                : () => _onSyncNow(context, ref, overview.isOnline),
-          ),
-        ),
       ],
-    );
+      ListTile(
+        contentPadding: embedded ? EdgeInsets.zero : null,
+        leading: const Icon(Icons.cloud_sync_outlined),
+        title: Text(l10n.syncBackendLabel),
+        subtitle: Text(ref.watch(syncApiConfigProvider).modeLabel),
+      ),
+      const Divider(height: 1),
+      ListTile(
+        contentPadding: embedded ? EdgeInsets.zero : null,
+        leading: const Icon(Icons.schedule_outlined),
+        title: Text(l10n.syncLastSyncLabel),
+        subtitle: Text(lastSyncText),
+      ),
+      const Divider(height: 1),
+      ListTile(
+        contentPadding: embedded ? EdgeInsets.zero : null,
+        leading: const Icon(Icons.pending_actions_outlined),
+        title: Text(l10n.syncPendingChangesLabel),
+        trailing: _CountBadge(count: overview.pendingCount),
+      ),
+      const Divider(height: 1),
+      ListTile(
+        contentPadding: embedded ? EdgeInsets.zero : null,
+        leading: const Icon(Icons.error_outline),
+        title: Text(l10n.syncFailedChangesLabel),
+        trailing: _CountBadge(
+          count: overview.failedCount,
+          emphasize: overview.failedCount > 0,
+        ),
+      ),
+      Padding(
+        padding: EdgeInsets.only(
+          top: AppSpacing.md,
+          bottom: embedded ? 0 : AppSpacing.md,
+          left: embedded ? 0 : AppSpacing.md,
+          right: embedded ? 0 : AppSpacing.md,
+        ),
+        child: AppButton(
+          label: l10n.syncNowAction,
+          expand: true,
+          icon: Icons.sync,
+          onPressed: overview.isSyncing
+              ? null
+              : () => _onSyncNow(context, ref, overview.isOnline),
+        ),
+      ),
+    ];
+
+    final content = Column(children: rows);
 
     if (embedded) {
       return content;
@@ -136,5 +149,36 @@ class SyncSettingsSection extends ConsumerWidget {
         isSuccess: false,
       );
     }
+  }
+}
+
+class _CountBadge extends StatelessWidget {
+  const _CountBadge({required this.count, this.emphasize = false});
+
+  final int count;
+  final bool emphasize;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final color = emphasize ? colorScheme.error : colorScheme.primary;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        child: Text(
+          '$count',
+          style: theme.textTheme.labelLarge?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
   }
 }

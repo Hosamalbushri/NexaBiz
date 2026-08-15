@@ -6,6 +6,7 @@ import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
 import 'presentation/pages/customer_details_page.dart';
 import 'presentation/pages/customer_form_page.dart';
+import 'presentation/pages/customers_accounts_page.dart';
 import 'presentation/pages/customers_home_page.dart';
 import 'presentation/pages/customers_import_page.dart';
 import 'presentation/pages/customers_list_page.dart';
@@ -76,6 +77,11 @@ class CustomersModule extends AppModule {
           path: 'list',
           name: 'customersList',
           builder: (context, state) => const CustomersListPage(),
+        ),
+        GoRoute(
+          path: 'accounts',
+          name: 'customersAccounts',
+          builder: (context, state) => const CustomersAccountsPage(),
         ),
         GoRoute(
           path: 'import',

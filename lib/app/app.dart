@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../core/di/app_providers.dart';
 import '../core/notifications/notification_type.dart';
@@ -100,21 +99,19 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
         );
   }
 
-  /// Kept for the [State] lifetime so hot reload / provider refresh does not
-  /// swap [MaterialApp.router] onto a second [GoRouter] that shares navigator
-  /// GlobalKeys with the instance still disposing.
-  GoRouter? _router;
-
   @override
   Widget build(BuildContext context) {
-    _router ??= ref.read(appRouterProvider);
+    // Read once: provider must not watch mutable deps (see app_router.dart).
+    // Caching here while the provider disposes on invalidate left a live
+    // MaterialApp on a disposed GoRouter and invited duplicate navigator keys.
+    final router = ref.watch(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-      routerConfig: _router!,
+      routerConfig: router,
       themeMode: themeMode,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),

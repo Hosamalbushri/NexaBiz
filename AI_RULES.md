@@ -7,7 +7,7 @@ Read this file before modifying the project. For full context see [`AI_CONTEXT.m
 - This is a **Modular Business Platform**, not an inventory-only app.
 - Pub package name is still `stock_count` (legacy); product name is **Business Platform**.
 - Inventory is the **first** business module under `lib/modules/inventory/`.
-- Accounting is the **second** business module under `lib/modules/accounting/` (Chart of Accounts, currency rates, voucher books; standalone/integrated operating modes via settings).
+- Accounting is the **second** business module under `lib/modules/accounting/` (Chart of Accounts, currency rates, voucher books, local journals).
 - Customers is the **third** business module under `lib/modules/customers/` (master data; optional opaque link to Account.uuid).
 - Sales is the **fourth** business module under `lib/modules/sales/` (operational sales documents; ports to Customers/Inventory/Accounting).
 - Reports is the **fifth** business module under `lib/modules/reports/` (PDF catalog/preview; shared kit in `lib/core/reporting/`).

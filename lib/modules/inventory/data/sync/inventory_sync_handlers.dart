@@ -53,6 +53,12 @@ class ProductSyncHandler implements SyncEntityHandler {
   }
 
   @override
+  Future<void> confirmPull() async => _remote.acknowledgePull(entityType);
+
+  @override
+  Future<void> abandonPull() async => _remote.abandonPull(entityType);
+
+  @override
   Future<void> applyRemoteChange(SyncRemoteChange change) async {
     final payload = Map<String, dynamic>.from(change.payload);
     payload['uuid'] = change.entityId;
@@ -137,6 +143,12 @@ class InventoryItemSyncHandler implements SyncEntityHandler {
   Future<List<SyncRemoteChange>> pull({DateTime? since}) {
     return _remote.pull(entityType: entityType, since: since);
   }
+
+  @override
+  Future<void> confirmPull() async => _remote.acknowledgePull(entityType);
+
+  @override
+  Future<void> abandonPull() async => _remote.abandonPull(entityType);
 
   @override
   Future<void> applyRemoteChange(SyncRemoteChange change) async {

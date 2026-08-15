@@ -121,6 +121,24 @@ void main() {
     expect(customer.customerCode, code);
   });
 
+  test('listUnderParent returns CoA children under customers group', () async {
+    final parent = await linkPort.findSystemCustomersParent();
+    expect(parent, isNotNull);
+
+    await linkPort.ensurePostingUnderParent(
+      parentId: parent!.accountId,
+      accountCode: '12216601',
+      name: 'ظاهر في حزمة العملاء',
+    );
+
+    final listed = await linkPort.listUnderParent(parent.accountId);
+    expect(listed.any((a) => a.code == '12216601'), isTrue);
+    expect(
+      listed.firstWhere((a) => a.code == '12216601').name,
+      'ظاهر في حزمة العملاء',
+    );
+  });
+
   test('EnsureCustomerAccountLinks fills drafts for import', () async {
     final parent = await linkPort.findSystemCustomersParent();
     final linker = EnsureCustomerAccountLinks(linkPort);

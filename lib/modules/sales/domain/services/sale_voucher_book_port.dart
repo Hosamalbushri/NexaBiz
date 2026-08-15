@@ -5,17 +5,22 @@ class SaleVoucherBookRef {
     required this.name,
     required this.nextNumber,
     required this.canAllocate,
+    this.formattedPreview,
   });
 
   /// VoucherBook.uuid
   final String bookId;
   final String name;
 
-  /// Next number that will be allocated (preview).
+  /// Next numeric sequence that will be allocated (without device prefix).
   final int nextNumber;
   final bool canAllocate;
 
-  String get previewNumber => nextNumber.toString();
+  /// Plain integer preview for the next sale number on this device lane.
+  final String? formattedPreview;
+
+  /// UI preview of the next invoice number.
+  String get previewNumber => formattedPreview ?? '$nextNumber';
 }
 
 /// App wires to Accounting voucher books (modules ↛ modules).

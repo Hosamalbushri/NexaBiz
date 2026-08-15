@@ -59,6 +59,9 @@ abstract class CustomerAccountLinkPort {
     required String accountCode,
     required String name,
   });
+
+  /// Direct children under [parentId] (same nesting as Chart of Accounts).
+  Future<List<LinkedAccountRef>> listUnderParent(String parentId);
 }
 
 /// Safe default until App wires Accounting.
@@ -105,5 +108,10 @@ class NoOpCustomerAccountLinkPort implements CustomerAccountLinkPort {
     required String name,
   }) async {
     return null;
+  }
+
+  @override
+  Future<List<LinkedAccountRef>> listUnderParent(String parentId) async {
+    return const [];
   }
 }

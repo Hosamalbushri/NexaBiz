@@ -65,6 +65,12 @@ abstract class SyncEntityHandler {
   /// Mark the local entity as conflicted.
   Future<void> markLocalConflict({required String entityId, String? message});
 
+  /// Commit pull cursor after all remote changes for this type applied OK.
+  Future<void> confirmPull() async {}
+
+  /// Drop staged pull cursor when one or more applies failed.
+  Future<void> abandonPull() async {}
+
   /// Optional pre-upload conflict probe against remote metadata.
   Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async {
     return null;

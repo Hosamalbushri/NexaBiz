@@ -377,6 +377,15 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
 
   @override
   Future<int> allocateNextNumber(int id) async {
+    final block = await reserveNumberBlock(id, 1);
+    return block.start;
+  }
+
+  @override
+  Future<({int start, int end})> reserveNumberBlock(int id, int size) async {
+    if (size < 1) {
+      throw const VoucherBookException('Block size must be at least 1');
+    }
     return _db.transaction(() async {
       final row = await (_db.select(
         _db.voucherBooks,
@@ -393,15 +402,18 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
       if (row.nextNumber > row.endNumber) {
         throw const VoucherBookException('Voucher book is exhausted');
       }
-      final allocated = row.nextNumber;
+      final start = row.nextNumber;
+      final remaining = row.endNumber - start + 1;
+      final take = size > remaining ? remaining : size;
+      final end = start + take - 1;
       final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
       await (_db.update(_db.voucherBooks)..where((t) => t.id.equals(id))).write(
         VoucherBooksCompanion(
-          nextNumber: Value(allocated + 1),
+          nextNumber: Value(end + 1),
           updatedAt: Value(nowMs),
         ),
       );
-      return allocated;
+      return (start: start, end: end);
     });
   }
 }

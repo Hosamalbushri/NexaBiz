@@ -33,6 +33,7 @@ Current registry:
 
 ```dart
 ModuleRegistry(const [
+  SystemSetupModule(),
   InventoryModule(),
   AccountingModule(),
   CustomersModule(),
@@ -43,7 +44,15 @@ ModuleRegistry(const [
 
 `moduleRegistryProvider` throws if not overridden — App bootstrap is mandatory.
 
+Launcher grids use `AppModule.showInLauncher` (defaults to `isEnabled`). Routes come from every `isEnabled` module.
+
 ## Current modules
+
+### System Setup — implemented
+
+Path: `lib/modules/system_setup/`
+
+First-launch / resume initialization (not a duplicate of Settings). Shown on the service launcher as **Settings** / «الإعدادات». After initialization, hosts the **module settings hub** (company + Accounting/Customers panels via `AppModule.buildSettingsSections`). Wizard route `/system-setup` is outside `AppShell`. Splash gates on versioned Hive setup state. Base currency is chosen once and locked. See [ADR-009](adr/ADR-009-system-setup.md).
 
 ### Inventory — implemented
 
@@ -86,7 +95,7 @@ Capabilities:
 
 Path: `lib/modules/accounting/`
 
-Chart of Accounts + currency rates + voucher books (sequential numbering) + local journals (`journal_entries` / `journal_lines`) + standalone/integrated mode. See ADR-007 / ADR-008 / ADR-010.
+Chart of Accounts + currency rates + voucher books + local journals. Operating mode is fixed local accounting (see ADR-008).
 
 ### Customers — implemented
 

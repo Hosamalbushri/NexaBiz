@@ -11,6 +11,7 @@ import '../../constants/app_constants.dart';
 import '../../localization/app_localizations.dart';
 import '../../notifications/presentation/providers/notifications_provider.dart';
 import '../../router/app_routes.dart';
+import '../../sync/app_bar_sync_actions.dart';
 import '../../theme/app_spacing.dart';
 import '../providers/dashboard_services_provider.dart';
 import '../providers/quick_actions_panel_provider.dart';
@@ -32,9 +33,11 @@ class DashboardPage extends ConsumerWidget {
     return Scaffold(
       appBar: CustomAppBar(
         title: l10n.dashboardTitle,
+        centerTitle: false,
         showNotifications: true,
         notificationCount: unread,
         onNotifications: () => context.push(AppRoutes.notifications),
+        actions: const [AppBarSyncActions()],
       ),
       body: servicesAsync.when(
         loading: () => const AppLoading(),
@@ -69,7 +72,10 @@ class DashboardPage extends ConsumerWidget {
                       if (!module.isEnabled) {
                         return;
                       }
-                      context.push(module.rootRoute);
+                      // Use go (not push): leaving StatefulShellRoute under a
+                      // pushed module, then later pushing a shell tab, duplicates
+                      // ShellRouteMatch page keys (go_router #140586).
+                      context.go(module.rootRoute);
                     },
                   ),
                   const SizedBox(height: AppSpacing.md),

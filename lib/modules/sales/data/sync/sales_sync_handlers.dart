@@ -52,6 +52,12 @@ class SaleSyncHandler implements SyncEntityHandler {
   }
 
   @override
+  Future<void> confirmPull() async => _remote.acknowledgePull(entityType);
+
+  @override
+  Future<void> abandonPull() async => _remote.abandonPull(entityType);
+
+  @override
   Future<void> applyRemoteChange(SyncRemoteChange change) async {
     final payload = Map<String, dynamic>.from(change.payload);
     payload['uuid'] = change.entityId;

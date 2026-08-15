@@ -3,7 +3,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../connectivity/connectivity_service.dart';
 import '../database/hive_boxes.dart';
+import '../network/http_remote_sync_api.dart';
 import '../network/remote_sync_api.dart';
+import '../network/sync_api_config.dart';
 import 'sync_manager.dart';
 import 'sync_operation.dart';
 import 'sync_overview.dart';
@@ -21,8 +23,23 @@ final syncQueueProvider = Provider<SyncQueue>((ref) {
   return queue;
 });
 
+/// Experimental sync API config (HTTP by default → LAN backend).
+///
+/// [AppBootstrap] overwrites [deviceId] with a per-install UUID from Hive.
+final syncApiConfigProvider = StateProvider<SyncApiConfig>((ref) {
+  return SyncApiConfig.fromEnvironment();
+});
+
+/// Swappable remote: HTTP experimental backend when enabled, else in-memory.
+///
+/// Unchanged: SyncManager, SyncQueue, entity handlers, repositories.
 final remoteSyncApiProvider = Provider<RemoteSyncApi>((ref) {
-  // Replace with HTTP-backed implementation when the backend is available.
+  final config = ref.watch(syncApiConfigProvider);
+  if (config.enabled) {
+    final api = HttpRemoteSyncApi(config: config);
+    ref.onDispose(api.dispose);
+    return api;
+  }
   return InMemoryRemoteSyncApi();
 });
 

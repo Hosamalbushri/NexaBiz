@@ -21,6 +21,7 @@ import '../../domain/models/sale_paged_result.dart';
 import '../../domain/repositories/sale_repository.dart';
 import '../../domain/services/sale_calculation_service.dart';
 import '../../domain/services/sale_quantity_math.dart';
+import '../../domain/services/device_sale_number.dart';
 import '../../domain/services/sale_validator.dart';
 import '../database/sales_database.dart';
 
@@ -581,21 +582,16 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   @override
-  Future<int> nextLocalSequence() async {
+  Future<int> nextLocalSequence({int? minExclusive}) async {
     final rows = await (_db.selectOnly(_db.sales)
           ..addColumns([_db.sales.saleNumber]))
         .get();
-    var maxSeq = 0;
-    final plain = RegExp(r'^(\d+)$');
-    final legacyInv = RegExp(r'^INV-(\d+)$', caseSensitive: false);
+    var maxSeq = minExclusive ?? 0;
     for (final row in rows) {
       final raw = (row.read(_db.sales.saleNumber) ?? '').trim();
-      final match = plain.firstMatch(raw) ?? legacyInv.firstMatch(raw);
-      if (match != null) {
-        final n = int.tryParse(match.group(1)!) ?? 0;
-        if (n > maxSeq) {
-          maxSeq = n;
-        }
+      final n = parseSaleNumberSequence(raw);
+      if (n != null && n > maxSeq) {
+        maxSeq = n;
       }
     }
     return maxSeq + 1;
