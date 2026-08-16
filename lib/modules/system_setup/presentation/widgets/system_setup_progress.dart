@@ -82,20 +82,7 @@ class SystemSetupStepTile extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       leading: Icon(icon, color: color),
       title: Text(setupStepTitle(l10n, step.id)),
-      subtitle: Text(
-        [
-          setupStepStatusLabel(l10n, step.status),
-          if (!step.id.isRequired) l10n.systemSetupOptionalSection,
-        ].join(' · '),
-      ),
-      trailing: step.id.isRequired
-          ? null
-          : Text(
-              l10n.systemSetupSkip,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
+      subtitle: Text(setupStepStatusLabel(l10n, step.status)),
       onTap: onTap,
     );
   }

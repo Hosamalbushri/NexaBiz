@@ -7,7 +7,7 @@ import '../entities/account_type.dart';
 /// where needed. Do not hardcode this list in widgets.
 ///
 /// Module → system key map (sale journals resolve revenue/discounts/cash/customer):
-/// - Sales / Treasury: `cash`, `bank`, `petty_cash`, `sales_revenue`,
+/// - Sales / Treasury: `cash_boxes`, `cash`, `bank`, `petty_cash`, `sales_revenue`,
 ///   `sales_returns`, `sales_discounts`, `vat_output`, `cost_of_goods_sold`,
 ///   `customer_advances`
 /// - Customers: `customers` (group `1221`)
@@ -73,16 +73,24 @@ class DefaultChartOfAccounts {
       isGroup: true,
     ),
     DefaultAccountSeed(
-      systemKey: 'cash',
+      systemKey: 'cash_boxes',
       parentKey: 'current_assets',
+      accountCode: '1210',
+      name: 'Cash Boxes',
+      accountType: AccountType.asset,
+      isGroup: true,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'cash',
+      parentKey: 'cash_boxes',
       accountCode: '1211',
-      name: 'Cash',
+      name: 'Main Cash Box',
       accountType: AccountType.asset,
       isGroup: false,
     ),
     DefaultAccountSeed(
       systemKey: 'bank',
-      parentKey: 'current_assets',
+      parentKey: 'cash_boxes',
       accountCode: '1212',
       name: 'Bank',
       accountType: AccountType.asset,
@@ -90,7 +98,7 @@ class DefaultChartOfAccounts {
     ),
     DefaultAccountSeed(
       systemKey: 'petty_cash',
-      parentKey: 'current_assets',
+      parentKey: 'cash_boxes',
       accountCode: '1213',
       name: 'Petty Cash',
       accountType: AccountType.asset,

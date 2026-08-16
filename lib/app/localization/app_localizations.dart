@@ -164,6 +164,18 @@ abstract class AppLocalizations {
   /// **'Create and manage sales offline, with optional accounting and inventory hooks.'**
   String get moduleSalesDescription;
 
+  /// No description provided for @moduleReceiptsPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts & Payments'**
+  String get moduleReceiptsPayments;
+
+  /// No description provided for @moduleReceiptsPaymentsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Record cash and bank receipts and payments with accounting posting and offline sync.'**
+  String get moduleReceiptsPaymentsDescription;
+
   /// No description provided for @moduleReports.
   ///
   /// In en, this message translates to:
@@ -175,6 +187,930 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Generate, preview, print, and share professional PDF reports.'**
   String get moduleReportsDescription;
+
+  /// No description provided for @rpListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get rpListTitle;
+
+  /// No description provided for @rpListTitleReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts'**
+  String get rpListTitleReceipts;
+
+  /// No description provided for @rpListTitlePayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get rpListTitlePayments;
+
+  /// No description provided for @rpListCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search and filter receipts and payments'**
+  String get rpListCardSubtitle;
+
+  /// No description provided for @rpActionViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All transactions'**
+  String get rpActionViewAll;
+
+  /// No description provided for @rpActionNewReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'New receipt'**
+  String get rpActionNewReceipt;
+
+  /// No description provided for @rpActionNewPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'New payment'**
+  String get rpActionNewPayment;
+
+  /// No description provided for @rpCreateReceiptSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect cash or bank into treasury'**
+  String get rpCreateReceiptSubtitle;
+
+  /// No description provided for @rpCreatePaymentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay from cash or bank'**
+  String get rpCreatePaymentSubtitle;
+
+  /// No description provided for @rpServiceReceiptsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts'**
+  String get rpServiceReceiptsTitle;
+
+  /// No description provided for @rpServiceReceiptsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View receipt vouchers or create a new one'**
+  String get rpServiceReceiptsSubtitle;
+
+  /// No description provided for @rpServicePaymentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get rpServicePaymentsTitle;
+
+  /// No description provided for @rpServicePaymentsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View payment vouchers or create a new one'**
+  String get rpServicePaymentsSubtitle;
+
+  /// No description provided for @rpServiceViewReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'All receipts'**
+  String get rpServiceViewReceipts;
+
+  /// No description provided for @rpServiceViewReceiptsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse and filter receipt vouchers'**
+  String get rpServiceViewReceiptsSubtitle;
+
+  /// No description provided for @rpServiceViewPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'All payments'**
+  String get rpServiceViewPayments;
+
+  /// No description provided for @rpServiceViewPaymentsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse and filter payment vouchers'**
+  String get rpServiceViewPaymentsSubtitle;
+
+  /// No description provided for @rpServiceCreateReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'New receipt voucher'**
+  String get rpServiceCreateReceipt;
+
+  /// No description provided for @rpServiceCreatePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'New payment voucher'**
+  String get rpServiceCreatePayment;
+
+  /// No description provided for @rpDashboardTodayReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s receipts'**
+  String get rpDashboardTodayReceipts;
+
+  /// No description provided for @rpDashboardTodayPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s payments'**
+  String get rpDashboardTodayPayments;
+
+  /// No description provided for @rpDashboardPeriodReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'Period receipts'**
+  String get rpDashboardPeriodReceipts;
+
+  /// No description provided for @rpDashboardPeriodPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Period payments'**
+  String get rpDashboardPeriodPayments;
+
+  /// No description provided for @rpDashboardNetMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Net movement'**
+  String get rpDashboardNetMovement;
+
+  /// No description provided for @rpDashboardCashMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash movement'**
+  String get rpDashboardCashMovement;
+
+  /// No description provided for @rpDashboardBankMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank movement'**
+  String get rpDashboardBankMovement;
+
+  /// No description provided for @rpDashboardPendingSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending sync'**
+  String get rpDashboardPendingSync;
+
+  /// No description provided for @rpDashboardFailedSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed sync'**
+  String get rpDashboardFailedSync;
+
+  /// No description provided for @rpFormTitleReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'New receipt'**
+  String get rpFormTitleReceipt;
+
+  /// No description provided for @rpFormTitlePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'New payment'**
+  String get rpFormTitlePayment;
+
+  /// No description provided for @rpFormSectionDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Document'**
+  String get rpFormSectionDocument;
+
+  /// No description provided for @rpFormSectionAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts & amount'**
+  String get rpFormSectionAccounts;
+
+  /// No description provided for @rpFormSectionParty.
+  ///
+  /// In en, this message translates to:
+  /// **'Party'**
+  String get rpFormSectionParty;
+
+  /// No description provided for @rpFormSectionNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference & notes'**
+  String get rpFormSectionNotes;
+
+  /// No description provided for @rpFormSectionLines.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry lines'**
+  String get rpFormSectionLines;
+
+  /// No description provided for @rpGeneralDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher description'**
+  String get rpGeneralDescription;
+
+  /// No description provided for @rpDefaultGeneralDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment from account'**
+  String get rpDefaultGeneralDescription;
+
+  /// No description provided for @rpManualExchangeRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rate'**
+  String get rpManualExchangeRate;
+
+  /// No description provided for @rpManualExchangeRateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'1 {cash} = ? {party}'**
+  String rpManualExchangeRateHint(String cash, String party);
+
+  /// No description provided for @rpLineDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Line description'**
+  String get rpLineDescription;
+
+  /// No description provided for @rpCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get rpCurrency;
+
+  /// No description provided for @rpCurrencyEquivalent.
+  ///
+  /// In en, this message translates to:
+  /// **'Base equivalent'**
+  String get rpCurrencyEquivalent;
+
+  /// No description provided for @rpExchangeRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate'**
+  String get rpExchangeRate;
+
+  /// No description provided for @rpBaseCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Base currency'**
+  String get rpBaseCurrency;
+
+  /// No description provided for @rpLinesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts added.'**
+  String get rpLinesEmpty;
+
+  /// No description provided for @rpAddAccountLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get rpAddAccountLine;
+
+  /// No description provided for @rpAddAnotherAccountLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Add row'**
+  String get rpAddAnotherAccountLine;
+
+  /// No description provided for @rpChangeAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Change account'**
+  String get rpChangeAccount;
+
+  /// No description provided for @rpEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit transaction'**
+  String get rpEditTitle;
+
+  /// No description provided for @rpDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction details'**
+  String get rpDetailsTitle;
+
+  /// No description provided for @rpSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get rpSave;
+
+  /// No description provided for @rpSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction saved'**
+  String get rpSaved;
+
+  /// No description provided for @rpSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get rpSaving;
+
+  /// No description provided for @rpPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get rpPost;
+
+  /// No description provided for @rpPosting.
+  ///
+  /// In en, this message translates to:
+  /// **'Posting…'**
+  String get rpPosting;
+
+  /// No description provided for @rpPosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction posted'**
+  String get rpPosted;
+
+  /// No description provided for @rpCancelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel transaction'**
+  String get rpCancelTitle;
+
+  /// No description provided for @rpCancelMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel {number}? The linked accounting entry will be voided.'**
+  String rpCancelMessage(String number);
+
+  /// No description provided for @rpCancelAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel transaction'**
+  String get rpCancelAction;
+
+  /// No description provided for @rpCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction cancelled'**
+  String get rpCancelled;
+
+  /// No description provided for @rpLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get rpLoading;
+
+  /// No description provided for @rpNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction not found'**
+  String get rpNotFound;
+
+  /// No description provided for @rpEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions'**
+  String get rpEmptyTitle;
+
+  /// No description provided for @rpEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a receipt or payment to get started.'**
+  String get rpEmptyMessage;
+
+  /// No description provided for @rpSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search number, party, reference…'**
+  String get rpSearchHint;
+
+  /// No description provided for @rpTypeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get rpTypeAll;
+
+  /// No description provided for @rpTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get rpTypeLabel;
+
+  /// No description provided for @rpTypeReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get rpTypeReceipt;
+
+  /// No description provided for @rpTypePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get rpTypePayment;
+
+  /// No description provided for @rpStatusUnposted.
+  ///
+  /// In en, this message translates to:
+  /// **'Unposted'**
+  String get rpStatusUnposted;
+
+  /// No description provided for @rpStatusPosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted'**
+  String get rpStatusPosted;
+
+  /// No description provided for @rpSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get rpSource;
+
+  /// No description provided for @rpSourceManualReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual receipt'**
+  String get rpSourceManualReceipt;
+
+  /// No description provided for @rpSourceManualPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual payment'**
+  String get rpSourceManualPayment;
+
+  /// No description provided for @rpSourceCustomerReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer receipt'**
+  String get rpSourceCustomerReceipt;
+
+  /// No description provided for @rpSourceExpensePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Expense payment'**
+  String get rpSourceExpensePayment;
+
+  /// No description provided for @rpSourceOtherReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Other receipt'**
+  String get rpSourceOtherReceipt;
+
+  /// No description provided for @rpSourceOtherPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Other payment'**
+  String get rpSourceOtherPayment;
+
+  /// No description provided for @rpSourceSalesRelatedReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales-related receipt'**
+  String get rpSourceSalesRelatedReceipt;
+
+  /// No description provided for @rpSourcePurchaseRelatedPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase-related payment'**
+  String get rpSourcePurchaseRelatedPayment;
+
+  /// No description provided for @rpDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get rpDate;
+
+  /// No description provided for @rpAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get rpAmount;
+
+  /// No description provided for @rpLineAmountCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (Credit)'**
+  String get rpLineAmountCredit;
+
+  /// No description provided for @rpLineAmountDebit.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (Debit)'**
+  String get rpLineAmountDebit;
+
+  /// No description provided for @rpTotalsDebit.
+  ///
+  /// In en, this message translates to:
+  /// **'Total debit'**
+  String get rpTotalsDebit;
+
+  /// No description provided for @rpTotalsCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Total credit'**
+  String get rpTotalsCredit;
+
+  /// No description provided for @rpTotalsDifference.
+  ///
+  /// In en, this message translates to:
+  /// **'Difference'**
+  String get rpTotalsDifference;
+
+  /// No description provided for @rpCashAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash amount'**
+  String get rpCashAmount;
+
+  /// No description provided for @rpCashAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash / bank account'**
+  String get rpCashAccount;
+
+  /// No description provided for @rpCounterAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter account'**
+  String get rpCounterAccount;
+
+  /// No description provided for @rpCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get rpCustomer;
+
+  /// No description provided for @rpPartyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Party name'**
+  String get rpPartyName;
+
+  /// No description provided for @rpNoParty.
+  ///
+  /// In en, this message translates to:
+  /// **'No party'**
+  String get rpNoParty;
+
+  /// No description provided for @rpReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference'**
+  String get rpReference;
+
+  /// No description provided for @rpDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get rpDescription;
+
+  /// No description provided for @rpPaymentMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment method'**
+  String get rpPaymentMethod;
+
+  /// No description provided for @rpPaymentCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get rpPaymentCash;
+
+  /// No description provided for @rpPaymentCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Card'**
+  String get rpPaymentCard;
+
+  /// No description provided for @rpPaymentBankTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank transfer'**
+  String get rpPaymentBankTransfer;
+
+  /// No description provided for @rpPaymentOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get rpPaymentOther;
+
+  /// No description provided for @rpVoucherBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher book'**
+  String get rpVoucherBook;
+
+  /// No description provided for @rpVoucherBookEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No voucher books available'**
+  String get rpVoucherBookEmpty;
+
+  /// No description provided for @rpTransactionNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get rpTransactionNumber;
+
+  /// No description provided for @rpSearchAccountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search accounts'**
+  String get rpSearchAccountHint;
+
+  /// No description provided for @rpSearchCustomerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search customers'**
+  String get rpSearchCustomerHint;
+
+  /// No description provided for @rpCustomerNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No customers found'**
+  String get rpCustomerNotFound;
+
+  /// No description provided for @rpAutocompleteSearchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Search failed'**
+  String get rpAutocompleteSearchFailed;
+
+  /// No description provided for @rpErrorAmountMustBePositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount must be greater than zero'**
+  String get rpErrorAmountMustBePositive;
+
+  /// No description provided for @rpErrorCounterAmountMustBePositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Party amount must be greater than zero'**
+  String get rpErrorCounterAmountMustBePositive;
+
+  /// No description provided for @rpErrorCashAccountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash or bank account is required'**
+  String get rpErrorCashAccountRequired;
+
+  /// No description provided for @rpErrorCounterAccountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter account is required'**
+  String get rpErrorCounterAccountRequired;
+
+  /// No description provided for @rpErrorCustomerRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer is required for this source'**
+  String get rpErrorCustomerRequired;
+
+  /// No description provided for @rpErrorSameAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash and counter accounts must be different'**
+  String get rpErrorSameAccounts;
+
+  /// No description provided for @rpErrorVoucherBookRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a voucher book'**
+  String get rpErrorVoucherBookRequired;
+
+  /// No description provided for @rpErrorNotEditable.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted transactions cannot be edited'**
+  String get rpErrorNotEditable;
+
+  /// No description provided for @rpErrorCannotPost.
+  ///
+  /// In en, this message translates to:
+  /// **'This transaction cannot be posted'**
+  String get rpErrorCannotPost;
+
+  /// No description provided for @rpErrorCannotCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'This transaction cannot be cancelled'**
+  String get rpErrorCannotCancel;
+
+  /// No description provided for @rpErrorAlreadyCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction is already cancelled'**
+  String get rpErrorAlreadyCancelled;
+
+  /// No description provided for @rpErrorCurrencyRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency is required'**
+  String get rpErrorCurrencyRequired;
+
+  /// No description provided for @rpErrorUnbalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot save while debit and credit totals differ'**
+  String get rpErrorUnbalanced;
+
+  /// No description provided for @rpErrorSavingInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Save already in progress'**
+  String get rpErrorSavingInProgress;
+
+  /// No description provided for @rpErrorLedgerPostingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounting posting failed'**
+  String get rpErrorLedgerPostingFailed;
+
+  /// No description provided for @adminPermPackageReceiptsPaymentsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts, payments, reports, and sync'**
+  String get adminPermPackageReceiptsPaymentsHint;
+
+  /// No description provided for @adminPermServiceReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts'**
+  String get adminPermServiceReceipts;
+
+  /// No description provided for @adminPermServiceReceiptsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash and bank receipts'**
+  String get adminPermServiceReceiptsHint;
+
+  /// No description provided for @adminPermServicePayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get adminPermServicePayments;
+
+  /// No description provided for @adminPermServicePaymentsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash and bank payments'**
+  String get adminPermServicePaymentsHint;
+
+  /// No description provided for @adminPermServiceRpReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get adminPermServiceRpReports;
+
+  /// No description provided for @adminPermServiceRpReportsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts and payments reports'**
+  String get adminPermServiceRpReportsHint;
+
+  /// No description provided for @adminPermServiceRpSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization'**
+  String get adminPermServiceRpSync;
+
+  /// No description provided for @adminPermServiceRpSyncHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync receipts and payments'**
+  String get adminPermServiceRpSyncHint;
+
+  /// No description provided for @adminPermActionSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get adminPermActionSync;
+
+  /// No description provided for @reportsRpReceiptsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts report'**
+  String get reportsRpReceiptsTitle;
+
+  /// No description provided for @reportsRpReceiptsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts in a period with totals from the database.'**
+  String get reportsRpReceiptsSubtitle;
+
+  /// No description provided for @reportsRpPaymentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments report'**
+  String get reportsRpPaymentsTitle;
+
+  /// No description provided for @reportsRpPaymentsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments in a period with totals from the database.'**
+  String get reportsRpPaymentsSubtitle;
+
+  /// No description provided for @reportsRpCashMovementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash movement'**
+  String get reportsRpCashMovementTitle;
+
+  /// No description provided for @reportsRpCashMovementSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash-box receipts and payments for a period.'**
+  String get reportsRpCashMovementSubtitle;
+
+  /// No description provided for @reportsRpBankMovementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank movement'**
+  String get reportsRpBankMovementTitle;
+
+  /// No description provided for @reportsRpBankMovementSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank account receipts and payments for a period.'**
+  String get reportsRpBankMovementSubtitle;
+
+  /// No description provided for @reportsRpCustomerReceiptsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer receipts'**
+  String get reportsRpCustomerReceiptsTitle;
+
+  /// No description provided for @reportsRpCustomerReceiptsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts linked to customers.'**
+  String get reportsRpCustomerReceiptsSubtitle;
+
+  /// No description provided for @reportsRpDailySummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily summary'**
+  String get reportsRpDailySummaryTitle;
+
+  /// No description provided for @reportsRpDailySummarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts and payments for a single day.'**
+  String get reportsRpDailySummarySubtitle;
+
+  /// No description provided for @reportsRpPeriodSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Period summary'**
+  String get reportsRpPeriodSummaryTitle;
+
+  /// No description provided for @reportsRpPeriodSummarySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Aggregated receipts and payments for a date range.'**
+  String get reportsRpPeriodSummarySubtitle;
+
+  /// No description provided for @reportsRpColNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get reportsRpColNumber;
+
+  /// No description provided for @reportsRpColDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get reportsRpColDate;
+
+  /// No description provided for @reportsRpColType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get reportsRpColType;
+
+  /// No description provided for @reportsRpColParty.
+  ///
+  /// In en, this message translates to:
+  /// **'Party'**
+  String get reportsRpColParty;
+
+  /// No description provided for @reportsRpColAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get reportsRpColAmount;
+
+  /// No description provided for @reportsRpColStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get reportsRpColStatus;
+
+  /// No description provided for @reportsRpTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get reportsRpTotal;
+
+  /// No description provided for @reportsRpCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Count'**
+  String get reportsRpCount;
 
   /// No description provided for @reportsSalesPeriodTitle.
   ///
@@ -956,6 +1892,12 @@ abstract class AppLocalizations {
   /// **'Invoice number'**
   String get salesInvoiceNumber;
 
+  /// No description provided for @salesInvoiceReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Ref. {number}'**
+  String salesInvoiceReference(String number);
+
   /// No description provided for @salesCashAccount.
   ///
   /// In en, this message translates to:
@@ -1249,6 +2191,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Post'**
   String get salesPostSale;
+
+  /// No description provided for @salesPostRequiresInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Posting is unavailable until inventory stock tracking is added.'**
+  String get salesPostRequiresInventory;
 
   /// No description provided for @salesCompleteSale.
   ///
@@ -1951,6 +2899,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Updated {count} customers'**
   String customersImportUpdatedCount(int count);
+
+  /// No description provided for @customersImportBackgroundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can leave this page and keep using the app while import runs in the background.'**
+  String get customersImportBackgroundHint;
+
+  /// No description provided for @importBackgroundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can leave this page and keep using the app while import runs in the background.'**
+  String get importBackgroundHint;
 
   /// No description provided for @customersNoValidRows.
   ///
@@ -2816,6 +3776,24 @@ abstract class AppLocalizations {
   /// **'Account code'**
   String get accountingFieldCode;
 
+  /// No description provided for @accountingFieldCodeHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'When a parent is selected, the code is generated from it (e.g. 1221 → 12210001).'**
+  String get accountingFieldCodeHelper;
+
+  /// No description provided for @accountingGenerateCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate code'**
+  String get accountingGenerateCode;
+
+  /// No description provided for @accountingAddChildAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Add child account'**
+  String get accountingAddChildAccount;
+
   /// No description provided for @accountingFieldParent.
   ///
   /// In en, this message translates to:
@@ -3176,10 +4154,16 @@ abstract class AppLocalizations {
   /// **'Current Assets'**
   String get accountingAccountCurrentAssets;
 
+  /// No description provided for @accountingAccountCashBoxes.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Boxes'**
+  String get accountingAccountCashBoxes;
+
   /// No description provided for @accountingAccountCash.
   ///
   /// In en, this message translates to:
-  /// **'Cash'**
+  /// **'Main Cash Box'**
   String get accountingAccountCash;
 
   /// No description provided for @accountingAccountBank.
@@ -4907,13 +5891,13 @@ abstract class AppLocalizations {
   /// No description provided for @systemSetupStepSeed.
   ///
   /// In en, this message translates to:
-  /// **'Local defaults'**
+  /// **'Chart of accounts'**
   String get systemSetupStepSeed;
 
   /// No description provided for @systemSetupStepSeedHint.
   ///
   /// In en, this message translates to:
-  /// **'Create the default chart of accounts and voucher books.'**
+  /// **'Create the chart locally (first device) or sync it from your company server (joining device).'**
   String get systemSetupStepSeedHint;
 
   /// No description provided for @systemSetupStepExternal.
@@ -4993,6 +5977,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Default accounts and voucher books are ready.'**
   String get systemSetupSeedDone;
+
+  /// No description provided for @systemSetupSeedCreateLocalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create locally'**
+  String get systemSetupSeedCreateLocalTitle;
+
+  /// No description provided for @systemSetupSeedCreateLocalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Build the default chart of accounts on this device. Use this on the first device or when offline.'**
+  String get systemSetupSeedCreateLocalSubtitle;
+
+  /// No description provided for @systemSetupSeedSyncTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync from server'**
+  String get systemSetupSeedSyncTitle;
+
+  /// No description provided for @systemSetupSeedSyncSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in and enter the app. The company chart downloads in the background so you do not create a duplicate.'**
+  String get systemSetupSeedSyncSubtitle;
+
+  /// No description provided for @systemSetupSeedSyncRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading chart of accounts…'**
+  String get systemSetupSeedSyncRunning;
+
+  /// No description provided for @systemSetupSeedSyncDone.
+  ///
+  /// In en, this message translates to:
+  /// **'You can enter the app now. Chart sync continues in the background.'**
+  String get systemSetupSeedSyncDone;
+
+  /// No description provided for @systemSetupSeedSignInToSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to sync'**
+  String get systemSetupSeedSignInToSync;
+
+  /// No description provided for @systemSetupSeedErrorSyncRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on sync and sign in, then try again.'**
+  String get systemSetupSeedErrorSyncRequired;
+
+  /// No description provided for @systemSetupSeedErrorAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to the company server, then try again.'**
+  String get systemSetupSeedErrorAuth;
+
+  /// No description provided for @systemSetupSeedErrorOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the internet to sync the chart of accounts.'**
+  String get systemSetupSeedErrorOffline;
+
+  /// No description provided for @systemSetupSeedErrorEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No chart of accounts on the server yet. Create it locally on the first device, sync there, then retry here.'**
+  String get systemSetupSeedErrorEmpty;
+
+  /// No description provided for @systemSetupSeedErrorPull.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not download the chart of accounts. Try again.'**
+  String get systemSetupSeedErrorPull;
 
   /// No description provided for @systemSetupExternalPlaceholder.
   ///
@@ -5521,6 +6577,294 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Something went wrong while initializing the application.'**
   String get splashInitErrorMessage;
+
+  /// No description provided for @appLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App locked'**
+  String get appLockTitle;
+
+  /// No description provided for @appLockSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN to continue. This protects the app on this device — you are still signed in.'**
+  String get appLockSubtitle;
+
+  /// No description provided for @appLockPinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN'**
+  String get appLockPinLabel;
+
+  /// No description provided for @appLockConfirmPinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm PIN'**
+  String get appLockConfirmPinLabel;
+
+  /// No description provided for @appLockCurrentPinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current PIN'**
+  String get appLockCurrentPinLabel;
+
+  /// No description provided for @appLockNewPinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New PIN'**
+  String get appLockNewPinLabel;
+
+  /// No description provided for @appLockUnlockAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get appLockUnlockAction;
+
+  /// No description provided for @appLockShowPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Show PIN'**
+  String get appLockShowPin;
+
+  /// No description provided for @appLockHidePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide PIN'**
+  String get appLockHidePin;
+
+  /// No description provided for @appLockErrorInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect PIN. Try again.'**
+  String get appLockErrorInvalid;
+
+  /// No description provided for @appLockErrorLockout.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please wait a moment and try again.'**
+  String get appLockErrorLockout;
+
+  /// No description provided for @appLockErrorLength.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN must be 4 to 6 digits.'**
+  String get appLockErrorLength;
+
+  /// No description provided for @appLockErrorDigits.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN must contain digits only.'**
+  String get appLockErrorDigits;
+
+  /// No description provided for @appLockErrorMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN confirmation does not match.'**
+  String get appLockErrorMismatch;
+
+  /// No description provided for @appLockSettingsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get appLockSettingsSection;
+
+  /// No description provided for @appLockSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App Lock'**
+  String get appLockSettingsTitle;
+
+  /// No description provided for @appLockSettingsEnabledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN required when returning to the app.'**
+  String get appLockSettingsEnabledHint;
+
+  /// No description provided for @appLockSettingsDisabledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a PIN to protect this app locally.'**
+  String get appLockSettingsDisabledHint;
+
+  /// No description provided for @appLockEnableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable App Lock'**
+  String get appLockEnableTitle;
+
+  /// No description provided for @appLockEnableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a 4–6 digit PIN. You will need it whenever the app is locked.'**
+  String get appLockEnableMessage;
+
+  /// No description provided for @appLockDisableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable App Lock'**
+  String get appLockDisableTitle;
+
+  /// No description provided for @appLockDisableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your current PIN to turn off App Lock.'**
+  String get appLockDisableMessage;
+
+  /// No description provided for @appLockChangePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Change PIN'**
+  String get appLockChangePin;
+
+  /// No description provided for @appLockChangePinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your current PIN.'**
+  String get appLockChangePinHint;
+
+  /// No description provided for @appLockBiometricTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with fingerprint'**
+  String get appLockBiometricTitle;
+
+  /// No description provided for @appLockBiometricHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use fingerprint or device biometrics to unlock.'**
+  String get appLockBiometricHint;
+
+  /// No description provided for @appLockBiometricUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometrics are not available on this device.'**
+  String get appLockBiometricUnavailable;
+
+  /// No description provided for @appLockBiometricPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to unlock NexaBiz'**
+  String get appLockBiometricPrompt;
+
+  /// No description provided for @appLockBiometricEnabledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint unlock is on.'**
+  String get appLockBiometricEnabledSuccess;
+
+  /// No description provided for @appLockBiometricUnlockAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Use fingerprint'**
+  String get appLockBiometricUnlockAction;
+
+  /// No description provided for @appLockPolicyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'When to lock'**
+  String get appLockPolicyLabel;
+
+  /// No description provided for @appLockPolicyDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get appLockPolicyDisabled;
+
+  /// No description provided for @appLockPolicyOnResume.
+  ///
+  /// In en, this message translates to:
+  /// **'When returning from background'**
+  String get appLockPolicyOnResume;
+
+  /// No description provided for @appLockPolicyOnResumeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Asks for PIN after the app was in the background.'**
+  String get appLockPolicyOnResumeHint;
+
+  /// No description provided for @appLockPolicyColdStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Only when reopening the app'**
+  String get appLockPolicyColdStart;
+
+  /// No description provided for @appLockPolicyColdStartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Asks for PIN after the app was fully closed.'**
+  String get appLockPolicyColdStartHint;
+
+  /// No description provided for @appLockEnabledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'App Lock is on.'**
+  String get appLockEnabledSuccess;
+
+  /// No description provided for @appLockDisabledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'App Lock is off.'**
+  String get appLockDisabledSuccess;
+
+  /// No description provided for @appLockPinChangedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN updated.'**
+  String get appLockPinChangedSuccess;
+
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboardingSkip;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get onboardingStart;
+
+  /// No description provided for @onboardingPage1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to NexaBiz'**
+  String get onboardingPage1Title;
+
+  /// No description provided for @onboardingPage1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your offline-first platform for running inventory, sales, customers, and accounting in one place.'**
+  String get onboardingPage1Body;
+
+  /// No description provided for @onboardingPage2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Works fully offline'**
+  String get onboardingPage2Title;
+
+  /// No description provided for @onboardingPage2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Use inventory, sales, and accounting on this device without a network. Synchronization is optional — enable it later from Settings only if you need multi-device sync.'**
+  String get onboardingPage2Body;
+
+  /// No description provided for @onboardingPage3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your company'**
+  String get onboardingPage3Title;
+
+  /// No description provided for @onboardingPage3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Next you will configure company details, currency, and how the system should run for your business.'**
+  String get onboardingPage3Body;
 
   /// No description provided for @loading.
   ///
@@ -6104,6 +7448,12 @@ abstract class AppLocalizations {
   /// **'Saving items...'**
   String get importSaving;
 
+  /// No description provided for @importLinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Linking Chart of Accounts…'**
+  String get importLinking;
+
   /// No description provided for @emptyWorkbook.
   ///
   /// In en, this message translates to:
@@ -6127,6 +7477,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Synchronization'**
   String get syncSectionTitle;
+
+  /// No description provided for @syncEnabledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable synchronization'**
+  String get syncEnabledTitle;
+
+  /// No description provided for @syncEnabledSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. Keep data on this device only, or authenticate with the server to sync across devices.'**
+  String get syncEnabledSubtitle;
+
+  /// No description provided for @syncDisabledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization is turned off. Local data stays on this device.'**
+  String get syncDisabledMessage;
+
+  /// No description provided for @syncAuthRequiredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with your server account. Synchronization stays off until authentication succeeds.'**
+  String get syncAuthRequiredHint;
+
+  /// No description provided for @syncAuthCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization was not enabled. Authentication is required.'**
+  String get syncAuthCancelled;
+
+  /// No description provided for @syncPermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This account cannot synchronize. Ask an admin to grant sync.view or sync.execute on your role.'**
+  String get syncPermissionRequired;
+
+  /// No description provided for @syncSessionAuthenticated.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticated synchronization session is active.'**
+  String get syncSessionAuthenticated;
+
+  /// No description provided for @syncSessionAsUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {email}'**
+  String syncSessionAsUser(String email);
+
+  /// No description provided for @syncSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Session expired. Sign in again to continue syncing.'**
+  String get syncSessionExpired;
+
+  /// No description provided for @syncAutoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic synchronization'**
+  String get syncAutoTitle;
+
+  /// No description provided for @syncAutoSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync in the background without blocking the app. You can still tap Sync Now anytime.'**
+  String get syncAutoSubtitle;
+
+  /// No description provided for @syncAutoIntervalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency'**
+  String get syncAutoIntervalLabel;
+
+  /// No description provided for @syncAutoIntervalOnChange.
+  ///
+  /// In en, this message translates to:
+  /// **'When there are pending changes'**
+  String get syncAutoIntervalOnChange;
+
+  /// No description provided for @syncAutoIntervalMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {minutes} minutes'**
+  String syncAutoIntervalMinutes(int minutes);
+
+  /// No description provided for @syncDisableRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'A request was sent to the administrator. Synchronization stays on until they approve.'**
+  String get syncDisableRequestSent;
+
+  /// No description provided for @syncDisableRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not notify the administrator. Check your connection and try again.'**
+  String get syncDisableRequestFailed;
+
+  /// No description provided for @syncDisableNeedsAdminOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an administrator can disable sync. Connect and sign in to send a request.'**
+  String get syncDisableNeedsAdminOnline;
+
+  /// No description provided for @adminDevicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices'**
+  String get adminDevicesTitle;
+
+  /// No description provided for @adminDevicesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered devices and sync-disable requests'**
+  String get adminDevicesSubtitle;
+
+  /// No description provided for @adminDevicesPendingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} pending disable requests'**
+  String adminDevicesPendingCount(int count);
+
+  /// No description provided for @adminDevicesListIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'See every device linked to this company. Revoke a device to end its sessions and block further sync.'**
+  String get adminDevicesListIntro;
+
+  /// No description provided for @adminDevicesListSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered devices'**
+  String get adminDevicesListSection;
+
+  /// No description provided for @adminDevicesRequestsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync-disable requests'**
+  String get adminDevicesRequestsSection;
+
+  /// No description provided for @adminDevicesListEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No devices yet'**
+  String get adminDevicesListEmptyTitle;
+
+  /// No description provided for @adminDevicesListEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices appear here after a user signs in for synchronization.'**
+  String get adminDevicesListEmptyMessage;
+
+  /// No description provided for @adminDevicesListLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load devices'**
+  String get adminDevicesListLoadError;
+
+  /// No description provided for @adminDevicesUntitled.
+  ///
+  /// In en, this message translates to:
+  /// **'Unnamed device'**
+  String get adminDevicesUntitled;
+
+  /// No description provided for @adminDevicesStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get adminDevicesStatusActive;
+
+  /// No description provided for @adminDevicesStatusRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoked'**
+  String get adminDevicesStatusRevoked;
+
+  /// No description provided for @adminDevicesStatusBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get adminDevicesStatusBlocked;
+
+  /// No description provided for @adminDevicesLastSeenNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen: never'**
+  String get adminDevicesLastSeenNever;
+
+  /// No description provided for @adminDevicesLastSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen: {when}'**
+  String adminDevicesLastSeen(String when);
+
+  /// No description provided for @adminDevicesRevokeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get adminDevicesRevokeAction;
+
+  /// No description provided for @adminDevicesRevokeCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get adminDevicesRevokeCancel;
+
+  /// No description provided for @adminDevicesRevokeConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke this device?'**
+  String get adminDevicesRevokeConfirmTitle;
+
+  /// No description provided for @adminDevicesRevokeConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The device will lose sync access immediately. The user must sign in again on a new registration.'**
+  String get adminDevicesRevokeConfirmMessage;
+
+  /// No description provided for @adminDevicesRevokeSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Device revoked.'**
+  String get adminDevicesRevokeSuccess;
+
+  /// No description provided for @adminDevicesDisableRequestsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Users who are not administrators cannot turn sync off themselves. Approve to disable sync on their device, or reject to keep it enabled.'**
+  String get adminDevicesDisableRequestsIntro;
+
+  /// No description provided for @adminDevicesDisableRequestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This user asked to disable synchronization on their device.'**
+  String get adminDevicesDisableRequestHint;
+
+  /// No description provided for @adminDevicesApproveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable on device'**
+  String get adminDevicesApproveAction;
+
+  /// No description provided for @adminDevicesRejectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep syncing'**
+  String get adminDevicesRejectAction;
+
+  /// No description provided for @adminDevicesApproveSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Device sync will be disabled.'**
+  String get adminDevicesApproveSuccess;
+
+  /// No description provided for @adminDevicesRejectSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Request rejected. Sync stays enabled.'**
+  String get adminDevicesRejectSuccess;
+
+  /// No description provided for @adminDevicesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending requests'**
+  String get adminDevicesEmptyTitle;
+
+  /// No description provided for @adminDevicesEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'When a user asks to disable sync, the request appears here.'**
+  String get adminDevicesEmptyMessage;
+
+  /// No description provided for @adminDevicesLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load device requests'**
+  String get adminDevicesLoadError;
+
+  /// No description provided for @adminDevicesRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get adminDevicesRefresh;
+
+  /// No description provided for @adminDevicesUnknownUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown user'**
+  String get adminDevicesUnknownUser;
+
+  /// No description provided for @syncServerSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync server'**
+  String get syncServerSectionTitle;
+
+  /// No description provided for @syncServerUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL'**
+  String get syncServerUrlLabel;
+
+  /// No description provided for @syncServerUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'http://192.168.1.10:8000'**
+  String get syncServerUrlHint;
+
+  /// No description provided for @syncServerUrlRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the sync server URL first.'**
+  String get syncServerUrlRequired;
+
+  /// No description provided for @syncServerUrlInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid URL including http:// or https://.'**
+  String get syncServerUrlInvalid;
+
+  /// No description provided for @syncServerTokenLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'API token (optional)'**
+  String get syncServerTokenLabel;
+
+  /// No description provided for @syncServerTokenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave blank to keep the current token'**
+  String get syncServerTokenHint;
+
+  /// No description provided for @syncServerSaveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Save server'**
+  String get syncServerSaveAction;
+
+  /// No description provided for @syncServerSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Server settings saved.'**
+  String get syncServerSaved;
 
   /// No description provided for @syncBackendLabel.
   ///
@@ -6164,6 +7856,12 @@ abstract class AppLocalizations {
   /// **'Never'**
   String get syncLastSyncNever;
 
+  /// No description provided for @syncLastPassMetrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Last pass: ↑{uploaded} ↓{downloaded} · {ms} ms'**
+  String syncLastPassMetrics(int uploaded, int downloaded, int ms);
+
   /// No description provided for @syncPendingChangesLabel.
   ///
   /// In en, this message translates to:
@@ -6182,10 +7880,22 @@ abstract class AppLocalizations {
   /// **'Sync Now'**
   String get syncNowAction;
 
+  /// No description provided for @syncCheckIncomingAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Get server changes'**
+  String get syncCheckIncomingAction;
+
+  /// No description provided for @syncCheckingIncoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking server…'**
+  String get syncCheckingIncoming;
+
   /// No description provided for @syncOfflineMessage.
   ///
   /// In en, this message translates to:
-  /// **'You\'re offline. Changes will sync automatically when an internet connection is available.'**
+  /// **'You\'re offline. Connect to the internet, then tap Sync Now.'**
   String get syncOfflineMessage;
 
   /// No description provided for @syncStatusSynced.
@@ -6218,6 +7928,12 @@ abstract class AppLocalizations {
   /// **'Conflict'**
   String get syncStatusConflict;
 
+  /// No description provided for @syncStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not authorized'**
+  String get syncStatusRejected;
+
   /// No description provided for @syncStatusOffline.
   ///
   /// In en, this message translates to:
@@ -6235,6 +7951,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All changes have been synchronized.'**
   String get syncCompletedMessage;
+
+  /// No description provided for @syncIncomingNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No new changes from the server.'**
+  String get syncIncomingNone;
+
+  /// No description provided for @syncIncomingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} changes received from the server'**
+  String syncIncomingCount(int count);
+
+  /// No description provided for @syncIncomingSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} from server: {details}'**
+  String syncIncomingSummary(int count, String details);
+
+  /// No description provided for @syncIncomingEntityCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} {count}'**
+  String syncIncomingEntityCount(String label, int count);
+
+  /// No description provided for @syncIncomingFromServerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'From server'**
+  String get syncIncomingFromServerTitle;
+
+  /// No description provided for @syncEntityProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get syncEntityProduct;
+
+  /// No description provided for @syncEntityInventoryItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock items'**
+  String get syncEntityInventoryItem;
+
+  /// No description provided for @syncEntityCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers'**
+  String get syncEntityCustomer;
+
+  /// No description provided for @syncEntityAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get syncEntityAccount;
+
+  /// No description provided for @syncEntityJournalEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal entries'**
+  String get syncEntityJournalEntry;
+
+  /// No description provided for @syncEntitySale.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales'**
+  String get syncEntitySale;
 
   /// No description provided for @syncPartialTitle.
   ///
@@ -6307,6 +8089,996 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preparing report…'**
   String get loadingExportingReport;
+
+  /// No description provided for @authLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get authLoginTitle;
+
+  /// No description provided for @authLoginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to sync securely across your devices.'**
+  String get authLoginSubtitle;
+
+  /// No description provided for @authLoginLocalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline local login. Default admin has full permissions.'**
+  String get authLoginLocalHint;
+
+  /// No description provided for @authEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get authEmailLabel;
+
+  /// No description provided for @authPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get authPasswordLabel;
+
+  /// No description provided for @authSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get authSignIn;
+
+  /// No description provided for @authSigningIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in…'**
+  String get authSigningIn;
+
+  /// No description provided for @authBiometricSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with fingerprint'**
+  String get authBiometricSignIn;
+
+  /// No description provided for @authBiometricPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to sign in to sync'**
+  String get authBiometricPrompt;
+
+  /// No description provided for @authBiometricSaveForNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Use fingerprint next time'**
+  String get authBiometricSaveForNext;
+
+  /// No description provided for @authBiometricUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint is not available on this device.'**
+  String get authBiometricUnavailable;
+
+  /// No description provided for @authBiometricFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint authentication failed. Try again or use your password.'**
+  String get authBiometricFailed;
+
+  /// No description provided for @authLoginFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email or password.'**
+  String get authLoginFailed;
+
+  /// No description provided for @authNetworkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot reach the server. Check Wi‑Fi and API address.'**
+  String get authNetworkError;
+
+  /// No description provided for @authLoginGenericError.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in failed. Please try again.'**
+  String get authLoginGenericError;
+
+  /// No description provided for @authSelectCompanyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select company'**
+  String get authSelectCompanyTitle;
+
+  /// No description provided for @authLogoutAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get authLogoutAction;
+
+  /// No description provided for @authSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Session expired. Please sign in again.'**
+  String get authSessionExpired;
+
+  /// No description provided for @moduleAdministration.
+  ///
+  /// In en, this message translates to:
+  /// **'Administration'**
+  String get moduleAdministration;
+
+  /// No description provided for @moduleAdministrationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Users, roles, and access control'**
+  String get moduleAdministrationDescription;
+
+  /// No description provided for @adminRequiresOnlineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Online required'**
+  String get adminRequiresOnlineTitle;
+
+  /// No description provided for @adminRequiresOnlineMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'User management needs an authenticated sync session and network connection.'**
+  String get adminRequiresOnlineMessage;
+
+  /// No description provided for @adminUsersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Users'**
+  String get adminUsersTitle;
+
+  /// No description provided for @adminUsersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create and manage application users'**
+  String get adminUsersSubtitle;
+
+  /// No description provided for @adminRolesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Roles & permissions'**
+  String get adminRolesTitle;
+
+  /// No description provided for @adminRolesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create roles and assign the permissions you need'**
+  String get adminRolesSubtitle;
+
+  /// No description provided for @adminRolesHubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Build custom roles and control what each role can do'**
+  String get adminRolesHubSubtitle;
+
+  /// No description provided for @adminAccessControlSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Access control'**
+  String get adminAccessControlSection;
+
+  /// No description provided for @adminAccessControlIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage who can use the app and what they can see or change. Roles package permissions; users receive a role.'**
+  String get adminAccessControlIntro;
+
+  /// No description provided for @adminAccessControlTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: create a role first, pick permissions carefully (especially accounting), then assign the role when creating a user.'**
+  String get adminAccessControlTip;
+
+  /// No description provided for @adminPermissionsCatalogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission catalog'**
+  String get adminPermissionsCatalogTitle;
+
+  /// No description provided for @adminPermissionsCatalogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse every available permission by module'**
+  String get adminPermissionsCatalogSubtitle;
+
+  /// No description provided for @adminPermissionsCatalogIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'These are the building blocks of access control. Attach them to roles — never hard-code them into screens.'**
+  String get adminPermissionsCatalogIntro;
+
+  /// No description provided for @adminRolesPageIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom roles are fully editable. System roles come from the server and are protected.'**
+  String get adminRolesPageIntro;
+
+  /// No description provided for @adminRolesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search roles by name'**
+  String get adminRolesSearchHint;
+
+  /// No description provided for @adminRolesFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get adminRolesFilterAll;
+
+  /// No description provided for @adminRolesFilterCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get adminRolesFilterCustom;
+
+  /// No description provided for @adminRolesFilterSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get adminRolesFilterSystem;
+
+  /// No description provided for @adminRolesStatTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get adminRolesStatTotal;
+
+  /// No description provided for @adminSystemRoleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in role maintained by the server'**
+  String get adminSystemRoleHint;
+
+  /// No description provided for @adminCustomRoleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your role — edit name and permissions anytime'**
+  String get adminCustomRoleHint;
+
+  /// No description provided for @adminTapToConfigure.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to configure'**
+  String get adminTapToConfigure;
+
+  /// No description provided for @adminUsersSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or email'**
+  String get adminUsersSearchHint;
+
+  /// No description provided for @adminUsersLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load users'**
+  String get adminUsersLoadError;
+
+  /// No description provided for @adminUsersEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No users'**
+  String get adminUsersEmptyTitle;
+
+  /// No description provided for @adminUsersEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a user to grant access.'**
+  String get adminUsersEmptyMessage;
+
+  /// No description provided for @adminCreateUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Create user'**
+  String get adminCreateUser;
+
+  /// No description provided for @adminEditUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit user'**
+  String get adminEditUser;
+
+  /// No description provided for @adminSuspendUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspend'**
+  String get adminSuspendUser;
+
+  /// No description provided for @adminActivateUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate'**
+  String get adminActivateUser;
+
+  /// No description provided for @adminDeactivateUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate'**
+  String get adminDeactivateUser;
+
+  /// No description provided for @adminUserUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'User updated'**
+  String get adminUserUpdated;
+
+  /// No description provided for @adminUserNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get adminUserNameLabel;
+
+  /// No description provided for @adminUserPhoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get adminUserPhoneLabel;
+
+  /// No description provided for @adminUserStatusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get adminUserStatusLabel;
+
+  /// No description provided for @adminUserRoleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get adminUserRoleLabel;
+
+  /// No description provided for @adminStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get adminStatusActive;
+
+  /// No description provided for @adminStatusInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get adminStatusInactive;
+
+  /// No description provided for @adminStatusSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended'**
+  String get adminStatusSuspended;
+
+  /// No description provided for @adminNewPasswordOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'New password (optional)'**
+  String get adminNewPasswordOptional;
+
+  /// No description provided for @adminConfirmPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get adminConfirmPasswordLabel;
+
+  /// No description provided for @adminUserValidationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Name and email are required.'**
+  String get adminUserValidationError;
+
+  /// No description provided for @adminPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters.'**
+  String get adminPasswordTooShort;
+
+  /// No description provided for @adminPasswordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get adminPasswordMismatch;
+
+  /// No description provided for @adminRolesLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load roles'**
+  String get adminRolesLoadError;
+
+  /// No description provided for @adminRolesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No roles'**
+  String get adminRolesEmptyTitle;
+
+  /// No description provided for @adminRolesEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a custom role and pick its permissions.'**
+  String get adminRolesEmptyMessage;
+
+  /// No description provided for @adminSystemRole.
+  ///
+  /// In en, this message translates to:
+  /// **'System role'**
+  String get adminSystemRole;
+
+  /// No description provided for @adminCustomRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom role'**
+  String get adminCustomRole;
+
+  /// No description provided for @adminCreateRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Create role'**
+  String get adminCreateRole;
+
+  /// No description provided for @adminEditRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit role'**
+  String get adminEditRole;
+
+  /// No description provided for @adminDeleteRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete role'**
+  String get adminDeleteRole;
+
+  /// No description provided for @adminDeleteRoleConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete role \"{name}\"? Users with this role keep their account but lose these permissions until reassigned.'**
+  String adminDeleteRoleConfirm(String name);
+
+  /// No description provided for @adminRoleDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Role deleted'**
+  String get adminRoleDeleted;
+
+  /// No description provided for @adminRoleNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Role name'**
+  String get adminRoleNameLabel;
+
+  /// No description provided for @adminRoleNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Sales employee'**
+  String get adminRoleNameHint;
+
+  /// No description provided for @adminRoleDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get adminRoleDescriptionLabel;
+
+  /// No description provided for @adminRoleDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What this role is for'**
+  String get adminRoleDescriptionHint;
+
+  /// No description provided for @adminRoleBasicsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Role details'**
+  String get adminRoleBasicsSection;
+
+  /// No description provided for @adminRoleBasicsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the role a clear name so admins can assign it confidently.'**
+  String get adminRoleBasicsHint;
+
+  /// No description provided for @adminRoleCapabilitiesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'What this role can open'**
+  String get adminRoleCapabilitiesSection;
+
+  /// No description provided for @adminRoleCapabilitiesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates live as you toggle permissions below.'**
+  String get adminRoleCapabilitiesHint;
+
+  /// No description provided for @adminRolePermissionsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get adminRolePermissionsSection;
+
+  /// No description provided for @adminRoleVisibleModules.
+  ///
+  /// In en, this message translates to:
+  /// **'Modules this role can open'**
+  String get adminRoleVisibleModules;
+
+  /// No description provided for @adminRoleNoModulesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No modules yet — select at least one .view permission.'**
+  String get adminRoleNoModulesYet;
+
+  /// No description provided for @adminSelectAllPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get adminSelectAllPermissions;
+
+  /// No description provided for @adminClearPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get adminClearPermissions;
+
+  /// No description provided for @adminRoleNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Role name is required.'**
+  String get adminRoleNameRequired;
+
+  /// No description provided for @adminRolePermissionsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one permission.'**
+  String get adminRolePermissionsRequired;
+
+  /// No description provided for @adminPermissionsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, action, or code'**
+  String get adminPermissionsSearchHint;
+
+  /// No description provided for @adminPermissionsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load permissions'**
+  String get adminPermissionsLoadError;
+
+  /// No description provided for @adminPermissionsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get adminPermissionsEmptyTitle;
+
+  /// No description provided for @adminPermissionsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another search or clear the module filter.'**
+  String get adminPermissionsEmptyMessage;
+
+  /// No description provided for @adminPermissionCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} permissions'**
+  String adminPermissionCount(int count);
+
+  /// No description provided for @adminSelectedPermissionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String adminSelectedPermissionsCount(int count);
+
+  /// No description provided for @adminGroupPermissionSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{selected} of {total}'**
+  String adminGroupPermissionSummary(int selected, int total);
+
+  /// No description provided for @adminSystemRoleReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'System roles are protected. Permission changes may be restricted.'**
+  String get adminSystemRoleReadOnly;
+
+  /// No description provided for @adminPermActionView.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get adminPermActionView;
+
+  /// No description provided for @adminPermActionCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get adminPermActionCreate;
+
+  /// No description provided for @adminPermActionUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get adminPermActionUpdate;
+
+  /// No description provided for @adminPermActionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get adminPermActionDelete;
+
+  /// No description provided for @adminPermActionManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get adminPermActionManage;
+
+  /// No description provided for @adminPermActionAdjust.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust'**
+  String get adminPermActionAdjust;
+
+  /// No description provided for @adminPermActionPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get adminPermActionPost;
+
+  /// No description provided for @adminPermActionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get adminPermActionCancel;
+
+  /// No description provided for @adminPermActionExecute.
+  ///
+  /// In en, this message translates to:
+  /// **'Execute'**
+  String get adminPermActionExecute;
+
+  /// No description provided for @adminPermActionRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get adminPermActionRevoke;
+
+  /// No description provided for @adminPermResourceAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get adminPermResourceAccounts;
+
+  /// No description provided for @adminPermResourceJournals.
+  ///
+  /// In en, this message translates to:
+  /// **'Journals'**
+  String get adminPermResourceJournals;
+
+  /// No description provided for @adminPermResourceDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'Devices'**
+  String get adminPermResourceDevices;
+
+  /// No description provided for @adminPermResourceCompanies.
+  ///
+  /// In en, this message translates to:
+  /// **'Companies'**
+  String get adminPermResourceCompanies;
+
+  /// No description provided for @adminPermGroupSalesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales documents and posting'**
+  String get adminPermGroupSalesHint;
+
+  /// No description provided for @adminPermGroupCustomersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer master data'**
+  String get adminPermGroupCustomersHint;
+
+  /// No description provided for @adminPermGroupInventoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Products and stock'**
+  String get adminPermGroupInventoryHint;
+
+  /// No description provided for @adminPermGroupAccountingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitive financial access'**
+  String get adminPermGroupAccountingHint;
+
+  /// No description provided for @adminPermGroupReportsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports and exports'**
+  String get adminPermGroupReportsHint;
+
+  /// No description provided for @adminPermGroupAdminHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Users, roles, and platform control'**
+  String get adminPermGroupAdminHint;
+
+  /// No description provided for @adminPermGroupSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Application settings'**
+  String get adminPermGroupSettingsHint;
+
+  /// No description provided for @adminPermGroupSyncHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization actions'**
+  String get adminPermGroupSyncHint;
+
+  /// No description provided for @adminPermGroupOtherHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Other permissions'**
+  String get adminPermGroupOtherHint;
+
+  /// No description provided for @adminPermTreeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Organized like the app: Package → Service → Operation. Example: Inventory → Stock count → Import.'**
+  String get adminPermTreeHint;
+
+  /// No description provided for @adminPermTreeCatalogIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Full map of packages, their services, and every operation you can grant on a role.'**
+  String get adminPermTreeCatalogIntro;
+
+  /// No description provided for @adminPermPackagePlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform'**
+  String get adminPermPackagePlatform;
+
+  /// No description provided for @adminPermPackageInventoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock count and products services'**
+  String get adminPermPackageInventoryHint;
+
+  /// No description provided for @adminPermPackageSalesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales documents and invoices'**
+  String get adminPermPackageSalesHint;
+
+  /// No description provided for @adminPermPackageCustomersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers, accounts, and settings'**
+  String get adminPermPackageCustomersHint;
+
+  /// No description provided for @adminPermPackageAccountingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts, journals, rates, voucher books'**
+  String get adminPermPackageAccountingHint;
+
+  /// No description provided for @adminPermPackageReportsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Operational and financial reports'**
+  String get adminPermPackageReportsHint;
+
+  /// No description provided for @adminPermPackageAdminHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Users, roles, and permissions'**
+  String get adminPermPackageAdminHint;
+
+  /// No description provided for @adminPermPackagePlatformHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings, sync, devices, companies'**
+  String get adminPermPackagePlatformHint;
+
+  /// No description provided for @adminPermPackageSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{services} services · {selected}/{total} operations'**
+  String adminPermPackageSummary(int services, int selected, int total);
+
+  /// No description provided for @adminPermServiceSalesDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales documents'**
+  String get adminPermServiceSalesDocuments;
+
+  /// No description provided for @adminPermServiceSalesDocumentsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'List, create, post, cancel, and print invoices'**
+  String get adminPermServiceSalesDocumentsHint;
+
+  /// No description provided for @adminPermServiceCustomersMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer list'**
+  String get adminPermServiceCustomersMaster;
+
+  /// No description provided for @adminPermServiceCustomersMasterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create and manage customers'**
+  String get adminPermServiceCustomersMasterHint;
+
+  /// No description provided for @adminPermServiceCustomersAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer accounts'**
+  String get adminPermServiceCustomersAccounts;
+
+  /// No description provided for @adminPermServiceCustomersAccountsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse linked chart of accounts'**
+  String get adminPermServiceCustomersAccountsHint;
+
+  /// No description provided for @adminPermServiceCustomersSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer settings'**
+  String get adminPermServiceCustomersSettings;
+
+  /// No description provided for @adminPermServiceCustomersSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent account and auto-link options'**
+  String get adminPermServiceCustomersSettingsHint;
+
+  /// No description provided for @adminPermServiceChartOfAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart of accounts'**
+  String get adminPermServiceChartOfAccounts;
+
+  /// No description provided for @adminPermServiceChartOfAccountsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create and maintain accounts'**
+  String get adminPermServiceChartOfAccountsHint;
+
+  /// No description provided for @adminPermServiceJournals.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal entries'**
+  String get adminPermServiceJournals;
+
+  /// No description provided for @adminPermServiceJournalsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create and manage journals'**
+  String get adminPermServiceJournalsHint;
+
+  /// No description provided for @adminPermServiceCurrencyRates.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency rates'**
+  String get adminPermServiceCurrencyRates;
+
+  /// No description provided for @adminPermServiceCurrencyRatesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rates maintenance'**
+  String get adminPermServiceCurrencyRatesHint;
+
+  /// No description provided for @adminPermServiceVoucherBooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher books'**
+  String get adminPermServiceVoucherBooks;
+
+  /// No description provided for @adminPermServiceVoucherBooksHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Numbering books by document type'**
+  String get adminPermServiceVoucherBooksHint;
+
+  /// No description provided for @adminPermServiceAccountingReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounting reports'**
+  String get adminPermServiceAccountingReports;
+
+  /// No description provided for @adminPermServiceAccountingReportsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounting report hub'**
+  String get adminPermServiceAccountingReportsHint;
+
+  /// No description provided for @adminPermServiceSalesPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales period report'**
+  String get adminPermServiceSalesPeriod;
+
+  /// No description provided for @adminPermServiceSalesPeriodHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales by period with export'**
+  String get adminPermServiceSalesPeriodHint;
+
+  /// No description provided for @adminPermServiceAccountStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Account statement'**
+  String get adminPermServiceAccountStatement;
+
+  /// No description provided for @adminPermServiceAccountStatementHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer / account statement with export'**
+  String get adminPermServiceAccountStatementHint;
+
+  /// No description provided for @adminPermServiceDevicesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered sync devices'**
+  String get adminPermServiceDevicesHint;
+
+  /// No description provided for @adminPermServiceCompaniesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Company profile and platform company tools'**
+  String get adminPermServiceCompaniesHint;
+
+  /// No description provided for @adminPermOpStockCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Perform stock count'**
+  String get adminPermOpStockCount;
+
+  /// No description provided for @adminPermOpImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get adminPermOpImport;
+
+  /// No description provided for @adminPermOpExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get adminPermOpExport;
+
+  /// No description provided for @adminPermOpReportsExport.
+  ///
+  /// In en, this message translates to:
+  /// **'View / export reports'**
+  String get adminPermOpReportsExport;
+
+  /// No description provided for @adminPermOpClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear data'**
+  String get adminPermOpClear;
+
+  /// No description provided for @adminPermOpBarcode.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcodes & labels'**
+  String get adminPermOpBarcode;
+
+  /// No description provided for @adminPermOpDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get adminPermOpDuplicate;
+
+  /// No description provided for @adminPermOpInvoiceExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Print / share invoice'**
+  String get adminPermOpInvoiceExport;
+
+  /// No description provided for @adminPermOpPlatformCompanies.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage companies (platform)'**
+  String get adminPermOpPlatformCompanies;
+
+  /// No description provided for @adminPermOpPlatformUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage users (platform)'**
+  String get adminPermOpPlatformUsers;
 }
 
 class _AppLocalizationsDelegate

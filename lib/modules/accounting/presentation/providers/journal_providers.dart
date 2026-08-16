@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/presentation/providers/dashboard_services_provider.dart';
 import '../../../../app/settings/company/company_profile_providers.dart';
+import '../../../../core/sync/sync_providers.dart';
 import '../../domain/entities/journal_entry.dart';
 import '../../domain/repositories/journal_repository.dart';
 import '../../domain/services/fiscal_period_policy.dart';
@@ -10,11 +11,16 @@ import '../../domain/usecases/journal_usecases.dart';
 import '../../data/repositories/journal_repository_impl.dart';
 import 'account_providers.dart';
 
-final journalRepositoryProvider = Provider<JournalRepository>((ref) {
+final journalRepositoryImplProvider = Provider<JournalRepositoryImpl>((ref) {
   return JournalRepositoryImpl(
     ref.watch(accountingDatabaseProvider),
     accounts: ref.watch(accountRepositoryProvider),
+    syncQueue: ref.watch(syncQueueProvider),
   );
+});
+
+final journalRepositoryProvider = Provider<JournalRepository>((ref) {
+  return ref.watch(journalRepositoryImplProvider);
 });
 
 /// Last closed fiscal day (nullable). Invalidate after settings save.

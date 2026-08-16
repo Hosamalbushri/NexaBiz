@@ -19,14 +19,17 @@ class AccountRepositoryImpl implements AccountRepository {
     SyncQueue? syncQueue,
     AccountValidator validator = const AccountValidator(),
     Future<void> Function(String oldUuid, String newUuid)? onUuidRemapped,
+    Future<bool> Function()? shouldSuppressLocalChartSeed,
   }) : _syncQueue = syncQueue,
        _validator = validator,
-       _onUuidRemapped = onUuidRemapped;
+       _onUuidRemapped = onUuidRemapped,
+       _shouldSuppressLocalChartSeed = shouldSuppressLocalChartSeed;
 
   final AccountingDatabase _db;
   final SyncQueue? _syncQueue;
   final AccountValidator _validator;
   final Future<void> Function(String oldUuid, String newUuid)? _onUuidRemapped;
+  final Future<bool> Function()? _shouldSuppressLocalChartSeed;
 
   static const entityType = 'account';
 
@@ -498,11 +501,16 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<void> ensureDefaultChartSeeded() async {
     final existing = await (_db.select(_db.accounts)..limit(1)).get();
     if (existing.isEmpty) {
+      if (await _shouldSuppressLocalChartSeed?.call() ?? false) {
+        // Joining device: wait for background pull — do not create a local CoA.
+        return;
+      }
       await _seedDefaultChart();
     } else {
       await _alignSystemAccountCodes();
       await _alignSystemAccountFlags();
       await _insertMissingSystemAccounts();
+      await _alignSystemAccountParents();
     }
     // Legacy installs marked seeds as synced without pushing — queue them once.
     await _enqueueUnpushedAccounts();
@@ -663,6 +671,70 @@ class AccountRepositoryImpl implements AccountRepository {
         ),
       );
       changedIds.add(row.id);
+    }
+    for (final id in changedIds) {
+      final account = await getById(id);
+      if (account != null) {
+        await _enqueue(account, SyncOperationType.update);
+      }
+    }
+  }
+
+  /// Moves system accounts under the parent implied by [DefaultChartOfAccounts]
+  /// (e.g. Cash/Bank under Cash Boxes) and refreshes tree levels.
+  Future<void> _alignSystemAccountParents() async {
+    final seeds = DefaultChartOfAccounts.seeds();
+    final byKey = <String, AccountRow>{};
+    final rows =
+        await (_db.select(_db.accounts)..where(
+              (t) => t.isSystemAccount.equals(true) & t.deletedAt.isNull(),
+            ))
+            .get();
+
+    for (final row in rows) {
+      final description = row.description;
+      if (description == null || !description.startsWith('system:')) {
+        continue;
+      }
+      byKey[description.substring('system:'.length)] = row;
+    }
+
+    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final changedIds = <int>[];
+    for (final seed in seeds) {
+      final row = byKey[seed.systemKey];
+      if (row == null) {
+        continue;
+      }
+      final expectedParentUuid =
+          seed.parentKey == null ? null : byKey[seed.parentKey!]?.uuid;
+      if (seed.parentKey != null && expectedParentUuid == null) {
+        continue;
+      }
+      final expectedLevel = seed.parentKey == null
+          ? 0
+          : (byKey[seed.parentKey!]?.level ?? 0) + 1;
+      final parentChanged = row.parentId != expectedParentUuid;
+      final levelChanged = row.level != expectedLevel;
+      if (!parentChanged && !levelChanged) {
+        continue;
+      }
+      await (_db.update(_db.accounts)..where((t) => t.id.equals(row.id))).write(
+        AccountsCompanion(
+          parentId: Value(expectedParentUuid),
+          level: Value(expectedLevel),
+          updatedAt: Value(nowMs),
+          syncStatus: const Value('pending'),
+          version: Value(row.version + 1),
+        ),
+      );
+      changedIds.add(row.id);
+      // Keep in-memory map fresh for children processed later in seed order.
+      byKey[seed.systemKey] = row.copyWith(
+        parentId: Value(expectedParentUuid),
+        level: expectedLevel,
+        version: row.version + 1,
+      );
     }
     for (final id in changedIds) {
       final account = await getById(id);

@@ -128,13 +128,14 @@ def push_batch(
                 entity_type=op.entity_type,
                 operation=op.type.value,
             )
-            ack = service.push_operation(
-                company_id=company_id,
-                user_id=auth.user_id,
-                device_id=auth.device_id or auth.user_id,
-                op=op,
-            )
-            db.commit()
+            # Savepoint so one conflict/error does not undo prior successes.
+            with db.begin_nested():
+                ack = service.push_operation(
+                    company_id=company_id,
+                    user_id=auth.user_id,
+                    device_id=auth.device_id or auth.user_id,
+                    op=op,
+                )
             results.append(
                 SyncPushResultItem(
                     operation_id=str(op.operation_id),
@@ -143,7 +144,6 @@ def push_batch(
                 )
             )
         except ConflictError as exc:
-            db.rollback()
             results.append(
                 SyncPushResultItem(
                     operation_id=str(op.operation_id),
@@ -153,7 +153,6 @@ def push_batch(
                 )
             )
         except AppError as exc:
-            db.rollback()
             if exc.code == "permission_denied":
                 write_audit(
                     db,
@@ -169,7 +168,6 @@ def push_batch(
                         "message": exc.message,
                     },
                 )
-                db.commit()
             results.append(
                 SyncPushResultItem(
                     operation_id=str(op.operation_id),
@@ -182,7 +180,6 @@ def push_batch(
                 )
             )
         except Exception as exc:  # noqa: BLE001
-            db.rollback()
             results.append(
                 SyncPushResultItem(
                     operation_id=str(op.operation_id),
@@ -191,6 +188,7 @@ def push_batch(
                 )
             )
 
+    db.commit()
     return SyncBatchPushResponse(results=results)
 
 

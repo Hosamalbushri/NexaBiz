@@ -10,7 +10,15 @@ from sqlalchemy import JSON, Uuid, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-os.environ.setdefault("DEV_API_TOKEN", "test-token")
+os.environ["DEV_API_TOKEN"] = "test-token"
+os.environ["ALLOW_DEV_TOKEN"] = "true"
+# Rewrite docker-compose hostname so host-side pytest can reach published Postgres.
+_db = os.environ.get("DATABASE_URL", "")
+if not _db or "@db:" in _db or "@db/" in _db:
+    os.environ["DATABASE_URL"] = os.environ.get(
+        "TEST_DATABASE_URL",
+        "postgresql+psycopg2://sync:sync@localhost:5432/sync_experimental",
+    )
 os.environ.setdefault(
     "DEFAULT_COMPANY_ID", "00000000-0000-4000-8000-000000000001"
 )
@@ -21,9 +29,14 @@ os.environ.setdefault(
     "DEFAULT_DEVICE_ID", "00000000-0000-4000-8000-000000000003"
 )
 
+from app.core.config import get_settings
 from app.core.database import Base, get_db
 from app.main import app
+from app.auth.seed import seed_identity
 from app.models import sync as sync_models  # noqa: F401
+from app.models import identity as identity_models  # noqa: F401
+
+get_settings.cache_clear()
 
 
 def _sqlite_friendly_metadata() -> None:
@@ -48,6 +61,8 @@ def db_session() -> Generator[Session, None, None]:
     Base.metadata.create_all(bind=engine)
     TestingSession = sessionmaker(bind=engine, autocommit=False, autoflush=False)
     session = TestingSession()
+    seed_identity(session, get_settings())
+    session.commit()
     try:
         yield session
     finally:
@@ -164,6 +179,42 @@ def test_update_entity(client: TestClient, auth_headers: dict[str, str]) -> None
     assert response.json()["server_payload"]["name"] == "Ahmed Updated"
 
 
+def test_update_missing_entity_upserts(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    """Local update against unknown remote UUID must create (InMemory parity)."""
+    entity_id = uuid.uuid4()
+    update = _op(
+        entity_id=entity_id,
+        entity_type="product",
+        op_type="update",
+        base_version=3,
+        payload={
+            "uuid": str(entity_id),
+            "itemCode": "P-100",
+            "name": "Local-only product",
+            "price": 12.5,
+        },
+    )
+    response = client.post(
+        "/api/v1/sync/push",
+        headers=auth_headers,
+        json={"entity_type": "product", "operation": update},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["entity_id"] == str(entity_id)
+    assert body["remote_version"] == 4
+    assert body["server_payload"]["name"] == "Local-only product"
+
+    meta = client.get(
+        f"/api/v1/sync/meta/product/{entity_id}",
+        headers=auth_headers,
+    )
+    assert meta.status_code == 200
+    assert meta.json()["version"] == 4
+
+
 def test_soft_delete(client: TestClient, auth_headers: dict[str, str]) -> None:
     entity_id = uuid.uuid4()
     client.post(
@@ -221,6 +272,71 @@ def test_duplicate_operation_idempotent(
         if c["entity_id"] == op["entity_id"] and c["operation"] == "create"
     ]
     assert len(creates) == 1
+
+
+def test_create_idempotent_when_server_already_advanced(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    """Second device create with stale base_version must not 409."""
+    entity_id = uuid.uuid4()
+    payload = {
+        "uuid": str(entity_id),
+        "name": "Cash",
+        "accountCode": "1100",
+        "isActive": True,
+    }
+    first = client.post(
+        "/api/v1/sync/push",
+        headers=auth_headers,
+        json={
+            "entity_type": "account",
+            "operation": _op(
+                entity_type="account",
+                entity_id=entity_id,
+                payload=payload,
+            ),
+        },
+    )
+    assert first.status_code == 200
+    assert first.json()["remote_version"] == 1
+
+    # Simulate device A update bumping server to v2.
+    updated = client.post(
+        "/api/v1/sync/push",
+        headers=auth_headers,
+        json={
+            "entity_type": "account",
+            "operation": _op(
+                entity_type="account",
+                entity_id=entity_id,
+                op_type="update",
+                base_version=1,
+                payload={**payload, "name": "Cash (renamed)"},
+            ),
+        },
+    )
+    assert updated.status_code == 200
+    assert updated.json()["remote_version"] == 2
+
+    # Device B still has a pending seed create (base_version=1 historically).
+    second_create = client.post(
+        "/api/v1/sync/push",
+        headers=auth_headers,
+        json={
+            "entity_type": "account",
+            "operation": _op(
+                entity_type="account",
+                entity_id=entity_id,
+                op_type="create",
+                base_version=1,
+                payload=payload,
+            ),
+        },
+    )
+    assert second_create.status_code == 200
+    body = second_create.json()
+    assert body["remote_version"] == 2
+    assert body["entity_id"] == str(entity_id)
 
 
 def test_version_conflict(client: TestClient, auth_headers: dict[str, str]) -> None:
@@ -439,34 +555,31 @@ def test_failed_request_retry_same_operation_id(
     assert r1.json() == r2.json()
 
 
-def test_tenant_isolation(client: TestClient, auth_headers: dict[str, str]) -> None:
-    company_a = {
+def test_client_company_header_cannot_switch_tenant(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    """Dev-token company comes from seed identity; forged X-Company-Id is ignored."""
+    forged = {
         **auth_headers,
         "X-Company-Id": "00000000-0000-4000-8000-0000000000aa",
     }
-    company_b = {
-        **auth_headers,
-        "X-Company-Id": "00000000-0000-4000-8000-0000000000bb",
-    }
     entity_id = uuid.uuid4()
-    client.post(
+    created = client.post(
         "/api/v1/sync/push",
-        headers=company_a,
+        headers=forged,
         json={"entity_type": "customer", "operation": _op(entity_id=entity_id)},
     )
-    pull_b = client.get(
-        "/api/v1/sync/pull",
-        headers=company_b,
-        params={"entity_type": "customer", "cursor": 0},
-    ).json()
-    assert pull_b["changes"] == []
+    assert created.status_code == 200, created.text
 
-    meta_b = client.get(
-        f"/api/v1/sync/meta/customer/{entity_id}",
-        headers=company_b,
+    pull = client.get(
+        "/api/v1/sync/pull",
+        headers=auth_headers,
+        params={"entity_type": "customer", "cursor": 0},
     )
-    assert meta_b.status_code == 200
-    assert meta_b.json() is None
+    assert pull.status_code == 200
+    assert any(
+        c["entity_id"] == str(entity_id) for c in pull.json()["changes"]
+    ), pull.text
 
 
 def test_get_meta(client: TestClient, auth_headers: dict[str, str]) -> None:
@@ -535,3 +648,58 @@ def test_product_and_inventory_entity_types(
     )
     assert p.status_code == 200
     assert i.status_code == 200
+
+
+def test_journal_entry_entity_type(
+    client: TestClient, auth_headers: dict[str, str]
+) -> None:
+    entry_id = uuid.uuid4()
+    line_id = uuid.uuid4()
+    account_id = uuid.uuid4()
+    r = client.post(
+        "/api/v1/sync/push",
+        headers=auth_headers,
+        json={
+            "entity_type": "journal_entry",
+            "operation": {
+                "operation_id": str(uuid.uuid4()),
+                "entity_type": "journal_entry",
+                "entity_id": str(entry_id),
+                "type": "create",
+                "base_version": 0,
+                "payload": {
+                    "uuid": str(entry_id),
+                    "voucherNumber": "J-1",
+                    "voucherType": "بيع نقدي",
+                    "currencyCode": "SAR",
+                    "isPosted": True,
+                    "sourceType": "sale",
+                    "sourceId": str(uuid.uuid4()),
+                    "lines": [
+                        {
+                            "uuid": str(line_id),
+                            "accountUuid": str(account_id),
+                            "accountCode": "4100",
+                            "debit": 0,
+                            "credit": 50,
+                            "currencyCode": "SAR",
+                            "sortOrder": 0,
+                        }
+                    ],
+                },
+            },
+        },
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["entity_id"] == str(entry_id)
+    assert body["remote_version"] == 1
+
+    pull = client.get(
+        "/api/v1/sync/pull",
+        headers=auth_headers,
+        params={"entity_type": "journal_entry", "cursor": 0},
+    )
+    assert pull.status_code == 200
+    changes = pull.json()["changes"]
+    assert any(c["entity_id"] == str(entry_id) for c in changes)

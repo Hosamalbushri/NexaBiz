@@ -1,37 +1,54 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/app_failure.dart';
 import '../../../../core/network/authenticated_http_client.dart';
 import '../../../../core/network/http_client_providers.dart';
 import '../../../../core/network/sync_api_config.dart';
+import '../../../../core/network/token_refresh_outcome.dart';
 import '../../../../core/sync/sync_providers.dart';
 import '../../data/auth_repository_impl.dart';
+import '../../data/local_auth_repository.dart';
+import '../../data/local_auth_store.dart';
 import '../../data/secure_token_storage.dart';
+import '../../data/sync_login_credential_store.dart';
 import '../../domain/entities/auth_session.dart';
+import '../../domain/local_permissions.dart';
 import '../../domain/repositories/auth_repository.dart';
+
+/// Mutable callbacks shared between HTTP client and auth without Riverpod cycles.
+class AuthCallbackHub {
+  Future<TokenRefreshOutcome> Function()? onRefresh;
+  void Function()? onSessionExpired;
+}
+
+final authCallbackHubProvider = Provider<AuthCallbackHub>((ref) {
+  return AuthCallbackHub();
+});
 
 final secureTokenStorageProvider = Provider<SecureTokenStorage>((ref) {
   return SecureTokenStorage();
 });
 
-/// Late-bound refresh callback avoids Riverpod cycles between HTTP client and auth repo.
-final tokenRefreshCallbackProvider =
-    StateProvider<Future<bool> Function()?>((ref) => null);
+final syncLoginCredentialStoreProvider = Provider<SyncLoginCredentialStore>((
+  ref,
+) {
+  return SyncLoginCredentialStore();
+});
 
-final sessionExpiredCallbackProvider = StateProvider<void Function()?>((ref) => null);
-
+/// Stable HTTP client — must NOT rebuild when [syncApiConfigProvider] changes,
+/// or login mid-flight disposes [AuthController].
 final authenticatedHttpClientProvider = Provider<AuthenticatedHttpClient>((ref) {
   final storage = ref.watch(secureTokenStorageProvider);
+  final hub = ref.watch(authCallbackHubProvider);
   final client = AuthenticatedHttpClient(
-    config: ref.watch(syncApiConfigProvider),
+    config: ref.read(syncApiConfigProvider),
     tokenStore: storage,
     onRefresh: () async {
-      final cb = ref.read(tokenRefreshCallbackProvider);
-      if (cb == null) return false;
+      final cb = hub.onRefresh;
+      if (cb == null) return TokenRefreshOutcome.unauthorized;
       return cb();
     },
-    onSessionExpired: () {
-      ref.read(sessionExpiredCallbackProvider)?.call();
-    },
+    onSessionExpired: () => hub.onSessionExpired?.call(),
   );
   ref.listen<SyncApiConfig>(syncApiConfigProvider, (_, next) {
     client.updateConfig(next);
@@ -46,7 +63,22 @@ final authSyncHttpOverride = syncAuthenticatedHttpClientProvider.overrideWith(
 
 List<Override> authenticationOverrides() => [authSyncHttpOverride];
 
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
+final localAuthStoreProvider = Provider<LocalAuthStore>((ref) {
+  return LocalAuthStore();
+});
+
+final localAuthRepositoryProvider = Provider<LocalAuthRepository>((ref) {
+  return LocalAuthRepository(
+    store: ref.watch(localAuthStoreProvider),
+    tokenStorage: ref.watch(secureTokenStorageProvider),
+    readConfig: () => ref.read(syncApiConfigProvider),
+    onConfigChanged: (config) {
+      ref.read(syncApiConfigProvider.notifier).state = config;
+    },
+  );
+});
+
+final remoteAuthRepositoryProvider = Provider<AuthRepositoryImpl>((ref) {
   final repo = AuthRepositoryImpl(
     http: ref.watch(authenticatedHttpClientProvider),
     tokenStorage: ref.watch(secureTokenStorageProvider),
@@ -55,16 +87,17 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
       ref.read(syncApiConfigProvider.notifier).state = config;
     },
   );
-  ref.read(tokenRefreshCallbackProvider.notifier).state = () async {
-    try {
-      await repo.refreshSession();
-      return true;
-    } catch (_) {
-      return false;
-    }
-  };
   ref.onDispose(repo.dispose);
   return repo;
+});
+
+/// Active auth repository — remote when a sync session is active, else local.
+///
+/// Prefer [AuthController] APIs (`loginForSync`, `returnToLocalMode`) rather
+/// than calling this directly for mode switches.
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  // Default for bootstrap / generic callers: local until sync login succeeds.
+  return ref.watch(localAuthRepositoryProvider);
 });
 
 enum AuthStatus {
@@ -74,11 +107,18 @@ enum AuthStatus {
   authenticated,
 }
 
+/// Whether the current [AuthState] came from the remote JWT backend.
+enum AuthBackend {
+  local,
+  remote,
+}
+
 class AuthState {
   const AuthState({
     required this.status,
     this.session,
     this.errorMessage,
+    this.backend = AuthBackend.local,
   });
 
   const AuthState.unknown() : this(status: AuthStatus.unknown);
@@ -86,40 +126,119 @@ class AuthState {
   final AuthStatus status;
   final AuthSessionSnapshot? session;
   final String? errorMessage;
+  final AuthBackend backend;
 
   bool get isAuthenticated =>
       status == AuthStatus.authenticated || status == AuthStatus.needsCompany;
 
+  bool get isRemoteSession => backend == AuthBackend.remote;
+
+  /// Refresh failed / tokens cleared — UI keeps [session] permissions offline.
+  bool get needsSessionRenewal => errorMessage == 'session_expired';
+
+  /// Live credentials available for SyncManager / online APIs.
+  bool get canUseRemoteSync =>
+      isRemoteSession && isAuthenticated && !needsSessionRenewal;
+
+  /// Admin-approved sync disable is pending application on this device.
+  bool get syncDisableApprovedByAdmin =>
+      errorMessage == 'sync_disable_approved';
+
+  /// Whether this account may turn sync off on the device without approval.
+  bool get canDisableSyncLocally {
+    if (!isRemoteSession) return true;
+    if (session?.user.isSuperAdmin == true) return true;
+    if (hasPermission('devices.revoke')) return true;
+    if (hasPermission('platform.users.manage')) return true;
+    return false;
+  }
+
+  /// UI-facing account type derived from the server snapshot (not a security boundary).
+  String get accountType {
+    final session = this.session;
+    if (session == null) return 'anonymous';
+    if (session.user.isSuperAdmin) return 'admin';
+    final roles = session.roles.map((r) => r.toLowerCase());
+    if (roles.any((r) => r.contains('admin'))) return 'admin';
+    return 'user';
+  }
+
   bool hasPermission(String code) => session?.hasPermission(code) ?? false;
+
+  bool hasAnyPermission(Iterable<String> codes) =>
+      session?.hasAnyPermission(codes) ?? false;
 }
 
 class AuthController extends StateNotifier<AuthState> {
-  AuthController(this._repo) : super(const AuthState.unknown());
+  AuthController({
+    required LocalAuthRepository local,
+    required AuthRepositoryImpl remote,
+  })  : _local = local,
+        _remote = remote,
+        super(const AuthState.unknown());
 
-  final AuthRepository _repo;
+  final LocalAuthRepository _local;
+  final AuthRepositoryImpl _remote;
 
-  Future<void> bootstrap() async {
+  void _set(AuthState next) {
+    if (!mounted) return;
+    state = next;
+  }
+
+  /// Offline-first bootstrap: restore remote sync session if present, else
+  /// silent local admin so the app remains usable without sync.
+  Future<void> bootstrap({bool preferRemote = false}) async {
     try {
-      final session = await _repo.restoreSession();
-      state = _stateFor(session);
+      if (preferRemote) {
+        final remoteSession = await _remote.restoreSession();
+        if (remoteSession != null) {
+          final live = await _remote.hasRefreshToken();
+          final base = _stateFor(remoteSession, AuthBackend.remote);
+          _set(
+            live
+                ? base
+                : AuthState(
+                    status: base.status,
+                    session: base.session,
+                    backend: AuthBackend.remote,
+                    errorMessage: 'session_expired',
+                  ),
+          );
+          return;
+        }
+      }
+      var session = await _local.restoreSession();
+      session ??= await _local.login(
+        email: LocalAuthDefaults.adminEmail,
+        password: LocalAuthDefaults.adminPassword,
+        companyId: LocalAuthDefaults.companyId,
+        deviceId: 'local-device',
+        deviceName: 'Local',
+        platform: 'local',
+      );
+      _set(_stateFor(session, AuthBackend.local));
     } catch (e) {
-      state = AuthState(
-        status: AuthStatus.unauthenticated,
-        errorMessage: e.toString(),
+      _set(
+        AuthState(
+          status: AuthStatus.unauthenticated,
+          errorMessage: e.toString(),
+        ),
       );
     }
   }
 
-  Future<void> login({
+  /// Remote login used when enabling synchronization. Does not persist the
+  /// password. On success, [state] becomes a remote session.
+  Future<AuthSessionSnapshot> loginForSync({
     required String email,
     required String password,
+    String? companyId,
     required String deviceId,
     required String deviceName,
     required String platform,
     String? appVersion,
-    String? companyId,
   }) async {
-    final session = await _repo.login(
+    final session = await _remote.login(
       email: email,
       password: password,
       companyId: companyId,
@@ -128,40 +247,193 @@ class AuthController extends StateNotifier<AuthState> {
       platform: platform,
       appVersion: appVersion,
     );
-    state = _stateFor(session);
+    _set(_stateFor(session, AuthBackend.remote));
+    return session;
+  }
+
+  Future<void> login({
+    required String email,
+    required String password,
+    String? companyId,
+    required String deviceId,
+    required String deviceName,
+    required String platform,
+    String? appVersion,
+  }) async {
+    await loginForSync(
+      email: email,
+      password: password,
+      companyId: companyId,
+      deviceId: deviceId,
+      deviceName: deviceName,
+      platform: platform,
+      appVersion: appVersion,
+    );
   }
 
   Future<void> switchCompany(String companyId) async {
-    final session = await _repo.switchCompany(companyId);
-    state = _stateFor(session);
+    final session = await _remote.switchCompany(companyId);
+    _set(_stateFor(session, AuthBackend.remote));
+  }
+
+  Future<void> logoutRemote() async {
+    try {
+      await _remote.logout();
+    } catch (_) {
+      // Best-effort; always clear local remote state next.
+    }
+  }
+
+  /// After disabling sync: drop remote session and restore local offline admin.
+  Future<void> returnToLocalMode() async {
+    await logoutRemote();
+    await bootstrap(preferRemote: false);
+  }
+
+  /// Refresh failed: clear tokens, keep RBAC snapshot + UI access offline.
+  Future<void> enterOfflineExpiredSession() async {
+    final snapshot = state.session ?? await _remote.restoreSession();
+    try {
+      await _remote.clearTokensKeepSnapshot();
+    } catch (_) {}
+    if (snapshot == null) {
+      _set(
+        const AuthState(
+          status: AuthStatus.unauthenticated,
+          backend: AuthBackend.remote,
+          errorMessage: 'session_expired',
+        ),
+      );
+      return;
+    }
+    final base = _stateFor(snapshot, AuthBackend.remote);
+    _set(
+      AuthState(
+        status: base.status,
+        session: snapshot,
+        backend: AuthBackend.remote,
+        errorMessage: 'session_expired',
+      ),
+    );
+  }
+
+  /// Single-flight refresh used by [AuthenticatedHttpClient] on HTTP 401.
+  Future<TokenRefreshOutcome> tryRefreshSession() async {
+    if (!state.isRemoteSession || state.needsSessionRenewal) {
+      return TokenRefreshOutcome.unauthorized;
+    }
+    if (state.syncDisableApprovedByAdmin) {
+      return TokenRefreshOutcome.syncDisableApproved;
+    }
+    try {
+      final session = await _remote.refreshSession();
+      _set(_stateFor(session, AuthBackend.remote));
+      return TokenRefreshOutcome.refreshed;
+    } on NetworkFailure {
+      return TokenRefreshOutcome.unavailable;
+    } on AuthenticationFailure catch (e) {
+      if (e.reason == 'sync_disable_approved') {
+        final snapshot = state.session;
+        _set(
+          AuthState(
+            status: snapshot == null
+                ? AuthStatus.unauthenticated
+                : (snapshot.hasCompany
+                    ? AuthStatus.authenticated
+                    : AuthStatus.needsCompany),
+            session: snapshot,
+            backend: AuthBackend.remote,
+            errorMessage: 'sync_disable_approved',
+          ),
+        );
+        return TokenRefreshOutcome.syncDisableApproved;
+      }
+      return TokenRefreshOutcome.unauthorized;
+    } catch (_) {
+      return TokenRefreshOutcome.unauthorized;
+    }
   }
 
   Future<void> logout() async {
-    await _repo.logout();
-    state = const AuthState(status: AuthStatus.unauthenticated);
+    if (state.isRemoteSession) {
+      await logoutRemote();
+    } else {
+      await _local.logout();
+    }
+    _set(const AuthState(status: AuthStatus.unauthenticated));
+  }
+
+  void markSessionExpired() {
+    if (state.syncDisableApprovedByAdmin) return;
+    if (state.needsSessionRenewal) return;
+    final session = state.session;
+    if (session == null) {
+      _set(
+        const AuthState(
+          status: AuthStatus.unauthenticated,
+          backend: AuthBackend.remote,
+          errorMessage: 'session_expired',
+        ),
+      );
+      return;
+    }
+    // Keep authenticated status so module launcher / PermissionGate stay intact.
+    _set(
+      AuthState(
+        status: session.hasCompany
+            ? AuthStatus.authenticated
+            : AuthStatus.needsCompany,
+        session: session,
+        backend: AuthBackend.remote,
+        errorMessage: 'session_expired',
+      ),
+    );
   }
 
   void markUnauthenticated() {
-    state = const AuthState(status: AuthStatus.unauthenticated);
+    markSessionExpired();
   }
 
-  AuthState _stateFor(AuthSessionSnapshot? session) {
+  AuthState _stateFor(AuthSessionSnapshot? session, AuthBackend backend) {
     if (session == null) {
-      return const AuthState(status: AuthStatus.unauthenticated);
+      return AuthState(status: AuthStatus.unauthenticated, backend: backend);
     }
     if (!session.hasCompany) {
-      return AuthState(status: AuthStatus.needsCompany, session: session);
+      return AuthState(
+        status: AuthStatus.needsCompany,
+        session: session,
+        backend: backend,
+      );
     }
-    return AuthState(status: AuthStatus.authenticated, session: session);
+    return AuthState(
+      status: AuthStatus.authenticated,
+      session: session,
+      backend: backend,
+    );
   }
 }
 
 final authStateProvider =
     StateNotifierProvider<AuthController, AuthState>((ref) {
-  final controller = AuthController(ref.watch(authRepositoryProvider));
-  ref.read(sessionExpiredCallbackProvider.notifier).state = () {
-    controller.markUnauthenticated();
-  };
+  final hub = ref.read(authCallbackHubProvider);
+  final controller = AuthController(
+    local: ref.watch(localAuthRepositoryProvider),
+    remote: ref.watch(remoteAuthRepositoryProvider),
+  );
+
+  Future<TokenRefreshOutcome> refreshCb() => controller.tryRefreshSession();
+  void expiredCb() => controller.markSessionExpired();
+
+  hub.onRefresh = refreshCb;
+  hub.onSessionExpired = expiredCb;
+  ref.onDispose(() {
+    if (identical(hub.onRefresh, refreshCb)) {
+      hub.onRefresh = null;
+    }
+    if (identical(hub.onSessionExpired, expiredCb)) {
+      hub.onSessionExpired = null;
+    }
+  });
   return controller;
 });
 

@@ -3,11 +3,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/route_access_rule.dart';
+import '../../core/permissions/permission_defs.dart';
+import 'permissions/reports_permission_package.dart';
 import 'presentation/pages/account_statement_report_page.dart';
 import 'presentation/pages/report_pdf_preview_page.dart';
 import 'presentation/pages/reports_home_page.dart';
 import 'presentation/pages/reports_routes.dart';
+import 'presentation/pages/rp_transaction_report_page.dart';
 import 'presentation/pages/sales_period_report_page.dart';
+import 'domain/services/rp_report_data_port.dart';
 
 /// Platform reports module — generic PDF catalog, preview, print/share.
 ///
@@ -31,6 +36,25 @@ class ReportsModule extends AppModule {
 
   @override
   bool get isEnabled => true;
+
+  @override
+  List<String> get requiredAnyPermissions => const [
+        'reports.view',
+        'reports.sales_period.view',
+        'reports.account_statement.view',
+        'receipts_payments.reports.view',
+      ];
+
+  @override
+  List<RouteAccessRule> get routeAccessRules => [
+        RouteAccessRule(
+          pathPrefix: ReportsRoutes.root,
+          anyOf: requiredAnyPermissions,
+        ),
+      ];
+
+  @override
+  PermissionPackageDef? get permissionPackage => reportsPermissionPackage();
 
   @override
   String label(BuildContext context) {
@@ -58,6 +82,49 @@ class ReportsModule extends AppModule {
           path: 'account-statement',
           name: 'reportsAccountStatement',
           builder: (context, state) => const AccountStatementReportPage(),
+        ),
+        GoRoute(
+          path: 'rp-receipts',
+          name: 'reportsRpReceipts',
+          builder: (context, state) =>
+              const RpTransactionReportPage(kind: RpReportKind.receipts),
+        ),
+        GoRoute(
+          path: 'rp-payments',
+          name: 'reportsRpPayments',
+          builder: (context, state) =>
+              const RpTransactionReportPage(kind: RpReportKind.payments),
+        ),
+        GoRoute(
+          path: 'rp-cash-movement',
+          name: 'reportsRpCash',
+          builder: (context, state) =>
+              const RpTransactionReportPage(kind: RpReportKind.cashMovement),
+        ),
+        GoRoute(
+          path: 'rp-bank-movement',
+          name: 'reportsRpBank',
+          builder: (context, state) =>
+              const RpTransactionReportPage(kind: RpReportKind.bankMovement),
+        ),
+        GoRoute(
+          path: 'rp-customer-receipts',
+          name: 'reportsRpCustomerReceipts',
+          builder: (context, state) => const RpTransactionReportPage(
+            kind: RpReportKind.customerReceipts,
+          ),
+        ),
+        GoRoute(
+          path: 'rp-daily-summary',
+          name: 'reportsRpDaily',
+          builder: (context, state) =>
+              const RpTransactionReportPage(kind: RpReportKind.dailySummary),
+        ),
+        GoRoute(
+          path: 'rp-period-summary',
+          name: 'reportsRpPeriod',
+          builder: (context, state) =>
+              const RpTransactionReportPage(kind: RpReportKind.periodSummary),
         ),
         GoRoute(
           path: 'preview',

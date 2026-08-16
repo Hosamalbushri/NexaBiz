@@ -57,20 +57,23 @@ def seed_identity(db: Session, settings: Settings) -> None:
             )
             db.add(role)
             db.flush()
-        # Reset permissions for system roles to catalog defaults.
+        # Sync system-role permissions to catalog defaults (idempotent).
         existing_links = (
             db.execute(select(RolePermission).where(RolePermission.role_id == role.id))
             .scalars()
             .all()
         )
+        wanted_ids = {
+            code_to_perm[code].id
+            for code in perm_codes
+            if code in code_to_perm
+        }
+        existing_ids = {link.permission_id for link in existing_links}
         for link in existing_links:
-            db.delete(link)
-        db.flush()
-        for code in perm_codes:
-            perm = code_to_perm.get(code)
-            if perm is None:
-                continue
-            db.add(RolePermission(role_id=role.id, permission_id=perm.id))
+            if link.permission_id not in wanted_ids:
+                db.delete(link)
+        for permission_id in wanted_ids - existing_ids:
+            db.add(RolePermission(role_id=role.id, permission_id=permission_id))
         db.flush()
         role_by_name[role_name] = role
 
@@ -118,19 +121,31 @@ def seed_identity(db: Session, settings: Settings) -> None:
             )
             db.add(existing)
             db.flush()
-            # Copy permissions from template
-            template_perms = (
-                db.execute(
-                    select(RolePermission.permission_id).where(
-                        RolePermission.role_id == template.id
-                    )
+        # Keep company role permissions aligned with the system template
+        # (idempotent — picks up newly catalogued modules on re-seed).
+        template_perm_ids = set(
+            db.execute(
+                select(RolePermission.permission_id).where(
+                    RolePermission.role_id == template.id
                 )
-                .scalars()
-                .all()
             )
-            for pid in template_perms:
-                db.add(RolePermission(role_id=existing.id, permission_id=pid))
-            db.flush()
+            .scalars()
+            .all()
+        )
+        existing_links = (
+            db.execute(
+                select(RolePermission).where(RolePermission.role_id == existing.id)
+            )
+            .scalars()
+            .all()
+        )
+        existing_ids = {link.permission_id for link in existing_links}
+        for link in existing_links:
+            if link.permission_id not in template_perm_ids:
+                db.delete(link)
+        for permission_id in template_perm_ids - existing_ids:
+            db.add(RolePermission(role_id=existing.id, permission_id=permission_id))
+        db.flush()
         company_roles[role_name] = existing
 
     # Bootstrap super admin

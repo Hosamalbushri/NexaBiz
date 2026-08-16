@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/router/app_routes.dart';
-import '../../../../app/sync/app_bar_sync_actions.dart';
 import '../../../../app/theme/app_breakpoints.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_shadows.dart';
@@ -47,7 +46,6 @@ class InventoryHomePage extends ConsumerWidget {
         appBar: CustomAppBar(
           title: l10n.moduleInventory,
           showBackButton: true,
-          actions: const [AppBarSyncActions()],
         ),
         body: servicesAsync.when(
           loading: () => const AppLoading(),

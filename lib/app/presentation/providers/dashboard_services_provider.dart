@@ -70,17 +70,24 @@ class DashboardServicesController
     return result;
   }
 
-  List<AppModule> resolveModules() {
+  List<AppModule> resolveModules({Set<String>? permissions}) {
     final ids = state.valueOrNull ?? const <String>[];
     final modules = <AppModule>[];
+    final perms = permissions;
     for (final id in ids) {
       if (modules.length >= kMaxDashboardServices) {
         break;
       }
       final module = _registry.findById(id);
-      if (module != null && module.isEnabled) {
-        modules.add(module);
+      if (module == null || !module.isEnabled) {
+        continue;
       }
+      if (perms != null &&
+          module.requiredAnyPermissions.isNotEmpty &&
+          !module.requiredAnyPermissions.any(perms.contains)) {
+        continue;
+      }
+      modules.add(module);
     }
     return modules;
   }

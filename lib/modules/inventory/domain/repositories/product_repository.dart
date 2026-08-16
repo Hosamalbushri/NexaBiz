@@ -40,7 +40,10 @@ abstract class ProductRepository {
   Future<void> delete(int id);
 
   /// Insert or update by [ProductDraft.itemCode]. Returns counts.
-  Future<ProductUpsertResult> upsertAll(List<ProductDraft> drafts);
+  Future<ProductUpsertResult> upsertAll(
+    List<ProductDraft> drafts, {
+    void Function(int processed, int total)? onProgress,
+  });
 }
 
 class ProductUpsertResult {

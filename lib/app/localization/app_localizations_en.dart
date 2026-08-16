@@ -46,11 +46,499 @@ class AppLocalizationsEn extends AppLocalizations {
       'Create and manage sales offline, with optional accounting and inventory hooks.';
 
   @override
+  String get moduleReceiptsPayments => 'Receipts & Payments';
+
+  @override
+  String get moduleReceiptsPaymentsDescription =>
+      'Record cash and bank receipts and payments with accounting posting and offline sync.';
+
+  @override
   String get moduleReports => 'Reports';
 
   @override
   String get moduleReportsDescription =>
       'Generate, preview, print, and share professional PDF reports.';
+
+  @override
+  String get rpListTitle => 'Transactions';
+
+  @override
+  String get rpListTitleReceipts => 'Receipts';
+
+  @override
+  String get rpListTitlePayments => 'Payments';
+
+  @override
+  String get rpListCardSubtitle => 'Search and filter receipts and payments';
+
+  @override
+  String get rpActionViewAll => 'All transactions';
+
+  @override
+  String get rpActionNewReceipt => 'New receipt';
+
+  @override
+  String get rpActionNewPayment => 'New payment';
+
+  @override
+  String get rpCreateReceiptSubtitle => 'Collect cash or bank into treasury';
+
+  @override
+  String get rpCreatePaymentSubtitle => 'Pay from cash or bank';
+
+  @override
+  String get rpServiceReceiptsTitle => 'Receipts';
+
+  @override
+  String get rpServiceReceiptsSubtitle =>
+      'View receipt vouchers or create a new one';
+
+  @override
+  String get rpServicePaymentsTitle => 'Payments';
+
+  @override
+  String get rpServicePaymentsSubtitle =>
+      'View payment vouchers or create a new one';
+
+  @override
+  String get rpServiceViewReceipts => 'All receipts';
+
+  @override
+  String get rpServiceViewReceiptsSubtitle =>
+      'Browse and filter receipt vouchers';
+
+  @override
+  String get rpServiceViewPayments => 'All payments';
+
+  @override
+  String get rpServiceViewPaymentsSubtitle =>
+      'Browse and filter payment vouchers';
+
+  @override
+  String get rpServiceCreateReceipt => 'New receipt voucher';
+
+  @override
+  String get rpServiceCreatePayment => 'New payment voucher';
+
+  @override
+  String get rpDashboardTodayReceipts => 'Today\'s receipts';
+
+  @override
+  String get rpDashboardTodayPayments => 'Today\'s payments';
+
+  @override
+  String get rpDashboardPeriodReceipts => 'Period receipts';
+
+  @override
+  String get rpDashboardPeriodPayments => 'Period payments';
+
+  @override
+  String get rpDashboardNetMovement => 'Net movement';
+
+  @override
+  String get rpDashboardCashMovement => 'Cash movement';
+
+  @override
+  String get rpDashboardBankMovement => 'Bank movement';
+
+  @override
+  String get rpDashboardPendingSync => 'Pending sync';
+
+  @override
+  String get rpDashboardFailedSync => 'Failed sync';
+
+  @override
+  String get rpFormTitleReceipt => 'New receipt';
+
+  @override
+  String get rpFormTitlePayment => 'New payment';
+
+  @override
+  String get rpFormSectionDocument => 'Document';
+
+  @override
+  String get rpFormSectionAccounts => 'Accounts & amount';
+
+  @override
+  String get rpFormSectionParty => 'Party';
+
+  @override
+  String get rpFormSectionNotes => 'Reference & notes';
+
+  @override
+  String get rpFormSectionLines => 'Entry lines';
+
+  @override
+  String get rpGeneralDescription => 'Voucher description';
+
+  @override
+  String get rpDefaultGeneralDescription => 'Payment from account';
+
+  @override
+  String get rpManualExchangeRate => 'Exchange rate';
+
+  @override
+  String rpManualExchangeRateHint(String cash, String party) {
+    return '1 $cash = ? $party';
+  }
+
+  @override
+  String get rpLineDescription => 'Line description';
+
+  @override
+  String get rpCurrency => 'Currency';
+
+  @override
+  String get rpCurrencyEquivalent => 'Base equivalent';
+
+  @override
+  String get rpExchangeRate => 'Rate';
+
+  @override
+  String get rpBaseCurrency => 'Base currency';
+
+  @override
+  String get rpLinesEmpty => 'No accounts added.';
+
+  @override
+  String get rpAddAccountLine => 'Add account';
+
+  @override
+  String get rpAddAnotherAccountLine => 'Add row';
+
+  @override
+  String get rpChangeAccount => 'Change account';
+
+  @override
+  String get rpEditTitle => 'Edit transaction';
+
+  @override
+  String get rpDetailsTitle => 'Transaction details';
+
+  @override
+  String get rpSave => 'Save';
+
+  @override
+  String get rpSaved => 'Transaction saved';
+
+  @override
+  String get rpSaving => 'Saving…';
+
+  @override
+  String get rpPost => 'Post';
+
+  @override
+  String get rpPosting => 'Posting…';
+
+  @override
+  String get rpPosted => 'Transaction posted';
+
+  @override
+  String get rpCancelTitle => 'Cancel transaction';
+
+  @override
+  String rpCancelMessage(String number) {
+    return 'Cancel $number? The linked accounting entry will be voided.';
+  }
+
+  @override
+  String get rpCancelAction => 'Cancel transaction';
+
+  @override
+  String get rpCancelled => 'Transaction cancelled';
+
+  @override
+  String get rpLoading => 'Loading…';
+
+  @override
+  String get rpNotFound => 'Transaction not found';
+
+  @override
+  String get rpEmptyTitle => 'No transactions';
+
+  @override
+  String get rpEmptyMessage => 'Create a receipt or payment to get started.';
+
+  @override
+  String get rpSearchHint => 'Search number, party, reference…';
+
+  @override
+  String get rpTypeAll => 'All';
+
+  @override
+  String get rpTypeLabel => 'Type';
+
+  @override
+  String get rpTypeReceipt => 'Receipt';
+
+  @override
+  String get rpTypePayment => 'Payment';
+
+  @override
+  String get rpStatusUnposted => 'Unposted';
+
+  @override
+  String get rpStatusPosted => 'Posted';
+
+  @override
+  String get rpSource => 'Source';
+
+  @override
+  String get rpSourceManualReceipt => 'Manual receipt';
+
+  @override
+  String get rpSourceManualPayment => 'Manual payment';
+
+  @override
+  String get rpSourceCustomerReceipt => 'Customer receipt';
+
+  @override
+  String get rpSourceExpensePayment => 'Expense payment';
+
+  @override
+  String get rpSourceOtherReceipt => 'Other receipt';
+
+  @override
+  String get rpSourceOtherPayment => 'Other payment';
+
+  @override
+  String get rpSourceSalesRelatedReceipt => 'Sales-related receipt';
+
+  @override
+  String get rpSourcePurchaseRelatedPayment => 'Purchase-related payment';
+
+  @override
+  String get rpDate => 'Date';
+
+  @override
+  String get rpAmount => 'Amount';
+
+  @override
+  String get rpLineAmountCredit => 'Amount (Credit)';
+
+  @override
+  String get rpLineAmountDebit => 'Amount (Debit)';
+
+  @override
+  String get rpTotalsDebit => 'Total debit';
+
+  @override
+  String get rpTotalsCredit => 'Total credit';
+
+  @override
+  String get rpTotalsDifference => 'Difference';
+
+  @override
+  String get rpCashAmount => 'Cash amount';
+
+  @override
+  String get rpCashAccount => 'Cash / bank account';
+
+  @override
+  String get rpCounterAccount => 'Counter account';
+
+  @override
+  String get rpCustomer => 'Customer';
+
+  @override
+  String get rpPartyName => 'Party name';
+
+  @override
+  String get rpNoParty => 'No party';
+
+  @override
+  String get rpReference => 'Reference';
+
+  @override
+  String get rpDescription => 'Description';
+
+  @override
+  String get rpPaymentMethod => 'Payment method';
+
+  @override
+  String get rpPaymentCash => 'Cash';
+
+  @override
+  String get rpPaymentCard => 'Card';
+
+  @override
+  String get rpPaymentBankTransfer => 'Bank transfer';
+
+  @override
+  String get rpPaymentOther => 'Other';
+
+  @override
+  String get rpVoucherBook => 'Voucher book';
+
+  @override
+  String get rpVoucherBookEmpty => 'No voucher books available';
+
+  @override
+  String get rpTransactionNumber => 'Number';
+
+  @override
+  String get rpSearchAccountHint => 'Search accounts';
+
+  @override
+  String get rpSearchCustomerHint => 'Search customers';
+
+  @override
+  String get rpCustomerNotFound => 'No customers found';
+
+  @override
+  String get rpAutocompleteSearchFailed => 'Search failed';
+
+  @override
+  String get rpErrorAmountMustBePositive => 'Amount must be greater than zero';
+
+  @override
+  String get rpErrorCounterAmountMustBePositive =>
+      'Party amount must be greater than zero';
+
+  @override
+  String get rpErrorCashAccountRequired => 'Cash or bank account is required';
+
+  @override
+  String get rpErrorCounterAccountRequired => 'Counter account is required';
+
+  @override
+  String get rpErrorCustomerRequired => 'Customer is required for this source';
+
+  @override
+  String get rpErrorSameAccounts =>
+      'Cash and counter accounts must be different';
+
+  @override
+  String get rpErrorVoucherBookRequired => 'Select a voucher book';
+
+  @override
+  String get rpErrorNotEditable => 'Posted transactions cannot be edited';
+
+  @override
+  String get rpErrorCannotPost => 'This transaction cannot be posted';
+
+  @override
+  String get rpErrorCannotCancel => 'This transaction cannot be cancelled';
+
+  @override
+  String get rpErrorAlreadyCancelled => 'Transaction is already cancelled';
+
+  @override
+  String get rpErrorCurrencyRequired => 'Currency is required';
+
+  @override
+  String get rpErrorUnbalanced =>
+      'Cannot save while debit and credit totals differ';
+
+  @override
+  String get rpErrorSavingInProgress => 'Save already in progress';
+
+  @override
+  String get rpErrorLedgerPostingFailed => 'Accounting posting failed';
+
+  @override
+  String get adminPermPackageReceiptsPaymentsHint =>
+      'Receipts, payments, reports, and sync';
+
+  @override
+  String get adminPermServiceReceipts => 'Receipts';
+
+  @override
+  String get adminPermServiceReceiptsHint => 'Cash and bank receipts';
+
+  @override
+  String get adminPermServicePayments => 'Payments';
+
+  @override
+  String get adminPermServicePaymentsHint => 'Cash and bank payments';
+
+  @override
+  String get adminPermServiceRpReports => 'Reports';
+
+  @override
+  String get adminPermServiceRpReportsHint => 'Receipts and payments reports';
+
+  @override
+  String get adminPermServiceRpSync => 'Synchronization';
+
+  @override
+  String get adminPermServiceRpSyncHint => 'Sync receipts and payments';
+
+  @override
+  String get adminPermActionSync => 'Sync';
+
+  @override
+  String get reportsRpReceiptsTitle => 'Receipts report';
+
+  @override
+  String get reportsRpReceiptsSubtitle =>
+      'Receipts in a period with totals from the database.';
+
+  @override
+  String get reportsRpPaymentsTitle => 'Payments report';
+
+  @override
+  String get reportsRpPaymentsSubtitle =>
+      'Payments in a period with totals from the database.';
+
+  @override
+  String get reportsRpCashMovementTitle => 'Cash movement';
+
+  @override
+  String get reportsRpCashMovementSubtitle =>
+      'Cash-box receipts and payments for a period.';
+
+  @override
+  String get reportsRpBankMovementTitle => 'Bank movement';
+
+  @override
+  String get reportsRpBankMovementSubtitle =>
+      'Bank account receipts and payments for a period.';
+
+  @override
+  String get reportsRpCustomerReceiptsTitle => 'Customer receipts';
+
+  @override
+  String get reportsRpCustomerReceiptsSubtitle =>
+      'Receipts linked to customers.';
+
+  @override
+  String get reportsRpDailySummaryTitle => 'Daily summary';
+
+  @override
+  String get reportsRpDailySummarySubtitle =>
+      'Receipts and payments for a single day.';
+
+  @override
+  String get reportsRpPeriodSummaryTitle => 'Period summary';
+
+  @override
+  String get reportsRpPeriodSummarySubtitle =>
+      'Aggregated receipts and payments for a date range.';
+
+  @override
+  String get reportsRpColNumber => 'Number';
+
+  @override
+  String get reportsRpColDate => 'Date';
+
+  @override
+  String get reportsRpColType => 'Type';
+
+  @override
+  String get reportsRpColParty => 'Party';
+
+  @override
+  String get reportsRpColAmount => 'Amount';
+
+  @override
+  String get reportsRpColStatus => 'Status';
+
+  @override
+  String get reportsRpTotal => 'Total';
+
+  @override
+  String get reportsRpCount => 'Count';
 
   @override
   String get reportsSalesPeriodTitle => 'Sales by period';
@@ -457,6 +945,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get salesInvoiceNumber => 'Invoice number';
 
   @override
+  String salesInvoiceReference(String number) {
+    return 'Ref. $number';
+  }
+
+  @override
   String get salesCashAccount => 'Cash box account';
 
   @override
@@ -608,6 +1101,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get salesPostSale => 'Post';
+
+  @override
+  String get salesPostRequiresInventory =>
+      'Posting is unavailable until inventory stock tracking is added.';
 
   @override
   String get salesCompleteSale => 'Mark completed';
@@ -1007,6 +1504,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String customersImportUpdatedCount(int count) {
     return 'Updated $count customers';
   }
+
+  @override
+  String get customersImportBackgroundHint =>
+      'You can leave this page and keep using the app while import runs in the background.';
+
+  @override
+  String get importBackgroundHint =>
+      'You can leave this page and keep using the app while import runs in the background.';
 
   @override
   String get customersNoValidRows =>
@@ -1511,6 +2016,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountingFieldCode => 'Account code';
 
   @override
+  String get accountingFieldCodeHelper =>
+      'When a parent is selected, the code is generated from it (e.g. 1221 → 12210001).';
+
+  @override
+  String get accountingGenerateCode => 'Generate code';
+
+  @override
+  String get accountingAddChildAccount => 'Add child account';
+
+  @override
   String get accountingFieldParent => 'Parent account';
 
   @override
@@ -1709,7 +2224,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountingAccountCurrentAssets => 'Current Assets';
 
   @override
-  String get accountingAccountCash => 'Cash';
+  String get accountingAccountCashBoxes => 'Cash Boxes';
+
+  @override
+  String get accountingAccountCash => 'Main Cash Box';
 
   @override
   String get accountingAccountBank => 'Bank';
@@ -2636,11 +3154,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Base currency is locked and cannot be changed.';
 
   @override
-  String get systemSetupStepSeed => 'Local defaults';
+  String get systemSetupStepSeed => 'Chart of accounts';
 
   @override
   String get systemSetupStepSeedHint =>
-      'Create the default chart of accounts and voucher books.';
+      'Create the chart locally (first device) or sync it from your company server (joining device).';
 
   @override
   String get systemSetupStepExternal => 'External connection';
@@ -2685,6 +3203,50 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get systemSetupSeedDone =>
       'Default accounts and voucher books are ready.';
+
+  @override
+  String get systemSetupSeedCreateLocalTitle => 'Create locally';
+
+  @override
+  String get systemSetupSeedCreateLocalSubtitle =>
+      'Build the default chart of accounts on this device. Use this on the first device or when offline.';
+
+  @override
+  String get systemSetupSeedSyncTitle => 'Sync from server';
+
+  @override
+  String get systemSetupSeedSyncSubtitle =>
+      'Sign in and enter the app. The company chart downloads in the background so you do not create a duplicate.';
+
+  @override
+  String get systemSetupSeedSyncRunning => 'Downloading chart of accounts…';
+
+  @override
+  String get systemSetupSeedSyncDone =>
+      'You can enter the app now. Chart sync continues in the background.';
+
+  @override
+  String get systemSetupSeedSignInToSync => 'Sign in to sync';
+
+  @override
+  String get systemSetupSeedErrorSyncRequired =>
+      'Turn on sync and sign in, then try again.';
+
+  @override
+  String get systemSetupSeedErrorAuth =>
+      'Sign in to the company server, then try again.';
+
+  @override
+  String get systemSetupSeedErrorOffline =>
+      'Connect to the internet to sync the chart of accounts.';
+
+  @override
+  String get systemSetupSeedErrorEmpty =>
+      'No chart of accounts on the server yet. Create it locally on the first device, sync there, then retry here.';
+
+  @override
+  String get systemSetupSeedErrorPull =>
+      'Could not download the chart of accounts. Try again.';
 
   @override
   String get systemSetupExternalPlaceholder =>
@@ -2975,6 +3537,163 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get splashInitErrorMessage =>
       'Something went wrong while initializing the application.';
+
+  @override
+  String get appLockTitle => 'App locked';
+
+  @override
+  String get appLockSubtitle =>
+      'Enter your PIN to continue. This protects the app on this device — you are still signed in.';
+
+  @override
+  String get appLockPinLabel => 'PIN';
+
+  @override
+  String get appLockConfirmPinLabel => 'Confirm PIN';
+
+  @override
+  String get appLockCurrentPinLabel => 'Current PIN';
+
+  @override
+  String get appLockNewPinLabel => 'New PIN';
+
+  @override
+  String get appLockUnlockAction => 'Unlock';
+
+  @override
+  String get appLockShowPin => 'Show PIN';
+
+  @override
+  String get appLockHidePin => 'Hide PIN';
+
+  @override
+  String get appLockErrorInvalid => 'Incorrect PIN. Try again.';
+
+  @override
+  String get appLockErrorLockout =>
+      'Too many attempts. Please wait a moment and try again.';
+
+  @override
+  String get appLockErrorLength => 'PIN must be 4 to 6 digits.';
+
+  @override
+  String get appLockErrorDigits => 'PIN must contain digits only.';
+
+  @override
+  String get appLockErrorMismatch => 'PIN confirmation does not match.';
+
+  @override
+  String get appLockSettingsSection => 'Security';
+
+  @override
+  String get appLockSettingsTitle => 'App Lock';
+
+  @override
+  String get appLockSettingsEnabledHint =>
+      'PIN required when returning to the app.';
+
+  @override
+  String get appLockSettingsDisabledHint =>
+      'Add a PIN to protect this app locally.';
+
+  @override
+  String get appLockEnableTitle => 'Enable App Lock';
+
+  @override
+  String get appLockEnableMessage =>
+      'Choose a 4–6 digit PIN. You will need it whenever the app is locked.';
+
+  @override
+  String get appLockDisableTitle => 'Disable App Lock';
+
+  @override
+  String get appLockDisableMessage =>
+      'Enter your current PIN to turn off App Lock.';
+
+  @override
+  String get appLockChangePin => 'Change PIN';
+
+  @override
+  String get appLockChangePinHint => 'Update your current PIN.';
+
+  @override
+  String get appLockBiometricTitle => 'Unlock with fingerprint';
+
+  @override
+  String get appLockBiometricHint =>
+      'Use fingerprint or device biometrics to unlock.';
+
+  @override
+  String get appLockBiometricUnavailable =>
+      'Biometrics are not available on this device.';
+
+  @override
+  String get appLockBiometricPrompt => 'Authenticate to unlock NexaBiz';
+
+  @override
+  String get appLockBiometricEnabledSuccess => 'Fingerprint unlock is on.';
+
+  @override
+  String get appLockBiometricUnlockAction => 'Use fingerprint';
+
+  @override
+  String get appLockPolicyLabel => 'When to lock';
+
+  @override
+  String get appLockPolicyDisabled => 'Disabled';
+
+  @override
+  String get appLockPolicyOnResume => 'When returning from background';
+
+  @override
+  String get appLockPolicyOnResumeHint =>
+      'Asks for PIN after the app was in the background.';
+
+  @override
+  String get appLockPolicyColdStart => 'Only when reopening the app';
+
+  @override
+  String get appLockPolicyColdStartHint =>
+      'Asks for PIN after the app was fully closed.';
+
+  @override
+  String get appLockEnabledSuccess => 'App Lock is on.';
+
+  @override
+  String get appLockDisabledSuccess => 'App Lock is off.';
+
+  @override
+  String get appLockPinChangedSuccess => 'PIN updated.';
+
+  @override
+  String get onboardingSkip => 'Skip';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingStart => 'Get started';
+
+  @override
+  String get onboardingPage1Title => 'Welcome to NexaBiz';
+
+  @override
+  String get onboardingPage1Body =>
+      'Your offline-first platform for running inventory, sales, customers, and accounting in one place.';
+
+  @override
+  String get onboardingPage2Title => 'Works fully offline';
+
+  @override
+  String get onboardingPage2Body =>
+      'Use inventory, sales, and accounting on this device without a network. Synchronization is optional — enable it later from Settings only if you need multi-device sync.';
+
+  @override
+  String get onboardingPage3Title => 'Set up your company';
+
+  @override
+  String get onboardingPage3Body =>
+      'Next you will configure company details, currency, and how the system should run for your business.';
 
   @override
   String get loading => 'Loading...';
@@ -3302,6 +4021,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importSaving => 'Saving items...';
 
   @override
+  String get importLinking => 'Linking Chart of Accounts…';
+
+  @override
   String get emptyWorkbook => 'The Excel file is empty or has no sheets.';
 
   @override
@@ -3314,6 +4036,205 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncSectionTitle => 'Synchronization';
+
+  @override
+  String get syncEnabledTitle => 'Enable synchronization';
+
+  @override
+  String get syncEnabledSubtitle =>
+      'Optional. Keep data on this device only, or authenticate with the server to sync across devices.';
+
+  @override
+  String get syncDisabledMessage =>
+      'Synchronization is turned off. Local data stays on this device.';
+
+  @override
+  String get syncAuthRequiredHint =>
+      'Sign in with your server account. Synchronization stays off until authentication succeeds.';
+
+  @override
+  String get syncAuthCancelled =>
+      'Synchronization was not enabled. Authentication is required.';
+
+  @override
+  String get syncPermissionRequired =>
+      'This account cannot synchronize. Ask an admin to grant sync.view or sync.execute on your role.';
+
+  @override
+  String get syncSessionAuthenticated =>
+      'Authenticated synchronization session is active.';
+
+  @override
+  String syncSessionAsUser(String email) {
+    return 'Signed in as $email';
+  }
+
+  @override
+  String get syncSessionExpired =>
+      'Session expired. Sign in again to continue syncing.';
+
+  @override
+  String get syncAutoTitle => 'Automatic synchronization';
+
+  @override
+  String get syncAutoSubtitle =>
+      'Sync in the background without blocking the app. You can still tap Sync Now anytime.';
+
+  @override
+  String get syncAutoIntervalLabel => 'Frequency';
+
+  @override
+  String get syncAutoIntervalOnChange => 'When there are pending changes';
+
+  @override
+  String syncAutoIntervalMinutes(int minutes) {
+    return 'Every $minutes minutes';
+  }
+
+  @override
+  String get syncDisableRequestSent =>
+      'A request was sent to the administrator. Synchronization stays on until they approve.';
+
+  @override
+  String get syncDisableRequestFailed =>
+      'Could not notify the administrator. Check your connection and try again.';
+
+  @override
+  String get syncDisableNeedsAdminOnline =>
+      'Only an administrator can disable sync. Connect and sign in to send a request.';
+
+  @override
+  String get adminDevicesTitle => 'Devices';
+
+  @override
+  String get adminDevicesSubtitle =>
+      'Registered devices and sync-disable requests';
+
+  @override
+  String adminDevicesPendingCount(int count) {
+    return '$count pending disable requests';
+  }
+
+  @override
+  String get adminDevicesListIntro =>
+      'See every device linked to this company. Revoke a device to end its sessions and block further sync.';
+
+  @override
+  String get adminDevicesListSection => 'Registered devices';
+
+  @override
+  String get adminDevicesRequestsSection => 'Sync-disable requests';
+
+  @override
+  String get adminDevicesListEmptyTitle => 'No devices yet';
+
+  @override
+  String get adminDevicesListEmptyMessage =>
+      'Devices appear here after a user signs in for synchronization.';
+
+  @override
+  String get adminDevicesListLoadError => 'Could not load devices';
+
+  @override
+  String get adminDevicesUntitled => 'Unnamed device';
+
+  @override
+  String get adminDevicesStatusActive => 'Active';
+
+  @override
+  String get adminDevicesStatusRevoked => 'Revoked';
+
+  @override
+  String get adminDevicesStatusBlocked => 'Blocked';
+
+  @override
+  String get adminDevicesLastSeenNever => 'Last seen: never';
+
+  @override
+  String adminDevicesLastSeen(String when) {
+    return 'Last seen: $when';
+  }
+
+  @override
+  String get adminDevicesRevokeAction => 'Revoke';
+
+  @override
+  String get adminDevicesRevokeCancel => 'Cancel';
+
+  @override
+  String get adminDevicesRevokeConfirmTitle => 'Revoke this device?';
+
+  @override
+  String get adminDevicesRevokeConfirmMessage =>
+      'The device will lose sync access immediately. The user must sign in again on a new registration.';
+
+  @override
+  String get adminDevicesRevokeSuccess => 'Device revoked.';
+
+  @override
+  String get adminDevicesDisableRequestsIntro =>
+      'Users who are not administrators cannot turn sync off themselves. Approve to disable sync on their device, or reject to keep it enabled.';
+
+  @override
+  String get adminDevicesDisableRequestHint =>
+      'This user asked to disable synchronization on their device.';
+
+  @override
+  String get adminDevicesApproveAction => 'Disable on device';
+
+  @override
+  String get adminDevicesRejectAction => 'Keep syncing';
+
+  @override
+  String get adminDevicesApproveSuccess => 'Device sync will be disabled.';
+
+  @override
+  String get adminDevicesRejectSuccess =>
+      'Request rejected. Sync stays enabled.';
+
+  @override
+  String get adminDevicesEmptyTitle => 'No pending requests';
+
+  @override
+  String get adminDevicesEmptyMessage =>
+      'When a user asks to disable sync, the request appears here.';
+
+  @override
+  String get adminDevicesLoadError => 'Could not load device requests';
+
+  @override
+  String get adminDevicesRefresh => 'Refresh';
+
+  @override
+  String get adminDevicesUnknownUser => 'Unknown user';
+
+  @override
+  String get syncServerSectionTitle => 'Sync server';
+
+  @override
+  String get syncServerUrlLabel => 'Server URL';
+
+  @override
+  String get syncServerUrlHint => 'http://192.168.1.10:8000';
+
+  @override
+  String get syncServerUrlRequired => 'Enter the sync server URL first.';
+
+  @override
+  String get syncServerUrlInvalid =>
+      'Enter a valid URL including http:// or https://.';
+
+  @override
+  String get syncServerTokenLabel => 'API token (optional)';
+
+  @override
+  String get syncServerTokenHint => 'Leave blank to keep the current token';
+
+  @override
+  String get syncServerSaveAction => 'Save server';
+
+  @override
+  String get syncServerSaved => 'Server settings saved.';
 
   @override
   String get syncBackendLabel => 'Sync backend';
@@ -3334,6 +4255,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncLastSyncNever => 'Never';
 
   @override
+  String syncLastPassMetrics(int uploaded, int downloaded, int ms) {
+    return 'Last pass: ↑$uploaded ↓$downloaded · $ms ms';
+  }
+
+  @override
   String get syncPendingChangesLabel => 'Pending changes';
 
   @override
@@ -3343,8 +4269,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncNowAction => 'Sync Now';
 
   @override
+  String get syncCheckIncomingAction => 'Get server changes';
+
+  @override
+  String get syncCheckingIncoming => 'Checking server…';
+
+  @override
   String get syncOfflineMessage =>
-      'You\'re offline. Changes will sync automatically when an internet connection is available.';
+      'You\'re offline. Connect to the internet, then tap Sync Now.';
 
   @override
   String get syncStatusSynced => 'Synced';
@@ -3362,6 +4294,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncStatusConflict => 'Conflict';
 
   @override
+  String get syncStatusRejected => 'Not authorized';
+
+  @override
   String get syncStatusOffline => 'Offline';
 
   @override
@@ -3369,6 +4304,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncCompletedMessage => 'All changes have been synchronized.';
+
+  @override
+  String get syncIncomingNone => 'No new changes from the server.';
+
+  @override
+  String syncIncomingCount(int count) {
+    return '$count changes received from the server';
+  }
+
+  @override
+  String syncIncomingSummary(int count, String details) {
+    return '$count from server: $details';
+  }
+
+  @override
+  String syncIncomingEntityCount(String label, int count) {
+    return '$label $count';
+  }
+
+  @override
+  String get syncIncomingFromServerTitle => 'From server';
+
+  @override
+  String get syncEntityProduct => 'Products';
+
+  @override
+  String get syncEntityInventoryItem => 'Stock items';
+
+  @override
+  String get syncEntityCustomer => 'Customers';
+
+  @override
+  String get syncEntityAccount => 'Accounts';
+
+  @override
+  String get syncEntityJournalEntry => 'Journal entries';
+
+  @override
+  String get syncEntitySale => 'Sales';
 
   @override
   String get syncPartialTitle => 'Some changes could not be synchronized';
@@ -3405,4 +4379,544 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadingExportingReport => 'Preparing report…';
+
+  @override
+  String get authLoginTitle => 'Sign in';
+
+  @override
+  String get authLoginSubtitle =>
+      'Sign in to sync securely across your devices.';
+
+  @override
+  String get authLoginLocalHint =>
+      'Offline local login. Default admin has full permissions.';
+
+  @override
+  String get authEmailLabel => 'Email';
+
+  @override
+  String get authPasswordLabel => 'Password';
+
+  @override
+  String get authSignIn => 'Sign in';
+
+  @override
+  String get authSigningIn => 'Signing in…';
+
+  @override
+  String get authBiometricSignIn => 'Sign in with fingerprint';
+
+  @override
+  String get authBiometricPrompt => 'Authenticate to sign in to sync';
+
+  @override
+  String get authBiometricSaveForNext => 'Use fingerprint next time';
+
+  @override
+  String get authBiometricUnavailable =>
+      'Fingerprint is not available on this device.';
+
+  @override
+  String get authBiometricFailed =>
+      'Fingerprint authentication failed. Try again or use your password.';
+
+  @override
+  String get authLoginFailed => 'Invalid email or password.';
+
+  @override
+  String get authNetworkError =>
+      'Cannot reach the server. Check Wi‑Fi and API address.';
+
+  @override
+  String get authLoginGenericError => 'Sign-in failed. Please try again.';
+
+  @override
+  String get authSelectCompanyTitle => 'Select company';
+
+  @override
+  String get authLogoutAction => 'Sign out';
+
+  @override
+  String get authSessionExpired => 'Session expired. Please sign in again.';
+
+  @override
+  String get moduleAdministration => 'Administration';
+
+  @override
+  String get moduleAdministrationDescription =>
+      'Users, roles, and access control';
+
+  @override
+  String get adminRequiresOnlineTitle => 'Online required';
+
+  @override
+  String get adminRequiresOnlineMessage =>
+      'User management needs an authenticated sync session and network connection.';
+
+  @override
+  String get adminUsersTitle => 'Users';
+
+  @override
+  String get adminUsersSubtitle => 'Create and manage application users';
+
+  @override
+  String get adminRolesTitle => 'Roles & permissions';
+
+  @override
+  String get adminRolesSubtitle =>
+      'Create roles and assign the permissions you need';
+
+  @override
+  String get adminRolesHubSubtitle =>
+      'Build custom roles and control what each role can do';
+
+  @override
+  String get adminAccessControlSection => 'Access control';
+
+  @override
+  String get adminAccessControlIntro =>
+      'Manage who can use the app and what they can see or change. Roles package permissions; users receive a role.';
+
+  @override
+  String get adminAccessControlTip =>
+      'Tip: create a role first, pick permissions carefully (especially accounting), then assign the role when creating a user.';
+
+  @override
+  String get adminPermissionsCatalogTitle => 'Permission catalog';
+
+  @override
+  String get adminPermissionsCatalogSubtitle =>
+      'Browse every available permission by module';
+
+  @override
+  String get adminPermissionsCatalogIntro =>
+      'These are the building blocks of access control. Attach them to roles — never hard-code them into screens.';
+
+  @override
+  String get adminRolesPageIntro =>
+      'Custom roles are fully editable. System roles come from the server and are protected.';
+
+  @override
+  String get adminRolesSearchHint => 'Search roles by name';
+
+  @override
+  String get adminRolesFilterAll => 'All';
+
+  @override
+  String get adminRolesFilterCustom => 'Custom';
+
+  @override
+  String get adminRolesFilterSystem => 'System';
+
+  @override
+  String get adminRolesStatTotal => 'Total';
+
+  @override
+  String get adminSystemRoleHint => 'Built-in role maintained by the server';
+
+  @override
+  String get adminCustomRoleHint =>
+      'Your role — edit name and permissions anytime';
+
+  @override
+  String get adminTapToConfigure => 'Tap to configure';
+
+  @override
+  String get adminUsersSearchHint => 'Search by name or email';
+
+  @override
+  String get adminUsersLoadError => 'Could not load users';
+
+  @override
+  String get adminUsersEmptyTitle => 'No users';
+
+  @override
+  String get adminUsersEmptyMessage => 'Create a user to grant access.';
+
+  @override
+  String get adminCreateUser => 'Create user';
+
+  @override
+  String get adminEditUser => 'Edit user';
+
+  @override
+  String get adminSuspendUser => 'Suspend';
+
+  @override
+  String get adminActivateUser => 'Activate';
+
+  @override
+  String get adminDeactivateUser => 'Deactivate';
+
+  @override
+  String get adminUserUpdated => 'User updated';
+
+  @override
+  String get adminUserNameLabel => 'Name';
+
+  @override
+  String get adminUserPhoneLabel => 'Phone';
+
+  @override
+  String get adminUserStatusLabel => 'Status';
+
+  @override
+  String get adminUserRoleLabel => 'Role';
+
+  @override
+  String get adminStatusActive => 'Active';
+
+  @override
+  String get adminStatusInactive => 'Inactive';
+
+  @override
+  String get adminStatusSuspended => 'Suspended';
+
+  @override
+  String get adminNewPasswordOptional => 'New password (optional)';
+
+  @override
+  String get adminConfirmPasswordLabel => 'Confirm password';
+
+  @override
+  String get adminUserValidationError => 'Name and email are required.';
+
+  @override
+  String get adminPasswordTooShort => 'Password must be at least 8 characters.';
+
+  @override
+  String get adminPasswordMismatch => 'Passwords do not match.';
+
+  @override
+  String get adminRolesLoadError => 'Could not load roles';
+
+  @override
+  String get adminRolesEmptyTitle => 'No roles';
+
+  @override
+  String get adminRolesEmptyMessage =>
+      'Create a custom role and pick its permissions.';
+
+  @override
+  String get adminSystemRole => 'System role';
+
+  @override
+  String get adminCustomRole => 'Custom role';
+
+  @override
+  String get adminCreateRole => 'Create role';
+
+  @override
+  String get adminEditRole => 'Edit role';
+
+  @override
+  String get adminDeleteRole => 'Delete role';
+
+  @override
+  String adminDeleteRoleConfirm(String name) {
+    return 'Delete role \"$name\"? Users with this role keep their account but lose these permissions until reassigned.';
+  }
+
+  @override
+  String get adminRoleDeleted => 'Role deleted';
+
+  @override
+  String get adminRoleNameLabel => 'Role name';
+
+  @override
+  String get adminRoleNameHint => 'e.g. Sales employee';
+
+  @override
+  String get adminRoleDescriptionLabel => 'Description';
+
+  @override
+  String get adminRoleDescriptionHint => 'What this role is for';
+
+  @override
+  String get adminRoleBasicsSection => 'Role details';
+
+  @override
+  String get adminRoleBasicsHint =>
+      'Give the role a clear name so admins can assign it confidently.';
+
+  @override
+  String get adminRoleCapabilitiesSection => 'What this role can open';
+
+  @override
+  String get adminRoleCapabilitiesHint =>
+      'Updates live as you toggle permissions below.';
+
+  @override
+  String get adminRolePermissionsSection => 'Permissions';
+
+  @override
+  String get adminRoleVisibleModules => 'Modules this role can open';
+
+  @override
+  String get adminRoleNoModulesYet =>
+      'No modules yet — select at least one .view permission.';
+
+  @override
+  String get adminSelectAllPermissions => 'Select all';
+
+  @override
+  String get adminClearPermissions => 'Clear';
+
+  @override
+  String get adminRoleNameRequired => 'Role name is required.';
+
+  @override
+  String get adminRolePermissionsRequired => 'Select at least one permission.';
+
+  @override
+  String get adminPermissionsSearchHint => 'Search by name, action, or code';
+
+  @override
+  String get adminPermissionsLoadError => 'Could not load permissions';
+
+  @override
+  String get adminPermissionsEmptyTitle => 'No matches';
+
+  @override
+  String get adminPermissionsEmptyMessage =>
+      'Try another search or clear the module filter.';
+
+  @override
+  String adminPermissionCount(int count) {
+    return '$count permissions';
+  }
+
+  @override
+  String adminSelectedPermissionsCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String adminGroupPermissionSummary(int selected, int total) {
+    return '$selected of $total';
+  }
+
+  @override
+  String get adminSystemRoleReadOnly =>
+      'System roles are protected. Permission changes may be restricted.';
+
+  @override
+  String get adminPermActionView => 'View';
+
+  @override
+  String get adminPermActionCreate => 'Create';
+
+  @override
+  String get adminPermActionUpdate => 'Update';
+
+  @override
+  String get adminPermActionDelete => 'Delete';
+
+  @override
+  String get adminPermActionManage => 'Manage';
+
+  @override
+  String get adminPermActionAdjust => 'Adjust';
+
+  @override
+  String get adminPermActionPost => 'Post';
+
+  @override
+  String get adminPermActionCancel => 'Cancel';
+
+  @override
+  String get adminPermActionExecute => 'Execute';
+
+  @override
+  String get adminPermActionRevoke => 'Revoke';
+
+  @override
+  String get adminPermResourceAccounts => 'Accounts';
+
+  @override
+  String get adminPermResourceJournals => 'Journals';
+
+  @override
+  String get adminPermResourceDevices => 'Devices';
+
+  @override
+  String get adminPermResourceCompanies => 'Companies';
+
+  @override
+  String get adminPermGroupSalesHint => 'Sales documents and posting';
+
+  @override
+  String get adminPermGroupCustomersHint => 'Customer master data';
+
+  @override
+  String get adminPermGroupInventoryHint => 'Products and stock';
+
+  @override
+  String get adminPermGroupAccountingHint => 'Sensitive financial access';
+
+  @override
+  String get adminPermGroupReportsHint => 'Reports and exports';
+
+  @override
+  String get adminPermGroupAdminHint => 'Users, roles, and platform control';
+
+  @override
+  String get adminPermGroupSettingsHint => 'Application settings';
+
+  @override
+  String get adminPermGroupSyncHint => 'Synchronization actions';
+
+  @override
+  String get adminPermGroupOtherHint => 'Other permissions';
+
+  @override
+  String get adminPermTreeHint =>
+      'Organized like the app: Package → Service → Operation. Example: Inventory → Stock count → Import.';
+
+  @override
+  String get adminPermTreeCatalogIntro =>
+      'Full map of packages, their services, and every operation you can grant on a role.';
+
+  @override
+  String get adminPermPackagePlatform => 'Platform';
+
+  @override
+  String get adminPermPackageInventoryHint =>
+      'Stock count and products services';
+
+  @override
+  String get adminPermPackageSalesHint => 'Sales documents and invoices';
+
+  @override
+  String get adminPermPackageCustomersHint =>
+      'Customers, accounts, and settings';
+
+  @override
+  String get adminPermPackageAccountingHint =>
+      'Accounts, journals, rates, voucher books';
+
+  @override
+  String get adminPermPackageReportsHint => 'Operational and financial reports';
+
+  @override
+  String get adminPermPackageAdminHint => 'Users, roles, and permissions';
+
+  @override
+  String get adminPermPackagePlatformHint =>
+      'Settings, sync, devices, companies';
+
+  @override
+  String adminPermPackageSummary(int services, int selected, int total) {
+    return '$services services · $selected/$total operations';
+  }
+
+  @override
+  String get adminPermServiceSalesDocuments => 'Sales documents';
+
+  @override
+  String get adminPermServiceSalesDocumentsHint =>
+      'List, create, post, cancel, and print invoices';
+
+  @override
+  String get adminPermServiceCustomersMaster => 'Customer list';
+
+  @override
+  String get adminPermServiceCustomersMasterHint =>
+      'Create and manage customers';
+
+  @override
+  String get adminPermServiceCustomersAccounts => 'Customer accounts';
+
+  @override
+  String get adminPermServiceCustomersAccountsHint =>
+      'Browse linked chart of accounts';
+
+  @override
+  String get adminPermServiceCustomersSettings => 'Customer settings';
+
+  @override
+  String get adminPermServiceCustomersSettingsHint =>
+      'Parent account and auto-link options';
+
+  @override
+  String get adminPermServiceChartOfAccounts => 'Chart of accounts';
+
+  @override
+  String get adminPermServiceChartOfAccountsHint =>
+      'Create and maintain accounts';
+
+  @override
+  String get adminPermServiceJournals => 'Journal entries';
+
+  @override
+  String get adminPermServiceJournalsHint => 'Create and manage journals';
+
+  @override
+  String get adminPermServiceCurrencyRates => 'Currency rates';
+
+  @override
+  String get adminPermServiceCurrencyRatesHint => 'Exchange rates maintenance';
+
+  @override
+  String get adminPermServiceVoucherBooks => 'Voucher books';
+
+  @override
+  String get adminPermServiceVoucherBooksHint =>
+      'Numbering books by document type';
+
+  @override
+  String get adminPermServiceAccountingReports => 'Accounting reports';
+
+  @override
+  String get adminPermServiceAccountingReportsHint => 'Accounting report hub';
+
+  @override
+  String get adminPermServiceSalesPeriod => 'Sales period report';
+
+  @override
+  String get adminPermServiceSalesPeriodHint => 'Sales by period with export';
+
+  @override
+  String get adminPermServiceAccountStatement => 'Account statement';
+
+  @override
+  String get adminPermServiceAccountStatementHint =>
+      'Customer / account statement with export';
+
+  @override
+  String get adminPermServiceDevicesHint => 'Registered sync devices';
+
+  @override
+  String get adminPermServiceCompaniesHint =>
+      'Company profile and platform company tools';
+
+  @override
+  String get adminPermOpStockCount => 'Perform stock count';
+
+  @override
+  String get adminPermOpImport => 'Import';
+
+  @override
+  String get adminPermOpExport => 'Export';
+
+  @override
+  String get adminPermOpReportsExport => 'View / export reports';
+
+  @override
+  String get adminPermOpClear => 'Clear data';
+
+  @override
+  String get adminPermOpBarcode => 'Barcodes & labels';
+
+  @override
+  String get adminPermOpDuplicate => 'Duplicate';
+
+  @override
+  String get adminPermOpInvoiceExport => 'Print / share invoice';
+
+  @override
+  String get adminPermOpPlatformCompanies => 'Manage companies (platform)';
+
+  @override
+  String get adminPermOpPlatformUsers => 'Manage users (platform)';
 }

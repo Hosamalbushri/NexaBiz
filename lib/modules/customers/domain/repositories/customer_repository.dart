@@ -34,5 +34,10 @@ abstract class CustomerRepository {
   Future<Customer> upsertFromExternal(CustomerDraft draft);
 
   /// Bulk upsert by customer code (Excel import). Preserves existing [accountId].
-  Future<CustomerUpsertResult> upsertAll(List<CustomerDraft> drafts);
+  ///
+  /// [onProgress] reports processed/total so callers can keep the UI responsive.
+  Future<CustomerUpsertResult> upsertAll(
+    List<CustomerDraft> drafts, {
+    void Function(int processed, int total)? onProgress,
+  });
 }

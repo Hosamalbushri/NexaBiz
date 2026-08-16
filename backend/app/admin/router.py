@@ -35,15 +35,23 @@ from app.auth.schemas import (
     RoleCreateRequest,
     RoleUpdateRequest,
     UserCreateRequest,
+    UserStatusRequest,
     UserUpdateRequest,
 )
 from app.auth.service import AuthService
+from app.auth.admin_safety import (
+    ensure_not_last_admin,
+    require_company_scope,
+    require_manageable_user,
+)
 from app.auth.tokens import utcnow
 from app.core.config import Settings, get_settings
 from app.core.database import get_db
 from app.core.exceptions import NotFoundError, ValidationAppError
 from app.models.identity import (
+    AuthSession,
     CompanyUser,
+    Device,
     Permission,
     Role,
     RolePermission,
@@ -110,6 +118,9 @@ def create_user(
 ) -> dict:
     if body.is_super_admin and not auth.user.is_super_admin:
         raise ValidationAppError("Only super admins can create super admins")
+    company_id = body.company_id or auth.company_id
+    if company_id is not None:
+        require_company_scope(auth, company_id)
     service = AuthService(db, settings)
     try:
         user = service.create_user(
@@ -120,7 +131,6 @@ def create_user(
             status=body.status,
             is_super_admin=body.is_super_admin and auth.user.is_super_admin,
         )
-        company_id = body.company_id or auth.company_id
         if company_id is not None and body.role_id is not None:
             db.add(
                 CompanyUser(
@@ -156,9 +166,7 @@ def get_user(
         PermissionChecker(USERS_VIEW, USERS_MANAGE, PLATFORM_USERS_MANAGE, any_of=True)
     ),
 ) -> dict:
-    user = db.get(User, user_id)
-    if user is None:
-        raise NotFoundError("User not found")
+    user = require_manageable_user(db, auth, user_id)
     return {"data": _user_out(user)}
 
 
@@ -171,14 +179,20 @@ def update_user(
         PermissionChecker(USERS_UPDATE, USERS_MANAGE, PLATFORM_USERS_MANAGE, any_of=True)
     ),
 ) -> dict:
-    user = db.get(User, user_id)
-    if user is None:
-        raise NotFoundError("User not found")
+    user = require_manageable_user(db, auth, user_id)
     if body.name is not None:
         user.name = body.name
     if body.phone is not None:
         user.phone = body.phone
     if body.status is not None:
+        if body.status not in {"active", "inactive", "suspended"}:
+            raise ValidationAppError("status must be active, inactive, or suspended")
+        ensure_not_last_admin(
+            db,
+            user,
+            company_id=auth.company_id,
+            next_status=body.status,
+        )
         user.status = body.status
         write_audit(
             db,
@@ -189,9 +203,56 @@ def update_user(
             entity_id=str(user.id),
             metadata={"status": body.status},
         )
+        if body.status != "active":
+            _revoke_user_sessions(db, user.id)
     if body.password is not None:
         user.password_hash = hash_password(body.password)
+        write_audit(
+            db,
+            action="user.password_changed",
+            user_id=auth.user.id,
+            company_id=auth.company_id,
+            entity_type="user",
+            entity_id=str(user.id),
+        )
     user.updated_at = utcnow()
+    try:
+        db.commit()
+        return {"data": _user_out(user)}
+    except Exception:
+        db.rollback()
+        raise
+
+
+@users_router.post("/{user_id}/status")
+def set_user_status(
+    user_id: uuid.UUID,
+    body: UserStatusRequest,
+    db: Session = Depends(get_db),
+    auth: AuthContext = Depends(
+        PermissionChecker(USERS_UPDATE, USERS_MANAGE, PLATFORM_USERS_MANAGE, any_of=True)
+    ),
+) -> dict:
+    user = require_manageable_user(db, auth, user_id)
+    ensure_not_last_admin(
+        db,
+        user,
+        company_id=auth.company_id,
+        next_status=body.status,
+    )
+    user.status = body.status
+    user.updated_at = utcnow()
+    write_audit(
+        db,
+        action="user.status_changed",
+        user_id=auth.user.id,
+        company_id=auth.company_id,
+        entity_type="user",
+        entity_id=str(user.id),
+        metadata={"status": body.status},
+    )
+    if body.status != "active":
+        _revoke_user_sessions(db, user.id)
     try:
         db.commit()
         return {"data": _user_out(user)}
@@ -208,11 +269,16 @@ def delete_user(
         PermissionChecker(USERS_DELETE, USERS_MANAGE, PLATFORM_USERS_MANAGE, any_of=True)
     ),
 ) -> dict:
-    user = db.get(User, user_id)
-    if user is None:
-        raise NotFoundError("User not found")
+    user = require_manageable_user(db, auth, user_id)
+    ensure_not_last_admin(
+        db,
+        user,
+        company_id=auth.company_id,
+        next_status="inactive",
+    )
     user.status = "inactive"
     user.updated_at = utcnow()
+    _revoke_user_sessions(db, user.id)
     write_audit(
         db,
         action="user.deactivated",
@@ -227,6 +293,22 @@ def delete_user(
     except Exception:
         db.rollback()
         raise
+
+
+def _revoke_user_sessions(db: Session, user_id: uuid.UUID) -> None:
+    sessions = (
+        db.execute(
+            select(AuthSession).where(
+                AuthSession.user_id == user_id,
+                AuthSession.status == "active",
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for session in sessions:
+        session.status = "revoked"
+        session.revoked_at = utcnow()
 
 
 @roles_router.get("")
@@ -249,6 +331,15 @@ def list_roles(
                 "description": r.description,
                 "system_role": r.system_role,
                 "company_id": str(r.company_id) if r.company_id else None,
+                "permission_count": len(
+                    db.execute(
+                        select(RolePermission.permission_id).where(
+                            RolePermission.role_id == r.id
+                        )
+                    )
+                    .scalars()
+                    .all()
+                ),
             }
             for r in rows
         ]
@@ -530,12 +621,7 @@ def list_members(
         PermissionChecker(USERS_VIEW, USERS_MANAGE, any_of=True)
     ),
 ) -> dict:
-    if (
-        not auth.user.is_super_admin
-        and auth.company_id != company_id
-        and PLATFORM_USERS_MANAGE not in auth.permissions
-    ):
-        raise ValidationAppError("Cannot view members of another company")
+    require_company_scope(auth, company_id)
     rows = (
         db.execute(select(CompanyUser).where(CompanyUser.company_id == company_id))
         .scalars()
@@ -568,6 +654,7 @@ def add_member(
         PermissionChecker(USERS_CREATE, USERS_MANAGE, PLATFORM_USERS_MANAGE, any_of=True)
     ),
 ) -> dict:
+    require_company_scope(auth, company_id)
     company = db.get(Company, company_id)
     if company is None:
         raise NotFoundError("Company not found")
@@ -616,6 +703,7 @@ def update_member(
         PermissionChecker(USERS_UPDATE, USERS_MANAGE, any_of=True)
     ),
 ) -> dict:
+    require_company_scope(auth, company_id)
     membership = db.get(CompanyUser, membership_id)
     if membership is None or membership.company_id != company_id:
         raise NotFoundError("Membership not found")
@@ -650,6 +738,7 @@ def remove_member(
         PermissionChecker(USERS_DELETE, USERS_MANAGE, any_of=True)
     ),
 ) -> dict:
+    require_company_scope(auth, company_id)
     membership = db.get(CompanyUser, membership_id)
     if membership is None or membership.company_id != company_id:
         raise NotFoundError("Membership not found")
@@ -675,11 +764,11 @@ def list_devices(
     company_id = auth.require_company_id
     rows = (
         db.execute(
-            select(Device)
+            select(Device, User)
+            .outerjoin(User, User.id == Device.user_id)
             .where(Device.company_id == company_id)
-            .order_by(Device.created_at.desc())
+            .order_by(Device.last_seen_at.desc().nullslast(), Device.created_at.desc())
         )
-        .scalars()
         .all()
     )
     return {
@@ -692,9 +781,13 @@ def list_devices(
                 "app_version": d.app_version,
                 "status": d.status,
                 "user_id": str(d.user_id),
+                "user_name": user.name if user is not None else None,
+                "user_email": user.email if user is not None else None,
                 "last_seen_at": d.last_seen_at.isoformat() if d.last_seen_at else None,
+                "created_at": d.created_at.isoformat() if d.created_at else None,
+                "revoked_at": d.revoked_at.isoformat() if d.revoked_at else None,
             }
-            for d in rows
+            for d, user in rows
         ]
     }
 
@@ -745,6 +838,118 @@ def revoke_device(
         )
         db.commit()
         return {"data": {"id": str(device.id), "status": device.status}}
+    except Exception:
+        db.rollback()
+        raise
+
+
+@devices_router.post("/sync-disable-requests")
+def create_sync_disable_request(
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    auth: AuthContext = Depends(require_company_context),
+) -> dict:
+    """Non-admin users request that an admin disable sync on this device."""
+    if auth.device_id is None:
+        raise ValidationAppError("Current session has no registered device")
+    service = AuthService(db, settings)
+    try:
+        row = service.request_sync_disable(
+            user=auth.user,
+            company_id=auth.require_company_id,
+            device_id=auth.device_id,
+        )
+        db.commit()
+        return {
+            "data": {
+                "id": str(row.id),
+                "status": row.status,
+                "device_id": str(row.device_id),
+                "created_at": row.created_at.isoformat() if row.created_at else None,
+            }
+        }
+    except Exception:
+        db.rollback()
+        raise
+
+
+@devices_router.get("/sync-disable-requests")
+def list_sync_disable_requests(
+    status: str | None = "pending",
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    auth: AuthContext = Depends(
+        PermissionChecker(DEVICES_VIEW, DEVICES_REVOKE, any_of=True)
+    ),
+) -> dict:
+    service = AuthService(db, settings)
+    rows = service.list_sync_disable_requests(
+        company_id=auth.require_company_id,
+        status=status,
+    )
+    from app.models.identity import User as UserModel
+
+    out = []
+    for row in rows:
+        user = db.get(UserModel, row.user_id)
+        device = db.get(Device, row.device_id)
+        out.append(
+            {
+                "id": str(row.id),
+                "status": row.status,
+                "message": row.message,
+                "user_id": str(row.user_id),
+                "user_name": user.name if user else None,
+                "user_email": user.email if user else None,
+                "device_id": str(row.device_id),
+                "device_name": device.device_name if device else None,
+                "platform": device.platform if device else None,
+                "created_at": row.created_at.isoformat() if row.created_at else None,
+                "resolved_at": row.resolved_at.isoformat()
+                if row.resolved_at
+                else None,
+            }
+        )
+    return {"data": out}
+
+
+@devices_router.post("/sync-disable-requests/{request_id}/approve")
+def approve_sync_disable_request(
+    request_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    auth: AuthContext = Depends(PermissionChecker(DEVICES_REVOKE)),
+) -> dict:
+    service = AuthService(db, settings)
+    try:
+        row = service.approve_sync_disable(
+            actor=auth.user,
+            company_id=auth.require_company_id,
+            request_id=request_id,
+        )
+        db.commit()
+        return {"data": {"id": str(row.id), "status": row.status}}
+    except Exception:
+        db.rollback()
+        raise
+
+
+@devices_router.post("/sync-disable-requests/{request_id}/reject")
+def reject_sync_disable_request(
+    request_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    auth: AuthContext = Depends(PermissionChecker(DEVICES_REVOKE)),
+) -> dict:
+    service = AuthService(db, settings)
+    try:
+        row = service.reject_sync_disable(
+            actor=auth.user,
+            company_id=auth.require_company_id,
+            request_id=request_id,
+        )
+        db.commit()
+        return {"data": {"id": str(row.id), "status": row.status}}
     except Exception:
         db.rollback()
         raise

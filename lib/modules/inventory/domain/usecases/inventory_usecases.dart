@@ -38,7 +38,11 @@ class ReplaceInventoryItems {
 
   final InventoryRepository _repository;
 
-  Future<void> call(List<InventoryItem> items) => _repository.replaceAll(items);
+  Future<void> call(
+    List<InventoryItem> items, {
+    void Function(int processed, int total)? onProgress,
+  }) =>
+      _repository.replaceAll(items, onProgress: onProgress);
 }
 
 class ClearInventoryItems {

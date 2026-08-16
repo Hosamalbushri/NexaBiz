@@ -239,6 +239,50 @@ class AuthSession(Base):
     )
 
 
+class SyncDisableRequest(Base):
+    """User asks admin to disable sync on a device; admin approves/rejects."""
+
+    __tablename__ = "sync_disable_requests"
+    __table_args__ = (
+        Index("ix_sync_disable_requests_company_status", "company_id", "status"),
+        Index("ix_sync_disable_requests_device_id", "device_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=_uuid
+    )
+    company_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("companies.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    device_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("devices.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="pending"
+    )  # pending | approved | rejected | cancelled
+    message: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    resolved_by_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    resolved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
 class AuditLog(Base):
     __tablename__ = "audit_logs"
     __table_args__ = (

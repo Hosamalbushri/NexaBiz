@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/services/loading_providers.dart';
 import '../../core/sync/sync_overview.dart';
 import '../../core/sync/sync_providers.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/custom_app_bar.dart';
+import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../localization/app_localizations.dart';
 import '../router/app_routes.dart';
+import 'sync_background_scheduler.dart';
+import 'sync_enabled_provider.dart';
+import 'sync_session_state.dart';
 
-/// App-bar cluster: Wi‑Fi always visible; sync action only while work is active.
+/// App-bar sync actions — hidden entirely when sync is disabled.
+///
+/// Sync runs in the background (no blocking overlay).
 class AppBarSyncActions extends ConsumerWidget {
   const AppBarSyncActions({super.key, this.size = 42});
 
@@ -25,24 +30,39 @@ class AppBarSyncActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final syncEnabled = ref.watch(syncEnabledProvider);
+    final session = ref.watch(syncSessionStateProvider);
+    if (!syncEnabled) {
+      return const SizedBox.shrink();
+    }
+
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final overview =
         ref.watch(syncOverviewProvider).asData?.value ?? SyncOverview.initial();
     final online = overview.isOnline;
     final showSync = hasActiveSync(overview);
+    final needsReauth = session.phase == SyncSessionPhase.sessionExpired;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         CustomAppBarAction(
-          icon: online ? Icons.wifi_rounded : Icons.wifi_off_rounded,
-          tooltip: online
-              ? l10n.syncConnectionOnline
-              : l10n.syncConnectionOffline,
+          icon: needsReauth
+              ? Icons.lock_clock_outlined
+              : (online ? Icons.wifi_rounded : Icons.wifi_off_rounded),
+          tooltip: needsReauth
+              ? l10n.syncSessionExpired
+              : (online
+                  ? l10n.syncConnectionOnline
+                  : l10n.syncConnectionOffline),
           size: size,
-          accentColor: online ? colorScheme.primary : colorScheme.outline,
-          onPressed: () => context.go(AppRoutes.settings),
+          accentColor: needsReauth
+              ? colorScheme.error
+              : (online ? colorScheme.primary : colorScheme.outline),
+          onPressed: () => needsReauth
+              ? context.push(AppRoutes.settingsDataSyncLogin)
+              : context.go(AppRoutes.settings),
         ),
         if (showSync) ...[
           const SizedBox(width: 4),
@@ -71,6 +91,24 @@ class AppBarSyncActions extends ConsumerWidget {
     bool isOnline,
   ) async {
     final l10n = AppLocalizations.of(context);
+    if (!ref.read(syncEnabledProvider)) {
+      showAppSnackBar(
+        context,
+        message: l10n.syncDisabledMessage,
+        isSuccess: false,
+      );
+      return;
+    }
+    final auth = ref.read(authStateProvider);
+    if (!auth.canUseRemoteSync) {
+      showAppSnackBar(
+        context,
+        message: l10n.syncSessionExpired,
+        isSuccess: false,
+      );
+      await context.push(AppRoutes.settingsDataSyncLogin);
+      return;
+    }
     if (!isOnline) {
       showAppSnackBar(
         context,
@@ -80,20 +118,9 @@ class AppBarSyncActions extends ConsumerWidget {
       return;
     }
 
-    final result = await ref.read(loadingControllerProvider).run(
-      message: l10n.loadingSynchronizing,
-      action: () => ref.read(syncManagerProvider).syncNow(notify: true),
-    );
-
-    if (!context.mounted) {
-      return;
-    }
-    if (result.outcome == SyncPassOutcome.skippedOffline) {
-      showAppSnackBar(
-        context,
-        message: l10n.syncOfflineMessage,
-        isSuccess: false,
-      );
-    }
+    // Background pass — UI stays interactive; indicator shows progress.
+    await ref
+        .read(syncBackgroundSchedulerProvider)
+        .requestSync(notify: true);
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -37,6 +39,8 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
 
   var _hydrated = false;
   var _saving = false;
+  var _generatingCode = false;
+  var _codeAutoFilled = false;
   var _isGroup = false;
   var _isActive = true;
   AccountType _accountType = AccountType.asset;
@@ -47,6 +51,11 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
   void initState() {
     super.initState();
     _parentId = widget.initialParentId;
+    if (!widget.isEditing && widget.initialParentId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_assignCodeFromParent(force: true));
+      });
+    }
   }
 
   @override
@@ -84,6 +93,53 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
       return;
     }
     setState(() => _accountType = parent.accountType);
+    await _assignCodeFromParent(
+      force: _codeController.text.trim().isEmpty || _codeAutoFilled,
+    );
+  }
+
+  Future<void> _assignCodeFromParent({required bool force}) async {
+    if (!mounted || widget.isEditing || _generatingCode) {
+      return;
+    }
+    final parentUuid = _parentId;
+    if (parentUuid == null || parentUuid.isEmpty) {
+      return;
+    }
+    if (!force && _codeController.text.trim().isNotEmpty && !_codeAutoFilled) {
+      return;
+    }
+
+    setState(() => _generatingCode = true);
+    try {
+      final parent = await ref
+          .read(getAccountByUuidUseCaseProvider)
+          .call(parentUuid);
+      if (!mounted || parent == null || parent.accountCode.trim().isEmpty) {
+        return;
+      }
+      final code = await ref
+          .read(accountCodeGeneratorProvider)
+          .generate(parentAccountCode: parent.accountCode);
+      if (!mounted) {
+        return;
+      }
+      _codeController.text = code;
+      _codeAutoFilled = true;
+    } on AccountException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      showAppSnackBar(
+        context,
+        message: accountExceptionMessage(AppLocalizations.of(context), e),
+        isSuccess: false,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _generatingCode = false);
+      }
+    }
   }
 
   @override
@@ -147,11 +203,29 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
             TextFormField(
               controller: _codeController,
               enabled: !systemLocked,
+              onChanged: (_) => _codeAutoFilled = false,
               decoration: InputDecoration(
                 labelText: l10n.accountingFieldCode,
                 helperText: systemLocked
                     ? l10n.accountingSystemAccountHint
-                    : null,
+                    : l10n.accountingFieldCodeHelper,
+                suffixIcon: widget.isEditing || systemLocked
+                    ? null
+                    : IconButton(
+                        tooltip: l10n.accountingGenerateCode,
+                        onPressed: _generatingCode || _parentId == null
+                            ? null
+                            : () => _assignCodeFromParent(force: true),
+                        icon: _generatingCode
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.auto_awesome),
+                      ),
               ),
               textInputAction: TextInputAction.next,
               validator: (value) {

@@ -4,18 +4,22 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../errors/app_failure.dart';
+import '../sync/sync_request_context.dart';
 import 'sync_api_config.dart';
+import 'token_refresh_outcome.dart';
 import 'token_store.dart';
 
-/// Central authenticated HTTP client with one-shot refresh-on-401.
+/// Central authenticated HTTP client with single-flight refresh-on-401.
 ///
-/// SyncManager never talks to this directly — [HttpRemoteSyncApi] uses it.
+/// Concurrent 401s wait for the same refresh attempt instead of immediately
+/// treating the session as expired. Network failures during refresh do **not**
+/// expire the session (offline work keeps the local permission snapshot).
 class AuthenticatedHttpClient {
   AuthenticatedHttpClient({
     required SyncApiConfig config,
     required TokenStore tokenStore,
     http.Client? client,
-    Future<bool> Function()? onRefresh,
+    Future<TokenRefreshOutcome> Function()? onRefresh,
     void Function()? onSessionExpired,
   }) : _config = config,
        _tokenStore = tokenStore,
@@ -28,10 +32,10 @@ class AuthenticatedHttpClient {
   final TokenStore _tokenStore;
   final http.Client _client;
   final bool _ownsClient;
-  final Future<bool> Function()? _onRefresh;
+  final Future<TokenRefreshOutcome> Function()? _onRefresh;
   final void Function()? _onSessionExpired;
 
-  bool _refreshing = false;
+  Future<TokenRefreshOutcome>? _refreshInFlight;
 
   void updateConfig(SyncApiConfig config) {
     _config = config;
@@ -52,11 +56,14 @@ class AuthenticatedHttpClient {
 
   Future<Map<String, String>> _headers({bool jsonBody = true}) async {
     final access = await _tokenStore.readAccessToken() ?? _config.apiToken;
+    final correlation = SyncRequestContext.correlationId;
     return {
       'Authorization': 'Bearer $access',
       'Accept': 'application/json',
       if (jsonBody) 'Content-Type': 'application/json',
       'X-Device-Id': _config.deviceId,
+      if (correlation != null && correlation.isNotEmpty)
+        'X-Correlation-Id': correlation,
     };
   }
 
@@ -103,6 +110,31 @@ class AuthenticatedHttpClient {
     });
   }
 
+  Future<TokenRefreshOutcome> _refreshOnce() {
+    final existing = _refreshInFlight;
+    if (existing != null) return existing;
+
+    final refresh = _onRefresh;
+    if (refresh == null) {
+      return Future.value(TokenRefreshOutcome.unauthorized);
+    }
+
+    final future = () async {
+      try {
+        return await refresh();
+      } catch (_) {
+        return TokenRefreshOutcome.unauthorized;
+      }
+    }();
+    _refreshInFlight = future;
+    future.whenComplete(() {
+      if (identical(_refreshInFlight, future)) {
+        _refreshInFlight = null;
+      }
+    });
+    return future;
+  }
+
   Future<http.Response> _send(
     Future<http.Response> Function() request,
   ) async {
@@ -111,25 +143,27 @@ class AuthenticatedHttpClient {
       if (response.statusCode != 401) {
         return response;
       }
-      if (_refreshing || _onRefresh == null) {
+      if (_onRefresh == null) {
         _onSessionExpired?.call();
         return response;
       }
-      final refresh = _onRefresh;
-      _refreshing = true;
-      try {
-        final ok = await refresh();
-        if (!ok) {
+      final outcome = await _refreshOnce();
+      switch (outcome) {
+        case TokenRefreshOutcome.refreshed:
+          response = await request();
+          if (response.statusCode == 401) {
+            _onSessionExpired?.call();
+          }
+          return response;
+        case TokenRefreshOutcome.unavailable:
+          // Offline / transient — keep local session; do not force re-login.
+          return response;
+        case TokenRefreshOutcome.unauthorized:
           _onSessionExpired?.call();
           return response;
-        }
-        response = await request();
-        if (response.statusCode == 401) {
-          _onSessionExpired?.call();
-        }
-        return response;
-      } finally {
-        _refreshing = false;
+        case TokenRefreshOutcome.syncDisableApproved:
+          // AuthController already flagged; SyncEnabledController will opt out.
+          return response;
       }
     } on http.ClientException catch (e) {
       throw NetworkFailure(e.message, e);
@@ -205,5 +239,20 @@ class AuthenticatedHttpClient {
       return Map<String, dynamic>.from(decoded);
     }
     throw const ServerFailure('Invalid response');
+  }
+
+  /// Decodes `{ "data": [ ... ] }` list payloads.
+  List<dynamic> decodeDataList(http.Response response) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw mapFailure(response);
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is Map && decoded['data'] is List) {
+      return List<dynamic>.from(decoded['data'] as List);
+    }
+    if (decoded is List) {
+      return List<dynamic>.from(decoded);
+    }
+    throw const ServerFailure('Invalid list response');
   }
 }

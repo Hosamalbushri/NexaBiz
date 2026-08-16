@@ -57,7 +57,7 @@ void main() {
     queue = SyncQueue(box: syncBox);
     db = AccountingDatabase.memory();
     accounts = AccountRepositoryImpl(db, syncQueue: queue);
-    journals = JournalRepositoryImpl(db, accounts: accounts);
+    journals = JournalRepositoryImpl(db, accounts: accounts, syncQueue: queue);
     rates = CurrencyRateRepositoryImpl(db);
     await accounts.ensureDefaultChartSeeded();
     customerCodeSeq = 0;

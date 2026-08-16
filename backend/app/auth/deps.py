@@ -4,6 +4,7 @@ import uuid
 from dataclasses import dataclass, field
 
 from fastapi import Depends, Header, Request
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.auth.authorization import load_permission_codes, require_permissions
@@ -11,7 +12,7 @@ from app.auth.tokens import decode_access_token
 from app.core.config import Settings, get_settings
 from app.core.database import get_db
 from app.core.exceptions import UnauthorizedError, ValidationAppError
-from app.models.identity import AuthSession, Device, User
+from app.models.identity import AuthSession, Device, SyncDisableRequest, User
 from app.models.sync import Company
 
 
@@ -120,6 +121,18 @@ def get_auth_context(
     if device_id is not None:
         device = db.get(Device, device_id)
         if device is None or device.status != "active":
+            if device is not None:
+                approved = db.execute(
+                    select(SyncDisableRequest).where(
+                        SyncDisableRequest.device_id == device.id,
+                        SyncDisableRequest.status == "approved",
+                    )
+                ).scalar_one_or_none()
+                if approved is not None:
+                    raise UnauthorizedError(
+                        "Synchronization disabled by administrator",
+                        details={"reason": "sync_disable_approved"},
+                    )
             raise UnauthorizedError("Device is revoked or blocked")
 
     if company_id is not None:

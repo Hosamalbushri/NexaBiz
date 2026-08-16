@@ -423,94 +423,195 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
-  Future<CustomerUpsertResult> upsertAll(List<CustomerDraft> drafts) async {
+  Future<CustomerUpsertResult> upsertAll(
+    List<CustomerDraft> drafts, {
+    void Function(int processed, int total)? onProgress,
+  }) async {
+    if (drafts.isEmpty) {
+      return const CustomerUpsertResult(insertedCount: 0, updatedCount: 0);
+    }
+
     var inserted = 0;
     var updated = 0;
     final now = DateTime.now().toUtc();
     final nowMs = now.millisecondsSinceEpoch;
     final touched = <Customer>[];
 
-    await _db.transaction(() async {
-      for (final draft in drafts) {
-        _validator.validate(draft);
-        final normalized = _normalizedDraft(draft);
-
-        Customer? existing;
-        if (normalized.externalId != null) {
-          existing = await getByExternalId(normalized.externalId!);
-        }
-        existing ??= await getByCustomerCode(normalized.customerCode);
-
-        if (existing == null) {
-          await _assertUniqueCode(customerCode: normalized.customerCode);
-          await _assertUniqueExternalId(externalId: normalized.externalId);
-
-          final uuid = generateUuidV4();
-          final id = await _db
-              .into(_db.customers)
-              .insert(
-                CustomersCompanion.insert(
-                  uuid: uuid,
-                  customerCode: normalized.customerCode,
-                  name: normalized.name,
-                  phone: Value(normalized.phone),
-                  email: Value(normalized.email),
-                  address: Value(normalized.address),
-                  notes: Value(normalized.notes),
-                  isActive: Value(normalized.isActive),
-                  accountId: Value(normalized.accountId),
-                  externalId: Value(normalized.externalId),
-                  dataSource: Value(normalized.dataSource.storageValue),
-                  createdAt: nowMs,
-                  updatedAt: nowMs,
-                  syncStatus: const Value('pending'),
-                  version: const Value(1),
-                ),
-              );
-          final created = await getById(id);
-          if (created != null) {
-            touched.add(created);
-          }
-          inserted++;
-        } else {
-          await _assertUniqueCode(
-            customerCode: normalized.customerCode,
-            excludingId: existing.id,
-          );
-          await _assertUniqueExternalId(
-            externalId: normalized.externalId,
-            excludingId: existing.id,
-          );
-
-          final nextVersion = existing.version + 1;
-          await (_db.update(
-            _db.customers,
-          )..where((t) => t.id.equals(existing!.id))).write(
-            CustomersCompanion(
-              customerCode: Value(normalized.customerCode),
-              name: Value(normalized.name),
-              phone: Value(normalized.phone),
-              email: Value(normalized.email),
-              address: Value(normalized.address),
-              notes: Value(normalized.notes),
-              isActive: Value(normalized.isActive),
-              // Preserve linked CoA account unless the draft explicitly sets one.
-              accountId: Value(normalized.accountId ?? existing.accountId),
-              externalId: Value(normalized.externalId ?? existing.externalId),
-              dataSource: Value(normalized.dataSource.storageValue),
-              updatedAt: Value(nowMs),
-              syncStatus: const Value('pending'),
-              version: Value(nextVersion),
-            ),
-          );
-          final updatedRow = await getById(existing.id);
-          if (updatedRow != null) {
-            touched.add(updatedRow);
-          }
-          updated++;
-        }
+    // One preload instead of N+1 lookups per row.
+    final existingRows =
+        await (_db.select(_db.customers)..where(_notDeleted)).get();
+    final byCode = <String, Customer>{};
+    final byExternalId = <String, Customer>{};
+    for (final row in existingRows) {
+      final customer = _map(row);
+      byCode[customer.customerCode] = customer;
+      final externalId = customer.externalId;
+      if (externalId != null && externalId.isNotEmpty) {
+        byExternalId[externalId] = customer;
       }
-    });
+    }
+
+    const chunkSize = 40;
+    final total = drafts.length;
+    for (var start = 0; start < drafts.length; start += chunkSize) {
+      final end = (start + chunkSize < drafts.length)
+          ? start + chunkSize
+          : drafts.length;
+      final chunk = drafts.sublist(start, end);
+
+      await _db.transaction(() async {
+        for (final draft in chunk) {
+          _validator.validate(draft);
+          final normalized = _normalizedDraft(draft);
+
+          Customer? existing;
+          if (normalized.externalId != null) {
+            existing = byExternalId[normalized.externalId!];
+          }
+          existing ??= byCode[normalized.customerCode];
+
+          if (existing == null) {
+            final codeClash = byCode[normalized.customerCode];
+            if (codeClash != null) {
+              throw const CustomerException(
+                CustomerException.duplicateCustomerCode,
+              );
+            }
+            if (normalized.externalId != null &&
+                byExternalId.containsKey(normalized.externalId!)) {
+              throw const CustomerException(
+                CustomerException.duplicateExternalId,
+              );
+            }
+
+            final uuid = generateUuidV4();
+            final id = await _db
+                .into(_db.customers)
+                .insert(
+                  CustomersCompanion.insert(
+                    uuid: uuid,
+                    customerCode: normalized.customerCode,
+                    name: normalized.name,
+                    phone: Value(normalized.phone),
+                    email: Value(normalized.email),
+                    address: Value(normalized.address),
+                    notes: Value(normalized.notes),
+                    isActive: Value(normalized.isActive),
+                    accountId: Value(normalized.accountId),
+                    externalId: Value(normalized.externalId),
+                    dataSource: Value(normalized.dataSource.storageValue),
+                    createdAt: nowMs,
+                    updatedAt: nowMs,
+                    syncStatus: const Value('pending'),
+                    version: const Value(1),
+                  ),
+                );
+            final created = Customer(
+              id: id,
+              uuid: uuid,
+              customerCode: normalized.customerCode,
+              name: normalized.name,
+              phone: normalized.phone,
+              email: normalized.email,
+              address: normalized.address,
+              notes: normalized.notes,
+              isActive: normalized.isActive,
+              accountId: normalized.accountId,
+              externalId: normalized.externalId,
+              dataSource: normalized.dataSource,
+              createdAt: now,
+              updatedAt: now,
+              syncStatus: SyncStatus.pending,
+              version: 1,
+            );
+            touched.add(created);
+            byCode[created.customerCode] = created;
+            if (created.externalId != null) {
+              byExternalId[created.externalId!] = created;
+            }
+            inserted++;
+          } else {
+            final codeOwner = byCode[normalized.customerCode];
+            if (codeOwner != null && codeOwner.id != existing.id) {
+              throw const CustomerException(
+                CustomerException.duplicateCustomerCode,
+              );
+            }
+            if (normalized.externalId != null) {
+              final extOwner = byExternalId[normalized.externalId!];
+              if (extOwner != null && extOwner.id != existing.id) {
+                throw const CustomerException(
+                  CustomerException.duplicateExternalId,
+                );
+              }
+            }
+
+            final nextVersion = existing.version + 1;
+            final nextAccountId = normalized.accountId ?? existing.accountId;
+            final nextExternalId =
+                normalized.externalId ?? existing.externalId;
+            await (_db.update(
+              _db.customers,
+            )..where((t) => t.id.equals(existing!.id))).write(
+              CustomersCompanion(
+                customerCode: Value(normalized.customerCode),
+                name: Value(normalized.name),
+                phone: Value(normalized.phone),
+                email: Value(normalized.email),
+                address: Value(normalized.address),
+                notes: Value(normalized.notes),
+                isActive: Value(normalized.isActive),
+                // Preserve linked CoA account unless the draft explicitly sets one.
+                accountId: Value(nextAccountId),
+                externalId: Value(nextExternalId),
+                dataSource: Value(normalized.dataSource.storageValue),
+                updatedAt: Value(nowMs),
+                syncStatus: const Value('pending'),
+                version: Value(nextVersion),
+              ),
+            );
+            final updatedRow = existing.copyWith(
+              customerCode: normalized.customerCode,
+              name: normalized.name,
+              phone: normalized.phone,
+              clearPhone: normalized.phone == null,
+              email: normalized.email,
+              clearEmail: normalized.email == null,
+              address: normalized.address,
+              clearAddress: normalized.address == null,
+              notes: normalized.notes,
+              clearNotes: normalized.notes == null,
+              isActive: normalized.isActive,
+              accountId: nextAccountId,
+              clearAccountId: nextAccountId == null,
+              externalId: nextExternalId,
+              clearExternalId: nextExternalId == null,
+              dataSource: normalized.dataSource,
+              updatedAt: now,
+              syncStatus: SyncStatus.pending,
+              version: nextVersion,
+            );
+            // Refresh maps if code/external id changed.
+            if (existing.customerCode != updatedRow.customerCode) {
+              byCode.remove(existing.customerCode);
+            }
+            final oldExternal = existing.externalId;
+            if (oldExternal != null && oldExternal != updatedRow.externalId) {
+              byExternalId.remove(oldExternal);
+            }
+            byCode[updatedRow.customerCode] = updatedRow;
+            if (updatedRow.externalId != null) {
+              byExternalId[updatedRow.externalId!] = updatedRow;
+            }
+            touched.add(updatedRow);
+            updated++;
+          }
+        }
+      });
+
+      onProgress?.call(end, total);
+      await Future<void>.delayed(Duration.zero);
+    }
 
     for (final customer in touched) {
       await _enqueue(

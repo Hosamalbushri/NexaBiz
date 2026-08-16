@@ -27,12 +27,17 @@ class LocalAuthStore {
   }
 
   /// Ensures local company + admin with full permissions exist.
+  ///
+  /// When already seeded, keeps Super Admin permission lists in sync with
+  /// [kAllLocalPermissions] so newly added module codes appear after upgrades.
   Future<void> ensureSeeded() async {
     final box = await _box();
     if (box.get(_seededKey) == true) {
-      // Still repair admin if somehow deleted.
       final users = _readUsers(box);
-      if (users.any((u) => u.email == LocalAuthDefaults.adminEmail)) {
+      final adminExists =
+          users.any((u) => u.email == LocalAuthDefaults.adminEmail);
+      if (adminExists) {
+        await _syncSuperAdminPermissions(box, users);
         return;
       }
     }
@@ -65,6 +70,107 @@ class LocalAuthStore {
     await box.put(_usersKey, [admin.toJson()]);
     await box.put(_companiesKey, [company.toJson()]);
     await box.put(_seededKey, true);
+  }
+
+  /// Merges newly catalogued permission codes into every Super Admin user.
+  Future<void> _syncSuperAdminPermissions(
+    Box<dynamic> box,
+    List<_LocalUserRecord> users,
+  ) async {
+    final catalog = kAllLocalPermissions.toSet();
+    var changed = false;
+    final nextUsers = <_LocalUserRecord>[];
+    for (final user in users) {
+      if (!user.isSuperAdmin) {
+        nextUsers.add(user);
+        continue;
+      }
+      final nextPerms = <String, List<String>>{};
+      final companyIds = user.companyIds.isEmpty
+          ? const [LocalAuthDefaults.companyId]
+          : user.companyIds;
+      for (final companyId in companyIds) {
+        final existing = user.permissionsByCompany[companyId] ?? const <String>[];
+        final merged = {...existing, ...catalog}.toList(growable: false)
+          ..sort();
+        nextPerms[companyId] = merged;
+        if (merged.length != existing.length ||
+            !existing.toSet().containsAll(catalog)) {
+          changed = true;
+        }
+      }
+      // Also refresh any other company keys already stored.
+      for (final entry in user.permissionsByCompany.entries) {
+        if (nextPerms.containsKey(entry.key)) continue;
+        final merged = {...entry.value, ...catalog}.toList(growable: false)
+          ..sort();
+        nextPerms[entry.key] = merged;
+        if (merged.length != entry.value.length) changed = true;
+      }
+      nextUsers.add(
+        _LocalUserRecord(
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          passwordSalt: user.passwordSalt,
+          passwordHash: user.passwordHash,
+          status: user.status,
+          isSuperAdmin: user.isSuperAdmin,
+          companyIds: user.companyIds,
+          rolesByCompany: user.rolesByCompany,
+          permissionsByCompany: nextPerms,
+        ),
+      );
+    }
+    if (!changed) return;
+    await box.put(
+      _usersKey,
+      [for (final u in nextUsers) u.toJson()],
+    );
+
+    // Refresh persisted session so the launcher sees new codes without logout.
+    // Session is stored as a JSON string (see [saveSession]).
+    final rawSession = box.get(_sessionKey);
+    if (rawSession is! String || rawSession.isEmpty) return;
+    try {
+      final decoded = jsonDecode(rawSession);
+      if (decoded is! Map) return;
+      final snapshot = AuthSessionSnapshot.fromJson(
+        Map<String, dynamic>.from(decoded),
+      );
+      if (!snapshot.user.isSuperAdmin &&
+          !snapshot.roles.contains(LocalAuthDefaults.adminRole)) {
+        return;
+      }
+      _LocalUserRecord? admin;
+      for (final u in nextUsers) {
+        if (u.id == snapshot.user.id && u.isSuperAdmin) {
+          admin = u;
+          break;
+        }
+      }
+      if (admin == null) {
+        for (final u in nextUsers) {
+          if (u.isSuperAdmin) {
+            admin = u;
+            break;
+          }
+        }
+      }
+      final companyId =
+          snapshot.currentCompanyId ?? LocalAuthDefaults.companyId;
+      final companyPerms = admin?.permissionsByCompany[companyId];
+      final refreshed = snapshot.copyWith(
+        permissions: {
+          ...snapshot.permissions,
+          ...catalog,
+          ...?companyPerms,
+        },
+      );
+      await saveSession(refreshed);
+    } catch (_) {
+      // Keep user rows updated; next login rebuilds the session.
+    }
   }
 
   Future<AuthSessionSnapshot?> login({
@@ -116,9 +222,11 @@ class LocalAuthStore {
       selectedId = companies.first.id;
     }
 
+    final stored = matched.permissionsByCompany[selectedId];
     final permissions = Set<String>.from(
-      matched.permissionsByCompany[selectedId] ??
-          (matched.isSuperAdmin ? kAllLocalPermissions : const <String>[]),
+      matched.isSuperAdmin
+          ? {...?stored, ...kAllLocalPermissions}
+          : (stored ?? const <String>[]),
     );
     final roles = <String>[
       if (matched.rolesByCompany[selectedId] != null)
@@ -163,9 +271,22 @@ class LocalAuthStore {
     if (raw is! String || raw.isEmpty) return null;
     try {
       final map = jsonDecode(raw);
-      if (map is Map) {
-        return AuthSessionSnapshot.fromJson(Map<String, dynamic>.from(map));
+      if (map is! Map) return null;
+      var snapshot = AuthSessionSnapshot.fromJson(
+        Map<String, dynamic>.from(map),
+      );
+      // Safety net: Super Admin sessions always include the current catalog
+      // so new modules appear after app upgrades without wiping Hive.
+      if (snapshot.user.isSuperAdmin ||
+          snapshot.roles.contains(LocalAuthDefaults.adminRole)) {
+        final merged = {...snapshot.permissions, ...kAllLocalPermissions};
+        if (merged.length != snapshot.permissions.length ||
+            !snapshot.permissions.containsAll(kAllLocalPermissions)) {
+          snapshot = snapshot.copyWith(permissions: merged);
+          await saveSession(snapshot);
+        }
       }
+      return snapshot;
     } catch (_) {}
     return null;
   }
@@ -196,9 +317,11 @@ class LocalAuthStore {
     }
     if (company == null) return null;
 
+    final stored = user.permissionsByCompany[companyId];
     final permissions = Set<String>.from(
-      user.permissionsByCompany[companyId] ??
-          (user.isSuperAdmin ? kAllLocalPermissions : const <String>[]),
+      user.isSuperAdmin
+          ? {...?stored, ...kAllLocalPermissions}
+          : (stored ?? const <String>[]),
     );
     final role = user.rolesByCompany[companyId];
     final next = current.copyWith(

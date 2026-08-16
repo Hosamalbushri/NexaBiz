@@ -6,10 +6,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/router/app_routes.dart';
-import '../../../../app/sync/app_bar_sync_actions.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../authentication/presentation/widgets/permission_gate.dart';
+import '../../permissions/customers_permission_package.dart';
 import '../providers/customer_providers.dart';
 import 'customers_routes.dart';
 
@@ -40,7 +41,6 @@ class CustomersHomePage extends ConsumerWidget {
         appBar: CustomAppBar(
           title: l10n.moduleCustomers,
           showBackButton: true,
-          actions: const [AppBarSyncActions()],
         ),
         body: ListView(
           padding: AppConstants.pageInsets(context),
@@ -100,45 +100,59 @@ class CustomersHomePage extends ConsumerWidget {
                 .fadeIn(duration: 280.ms)
                 .slideY(begin: 0.04, end: 0, duration: 280.ms),
             const SizedBox(height: AppSpacing.md),
-            _CustomersHubCard(
-                  icon: Icons.account_balance_outlined,
-                  title: l10n.customersAccountsTitle,
-                  subtitle: l10n.customersAccountsCardSubtitle,
-                  onTap: () => CustomersRoutes.pushAccounts(context),
-                )
-                .animate()
-                .fadeIn(delay: 40.ms, duration: 280.ms)
-                .slideY(
-                  begin: 0.04,
-                  end: 0,
-                  delay: 40.ms,
-                  duration: 280.ms,
-                ),
+            PermissionGate(
+              anyOf: CustomersPermissions.accountsView,
+              child: _CustomersHubCard(
+                    icon: Icons.account_balance_outlined,
+                    title: l10n.customersAccountsTitle,
+                    subtitle: l10n.customersAccountsCardSubtitle,
+                    onTap: () => CustomersRoutes.pushAccounts(context),
+                  )
+                  .animate()
+                  .fadeIn(delay: 40.ms, duration: 280.ms)
+                  .slideY(
+                    begin: 0.04,
+                    end: 0,
+                    delay: 40.ms,
+                    duration: 280.ms,
+                  ),
+            ),
             const SizedBox(height: AppSpacing.md),
-            _CustomersHubCard(
-                  icon: Icons.upload_file_outlined,
-                  title: l10n.customersImportTitle,
-                  subtitle: l10n.customersImportSubtitle,
-                  onTap: () => CustomersRoutes.pushImport(context),
-                )
-                .animate()
-                .fadeIn(delay: 80.ms, duration: 280.ms)
-                .slideY(begin: 0.04, end: 0, delay: 80.ms, duration: 280.ms),
+            PermissionGate(
+              anyOf: CustomersPermissions.importOp,
+              child: _CustomersHubCard(
+                    icon: Icons.upload_file_outlined,
+                    title: l10n.customersImportTitle,
+                    subtitle: l10n.customersImportSubtitle,
+                    onTap: () => CustomersRoutes.pushImport(context),
+                  )
+                  .animate()
+                  .fadeIn(delay: 80.ms, duration: 280.ms)
+                  .slideY(
+                    begin: 0.04,
+                    end: 0,
+                    delay: 80.ms,
+                    duration: 280.ms,
+                  ),
+            ),
             const SizedBox(height: AppSpacing.md),
-            _CustomersHubCard(
-                  icon: Icons.settings_outlined,
-                  title: l10n.customersSettingsTitle,
-                  subtitle: l10n.customersSettingsCardSubtitle,
-                  onTap: () => CustomersRoutes.pushSettings(context),
-                )
-                .animate()
-                .fadeIn(delay: 120.ms, duration: 280.ms)
-                .slideY(
-                  begin: 0.04,
-                  end: 0,
-                  delay: 120.ms,
-                  duration: 280.ms,
-                ),
+            PermissionGate(
+              anyOf: CustomersPermissions.settingsView,
+              child: _CustomersHubCard(
+                    icon: Icons.settings_outlined,
+                    title: l10n.customersSettingsTitle,
+                    subtitle: l10n.customersSettingsCardSubtitle,
+                    onTap: () => CustomersRoutes.pushSettings(context),
+                  )
+                  .animate()
+                  .fadeIn(delay: 120.ms, duration: 280.ms)
+                  .slideY(
+                    begin: 0.04,
+                    end: 0,
+                    delay: 120.ms,
+                    duration: 280.ms,
+                  ),
+            ),
           ],
         ),
       ),

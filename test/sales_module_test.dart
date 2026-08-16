@@ -453,6 +453,51 @@ void main() {
       expect(byProduct.items.single.saleNumber, isNotEmpty);
     });
 
+    test('post is blocked until inventory tracking is wired', () async {
+      final create = CreateSale(
+        repository: repository,
+        numberAllocator: LocalSaleNumberAllocator(
+          nextSequence: repository.nextLocalSequence,
+        ),
+        voucherBookPort: _FakeVoucherBookPort(),
+      );
+      final sale = await create(
+        _cashDraft(
+          paidAmount: 10,
+          items: const [
+            SaleItemDraft(
+              productId: 'p',
+              productName: 'P',
+              productCode: 'P',
+              mainQuantity: 1,
+              unitPrice: 10,
+              baseUnitPrice: 10,
+            ),
+          ],
+        ),
+      );
+
+      final confirm = ConfirmSale(
+        repository: repository,
+        accountingBridge: const NoOpSaleAccountingBridgePort(),
+        inventoryEffect: const NoOpSaleInventoryEffectPort(),
+      );
+
+      await expectLater(
+        confirm(sale.id),
+        throwsA(
+          isA<SaleException>().having(
+            (e) => e.code,
+            'code',
+            SaleException.postingRequiresInventory,
+          ),
+        ),
+      );
+
+      final reloaded = await repository.getById(sale.id);
+      expect(reloaded?.saleStatus, SaleStatus.unposted);
+    });
+
     test('post leaves unposted when accounting bridge fails', () async {
       final create = CreateSale(
         repository: repository,
@@ -480,7 +525,7 @@ void main() {
       final confirm = ConfirmSale(
         repository: repository,
         accountingBridge: const _FailingAccountingBridge(),
-        inventoryEffect: const NoOpSaleInventoryEffectPort(),
+        inventoryEffect: const _ReadyInventoryEffect(),
       );
 
       await expectLater(
@@ -600,6 +645,16 @@ class _FailingAccountingBridge implements SaleAccountingBridgePort {
     String? externalDocumentNumber,
     String? externalStatus,
   }) async {}
+}
+
+class _ReadyInventoryEffect implements SaleInventoryEffectPort {
+  const _ReadyInventoryEffect();
+
+  @override
+  Future<void> onConfirmed(Sale sale) async {}
+
+  @override
+  Future<void> onCancelled(Sale sale) async {}
 }
 
 class _FailingInventoryEffect implements SaleInventoryEffectPort {

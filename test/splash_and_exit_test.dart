@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 
 import 'package:stock_count/app/bootstrap/app_initialization.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
+import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
 import 'package:stock_count/app/router/app_routes.dart';
+import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/app/splash/splash_page.dart';
 import 'package:stock_count/app/theme/app_theme.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
@@ -28,22 +30,28 @@ class _FixedSetupStateRepository implements SystemSetupStateRepository {
   Future<void> save(SetupProgress progress) async {}
 }
 
+class _FakeSettingsRepository extends SettingsRepository {
+  _FakeSettingsRepository({this.onboardingCompleted = false});
+
+  final bool onboardingCompleted;
+
+  @override
+  Future<bool> loadOnboardingCompleted() async => onboardingCompleted;
+
+  @override
+  Future<void> saveOnboardingCompleted(bool completed) async {}
+}
+
 SetupProgress _readyProgress() {
   final now = DateTime.utc(2026, 8, 14);
   return SetupProgress(
     schemaVersion: SystemSetupSchema.currentVersion,
     status: SystemSetupStatus.ready,
     steps: {
-      for (final id in SetupStepId.requiredIds)
+      for (final id in SetupStepId.allIds)
         id: SetupStepState(
           id: id,
           status: SetupStepStatus.completed,
-          updatedAt: now,
-        ),
-      for (final id in SetupStepId.optionalIds)
-        id: SetupStepState(
-          id: id,
-          status: SetupStepStatus.skipped,
           updatedAt: now,
         ),
     },
@@ -62,8 +70,14 @@ SetupProgress _freshProgress() {
   );
 }
 
-List<Override> setupOverrides(SetupProgress progress) {
+List<Override> setupOverrides(
+  SetupProgress progress, {
+  bool onboardingCompleted = false,
+}) {
   return [
+    settingsRepositoryProvider.overrideWithValue(
+      _FakeSettingsRepository(onboardingCompleted: onboardingCompleted),
+    ),
     systemSetupStateRepositoryProvider.overrideWithValue(
       _FixedSetupStateRepository(progress),
     ),
@@ -107,6 +121,11 @@ void main() {
           path: AppRoutes.dashboard,
           builder: (context, state) =>
               const Scaffold(body: Text('DashboardShell')),
+        ),
+        GoRoute(
+          path: AppRoutes.onboarding,
+          builder: (context, state) =>
+              const Scaffold(body: Text('OnboardingShell')),
         ),
         GoRoute(
           path: SystemSetupRoutes.root,
@@ -171,7 +190,7 @@ void main() {
       expect(find.byType(SplashPage), findsNothing);
     });
 
-    testWidgets('navigates to system setup when not ready', (tester) async {
+    testWidgets('navigates to onboarding when not ready', (tester) async {
       await tester.pumpWidget(
         wrapSplash(
           overrides: [
@@ -183,7 +202,27 @@ void main() {
 
       await tester.pumpAndSettle();
 
+      expect(find.text('OnboardingShell'), findsOneWidget);
+      expect(find.text('SystemSetupShell'), findsNothing);
+      expect(find.text('DashboardShell'), findsNothing);
+    });
+
+    testWidgets('navigates to system setup when onboarding already done', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapSplash(
+          overrides: [
+            ...setupOverrides(_freshProgress(), onboardingCompleted: true),
+            appInitializationProvider.overrideWith((ref) async {}),
+          ],
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
       expect(find.text('SystemSetupShell'), findsOneWidget);
+      expect(find.text('OnboardingShell'), findsNothing);
       expect(find.text('DashboardShell'), findsNothing);
     });
 

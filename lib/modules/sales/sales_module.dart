@@ -3,7 +3,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/route_access_rule.dart';
+import '../../core/permissions/permission_defs.dart';
 import '../../core/reporting/pdf_document_preview_page.dart';
+import 'permissions/sales_permission_package.dart';
 import 'presentation/pages/sale_details_page.dart';
 import 'presentation/pages/sale_form_page.dart';
 import 'presentation/pages/sales_home_page.dart';
@@ -32,6 +35,28 @@ class SalesModule extends AppModule {
 
   @override
   bool get isEnabled => true;
+
+  @override
+  List<String> get requiredAnyPermissions => SalesPermissions.view;
+
+  @override
+  List<RouteAccessRule> get routeAccessRules => [
+        RouteAccessRule(
+          pathEquals: SalesRoutes.create,
+          anyOf: SalesPermissions.create,
+        ),
+        RouteAccessRule(
+          pathRegex: RegExp(r'^/sales/\d+/edit$'),
+          anyOf: SalesPermissions.update,
+        ),
+        RouteAccessRule(
+          pathPrefix: SalesRoutes.root,
+          anyOf: SalesPermissions.view,
+        ),
+      ];
+
+  @override
+  PermissionPackageDef? get permissionPackage => salesPermissionPackage();
 
   @override
   String label(BuildContext context) {

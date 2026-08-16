@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../core/di/app_providers.dart';
 import '../core/notifications/notification_type.dart';
@@ -10,6 +11,7 @@ import '../core/sync/sync_overview.dart';
 import '../core/sync/sync_providers.dart';
 import '../core/widgets/app_snackbar.dart';
 import '../core/widgets/loading_overlay.dart';
+import '../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import 'localization/app_localizations.dart';
 import 'notifications/presentation/providers/notifications_provider.dart';
 import 'notifications/presentation/widgets/notification_toast_host.dart';
@@ -27,6 +29,8 @@ class BusinessPlatformApp extends ConsumerStatefulWidget {
 
 class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
   StreamSubscription<SyncPassResult>? _syncPassSub;
+  AppLifecycleListener? _lifecycleListener;
+  GoRouter? _router;
 
   @override
   void initState() {
@@ -36,15 +40,30 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
         .read(syncManagerProvider)
         .meaningfulPasses
         .listen(_onMeaningfulSyncPass);
+    _lifecycleListener = AppLifecycleListener(
+      onPause: () {
+        ref.read(appLockControllerProvider.notifier).onAppPaused();
+      },
+      onHide: () {
+        ref.read(appLockControllerProvider.notifier).onAppPaused();
+      },
+      onResume: () {
+        ref.read(appLockControllerProvider.notifier).onAppResumed();
+      },
+    );
   }
 
   @override
   void dispose() {
+    _lifecycleListener?.dispose();
     unawaited(_syncPassSub?.cancel());
     super.dispose();
   }
 
   void _onMeaningfulSyncPass(SyncPassResult result) {
+    if (!result.shouldNotify) {
+      return;
+    }
     final locale =
         ref.read(localeProvider) ?? AppLocalizations.supportedLocales.first;
     final l10n = lookupAppLocalizations(locale);
@@ -55,7 +74,9 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
         unawaited(
           notifications.showSuccess(
             title: l10n.syncCompletedTitle,
-            message: l10n.syncCompletedMessage,
+            message: result.hasIncomingFromServer
+                ? l10n.syncIncomingCount(result.downloaded)
+                : l10n.syncCompletedMessage,
             category: NotificationCategory.sync,
           ),
         );
@@ -63,6 +84,9 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
         unawaited(
           notifications.showWarning(
             title: l10n.syncPartialTitle,
+            message: result.hasIncomingFromServer
+                ? l10n.syncIncomingCount(result.downloaded)
+                : null,
             category: NotificationCategory.sync,
           ),
         );
@@ -74,8 +98,17 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
             category: NotificationCategory.sync,
           ),
         );
+      case SyncPassOutcome.authRequired:
+        unawaited(
+          notifications.showWarning(
+            title: l10n.syncSessionExpired,
+            message: l10n.syncSessionExpired,
+            category: NotificationCategory.sync,
+          ),
+        );
       case SyncPassOutcome.idle:
       case SyncPassOutcome.skippedOffline:
+      case SyncPassOutcome.skippedDisabled:
         break;
     }
   }
@@ -101,17 +134,16 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
 
   @override
   Widget build(BuildContext context) {
-    // Read once: provider must not watch mutable deps (see app_router.dart).
-    // Caching here while the provider disposes on invalidate left a live
-    // MaterialApp on a disposed GoRouter and invited duplicate navigator keys.
-    final router = ref.watch(appRouterProvider);
+    // Pin one GoRouter instance for the widget lifetime. Watching the provider
+    // can recreate GoRouter and reuse the same navigator GlobalKeys → crash.
+    _router ??= ref.read(appRouterProvider);
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-      routerConfig: router,
+      routerConfig: _router!,
       themeMode: themeMode,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),

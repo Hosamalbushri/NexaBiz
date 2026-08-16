@@ -203,3 +203,123 @@ def test_dev_token_still_works_after_seed(client: TestClient):
         params={"entity_type": "product", "cursor": 0},
     )
     assert r.status_code == 200
+
+
+def test_dev_token_disabled_by_default_flag(client: TestClient, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("ALLOW_DEV_TOKEN", "false")
+    from app.core.config import get_settings
+
+    get_settings.cache_clear()
+    headers = {"Authorization": "Bearer dev-sync-token-change-me"}
+    r = client.get(
+        "/api/v1/sync/pull",
+        headers=headers,
+        params={"entity_type": "product", "cursor": 0},
+    )
+    assert r.status_code == 401
+    get_settings.cache_clear()
+    monkeypatch.setenv("ALLOW_DEV_TOKEN", "true")
+    get_settings.cache_clear()
+
+
+def test_company_admin_cannot_read_cross_tenant_user(client: TestClient):
+    """Company-scoped admin must not GET a user who only belongs to another company."""
+    admin = _login(
+        client,
+        "admin@example.com",
+        "ChangeMeAdmin!123",
+        company_id="00000000-0000-4000-8000-000000000001",
+        device_id=str(uuid.uuid4()),
+        device_name="Admin Device",
+        platform="android",
+    )
+    admin_headers = {"Authorization": f"Bearer {admin['access_token']}"}
+
+    roles = client.get("/api/v1/roles", headers=admin_headers)
+    assert roles.status_code == 200
+    company_admin_role = next(
+        r for r in roles.json()["data"] if r["name"] == "Company Admin" and r.get("system_role")
+    )
+
+    # Tenant admin in Demo Company A (not super admin).
+    tenant_email = f"tenant-admin-{uuid.uuid4().hex[:8]}@example.com"
+    created = client.post(
+        "/api/v1/users",
+        headers=admin_headers,
+        json={
+            "name": "Tenant Admin",
+            "email": tenant_email,
+            "password": "TenantAdmin!123",
+            "company_id": "00000000-0000-4000-8000-000000000001",
+            "role_id": company_admin_role["id"],
+            "is_super_admin": False,
+        },
+    )
+    assert created.status_code == 200, created.text
+
+    # Second company + outsider user only there.
+    other_company = client.post(
+        "/api/v1/companies",
+        headers=admin_headers,
+        json={
+            "name": f"Other Co {uuid.uuid4().hex[:6]}",
+            "code": f"OTHER-{uuid.uuid4().hex[:6].upper()}",
+        },
+    )
+    assert other_company.status_code == 200, other_company.text
+    other_company_id = other_company.json()["data"]["id"]
+
+    outsider_email = f"outsider-{uuid.uuid4().hex[:8]}@example.com"
+    outsider = client.post(
+        "/api/v1/users",
+        headers=admin_headers,
+        json={
+            "name": "Outsider",
+            "email": outsider_email,
+            "password": "Outsider!12345",
+            "company_id": other_company_id,
+            "role_id": company_admin_role["id"],
+            "is_super_admin": False,
+        },
+    )
+    assert outsider.status_code == 200, outsider.text
+    outsider_id = outsider.json()["data"]["id"]
+
+    tenant = _login(
+        client,
+        tenant_email,
+        "TenantAdmin!123",
+        company_id="00000000-0000-4000-8000-000000000001",
+        device_id=str(uuid.uuid4()),
+        device_name="Tenant Device",
+        platform="android",
+    )
+    tenant_headers = {"Authorization": f"Bearer {tenant['access_token']}"}
+
+    denied = client.get(f"/api/v1/users/{outsider_id}", headers=tenant_headers)
+    assert denied.status_code == 404, denied.text
+
+    # Adding outsider into Demo Company A via forged company path must fail.
+    forged = client.post(
+        f"/api/v1/companies/{other_company_id}/members",
+        headers=tenant_headers,
+        json={
+            "user_id": outsider_id,
+            "role_id": company_admin_role["id"],
+            "status": "active",
+        },
+    )
+    assert forged.status_code == 403, forged.text
+
+
+def test_super_admin_can_still_read_any_user(client: TestClient):
+    admin = _login(client, "admin@example.com", "ChangeMeAdmin!123")
+    headers = {"Authorization": f"Bearer {admin['access_token']}"}
+    users = client.get("/api/v1/users", headers=headers)
+    assert users.status_code == 200
+    rows = users.json()["data"]
+    assert rows
+    target = rows[0]["id"]
+    r = client.get(f"/api/v1/users/{target}", headers=headers)
+    assert r.status_code == 200
+    assert r.json()["data"]["id"] == target

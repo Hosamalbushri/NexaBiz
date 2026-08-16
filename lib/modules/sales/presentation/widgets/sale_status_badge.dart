@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../domain/entities/payment_status.dart';
+import '../../../../core/widgets/app_amount_field.dart';
 import '../../domain/entities/sale_status.dart';
 
 class SaleStatusBadge extends StatelessWidget {
@@ -21,34 +20,6 @@ class SaleStatusBadge extends StatelessWidget {
         scheme.primaryContainer,
         scheme.onPrimaryContainer,
       ),
-    };
-    return _Badge(label: label, background: bg, foreground: fg);
-  }
-}
-
-class SalePaymentStatusBadge extends StatelessWidget {
-  const SalePaymentStatusBadge({
-    super.key,
-    required this.status,
-    required this.label,
-  });
-
-  final PaymentStatus status;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final (Color bg, Color fg) = switch (status) {
-      PaymentStatus.paid => (
-        scheme.secondaryContainer,
-        scheme.onSecondaryContainer,
-      ),
-      PaymentStatus.partiallyPaid => (
-        scheme.tertiaryContainer,
-        scheme.onTertiaryContainer,
-      ),
-      PaymentStatus.unpaid => (scheme.errorContainer, scheme.onErrorContainer),
     };
     return _Badge(label: label, background: bg, foreground: fg);
   }
@@ -85,8 +56,7 @@ class _Badge extends StatelessWidget {
 }
 
 String formatSaleMoney(BuildContext context, double value) {
-  final locale = Localizations.localeOf(context).toString();
-  return NumberFormat.decimalPattern(locale).format(value);
+  return formatAppAmount(context, value);
 }
 
 class SaleMoneyText extends StatelessWidget {
@@ -98,11 +68,7 @@ class SaleMoneyText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      formatSaleMoney(context, value),
-      style: style,
-      textAlign: textAlign,
-    );
+    return AppAmountText(value, style: style, textAlign: textAlign);
   }
 }
 

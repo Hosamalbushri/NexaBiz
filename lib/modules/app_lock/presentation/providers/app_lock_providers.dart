@@ -1,14 +1,18 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/app_lock_repository_impl.dart';
+import '../../data/local_auth_app_lock_biometrics.dart';
+import '../../domain/app_lock_biometrics.dart';
 import '../../domain/entities/app_lock_state.dart';
 import '../../domain/repositories/app_lock_repository.dart';
 
 final appLockRepositoryProvider = Provider<AppLockRepository>((ref) {
   return AppLockRepositoryImpl();
+});
+
+final appLockBiometricsProvider = Provider<AppLockBiometrics>((ref) {
+  return LocalAuthAppLockBiometrics();
 });
 
 /// Listenable for GoRouter refresh without rebuilding the router provider.
@@ -22,6 +26,7 @@ final appLockControllerProvider =
     StateNotifierProvider<AppLockController, AppLockState>((ref) {
   return AppLockController(
     repository: ref.watch(appLockRepositoryProvider),
+    biometrics: ref.watch(appLockBiometricsProvider),
     onChanged: () {
       ref.read(appLockRouterRefreshProvider).value++;
     },
@@ -31,12 +36,15 @@ final appLockControllerProvider =
 class AppLockController extends StateNotifier<AppLockState> {
   AppLockController({
     required AppLockRepository repository,
+    required AppLockBiometrics biometrics,
     required VoidCallback onChanged,
   })  : _repository = repository,
+        _biometrics = biometrics,
         _onChanged = onChanged,
         super(AppLockState.initial());
 
   final AppLockRepository _repository;
+  final AppLockBiometrics _biometrics;
   final VoidCallback _onChanged;
 
   static const minPinLength = 4;
@@ -50,10 +58,19 @@ class AppLockController extends StateNotifier<AppLockState> {
   var _lifecyclePaused = false;
   var _hydrated = false;
 
-  void _emit(AppLockState next) {
+  void _emit(AppLockState next, {bool deferRouterNotify = false}) {
     if (!mounted) return;
     state = next;
-    _onChanged();
+    if (!deferRouterNotify) {
+      _onChanged();
+      return;
+    }
+    // Defer GoRouter refresh so focused TextField/IME can deactivate first.
+    // Use a microtask (works in unit tests without a WidgetsBinding).
+    Future<void>.microtask(() {
+      if (!mounted) return;
+      _onChanged();
+    });
   }
 
   Future<void> hydrate({bool lockOnColdStart = true}) async {
@@ -65,6 +82,8 @@ class AppLockController extends StateNotifier<AppLockState> {
     }
     final failed = await _repository.loadFailedAttempts();
     final lockout = await _repository.loadLockoutUntil();
+    final biometricEnabled = await _repository.isBiometricEnabled();
+    final biometricAvailable = await _biometrics.isAvailable();
 
     final active = enabled && hasPin && policy != AppLockPolicy.disabled;
     final shouldLockCold =
@@ -79,6 +98,8 @@ class AppLockController extends StateNotifier<AppLockState> {
             ? AppLockGate.locked
             : (active ? AppLockGate.unlocked : AppLockGate.disabled),
         hasPin: hasPin,
+        biometricEnabled: active && biometricEnabled,
+        biometricAvailable: biometricAvailable,
         failedAttempts: failed,
         lockoutUntil: lockout,
       ),
@@ -145,6 +166,7 @@ class AppLockController extends StateNotifier<AppLockState> {
           clearError: true,
           clearLockout: true,
         ),
+        deferRouterNotify: true,
       );
       return true;
     }
@@ -167,6 +189,71 @@ class AppLockController extends StateNotifier<AppLockState> {
     return false;
   }
 
+  Future<bool> unlockWithBiometrics({required String localizedReason}) async {
+    if (!state.enabled) return true;
+    if (!state.canUseBiometrics) return false;
+    if (state.isLockoutActive) {
+      _emit(state.copyWith(errorMessage: 'lockout', busy: false));
+      return false;
+    }
+
+    _emit(state.copyWith(busy: true, clearError: true));
+    final ok = await _biometrics.authenticate(localizedReason: localizedReason);
+    if (!mounted) return false;
+
+    if (!ok) {
+      _emit(state.copyWith(busy: false, clearError: true));
+      return false;
+    }
+
+    await _repository.saveFailedAttempts(0);
+    await _repository.saveLockoutUntil(null);
+    _emit(
+      state.copyWith(
+        gate: AppLockGate.unlocked,
+        failedAttempts: 0,
+        busy: false,
+        clearError: true,
+        clearLockout: true,
+      ),
+      deferRouterNotify: true,
+    );
+    return true;
+  }
+
+  /// Enables biometrics after an OS confirmation prompt.
+  Future<String?> setBiometricEnabled({
+    required bool enabled,
+    required String localizedReason,
+  }) async {
+    if (!state.enabled || !state.hasPin) return 'unavailable';
+
+    if (!enabled) {
+      await _repository.setBiometricEnabled(false);
+      _emit(state.copyWith(biometricEnabled: false));
+      return null;
+    }
+
+    final available = await _biometrics.isAvailable();
+    if (!available) {
+      _emit(state.copyWith(biometricAvailable: false));
+      return 'unavailable';
+    }
+
+    final confirmed =
+        await _biometrics.authenticate(localizedReason: localizedReason);
+    if (!confirmed) return 'cancelled';
+
+    await _repository.setBiometricEnabled(true);
+    _emit(
+      state.copyWith(
+        biometricEnabled: true,
+        biometricAvailable: true,
+      ),
+    );
+    return null;
+  }
+
   Future<String?> enableWithPin({
     required String pin,
     required String confirmPin,
@@ -178,8 +265,10 @@ class AppLockController extends StateNotifier<AppLockState> {
     await _repository.setPin(pin);
     await _repository.setPolicy(policy);
     await _repository.setEnabled(true);
+    await _repository.setBiometricEnabled(false);
     await _repository.saveFailedAttempts(0);
     await _repository.saveLockoutUntil(null);
+    final biometricAvailable = await _biometrics.isAvailable();
 
     _emit(
       AppLockState(
@@ -187,6 +276,8 @@ class AppLockController extends StateNotifier<AppLockState> {
         policy: policy,
         gate: AppLockGate.unlocked,
         hasPin: true,
+        biometricEnabled: false,
+        biometricAvailable: biometricAvailable,
       ),
     );
     return null;
@@ -236,6 +327,14 @@ class AppLockController extends StateNotifier<AppLockState> {
     if (!state.enabled) return;
     await _repository.setPolicy(policy);
     _emit(state.copyWith(policy: policy));
+  }
+
+  /// Re-check device biometric capability (e.g. when opening Security settings).
+  Future<void> refreshBiometricAvailability() async {
+    final available = await _biometrics.isAvailable();
+    if (!mounted) return;
+    if (available == state.biometricAvailable) return;
+    _emit(state.copyWith(biometricAvailable: available));
   }
 
   String? _validateNewPin(String pin, String confirm) {

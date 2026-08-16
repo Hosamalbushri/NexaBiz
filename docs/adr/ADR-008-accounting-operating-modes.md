@@ -5,8 +5,8 @@
 Accepted — 2026-08-13  
 Amended — 2026-08-14 (standalone cash + credit sale journals on save; post marks sale+journal posted)  
 Amended — 2026-08-14 (JournalPostingService + fiscal closed-through; manual journal UI)  
-**Superseded in part — 2026-08-15:** dual standalone/integrated **user switch removed**. The product always runs as **local accounting** (former standalone).
-
+**Superseded in part — 2026-08-15:** dual standalone/integrated **user switch removed**. The product always runs as **local accounting** (former standalone).  
+**Amended — 2026-08-16 (Phase 5):** when sync is enabled, `journal_entry` replicates as offline-first events (see ADR-006); not server-side posting.
 ## Context
 
 The Accounting module provides Chart of Accounts, journals, and reports. A dual mode (local vs ERP-integrated) existed as a settings/wizard choice. Integrated ERP connectors were never productized; the switch added complexity without value.
@@ -39,6 +39,7 @@ Saving a **sales invoice** creates/updates a **local journal entry** via App `Sa
 
 ## Consequences
 
-- Chart of Accounts, sync, journals, and account statements remain local.
+- Chart of Accounts and journals remain **locally owned**; when sync is enabled,
+  both `account` and `journal_entry` replicate via ADR-006 (not ERP posting).
 - Setup wizard “welcome” step confirms local accounting only (no ERP choice).
 - Re-introducing an ERP mode would require a new ADR and a real connector, not a settings toggle alone.

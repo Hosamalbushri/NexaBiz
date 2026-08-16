@@ -43,3 +43,17 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Secrets / local env (templates *.example are tracked)
+.env
+.env.*
+!.env.example
+!**/.env.example
+!**/.env.production.example
+backend/.env
+*.jks
+*.keystore
+*.p12
+**/key.properties
+google-services.json
+**/GoogleService-Info.plist

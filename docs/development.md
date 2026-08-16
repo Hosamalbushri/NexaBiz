@@ -31,6 +31,12 @@ flutter test   # only after tests exist
 4. Add EN + AR strings for any new UI text.
 5. Run `dart format` and `flutter analyze`.
 6. Update docs if architecture/behavior changed.
+7. Ensure CI would pass (`flutter test` + backend `pytest` when touching API).
+
+## CI / release
+
+See [`deployment.md`](deployment.md) for GitHub Actions gates, secrets rules,
+migrations, and staging → canary.
 
 ## Adding a module
 

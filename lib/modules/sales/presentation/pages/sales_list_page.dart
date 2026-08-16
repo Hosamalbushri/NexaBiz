@@ -12,15 +12,18 @@ import '../../../../core/services/loading_providers.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../authentication/presentation/providers/auth_providers.dart';
+import '../../../authentication/presentation/widgets/permission_gate.dart';
 import '../../domain/entities/payment_method.dart';
-import '../../domain/entities/payment_status.dart';
 import '../../domain/entities/sale_list_item.dart';
 import '../../domain/entities/sale_settlement_type.dart';
 import '../../domain/entities/sale_status.dart';
 import '../../domain/models/sale_list_filter.dart';
+import '../../permissions/sales_permission_package.dart';
 import '../providers/sale_providers.dart';
 import '../providers/sales_list_provider.dart';
 import '../widgets/sale_error_messages.dart';
+import '../widgets/sale_number_text.dart';
 import '../widgets/sale_status_badge.dart';
 import '../widgets/sales_page_loader.dart';
 import 'sales_routes.dart';
@@ -99,7 +102,6 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
     final l10n = AppLocalizations.of(context);
     final current = ref.read(saleListFilterProvider);
     SaleStatus? status = current.saleStatus;
-    PaymentStatus? payment = current.paymentStatus;
     PaymentMethod? method = current.paymentMethod;
 
     final applied = await showModalBottomSheet<SaleListFilter>(
@@ -140,26 +142,6 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
                       onChanged: (v) => setModalState(() => status = v),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    DropdownButtonFormField<PaymentStatus?>(
-                      value: payment,
-                      decoration: InputDecoration(
-                        labelText: l10n.salesPaymentStatus,
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: null,
-                          child: Text(l10n.salesFilterAll),
-                        ),
-                        ...PaymentStatus.values.map(
-                          (s) => DropdownMenuItem(
-                            value: s,
-                            child: Text(_paymentStatusLabel(l10n, s)),
-                          ),
-                        ),
-                      ],
-                      onChanged: (v) => setModalState(() => payment = v),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
                     DropdownButtonFormField<PaymentMethod?>(
                       value: method,
                       decoration: InputDecoration(
@@ -186,8 +168,7 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
                           current.copyWith(
                             saleStatus: status,
                             clearSaleStatus: status == null,
-                            paymentStatus: payment,
-                            clearPaymentStatus: payment == null,
+                            clearPaymentStatus: true,
                             paymentMethod: method,
                             clearPaymentMethod: method == null,
                           ),
@@ -224,9 +205,8 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
     final scheme = theme.colorScheme;
     final asyncList = ref.watch(salesListProvider);
     final filter = ref.watch(saleListFilterProvider);
-    final hasFilters = filter.saleStatus != null ||
-        filter.paymentStatus != null ||
-        filter.paymentMethod != null;
+    final hasFilters =
+        filter.saleStatus != null || filter.paymentMethod != null;
 
     _syncLoader(
       asyncList.isLoading && !asyncList.hasValue,
@@ -249,10 +229,13 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => SalesRoutes.pushCreate(context),
-        icon: const Icon(Icons.add_rounded),
-        label: Text(l10n.salesCreateTitle),
+      floatingActionButton: PermissionGate(
+        anyOf: SalesPermissions.create,
+        child: FloatingActionButton.extended(
+          onPressed: () => SalesRoutes.pushCreate(context),
+          icon: const Icon(Icons.add_rounded),
+          label: Text(l10n.salesCreateTitle),
+        ),
       ),
       body: Column(
         children: [
@@ -332,12 +315,17 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
                 data: (listState) {
                   final sales = listState.items;
                   if (sales.isEmpty) {
+                    final canCreate = ref
+                        .read(authStateProvider)
+                        .hasAnyPermission(SalesPermissions.create);
                     return AppEmptyState(
                       title: l10n.salesEmptyTitle,
                       subtitle: l10n.salesEmptyMessage,
                       icon: Icons.receipt_long_outlined,
-                      actionLabel: l10n.salesCreateTitle,
-                      onAction: () => SalesRoutes.pushCreate(context),
+                      actionLabel: canCreate ? l10n.salesCreateTitle : null,
+                      onAction: canCreate
+                          ? () => SalesRoutes.pushCreate(context)
+                          : null,
                     );
                   }
                   final footer = listState.hasMore ? 1 : 0;
@@ -432,8 +420,9 @@ class _SaleListTile extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          SaleNumberText(
                             sale.saleNumber,
+                            showReference: true,
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.2,
@@ -521,19 +510,9 @@ class _SaleListTile extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: AppSpacing.xs + 2,
-                  runSpacing: AppSpacing.xs,
-                  children: [
-                    SaleStatusBadge(
-                      status: sale.saleStatus,
-                      label: _saleStatusLabel(l10n, sale.saleStatus),
-                    ),
-                    SalePaymentStatusBadge(
-                      status: sale.paymentStatus,
-                      label: _paymentStatusLabel(l10n, sale.paymentStatus),
-                    ),
-                  ],
+                SaleStatusBadge(
+                  status: sale.saleStatus,
+                  label: _saleStatusLabel(l10n, sale.saleStatus),
                 ),
               ],
             ),
@@ -558,13 +537,5 @@ String _paymentMethodLabel(AppLocalizations l10n, PaymentMethod method) {
     PaymentMethod.bankTransfer => l10n.salesPaymentBankTransfer,
     PaymentMethod.credit => l10n.salesPaymentCredit,
     PaymentMethod.other => l10n.salesPaymentOther,
-  };
-}
-
-String _paymentStatusLabel(AppLocalizations l10n, PaymentStatus status) {
-  return switch (status) {
-    PaymentStatus.unpaid => l10n.salesPaymentUnpaid,
-    PaymentStatus.partiallyPaid => l10n.salesPaymentPartiallyPaid,
-    PaymentStatus.paid => l10n.salesPaymentPaid,
   };
 }

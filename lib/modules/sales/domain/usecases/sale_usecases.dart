@@ -221,6 +221,9 @@ class ConfirmSale {
   final SaleWorkflowService _workflow;
 
   Future<Sale> call(int id) async {
+    if (!isSalePostingEnabled(_inventoryEffect)) {
+      throw const SaleException(SaleException.postingRequiresInventory);
+    }
     final sale = await _repository.getById(id);
     if (sale == null) {
       throw const SaleException(SaleException.notFound);

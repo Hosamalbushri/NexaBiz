@@ -28,6 +28,8 @@ String saleErrorMessage(AppLocalizations l10n, Object error) {
       SaleException.syncFailed => l10n.somethingWentWrong,
       SaleException.externalIntegrationFailed => l10n.somethingWentWrong,
       SaleException.ledgerPostingFailed => l10n.somethingWentWrong,
+      SaleException.postingRequiresInventory =>
+        l10n.salesPostRequiresInventory,
       _ => l10n.somethingWentWrong,
     };
   }

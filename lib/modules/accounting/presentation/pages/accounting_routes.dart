@@ -87,8 +87,21 @@ class AccountingRoutes {
   static void pushVoucherBookEdit(BuildContext context, int id) =>
       context.push(voucherBookEdit(id));
 
-  static void pushAccountsCreate(BuildContext context) =>
+  static void pushAccountsCreate(
+    BuildContext context, {
+    String? parentId,
+  }) {
+    if (parentId == null || parentId.isEmpty) {
       context.push(accountsCreate);
+      return;
+    }
+    context.push(
+      Uri(
+        path: accountsCreate,
+        queryParameters: {'parentId': parentId},
+      ).toString(),
+    );
+  }
 
   static void pushAccountDetails(BuildContext context, int id) =>
       context.push(accountDetails(id));

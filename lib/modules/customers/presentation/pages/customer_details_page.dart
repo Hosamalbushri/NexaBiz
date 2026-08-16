@@ -9,8 +9,10 @@ import '../../../../core/widgets/app_dialog.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/app_status_badge.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../authentication/presentation/widgets/permission_gate.dart';
 import '../../domain/entities/customer_data_source.dart';
 import '../../domain/models/customer_exception.dart';
+import '../../permissions/customers_permission_package.dart';
 import '../providers/customer_providers.dart';
 import 'customers_routes.dart';
 
@@ -58,10 +60,14 @@ class CustomerDetailsPage extends ConsumerWidget {
             title: customer.name,
             showBackButton: true,
             actions: [
-              IconButton(
-                tooltip: l10n.customersEditTitle,
-                onPressed: () => CustomersRoutes.pushEdit(context, customer.id),
-                icon: const Icon(Icons.edit_outlined),
+              PermissionGate(
+                anyOf: CustomersPermissions.update,
+                child: IconButton(
+                  tooltip: l10n.customersEditTitle,
+                  onPressed: () =>
+                      CustomersRoutes.pushEdit(context, customer.id),
+                  icon: const Icon(Icons.edit_outlined),
+                ),
               ),
             ],
           ),
@@ -154,45 +160,48 @@ class CustomerDetailsPage extends ConsumerWidget {
                 ),
               ],
               const SizedBox(height: AppSpacing.xl),
-              AppButton(
-                label: l10n.customersDelete,
-                variant: AppButtonVariant.outlined,
-                expand: true,
-                onPressed: () async {
-                  final confirmed = await showAppDialog(
-                    context: context,
-                    title: l10n.customersDeleteTitle,
-                    message: l10n.customersDeleteMessage(customer.name),
-                    confirmLabel: l10n.customersDelete,
-                    isDestructive: true,
-                  );
-                  if (!confirmed || !context.mounted) {
-                    return;
-                  }
-                  try {
-                    await ref
-                        .read(deleteCustomerUseCaseProvider)
-                        .call(customer.id);
-                    if (!context.mounted) {
+              PermissionGate(
+                anyOf: CustomersPermissions.delete,
+                child: AppButton(
+                  label: l10n.customersDelete,
+                  variant: AppButtonVariant.outlined,
+                  expand: true,
+                  onPressed: () async {
+                    final confirmed = await showAppDialog(
+                      context: context,
+                      title: l10n.customersDeleteTitle,
+                      message: l10n.customersDeleteMessage(customer.name),
+                      confirmLabel: l10n.customersDelete,
+                      isDestructive: true,
+                    );
+                    if (!confirmed || !context.mounted) {
                       return;
                     }
-                    showAppSnackBar(
-                      context,
-                      message: l10n.customersDeleted,
-                      isSuccess: true,
-                    );
-                    Navigator.of(context).pop();
-                  } on CustomerException catch (e) {
-                    if (!context.mounted) {
-                      return;
+                    try {
+                      await ref
+                          .read(deleteCustomerUseCaseProvider)
+                          .call(customer.id);
+                      if (!context.mounted) {
+                        return;
+                      }
+                      showAppSnackBar(
+                        context,
+                        message: l10n.customersDeleted,
+                        isSuccess: true,
+                      );
+                      Navigator.of(context).pop();
+                    } on CustomerException catch (e) {
+                      if (!context.mounted) {
+                        return;
+                      }
+                      showAppSnackBar(
+                        context,
+                        message: e.toString(),
+                        isSuccess: false,
+                      );
                     }
-                    showAppSnackBar(
-                      context,
-                      message: e.toString(),
-                      isSuccess: false,
-                    );
-                  }
-                },
+                  },
+                ),
               ),
             ],
           ),

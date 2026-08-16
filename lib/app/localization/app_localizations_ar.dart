@@ -46,11 +46,494 @@ class AppLocalizationsAr extends AppLocalizations {
       'إنشاء وإدارة المبيعات دون اتصال، مع ربط اختياري بالمحاسبة والمخزون.';
 
   @override
+  String get moduleReceiptsPayments => 'المقبوضات والمدفوعات';
+
+  @override
+  String get moduleReceiptsPaymentsDescription =>
+      'تسجيل المقبوضات والمدفوعات النقدية والبنكية مع الترحيل المحاسبي والمزامنة دون اتصال.';
+
+  @override
   String get moduleReports => 'التقارير';
 
   @override
   String get moduleReportsDescription =>
       'إنشاء ومعاينة وطباعة ومشاركة تقارير PDF احترافية.';
+
+  @override
+  String get rpListTitle => 'الحركات';
+
+  @override
+  String get rpListTitleReceipts => 'المقبوضات';
+
+  @override
+  String get rpListTitlePayments => 'المدفوعات';
+
+  @override
+  String get rpListCardSubtitle => 'بحث وتصفية المقبوضات والمدفوعات';
+
+  @override
+  String get rpActionViewAll => 'كل الحركات';
+
+  @override
+  String get rpActionNewReceipt => 'قبض جديد';
+
+  @override
+  String get rpActionNewPayment => 'صرف جديد';
+
+  @override
+  String get rpCreateReceiptSubtitle => 'تحصيل نقدي أو بنكي إلى الخزينة';
+
+  @override
+  String get rpCreatePaymentSubtitle => 'صرف من الصندوق أو البنك';
+
+  @override
+  String get rpServiceReceiptsTitle => 'المقبوضات';
+
+  @override
+  String get rpServiceReceiptsSubtitle => 'عرض سندات القبض أو إنشاء سند جديد';
+
+  @override
+  String get rpServicePaymentsTitle => 'المدفوعات';
+
+  @override
+  String get rpServicePaymentsSubtitle => 'عرض سندات الصرف أو إنشاء سند جديد';
+
+  @override
+  String get rpServiceViewReceipts => 'جميع المقبوضات';
+
+  @override
+  String get rpServiceViewReceiptsSubtitle => 'تصفح وتصفية سندات القبض';
+
+  @override
+  String get rpServiceViewPayments => 'جميع المدفوعات';
+
+  @override
+  String get rpServiceViewPaymentsSubtitle => 'تصفح وتصفية سندات الصرف';
+
+  @override
+  String get rpServiceCreateReceipt => 'إنشاء سند قبض';
+
+  @override
+  String get rpServiceCreatePayment => 'إنشاء سند صرف';
+
+  @override
+  String get rpDashboardTodayReceipts => 'مقبوضات اليوم';
+
+  @override
+  String get rpDashboardTodayPayments => 'مدفوعات اليوم';
+
+  @override
+  String get rpDashboardPeriodReceipts => 'مقبوضات الفترة';
+
+  @override
+  String get rpDashboardPeriodPayments => 'مدفوعات الفترة';
+
+  @override
+  String get rpDashboardNetMovement => 'صافي الحركة';
+
+  @override
+  String get rpDashboardCashMovement => 'حركة الصندوق';
+
+  @override
+  String get rpDashboardBankMovement => 'حركة البنك';
+
+  @override
+  String get rpDashboardPendingSync => 'بانتظار المزامنة';
+
+  @override
+  String get rpDashboardFailedSync => 'فشل المزامنة';
+
+  @override
+  String get rpFormTitleReceipt => 'قبض جديد';
+
+  @override
+  String get rpFormTitlePayment => 'صرف جديد';
+
+  @override
+  String get rpFormSectionDocument => 'المستند';
+
+  @override
+  String get rpFormSectionAccounts => 'الحسابات والمبلغ';
+
+  @override
+  String get rpFormSectionParty => 'الطرف';
+
+  @override
+  String get rpFormSectionNotes => 'المرجع والملاحظات';
+
+  @override
+  String get rpFormSectionLines => 'بنود القيد';
+
+  @override
+  String get rpGeneralDescription => 'البيان العام للسند';
+
+  @override
+  String get rpDefaultGeneralDescription => 'دفعة من الحساب';
+
+  @override
+  String get rpManualExchangeRate => 'سعر الصرف';
+
+  @override
+  String rpManualExchangeRateHint(String cash, String party) {
+    return '1 $cash = ؟ $party';
+  }
+
+  @override
+  String get rpLineDescription => 'بيان السطر';
+
+  @override
+  String get rpCurrency => 'العملة';
+
+  @override
+  String get rpCurrencyEquivalent => 'المعادل';
+
+  @override
+  String get rpExchangeRate => 'سعر الصرف';
+
+  @override
+  String get rpBaseCurrency => 'العملة الأساسية';
+
+  @override
+  String get rpLinesEmpty => 'لم تُضف حسابات.';
+
+  @override
+  String get rpAddAccountLine => 'إضافة حساب';
+
+  @override
+  String get rpAddAnotherAccountLine => 'إضافة صف';
+
+  @override
+  String get rpChangeAccount => 'تغيير الحساب';
+
+  @override
+  String get rpEditTitle => 'تعديل الحركة';
+
+  @override
+  String get rpDetailsTitle => 'تفاصيل الحركة';
+
+  @override
+  String get rpSave => 'حفظ';
+
+  @override
+  String get rpSaved => 'تم حفظ الحركة';
+
+  @override
+  String get rpSaving => 'جارٍ الحفظ…';
+
+  @override
+  String get rpPost => 'ترحيل';
+
+  @override
+  String get rpPosting => 'جارٍ الترحيل…';
+
+  @override
+  String get rpPosted => 'تم ترحيل الحركة';
+
+  @override
+  String get rpCancelTitle => 'إلغاء الحركة';
+
+  @override
+  String rpCancelMessage(String number) {
+    return 'إلغاء $number؟ سيتم إبطال القيد المحاسبي المرتبط.';
+  }
+
+  @override
+  String get rpCancelAction => 'إلغاء الحركة';
+
+  @override
+  String get rpCancelled => 'تم إلغاء الحركة';
+
+  @override
+  String get rpLoading => 'جارٍ التحميل…';
+
+  @override
+  String get rpNotFound => 'الحركة غير موجودة';
+
+  @override
+  String get rpEmptyTitle => 'لا توجد حركات';
+
+  @override
+  String get rpEmptyMessage => 'أنشئ قبضاً أو صرفاً للبدء.';
+
+  @override
+  String get rpSearchHint => 'ابحث بالرقم أو الطرف أو المرجع…';
+
+  @override
+  String get rpTypeAll => 'الكل';
+
+  @override
+  String get rpTypeLabel => 'النوع';
+
+  @override
+  String get rpTypeReceipt => 'قبض';
+
+  @override
+  String get rpTypePayment => 'صرف';
+
+  @override
+  String get rpStatusUnposted => 'غير مرحّل';
+
+  @override
+  String get rpStatusPosted => 'مرحّل';
+
+  @override
+  String get rpSource => 'المصدر';
+
+  @override
+  String get rpSourceManualReceipt => 'قبض يدوي';
+
+  @override
+  String get rpSourceManualPayment => 'صرف يدوي';
+
+  @override
+  String get rpSourceCustomerReceipt => 'قبض عميل';
+
+  @override
+  String get rpSourceExpensePayment => 'صرف مصروف';
+
+  @override
+  String get rpSourceOtherReceipt => 'قبض أخرى';
+
+  @override
+  String get rpSourceOtherPayment => 'صرف أخرى';
+
+  @override
+  String get rpSourceSalesRelatedReceipt => 'قبض مرتبط بالمبيعات';
+
+  @override
+  String get rpSourcePurchaseRelatedPayment => 'صرف مرتبط بالمشتريات';
+
+  @override
+  String get rpDate => 'التاريخ';
+
+  @override
+  String get rpAmount => 'المبلغ';
+
+  @override
+  String get rpLineAmountCredit => 'المبلغ (دائن)';
+
+  @override
+  String get rpLineAmountDebit => 'المبلغ (مدين)';
+
+  @override
+  String get rpTotalsDebit => 'إجمالي المدين';
+
+  @override
+  String get rpTotalsCredit => 'إجمالي الدائن';
+
+  @override
+  String get rpTotalsDifference => 'الفارق';
+
+  @override
+  String get rpCashAmount => 'مبلغ الصندوق';
+
+  @override
+  String get rpCashAccount => 'حساب الصندوق / البنك';
+
+  @override
+  String get rpCounterAccount => 'الحساب المقابل';
+
+  @override
+  String get rpCustomer => 'العميل';
+
+  @override
+  String get rpPartyName => 'اسم الطرف';
+
+  @override
+  String get rpNoParty => 'بدون طرف';
+
+  @override
+  String get rpReference => 'المرجع';
+
+  @override
+  String get rpDescription => 'الوصف';
+
+  @override
+  String get rpPaymentMethod => 'طريقة الدفع';
+
+  @override
+  String get rpPaymentCash => 'نقداً';
+
+  @override
+  String get rpPaymentCard => 'بطاقة';
+
+  @override
+  String get rpPaymentBankTransfer => 'تحويل بنكي';
+
+  @override
+  String get rpPaymentOther => 'أخرى';
+
+  @override
+  String get rpVoucherBook => 'دفتر السندات';
+
+  @override
+  String get rpVoucherBookEmpty => 'لا توجد دفاتر سندات';
+
+  @override
+  String get rpTransactionNumber => 'الرقم';
+
+  @override
+  String get rpSearchAccountHint => 'ابحث في الحسابات';
+
+  @override
+  String get rpSearchCustomerHint => 'ابحث في العملاء';
+
+  @override
+  String get rpCustomerNotFound => 'لا يوجد عملاء';
+
+  @override
+  String get rpAutocompleteSearchFailed => 'فشل البحث';
+
+  @override
+  String get rpErrorAmountMustBePositive => 'يجب أن يكون المبلغ أكبر من صفر';
+
+  @override
+  String get rpErrorCounterAmountMustBePositive =>
+      'يجب أن يكون مبلغ الطرف أكبر من صفر';
+
+  @override
+  String get rpErrorCashAccountRequired => 'حساب الصندوق أو البنك مطلوب';
+
+  @override
+  String get rpErrorCounterAccountRequired => 'الحساب المقابل مطلوب';
+
+  @override
+  String get rpErrorCustomerRequired => 'العميل مطلوب لهذا المصدر';
+
+  @override
+  String get rpErrorSameAccounts =>
+      'يجب أن يختلف حساب الصندوق عن الحساب المقابل';
+
+  @override
+  String get rpErrorVoucherBookRequired => 'اختر دفتر سندات';
+
+  @override
+  String get rpErrorNotEditable => 'لا يمكن تعديل الحركات المرحّلة';
+
+  @override
+  String get rpErrorCannotPost => 'لا يمكن ترحيل هذه الحركة';
+
+  @override
+  String get rpErrorCannotCancel => 'لا يمكن إلغاء هذه الحركة';
+
+  @override
+  String get rpErrorAlreadyCancelled => 'الحركة ملغاة مسبقاً';
+
+  @override
+  String get rpErrorCurrencyRequired => 'العملة مطلوبة';
+
+  @override
+  String get rpErrorUnbalanced =>
+      'لا يمكن الحفظ مع وجود فارق بين المدين والدائن';
+
+  @override
+  String get rpErrorSavingInProgress => 'الحفظ قيد التنفيذ';
+
+  @override
+  String get rpErrorLedgerPostingFailed => 'فشل الترحيل المحاسبي';
+
+  @override
+  String get adminPermPackageReceiptsPaymentsHint =>
+      'المقبوضات والمدفوعات والتقارير والمزامنة';
+
+  @override
+  String get adminPermServiceReceipts => 'المقبوضات';
+
+  @override
+  String get adminPermServiceReceiptsHint => 'المقبوضات النقدية والبنكية';
+
+  @override
+  String get adminPermServicePayments => 'المدفوعات';
+
+  @override
+  String get adminPermServicePaymentsHint => 'المدفوعات النقدية والبنكية';
+
+  @override
+  String get adminPermServiceRpReports => 'التقارير';
+
+  @override
+  String get adminPermServiceRpReportsHint => 'تقارير المقبوضات والمدفوعات';
+
+  @override
+  String get adminPermServiceRpSync => 'المزامنة';
+
+  @override
+  String get adminPermServiceRpSyncHint => 'مزامنة المقبوضات والمدفوعات';
+
+  @override
+  String get adminPermActionSync => 'مزامنة';
+
+  @override
+  String get reportsRpReceiptsTitle => 'تقرير المقبوضات';
+
+  @override
+  String get reportsRpReceiptsSubtitle =>
+      'المقبوضات خلال فترة مع إجماليات من قاعدة البيانات.';
+
+  @override
+  String get reportsRpPaymentsTitle => 'تقرير المدفوعات';
+
+  @override
+  String get reportsRpPaymentsSubtitle =>
+      'المدفوعات خلال فترة مع إجماليات من قاعدة البيانات.';
+
+  @override
+  String get reportsRpCashMovementTitle => 'حركة الصندوق';
+
+  @override
+  String get reportsRpCashMovementSubtitle =>
+      'مقبوضات ومدفوعات الصندوق خلال فترة.';
+
+  @override
+  String get reportsRpBankMovementTitle => 'حركة البنك';
+
+  @override
+  String get reportsRpBankMovementSubtitle =>
+      'مقبوضات ومدفوعات البنك خلال فترة.';
+
+  @override
+  String get reportsRpCustomerReceiptsTitle => 'مقبوضات العملاء';
+
+  @override
+  String get reportsRpCustomerReceiptsSubtitle =>
+      'المقبوضات المرتبطة بالعملاء.';
+
+  @override
+  String get reportsRpDailySummaryTitle => 'ملخص يومي';
+
+  @override
+  String get reportsRpDailySummarySubtitle => 'المقبوضات والمدفوعات ليوم واحد.';
+
+  @override
+  String get reportsRpPeriodSummaryTitle => 'ملخص الفترة';
+
+  @override
+  String get reportsRpPeriodSummarySubtitle =>
+      'إجماليات المقبوضات والمدفوعات لفترة.';
+
+  @override
+  String get reportsRpColNumber => 'الرقم';
+
+  @override
+  String get reportsRpColDate => 'التاريخ';
+
+  @override
+  String get reportsRpColType => 'النوع';
+
+  @override
+  String get reportsRpColParty => 'الطرف';
+
+  @override
+  String get reportsRpColAmount => 'المبلغ';
+
+  @override
+  String get reportsRpColStatus => 'الحالة';
+
+  @override
+  String get reportsRpTotal => 'الإجمالي';
+
+  @override
+  String get reportsRpCount => 'العدد';
 
   @override
   String get reportsSalesPeriodTitle => 'المبيعات حسب الفترة';
@@ -454,6 +937,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get salesInvoiceNumber => 'رقم الفاتورة';
 
   @override
+  String salesInvoiceReference(String number) {
+    return 'مرجع $number';
+  }
+
+  @override
   String get salesCashAccount => 'حساب الصندوق';
 
   @override
@@ -603,6 +1091,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get salesPostSale => 'ترحيل';
+
+  @override
+  String get salesPostRequiresInventory =>
+      'الترحيل غير متاح حتى يتم إضافة تتبع المخزون.';
 
   @override
   String get salesCompleteSale => 'تعليم كمكتملة';
@@ -998,6 +1490,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String customersImportUpdatedCount(int count) {
     return 'تم تحديث $count عميل';
   }
+
+  @override
+  String get customersImportBackgroundHint =>
+      'يمكنك مغادرة هذه الصفحة ومتابعة استخدام التطبيق أثناء تشغيل الاستيراد في الخلفية.';
+
+  @override
+  String get importBackgroundHint =>
+      'يمكنك مغادرة هذه الصفحة ومتابعة استخدام التطبيق أثناء تشغيل الاستيراد في الخلفية.';
 
   @override
   String get customersNoValidRows => 'لم يُعثر على صفوف عملاء صالحة في الملف.';
@@ -1497,6 +1997,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountingFieldCode => 'رمز الحساب';
 
   @override
+  String get accountingFieldCodeHelper =>
+      'عند اختيار حساب أب يُولَّد الرمز منه تلقائياً (مثال: 1221 ← 12210001).';
+
+  @override
+  String get accountingGenerateCode => 'توليد الرمز';
+
+  @override
+  String get accountingAddChildAccount => 'إضافة حساب فرعي';
+
+  @override
   String get accountingFieldParent => 'الحساب الأب';
 
   @override
@@ -1690,7 +2200,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountingAccountCurrentAssets => 'الأصول المتداولة';
 
   @override
-  String get accountingAccountCash => 'الصندوق / النقدية';
+  String get accountingAccountCashBoxes => 'الصناديق';
+
+  @override
+  String get accountingAccountCash => 'الصندوق الرئيسي';
 
   @override
   String get accountingAccountBank => 'البنك';
@@ -2606,11 +3119,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'العملة الرئيسية مقفلة ولا يمكن تغييرها.';
 
   @override
-  String get systemSetupStepSeed => 'البيانات الافتراضية';
+  String get systemSetupStepSeed => 'دليل الحسابات';
 
   @override
   String get systemSetupStepSeedHint =>
-      'إنشاء دليل الحسابات ودفاتر السندات الافتراضية.';
+      'أنشئ الدليل على هذا الجهاز (الجهاز الأول) أو زامنه من خادم الشركة (جهاز منضم).';
 
   @override
   String get systemSetupStepExternal => 'الاتصال الخارجي';
@@ -2653,6 +3166,50 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get systemSetupSeedDone => 'دليل الحسابات ودفاتر السندات جاهزة.';
+
+  @override
+  String get systemSetupSeedCreateLocalTitle => 'إنشاء محلياً';
+
+  @override
+  String get systemSetupSeedCreateLocalSubtitle =>
+      'إنشاء دليل الحسابات الافتراضي على هذا الجهاز. للجهاز الأول أو عند العمل دون اتصال.';
+
+  @override
+  String get systemSetupSeedSyncTitle => 'مزامنة من الخادم';
+
+  @override
+  String get systemSetupSeedSyncSubtitle =>
+      'سجّل الدخول وادخل التطبيق. يُنزَّل دليل الشركة في الخلفية حتى لا يُنشأ دليل مكرر.';
+
+  @override
+  String get systemSetupSeedSyncRunning => 'جارٍ تنزيل دليل الحسابات…';
+
+  @override
+  String get systemSetupSeedSyncDone =>
+      'يمكنك الدخول الآن. مزامنة الدليل تُكمل في الخلفية.';
+
+  @override
+  String get systemSetupSeedSignInToSync => 'تسجيل الدخول للمزامنة';
+
+  @override
+  String get systemSetupSeedErrorSyncRequired =>
+      'فعّل المزامنة وسجّل الدخول ثم أعد المحاولة.';
+
+  @override
+  String get systemSetupSeedErrorAuth =>
+      'سجّل الدخول إلى خادم الشركة ثم أعد المحاولة.';
+
+  @override
+  String get systemSetupSeedErrorOffline =>
+      'اتصل بالإنترنت لمزامنة دليل الحسابات.';
+
+  @override
+  String get systemSetupSeedErrorEmpty =>
+      'لا يوجد دليل حسابات على الخادم بعد. أنشئه محلياً على الجهاز الأول وزامنه، ثم أعد المحاولة هنا.';
+
+  @override
+  String get systemSetupSeedErrorPull =>
+      'تعذر تنزيل دليل الحسابات. حاول مرة أخرى.';
 
   @override
   String get systemSetupExternalPlaceholder =>
@@ -2937,6 +3494,161 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get splashInitErrorMessage => 'حدث خطأ أثناء تهيئة التطبيق.';
+
+  @override
+  String get appLockTitle => 'التطبيق مقفل';
+
+  @override
+  String get appLockSubtitle =>
+      'أدخل رمز PIN للمتابعة. هذا يحمي التطبيق على هذا الجهاز — جلستك ما زالت نشطة.';
+
+  @override
+  String get appLockPinLabel => 'رمز PIN';
+
+  @override
+  String get appLockConfirmPinLabel => 'تأكيد الرمز';
+
+  @override
+  String get appLockCurrentPinLabel => 'الرمز الحالي';
+
+  @override
+  String get appLockNewPinLabel => 'الرمز الجديد';
+
+  @override
+  String get appLockUnlockAction => 'فتح القفل';
+
+  @override
+  String get appLockShowPin => 'إظهار الرمز';
+
+  @override
+  String get appLockHidePin => 'إخفاء الرمز';
+
+  @override
+  String get appLockErrorInvalid => 'رمز غير صحيح. حاول مرة أخرى.';
+
+  @override
+  String get appLockErrorLockout =>
+      'محاولات كثيرة. انتظر قليلاً ثم حاول مجدداً.';
+
+  @override
+  String get appLockErrorLength => 'يجب أن يكون الرمز من 4 إلى 6 أرقام.';
+
+  @override
+  String get appLockErrorDigits => 'الرمز يجب أن يحتوي أرقاماً فقط.';
+
+  @override
+  String get appLockErrorMismatch => 'تأكيد الرمز غير متطابق.';
+
+  @override
+  String get appLockSettingsSection => 'الأمان';
+
+  @override
+  String get appLockSettingsTitle => 'قفل التطبيق';
+
+  @override
+  String get appLockSettingsEnabledHint =>
+      'يُطلب الرمز عند العودة إلى التطبيق.';
+
+  @override
+  String get appLockSettingsDisabledHint => 'أضف رمزاً لحماية التطبيق محلياً.';
+
+  @override
+  String get appLockEnableTitle => 'تفعيل قفل التطبيق';
+
+  @override
+  String get appLockEnableMessage =>
+      'اختر رمزاً من 4 إلى 6 أرقام. ستحتاجه كلما أُقفل التطبيق.';
+
+  @override
+  String get appLockDisableTitle => 'إيقاف قفل التطبيق';
+
+  @override
+  String get appLockDisableMessage => 'أدخل الرمز الحالي لإيقاف قفل التطبيق.';
+
+  @override
+  String get appLockChangePin => 'تغيير الرمز';
+
+  @override
+  String get appLockChangePinHint => 'حدّث رمز PIN الحالي.';
+
+  @override
+  String get appLockBiometricTitle => 'الفتح بالبصمة';
+
+  @override
+  String get appLockBiometricHint =>
+      'استخدم البصمة أو المقاييس الحيوية للجهاز للفتح.';
+
+  @override
+  String get appLockBiometricUnavailable =>
+      'المقاييس الحيوية غير متاحة على هذا الجهاز.';
+
+  @override
+  String get appLockBiometricPrompt => 'صادِق لفتح NexaBiz';
+
+  @override
+  String get appLockBiometricEnabledSuccess => 'تم تفعيل الفتح بالبصمة.';
+
+  @override
+  String get appLockBiometricUnlockAction => 'استخدم البصمة';
+
+  @override
+  String get appLockPolicyLabel => 'متى يُقفل';
+
+  @override
+  String get appLockPolicyDisabled => 'معطّل';
+
+  @override
+  String get appLockPolicyOnResume => 'عند العودة من الخلفية';
+
+  @override
+  String get appLockPolicyOnResumeHint =>
+      'يطلب الرمز بعد وضع التطبيق في الخلفية.';
+
+  @override
+  String get appLockPolicyColdStart => 'عند إعادة فتح التطبيق فقط';
+
+  @override
+  String get appLockPolicyColdStartHint =>
+      'يطلب الرمز بعد إغلاق التطبيق بالكامل.';
+
+  @override
+  String get appLockEnabledSuccess => 'تم تفعيل قفل التطبيق.';
+
+  @override
+  String get appLockDisabledSuccess => 'تم إيقاف قفل التطبيق.';
+
+  @override
+  String get appLockPinChangedSuccess => 'تم تحديث الرمز.';
+
+  @override
+  String get onboardingSkip => 'تخطي';
+
+  @override
+  String get onboardingNext => 'التالي';
+
+  @override
+  String get onboardingStart => 'ابدأ الآن';
+
+  @override
+  String get onboardingPage1Title => 'مرحباً بك في NexaBiz';
+
+  @override
+  String get onboardingPage1Body =>
+      'منصتك للعمل دون اتصال لإدارة المخزون والمبيعات والعملاء والمحاسبة في مكان واحد.';
+
+  @override
+  String get onboardingPage2Title => 'يعمل بالكامل دون اتصال';
+
+  @override
+  String get onboardingPage2Body =>
+      'استخدم المخزون والمبيعات والمحاسبة على هذا الجهاز دون شبكة. المزامنة اختيارية — فعّلها لاحقاً من الإعدادات فقط إذا احتجت مزامنة بين الأجهزة.';
+
+  @override
+  String get onboardingPage3Title => 'هيّئ شركتك';
+
+  @override
+  String get onboardingPage3Body =>
+      'في الخطوة التالية ستضبط بيانات الشركة والعملة وطريقة عمل النظام بما يناسب نشاطك.';
 
   @override
   String get loading => 'جاري التحميل...';
@@ -3260,6 +3972,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get importSaving => 'جاري حفظ الأصناف...';
 
   @override
+  String get importLinking => 'جاري ربط الدليل المحاسبي…';
+
+  @override
   String get emptyWorkbook => 'ملف Excel فارغ أو لا يحتوي على أوراق.';
 
   @override
@@ -3272,6 +3987,201 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get syncSectionTitle => 'المزامنة';
+
+  @override
+  String get syncEnabledTitle => 'تفعيل المزامنة';
+
+  @override
+  String get syncEnabledSubtitle =>
+      'اختيارية. أبقِ البيانات على هذا الجهاز فقط، أو سجّل الدخول للخادم للمزامنة بين الأجهزة.';
+
+  @override
+  String get syncDisabledMessage =>
+      'المزامنة معطّلة. تبقى البيانات المحلية على هذا الجهاز.';
+
+  @override
+  String get syncAuthRequiredHint =>
+      'سجّل الدخول بحساب الخادم. تبقى المزامنة معطّلة حتى نجاح المصادقة.';
+
+  @override
+  String get syncAuthCancelled => 'لم يتم تفعيل المزامنة. المصادقة مطلوبة.';
+
+  @override
+  String get syncPermissionRequired =>
+      'هذا الحساب لا يملك صلاحية المزامنة. اطلب من المسؤول منح sync.view أو sync.execute للدور.';
+
+  @override
+  String get syncSessionAuthenticated => 'جلسة مزامنة مصادَق عليها نشطة.';
+
+  @override
+  String syncSessionAsUser(String email) {
+    return 'مسجّل الدخول كـ $email';
+  }
+
+  @override
+  String get syncSessionExpired =>
+      'انتهت الجلسة. سجّل الدخول مجدداً لمتابعة المزامنة.';
+
+  @override
+  String get syncAutoTitle => 'مزامنة تلقائية';
+
+  @override
+  String get syncAutoSubtitle =>
+      'تعمل في الخلفية دون إعاقة استخدام التطبيق. يمكنك أيضاً المزامنة يدوياً في أي وقت.';
+
+  @override
+  String get syncAutoIntervalLabel => 'التكرار';
+
+  @override
+  String get syncAutoIntervalOnChange => 'عند وجود تغييرات معلّقة';
+
+  @override
+  String syncAutoIntervalMinutes(int minutes) {
+    return 'كل $minutes دقيقة';
+  }
+
+  @override
+  String get syncDisableRequestSent =>
+      'تم إرسال طلب للمدير. تبقى المزامنة مفعّلة حتى يوافق.';
+
+  @override
+  String get syncDisableRequestFailed =>
+      'تعذّر إبلاغ المدير. تحقق من الاتصال ثم أعد المحاولة.';
+
+  @override
+  String get syncDisableNeedsAdminOnline =>
+      'إلغاء المزامنة يحتاج موافقة المدير. اتصل وسجّل الدخول لإرسال الطلب.';
+
+  @override
+  String get adminDevicesTitle => 'الأجهزة';
+
+  @override
+  String get adminDevicesSubtitle => 'الأجهزة المسجّلة وطلبات إلغاء المزامنة';
+
+  @override
+  String adminDevicesPendingCount(int count) {
+    return '$count طلبات إلغاء معلّقة';
+  }
+
+  @override
+  String get adminDevicesListIntro =>
+      'عرض كل الأجهزة المرتبطة بهذه الشركة. إلغاء جهاز ينهي جلساته ويمنع المزامنة.';
+
+  @override
+  String get adminDevicesListSection => 'الأجهزة المسجّلة';
+
+  @override
+  String get adminDevicesRequestsSection => 'طلبات إلغاء المزامنة';
+
+  @override
+  String get adminDevicesListEmptyTitle => 'لا أجهزة بعد';
+
+  @override
+  String get adminDevicesListEmptyMessage =>
+      'تظهر الأجهزة هنا بعد تسجيل الدخول للمزامنة.';
+
+  @override
+  String get adminDevicesListLoadError => 'تعذّر تحميل الأجهزة';
+
+  @override
+  String get adminDevicesUntitled => 'جهاز بدون اسم';
+
+  @override
+  String get adminDevicesStatusActive => 'نشط';
+
+  @override
+  String get adminDevicesStatusRevoked => 'ملغى';
+
+  @override
+  String get adminDevicesStatusBlocked => 'محظور';
+
+  @override
+  String get adminDevicesLastSeenNever => 'آخر ظهور: لم يُرَ بعد';
+
+  @override
+  String adminDevicesLastSeen(String when) {
+    return 'آخر ظهور: $when';
+  }
+
+  @override
+  String get adminDevicesRevokeAction => 'إلغاء الجهاز';
+
+  @override
+  String get adminDevicesRevokeCancel => 'إلغاء';
+
+  @override
+  String get adminDevicesRevokeConfirmTitle => 'إلغاء هذا الجهاز؟';
+
+  @override
+  String get adminDevicesRevokeConfirmMessage =>
+      'سيفقد الجهاز صلاحية المزامنة فوراً. يحتاج المستخدم لتسجيل الدخول من جديد.';
+
+  @override
+  String get adminDevicesRevokeSuccess => 'تم إلغاء الجهاز.';
+
+  @override
+  String get adminDevicesDisableRequestsIntro =>
+      'المستخدم غير المدير لا يستطيع إيقاف المزامنة بنفسه. وافق لإيقافها على جهازه، أو ارفض لإبقائها مفعّلة.';
+
+  @override
+  String get adminDevicesDisableRequestHint =>
+      'طلب هذا المستخدم إلغاء المزامنة على جهازه.';
+
+  @override
+  String get adminDevicesApproveAction => 'إيقاف على الجهاز';
+
+  @override
+  String get adminDevicesRejectAction => 'إبقاء المزامنة';
+
+  @override
+  String get adminDevicesApproveSuccess => 'سيتم إيقاف مزامنة الجهاز.';
+
+  @override
+  String get adminDevicesRejectSuccess => 'تم رفض الطلب. المزامنة تبقى مفعّلة.';
+
+  @override
+  String get adminDevicesEmptyTitle => 'لا طلبات معلّقة';
+
+  @override
+  String get adminDevicesEmptyMessage =>
+      'عند طلب مستخدم إلغاء المزامنة يظهر الطلب هنا.';
+
+  @override
+  String get adminDevicesLoadError => 'تعذّر تحميل طلبات الأجهزة';
+
+  @override
+  String get adminDevicesRefresh => 'تحديث';
+
+  @override
+  String get adminDevicesUnknownUser => 'مستخدم غير معروف';
+
+  @override
+  String get syncServerSectionTitle => 'خادم المزامنة';
+
+  @override
+  String get syncServerUrlLabel => 'عنوان الخادم';
+
+  @override
+  String get syncServerUrlHint => 'http://192.168.1.10:8000';
+
+  @override
+  String get syncServerUrlRequired => 'أدخل عنوان خادم المزامنة أولاً.';
+
+  @override
+  String get syncServerUrlInvalid =>
+      'أدخل عنواناً صالحاً يبدأ بـ http:// أو https://.';
+
+  @override
+  String get syncServerTokenLabel => 'رمز API (اختياري)';
+
+  @override
+  String get syncServerTokenHint => 'اتركه فارغاً للإبقاء على الرمز الحالي';
+
+  @override
+  String get syncServerSaveAction => 'حفظ الخادم';
+
+  @override
+  String get syncServerSaved => 'تم حفظ إعدادات الخادم.';
 
   @override
   String get syncBackendLabel => 'خادم المزامنة';
@@ -3292,6 +4202,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get syncLastSyncNever => 'لم تتم بعد';
 
   @override
+  String syncLastPassMetrics(int uploaded, int downloaded, int ms) {
+    return 'آخر تمريرة: ↑$uploaded ↓$downloaded · $ms مللي ثانية';
+  }
+
+  @override
   String get syncPendingChangesLabel => 'تغييرات معلّقة';
 
   @override
@@ -3301,8 +4216,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get syncNowAction => 'مزامنة الآن';
 
   @override
+  String get syncCheckIncomingAction => 'جلب تغييرات الخادم';
+
+  @override
+  String get syncCheckingIncoming => 'جاري الطلب من الخادم…';
+
+  @override
   String get syncOfflineMessage =>
-      'أنت غير متصل. ستتم مزامنة التغييرات تلقائياً عند توفر الإنترنت.';
+      'أنت غير متصل. اتصل بالإنترنت ثم اضغط «مزامنة الآن».';
 
   @override
   String get syncStatusSynced => 'تمت المزامنة';
@@ -3320,6 +4241,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get syncStatusConflict => 'تعارض';
 
   @override
+  String get syncStatusRejected => 'غير مصرّح';
+
+  @override
   String get syncStatusOffline => 'غير متصل';
 
   @override
@@ -3327,6 +4251,45 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get syncCompletedMessage => 'تمت مزامنة جميع التغييرات.';
+
+  @override
+  String get syncIncomingNone => 'لا توجد تغييرات جديدة من الخادم.';
+
+  @override
+  String syncIncomingCount(int count) {
+    return 'تم استلام $count تغييرات من الخادم';
+  }
+
+  @override
+  String syncIncomingSummary(int count, String details) {
+    return '$count من الخادم: $details';
+  }
+
+  @override
+  String syncIncomingEntityCount(String label, int count) {
+    return '$label $count';
+  }
+
+  @override
+  String get syncIncomingFromServerTitle => 'قادم من الخادم';
+
+  @override
+  String get syncEntityProduct => 'منتجات';
+
+  @override
+  String get syncEntityInventoryItem => 'عناصر مخزون';
+
+  @override
+  String get syncEntityCustomer => 'عملاء';
+
+  @override
+  String get syncEntityAccount => 'حسابات';
+
+  @override
+  String get syncEntityJournalEntry => 'قيود يومية';
+
+  @override
+  String get syncEntitySale => 'مبيعات';
 
   @override
   String get syncPartialTitle => 'تعذّرت مزامنة بعض التغييرات';
@@ -3363,4 +4326,536 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get loadingExportingReport => 'جاري إعداد التقرير…';
+
+  @override
+  String get authLoginTitle => 'تسجيل الدخول';
+
+  @override
+  String get authLoginSubtitle => 'سجّل الدخول للمزامنة الآمنة عبر أجهزتك.';
+
+  @override
+  String get authLoginLocalHint =>
+      'دخول محلي دون إنترنت. حساب الأدمن الافتراضي يملك كل الصلاحيات.';
+
+  @override
+  String get authEmailLabel => 'البريد الإلكتروني';
+
+  @override
+  String get authPasswordLabel => 'كلمة المرور';
+
+  @override
+  String get authSignIn => 'دخول';
+
+  @override
+  String get authSigningIn => 'جاري الدخول…';
+
+  @override
+  String get authBiometricSignIn => 'الدخول بالبصمة';
+
+  @override
+  String get authBiometricPrompt => 'صادِق للدخول إلى المزامنة';
+
+  @override
+  String get authBiometricSaveForNext => 'استخدم البصمة في المرة القادمة';
+
+  @override
+  String get authBiometricUnavailable => 'البصمة غير متاحة على هذا الجهاز.';
+
+  @override
+  String get authBiometricFailed =>
+      'فشل التحقق بالبصمة. حاول مرة أخرى أو استخدم كلمة المرور.';
+
+  @override
+  String get authLoginFailed => 'البريد أو كلمة المرور غير صحيحة.';
+
+  @override
+  String get authNetworkError =>
+      'تعذّر الوصول للخادم. تحقق من الشبكة وعنوان الـ API.';
+
+  @override
+  String get authLoginGenericError => 'فشل تسجيل الدخول. حاول مرة أخرى.';
+
+  @override
+  String get authSelectCompanyTitle => 'اختر الشركة';
+
+  @override
+  String get authLogoutAction => 'تسجيل الخروج';
+
+  @override
+  String get authSessionExpired => 'انتهت الجلسة. يرجى تسجيل الدخول مجدداً.';
+
+  @override
+  String get moduleAdministration => 'الإدارة';
+
+  @override
+  String get moduleAdministrationDescription =>
+      'المستخدمون والأدوار والتحكم بالوصول';
+
+  @override
+  String get adminRequiresOnlineTitle => 'مطلوب اتصال';
+
+  @override
+  String get adminRequiresOnlineMessage =>
+      'إدارة المستخدمين تتطلب جلسة مزامنة مصادَق عليها واتصالاً بالشبكة.';
+
+  @override
+  String get adminUsersTitle => 'المستخدمون';
+
+  @override
+  String get adminUsersSubtitle => 'إنشاء وإدارة مستخدمي التطبيق';
+
+  @override
+  String get adminRolesTitle => 'الأدوار والصلاحيات';
+
+  @override
+  String get adminRolesSubtitle => 'أنشئ أدواراً وعيّن الصلاحيات كما تريد';
+
+  @override
+  String get adminRolesHubSubtitle =>
+      'ابنِ أدواراً مخصصة وتحكّم بما يستطيع كل دور فعله';
+
+  @override
+  String get adminAccessControlSection => 'التحكم بالوصول';
+
+  @override
+  String get adminAccessControlIntro =>
+      'أدر من يستخدم التطبيق وما يمكنه رؤيته أو تعديله. الدور يجمع الصلاحيات، والمستخدم يحصل على دور.';
+
+  @override
+  String get adminAccessControlTip =>
+      'نصيحة: أنشئ الدور أولاً واختر الصلاحيات بعناية (خصوصاً المحاسبة)، ثم عيّن الدور عند إنشاء المستخدم.';
+
+  @override
+  String get adminPermissionsCatalogTitle => 'كتالوج الصلاحيات';
+
+  @override
+  String get adminPermissionsCatalogSubtitle =>
+      'استعرض كل الصلاحيات حسب الوحدة';
+
+  @override
+  String get adminPermissionsCatalogIntro =>
+      'هذه لبنات التحكم بالوصول. اربطها بالأدوار — ولا تثبتها داخل الشاشات.';
+
+  @override
+  String get adminRolesPageIntro =>
+      'الأدوار المخصصة قابلة للتعديل بالكامل. أدوار النظام تأتي من الخادم ومحمية.';
+
+  @override
+  String get adminRolesSearchHint => 'ابحث عن دور بالاسم';
+
+  @override
+  String get adminRolesFilterAll => 'الكل';
+
+  @override
+  String get adminRolesFilterCustom => 'مخصص';
+
+  @override
+  String get adminRolesFilterSystem => 'نظام';
+
+  @override
+  String get adminRolesStatTotal => 'الإجمالي';
+
+  @override
+  String get adminSystemRoleHint => 'دور مدمج يديره الخادم';
+
+  @override
+  String get adminCustomRoleHint => 'دورك — عدّل الاسم والصلاحيات في أي وقت';
+
+  @override
+  String get adminTapToConfigure => 'اضغط للضبط';
+
+  @override
+  String get adminUsersSearchHint => 'بحث بالاسم أو البريد';
+
+  @override
+  String get adminUsersLoadError => 'تعذّر تحميل المستخدمين';
+
+  @override
+  String get adminUsersEmptyTitle => 'لا يوجد مستخدمون';
+
+  @override
+  String get adminUsersEmptyMessage => 'أنشئ مستخدماً لمنح صلاحية الوصول.';
+
+  @override
+  String get adminCreateUser => 'إنشاء مستخدم';
+
+  @override
+  String get adminEditUser => 'تعديل مستخدم';
+
+  @override
+  String get adminSuspendUser => 'تعليق';
+
+  @override
+  String get adminActivateUser => 'تفعيل';
+
+  @override
+  String get adminDeactivateUser => 'إلغاء التفعيل';
+
+  @override
+  String get adminUserUpdated => 'تم تحديث المستخدم';
+
+  @override
+  String get adminUserNameLabel => 'الاسم';
+
+  @override
+  String get adminUserPhoneLabel => 'الهاتف';
+
+  @override
+  String get adminUserStatusLabel => 'الحالة';
+
+  @override
+  String get adminUserRoleLabel => 'الدور';
+
+  @override
+  String get adminStatusActive => 'نشط';
+
+  @override
+  String get adminStatusInactive => 'غير نشط';
+
+  @override
+  String get adminStatusSuspended => 'معلّق';
+
+  @override
+  String get adminNewPasswordOptional => 'كلمة مرور جديدة (اختياري)';
+
+  @override
+  String get adminConfirmPasswordLabel => 'تأكيد كلمة المرور';
+
+  @override
+  String get adminUserValidationError => 'الاسم والبريد مطلوبان.';
+
+  @override
+  String get adminPasswordTooShort =>
+      'يجب أن تكون كلمة المرور 8 أحرف على الأقل.';
+
+  @override
+  String get adminPasswordMismatch => 'كلمتا المرور غير متطابقتين.';
+
+  @override
+  String get adminRolesLoadError => 'تعذّر تحميل الأدوار';
+
+  @override
+  String get adminRolesEmptyTitle => 'لا توجد أدوار';
+
+  @override
+  String get adminRolesEmptyMessage => 'أنشئ دوراً مخصصاً واختر صلاحياته.';
+
+  @override
+  String get adminSystemRole => 'دور نظام';
+
+  @override
+  String get adminCustomRole => 'دور مخصص';
+
+  @override
+  String get adminCreateRole => 'إنشاء دور';
+
+  @override
+  String get adminEditRole => 'تعديل الدور';
+
+  @override
+  String get adminDeleteRole => 'حذف الدور';
+
+  @override
+  String adminDeleteRoleConfirm(String name) {
+    return 'حذف الدور \"$name\"؟ يبقى حساب المستخدم لكن يفقد هذه الصلاحيات حتى يُعاد تعيين دور.';
+  }
+
+  @override
+  String get adminRoleDeleted => 'تم حذف الدور';
+
+  @override
+  String get adminRoleNameLabel => 'اسم الدور';
+
+  @override
+  String get adminRoleNameHint => 'مثال: موظف مبيعات';
+
+  @override
+  String get adminRoleDescriptionLabel => 'الوصف';
+
+  @override
+  String get adminRoleDescriptionHint => 'الغرض من هذا الدور';
+
+  @override
+  String get adminRoleBasicsSection => 'تفاصيل الدور';
+
+  @override
+  String get adminRoleBasicsHint =>
+      'اختر اسماً واضحاً ليسهل تعيينه للمستخدمين.';
+
+  @override
+  String get adminRoleCapabilitiesSection => 'ما يمكن لهذا الدور فتحه';
+
+  @override
+  String get adminRoleCapabilitiesHint =>
+      'يتحدّث مباشرة أثناء تفعيل الصلاحيات أدناه.';
+
+  @override
+  String get adminRolePermissionsSection => 'الصلاحيات';
+
+  @override
+  String get adminRoleVisibleModules => 'الوحدات التي يفتحها هذا الدور';
+
+  @override
+  String get adminRoleNoModulesYet =>
+      'لا وحدات بعد — اختر صلاحية عرض واحدة على الأقل.';
+
+  @override
+  String get adminSelectAllPermissions => 'تحديد الكل';
+
+  @override
+  String get adminClearPermissions => 'مسح';
+
+  @override
+  String get adminRoleNameRequired => 'اسم الدور مطلوب.';
+
+  @override
+  String get adminRolePermissionsRequired => 'اختر صلاحية واحدة على الأقل.';
+
+  @override
+  String get adminPermissionsSearchHint => 'بحث بالاسم أو الإجراء أو الرمز';
+
+  @override
+  String get adminPermissionsLoadError => 'تعذّر تحميل الصلاحيات';
+
+  @override
+  String get adminPermissionsEmptyTitle => 'لا نتائج';
+
+  @override
+  String get adminPermissionsEmptyMessage =>
+      'جرّب بحثاً آخر أو ألغِ فلتر الوحدة.';
+
+  @override
+  String adminPermissionCount(int count) {
+    return '$count صلاحيات';
+  }
+
+  @override
+  String adminSelectedPermissionsCount(int count) {
+    return '$count محددة';
+  }
+
+  @override
+  String adminGroupPermissionSummary(int selected, int total) {
+    return '$selected من $total';
+  }
+
+  @override
+  String get adminSystemRoleReadOnly =>
+      'أدوار النظام محمية. قد تكون تعديلات الصلاحيات مقيدة.';
+
+  @override
+  String get adminPermActionView => 'عرض';
+
+  @override
+  String get adminPermActionCreate => 'إنشاء';
+
+  @override
+  String get adminPermActionUpdate => 'تعديل';
+
+  @override
+  String get adminPermActionDelete => 'حذف';
+
+  @override
+  String get adminPermActionManage => 'إدارة';
+
+  @override
+  String get adminPermActionAdjust => 'تسوية';
+
+  @override
+  String get adminPermActionPost => 'ترحيل';
+
+  @override
+  String get adminPermActionCancel => 'إلغاء';
+
+  @override
+  String get adminPermActionExecute => 'تنفيذ';
+
+  @override
+  String get adminPermActionRevoke => 'إبطال';
+
+  @override
+  String get adminPermResourceAccounts => 'الحسابات';
+
+  @override
+  String get adminPermResourceJournals => 'القيود';
+
+  @override
+  String get adminPermResourceDevices => 'الأجهزة';
+
+  @override
+  String get adminPermResourceCompanies => 'الشركات';
+
+  @override
+  String get adminPermGroupSalesHint => 'مستندات المبيعات والترحيل';
+
+  @override
+  String get adminPermGroupCustomersHint => 'بيانات العملاء';
+
+  @override
+  String get adminPermGroupInventoryHint => 'المنتجات والمخزون';
+
+  @override
+  String get adminPermGroupAccountingHint => 'وصول مالي حسّاس';
+
+  @override
+  String get adminPermGroupReportsHint => 'التقارير والتصدير';
+
+  @override
+  String get adminPermGroupAdminHint => 'المستخدمون والأدوار والتحكم';
+
+  @override
+  String get adminPermGroupSettingsHint => 'إعدادات التطبيق';
+
+  @override
+  String get adminPermGroupSyncHint => 'إجراءات المزامنة';
+
+  @override
+  String get adminPermGroupOtherHint => 'صلاحيات أخرى';
+
+  @override
+  String get adminPermTreeHint =>
+      'منظمة مثل التطبيق: حزمة ← خدمة ← عملية. مثال: المخزون ← الجرد ← استيراد.';
+
+  @override
+  String get adminPermTreeCatalogIntro =>
+      'خريطة كاملة للحزم وخدماتها وكل عملية يمكن منحها لدور.';
+
+  @override
+  String get adminPermPackagePlatform => 'المنصة';
+
+  @override
+  String get adminPermPackageInventoryHint => 'خدمات الجرد والمنتجات';
+
+  @override
+  String get adminPermPackageSalesHint => 'مستندات المبيعات والفواتير';
+
+  @override
+  String get adminPermPackageCustomersHint => 'العملاء والحسابات والإعدادات';
+
+  @override
+  String get adminPermPackageAccountingHint =>
+      'الحسابات والقيود والأسعار ودفاتر السندات';
+
+  @override
+  String get adminPermPackageReportsHint => 'التقارير التشغيلية والمالية';
+
+  @override
+  String get adminPermPackageAdminHint => 'المستخدمون والأدوار والصلاحيات';
+
+  @override
+  String get adminPermPackagePlatformHint =>
+      'الإعدادات والمزامنة والأجهزة والشركات';
+
+  @override
+  String adminPermPackageSummary(int services, int selected, int total) {
+    return '$services خدمات · $selected/$total عمليات';
+  }
+
+  @override
+  String get adminPermServiceSalesDocuments => 'مستندات المبيعات';
+
+  @override
+  String get adminPermServiceSalesDocumentsHint =>
+      'عرض وإنشاء وترحيل وإلغاء وطباعة الفواتير';
+
+  @override
+  String get adminPermServiceCustomersMaster => 'قائمة العملاء';
+
+  @override
+  String get adminPermServiceCustomersMasterHint => 'إنشاء وإدارة العملاء';
+
+  @override
+  String get adminPermServiceCustomersAccounts => 'حسابات العملاء';
+
+  @override
+  String get adminPermServiceCustomersAccountsHint =>
+      'استعراض دليل الحسابات المرتبط';
+
+  @override
+  String get adminPermServiceCustomersSettings => 'إعدادات العملاء';
+
+  @override
+  String get adminPermServiceCustomersSettingsHint =>
+      'الحساب الأب والربط التلقائي';
+
+  @override
+  String get adminPermServiceChartOfAccounts => 'دليل الحسابات';
+
+  @override
+  String get adminPermServiceChartOfAccountsHint => 'إنشاء وصيانة الحسابات';
+
+  @override
+  String get adminPermServiceJournals => 'القيود اليومية';
+
+  @override
+  String get adminPermServiceJournalsHint => 'إنشاء وإدارة القيود';
+
+  @override
+  String get adminPermServiceCurrencyRates => 'أسعار العملات';
+
+  @override
+  String get adminPermServiceCurrencyRatesHint => 'صيانة أسعار الصرف';
+
+  @override
+  String get adminPermServiceVoucherBooks => 'دفاتر السندات';
+
+  @override
+  String get adminPermServiceVoucherBooksHint =>
+      'دفاتر الترقيم حسب نوع المستند';
+
+  @override
+  String get adminPermServiceAccountingReports => 'تقارير المحاسبة';
+
+  @override
+  String get adminPermServiceAccountingReportsHint => 'مركز تقارير المحاسبة';
+
+  @override
+  String get adminPermServiceSalesPeriod => 'تقرير فترة المبيعات';
+
+  @override
+  String get adminPermServiceSalesPeriodHint => 'مبيعات الفترة مع التصدير';
+
+  @override
+  String get adminPermServiceAccountStatement => 'كشف حساب';
+
+  @override
+  String get adminPermServiceAccountStatementHint =>
+      'كشف حساب عميل/حساب مع التصدير';
+
+  @override
+  String get adminPermServiceDevicesHint => 'أجهزة المزامنة المسجّلة';
+
+  @override
+  String get adminPermServiceCompaniesHint =>
+      'ملف الشركة وأدوات الشركات على المنصة';
+
+  @override
+  String get adminPermOpStockCount => 'تنفيذ الجرد';
+
+  @override
+  String get adminPermOpImport => 'استيراد';
+
+  @override
+  String get adminPermOpExport => 'تصدير';
+
+  @override
+  String get adminPermOpReportsExport => 'عرض / تصدير التقارير';
+
+  @override
+  String get adminPermOpClear => 'مسح البيانات';
+
+  @override
+  String get adminPermOpBarcode => 'الباركود والملصقات';
+
+  @override
+  String get adminPermOpDuplicate => 'تكرار';
+
+  @override
+  String get adminPermOpInvoiceExport => 'طباعة / مشاركة الفاتورة';
+
+  @override
+  String get adminPermOpPlatformCompanies => 'إدارة الشركات (منصة)';
+
+  @override
+  String get adminPermOpPlatformUsers => 'إدارة المستخدمين (منصة)';
 }

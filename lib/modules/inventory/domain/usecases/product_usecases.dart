@@ -67,6 +67,9 @@ class UpsertProducts {
 
   final ProductRepository _repository;
 
-  Future<ProductUpsertResult> call(List<ProductDraft> drafts) =>
-      _repository.upsertAll(drafts);
+  Future<ProductUpsertResult> call(
+    List<ProductDraft> drafts, {
+    void Function(int processed, int total)? onProgress,
+  }) =>
+      _repository.upsertAll(drafts, onProgress: onProgress);
 }

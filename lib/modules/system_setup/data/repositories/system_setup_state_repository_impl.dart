@@ -100,16 +100,10 @@ class SystemSetupStateRepositoryImpl implements SystemSetupStateRepository {
   SetupProgress _grandfatheredProgress() {
     final now = DateTime.now().toUtc();
     final steps = <SetupStepId, SetupStepState>{
-      for (final id in SetupStepId.requiredIds)
+      for (final id in SetupStepId.allIds)
         id: SetupStepState(
           id: id,
           status: SetupStepStatus.completed,
-          updatedAt: now,
-        ),
-      for (final id in SetupStepId.optionalIds)
-        id: SetupStepState(
-          id: id,
-          status: SetupStepStatus.skipped,
           updatedAt: now,
         ),
     };

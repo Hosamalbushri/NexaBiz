@@ -1,8 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/localization/app_localizations.dart';
+import '../../../../app/notifications/presentation/providers/notifications_provider.dart';
 import '../../../../app/presentation/providers/dashboard_services_provider.dart';
+import '../../../../core/di/app_providers.dart';
+import '../../../../core/notifications/notification_type.dart';
 import '../../data/datasources/customer_excel_import_isolate.dart';
+import '../../domain/models/customer_exception.dart';
 import '../../domain/models/import_session.dart';
 import '../../domain/models/import_validation_exception.dart';
 import 'customer_providers.dart';
@@ -37,6 +42,7 @@ class CustomerImportUiState {
   CustomerImportUiState copyWith({
     String? selectedFileName,
     Uint8List? bytes,
+    bool clearBytes = false,
     bool? isImporting,
     double? progress,
     String? progressLabelKey,
@@ -51,7 +57,7 @@ class CustomerImportUiState {
   }) {
     return CustomerImportUiState(
       selectedFileName: selectedFileName ?? this.selectedFileName,
-      bytes: bytes ?? this.bytes,
+      bytes: clearBytes ? null : (bytes ?? this.bytes),
       isImporting: isImporting ?? this.isImporting,
       progress: progress ?? this.progress,
       progressLabelKey: clearProgressLabel
@@ -70,6 +76,7 @@ class CustomerImportNotifier extends StateNotifier<CustomerImportUiState> {
   CustomerImportNotifier(this._ref) : super(const CustomerImportUiState());
 
   final Ref _ref;
+  KeepAliveLink? _keepAlive;
 
   void setSelectedFile({required String fileName, required Uint8List bytes}) {
     state = CustomerImportUiState(selectedFileName: fileName, bytes: bytes);
@@ -81,10 +88,15 @@ class CustomerImportNotifier extends StateNotifier<CustomerImportUiState> {
       state = state.copyWith(errorMessage: 'no_file', clearResult: true);
       return null;
     }
+    if (state.isImporting) {
+      return null;
+    }
+
+    _keepAlive ??= _ref.keepAlive();
 
     state = state.copyWith(
       isImporting: true,
-      progress: 0.15,
+      progress: 0.08,
       progressLabelKey: 'parsing',
       clearError: true,
       clearResult: true,
@@ -103,13 +115,14 @@ class CustomerImportNotifier extends StateNotifier<CustomerImportUiState> {
           errorMessage:
               outcome.errorCode ?? ImportValidationException.decodeFailed,
         );
+        await _notifyFailure(state.errorMessage!);
         return null;
       }
 
       final imported = outcome.result!;
       state = state.copyWith(
-        progress: 0.55,
-        progressLabelKey: 'saving',
+        progress: 0.28,
+        progressLabelKey: 'linking',
         duplicateCount: imported.duplicateCount,
       );
 
@@ -124,13 +137,40 @@ class CustomerImportNotifier extends StateNotifier<CustomerImportUiState> {
         if (parent != null) {
           drafts = await _ref
               .read(ensureCustomerAccountLinksProvider)
-              .applyAll(drafts, parentId: parent.accountId);
+              .applyAll(
+                drafts,
+                parentId: parent.accountId,
+                onProgress: (processed, total) {
+                  if (total <= 0) {
+                    return;
+                  }
+                  final fraction = processed / total;
+                  state = state.copyWith(
+                    progress: 0.28 + (fraction * 0.22),
+                    progressLabelKey: 'linking',
+                  );
+                },
+              );
         }
       }
 
+      state = state.copyWith(progress: 0.52, progressLabelKey: 'saving');
+
       final upsert = await _ref
           .read(upsertCustomersUseCaseProvider)
-          .call(drafts);
+          .call(
+            drafts,
+            onProgress: (processed, total) {
+              if (total <= 0) {
+                return;
+              }
+              final fraction = processed / total;
+              state = state.copyWith(
+                progress: 0.52 + (fraction * 0.45),
+                progressLabelKey: 'saving',
+              );
+            },
+          );
 
       final result = ImportSessionResult(
         importedCount: upsert.totalCount,
@@ -140,12 +180,32 @@ class CustomerImportNotifier extends StateNotifier<CustomerImportUiState> {
         isImporting: false,
         progress: 1,
         clearProgressLabel: true,
+        clearBytes: true,
         result: result,
         duplicateCount: imported.duplicateCount,
         insertedCount: upsert.insertedCount,
         updatedCount: upsert.updatedCount,
       );
+      await _notifySuccess(result, upsert);
       return result;
+    } on ImportValidationException catch (error) {
+      state = state.copyWith(
+        isImporting: false,
+        progress: 0,
+        clearProgressLabel: true,
+        errorMessage: error.code,
+      );
+      await _notifyFailure(error.code);
+      return null;
+    } on CustomerException catch (error) {
+      state = state.copyWith(
+        isImporting: false,
+        progress: 0,
+        clearProgressLabel: true,
+        errorMessage: error.code,
+      );
+      await _notifyFailure(error.code);
+      return null;
     } catch (_) {
       state = state.copyWith(
         isImporting: false,
@@ -153,7 +213,65 @@ class CustomerImportNotifier extends StateNotifier<CustomerImportUiState> {
         clearProgressLabel: true,
         errorMessage: ImportValidationException.decodeFailed,
       );
+      await _notifyFailure(ImportValidationException.decodeFailed);
       return null;
+    } finally {
+      _keepAlive?.close();
+      _keepAlive = null;
+    }
+  }
+
+  Future<void> _notifySuccess(
+    ImportSessionResult result,
+    CustomerUpsertResult upsert,
+  ) async {
+    final l10n = _l10n;
+    await _ref
+        .read(notificationServiceProvider)
+        .showSuccess(
+          title: l10n.customersImportTitle,
+          message:
+              '${l10n.customersImportInsertedCount(upsert.insertedCount)} · '
+              '${l10n.customersImportUpdatedCount(upsert.updatedCount)}',
+          category: NotificationCategory.general,
+          persistToHistory: true,
+        );
+  }
+
+  Future<void> _notifyFailure(String code) async {
+    final l10n = _l10n;
+    await _ref
+        .read(notificationServiceProvider)
+        .showError(
+          title: l10n.importFailed,
+          message: _errorMessage(l10n, code),
+          category: NotificationCategory.general,
+          persistToHistory: true,
+        );
+  }
+
+  AppLocalizations get _l10n {
+    final locale =
+        _ref.read(localeProvider) ?? AppLocalizations.supportedLocales.first;
+    return lookupAppLocalizations(locale);
+  }
+
+  String _errorMessage(AppLocalizations localization, String code) {
+    switch (code) {
+      case 'no_file':
+        return localization.fileSelectedPrompt;
+      case ImportValidationException.emptyWorkbook:
+        return localization.emptyWorkbook;
+      case ImportValidationException.noValidRows:
+        return localization.customersNoValidRows;
+      case ImportValidationException.decodeFailed:
+        return localization.invalidFile;
+      case CustomerException.duplicateCustomerCode:
+        return localization.customersErrorDuplicateCode;
+      case CustomerException.duplicateExternalId:
+        return localization.customersErrorDuplicateExternalId;
+      default:
+        return code;
     }
   }
 }

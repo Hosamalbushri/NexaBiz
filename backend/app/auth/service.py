@@ -23,7 +23,14 @@ from app.core.exceptions import (
     UnauthorizedError,
     ValidationAppError,
 )
-from app.models.identity import AuthSession, CompanyUser, Device, Role, User
+from app.models.identity import (
+    AuthSession,
+    CompanyUser,
+    Device,
+    Role,
+    SyncDisableRequest,
+    User,
+)
 from app.models.sync import Company, SyncSequence
 
 
@@ -169,6 +176,9 @@ class AuthService:
             "token_type": "bearer",
             "expires_in": expires_in,
             "user": self._user_public(user),
+            "account_type": "admin"
+            if user.is_super_admin or any("admin" in r.lower() for r in roles)
+            else "user",
             "companies": companies,
             "current_company_id": str(selected_company_id)
             if selected_company_id
@@ -221,7 +231,7 @@ class AuthService:
         if session.device_id is not None:
             device = self.db.get(Device, session.device_id)
             if device is None or device.status != "active":
-                raise UnauthorizedError("Device is revoked or blocked")
+                self._raise_device_inactive(device)
 
         # Rotate refresh token.
         session.status = "rotated"
@@ -532,6 +542,7 @@ class AuthService:
         actor: User,
         company_id: uuid.UUID,
         device_id: uuid.UUID,
+        reason: str | None = None,
     ) -> Device:
         device = self.db.get(Device, device_id)
         if device is None or device.company_id != company_id:
@@ -560,8 +571,142 @@ class AuthService:
             device_id=device.id,
             entity_type="device",
             entity_id=str(device.id),
+            metadata={"reason": reason} if reason else None,
         )
         return device
+
+    def request_sync_disable(
+        self,
+        *,
+        user: User,
+        company_id: uuid.UUID,
+        device_id: uuid.UUID,
+        message: str | None = None,
+    ) -> SyncDisableRequest:
+        device = self.db.get(Device, device_id)
+        if device is None or device.company_id != company_id:
+            raise NotFoundError("Device not found")
+        if device.user_id != user.id and not user.is_super_admin:
+            raise ForbiddenError("You can only request disable for your own device")
+        if device.status != "active":
+            raise ValidationAppError("Device is not active")
+
+        existing = self.db.execute(
+            select(SyncDisableRequest).where(
+                SyncDisableRequest.device_id == device.id,
+                SyncDisableRequest.status == "pending",
+            )
+        ).scalar_one_or_none()
+        if existing is not None:
+            return existing
+
+        row = SyncDisableRequest(
+            id=uuid.uuid4(),
+            company_id=company_id,
+            user_id=user.id,
+            device_id=device.id,
+            status="pending",
+            message=(message or "").strip()[:500] or None,
+        )
+        self.db.add(row)
+        write_audit(
+            self.db,
+            action="sync.disable_requested",
+            user_id=user.id,
+            company_id=company_id,
+            device_id=device.id,
+            entity_type="sync_disable_request",
+            entity_id=str(row.id),
+            metadata={"message": row.message},
+        )
+        return row
+
+    def list_sync_disable_requests(
+        self,
+        *,
+        company_id: uuid.UUID,
+        status: str | None = "pending",
+    ) -> list[SyncDisableRequest]:
+        stmt = select(SyncDisableRequest).where(
+            SyncDisableRequest.company_id == company_id
+        )
+        if status:
+            stmt = stmt.where(SyncDisableRequest.status == status)
+        stmt = stmt.order_by(SyncDisableRequest.created_at.desc())
+        return list(self.db.execute(stmt).scalars().all())
+
+    def approve_sync_disable(
+        self,
+        *,
+        actor: User,
+        company_id: uuid.UUID,
+        request_id: uuid.UUID,
+    ) -> SyncDisableRequest:
+        row = self.db.get(SyncDisableRequest, request_id)
+        if row is None or row.company_id != company_id:
+            raise NotFoundError("Request not found")
+        if row.status != "pending":
+            raise ValidationAppError("Request is not pending")
+        row.status = "approved"
+        row.resolved_by_id = actor.id
+        row.resolved_at = utcnow()
+        self.revoke_device(
+            actor=actor,
+            company_id=company_id,
+            device_id=row.device_id,
+            reason="sync_disable_approved",
+        )
+        write_audit(
+            self.db,
+            action="sync.disable_approved",
+            user_id=actor.id,
+            company_id=company_id,
+            device_id=row.device_id,
+            entity_type="sync_disable_request",
+            entity_id=str(row.id),
+        )
+        return row
+
+    def reject_sync_disable(
+        self,
+        *,
+        actor: User,
+        company_id: uuid.UUID,
+        request_id: uuid.UUID,
+    ) -> SyncDisableRequest:
+        row = self.db.get(SyncDisableRequest, request_id)
+        if row is None or row.company_id != company_id:
+            raise NotFoundError("Request not found")
+        if row.status != "pending":
+            raise ValidationAppError("Request is not pending")
+        row.status = "rejected"
+        row.resolved_by_id = actor.id
+        row.resolved_at = utcnow()
+        write_audit(
+            self.db,
+            action="sync.disable_rejected",
+            user_id=actor.id,
+            company_id=company_id,
+            device_id=row.device_id,
+            entity_type="sync_disable_request",
+            entity_id=str(row.id),
+        )
+        return row
+
+    def _raise_device_inactive(self, device: Device | None) -> None:
+        if device is not None:
+            approved = self.db.execute(
+                select(SyncDisableRequest).where(
+                    SyncDisableRequest.device_id == device.id,
+                    SyncDisableRequest.status == "approved",
+                )
+            ).scalar_one_or_none()
+            if approved is not None:
+                raise UnauthorizedError(
+                    "Synchronization disabled by administrator",
+                    details={"reason": "sync_disable_approved"},
+                )
+        raise UnauthorizedError("Device is revoked or blocked")
 
     def _role_names(self, user: User, company_id: uuid.UUID | None) -> list[str]:
         if user.is_super_admin:

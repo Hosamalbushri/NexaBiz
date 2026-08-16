@@ -2338,6 +2338,41 @@ class $JournalEntriesTable extends JournalEntries
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('synced'),
+  );
+  static const VerificationMeta _lastSyncedAtMeta = const VerificationMeta(
+    'lastSyncedAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastSyncedAt = GeneratedColumn<int>(
+    'last_synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   static const VerificationMeta _deletedAtMeta = const VerificationMeta(
     'deletedAt',
   );
@@ -2363,6 +2398,9 @@ class $JournalEntriesTable extends JournalEntries
     sourceId,
     createdAt,
     updatedAt,
+    syncStatus,
+    lastSyncedAt,
+    version,
     deletedAt,
   ];
   @override
@@ -2472,6 +2510,27 @@ class $JournalEntriesTable extends JournalEntries
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+        _lastSyncedAtMeta,
+        lastSyncedAt.isAcceptableOrUnknown(
+          data['last_synced_at']!,
+          _lastSyncedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
     if (data.containsKey('deleted_at')) {
       context.handle(
         _deletedAtMeta,
@@ -2535,6 +2594,18 @@ class $JournalEntriesTable extends JournalEntries
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
       )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_synced_at'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
@@ -2569,6 +2640,11 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
   final String? sourceId;
   final int createdAt;
   final int updatedAt;
+
+  /// [SyncStatus.name]
+  final String syncStatus;
+  final int? lastSyncedAt;
+  final int version;
   final int? deletedAt;
   const JournalEntryRow({
     required this.id,
@@ -2583,6 +2659,9 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
     this.sourceId,
     required this.createdAt,
     required this.updatedAt,
+    required this.syncStatus,
+    this.lastSyncedAt,
+    required this.version,
     this.deletedAt,
   });
   @override
@@ -2606,6 +2685,11 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
     }
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<int>(lastSyncedAt);
+    }
+    map['version'] = Variable<int>(version);
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
     }
@@ -2632,6 +2716,11 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
           : Value(sourceId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      syncStatus: Value(syncStatus),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+      version: Value(version),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
@@ -2656,6 +2745,9 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
       sourceId: serializer.fromJson<String?>(json['sourceId']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
+      version: serializer.fromJson<int>(json['version']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
     );
   }
@@ -2675,6 +2767,9 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
       'sourceId': serializer.toJson<String?>(sourceId),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
+      'version': serializer.toJson<int>(version),
       'deletedAt': serializer.toJson<int?>(deletedAt),
     };
   }
@@ -2692,6 +2787,9 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
     Value<String?> sourceId = const Value.absent(),
     int? createdAt,
     int? updatedAt,
+    String? syncStatus,
+    Value<int?> lastSyncedAt = const Value.absent(),
+    int? version,
     Value<int?> deletedAt = const Value.absent(),
   }) => JournalEntryRow(
     id: id ?? this.id,
@@ -2706,6 +2804,9 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
     sourceId: sourceId.present ? sourceId.value : this.sourceId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+    version: version ?? this.version,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   JournalEntryRow copyWithCompanion(JournalEntriesCompanion data) {
@@ -2732,6 +2833,13 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
       sourceId: data.sourceId.present ? data.sourceId.value : this.sourceId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+      version: data.version.present ? data.version.value : this.version,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
@@ -2751,6 +2859,9 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
           ..write('sourceId: $sourceId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('version: $version, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -2770,6 +2881,9 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
     sourceId,
     createdAt,
     updatedAt,
+    syncStatus,
+    lastSyncedAt,
+    version,
     deletedAt,
   );
   @override
@@ -2788,6 +2902,9 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
           other.sourceId == this.sourceId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.version == this.version &&
           other.deletedAt == this.deletedAt);
 }
 
@@ -2804,6 +2921,9 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
   final Value<String?> sourceId;
   final Value<int> createdAt;
   final Value<int> updatedAt;
+  final Value<String> syncStatus;
+  final Value<int?> lastSyncedAt;
+  final Value<int> version;
   final Value<int?> deletedAt;
   const JournalEntriesCompanion({
     this.id = const Value.absent(),
@@ -2818,6 +2938,9 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
     this.sourceId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.version = const Value.absent(),
     this.deletedAt = const Value.absent(),
   });
   JournalEntriesCompanion.insert({
@@ -2833,6 +2956,9 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
     this.sourceId = const Value.absent(),
     required int createdAt,
     required int updatedAt,
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.version = const Value.absent(),
     this.deletedAt = const Value.absent(),
   }) : uuid = Value(uuid),
        entryDate = Value(entryDate),
@@ -2854,6 +2980,9 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
     Expression<String>? sourceId,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
+    Expression<String>? syncStatus,
+    Expression<int>? lastSyncedAt,
+    Expression<int>? version,
     Expression<int>? deletedAt,
   }) {
     return RawValuesInsertable({
@@ -2869,6 +2998,9 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
       if (sourceId != null) 'source_id': sourceId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (version != null) 'version': version,
       if (deletedAt != null) 'deleted_at': deletedAt,
     });
   }
@@ -2886,6 +3018,9 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
     Value<String?>? sourceId,
     Value<int>? createdAt,
     Value<int>? updatedAt,
+    Value<String>? syncStatus,
+    Value<int?>? lastSyncedAt,
+    Value<int>? version,
     Value<int?>? deletedAt,
   }) {
     return JournalEntriesCompanion(
@@ -2901,6 +3036,9 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
       sourceId: sourceId ?? this.sourceId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      version: version ?? this.version,
       deletedAt: deletedAt ?? this.deletedAt,
     );
   }
@@ -2944,6 +3082,15 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<int>(lastSyncedAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
     if (deletedAt.present) {
       map['deleted_at'] = Variable<int>(deletedAt.value);
     }
@@ -2965,6 +3112,9 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
           ..write('sourceId: $sourceId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('version: $version, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -4604,6 +4754,9 @@ typedef $$JournalEntriesTableCreateCompanionBuilder =
       Value<String?> sourceId,
       required int createdAt,
       required int updatedAt,
+      Value<String> syncStatus,
+      Value<int?> lastSyncedAt,
+      Value<int> version,
       Value<int?> deletedAt,
     });
 typedef $$JournalEntriesTableUpdateCompanionBuilder =
@@ -4620,6 +4773,9 @@ typedef $$JournalEntriesTableUpdateCompanionBuilder =
       Value<String?> sourceId,
       Value<int> createdAt,
       Value<int> updatedAt,
+      Value<String> syncStatus,
+      Value<int?> lastSyncedAt,
+      Value<int> version,
       Value<int?> deletedAt,
     });
 
@@ -4689,6 +4845,21 @@ class $$JournalEntriesTableFilterComposer
 
   ColumnFilters<int> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4767,6 +4938,21 @@ class $$JournalEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get deletedAt => $composableBuilder(
     column: $table.deletedAt,
     builder: (column) => ColumnOrderings(column),
@@ -4828,6 +5014,19 @@ class $$JournalEntriesTableAnnotationComposer
   GeneratedColumn<int> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
   GeneratedColumn<int> get deletedAt =>
       $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
@@ -4881,6 +5080,9 @@ class $$JournalEntriesTableTableManager
                 Value<String?> sourceId = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
               }) => JournalEntriesCompanion(
                 id: id,
@@ -4895,6 +5097,9 @@ class $$JournalEntriesTableTableManager
                 sourceId: sourceId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncedAt: lastSyncedAt,
+                version: version,
                 deletedAt: deletedAt,
               ),
           createCompanionCallback:
@@ -4911,6 +5116,9 @@ class $$JournalEntriesTableTableManager
                 Value<String?> sourceId = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
+                Value<String> syncStatus = const Value.absent(),
+                Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
               }) => JournalEntriesCompanion.insert(
                 id: id,
@@ -4925,6 +5133,9 @@ class $$JournalEntriesTableTableManager
                 sourceId: sourceId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncedAt: lastSyncedAt,
+                version: version,
                 deletedAt: deletedAt,
               ),
           withReferenceMapper: (p0) => p0

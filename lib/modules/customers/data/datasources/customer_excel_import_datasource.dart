@@ -196,6 +196,20 @@ class CustomerExcelImportDatasource {
     if (value == null) {
       return null;
     }
+    // Excel often stores codes as numbers; DoubleCellValue → "12210001.0".
+    if (value is IntCellValue) {
+      return value.value.toString();
+    }
+    if (value is DoubleCellValue) {
+      final number = value.value;
+      if (number.isFinite && number == number.roundToDouble()) {
+        return number.toInt().toString();
+      }
+      return number.toString();
+    }
+    if (value is TextCellValue) {
+      return value.value.toString().trim();
+    }
     return value.toString().trim();
   }
 }

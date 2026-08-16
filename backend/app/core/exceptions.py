@@ -33,11 +33,17 @@ class ValidationAppError(AppError):
 
 
 class UnauthorizedError(AppError):
-    def __init__(self, message: str = "Unauthorized") -> None:
+    def __init__(
+        self,
+        message: str = "Unauthorized",
+        *,
+        details: dict[str, Any] | None = None,
+    ) -> None:
         super().__init__(
             code="unauthorized",
             message=message,
             status_code=status.HTTP_401_UNAUTHORIZED,
+            details=details,
         )
 
 

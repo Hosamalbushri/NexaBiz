@@ -15,8 +15,10 @@ import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/app_pagination_bar.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/models/product_exception.dart';
+import '../../permissions/inventory_permission_package.dart';
 import '../models/products_view_mode.dart';
 import '../providers/product_providers.dart';
 import '../widgets/catalog_expandable_search.dart';
@@ -77,6 +79,10 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
     final viewMode =
         ref.watch(productsViewModeProvider).valueOrNull ??
         ProductsViewMode.list;
+    final auth = ref.watch(authStateProvider);
+    final canCreate = auth.hasAnyPermission(InventoryPermissions.productsCreate);
+    final canUpdate = auth.hasAnyPermission(InventoryPermissions.productsUpdate);
+    final canDelete = auth.hasAnyPermission(InventoryPermissions.productsDelete);
 
     return PopScope(
       canPop: !_searchExpanded,
@@ -133,7 +139,9 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
                   ref.read(productsViewModeProvider.notifier).setMode(mode);
                 },
                 onScan: () => _scanAndOpenProduct(context),
-                onAdd: () => InventoryRoutes.pushProductsNew(context),
+                onAdd: canCreate
+                    ? () => InventoryRoutes.pushProductsNew(context)
+                    : null,
               ),
             ),
             Expanded(
@@ -157,10 +165,11 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
                           title: l10n.productsEmptyTitle,
                           subtitle: l10n.productsEmptyMessage,
                           icon: Icons.inventory_2_outlined,
-                          actionLabel: l10n.productsAdd,
+                          actionLabel: canCreate ? l10n.productsAdd : null,
                           actionIcon: Icons.add_rounded,
-                          onAction: () =>
-                              InventoryRoutes.pushProductsNew(context),
+                          onAction: canCreate
+                              ? () => InventoryRoutes.pushProductsNew(context)
+                              : null,
                         );
                       }
                       return AppEmptyState(
@@ -194,12 +203,16 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
                         ref.read(productSearchPageIndexProvider.notifier).state =
                             0;
                       },
-                      onEdit: (product) => InventoryRoutes.pushProductsEdit(
-                        context,
-                        product.id,
-                      ),
-                      onDelete: (product) =>
-                          _deleteProduct(context, ref, product),
+                      onEdit: canUpdate
+                          ? (product) => InventoryRoutes.pushProductsEdit(
+                                context,
+                                product.id,
+                              )
+                          : null,
+                      onDelete: canDelete
+                          ? (product) =>
+                              _deleteProduct(context, ref, product)
+                          : null,
                     );
                   },
                 ),
@@ -298,8 +311,8 @@ class _ProductsResults extends StatefulWidget {
     required this.totalCount,
     required this.onPageChanged,
     required this.onPageSizeChanged,
-    required this.onEdit,
-    required this.onDelete,
+    this.onEdit,
+    this.onDelete,
   });
 
   final List<Product> products;
@@ -310,8 +323,8 @@ class _ProductsResults extends StatefulWidget {
   final int totalCount;
   final ValueChanged<int> onPageChanged;
   final ValueChanged<int> onPageSizeChanged;
-  final ValueChanged<Product> onEdit;
-  final ValueChanged<Product> onDelete;
+  final ValueChanged<Product>? onEdit;
+  final ValueChanged<Product>? onDelete;
 
   @override
   State<_ProductsResults> createState() => _ProductsResultsState();
@@ -372,8 +385,12 @@ class _ProductsResultsState extends State<_ProductsResults> {
                       child: _ProductListCard(
                         key: ValueKey(product.id),
                         product: product,
-                        onEdit: () => widget.onEdit(product),
-                        onDelete: () => widget.onDelete(product),
+                        onEdit: widget.onEdit == null
+                            ? null
+                            : () => widget.onEdit!(product),
+                        onDelete: widget.onDelete == null
+                            ? null
+                            : () => widget.onDelete!(product),
                       ),
                     );
                   },
@@ -401,13 +418,13 @@ class _ProductsToolbar extends StatelessWidget {
     required this.viewMode,
     required this.onViewModeChanged,
     required this.onScan,
-    required this.onAdd,
+    this.onAdd,
   });
 
   final ProductsViewMode viewMode;
   final ValueChanged<ProductsViewMode> onViewModeChanged;
   final VoidCallback onScan;
-  final VoidCallback onAdd;
+  final VoidCallback? onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -451,42 +468,44 @@ class _ProductsToolbar extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Material(
-              color: colorScheme.primary,
-              elevation: 2,
-              shadowColor: colorScheme.primary.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              child: InkWell(
-                onTap: onAdd,
+            if (onAdd != null) ...[
+              const SizedBox(width: AppSpacing.sm),
+              Material(
+                color: colorScheme.primary,
+                elevation: 2,
+                shadowColor: colorScheme.primary.withValues(alpha: 0.45),
                 borderRadius: BorderRadius.circular(AppRadius.sm),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.add_rounded,
-                        size: 20,
-                        color: colorScheme.onPrimary,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text(
-                        l10n.productsAdd,
-                        style: theme.textTheme.labelLarge?.copyWith(
+                child: InkWell(
+                  onTap: onAdd,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.add_rounded,
+                          size: 20,
                           color: colorScheme.onPrimary,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.1,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(
+                          l10n.productsAdd,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: colorScheme.onPrimary,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       ),
@@ -581,14 +600,14 @@ class _ViewModeIconButton extends StatelessWidget {
 class _ProductsGrid extends StatelessWidget {
   const _ProductsGrid({
     required this.products,
-    required this.onEdit,
-    required this.onDelete,
+    this.onEdit,
+    this.onDelete,
     this.controller,
   });
 
   final List<Product> products;
-  final ValueChanged<Product> onEdit;
-  final ValueChanged<Product> onDelete;
+  final ValueChanged<Product>? onEdit;
+  final ValueChanged<Product>? onDelete;
   final ScrollController? controller;
 
   @override
@@ -621,8 +640,8 @@ class _ProductsGrid extends StatelessWidget {
             return _ProductGridCard(
               key: ValueKey(product.id),
               product: product,
-              onEdit: () => onEdit(product),
-              onDelete: () => onDelete(product),
+              onEdit: onEdit == null ? null : () => onEdit!(product),
+              onDelete: onDelete == null ? null : () => onDelete!(product),
             );
           },
         );
@@ -642,13 +661,13 @@ class _ProductListCard extends StatelessWidget {
   const _ProductListCard({
     super.key,
     required this.product,
-    required this.onEdit,
-    required this.onDelete,
+    this.onEdit,
+    this.onDelete,
   });
 
   final Product product;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -717,14 +736,15 @@ class _ProductListCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  IconButton(
-                    tooltip: l10n.productsDelete,
-                    onPressed: onDelete,
-                    icon: Icon(
-                      Icons.delete_outline_rounded,
-                      color: colorScheme.error,
+                  if (onDelete != null)
+                    IconButton(
+                      tooltip: l10n.productsDelete,
+                      onPressed: onDelete,
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        color: colorScheme.error,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -739,13 +759,13 @@ class _ProductGridCard extends StatelessWidget {
   const _ProductGridCard({
     super.key,
     required this.product,
-    required this.onEdit,
-    required this.onDelete,
+    this.onEdit,
+    this.onDelete,
   });
 
   final Product product;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -790,16 +810,17 @@ class _ProductGridCard extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      IconButton(
-                        tooltip: l10n.productsDelete,
-                        visualDensity: VisualDensity.compact,
-                        onPressed: onDelete,
-                        icon: Icon(
-                          Icons.delete_outline_rounded,
-                          color: colorScheme.error,
-                          size: 20,
+                      if (onDelete != null)
+                        IconButton(
+                          tooltip: l10n.productsDelete,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: onDelete,
+                          icon: Icon(
+                            Icons.delete_outline_rounded,
+                            color: colorScheme.error,
+                            size: 20,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.sm),

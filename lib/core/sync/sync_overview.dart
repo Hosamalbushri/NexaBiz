@@ -1,3 +1,5 @@
+import 'sync_request_context.dart';
+
 /// Aggregate sync state for UI (settings + global indicator).
 enum SyncPhase { offline, idleSynced, syncing, pending, failed, conflict }
 
@@ -53,7 +55,17 @@ class SyncOverview {
 }
 
 /// Result of a sync pass — used to decide whether to notify the user.
-enum SyncPassOutcome { idle, completed, partialFailure, failed, skippedOffline }
+enum SyncPassOutcome {
+  idle,
+  completed,
+  partialFailure,
+  failed,
+  skippedOffline,
+  skippedDisabled,
+
+  /// Session expired / tokens invalid — pause retries until re-auth.
+  authRequired,
+}
 
 class SyncPassResult {
   const SyncPassResult({
@@ -62,6 +74,11 @@ class SyncPassResult {
     this.downloaded = 0,
     this.failed = 0,
     this.conflicts = 0,
+    this.downloadedByEntity = const {},
+    this.correlationId,
+    this.durationMs = 0,
+    this.trigger = SyncPassTrigger.manual,
+    this.shouldNotify = false,
   });
 
   final SyncPassOutcome outcome;
@@ -70,10 +87,27 @@ class SyncPassResult {
   final int failed;
   final int conflicts;
 
+  /// Successful server→device applies keyed by handler [entityType].
+  final Map<String, int> downloadedByEntity;
+
+  /// Client-generated id echoed on HTTP as `X-Correlation-Id`.
+  final String? correlationId;
+
+  /// Wall time for the pass (ms).
+  final int durationMs;
+
+  final SyncPassTrigger trigger;
+
+  /// When true, UI may show a user-facing notification for this pass.
+  final bool shouldNotify;
+
   bool get isMeaningful =>
       outcome == SyncPassOutcome.completed ||
       outcome == SyncPassOutcome.partialFailure ||
-      outcome == SyncPassOutcome.failed;
+      outcome == SyncPassOutcome.failed ||
+      outcome == SyncPassOutcome.authRequired;
+
+  bool get hasIncomingFromServer => downloaded > 0;
 }
 
 /// Exponential backoff for retries: 1s, 2s, 4s, 8s… capped.

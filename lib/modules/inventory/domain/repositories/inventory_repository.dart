@@ -14,7 +14,11 @@ abstract class InventoryRepository {
 
   Future<void> save(InventoryItem item);
 
-  Future<void> replaceAll(List<InventoryItem> items);
+  Future<void> replaceAll(
+    List<InventoryItem> items, {
+    void Function(int processed, int total)? onProgress,
+  });
+
 
   Future<void> clear();
 

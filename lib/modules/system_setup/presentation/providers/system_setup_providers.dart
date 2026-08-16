@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/presentation/providers/dashboard_services_provider.dart';
-import '../../../../core/sync/sync_providers.dart';
 import '../../data/repositories/system_setup_state_repository_impl.dart';
 import '../../domain/entities/system_setup_state.dart';
 import '../../domain/ports/system_setup_seed_port.dart';
@@ -35,11 +34,4 @@ final systemSetupProgressProvider =
 final systemSetupReadyProvider = FutureProvider.autoDispose<bool>((ref) async {
   final progress = await ref.watch(systemSetupProgressProvider.future);
   return progress.isReady;
-});
-
-/// Triggers Core [SyncManager.syncNow] from optional setup step.
-final systemSetupSyncRunnerProvider = Provider<Future<void> Function()>((ref) {
-  return () async {
-    await ref.read(syncManagerProvider).syncNow(notify: false);
-  };
 });

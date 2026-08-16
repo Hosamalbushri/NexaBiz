@@ -60,6 +60,12 @@ class UserUpdateRequest(BaseModel):
     password: str | None = Field(default=None, min_length=8, max_length=200)
 
 
+class UserStatusRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    status: str = Field(pattern="^(active|inactive|suspended)$")
+
+
 class RoleCreateRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
 

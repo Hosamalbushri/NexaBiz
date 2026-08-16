@@ -7,7 +7,7 @@ import '../providers/auth_providers.dart';
 class PermissionGate extends ConsumerWidget {
   const PermissionGate({
     super.key,
-    required this.permission,
+    this.permission,
     required this.child,
     this.anyOf,
     this.fallback = const SizedBox.shrink(),

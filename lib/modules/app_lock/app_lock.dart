@@ -3,7 +3,9 @@ library;
 
 export 'domain/entities/app_lock_state.dart';
 export 'domain/repositories/app_lock_repository.dart';
+export 'domain/app_lock_biometrics.dart';
 export 'data/app_lock_repository_impl.dart';
+export 'data/local_auth_app_lock_biometrics.dart';
 export 'presentation/providers/app_lock_providers.dart';
 export 'presentation/pages/app_lock_page.dart';
 export 'presentation/pages/app_lock_routes.dart';

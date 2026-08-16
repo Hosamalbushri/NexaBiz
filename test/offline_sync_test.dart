@@ -72,7 +72,7 @@ void main() {
     manager!.registerHandler(
       InventoryItemSyncHandler(repository: inventoryRepo, remote: remote),
     );
-    await manager!.start();
+    await manager!.start(enabled: true);
 
     await inventoryRepo.save(
       InventoryItem(
@@ -116,6 +116,7 @@ void main() {
     );
     await connectivity.start();
     connectivity.debugSetStatus(ConnectivityStatus.online);
+    await manager!.setEnabled(true);
 
     await inventoryRepo.save(
       InventoryItem(
@@ -154,6 +155,7 @@ void main() {
     );
     await connectivity.start();
     connectivity.debugSetStatus(ConnectivityStatus.online);
+    await manager!.setEnabled(true);
 
     const id = 'fixed-id-1';
     await inventoryRepo.save(

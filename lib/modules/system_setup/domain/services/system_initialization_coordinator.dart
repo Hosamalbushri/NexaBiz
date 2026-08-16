@@ -60,23 +60,6 @@ class SystemInitializationCoordinator {
     }
   }
 
-  Future<SetupProgress> skipOptionalStep(SetupStepId id) async {
-    if (id.isRequired) {
-      throw StateError('Cannot skip required setup step: ${id.name}');
-    }
-    var progress = await loadProgress();
-    progress = _withStatus(progress, SystemSetupStatus.inProgress);
-    progress = _updateStep(
-      progress,
-      id,
-      SetupStepStatus.skipped,
-      clearError: true,
-    );
-    progress = _maybeMarkReady(progress);
-    await _stateRepository.save(progress);
-    return progress;
-  }
-
   Future<SetupProgress> markStepCompleted(SetupStepId id) async {
     var progress = await loadProgress();
     progress = _withStatus(progress, SystemSetupStatus.inProgress);
@@ -94,6 +77,11 @@ class SystemInitializationCoordinator {
   /// Runs the local seed step via [SystemSetupSeedPort].
   Future<SetupProgress> runSeedLocal() {
     return runStep(SetupStepId.seedLocal, _seedPort.ensureLocalDefaults);
+  }
+
+  /// Runs Chart of Accounts bootstrap by pulling from the remote company.
+  Future<SetupProgress> runSeedFromSync() {
+    return runStep(SetupStepId.seedLocal, _seedPort.pullRemoteDefaults);
   }
 
   /// After all required steps succeed, mark application ready.

@@ -70,6 +70,7 @@ class AccountLabels {
     return switch (systemKey) {
       'assets' => l10n.accountingAccountAssets,
       'current_assets' => l10n.accountingAccountCurrentAssets,
+      'cash_boxes' => l10n.accountingAccountCashBoxes,
       'cash' => l10n.accountingAccountCash,
       'bank' => l10n.accountingAccountBank,
       'petty_cash' => l10n.accountingAccountPettyCash,

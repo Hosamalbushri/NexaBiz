@@ -39,35 +39,21 @@ enum SetupStepStatus {
       this == SetupStepStatus.completed || this == SetupStepStatus.skipped;
 }
 
-/// Stable ids for System Setup v1 steps.
+/// Stable ids for System Setup steps.
 enum SetupStepId {
   locale,
   primaryCurrency,
-  welcomeMode,
   companyProfile,
-  seedLocal,
-  externalConnection,
-  initialSync;
+  seedLocal;
 
   static const requiredIds = <SetupStepId>[
     SetupStepId.locale,
     SetupStepId.primaryCurrency,
-    SetupStepId.welcomeMode,
     SetupStepId.companyProfile,
     SetupStepId.seedLocal,
   ];
 
-  static const optionalIds = <SetupStepId>[
-    SetupStepId.externalConnection,
-    SetupStepId.initialSync,
-  ];
-
-  static const allIds = <SetupStepId>[
-    ...requiredIds,
-    ...optionalIds,
-  ];
-
-  bool get isRequired => requiredIds.contains(this);
+  static const allIds = requiredIds;
 
   String get storageKey => name;
 
@@ -150,12 +136,6 @@ class SetupProgress {
       .where((id) => steps[id]?.status.isTerminalSuccess ?? false)
       .length;
 
-  int get optionalTotal => SetupStepId.optionalIds.length;
-
-  int get optionalDone => SetupStepId.optionalIds
-      .where((id) => steps[id]?.status.isTerminalSuccess ?? false)
-      .length;
-
   /// 0–100 based on required steps only.
   int get percentComplete {
     if (requiredTotal == 0) {
@@ -170,13 +150,7 @@ class SetupProgress {
     for (final id in SetupStepId.allIds) {
       final state = steps[id];
       if (state == null || !state.status.isTerminalSuccess) {
-        if (id.isRequired) {
-          return id;
-        }
-        // Optional: surface first incomplete optional after required done.
-        if (allRequiredComplete) {
-          return id;
-        }
+        return id;
       }
     }
     return null;

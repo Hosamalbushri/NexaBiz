@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
@@ -8,36 +9,42 @@ import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_shadows.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../authentication/presentation/providers/auth_providers.dart';
+import '../../permissions/inventory_permission_package.dart';
 import 'inventory_routes.dart';
 
 /// Products service home — grid of list / import.
-class ProductsHomePage extends StatelessWidget {
+class ProductsHomePage extends ConsumerWidget {
   const ProductsHomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final auth = ref.watch(authStateProvider);
 
     final features = <_ProductsFeature>[
-      _ProductsFeature(
-        icon: Icons.list_alt_outlined,
-        title: l10n.productsListTitle,
-        subtitle: l10n.productsListSubtitle,
-        path: InventoryRoutes.productsList,
-      ),
-      _ProductsFeature(
-        icon: Icons.qr_code_2_outlined,
-        title: l10n.productsBarcodeTitle,
-        subtitle: l10n.productsBarcodeSubtitle,
-        path: InventoryRoutes.productsBarcode,
-      ),
-      _ProductsFeature(
-        icon: Icons.upload_file_outlined,
-        title: l10n.productsImportTitle,
-        subtitle: l10n.productsImportSubtitle,
-        path: InventoryRoutes.productsImport,
-      ),
+      if (auth.hasAnyPermission(InventoryPermissions.productsView))
+        _ProductsFeature(
+          icon: Icons.list_alt_outlined,
+          title: l10n.productsListTitle,
+          subtitle: l10n.productsListSubtitle,
+          path: InventoryRoutes.productsList,
+        ),
+      if (auth.hasAnyPermission(InventoryPermissions.productsBarcode))
+        _ProductsFeature(
+          icon: Icons.qr_code_2_outlined,
+          title: l10n.productsBarcodeTitle,
+          subtitle: l10n.productsBarcodeSubtitle,
+          path: InventoryRoutes.productsBarcode,
+        ),
+      if (auth.hasAnyPermission(InventoryPermissions.productsImport))
+        _ProductsFeature(
+          icon: Icons.upload_file_outlined,
+          title: l10n.productsImportTitle,
+          subtitle: l10n.productsImportSubtitle,
+          path: InventoryRoutes.productsImport,
+        ),
     ];
 
     return PopScope(

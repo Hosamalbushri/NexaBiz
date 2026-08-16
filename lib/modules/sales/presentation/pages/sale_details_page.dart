@@ -14,19 +14,22 @@ import '../../../../core/widgets/app_dialog.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../domain/entities/payment_method.dart';
-import '../../domain/entities/payment_status.dart';
 import '../../domain/entities/sale.dart';
 import '../../domain/entities/sale_settlement_type.dart';
 import '../../domain/entities/sale_status.dart';
 import '../../domain/entities/sale_summary.dart';
+import '../../permissions/sales_permission_package.dart';
 import '../providers/sale_providers.dart';
 import '../providers/sales_list_provider.dart';
 import '../widgets/sale_error_messages.dart';
+import '../widgets/sale_number_text.dart';
 import '../widgets/sale_summary_widgets.dart';
 import '../widgets/sale_products_table.dart';
 import '../widgets/sale_status_badge.dart';
 import '../widgets/sales_page_loader.dart';
+import '../../domain/services/device_sale_number.dart';
 import 'sales_routes.dart';
 
 class SaleDetailsPage extends ConsumerStatefulWidget {
@@ -163,7 +166,7 @@ class _SaleDetailsBody extends ConsumerWidget {
       }
       PdfDocumentPreviewArgs.holder = PdfDocumentPreviewArgs(
         bytes: prepared.bytes,
-        title: sale.saleNumber,
+        title: formatSaleNumberPrimary(sale.saleNumber),
         fileName: prepared.fileName,
       );
       await SalesRoutes.pushInvoicePreview(context);
@@ -232,6 +235,13 @@ class _SaleDetailsBody extends ConsumerWidget {
         ? l10n.salesSettlementCash
         : l10n.salesSettlementCredit;
     final showPost = sale.saleStatus.canPost;
+    final auth = ref.watch(authStateProvider);
+    final canUpdate = auth.hasAnyPermission(SalesPermissions.update);
+    final canPost = auth.hasAnyPermission(SalesPermissions.post);
+    final postingEnabled = ref.watch(salePostingEnabledProvider);
+    final canCancel = auth.hasAnyPermission(SalesPermissions.cancel);
+    final canDuplicate = auth.hasAnyPermission(SalesPermissions.duplicate);
+    final canExport = auth.hasAnyPermission(SalesPermissions.export);
 
     return PopScope(
       canPop: false,
@@ -243,23 +253,34 @@ class _SaleDetailsBody extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: scheme.surfaceContainerLowest,
         appBar: CustomAppBar(
-          title: sale.saleNumber,
+          title: formatSaleNumberPrimary(sale.saleNumber),
           showBackButton: true,
           onBack: () => SalesRoutes.backToList(context),
           actions: [
-            if (sale.saleStatus.isEditable)
+            if (sale.saleStatus.isEditable && canUpdate)
               CustomAppBarAction(
                 icon: Icons.edit_outlined,
                 tooltip: l10n.salesEditTitle,
                 onPressed: () => SalesRoutes.pushEdit(context, sale.id),
               ),
-            PopupMenuButton<String>(
+            if ((showPost && canPost) ||
+                canDuplicate ||
+                (sale.saleStatus.canCancel && canCancel))
+              PopupMenuButton<String>(
               tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
               position: PopupMenuPosition.under,
               offset: const Offset(0, 8),
               onSelected: (value) async {
                 switch (value) {
                   case 'post':
+                    if (!postingEnabled) {
+                      showAppSnackBar(
+                        context,
+                        message: l10n.salesPostRequiresInventory,
+                        isSuccess: false,
+                      );
+                      return;
+                    }
                     await _runAction(
                       context,
                       ref,
@@ -290,7 +311,9 @@ class _SaleDetailsBody extends ConsumerWidget {
                     final ok = await showAppDialog(
                       context: context,
                       title: l10n.salesCancelTitle,
-                      message: l10n.salesCancelMessage(sale.saleNumber),
+                      message: l10n.salesCancelMessage(
+                        formatSaleNumberPrimary(sale.saleNumber),
+                      ),
                       confirmLabel: l10n.salesCancelSale,
                       cancelLabel: l10n.cancel,
                       isDestructive: true,
@@ -317,16 +340,17 @@ class _SaleDetailsBody extends ConsumerWidget {
                 }
               },
               itemBuilder: (context) => [
-                if (showPost)
+                if (showPost && canPost)
                   PopupMenuItem(
                     value: 'post',
                     child: Text(l10n.salesPostSale),
                   ),
-                PopupMenuItem(
-                  value: 'duplicate',
-                  child: Text(l10n.salesDuplicate),
-                ),
-                if (sale.saleStatus.canCancel)
+                if (canDuplicate)
+                  PopupMenuItem(
+                    value: 'duplicate',
+                    child: Text(l10n.salesDuplicate),
+                  ),
+                if (sale.saleStatus.canCancel && canCancel)
                   PopupMenuItem(
                     value: 'cancel',
                     child: Text(l10n.salesCancelSale),
@@ -348,7 +372,7 @@ class _SaleDetailsBody extends ConsumerWidget {
             ),
           ],
         ),
-        bottomNavigationBar: showPost
+        bottomNavigationBar: (showPost && canPost)
             ? Material(
                 color: scheme.surface,
                 elevation: 8,
@@ -362,17 +386,27 @@ class _SaleDetailsBody extends ConsumerWidget {
                       AppSpacing.sm,
                     ),
                     child: FilledButton.icon(
-                      onPressed: () => _runAction(
-                        context,
-                        ref,
-                        loadingMessage: l10n.salesPosting,
-                        action: () async {
-                          await ref
-                              .read(confirmSaleUseCaseProvider)
-                              .call(sale.id);
-                        },
-                        successMessage: l10n.salesPosted,
-                      ),
+                      onPressed: () {
+                        if (!postingEnabled) {
+                          showAppSnackBar(
+                            context,
+                            message: l10n.salesPostRequiresInventory,
+                            isSuccess: false,
+                          );
+                          return;
+                        }
+                        _runAction(
+                          context,
+                          ref,
+                          loadingMessage: l10n.salesPosting,
+                          action: () async {
+                            await ref
+                                .read(confirmSaleUseCaseProvider)
+                                .call(sale.id);
+                          },
+                          successMessage: l10n.salesPosted,
+                        );
+                      },
                       icon: const Icon(Icons.check_circle_outline),
                       label: Text(l10n.salesPostSale),
                       style: FilledButton.styleFrom(
@@ -392,14 +426,13 @@ class _SaleDetailsBody extends ConsumerWidget {
               total: sale.total,
               saleStatus: sale.saleStatus,
               saleStatusLabel: _saleStatusLabel(l10n, sale.saleStatus),
-              paymentStatus: sale.paymentStatus,
-              paymentStatusLabel: _paymentStatusLabel(l10n, sale.paymentStatus),
             ),
             const SizedBox(height: AppSpacing.md),
-            _InvoiceDocumentActions(
-              onPreview: () => _previewInvoice(context, ref, sale),
-            ),
-            const SizedBox(height: AppSpacing.md),
+            if (canExport)
+              _InvoiceDocumentActions(
+                onPreview: () => _previewInvoice(context, ref, sale),
+              ),
+            if (canExport) const SizedBox(height: AppSpacing.md),
             IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -714,8 +747,6 @@ class _InvoiceHero extends StatelessWidget {
     required this.total,
     required this.saleStatus,
     required this.saleStatusLabel,
-    required this.paymentStatus,
-    required this.paymentStatusLabel,
   });
 
   final String saleNumber;
@@ -723,8 +754,6 @@ class _InvoiceHero extends StatelessWidget {
   final double total;
   final SaleStatus saleStatus;
   final String saleStatusLabel;
-  final PaymentStatus paymentStatus;
-  final String paymentStatusLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -733,19 +762,10 @@ class _InvoiceHero extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
+        color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        gradient: LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [
-            scheme.primary.withValues(alpha: 0.14),
-            scheme.primaryContainer.withValues(alpha: 0.35),
-            scheme.surface,
-          ],
-          stops: const [0, 0.45, 1],
-        ),
         border: Border.all(
-          color: scheme.primary.withValues(alpha: 0.12),
+          color: scheme.outlineVariant.withValues(alpha: 0.4),
         ),
       ),
       child: Padding(
@@ -760,8 +780,9 @@ class _InvoiceHero extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      SaleNumberText(
                         saleNumber,
+                        showReference: true,
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.6,
@@ -769,19 +790,9 @@ class _InvoiceHero extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      Wrap(
-                        spacing: AppSpacing.xs + 2,
-                        runSpacing: AppSpacing.xs,
-                        children: [
-                          SaleStatusBadge(
-                            status: saleStatus,
-                            label: saleStatusLabel,
-                          ),
-                          SalePaymentStatusBadge(
-                            status: paymentStatus,
-                            label: paymentStatusLabel,
-                          ),
-                        ],
+                      SaleStatusBadge(
+                        status: saleStatus,
+                        label: saleStatusLabel,
                       ),
                     ],
                   ),
@@ -1005,14 +1016,6 @@ String _saleStatusLabel(AppLocalizations l10n, SaleStatus status) {
   return switch (status) {
     SaleStatus.unposted => l10n.salesStatusUnposted,
     SaleStatus.posted => l10n.salesStatusPosted,
-  };
-}
-
-String _paymentStatusLabel(AppLocalizations l10n, PaymentStatus status) {
-  return switch (status) {
-    PaymentStatus.unpaid => l10n.salesPaymentUnpaid,
-    PaymentStatus.partiallyPaid => l10n.salesPaymentPartiallyPaid,
-    PaymentStatus.paid => l10n.salesPaymentPaid,
   };
 }
 

@@ -55,7 +55,12 @@ final saleProductCatalogPortProvider = Provider<SaleProductCatalogPort>((ref) {
 final saleInventoryEffectPortProvider = Provider<SaleInventoryEffectPort>((
   ref,
 ) {
+  // Replace with Inventory stock adapter to unlock sale posting (ترحيل).
   return const NoOpSaleInventoryEffectPort();
+});
+
+final salePostingEnabledProvider = Provider<bool>((ref) {
+  return isSalePostingEnabled(ref.watch(saleInventoryEffectPortProvider));
 });
 
 final saleAccountingBridgePortProvider = Provider<SaleAccountingBridgePort>((

@@ -27,7 +27,7 @@ class AccountingDatabase extends _$AccountingDatabase {
   AccountingDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -44,6 +44,10 @@ class AccountingDatabase extends _$AccountingDatabase {
       );
       await customStatement(
         'CREATE INDEX IF NOT EXISTS idx_accounts_sync ON accounts (sync_status)',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_journal_entries_sync '
+        'ON journal_entries (sync_status)',
       );
       await customStatement(
         'CREATE INDEX IF NOT EXISTS idx_currency_rates_code '
@@ -95,6 +99,15 @@ class AccountingDatabase extends _$AccountingDatabase {
       }
       if (from < 8) {
         await _createJournalLedgerIndexes();
+      }
+      if (from < 9) {
+        await m.addColumn(journalEntries, journalEntries.syncStatus);
+        await m.addColumn(journalEntries, journalEntries.lastSyncedAt);
+        await m.addColumn(journalEntries, journalEntries.version);
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_journal_entries_sync '
+          'ON journal_entries (sync_status)',
+        );
       }
     },
   );

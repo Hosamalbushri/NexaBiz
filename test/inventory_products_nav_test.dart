@@ -40,7 +40,10 @@ class _FakeInventoryRepository implements InventoryRepository {
   Future<void> save(InventoryItem item) async {}
 
   @override
-  Future<void> replaceAll(List<InventoryItem> items) async {}
+  Future<void> replaceAll(
+    List<InventoryItem> items, {
+    void Function(int processed, int total)? onProgress,
+  }) async {}
 
   @override
   Future<void> clear() async {}
@@ -133,7 +136,10 @@ class _FakeProductRepository implements ProductRepository {
   Future<void> delete(int id) async {}
 
   @override
-  Future<ProductUpsertResult> upsertAll(List<ProductDraft> drafts) async {
+  Future<ProductUpsertResult> upsertAll(
+    List<ProductDraft> drafts, {
+    void Function(int processed, int total)? onProgress,
+  }) async {
     return const ProductUpsertResult(insertedCount: 0, updatedCount: 0);
   }
 }

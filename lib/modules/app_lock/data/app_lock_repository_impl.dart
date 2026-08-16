@@ -18,6 +18,7 @@ class AppLockRepositoryImpl implements AppLockRepository {
   static const _policyKey = 'policy';
   static const _saltKey = 'pin_salt';
   static const _hashKey = 'pin_hash';
+  static const _biometricKey = 'biometric_enabled';
   static const _failedKey = 'failed_attempts';
   static const _lockoutKey = 'lockout_until';
 
@@ -39,6 +40,18 @@ class AppLockRepositoryImpl implements AppLockRepository {
   Future<void> setEnabled(bool enabled) async {
     final box = await _open();
     await box.put(_enabledKey, enabled);
+  }
+
+  @override
+  Future<bool> isBiometricEnabled() async {
+    final box = await _open();
+    return box.get(_biometricKey) == true;
+  }
+
+  @override
+  Future<void> setBiometricEnabled(bool enabled) async {
+    final box = await _open();
+    await box.put(_biometricKey, enabled);
   }
 
   @override
@@ -93,6 +106,7 @@ class AppLockRepositoryImpl implements AppLockRepository {
     final box = await _open();
     await box.delete(_saltKey);
     await box.delete(_hashKey);
+    await box.put(_biometricKey, false);
     await box.put(_failedKey, 0);
     await box.delete(_lockoutKey);
   }

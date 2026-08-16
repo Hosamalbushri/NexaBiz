@@ -93,7 +93,10 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
     }
     return ref
         .read(customerCodeGeneratorProvider)
-        .generate(parentAccountCode: parent.code);
+        .generate(
+          parentAccountCode: parent.code,
+          parentAccountId: parent.accountId,
+        );
   }
 
   @override

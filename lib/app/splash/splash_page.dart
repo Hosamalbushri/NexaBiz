@@ -8,12 +8,13 @@ import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
 import '../../modules/system_setup/presentation/providers/system_setup_providers.dart';
 import '../bootstrap/app_initialization.dart';
 import '../localization/app_localizations.dart';
+import '../presentation/providers/dashboard_services_provider.dart';
 import '../router/app_routes.dart';
 import 'widgets/splash_brand.dart';
 
 /// Application splash: waits for [appInitializationProvider], then enters app.
 ///
-/// Routes to System Setup when initialization is incomplete; otherwise dashboard.
+/// First launch: onboarding → System Setup. After setup is complete: dashboard.
 class SplashPage extends ConsumerWidget {
   const SplashPage({super.key});
 
@@ -41,8 +42,20 @@ class SplashPage extends ConsumerWidget {
             if (!context.mounted) {
               return;
             }
+            if (ready) {
+              context.go(AppRoutes.dashboard);
+              return;
+            }
+            final onboardingDone = await ref
+                .read(settingsRepositoryProvider)
+                .loadOnboardingCompleted();
+            if (!context.mounted) {
+              return;
+            }
             context.go(
-              ready ? AppRoutes.dashboard : SystemSetupRoutes.root,
+              onboardingDone
+                  ? SystemSetupRoutes.root
+                  : AppRoutes.onboarding,
             );
           });
         },

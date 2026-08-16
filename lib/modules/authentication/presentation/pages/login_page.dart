@@ -1,15 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../../app/localization/app_localizations.dart';
-import '../../../../app/router/app_routes.dart';
+import '../../../../core/errors/app_failure.dart';
 import '../../../../core/sync/sync_providers.dart';
+import '../../../../core/utils/id_generator.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../domain/local_permissions.dart';
 import '../providers/auth_providers.dart';
-import 'auth_routes.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -19,33 +18,20 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  final _email = TextEditingController(text: 'ahmed@example.com');
-  final _password = TextEditingController();
+  final _email = TextEditingController(text: LocalAuthDefaults.adminEmail);
+  final _password = TextEditingController(text: LocalAuthDefaults.adminPassword);
   var _loading = false;
   String? _error;
+
+  static final _uuidPattern = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+  );
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
     super.dispose();
-  }
-
-  String get _platformLabel {
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-        return 'android';
-      case TargetPlatform.iOS:
-        return 'ios';
-      case TargetPlatform.linux:
-        return 'linux';
-      case TargetPlatform.macOS:
-        return 'macos';
-      case TargetPlatform.windows:
-        return 'windows';
-      case TargetPlatform.fuchsia:
-        return 'fuchsia';
-    }
   }
 
   Future<void> _submit() async {
@@ -55,26 +41,28 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       _error = null;
     });
     try {
-      final deviceId = ref.read(syncApiConfigProvider).deviceId;
-      final info = await PackageInfo.fromPlatform();
-      final platform = _platformLabel;
-      await ref.read(authStateProvider.notifier).login(
-            email: _email.text,
-            password: _password.text,
-            deviceId: deviceId,
-            deviceName: '${info.appName} ($platform)',
-            platform: platform,
-            appVersion: info.version,
-          );
-      if (!mounted) return;
-      final status = ref.read(authStateProvider).status;
-      if (status == AuthStatus.needsCompany) {
-        context.go(AuthRoutes.companySelect);
-      } else if (status == AuthStatus.authenticated) {
-        context.go(AppRoutes.dashboard);
+      var deviceId = ref.read(syncApiConfigProvider).deviceId.trim();
+      if (!_uuidPattern.hasMatch(deviceId)) {
+        deviceId = generateUuidV4();
+        ref.read(syncApiConfigProvider.notifier).state = ref
+            .read(syncApiConfigProvider)
+            .copyWith(deviceId: deviceId);
       }
-    } catch (e) {
+      await ref.read(authStateProvider.notifier).login(
+            email: _email.text.trim(),
+            password: _password.text.trim(),
+            companyId: LocalAuthDefaults.companyId,
+            deviceId: deviceId,
+            deviceName: 'local',
+            platform: defaultTargetPlatform.name,
+          );
+    } on AuthenticationFailure {
       setState(() => _error = l10n.authLoginFailed);
+    } on NetworkFailure {
+      setState(() => _error = l10n.authNetworkError);
+    } catch (e) {
+      setState(() => _error = l10n.authLoginGenericError);
+      debugPrint('Login failed: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -89,10 +77,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
@@ -102,7 +89,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    l10n.authLoginSubtitle,
+                    l10n.authLoginLocalHint,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -112,14 +99,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   TextField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
-                    autofillHints: const [AutofillHints.email],
+                    textInputAction: TextInputAction.next,
                     decoration: InputDecoration(labelText: l10n.authEmailLabel),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _password,
                     obscureText: true,
-                    autofillHints: const [AutofillHints.password],
+                    textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _loading ? null : _submit(),
                     decoration: InputDecoration(
                       labelText: l10n.authPasswordLabel,

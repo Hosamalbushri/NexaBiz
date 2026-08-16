@@ -1,8 +1,10 @@
 # Experimental Synchronization Backend
 #
-# STATUS: EXPERIMENTAL — not production-ready.
+# STATUS: EXPERIMENTAL — not production-ready for public internet.
 # Purpose: exercise the existing Flutter offline-first SyncManager against a
 # real HTTP API + PostgreSQL without replacing the Flutter sync engine.
+#
+# Release / CI / staging gates: see ../docs/deployment.md
 
 ## Architecture
 
@@ -73,6 +75,19 @@ source .venv/bin/activate
 pip install -r requirements.txt
 pytest -q
 ```
+
+Auth/RBAC tests need PostgreSQL (`DATABASE_URL` / `TEST_DATABASE_URL`). Sync API
+tests use in-memory SQLite. Production-guard unit tests need no database.
+
+```bash
+./scripts/migrate.sh
+APP_ENV=production JWT_SECRET="$(openssl rand -hex 32)" ALLOW_DEV_TOKEN=false \
+  CORS_ORIGINS=https://app.example.com SEED_ADMIN_PASSWORD='Strong!change-me' \
+  ./scripts/check_production_settings.sh
+```
+
+CI: GitHub Actions runs Flutter + backend pytest + secrets hygiene
+(`.github/workflows/ci.yml`). See [`docs/deployment.md`](../docs/deployment.md).
 
 ## Flutter connection
 

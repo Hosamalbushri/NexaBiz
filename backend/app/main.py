@@ -71,7 +71,36 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class CorrelationIdMiddleware(BaseHTTPMiddleware):
+    """Propagate / assign X-Correlation-Id for client↔server log joins."""
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        import logging
+        import uuid
+
+        correlation = (
+            request.headers.get("x-correlation-id")
+            or request.headers.get("x-request-id")
+            or ""
+        ).strip()
+        if not correlation:
+            correlation = str(uuid.uuid4())
+        request.state.correlation_id = correlation
+        response = await call_next(request)
+        response.headers.setdefault("X-Correlation-Id", correlation)
+        if request.url.path.startswith("/api/"):
+            logging.getLogger("sync").info(
+                "request method=%s path=%s correlation_id=%s status=%s",
+                request.method,
+                request.url.path,
+                correlation,
+                response.status_code,
+            )
+        return response
+
+
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(CorrelationIdMiddleware)
 
 app.add_exception_handler(AppError, app_error_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
@@ -89,6 +118,14 @@ app.include_router(devices_router)
 
 @app.on_event("startup")
 def on_startup() -> None:
+    settings.assert_safe_for_environment()
+    if settings.allow_dev_token:
+        # Loud warning — never silent in logs when shared bearer is enabled.
+        import logging
+
+        logging.getLogger("uvicorn.error").warning(
+            "ALLOW_DEV_TOKEN is enabled — disable for any non-local deployment"
+        )
     db = SessionLocal()
     try:
         seed_identity(db, settings)

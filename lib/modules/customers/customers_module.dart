@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/route_access_rule.dart';
+import '../../core/permissions/permission_defs.dart';
+import 'permissions/customers_permission_package.dart';
 import 'presentation/pages/customer_details_page.dart';
 import 'presentation/pages/customer_form_page.dart';
 import 'presentation/pages/customers_accounts_page.dart';
@@ -38,6 +41,40 @@ class CustomersModule extends AppModule {
 
   @override
   bool get isEnabled => true;
+
+  @override
+  List<String> get requiredAnyPermissions => CustomersPermissions.view;
+
+  @override
+  List<RouteAccessRule> get routeAccessRules => [
+        RouteAccessRule(
+          pathEquals: CustomersRoutes.create,
+          anyOf: CustomersPermissions.create,
+        ),
+        RouteAccessRule(
+          pathEquals: CustomersRoutes.importPath,
+          anyOf: CustomersPermissions.importOp,
+        ),
+        RouteAccessRule(
+          pathEquals: CustomersRoutes.accounts,
+          anyOf: CustomersPermissions.accountsView,
+        ),
+        RouteAccessRule(
+          pathPrefix: CustomersRoutes.settings,
+          anyOf: CustomersPermissions.settingsView,
+        ),
+        RouteAccessRule(
+          pathRegex: RegExp(r'^/customers/\d+/edit$'),
+          anyOf: CustomersPermissions.update,
+        ),
+        RouteAccessRule(
+          pathPrefix: CustomersRoutes.root,
+          anyOf: CustomersPermissions.view,
+        ),
+      ];
+
+  @override
+  PermissionPackageDef? get permissionPackage => customersPermissionPackage();
 
   @override
   String label(BuildContext context) {

@@ -2,6 +2,7 @@
 library;
 
 export 'animated_qr_illustration.dart';
+export 'app_amount_field.dart';
 export 'app_bottom_sheet.dart';
 export 'app_button.dart';
 export 'app_card.dart';

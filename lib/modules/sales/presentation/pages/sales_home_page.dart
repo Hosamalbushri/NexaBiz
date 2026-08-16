@@ -6,10 +6,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/router/app_routes.dart';
-import '../../../../app/sync/app_bar_sync_actions.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../authentication/presentation/widgets/permission_gate.dart';
+import '../../permissions/sales_permission_package.dart';
 import 'sales_routes.dart';
 
 /// Sales module hub.
@@ -39,7 +40,6 @@ class SalesHomePage extends ConsumerWidget {
         appBar: CustomAppBar(
           title: l10n.moduleSales,
           showBackButton: true,
-          actions: const [AppBarSyncActions()],
         ),
         body: ListView(
           padding: AppConstants.pageInsets(context),
@@ -70,15 +70,23 @@ class SalesHomePage extends ConsumerWidget {
                 .fadeIn(duration: 280.ms)
                 .slideY(begin: 0.04, end: 0, duration: 280.ms),
             const SizedBox(height: AppSpacing.md),
-            _SalesHubCard(
-                  icon: Icons.add_shopping_cart_outlined,
-                  title: l10n.salesCreateTitle,
-                  subtitle: l10n.salesCreateCardSubtitle,
-                  onTap: () => SalesRoutes.pushCreate(context),
-                )
-                .animate()
-                .fadeIn(delay: 60.ms, duration: 280.ms)
-                .slideY(begin: 0.04, end: 0, delay: 60.ms, duration: 280.ms),
+            PermissionGate(
+              anyOf: SalesPermissions.create,
+              child: _SalesHubCard(
+                    icon: Icons.add_shopping_cart_outlined,
+                    title: l10n.salesCreateTitle,
+                    subtitle: l10n.salesCreateCardSubtitle,
+                    onTap: () => SalesRoutes.pushCreate(context),
+                  )
+                  .animate()
+                  .fadeIn(delay: 60.ms, duration: 280.ms)
+                  .slideY(
+                    begin: 0.04,
+                    end: 0,
+                    delay: 60.ms,
+                    duration: 280.ms,
+                  ),
+            ),
           ],
         ),
       ),

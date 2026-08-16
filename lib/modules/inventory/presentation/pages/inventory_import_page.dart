@@ -1,13 +1,13 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/services/loading_providers.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -68,10 +68,33 @@ class InventoryImportPage extends ConsumerWidget {
             isLoading: importState.isImporting,
             onPressed: importState.isImporting || !importState.hasSelectedFile
                 ? null
-                : () => _import(context, ref),
+                : () => _startImport(ref),
           ),
           if (importState.isImporting) ...[
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            AppCard(
+              color: Theme.of(context).colorScheme.primaryContainer
+                  .withValues(alpha: 0.35),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.hourglass_top_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      localization.importBackgroundHint,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             AppLoading(
               style: AppLoadingStyle.linear,
               message: _progressMessage(localization, importState),
@@ -178,33 +201,8 @@ class InventoryImportPage extends ConsumerWidget {
     notifier.setSelectedFile(fileName: file.name, bytes: bytes);
   }
 
-  Future<void> _import(BuildContext context, WidgetRef ref) async {
-    final localization = AppLocalizations.of(context);
-    final result = await ref
-        .read(loadingControllerProvider)
-        .run(
-          message: localization.loadingImportingInventory,
-          action: () => ref.read(importProvider.notifier).importFile(),
-        );
-
-    if (!context.mounted) {
-      return;
-    }
-
-    if (result != null) {
-      showAppSnackBar(
-        context,
-        message: localization.importSuccess,
-        isSuccess: true,
-      );
-      context.pop();
-    } else {
-      showAppSnackBar(
-        context,
-        message: localization.importFailed,
-        isSuccess: false,
-      );
-    }
+  void _startImport(WidgetRef ref) {
+    unawaited(ref.read(importProvider.notifier).importFile());
   }
 }
 

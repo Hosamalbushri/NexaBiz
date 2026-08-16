@@ -1,3 +1,5 @@
+import '../../../../core/sync/sync_status.dart';
+
 /// One side of a journal entry.
 class JournalLine {
   const JournalLine({
@@ -32,6 +34,7 @@ class JournalLineDraft {
     required this.currencyCode,
     this.lineDescription,
     this.sortOrder = 0,
+    this.uuid,
   });
 
   final String accountUuid;
@@ -40,6 +43,9 @@ class JournalLineDraft {
   final String currencyCode;
   final String? lineDescription;
   final int sortOrder;
+
+  /// When set (e.g. remote apply), preserves line identity across devices.
+  final String? uuid;
 }
 
 /// Posted (or draft) journal entry with lines.
@@ -58,6 +64,9 @@ class JournalEntry {
     this.description,
     this.sourceType,
     this.sourceId,
+    this.syncStatus = SyncStatus.synced,
+    this.lastSyncedAt,
+    this.version = 1,
     this.deletedAt,
   });
 
@@ -74,6 +83,9 @@ class JournalEntry {
   final String? description;
   final String? sourceType;
   final String? sourceId;
+  final SyncStatus syncStatus;
+  final DateTime? lastSyncedAt;
+  final int version;
   final DateTime? deletedAt;
 }
 
@@ -90,6 +102,7 @@ class JournalEntryDraft {
     this.sourceType,
     this.sourceId,
     this.uuid,
+    this.allowUnbalancedMultiCurrency = false,
   });
 
   final DateTime entryDate;
@@ -104,6 +117,10 @@ class JournalEntryDraft {
 
   /// When set, replaces that existing non-deleted entry in place.
   final String? uuid;
+
+  /// When true and lines use more than one currency, skip numeric debit=credit
+  /// checks so cash/party legs can keep native amounts (e.g. SAR vs YER).
+  final bool allowUnbalancedMultiCurrency;
 }
 
 /// Lightweight journal list row (no lines loaded).

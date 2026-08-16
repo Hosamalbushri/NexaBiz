@@ -134,23 +134,34 @@ class AuthRepositoryImpl implements AuthRepository {
     final snapshot = await _loadSnapshot();
     final access = await _tokenStorage.readAccessToken();
     final refresh = await _tokenStorage.readRefreshToken();
-    if (snapshot == null || (access == null && refresh == null)) {
-      await _persistSnapshot(null);
+    if (snapshot == null) {
+      if (access != null || refresh != null) {
+        await _tokenStorage.clear();
+      }
       return null;
     }
     _applySessionToConfig(snapshot);
+    // Tokens already cleared after expiry — keep permission snapshot for offline UI.
+    if (access == null && refresh == null) {
+      return snapshot;
+    }
     try {
       if (access != null) {
         return await fetchMe();
       }
       return await refreshSession();
     } on AuthenticationFailure {
-      await logout();
-      return null;
+      await clearTokensKeepSnapshot();
+      return snapshot;
     } on NetworkFailure {
-      // Offline: keep local authorization snapshot.
+      // Offline: keep local authorization snapshot + tokens for later refresh.
       return snapshot;
     }
+  }
+
+  Future<bool> hasRefreshToken() async {
+    final refresh = await _tokenStorage.readRefreshToken();
+    return refresh != null && refresh.isNotEmpty;
   }
 
   @override
@@ -166,10 +177,10 @@ class AuthRepositoryImpl implements AuthRepository {
     final response = await _http.postPublic(
       '/api/v1/auth/login',
       body: {
-        'email': email.trim(),
-        'password': password,
-        if (companyId != null) 'company_id': companyId,
-        'device_id': deviceId,
+        'email': email.trim().toLowerCase(),
+        'password': password.trim(),
+        if (companyId != null && companyId.isNotEmpty) 'company_id': companyId,
+        if (_isUuid(deviceId)) 'device_id': deviceId,
         'device_name': deviceName,
         'platform': platform,
         if (appVersion != null) 'app_version': appVersion,
@@ -204,6 +215,15 @@ class AuthRepositoryImpl implements AuthRepository {
       '/api/v1/auth/refresh',
       body: {'refresh_token': refresh},
     );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      if (response.statusCode == 401) {
+        throw AuthenticationFailure.withReason(
+          message: 'Refresh failed',
+          reason: _unauthorizedReason(response.body),
+        );
+      }
+      throw _http.mapFailure(response);
+    }
     final data = _http.decodeData(response);
     await _tokenStorage.saveTokens(
       accessToken: data['access_token'] as String,
@@ -222,6 +242,19 @@ class AuthRepositoryImpl implements AuthRepository {
     _applySessionToConfig(next);
     await _persistSnapshot(next);
     return next;
+  }
+
+  static String? _unauthorizedReason(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map && decoded['error'] is Map) {
+        final details = (decoded['error'] as Map)['details'];
+        if (details is Map) {
+          return details['reason'] as String?;
+        }
+      }
+    } catch (_) {}
+    return null;
   }
 
   @override
@@ -286,13 +319,23 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (_) {
       // Best-effort server revoke.
     }
-    await _tokenStorage.clear();
-    await _persistSnapshot(null);
+    await clearLocalSession();
     // Intentionally do NOT wipe Drift/Hive business data by default.
     // Company/user switch isolation is a follow-up hardening item.
     if (clearLocalBusinessData) {
       // Reserved for future per-tenant DB wipe policy.
     }
+  }
+
+  /// Drop tokens / snapshot without calling the server.
+  Future<void> clearLocalSession() async {
+    await _tokenStorage.clear();
+    await _persistSnapshot(null);
+  }
+
+  /// Clear tokens after refresh failure but keep the RBAC snapshot for offline UI.
+  Future<void> clearTokensKeepSnapshot() async {
+    await _tokenStorage.clear();
   }
 
   @override
@@ -319,4 +362,10 @@ class AuthRepositoryImpl implements AuthRepository {
   void dispose() {
     _sessionController.close();
   }
+
+  static final _uuidRe = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+  );
+
+  static bool _isUuid(String value) => _uuidRe.hasMatch(value.trim());
 }

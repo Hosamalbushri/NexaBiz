@@ -14,9 +14,12 @@ import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/app_status_badge.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../authentication/presentation/providers/auth_providers.dart';
+import '../../../authentication/presentation/widgets/permission_gate.dart';
 import '../../domain/entities/customer.dart';
 import '../../domain/entities/customer_data_source.dart';
 import '../../domain/models/customer_exception.dart';
+import '../../permissions/customers_permission_package.dart';
 import '../providers/customer_providers.dart';
 import 'customers_routes.dart';
 
@@ -86,9 +89,12 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
         title: l10n.customersListTitle,
         showBackButton: true,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => CustomersRoutes.pushCreate(context),
-        child: const Icon(Icons.add),
+      floatingActionButton: PermissionGate(
+        anyOf: CustomersPermissions.create,
+        child: FloatingActionButton(
+          onPressed: () => CustomersRoutes.pushCreate(context),
+          child: const Icon(Icons.add),
+        ),
       ),
       body: Column(
         children: [
@@ -124,15 +130,24 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
                 error: (error, _) => AppErrorState(message: error.toString()),
                 data: (customers) {
                   if (customers.isEmpty) {
+                    final canImport = ref
+                        .read(authStateProvider)
+                        .hasAnyPermission(CustomersPermissions.importOp);
                     return AppEmptyState(
                       title: l10n.customersEmptyTitle,
                       subtitle: l10n.customersEmptyMessage,
                       icon: Icons.people_outline,
-                      actionLabel: l10n.customersImportTitle,
+                      actionLabel:
+                          canImport ? l10n.customersImportTitle : null,
                       actionIcon: Icons.upload_file_outlined,
-                      onAction: () => CustomersRoutes.pushImport(context),
+                      onAction: canImport
+                          ? () => CustomersRoutes.pushImport(context)
+                          : null,
                     );
                   }
+                  final canDelete = ref
+                      .read(authStateProvider)
+                      .hasAnyPermission(CustomersPermissions.delete);
                   return ListView.separated(
                     itemCount: customers.length,
                     separatorBuilder: (_, _) =>
@@ -146,7 +161,9 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
                           borderRadius: BorderRadius.circular(AppRadius.md),
                           onTap: () =>
                               CustomersRoutes.pushDetails(context, customer.id),
-                          onLongPress: () => _confirmDelete(customer),
+                          onLongPress: canDelete
+                              ? () => _confirmDelete(customer)
+                              : null,
                           child: Ink(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(AppRadius.md),

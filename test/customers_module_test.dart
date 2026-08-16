@@ -328,5 +328,22 @@ void main() {
       expect(result.duplicateCount, 1);
       expect(result.drafts.single.name, 'Second');
     });
+
+    test('normalizes numeric Excel codes without trailing .0', () {
+      final excel = Excel.createExcel();
+      final sheet = excel['Sheet1'];
+      sheet.appendRow([
+        TextCellValue('Code'),
+        TextCellValue('Name'),
+      ]);
+      sheet.appendRow([
+        DoubleCellValue(12210001),
+        TextCellValue('Numeric Code'),
+      ]);
+      final bytes = Uint8List.fromList(excel.encode()!);
+
+      final result = datasource.importBytes(bytes);
+      expect(result.drafts.single.customerCode, '12210001');
+    });
   });
 }

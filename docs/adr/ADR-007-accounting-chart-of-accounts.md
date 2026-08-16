@@ -19,7 +19,7 @@ The platform needs a reusable Accounting module. Chart of Accounts (COA) is the 
 
 ## Default system chart (trading + VAT)
 
-Seed catalog: `DefaultChartOfAccounts` (`system:<key>` in `description`). Existing module codes stay stable (`1211` cash, `1221` customers, `1230` inventory, `4100` sales revenue, `5100` COGS). Additive operational accounts include VAT input/output (`1250` / `2130`), suppliers group (`2111`), petty cash, sales returns/discounts, inventory adjustments, and related expense/revenue leaves. `ensureDefaultChartSeeded` inserts any newly added system seeds into existing databases without renumbering.
+Seed catalog: `DefaultChartOfAccounts` (`system:<key>` in `description`). Existing module codes stay stable (`1211` main cash box, `1221` customers, `1230` inventory, `4100` sales revenue, `5100` COGS). Cash/bank/petty cash hang under group `cash_boxes` (`1210`). Additive operational accounts include VAT input/output (`1250` / `2130`), suppliers group (`2111`), petty cash, sales returns/discounts, inventory adjustments, and related expense/revenue leaves. `ensureDefaultChartSeeded` inserts missing system seeds, realigns codes/flags/parents, and does not renumber existing module codes.
 
 ## Consequences
 

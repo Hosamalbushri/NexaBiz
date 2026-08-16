@@ -7,7 +7,11 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.auth.permissions_catalog import SYNC_ENTITY_PERMISSIONS, SYNC_EXECUTE
+from app.auth.permissions_catalog import (
+    SYNC_ENTITY_PERMISSIONS,
+    SYNC_EXECUTE,
+    expand_permission_codes,
+)
 from app.auth.errors import PermissionDeniedError
 from app.models.identity import (
     CompanyUser,
@@ -25,7 +29,7 @@ def load_permission_codes(
 ) -> set[str]:
     if user.is_super_admin:
         rows = db.execute(select(Permission.code)).scalars().all()
-        return set(rows)
+        return expand_permission_codes(set(rows))
 
     if company_id is None:
         return set()
@@ -45,7 +49,7 @@ def load_permission_codes(
         .join(RolePermission, RolePermission.permission_id == Permission.id)
         .where(RolePermission.role_id == membership.role_id)
     ).scalars().all()
-    return set(rows)
+    return expand_permission_codes(set(rows))
 
 
 def require_permissions(

@@ -7,6 +7,7 @@ import '../../domain/entities/account.dart';
 import '../../domain/entities/account_type.dart';
 import '../../domain/models/account_tree_node.dart';
 import '../../domain/repositories/account_repository.dart';
+import '../../domain/services/account_code_generator.dart';
 import '../../domain/services/account_validator.dart';
 import '../../domain/usecases/account_usecases.dart';
 
@@ -30,6 +31,10 @@ final accountRepositoryProvider = Provider<AccountRepository>((ref) {
 
 final accountValidatorProvider = Provider<AccountValidator>((ref) {
   return const AccountValidator();
+});
+
+final accountCodeGeneratorProvider = Provider<AccountCodeGenerator>((ref) {
+  return AccountCodeGenerator(ref.watch(accountRepositoryProvider));
 });
 
 final watchAccountsUseCaseProvider = Provider<WatchAccounts>((ref) {

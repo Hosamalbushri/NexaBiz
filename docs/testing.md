@@ -37,7 +37,16 @@ flutter test \
   test/accounting_chart_of_accounts_test.dart \
   test/sales_ledger_posting_test.dart \
   test/accounting_phase5_coverage_test.dart
+
+# Sync phases 3–6
+flutter test \
+  test/sync_health_phase3_test.dart \
+  test/sync_batch_phase4_test.dart \
+  test/journal_sync_phase5_test.dart \
+  test/sync_observability_phase6_test.dart
 ```
+
+CI runs the full Flutter suite plus backend pytest — see [`deployment.md`](deployment.md).
 
 ## Definition of Done
 

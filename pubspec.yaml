@@ -40,7 +40,11 @@ dependencies:
   connectivity_plus: ^7.3.1
   crypto: ^3.0.6
   http: ^1.5.0
+  flutter_secure_storage: ^9.2.4
   lottie: ^3.3.0
+  local_auth: ^3.0.2
+  local_auth_android: ^2.0.9
+  local_auth_darwin: ^2.0.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

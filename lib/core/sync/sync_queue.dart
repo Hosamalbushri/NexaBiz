@@ -158,6 +158,37 @@ class SyncQueue {
     }
   }
 
+  /// Drop pending/failed/conflict **create** ops after a remote row was applied.
+  ///
+  /// Dual-device system seeds enqueue creates for the same UUID; once pull
+  /// materializes the server row, local creates are redundant.
+  Future<void> removeCreatesForEntity({
+    required String entityType,
+    required String entityId,
+  }) async {
+    final box = await _ensureBox();
+    final keys = <dynamic>[];
+    for (final entry in box.toMap().entries) {
+      final op = entry.value;
+      if (op.entityType != entityType || op.entityId != entityId) {
+        continue;
+      }
+      if (op.type != SyncOperationType.create) {
+        continue;
+      }
+      if (op.status == SyncStatus.syncing) {
+        continue;
+      }
+      keys.add(entry.key);
+    }
+    for (final key in keys) {
+      await box.delete(key);
+    }
+    if (keys.isNotEmpty) {
+      _changes.add(null);
+    }
+  }
+
   Future<void> clearSynced() async {
     final box = await _ensureBox();
     final keys = <dynamic>[];
@@ -172,6 +203,35 @@ class SyncQueue {
     if (keys.isNotEmpty) {
       _changes.add(null);
     }
+  }
+
+  /// Reset crash-interrupted uploads (`syncing`) back to `pending`.
+  ///
+  /// Call on app start and before each sync pass so peekReady can see them.
+  Future<int> reclaimInFlight({DateTime? now}) async {
+    final box = await _ensureBox();
+    final stamp = now ?? DateTime.now().toUtc();
+    var count = 0;
+    for (final entry in box.toMap().entries) {
+      final op = entry.value;
+      if (op.status != SyncStatus.syncing) {
+        continue;
+      }
+      await box.put(
+        entry.key,
+        op.copyWith(
+          status: SyncStatus.pending,
+          updatedAt: stamp,
+          clearNextRetryAt: true,
+          lastError: op.lastError ?? 'Interrupted sync recovered',
+        ),
+      );
+      count++;
+    }
+    if (count > 0) {
+      _changes.add(null);
+    }
+    return count;
   }
 
   Future<void> dispose() async {

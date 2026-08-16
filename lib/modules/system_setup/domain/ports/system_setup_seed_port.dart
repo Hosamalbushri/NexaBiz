@@ -1,9 +1,17 @@
-/// App-wired port for idempotent local master-data seeds.
+import 'system_setup_seed_exception.dart';
+
+/// App-wired port for Chart of Accounts / voucher-book bootstrap.
 ///
 /// Implemented in App (must not import Accounting from this module).
 abstract class SystemSetupSeedPort {
-  /// Ensures default Chart of Accounts + voucher book sections exist.
+  /// First device / offline: create default CoA + voucher book sections locally.
   Future<void> ensureLocalDefaults();
+
+  /// Joining device: mark setup complete immediately and pull CoA in the
+  /// background. Must not await network or heavy local seeds — only persist
+  /// the "prefer remote chart" preference. Throws [SystemSetupSeedException]
+  /// only when sync is not enabled yet.
+  Future<void> pullRemoteDefaults();
 }
 
 /// No-op default until App overrides the provider.
@@ -12,4 +20,7 @@ class NoOpSystemSetupSeedPort implements SystemSetupSeedPort {
 
   @override
   Future<void> ensureLocalDefaults() async {}
+
+  @override
+  Future<void> pullRemoteDefaults() async {}
 }

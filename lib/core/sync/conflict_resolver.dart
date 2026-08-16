@@ -29,6 +29,12 @@ class ConflictResolver {
     required bool preferServerWhenLocalSynced,
     Map<String, dynamic>? remotePayload,
   }) {
+    // Create is ensure-exists: never markConflict against an existing UUID.
+    // Server (and InMemoryRemoteSyncApi) ack the authoritative row idempotently.
+    if (localOperation.type == SyncOperationType.create) {
+      return ConflictDecision.uploadLocal;
+    }
+
     final localVersion = localOperation.baseVersion;
     if (remoteVersion <= localVersion) {
       return ConflictDecision.uploadLocal;

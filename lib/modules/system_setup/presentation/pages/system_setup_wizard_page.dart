@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/presentation/providers/dashboard_services_provider.dart';
+import '../../../../app/router/app_routes.dart';
 import '../../../../app/settings/company/app_currency.dart';
 import '../../../../app/settings/company/company_profile.dart';
 import '../../../../app/settings/company/company_profile_providers.dart';
+import '../../../../app/sync/sync_enabled_provider.dart';
+import '../../../../app/sync/sync_session_state.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/di/app_providers.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -16,6 +20,7 @@ import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/system_setup_state.dart';
+import '../../domain/ports/system_setup_seed_exception.dart';
 import '../providers/system_setup_providers.dart';
 import '../widgets/system_settings_hub.dart';
 import '../widgets/system_setup_labels.dart';
@@ -61,14 +66,14 @@ class _SystemSetupWizardPageState extends ConsumerState<SystemSetupWizardPage> {
       if (successMessage != null) {
         showAppSnackBar(context, message: successMessage, isSuccess: true);
       }
-    } catch (_) {
+    } catch (error) {
       await _refresh();
       if (!mounted) {
         return;
       }
       showAppSnackBar(
         context,
-        message: l10n.systemSetupErrorGeneric,
+        message: _seedErrorMessage(l10n, error),
         isSuccess: false,
       );
     } finally {
@@ -76,6 +81,19 @@ class _SystemSetupWizardPageState extends ConsumerState<SystemSetupWizardPage> {
         setState(() => _busy = false);
       }
     }
+  }
+
+  String _seedErrorMessage(AppLocalizations l10n, Object error) {
+    if (error is SystemSetupSeedException) {
+      return switch (error.code) {
+        SystemSetupSeedError.syncRequired => l10n.systemSetupSeedErrorSyncRequired,
+        SystemSetupSeedError.authRequired => l10n.systemSetupSeedErrorAuth,
+        SystemSetupSeedError.offline => l10n.systemSetupSeedErrorOffline,
+        SystemSetupSeedError.emptyRemote => l10n.systemSetupSeedErrorEmpty,
+        SystemSetupSeedError.pullFailed => l10n.systemSetupSeedErrorPull,
+      };
+    }
+    return l10n.systemSetupErrorGeneric;
   }
 
   @override
@@ -164,26 +182,6 @@ class _SystemSetupWizardPageState extends ConsumerState<SystemSetupWizardPage> {
         ),
         const SizedBox(height: AppSpacing.lg),
         Text(
-          l10n.systemSetupOptionalSection,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        AppCard(
-          child: Column(
-            children: [
-              for (final id in SetupStepId.optionalIds)
-                SystemSetupStepTile(
-                  step: progress.stateFor(id),
-                  selected: selected == id,
-                  onTap: () => setState(() => _selected = id),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Text(
           setupStepTitle(l10n, selected),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w800,
@@ -235,11 +233,6 @@ class _StepBody extends ConsumerWidget {
         state: state,
         onRun: onRun,
       ),
-      SetupStepId.welcomeMode => _WelcomeModeStep(
-        busy: busy,
-        failed: state.status == SetupStepStatus.failed,
-        onRun: onRun,
-      ),
       SetupStepId.companyProfile => _CompanyProfileStep(
         busy: busy,
         onRun: onRun,
@@ -249,67 +242,7 @@ class _StepBody extends ConsumerWidget {
         state: state,
         onRun: onRun,
       ),
-      SetupStepId.externalConnection => _ExternalStep(
-        busy: busy,
-        onRun: onRun,
-      ),
-      SetupStepId.initialSync => _InitialSyncStep(
-        busy: busy,
-        state: state,
-        onRun: onRun,
-      ),
     };
-  }
-}
-
-class _WelcomeModeStep extends ConsumerWidget {
-  const _WelcomeModeStep({
-    required this.busy,
-    required this.failed,
-    required this.onRun,
-  });
-
-  final bool busy;
-  final bool failed;
-  final Future<void> Function(
-    Future<SetupProgress> Function() action, {
-    String? successMessage,
-  })
-  onRun;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.systemSetupModeStandaloneHint,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppButton(
-            label: failed ? l10n.systemSetupRetry : l10n.systemSetupContinue,
-            isLoading: busy,
-            expand: true,
-            onPressed: busy
-                ? null
-                : () => onRun(() async {
-                    final coordinator = ref.read(
-                      systemInitializationCoordinatorProvider,
-                    );
-                    return coordinator.runStep(SetupStepId.welcomeMode, () async {
-                      // Local accounting is the only operating mode.
-                    });
-                  }),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -634,7 +567,7 @@ class _LocaleStep extends ConsumerWidget {
   }
 }
 
-class _SeedLocalStep extends StatelessWidget {
+class _SeedLocalStep extends ConsumerWidget {
   const _SeedLocalStep({
     required this.busy,
     required this.state,
@@ -649,10 +582,70 @@ class _SeedLocalStep extends StatelessWidget {
   })
   onRun;
 
-  @override
-  Widget build(BuildContext context) {
+  Future<void> _ensureSignedInForSync(BuildContext context, WidgetRef ref) async {
+    final session = ref.read(syncSessionStateProvider);
+    if (session.phase == SyncSessionPhase.enabledAuthenticated) {
+      return;
+    }
+    final signedIn = await context.push<bool>(AppRoutes.settingsDataSyncLogin);
+    if (signedIn != true) {
+      throw const SystemSetupSeedException(SystemSetupSeedError.authRequired);
+    }
+  }
+
+  /// Completes setup and enters the app without a blocking "preparing" wait.
+  /// Chart download continues in the background after navigation.
+  Future<void> _enterViaSync(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
+    try {
+      await _ensureSignedInForSync(context, ref);
+      if (!context.mounted) {
+        return;
+      }
+      final coordinator = ref.read(systemInitializationCoordinatorProvider);
+      final progress = await coordinator.runSeedFromSync();
+      ref.invalidate(systemSetupProgressProvider);
+      ref.invalidate(systemSetupReadyProvider);
+      if (!context.mounted) {
+        return;
+      }
+      showAppSnackBar(
+        context,
+        message: l10n.systemSetupSeedSyncDone,
+        isSuccess: true,
+      );
+      final ready = progress.isReady || await coordinator.isReady();
+      if (ready && context.mounted) {
+        context.go(AppRoutes.dashboard);
+      }
+    } catch (error) {
+      ref.invalidate(systemSetupProgressProvider);
+      if (!context.mounted) {
+        return;
+      }
+      final message = switch (error) {
+        SystemSetupSeedException(:final code) => switch (code) {
+          SystemSetupSeedError.syncRequired =>
+            l10n.systemSetupSeedErrorSyncRequired,
+          SystemSetupSeedError.authRequired => l10n.systemSetupSeedErrorAuth,
+          SystemSetupSeedError.offline => l10n.systemSetupSeedErrorOffline,
+          SystemSetupSeedError.emptyRemote => l10n.systemSetupSeedErrorEmpty,
+          SystemSetupSeedError.pullFailed => l10n.systemSetupSeedErrorPull,
+        },
+        _ => l10n.systemSetupErrorGeneric,
+      };
+      showAppSnackBar(context, message: message, isSuccess: false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     final done = state.status == SetupStepStatus.completed;
+    final syncReady = ref.watch(syncSessionStateProvider).phase ==
+        SyncSessionPhase.enabledAuthenticated;
+
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -668,149 +661,111 @@ class _SeedLocalStep extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               state.errorMessage!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+              style: TextStyle(color: theme.colorScheme.error),
             ),
           ],
-          const SizedBox(height: AppSpacing.md),
-          AppButton(
-            label: state.status == SetupStepStatus.failed
-                ? l10n.systemSetupRetry
-                : l10n.systemSetupContinue,
-            isLoading: busy,
-            expand: true,
-            onPressed: busy
-                ? null
-                : () async {
-                    final container = ProviderScope.containerOf(context);
-                    await onRun(
-                      () => container
-                          .read(systemInitializationCoordinatorProvider)
-                          .runSeedLocal(),
-                      successMessage: l10n.systemSetupSeedDone,
-                    );
-                  },
-          ),
+          if (!done) ...[
+            const SizedBox(height: AppSpacing.md),
+            _SeedChoiceTile(
+              icon: Icons.phone_android_outlined,
+              title: l10n.systemSetupSeedCreateLocalTitle,
+              subtitle: l10n.systemSetupSeedCreateLocalSubtitle,
+              enabled: !busy,
+              onTap: () async {
+                await onRun(
+                  () => ref
+                      .read(systemInitializationCoordinatorProvider)
+                      .runSeedLocal(),
+                  successMessage: l10n.systemSetupSeedDone,
+                );
+              },
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _SeedChoiceTile(
+              icon: Icons.cloud_download_outlined,
+              title: l10n.systemSetupSeedSyncTitle,
+              subtitle: l10n.systemSetupSeedSyncSubtitle,
+              enabled: !busy,
+              trailingLabel: syncReady ? null : l10n.systemSetupSeedSignInToSync,
+              onTap: () => _enterViaSync(context, ref),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _ExternalStep extends ConsumerWidget {
-  const _ExternalStep({required this.busy, required this.onRun});
-
-  final bool busy;
-  final Future<void> Function(
-    Future<SetupProgress> Function() action, {
-    String? successMessage,
-  })
-  onRun;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(l10n.systemSetupExternalPlaceholder),
-          const SizedBox(height: AppSpacing.md),
-          AppButton(
-            label: l10n.systemSetupSkip,
-            variant: AppButtonVariant.outlined,
-            expand: true,
-            onPressed: busy
-                ? null
-                : () => onRun(
-                    () => ref
-                        .read(systemInitializationCoordinatorProvider)
-                        .skipOptionalStep(SetupStepId.externalConnection),
-                  ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          AppButton(
-            label: l10n.systemSetupContinue,
-            isLoading: busy,
-            expand: true,
-            onPressed: busy
-                ? null
-                : () => onRun(
-                    () => ref
-                        .read(systemInitializationCoordinatorProvider)
-                        .markStepCompleted(SetupStepId.externalConnection),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InitialSyncStep extends ConsumerWidget {
-  const _InitialSyncStep({
-    required this.busy,
-    required this.state,
-    required this.onRun,
+class _SeedChoiceTile extends StatelessWidget {
+  const _SeedChoiceTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.enabled,
+    required this.onTap,
+    this.trailingLabel,
   });
 
-  final bool busy;
-  final SetupStepState state;
-  final Future<void> Function(
-    Future<SetupProgress> Function() action, {
-    String? successMessage,
-  })
-  onRun;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool enabled;
+  final VoidCallback onTap;
+  final String? trailingLabel;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            state.status == SetupStepStatus.completed
-                ? l10n.systemSetupSyncDone
-                : l10n.systemSetupSyncSkippedHint,
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: enabled ? onTap : null,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: theme.colorScheme.primary),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    if (trailingLabel != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        trailingLabel!,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
           ),
-          if (state.errorMessage != null) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              state.errorMessage!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          ],
-          const SizedBox(height: AppSpacing.md),
-          AppButton(
-            label: l10n.systemSetupContinue,
-            isLoading: busy,
-            expand: true,
-            onPressed: busy
-                ? null
-                : () => onRun(
-                    () {
-                      final runner = ref.read(systemSetupSyncRunnerProvider);
-                      return ref
-                          .read(systemInitializationCoordinatorProvider)
-                          .runStep(SetupStepId.initialSync, runner);
-                    },
-                    successMessage: l10n.systemSetupSyncDone,
-                  ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          AppButton(
-            label: l10n.systemSetupSkip,
-            variant: AppButtonVariant.outlined,
-            expand: true,
-            onPressed: busy
-                ? null
-                : () => onRun(
-                    () => ref
-                        .read(systemInitializationCoordinatorProvider)
-                        .skipOptionalStep(SetupStepId.initialSync),
-                  ),
-          ),
-        ],
+        ),
       ),
     );
   }

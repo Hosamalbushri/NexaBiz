@@ -3,35 +3,36 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../errors/app_failure.dart';
+import '../sync/sync_cursor_store.dart';
 import '../sync/sync_entity_handler.dart';
 import '../sync/sync_operation.dart';
+import 'authenticated_http_client.dart';
 import 'remote_sync_api.dart';
 import 'sync_api_config.dart';
 
 /// HTTP implementation of [RemoteSyncApi] for the experimental FastAPI backend.
 ///
-/// Contract mapping (unchanged SyncManager / handlers):
-/// - [push] → POST /api/v1/sync/push
-/// - [pull] → GET  /api/v1/sync/pull  (cursor preferred; `since` for SyncManager)
-/// - [getMeta] → GET /api/v1/sync/meta/{entityType}/{entityId}
-///
-/// 409 `conflict` responses become [SyncConflictFailure].
+/// Auth is centralized in [AuthenticatedHttpClient] (token + refresh).
+/// Pull cursors are persisted via [SyncCursorStore] so restarts resume cleanly.
 class HttpRemoteSyncApi implements RemoteSyncApi {
   HttpRemoteSyncApi({
     required SyncApiConfig config,
+    AuthenticatedHttpClient? authenticatedClient,
     http.Client? client,
+    SyncCursorStore? cursorStore,
   }) : _config = config,
+       _authClient = authenticatedClient,
        _client = client ?? http.Client(),
-       _ownsClient = client == null;
+       _ownsClient = authenticatedClient == null && client == null,
+       _cursors = cursorStore ?? SyncCursorStore();
 
   final SyncApiConfig _config;
+  final AuthenticatedHttpClient? _authClient;
   final http.Client _client;
   final bool _ownsClient;
+  final SyncCursorStore _cursors;
 
-  /// Per-entity-type change-log cursors (experimental; in-memory only).
-  final Map<String, int> _cursors = {};
-
-  /// Cursor values waiting for successful local apply before commit.
+  /// Staged next cursor per entity — committed only via [acknowledgePull].
   final Map<String, int> _stagedCursors = {};
 
   void dispose() {
@@ -41,19 +42,19 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
   }
 
   @override
-  void acknowledgePull(String entityType) {
+  Future<void> acknowledgePull(String entityType) async {
     final staged = _stagedCursors.remove(entityType);
     if (staged != null) {
-      _cursors[entityType] = staged;
+      await _cursors.write(entityType, staged);
     }
   }
 
   @override
-  void abandonPull(String entityType) {
+  Future<void> abandonPull(String entityType) async {
     _stagedCursors.remove(entityType);
   }
 
-  Map<String, String> get _headers => {
+  Future<Map<String, String>> get _legacyHeaders async => {
     'Authorization': 'Bearer ${_config.apiToken}',
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -67,6 +68,30 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
         ? _config.baseUrl.substring(0, _config.baseUrl.length - 1)
         : _config.baseUrl;
     return Uri.parse('$base$path').replace(queryParameters: query);
+  }
+
+  Future<http.Response> _post(String path, Object body) async {
+    final auth = _authClient;
+    if (auth != null) {
+      return auth.post(path, body: body);
+    }
+    return _client
+        .post(
+          _uri(path),
+          headers: await _legacyHeaders,
+          body: jsonEncode(body),
+        )
+        .timeout(_config.timeout);
+  }
+
+  Future<http.Response> _get(String path, [Map<String, String>? query]) async {
+    final auth = _authClient;
+    if (auth != null) {
+      return auth.get(path, query: query);
+    }
+    return _client
+        .get(_uri(path, query), headers: await _legacyHeaders)
+        .timeout(_config.timeout);
   }
 
   @override
@@ -87,13 +112,7 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
         },
       };
 
-      final response = await _client
-          .post(
-            _uri('/api/v1/sync/push'),
-            headers: _headers,
-            body: jsonEncode(body),
-          )
-          .timeout(_config.timeout);
+      final response = await _post('/api/v1/sync/push', body);
 
       if (response.statusCode == 409) {
         throw _conflictFromBody(response.body, entityType, operation.entityId);
@@ -119,19 +138,116 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
   }
 
   @override
+  Future<List<SyncBatchPushItemResult>> pushBatch(
+    List<SyncOperation> operations,
+  ) async {
+    if (operations.isEmpty) {
+      return const [];
+    }
+    try {
+      final body = {
+        'operations': [
+          for (final op in operations)
+            {
+              'operation_id': op.id,
+              'entity_type': op.entityType,
+              'entity_id': op.entityId,
+              'type': op.type.name,
+              'payload': op.payload,
+              'base_version': op.baseVersion,
+            },
+        ],
+      };
+      final response = await _post('/api/v1/sync/push/batch', body);
+      _ensureSuccess(response);
+      final map = jsonDecode(response.body) as Map<String, dynamic>;
+      final rawResults = map['results'];
+      if (rawResults is! List) {
+        throw const ServerFailure('Invalid batch push response');
+      }
+      final byId = <String, SyncBatchPushItemResult>{};
+      for (final raw in rawResults) {
+        if (raw is! Map) {
+          continue;
+        }
+        final item = Map<String, dynamic>.from(raw);
+        final operationId = item['operation_id'] as String? ?? '';
+        final status = item['status'] as String? ?? 'error';
+        SyncUploadAck? ack;
+        AppFailure? failure;
+        if (status == 'success' && item['ack'] is Map) {
+          final ackMap = Map<String, dynamic>.from(item['ack'] as Map);
+          ack = SyncUploadAck(
+            entityId: ackMap['entity_id'] as String? ?? '',
+            remoteVersion: (ackMap['remote_version'] as num?)?.toInt() ?? 0,
+            remoteUpdatedAt: _parseDate(ackMap['remote_updated_at']),
+            serverPayload: ackMap['server_payload'] is Map
+                ? Map<String, dynamic>.from(ackMap['server_payload'] as Map)
+                : null,
+          );
+        } else if (status == 'conflict') {
+          final details = item['conflict'] is Map
+              ? Map<String, dynamic>.from(item['conflict'] as Map)
+              : const <String, dynamic>{};
+          final err = item['error'] is Map
+              ? Map<String, dynamic>.from(item['error'] as Map)
+              : const <String, dynamic>{};
+          failure = SyncConflictFailure.forEntity(
+            message: err['message'] as String? ?? 'Synchronization conflict',
+            entityType: details['entity_type'] as String?,
+            entityId: details['entity_id'] as String? ?? operationId,
+          );
+        } else {
+          final err = item['error'] is Map
+              ? Map<String, dynamic>.from(item['error'] as Map)
+              : const <String, dynamic>{};
+          final code = err['code'] as String? ?? 'server_error';
+          final message = err['message'] as String? ?? 'Batch item failed';
+          failure = switch (code) {
+            'unauthorized' => AuthenticationFailure(message),
+            'forbidden' || 'permission_denied' =>
+              AuthorizationFailure.withDetails(message: message, code: code),
+            'validation_error' => ValidationFailure(message),
+            _ => ServerFailure(message),
+          };
+        }
+        byId[operationId] = SyncBatchPushItemResult(
+          operationId: operationId,
+          status: status,
+          ack: ack,
+          failure: failure,
+        );
+      }
+      // Preserve caller order; fill gaps if server omitted an id.
+      return [
+        for (final op in operations)
+          byId[op.id] ??
+              SyncBatchPushItemResult(
+                operationId: op.id,
+                status: 'error',
+                failure: const ServerFailure('Missing batch result'),
+              ),
+      ];
+    } on AppFailure {
+      rethrow;
+    } on http.ClientException catch (e) {
+      throw NetworkFailure(e.message, e);
+    } on FormatException catch (e) {
+      throw ServerFailure('Invalid sync response', e);
+    }
+  }
+
+  @override
   Future<List<SyncRemoteChange>> pull({
     required String entityType,
     DateTime? since,
   }) async {
     try {
       final query = <String, String>{'entity_type': entityType};
-      // Full catch-up when SyncManager has no watermark yet.
-      if (since == null) {
-        _cursors.remove(entityType);
-      }
-      final cursor = _cursors[entityType];
-      if (cursor != null) {
-        query['cursor'] = '$cursor';
+      // Prefer durable sequence cursor; fall back to since only when unknown.
+      final stored = await _cursors.read(entityType);
+      if (stored != null) {
+        query['cursor'] = '$stored';
       } else if (since != null) {
         query['since'] = since.toUtc().toIso8601String();
       } else {
@@ -142,9 +258,7 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
       var guard = 0;
       while (guard < 50) {
         guard++;
-        final response = await _client
-            .get(_uri('/api/v1/sync/pull', query), headers: _headers)
-            .timeout(_config.timeout);
+        final response = await _get('/api/v1/sync/pull', query);
         _ensureSuccess(response);
         final map = jsonDecode(response.body) as Map<String, dynamic>;
         final changes = map['changes'];
@@ -195,12 +309,7 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
     required String entityId,
   }) async {
     try {
-      final response = await _client
-          .get(
-            _uri('/api/v1/sync/meta/$entityType/$entityId'),
-            headers: _headers,
-          )
-          .timeout(_config.timeout);
+      final response = await _get('/api/v1/sync/meta/$entityType/$entityId');
 
       if (response.statusCode == 404) {
         return null;
@@ -235,11 +344,13 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return;
     }
-    final failure = _failureFromBody(response);
-    throw failure;
+    throw _failureFromBody(response);
   }
 
   AppFailure _failureFromBody(http.Response response) {
+    if (_authClient != null) {
+      return _authClient.mapFailure(response);
+    }
     try {
       final decoded = jsonDecode(response.body);
       if (decoded is Map && decoded['error'] is Map) {
@@ -248,8 +359,13 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
         final message = err['message'] as String? ?? 'Request failed';
         switch (code) {
           case 'unauthorized':
-          case 'forbidden':
             return AuthenticationFailure(message);
+          case 'forbidden':
+          case 'permission_denied':
+            return AuthorizationFailure.withDetails(
+              message: message,
+              code: code,
+            );
           case 'validation_error':
             return ValidationFailure(message);
           case 'not_found':
@@ -275,11 +391,12 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
             );
         }
       }
-    } catch (_) {
-      // Fall through to status-based mapping.
-    }
-    if (response.statusCode == 401 || response.statusCode == 403) {
+    } catch (_) {}
+    if (response.statusCode == 401) {
       return const AuthenticationFailure();
+    }
+    if (response.statusCode == 403) {
+      return const AuthorizationFailure();
     }
     return ServerFailure.withCode(
       message: 'HTTP ${response.statusCode}',
@@ -305,9 +422,7 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
           entityId: details['entity_id'] as String? ?? entityId,
         );
       }
-    } catch (_) {
-      // ignore parse errors
-    }
+    } catch (_) {}
     return SyncConflictFailure.forEntity(
       entityType: entityType,
       entityId: entityId,

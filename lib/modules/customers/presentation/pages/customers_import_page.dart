@@ -1,18 +1,19 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/services/loading_providers.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_loading.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../domain/models/customer_exception.dart';
 import '../../domain/models/import_validation_exception.dart';
 import '../providers/customer_import_provider.dart';
 
@@ -70,10 +71,33 @@ class CustomersImportPage extends ConsumerWidget {
               isLoading: importState.isImporting,
               onPressed: importState.isImporting || !importState.hasSelectedFile
                   ? null
-                  : () => _import(context, ref),
+                  : () => _startImport(context, ref),
             ),
             if (importState.isImporting) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              AppCard(
+                color: Theme.of(context).colorScheme.primaryContainer
+                    .withValues(alpha: 0.35),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.hourglass_top_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        localization.importBackgroundHint,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
               AppLoading(
                 style: AppLoadingStyle.linear,
                 message: _progressMessage(localization, importState),
@@ -123,6 +147,8 @@ class CustomersImportPage extends ConsumerWidget {
     switch (state.progressLabelKey) {
       case 'parsing':
         return localization.importParsing;
+      case 'linking':
+        return localization.importLinking;
       case 'saving':
         return localization.importSaving;
       default:
@@ -140,6 +166,10 @@ class CustomersImportPage extends ConsumerWidget {
         return localization.customersNoValidRows;
       case ImportValidationException.decodeFailed:
         return localization.invalidFile;
+      case CustomerException.duplicateCustomerCode:
+        return localization.customersErrorDuplicateCode;
+      case CustomerException.duplicateExternalId:
+        return localization.customersErrorDuplicateExternalId;
       default:
         return code;
     }
@@ -177,33 +207,9 @@ class CustomersImportPage extends ConsumerWidget {
     notifier.setSelectedFile(fileName: file.name, bytes: bytes);
   }
 
-  Future<void> _import(BuildContext context, WidgetRef ref) async {
-    final localization = AppLocalizations.of(context);
-    final result = await ref
-        .read(loadingControllerProvider)
-        .run(
-          message: localization.loadingImportingCustomers,
-          action: () => ref.read(customerImportProvider.notifier).importFile(),
-        );
-
-    if (!context.mounted) {
-      return;
-    }
-
-    if (result != null) {
-      showAppSnackBar(
-        context,
-        message: localization.importSuccess,
-        isSuccess: true,
-      );
-      context.pop();
-    } else {
-      showAppSnackBar(
-        context,
-        message: localization.importFailed,
-        isSuccess: false,
-      );
-    }
+  void _startImport(BuildContext context, WidgetRef ref) {
+    // Fire-and-forget: no global overlay, user can navigate away.
+    unawaited(ref.read(customerImportProvider.notifier).importFile());
   }
 }
 

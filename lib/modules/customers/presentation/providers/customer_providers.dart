@@ -38,7 +38,10 @@ final customerAccountLinkPortProvider = Provider<CustomerAccountLinkPort>((
 });
 
 final customerCodeGeneratorProvider = Provider<CustomerCodeGenerator>((ref) {
-  return CustomerCodeGenerator(ref.watch(customerRepositoryProvider));
+  return CustomerCodeGenerator(
+    ref.watch(customerRepositoryProvider),
+    linkPort: ref.watch(customerAccountLinkPortProvider),
+  );
 });
 
 final watchCustomersUseCaseProvider = Provider<WatchCustomers>((ref) {

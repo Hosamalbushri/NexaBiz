@@ -30,6 +30,21 @@ class SettingsKeys {
   static const String systemBaseCurrencyLocked = 'system_base_currency_locked';
   /// Stable per-install device id for experimental multi-device sync.
   static const String syncDeviceId = 'sync_device_id';
+  /// When false (default), the app runs fully local — no auto/manual sync.
+  static const String syncEnabled = 'sync_enabled';
+  /// User-entered sync server base URL (e.g. http://192.168.1.10:8000).
+  static const String syncServerBaseUrl = 'sync_server_base_url';
+  /// Optional API token for the sync server.
+  static const String syncServerToken = 'sync_server_token';
+  /// When true, sync runs automatically in the background (queue / interval).
+  static const String syncAutoEnabled = 'sync_auto_enabled';
+  /// Auto-sync interval in minutes (`0` = on pending changes / online only).
+  static const String syncAutoIntervalMinutes = 'sync_auto_interval_minutes';
+  /// Welcome / product tour completed before first System Setup.
+  static const String onboardingCompleted = 'onboarding_completed';
+  /// When true, do not locally seed CoA — awaiting remote pull (joining device).
+  static const String chartBootstrapPreferRemote =
+      'chart_bootstrap_prefer_remote';
 }
 
 /// Persists and loads platform settings from Hive.
@@ -265,6 +280,92 @@ class SettingsRepository {
     return created;
   }
 
+  /// Opt-in multi-device sync. Default is off (local-only installs).
+  Future<bool> loadSyncEnabled() async {
+    final box = await _settingsBox;
+    return box.get(SettingsKeys.syncEnabled) == true;
+  }
+
+  Future<void> saveSyncEnabled(bool enabled) async {
+    final box = await _settingsBox;
+    await box.put(SettingsKeys.syncEnabled, enabled);
+  }
+
+  Future<String?> loadSyncServerBaseUrl() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.syncServerBaseUrl) as String?;
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+    return value.trim();
+  }
+
+  Future<void> saveSyncServerBaseUrl(String? url) async {
+    final box = await _settingsBox;
+    final trimmed = url?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      await box.delete(SettingsKeys.syncServerBaseUrl);
+      return;
+    }
+    await box.put(SettingsKeys.syncServerBaseUrl, trimmed);
+  }
+
+  Future<String?> loadSyncServerToken() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.syncServerToken) as String?;
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+    return value.trim();
+  }
+
+  Future<void> saveSyncServerToken(String? token) async {
+    final box = await _settingsBox;
+    final trimmed = token?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      await box.delete(SettingsKeys.syncServerToken);
+      return;
+    }
+    await box.put(SettingsKeys.syncServerToken, trimmed);
+  }
+
+  /// Default true — background sync when the user has opted into sync.
+  Future<bool> loadSyncAutoEnabled() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.syncAutoEnabled);
+    if (value is bool) return value;
+    return true;
+  }
+
+  Future<void> saveSyncAutoEnabled(bool enabled) async {
+    final box = await _settingsBox;
+    await box.put(SettingsKeys.syncAutoEnabled, enabled);
+  }
+
+  /// Default 15 minutes. `0` means change/online triggers only.
+  Future<int> loadSyncAutoIntervalMinutes() async {
+    final box = await _settingsBox;
+    final value = box.get(SettingsKeys.syncAutoIntervalMinutes);
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return 15;
+  }
+
+  Future<void> saveSyncAutoIntervalMinutes(int minutes) async {
+    final box = await _settingsBox;
+    await box.put(SettingsKeys.syncAutoIntervalMinutes, minutes);
+  }
+
+  Future<bool> loadOnboardingCompleted() async {
+    final box = await _settingsBox;
+    return box.get(SettingsKeys.onboardingCompleted) == true;
+  }
+
+  Future<void> saveOnboardingCompleted(bool completed) async {
+    final box = await _settingsBox;
+    await box.put(SettingsKeys.onboardingCompleted, completed);
+  }
+
   /// True when the settings box already has runtime configuration keys.
   ///
   /// Used to grandfather System Setup for upgrades without forcing the wizard.
@@ -339,6 +440,21 @@ class SettingsRepository {
       SettingsKeys.systemSetupLastUpdated,
       lastUpdated.toUtc().millisecondsSinceEpoch,
     );
+  }
+
+  /// Joining device: skip local CoA seed until remote accounts arrive.
+  Future<bool> loadChartBootstrapPreferRemote() async {
+    final box = await _settingsBox;
+    return box.get(SettingsKeys.chartBootstrapPreferRemote) == true;
+  }
+
+  Future<void> saveChartBootstrapPreferRemote(bool preferRemote) async {
+    final box = await _settingsBox;
+    if (preferRemote) {
+      await box.put(SettingsKeys.chartBootstrapPreferRemote, true);
+    } else {
+      await box.delete(SettingsKeys.chartBootstrapPreferRemote);
+    }
   }
 
   Future<void> resetSettings() async {

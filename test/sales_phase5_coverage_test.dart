@@ -423,13 +423,13 @@ void main() {
       await ConfirmSale(
         repository: repository,
         accountingBridge: const NoOpSaleAccountingBridgePort(),
-        inventoryEffect: const NoOpSaleInventoryEffectPort(),
+        inventoryEffect: _RecordingInventory(),
       )(s1.id);
 
       await ConfirmSale(
         repository: repository,
         accountingBridge: const NoOpSaleAccountingBridgePort(),
-        inventoryEffect: const NoOpSaleInventoryEffectPort(),
+        inventoryEffect: _RecordingInventory(),
       )(s2.id);
 
       await CancelSale(

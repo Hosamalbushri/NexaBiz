@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../permissions/permission_defs.dart';
+import 'route_access_rule.dart';
+
 /// Base contract every business module must extend.
 ///
 /// Prefer `extends AppModule` (not `implements`) so default settings / enable
@@ -30,6 +33,28 @@ abstract class AppModule {
   /// Defaults to [isEnabled]. Infrastructure modules (e.g. System Setup) can
   /// keep routes enabled while staying off the launcher.
   bool get showInLauncher => isEnabled;
+
+  /// Permission codes that grant launcher visibility (any-of).
+  ///
+  /// Empty means always visible when the module is enabled (local offline mode
+  /// uses a full-permission snapshot). Prefer codes like `sales.view`.
+  ///
+  /// Tip: derive from [permissionPackage] view operations when possible.
+  List<String> get requiredAnyPermissions => const [];
+
+  /// Path-level permission rules for GoRouter redirects.
+  ///
+  /// When empty, any path under [rootRoute] uses [requiredAnyPermissions].
+  /// More specific rules (create/edit/import) should be listed here; the
+  /// router picks the highest-specificity match.
+  List<RouteAccessRule> get routeAccessRules => const [];
+
+  /// Optional RBAC package contributed to Administration (Package → Service → Op).
+  ///
+  /// Return `null` when the module has no permission surface. Registering or
+  /// unregistering the module in [ModuleRegistry] adds/removes this package
+  /// from role editors automatically.
+  PermissionPackageDef? get permissionPackage => null;
 
   /// Localized display name for UI surfaces.
   String label(BuildContext context);

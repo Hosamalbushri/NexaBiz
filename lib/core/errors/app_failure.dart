@@ -21,7 +21,35 @@ final class AuthenticationFailure extends AppFailure {
   const AuthenticationFailure([
     super.message = 'Authentication error',
     super.cause,
-  ]);
+  ]) : reason = null;
+
+  const AuthenticationFailure.withReason({
+    String message = 'Authentication error',
+    Object? cause,
+    this.reason,
+  }) : super(message, cause);
+
+  /// Server detail reason, e.g. `sync_disable_approved`.
+  final String? reason;
+}
+
+/// Server refused the operation due to missing/revoked permission.
+final class AuthorizationFailure extends AppFailure {
+  const AuthorizationFailure([
+    super.message = 'Permission denied',
+    super.cause,
+  ]) : permission = null,
+       code = 'permission_denied';
+
+  const AuthorizationFailure.withDetails({
+    String message = 'Permission denied',
+    Object? cause,
+    this.permission,
+    this.code = 'permission_denied',
+  }) : super(message, cause);
+
+  final String? permission;
+  final String code;
 }
 
 final class ValidationFailure extends AppFailure {

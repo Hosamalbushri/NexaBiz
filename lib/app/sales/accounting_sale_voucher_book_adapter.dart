@@ -69,7 +69,7 @@ class AccountingSaleVoucherBookAdapter implements SaleVoucherBookPort {
       name: name,
       nextNumber: absolute,
       canAllocate: canAllocate || (peek != null),
-      formattedPreview: formatSaleNumber(absolute),
+      formattedPreview: formatSaleNumberPrimary(formatSaleNumber(absolute)),
     );
   }
 

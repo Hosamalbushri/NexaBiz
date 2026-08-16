@@ -1,9 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/localization/app_localizations.dart';
+import '../../../../app/notifications/presentation/providers/notifications_provider.dart';
+import '../../../../core/di/app_providers.dart';
+import '../../../../core/notifications/notification_type.dart';
 import '../../data/datasources/product_excel_import_isolate.dart';
 import '../../domain/models/import_session.dart';
 import '../../domain/models/import_validation_exception.dart';
+import '../../domain/models/product_exception.dart';
+import '../../domain/repositories/product_repository.dart';
 import 'product_providers.dart';
 
 class ProductImportUiState {
@@ -36,6 +42,7 @@ class ProductImportUiState {
   ProductImportUiState copyWith({
     String? selectedFileName,
     Uint8List? bytes,
+    bool clearBytes = false,
     bool? isImporting,
     double? progress,
     String? progressLabelKey,
@@ -50,7 +57,7 @@ class ProductImportUiState {
   }) {
     return ProductImportUiState(
       selectedFileName: selectedFileName ?? this.selectedFileName,
-      bytes: bytes ?? this.bytes,
+      bytes: clearBytes ? null : (bytes ?? this.bytes),
       isImporting: isImporting ?? this.isImporting,
       progress: progress ?? this.progress,
       progressLabelKey: clearProgressLabel
@@ -69,6 +76,7 @@ class ProductImportNotifier extends StateNotifier<ProductImportUiState> {
   ProductImportNotifier(this._ref) : super(const ProductImportUiState());
 
   final Ref _ref;
+  KeepAliveLink? _keepAlive;
 
   void setSelectedFile({required String fileName, required Uint8List bytes}) {
     state = ProductImportUiState(selectedFileName: fileName, bytes: bytes);
@@ -80,10 +88,15 @@ class ProductImportNotifier extends StateNotifier<ProductImportUiState> {
       state = state.copyWith(errorMessage: 'no_file', clearResult: true);
       return null;
     }
+    if (state.isImporting) {
+      return null;
+    }
+
+    _keepAlive ??= _ref.keepAlive();
 
     state = state.copyWith(
       isImporting: true,
-      progress: 0.15,
+      progress: 0.1,
       progressLabelKey: 'parsing',
       clearError: true,
       clearResult: true,
@@ -102,19 +115,31 @@ class ProductImportNotifier extends StateNotifier<ProductImportUiState> {
           errorMessage:
               outcome.errorCode ?? ImportValidationException.decodeFailed,
         );
+        await _notifyFailure(state.errorMessage!);
         return null;
       }
 
       final imported = outcome.result!;
       state = state.copyWith(
-        progress: 0.65,
+        progress: 0.4,
         progressLabelKey: 'saving',
         duplicateCount: imported.duplicateCount,
       );
 
       final upsert = await _ref
           .read(upsertProductsUseCaseProvider)
-          .call(imported.drafts);
+          .call(
+            imported.drafts,
+            onProgress: (processed, total) {
+              if (total <= 0) {
+                return;
+              }
+              state = state.copyWith(
+                progress: 0.4 + ((processed / total) * 0.55),
+                progressLabelKey: 'saving',
+              );
+            },
+          );
       bumpProductsRevision(_ref);
 
       final result = ImportSessionResult(
@@ -125,12 +150,32 @@ class ProductImportNotifier extends StateNotifier<ProductImportUiState> {
         isImporting: false,
         progress: 1,
         clearProgressLabel: true,
+        clearBytes: true,
         result: result,
         duplicateCount: imported.duplicateCount,
         insertedCount: upsert.insertedCount,
         updatedCount: upsert.updatedCount,
       );
+      await _notifySuccess(upsert);
       return result;
+    } on ImportValidationException catch (error) {
+      state = state.copyWith(
+        isImporting: false,
+        progress: 0,
+        clearProgressLabel: true,
+        errorMessage: error.code,
+      );
+      await _notifyFailure(error.code);
+      return null;
+    } on ProductException catch (error) {
+      state = state.copyWith(
+        isImporting: false,
+        progress: 0,
+        clearProgressLabel: true,
+        errorMessage: error.code,
+      );
+      await _notifyFailure(error.code);
+      return null;
     } catch (_) {
       state = state.copyWith(
         isImporting: false,
@@ -138,7 +183,62 @@ class ProductImportNotifier extends StateNotifier<ProductImportUiState> {
         clearProgressLabel: true,
         errorMessage: ImportValidationException.decodeFailed,
       );
+      await _notifyFailure(ImportValidationException.decodeFailed);
       return null;
+    } finally {
+      _keepAlive?.close();
+      _keepAlive = null;
+    }
+  }
+
+  Future<void> _notifySuccess(ProductUpsertResult upsert) async {
+    final l10n = _l10n;
+    await _ref
+        .read(notificationServiceProvider)
+        .showSuccess(
+          title: l10n.productsImportTitle,
+          message:
+              '${l10n.productsImportInsertedCount(upsert.insertedCount)} · '
+              '${l10n.productsImportUpdatedCount(upsert.updatedCount)}',
+          category: NotificationCategory.general,
+          persistToHistory: true,
+        );
+  }
+
+  Future<void> _notifyFailure(String code) async {
+    final l10n = _l10n;
+    await _ref
+        .read(notificationServiceProvider)
+        .showError(
+          title: l10n.importFailed,
+          message: _errorMessage(l10n, code),
+          category: NotificationCategory.general,
+          persistToHistory: true,
+        );
+  }
+
+  AppLocalizations get _l10n {
+    final locale =
+        _ref.read(localeProvider) ?? AppLocalizations.supportedLocales.first;
+    return lookupAppLocalizations(locale);
+  }
+
+  String _errorMessage(AppLocalizations localization, String code) {
+    switch (code) {
+      case 'no_file':
+        return localization.fileSelectedPrompt;
+      case ImportValidationException.emptyWorkbook:
+        return localization.emptyWorkbook;
+      case ImportValidationException.noValidRows:
+        return localization.productsNoValidRows;
+      case ImportValidationException.decodeFailed:
+        return localization.invalidFile;
+      case ProductException.duplicateBarcode:
+        return localization.productsDuplicateBarcode;
+      case ProductException.duplicateItemCode:
+        return localization.productsDuplicateCode;
+      default:
+        return code;
     }
   }
 }

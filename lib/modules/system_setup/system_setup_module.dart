@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/permissions/permission_defs.dart';
+import 'permissions/platform_permission_package.dart';
 import 'presentation/pages/system_setup_routes.dart';
 
 /// System settings / initialization module.
@@ -33,6 +35,9 @@ class SystemSetupModule extends AppModule {
 
   @override
   bool get showInLauncher => true;
+
+  @override
+  PermissionPackageDef? get permissionPackage => platformPermissionPackage();
 
   @override
   String label(BuildContext context) {

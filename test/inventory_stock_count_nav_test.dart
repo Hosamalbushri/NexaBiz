@@ -35,7 +35,10 @@ class _FakeInventoryRepository implements InventoryRepository {
   Future<void> save(InventoryItem item) async {}
 
   @override
-  Future<void> replaceAll(List<InventoryItem> items) async {}
+  Future<void> replaceAll(
+    List<InventoryItem> items, {
+    void Function(int processed, int total)? onProgress,
+  }) async {}
 
   @override
   Future<void> clear() async {}

@@ -30,6 +30,10 @@ class SyncOperation {
     DateTime? now,
   }) {
     final stamp = (now ?? DateTime.now().toUtc());
+    // Creates are "ensure exists" — never based on a prior server version.
+    // Passing entity.version here used to trip getMeta conflicts on dual seeds.
+    final resolvedBase =
+        type == SyncOperationType.create ? 0 : baseVersion;
     return SyncOperation(
       id: generateUuidV4(),
       entityType: entityType,
@@ -39,7 +43,7 @@ class SyncOperation {
       payload: Map<String, dynamic>.from(payload),
       createdAt: stamp,
       updatedAt: stamp,
-      baseVersion: baseVersion,
+      baseVersion: resolvedBase,
     );
   }
 
@@ -55,7 +59,8 @@ class SyncOperation {
   final String? lastError;
   final DateTime? nextRetryAt;
 
-  /// Local version observed when the mutation was enqueued (conflict base).
+  /// Version this mutation was based on (conflict base for update/delete).
+  /// Always `0` for [SyncOperationType.create] (ensure-exists, not a rebase).
   final int baseVersion;
 
   SyncOperation copyWith({

@@ -19,6 +19,10 @@ abstract class AppLockRepository {
 
   Future<void> setEnabled(bool enabled);
 
+  Future<bool> isBiometricEnabled();
+
+  Future<void> setBiometricEnabled(bool enabled);
+
   Future<int> loadFailedAttempts();
 
   Future<void> saveFailedAttempts(int count);

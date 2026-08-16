@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/route_access_rule.dart';
+import '../../core/permissions/permission_defs.dart';
+import 'permissions/accounting_permission_package.dart';
 import 'domain/entities/voucher_book_type.dart';
 import 'presentation/pages/account_details_page.dart';
 import 'presentation/pages/account_form_page.dart';
@@ -41,6 +44,40 @@ class AccountingModule extends AppModule {
 
   @override
   bool get isEnabled => true;
+
+  @override
+  List<String> get requiredAnyPermissions => const [
+        'accounting.view',
+        'accounting.accounts.view',
+        'accounting.journals.view',
+      ];
+
+  @override
+  List<RouteAccessRule> get routeAccessRules => [
+        RouteAccessRule(
+          pathEquals: AccountingRoutes.accountsCreate,
+          anyOf: const ['accounting.accounts.create'],
+        ),
+        RouteAccessRule(
+          pathRegex: RegExp(r'^/accounting/accounts/\d+/edit$'),
+          anyOf: const ['accounting.accounts.update'],
+        ),
+        RouteAccessRule(
+          pathEquals: AccountingRoutes.journalsCreate,
+          anyOf: const ['accounting.journals.create'],
+        ),
+        RouteAccessRule(
+          pathRegex: RegExp(r'^/accounting/journals/[^/]+/edit$'),
+          anyOf: const ['accounting.journals.update'],
+        ),
+        RouteAccessRule(
+          pathPrefix: AccountingRoutes.root,
+          anyOf: requiredAnyPermissions,
+        ),
+      ];
+
+  @override
+  PermissionPackageDef? get permissionPackage => accountingPermissionPackage();
 
   @override
   String label(BuildContext context) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
@@ -8,36 +9,42 @@ import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_shadows.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../authentication/presentation/providers/auth_providers.dart';
+import '../../permissions/inventory_permission_package.dart';
 import 'inventory_routes.dart';
 
 /// Stock-count service home — grid of count / import / reports (no tabs).
-class StockCountHomePage extends StatelessWidget {
+class StockCountHomePage extends ConsumerWidget {
   const StockCountHomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final auth = ref.watch(authStateProvider);
 
     final features = <_StockCountFeature>[
-      _StockCountFeature(
-        icon: Icons.fact_check_outlined,
-        title: l10n.inventoryCountTitle,
-        subtitle: l10n.inventoryCountSubtitle,
-        path: InventoryRoutes.count,
-      ),
-      _StockCountFeature(
-        icon: Icons.upload_file_outlined,
-        title: l10n.importPageTitle,
-        subtitle: l10n.selectExcelFile,
-        path: InventoryRoutes.import,
-      ),
-      _StockCountFeature(
-        icon: Icons.assessment_outlined,
-        title: l10n.reportsTitle,
-        subtitle: l10n.exportReport,
-        path: InventoryRoutes.reports,
-      ),
+      if (auth.hasAnyPermission(InventoryPermissions.stockAdjust))
+        _StockCountFeature(
+          icon: Icons.fact_check_outlined,
+          title: l10n.inventoryCountTitle,
+          subtitle: l10n.inventoryCountSubtitle,
+          path: InventoryRoutes.count,
+        ),
+      if (auth.hasAnyPermission(InventoryPermissions.stockImport))
+        _StockCountFeature(
+          icon: Icons.upload_file_outlined,
+          title: l10n.importPageTitle,
+          subtitle: l10n.selectExcelFile,
+          path: InventoryRoutes.import,
+        ),
+      if (auth.hasAnyPermission(InventoryPermissions.stockExport))
+        _StockCountFeature(
+          icon: Icons.assessment_outlined,
+          title: l10n.reportsTitle,
+          subtitle: l10n.exportReport,
+          path: InventoryRoutes.reports,
+        ),
     ];
 
     return PopScope(

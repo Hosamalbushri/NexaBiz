@@ -10,11 +10,27 @@ import '../theme/app_spacing.dart';
 import 'widgets/settings_chrome.dart';
 
 /// Dedicated security settings (App Lock / PIN).
-class SecuritySettingsPage extends ConsumerWidget {
+class SecuritySettingsPage extends ConsumerStatefulWidget {
   const SecuritySettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SecuritySettingsPage> createState() =>
+      _SecuritySettingsPageState();
+}
+
+class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(appLockControllerProvider.notifier)
+          .refreshBiometricAvailability();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -28,26 +44,29 @@ class SecuritySettingsPage extends ConsumerWidget {
         showBackButton: true,
       ),
       body: ListView(
-        padding: AppConstants.pageInsets(context),
+        padding: AppConstants.pageInsets(context).copyWith(
+          top: AppSpacing.sm,
+          bottom: AppSpacing.lg,
+        ),
         children: [
           Text(
             lock.enabled
                 ? l10n.appLockSettingsEnabledHint
                 : l10n.appLockSettingsDisabledHint,
-            style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
-              height: 1.4,
+              height: 1.35,
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           SettingsGroup(
             children: [
               const Padding(
                 padding: EdgeInsets.fromLTRB(
-                  AppSpacing.md,
                   AppSpacing.sm,
-                  AppSpacing.md,
-                  AppSpacing.md,
+                  AppSpacing.xs,
+                  AppSpacing.sm,
+                  AppSpacing.sm,
                 ),
                 child: AppLockSettingsSection(embedded: true),
               ),

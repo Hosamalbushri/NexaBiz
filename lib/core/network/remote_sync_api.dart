@@ -2,16 +2,65 @@ import '../errors/app_failure.dart';
 import '../sync/sync_entity_handler.dart';
 import '../sync/sync_operation.dart';
 
+/// Per-operation outcome from [RemoteSyncApi.pushBatch].
+class SyncBatchPushItemResult {
+  const SyncBatchPushItemResult({
+    required this.operationId,
+    required this.status,
+    this.ack,
+    this.failure,
+  });
+
+  final String operationId;
+
+  /// `success` | `conflict` | `error`
+  final String status;
+  final SyncUploadAck? ack;
+  final AppFailure? failure;
+
+  bool get isSuccess => status == 'success' && ack != null;
+  bool get isConflict => status == 'conflict';
+}
+
 /// Minimal remote sync API used by feature handlers.
 ///
 /// Use [HttpRemoteSyncApi] against the experimental FastAPI backend
 /// (`SYNC_API_ENABLED=true`), or [InMemoryRemoteSyncApi] for offline tests.
-/// SyncManager and queue stay unchanged.
 abstract class RemoteSyncApi {
   Future<SyncUploadAck> push({
     required String entityType,
     required SyncOperation operation,
   });
+
+  /// Push many operations in one round-trip when the backend supports it.
+  ///
+  /// Default falls back to sequential [push] (tests / in-memory).
+  Future<List<SyncBatchPushItemResult>> pushBatch(
+    List<SyncOperation> operations,
+  ) async {
+    final results = <SyncBatchPushItemResult>[];
+    for (final op in operations) {
+      try {
+        final ack = await push(entityType: op.entityType, operation: op);
+        results.add(
+          SyncBatchPushItemResult(
+            operationId: op.id,
+            status: 'success',
+            ack: ack,
+          ),
+        );
+      } on AppFailure catch (e) {
+        results.add(
+          SyncBatchPushItemResult(
+            operationId: op.id,
+            status: e is SyncConflictFailure ? 'conflict' : 'error',
+            failure: e,
+          ),
+        );
+      }
+    }
+    return results;
+  }
 
   Future<List<SyncRemoteChange>> pull({
     required String entityType,
@@ -24,10 +73,10 @@ abstract class RemoteSyncApi {
   });
 
   /// Persist the staged pull cursor after local applies succeeded.
-  void acknowledgePull(String entityType) {}
+  Future<void> acknowledgePull(String entityType) async {}
 
   /// Discard staged pull cursor when local applies failed.
-  void abandonPull(String entityType) {}
+  Future<void> abandonPull(String entityType) async {}
 }
 
 class RemoteEntityMeta {
@@ -65,6 +114,34 @@ class InMemoryRemoteSyncApi implements RemoteSyncApi {
 
     final bucket = _bucket(entityType);
     final existing = bucket[operation.entityId];
+
+    // Create = ensure UUID exists (idempotent). Never version-conflict creates;
+    // dual-device CoA/system seeds share deterministic ids.
+    if (operation.type == SyncOperationType.create) {
+      if (existing != null) {
+        return SyncUploadAck(
+          entityId: operation.entityId,
+          remoteVersion: existing.version,
+          remoteUpdatedAt: existing.updatedAt,
+          serverPayload: existing.payload,
+        );
+      }
+      final updatedAt = DateTime.now().toUtc();
+      final meta = RemoteEntityMeta(
+        entityId: operation.entityId,
+        version: 1,
+        updatedAt: updatedAt,
+        payload: Map<String, dynamic>.from(operation.payload),
+      );
+      bucket[operation.entityId] = meta;
+      return SyncUploadAck(
+        entityId: operation.entityId,
+        remoteVersion: meta.version,
+        remoteUpdatedAt: updatedAt,
+        serverPayload: meta.payload,
+      );
+    }
+
     if (existing != null && existing.version > operation.baseVersion) {
       throw SyncConflictFailure.forEntity(
         message:
@@ -99,6 +176,34 @@ class InMemoryRemoteSyncApi implements RemoteSyncApi {
       remoteUpdatedAt: updatedAt,
       serverPayload: bucket[operation.entityId]?.payload,
     );
+  }
+
+  @override
+  Future<List<SyncBatchPushItemResult>> pushBatch(
+    List<SyncOperation> operations,
+  ) async {
+    final results = <SyncBatchPushItemResult>[];
+    for (final op in operations) {
+      try {
+        final ack = await push(entityType: op.entityType, operation: op);
+        results.add(
+          SyncBatchPushItemResult(
+            operationId: op.id,
+            status: 'success',
+            ack: ack,
+          ),
+        );
+      } on AppFailure catch (e) {
+        results.add(
+          SyncBatchPushItemResult(
+            operationId: op.id,
+            status: e is SyncConflictFailure ? 'conflict' : 'error',
+            failure: e,
+          ),
+        );
+      }
+    }
+    return results;
   }
 
   @override
@@ -146,8 +251,8 @@ class InMemoryRemoteSyncApi implements RemoteSyncApi {
   }
 
   @override
-  void acknowledgePull(String entityType) {}
+  Future<void> acknowledgePull(String entityType) async {}
 
   @override
-  void abandonPull(String entityType) {}
+  Future<void> abandonPull(String entityType) async {}
 }

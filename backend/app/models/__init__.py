@@ -6,6 +6,7 @@ from app.models.identity import (
     Permission,
     Role,
     RolePermission,
+    SyncDisableRequest,
     User,
 )
 from app.models.sync import Company, SyncChange, SyncEntity, SyncOperationRecord, SyncSequence
@@ -20,6 +21,7 @@ __all__ = [
     "Role",
     "RolePermission",
     "SyncChange",
+    "SyncDisableRequest",
     "SyncEntity",
     "SyncOperationRecord",
     "SyncSequence",

@@ -162,30 +162,12 @@ class SaleStickySummary extends StatelessWidget {
                 ],
               ),
             ),
-            if (summary.paidAmount > 0 || summary.remainingAmount > 0) ...[
+            if (summary.paidAmount > 0) ...[
               const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  if (summary.paidAmount > 0)
-                    Expanded(
-                      child: _SummaryMetaChip(
-                        label: l10n.salesPaid,
-                        value: formatSaleMoney(context, summary.paidAmount),
-                        color: scheme.tertiary,
-                      ),
-                    ),
-                  if (summary.paidAmount > 0 && summary.remainingAmount > 0)
-                    const SizedBox(width: AppSpacing.sm),
-                  if (summary.remainingAmount > 0)
-                    Expanded(
-                      child: _SummaryMetaChip(
-                        label: l10n.salesRemaining,
-                        value:
-                            formatSaleMoney(context, summary.remainingAmount),
-                        color: scheme.tertiary,
-                      ),
-                    ),
-                ],
+              _SummaryMetaChip(
+                label: l10n.salesPaid,
+                value: formatSaleMoney(context, summary.paidAmount),
+                color: scheme.tertiary,
               ),
             ],
             const SizedBox(height: AppSpacing.md),
@@ -412,32 +394,6 @@ class SaleSummaryPanel extends StatelessWidget {
                 ],
               ),
             ),
-            if (summary.paidAmount > 0 || summary.remainingAmount > 0) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  if (summary.paidAmount > 0)
-                    Expanded(
-                      child: _SummaryMetaChip(
-                        label: l10n.salesPaid,
-                        value: formatSaleMoney(context, summary.paidAmount),
-                        color: scheme.tertiary,
-                      ),
-                    ),
-                  if (summary.paidAmount > 0 && summary.remainingAmount > 0)
-                    const SizedBox(width: AppSpacing.sm),
-                  if (summary.remainingAmount > 0)
-                    Expanded(
-                      child: _SummaryMetaChip(
-                        label: l10n.salesRemaining,
-                        value:
-                            formatSaleMoney(context, summary.remainingAmount),
-                        color: scheme.tertiary,
-                      ),
-                    ),
-                ],
-              ),
-            ],
           ],
         ),
       ),

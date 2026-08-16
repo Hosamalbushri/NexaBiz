@@ -31,5 +31,13 @@ class JournalEntries extends Table {
 
   IntColumn get updatedAt => integer()();
 
+  /// [SyncStatus.name]
+  TextColumn get syncStatus =>
+      text().withDefault(const Constant('synced'))();
+
+  IntColumn get lastSyncedAt => integer().nullable()();
+
+  IntColumn get version => integer().withDefault(const Constant(1))();
+
   IntColumn get deletedAt => integer().nullable()();
 }

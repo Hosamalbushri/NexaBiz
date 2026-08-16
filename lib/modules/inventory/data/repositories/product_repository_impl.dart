@@ -548,94 +548,141 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   @override
-  Future<ProductUpsertResult> upsertAll(List<ProductDraft> drafts) async {
+  Future<ProductUpsertResult> upsertAll(
+    List<ProductDraft> drafts, {
+    void Function(int processed, int total)? onProgress,
+  }) async {
+    if (drafts.isEmpty) {
+      return const ProductUpsertResult(insertedCount: 0, updatedCount: 0);
+    }
+
     var inserted = 0;
     var updated = 0;
     final now = DateTime.now().toUtc();
     final nowMs = now.millisecondsSinceEpoch;
     final touched = <Product>[];
 
-    await _db.transaction(() async {
-      for (final draft in drafts) {
-        _validateDraft(draft);
-        final code = _normalizeCode(draft.itemCode);
-        final name = _normalizeName(draft.name);
-        final barcode = _normalizeBarcode(draft.barcode);
-
-        final existing =
-            await (_db.select(_db.products)
-                  ..where((t) => t.itemCode.equals(code) & _notDeleted(t)))
-                .getSingleOrNull();
-
-        if (existing == null) {
-          if (barcode != null) {
-            final barcodeHit =
-                await (_db.select(
-                      _db.products,
-                    )..where((t) => t.barcode.equals(barcode) & _notDeleted(t)))
-                    .getSingleOrNull();
-            if (barcodeHit != null) {
-              throw const ProductException(ProductException.duplicateBarcode);
-            }
-          }
-          final uuid = generateUuidV4();
-          final id = await _db
-              .into(_db.products)
-              .insert(
-                ProductsCompanion.insert(
-                  uuid: uuid,
-                  itemCode: code,
-                  name: name,
-                  barcode: Value(barcode),
-                  packSize: draft.packSize,
-                  price: draft.price,
-                  createdAt: nowMs,
-                  updatedAt: nowMs,
-                  syncStatus: const Value('pending'),
-                  version: const Value(1),
-                ),
-              );
-          final created = await getById(id);
-          if (created != null) {
-            touched.add(created);
-          }
-          inserted++;
-        } else {
-          if (barcode != null) {
-            final barcodeHit =
-                await (_db.select(_db.products)..where(
-                      (t) =>
-                          t.barcode.equals(barcode) &
-                          t.id.isNotValue(existing.id) &
-                          _notDeleted(t),
-                    ))
-                    .getSingleOrNull();
-            if (barcodeHit != null) {
-              throw const ProductException(ProductException.duplicateBarcode);
-            }
-          }
-          final nextVersion = existing.version + 1;
-          await (_db.update(
-            _db.products,
-          )..where((t) => t.id.equals(existing.id))).write(
-            ProductsCompanion(
-              name: Value(name),
-              barcode: Value(barcode),
-              packSize: Value(draft.packSize),
-              price: Value(draft.price),
-              updatedAt: Value(nowMs),
-              syncStatus: const Value('pending'),
-              version: Value(nextVersion),
-            ),
-          );
-          final updatedRow = await getById(existing.id);
-          if (updatedRow != null) {
-            touched.add(updatedRow);
-          }
-          updated++;
-        }
+    final existingRows =
+        await (_db.select(_db.products)..where(_notDeleted)).get();
+    final byCode = <String, Product>{};
+    final byBarcode = <String, Product>{};
+    for (final row in existingRows) {
+      final product = _map(row);
+      byCode[product.itemCode] = product;
+      final barcode = product.barcode;
+      if (barcode != null && barcode.isNotEmpty) {
+        byBarcode[barcode] = product;
       }
-    });
+    }
+
+    const chunkSize = 40;
+    final total = drafts.length;
+    for (var start = 0; start < drafts.length; start += chunkSize) {
+      final end = (start + chunkSize < drafts.length)
+          ? start + chunkSize
+          : drafts.length;
+      final chunk = drafts.sublist(start, end);
+
+      await _db.transaction(() async {
+        for (final draft in chunk) {
+          _validateDraft(draft);
+          final code = _normalizeCode(draft.itemCode);
+          final name = _normalizeName(draft.name);
+          final barcode = _normalizeBarcode(draft.barcode);
+
+          final existing = byCode[code];
+
+          if (existing == null) {
+            if (barcode != null) {
+              final barcodeHit = byBarcode[barcode];
+              if (barcodeHit != null) {
+                throw const ProductException(ProductException.duplicateBarcode);
+              }
+            }
+            final uuid = generateUuidV4();
+            final id = await _db
+                .into(_db.products)
+                .insert(
+                  ProductsCompanion.insert(
+                    uuid: uuid,
+                    itemCode: code,
+                    name: name,
+                    barcode: Value(barcode),
+                    packSize: draft.packSize,
+                    price: draft.price,
+                    createdAt: nowMs,
+                    updatedAt: nowMs,
+                    syncStatus: const Value('pending'),
+                    version: const Value(1),
+                  ),
+                );
+            final created = Product(
+              id: id,
+              uuid: uuid,
+              itemCode: code,
+              name: name,
+              barcode: barcode,
+              packSize: draft.packSize,
+              price: draft.price,
+              createdAt: now,
+              updatedAt: now,
+              syncStatus: SyncStatus.pending,
+              version: 1,
+            );
+            touched.add(created);
+            byCode[code] = created;
+            if (barcode != null) {
+              byBarcode[barcode] = created;
+            }
+            inserted++;
+          } else {
+            if (barcode != null) {
+              final barcodeHit = byBarcode[barcode];
+              if (barcodeHit != null && barcodeHit.id != existing.id) {
+                throw const ProductException(ProductException.duplicateBarcode);
+              }
+            }
+            final nextVersion = existing.version + 1;
+            await (_db.update(
+              _db.products,
+            )..where((t) => t.id.equals(existing.id))).write(
+              ProductsCompanion(
+                name: Value(name),
+                barcode: Value(barcode),
+                packSize: Value(draft.packSize),
+                price: Value(draft.price),
+                updatedAt: Value(nowMs),
+                syncStatus: const Value('pending'),
+                version: Value(nextVersion),
+              ),
+            );
+            final oldBarcode = existing.barcode;
+            if (oldBarcode != null && oldBarcode != barcode) {
+              byBarcode.remove(oldBarcode);
+            }
+            final updatedRow = existing.copyWith(
+              name: name,
+              barcode: barcode,
+              clearBarcode: barcode == null,
+              packSize: draft.packSize,
+              price: draft.price,
+              updatedAt: now,
+              syncStatus: SyncStatus.pending,
+              version: nextVersion,
+            );
+            byCode[code] = updatedRow;
+            if (barcode != null) {
+              byBarcode[barcode] = updatedRow;
+            }
+            touched.add(updatedRow);
+            updated++;
+          }
+        }
+      });
+
+      onProgress?.call(end, total);
+      await Future<void>.delayed(Duration.zero);
+    }
 
     for (final product in touched) {
       await _enqueue(

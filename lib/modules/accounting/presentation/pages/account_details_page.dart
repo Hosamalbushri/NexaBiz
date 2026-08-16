@@ -66,6 +66,15 @@ class AccountDetailsPage extends ConsumerWidget {
             title: AccountLabels.displayName(l10n, account),
             showBackButton: true,
             actions: [
+              if (account.isGroup && account.isActive)
+                IconButton(
+                  tooltip: l10n.accountingAddChildAccount,
+                  icon: const Icon(Icons.add_box_outlined),
+                  onPressed: () => AccountingRoutes.pushAccountsCreate(
+                    context,
+                    parentId: account.uuid,
+                  ),
+                ),
               IconButton(
                 tooltip: l10n.accountingEditAccount,
                 icon: const Icon(Icons.edit_outlined),

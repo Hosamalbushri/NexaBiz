@@ -98,7 +98,10 @@ class _FakeProductRepository implements ProductRepository {
   Future<void> delete(int id) => throw UnimplementedError();
 
   @override
-  Future<ProductUpsertResult> upsertAll(List<ProductDraft> drafts) =>
+  Future<ProductUpsertResult> upsertAll(
+    List<ProductDraft> drafts, {
+    void Function(int processed, int total)? onProgress,
+  }) =>
       throw UnimplementedError();
 }
 

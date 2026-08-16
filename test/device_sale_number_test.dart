@@ -22,10 +22,18 @@ void main() {
     expect(formatSaleNumber(a), '161000041');
   });
 
-  test('parseSaleNumberSequence supports plain and legacy formats', () {
-    expect(parseSaleNumberSequence('42'), 42);
-    expect(parseSaleNumberSequence('INV-7'), 7);
-    expect(parseSaleNumberSequence('00A1-12'), 12);
+  test('saleNumberView shows short local sequence for device lanes', () {
+    final view = saleNumberView('161000041');
+    expect(view.primaryLabel, '41');
+    expect(view.referenceLabel, '161000041');
+    expect(view.hasSeparateReference, isTrue);
+    expect(formatSaleNumberPrimary('161000041'), '41');
+  });
+
+  test('saleNumberView keeps small legacy numbers as-is', () {
+    final view = saleNumberView('42');
+    expect(view.primaryLabel, '42');
+    expect(view.hasSeparateReference, isFalse);
   });
 
   test('LocalSaleNumberAllocator returns plain integers', () async {

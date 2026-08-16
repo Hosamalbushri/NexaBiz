@@ -123,7 +123,10 @@ class InventoryRepositoryImpl implements InventoryRepository {
   }
 
   @override
-  Future<void> replaceAll(List<InventoryItem> items) async {
+  Future<void> replaceAll(
+    List<InventoryItem> items, {
+    void Function(int processed, int total)? onProgress,
+  }) async {
     final box = await _box;
     await box.clear();
     final now = DateTime.now().toUtc();
@@ -136,8 +139,19 @@ class InventoryRepositoryImpl implements InventoryRepository {
         ),
     };
     await box.putAll(map);
-    for (final item in map.values) {
-      await _enqueue(item, SyncOperationType.create);
+
+    final values = map.values.toList(growable: false);
+    const chunkSize = 40;
+    final total = values.length;
+    for (var start = 0; start < values.length; start += chunkSize) {
+      final end = (start + chunkSize < values.length)
+          ? start + chunkSize
+          : values.length;
+      for (var i = start; i < end; i++) {
+        await _enqueue(values[i], SyncOperationType.create);
+      }
+      onProgress?.call(end, total);
+      await Future<void>.delayed(Duration.zero);
     }
   }
 

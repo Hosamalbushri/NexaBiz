@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/core/database/hive_boxes.dart';
 import 'package:stock_count/modules/app_lock/data/app_lock_repository_impl.dart';
+import 'package:stock_count/modules/app_lock/data/local_auth_app_lock_biometrics.dart';
 import 'package:stock_count/modules/app_lock/domain/entities/app_lock_state.dart';
 import 'package:stock_count/modules/app_lock/presentation/providers/app_lock_providers.dart';
 
@@ -20,6 +21,7 @@ void main() {
     repository = AppLockRepositoryImpl(box: box);
     controller = AppLockController(
       repository: repository,
+      biometrics: const UnavailableAppLockBiometrics(),
       onChanged: () {},
     );
   });

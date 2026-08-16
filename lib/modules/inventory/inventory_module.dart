@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/route_access_rule.dart';
+import '../../core/permissions/permission_defs.dart';
 import '../../core/reporting/pdf_document_preview_page.dart';
+import 'permissions/inventory_permission_package.dart';
 import 'presentation/pages/inventory_count_page.dart';
 import 'presentation/pages/inventory_home_page.dart';
 import 'presentation/pages/inventory_import_page.dart';
@@ -40,6 +43,66 @@ class InventoryModule extends AppModule {
 
   @override
   bool get isEnabled => true;
+
+  @override
+  List<String> get requiredAnyPermissions => const [
+        ...InventoryPermissions.stockView,
+        ...InventoryPermissions.productsView,
+      ];
+
+  @override
+  List<RouteAccessRule> get routeAccessRules => [
+        RouteAccessRule(
+          pathEquals: InventoryRoutes.productsNew,
+          anyOf: InventoryPermissions.productsCreate,
+        ),
+        RouteAccessRule(
+          pathEquals: InventoryRoutes.productsImport,
+          anyOf: InventoryPermissions.productsImport,
+        ),
+        RouteAccessRule(
+          pathEquals: InventoryRoutes.productsBarcode,
+          anyOf: InventoryPermissions.productsBarcode,
+        ),
+        RouteAccessRule(
+          pathRegex: RegExp(r'^/inventory/products/\d+/edit$'),
+          anyOf: InventoryPermissions.productsUpdate,
+        ),
+        RouteAccessRule(
+          pathPrefix: InventoryRoutes.products,
+          anyOf: InventoryPermissions.productsView,
+        ),
+        RouteAccessRule(
+          pathEquals: InventoryRoutes.import,
+          anyOf: InventoryPermissions.stockImport,
+        ),
+        RouteAccessRule(
+          pathEquals: InventoryRoutes.reports,
+          anyOf: InventoryPermissions.stockExport,
+        ),
+        RouteAccessRule(
+          pathEquals: InventoryRoutes.reportPreview,
+          anyOf: InventoryPermissions.stockExport,
+        ),
+        RouteAccessRule(
+          pathPrefix: InventoryRoutes.count,
+          anyOf: InventoryPermissions.stockAdjust,
+        ),
+        RouteAccessRule(
+          pathPrefix: InventoryRoutes.stockCount,
+          anyOf: InventoryPermissions.stockView,
+        ),
+        RouteAccessRule(
+          pathPrefix: InventoryRoutes.root,
+          anyOf: const [
+            ...InventoryPermissions.stockView,
+            ...InventoryPermissions.productsView,
+          ],
+        ),
+      ];
+
+  @override
+  PermissionPackageDef? get permissionPackage => inventoryPermissionPackage();
 
   @override
   String label(BuildContext context) {

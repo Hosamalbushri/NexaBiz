@@ -12,6 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../domain/entities/sale.dart';
 import '../../domain/entities/sale_item.dart';
 import '../../domain/entities/sale_settlement_type.dart';
+import '../../domain/services/device_sale_number.dart';
 import '../../../../core/reporting/arabic_amount_words.dart';
 
 /// Classic Arabic sales invoice PDF (matches traditional credit/cash form).
@@ -159,7 +160,7 @@ class SaleInvoicePdfPrinter {
         ? sale.customerName!.trim()
         : 'عميل_عابر';
     final date = DateFormat('dd-MM-yyyy').format(sale.saleDate.toLocal());
-    final raw = '${customer}_${sale.saleNumber}_$date.pdf';
+    final raw = '${customer}_${formatSaleNumberPrimary(sale.saleNumber)}_$date.pdf';
     return _sanitizeFileName(raw);
   }
 
@@ -250,7 +251,8 @@ class SaleInvoicePdfPrinter {
               ),
               pw.SizedBox(height: 10),
               _metaTable(
-                invoiceNumber: sale.saleNumber,
+                invoiceNumber: formatSaleNumberPrimary(sale.saleNumber),
+                invoiceReference: saleNumberView(sale.saleNumber).referenceLabel,
                 customerName: customer,
                 invoiceDate: dateText,
                 currencyLabel: currencyLabel,
@@ -405,9 +407,15 @@ class SaleInvoicePdfPrinter {
     required String customerName,
     required String invoiceDate,
     required String currencyLabel,
+    String? invoiceReference,
   }) {
     final labelStyle = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
     const valueStyle = pw.TextStyle(fontSize: 10);
+    final invoiceDisplay = invoiceReference == null ||
+            invoiceReference.isEmpty ||
+            invoiceReference == invoiceNumber
+        ? invoiceNumber
+        : '$invoiceNumber\n($invoiceReference)';
 
     pw.Widget fixedCol(
       String label,
@@ -472,7 +480,14 @@ class SaleInvoicePdfPrinter {
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          fixedCol('رقم الفاتورة', invoiceNumber, width: 88),
+          fixedCol(
+            'رقم الفاتورة',
+            invoiceDisplay,
+            width: 88,
+            wrap: invoiceReference != null &&
+                invoiceReference.isNotEmpty &&
+                invoiceReference != invoiceNumber,
+          ),
           customerCol,
           fixedCol('تاريخ الفاتورة', invoiceDate, width: 88),
           fixedCol(

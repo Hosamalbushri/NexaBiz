@@ -11,14 +11,23 @@ import 'package:stock_count/modules/system_setup/domain/ports/system_setup_seed_
 import 'package:stock_count/modules/system_setup/domain/services/system_initialization_coordinator.dart';
 
 class _CountingSeedPort implements SystemSetupSeedPort {
-  var calls = 0;
+  var localCalls = 0;
+  var syncCalls = 0;
   var fail = false;
 
   @override
   Future<void> ensureLocalDefaults() async {
-    calls += 1;
+    localCalls += 1;
     if (fail) {
       throw StateError('seed failed');
+    }
+  }
+
+  @override
+  Future<void> pullRemoteDefaults() async {
+    syncCalls += 1;
+    if (fail) {
+      throw StateError('sync seed failed');
     }
   }
 }
@@ -67,7 +76,7 @@ void main() {
         steps: steps,
       );
       expect(progress.requiredDone, 2);
-      expect(progress.percentComplete, 40);
+      expect(progress.percentComplete, 50);
       expect(progress.isReady, isFalse);
       expect(progress.allRequiredComplete, isFalse);
     });
@@ -122,12 +131,22 @@ void main() {
 
       await coordinator.markStepCompleted(SetupStepId.locale);
       await coordinator.markStepCompleted(SetupStepId.primaryCurrency);
-      await coordinator.markStepCompleted(SetupStepId.welcomeMode);
       await coordinator.markStepCompleted(SetupStepId.companyProfile);
       expect(await coordinator.isReady(), isFalse);
 
       await coordinator.runSeedLocal();
-      expect(seedPort.calls, 1);
+      expect(seedPort.localCalls, 1);
+      expect(await coordinator.isReady(), isTrue);
+    });
+
+    test('seed from sync completes the same setup step', () async {
+      await coordinator.markStepCompleted(SetupStepId.locale);
+      await coordinator.markStepCompleted(SetupStepId.primaryCurrency);
+      await coordinator.markStepCompleted(SetupStepId.companyProfile);
+
+      await coordinator.runSeedFromSync();
+      expect(seedPort.syncCalls, 1);
+      expect(seedPort.localCalls, 0);
       expect(await coordinator.isReady(), isTrue);
     });
 
@@ -159,37 +178,7 @@ void main() {
         progress.stateFor(SetupStepId.seedLocal).status,
         SetupStepStatus.completed,
       );
-      expect(seedPort.calls, 2);
-    });
-
-    test('optional failure does not block readiness', () async {
-      for (final id in SetupStepId.requiredIds) {
-        if (id == SetupStepId.seedLocal) {
-          await coordinator.runSeedLocal();
-        } else {
-          await coordinator.markStepCompleted(id);
-        }
-      }
-      expect(await coordinator.isReady(), isTrue);
-
-      seedPort.fail = true;
-      // Optional sync uses runStep with failing action — should not clear ready
-      // if we only fail an optional step after ready; simulate skip instead.
-      final afterSkip = await coordinator.skipOptionalStep(
-        SetupStepId.initialSync,
-      );
-      expect(afterSkip.isReady, isTrue);
-      expect(
-        afterSkip.stateFor(SetupStepId.initialSync).status,
-        SetupStepStatus.skipped,
-      );
-    });
-
-    test('cannot skip required step', () async {
-      expect(
-        () => coordinator.skipOptionalStep(SetupStepId.companyProfile),
-        throwsStateError,
-      );
+      expect(seedPort.localCalls, 2);
     });
   });
 }

@@ -16,6 +16,7 @@ import 'package:stock_count/modules/accounting/domain/entities/account_type.dart
 import 'package:stock_count/modules/accounting/domain/entities/normal_balance.dart';
 import 'package:stock_count/modules/accounting/domain/models/account_exception.dart';
 import 'package:stock_count/modules/accounting/domain/models/account_tree_node.dart';
+import 'package:stock_count/modules/accounting/domain/services/account_code_generator.dart';
 import 'package:stock_count/modules/accounting/domain/services/account_validator.dart';
 
 void main() {
@@ -222,6 +223,7 @@ void main() {
         expect(account.isGroup, isGroup, reason: code);
       }
 
+      await expectSystem(code: '1210', isGroup: true); // cash boxes
       await expectSystem(code: '1213', isGroup: false); // petty cash
       await expectSystem(code: '1235', isGroup: false); // inventory in transit
       await expectSystem(code: '1250', isGroup: false); // VAT input
@@ -238,6 +240,14 @@ void main() {
       await expectSystem(code: '5160', isGroup: false); // sales returns
       await expectSystem(code: '5170', isGroup: false); // sales discounts
       await expectSystem(code: '5500', isGroup: false); // bank charges
+
+      final cashBoxes = await repo.getByAccountCode('1210');
+      final cash = await repo.getByAccountCode('1211');
+      final bank = await repo.getByAccountCode('1212');
+      final currentAssets = await repo.getByAccountCode('1200');
+      expect(cashBoxes!.parentId, currentAssets!.uuid);
+      expect(cash!.parentId, cashBoxes.uuid);
+      expect(bank!.parentId, cashBoxes.uuid);
 
       final purchaseDiscounts = await repo.getByAccountCode('4210');
       final otherRevenue = await repo.getByAccountCode('4200');
@@ -336,6 +346,39 @@ void main() {
           ),
         ),
       );
+    });
+
+    test('AccountCodeGenerator sequences from parent account code', () async {
+      await repo.ensureDefaultChartSeeded();
+      final customers = await repo.getByAccountCode('1221');
+      expect(customers, isNotNull);
+
+      final generator = AccountCodeGenerator(repo);
+      final first = await generator.generate(
+        parentAccountCode: customers!.accountCode,
+      );
+      expect(first, '12210001');
+
+      await repo.insert(
+        AccountDraft(
+          parentId: customers.uuid,
+          accountCode: first,
+          name: 'Customer One',
+          accountType: AccountType.asset,
+          isGroup: false,
+        ),
+      );
+      final second = await generator.generate(
+        parentAccountCode: customers.accountCode,
+      );
+      expect(second, '12210002');
+
+      // Sibling system codes under cash boxes (1211) must not block 12100001.
+      final cashBoxes = await repo.getByAccountCode('1210');
+      final cashBoxChild = await generator.generate(
+        parentAccountCode: cashBoxes!.accountCode,
+      );
+      expect(cashBoxChild, '12100001');
     });
 
     test('rejects children under posting accounts', () async {

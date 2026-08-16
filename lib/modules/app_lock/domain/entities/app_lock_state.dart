@@ -44,6 +44,8 @@ class AppLockState {
     required this.policy,
     required this.gate,
     required this.hasPin,
+    this.biometricEnabled = false,
+    this.biometricAvailable = false,
     this.failedAttempts = 0,
     this.lockoutUntil,
     this.errorMessage,
@@ -61,12 +63,17 @@ class AppLockState {
   final AppLockPolicy policy;
   final AppLockGate gate;
   final bool hasPin;
+  final bool biometricEnabled;
+  final bool biometricAvailable;
   final int failedAttempts;
   final DateTime? lockoutUntil;
   final String? errorMessage;
   final bool busy;
 
   bool get isLocked => gate == AppLockGate.locked;
+
+  bool get canUseBiometrics =>
+      enabled && biometricEnabled && biometricAvailable && !isLockoutActive;
 
   bool get isLockoutActive =>
       lockoutUntil != null && DateTime.now().toUtc().isBefore(lockoutUntil!);
@@ -76,6 +83,8 @@ class AppLockState {
     AppLockPolicy? policy,
     AppLockGate? gate,
     bool? hasPin,
+    bool? biometricEnabled,
+    bool? biometricAvailable,
     int? failedAttempts,
     DateTime? lockoutUntil,
     String? errorMessage,
@@ -88,6 +97,8 @@ class AppLockState {
       policy: policy ?? this.policy,
       gate: gate ?? this.gate,
       hasPin: hasPin ?? this.hasPin,
+      biometricEnabled: biometricEnabled ?? this.biometricEnabled,
+      biometricAvailable: biometricAvailable ?? this.biometricAvailable,
       failedAttempts: failedAttempts ?? this.failedAttempts,
       lockoutUntil: clearLockout ? null : (lockoutUntil ?? this.lockoutUntil),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),

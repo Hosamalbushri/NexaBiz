@@ -7,6 +7,7 @@ import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/utils/digit_normalization.dart';
+import '../../../../core/widgets/app_amount_field.dart';
 import '../../domain/entities/sale_item.dart';
 import '../../domain/services/sale_calculation_service.dart';
 import '../../domain/services/sale_product_catalog_port.dart';
@@ -844,15 +845,7 @@ class _FilledProductRowState extends State<_FilledProductRow> {
 
   double get _effectiveUnitPrice => _liveUnitPrice ?? widget.item.unitPrice;
 
-  void _onPriceEdited(double? parsed) {
-    if (parsed == null) {
-      setState(() {
-        _liveUnitPrice = null;
-        _priceBelowMin = false;
-      });
-      return;
-    }
-
+  void _onPriceEdited(double parsed) {
     final belowMin = parsed < widget.minUnitPrice;
     setState(() {
       _liveUnitPrice = parsed;
@@ -960,8 +953,13 @@ class _FilledProductRowState extends State<_FilledProductRow> {
               width: _Cols.main,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: _CompactQtyField(
+                child: AppAmountField(
                   value: widget.item.mainQuantity,
+                  decimalPlaces: 3,
+                  trimTrailingZeros: true,
+                  variant: AppAmountFieldVariant.compact,
+                  skipTraversal: true,
+                  keepFocusOnSubmit: true,
                   onChanged: (main) => onQuantitiesChangedSafe(
                     main,
                     widget.item.subQuantity,
@@ -973,8 +971,13 @@ class _FilledProductRowState extends State<_FilledProductRow> {
               width: _Cols.sub,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: _CompactQtyField(
+                child: AppAmountField(
                   value: widget.item.subQuantity,
+                  decimalPlaces: 3,
+                  trimTrailingZeros: true,
+                  variant: AppAmountFieldVariant.compact,
+                  skipTraversal: true,
+                  keepFocusOnSubmit: true,
                   onChanged: (sub) => onQuantitiesChangedSafe(
                     widget.item.mainQuantity,
                     sub,
@@ -986,17 +989,22 @@ class _FilledProductRowState extends State<_FilledProductRow> {
               width: _Cols.price,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: _CompactPriceField(
-                  value: widget.item.unitPrice,
-                  minValue: widget.minUnitPrice,
-                  belowMin: _priceBelowMin,
-                  belowMinMessage: l10n.salesPriceBelowCatalogHint,
-                  onEdited: _onPriceEdited,
-                  onCommit: (price) => widget.onUnitPriceChanged(price),
-                  onRejected: () =>
-                      _onPriceCommitFinished(rejected: true),
-                  onAccepted: () =>
-                      _onPriceCommitFinished(rejected: false),
+                child: AppAmountField(
+                  value: _effectiveUnitPrice,
+                  variant: AppAmountFieldVariant.compact,
+                  skipTraversal: true,
+                  errorText: _priceBelowMin
+                      ? l10n.salesPriceBelowCatalogHint
+                      : null,
+                  onChanged: _onPriceEdited,
+                  onSubmitted: (price) {
+                    if (price < widget.minUnitPrice) {
+                      _onPriceCommitFinished(rejected: true);
+                      return;
+                    }
+                    final accepted = widget.onUnitPriceChanged(price);
+                    _onPriceCommitFinished(rejected: !accepted);
+                  },
                 ),
               ),
             ),
@@ -1335,281 +1343,6 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
             ),
         ],
       ),
-    );
-  }
-}
-
-class _CompactPriceField extends StatefulWidget {
-  const _CompactPriceField({
-    required this.value,
-    required this.minValue,
-    required this.belowMin,
-    required this.belowMinMessage,
-    required this.onEdited,
-    required this.onCommit,
-    required this.onRejected,
-    required this.onAccepted,
-  });
-
-  final double value;
-  final double minValue;
-  final bool belowMin;
-  final String belowMinMessage;
-  final ValueChanged<double?> onEdited;
-  final bool Function(double unitPrice) onCommit;
-  final VoidCallback onRejected;
-  final VoidCallback onAccepted;
-
-  @override
-  State<_CompactPriceField> createState() => _CompactPriceFieldState();
-}
-
-class _CompactPriceFieldState extends State<_CompactPriceField> {
-  late final TextEditingController _controller;
-  late final FocusNode _focusNode;
-  var _committing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: _format(widget.value));
-    _focusNode = FocusNode(skipTraversal: true)..addListener(_onFocusChange);
-  }
-
-  @override
-  void didUpdateWidget(covariant _CompactPriceField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!_focusNode.hasFocus &&
-        !widget.belowMin &&
-        oldWidget.value != widget.value) {
-      _controller.text = _format(widget.value);
-    }
-  }
-
-  @override
-  void dispose() {
-    _focusNode.removeListener(_onFocusChange);
-    _focusNode.dispose();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _onFocusChange() {
-    if (!_focusNode.hasFocus) {
-      _finalize();
-    }
-  }
-
-  String _format(double v) {
-    if (v == v.roundToDouble()) {
-      return v.toInt().toString();
-    }
-    return v.toStringAsFixed(2);
-  }
-
-  double? _parse(String raw) {
-    return double.tryParse(
-      normalizeDigitsToWestern(raw).replaceAll(',', '.'),
-    );
-  }
-
-  void _finalize() {
-    if (_committing) {
-      return;
-    }
-    _committing = true;
-    try {
-      final parsed = _parse(_controller.text);
-      if (parsed == null) {
-        _controller.text = _format(widget.value);
-        widget.onEdited(null);
-        widget.onAccepted();
-        return;
-      }
-      if (parsed < widget.minValue) {
-        _controller.text = _format(widget.value);
-        widget.onRejected();
-        return;
-      }
-      final accepted = widget.onCommit(parsed);
-      if (!accepted) {
-        _controller.text = _format(widget.value);
-        widget.onRejected();
-        return;
-      }
-      _controller.text = _format(parsed);
-      widget.onAccepted();
-    } finally {
-      _committing = false;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final hasError = widget.belowMin;
-
-    return TextField(
-      controller: _controller,
-      focusNode: _focusNode,
-      textAlign: TextAlign.center,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      textInputAction: TextInputAction.done,
-      inputFormatters: const [WesternDigitsInputFormatter()],
-      style: theme.textTheme.bodyMedium?.copyWith(
-        fontWeight: FontWeight.w800,
-        color: hasError ? scheme.error : null,
-      ),
-      decoration: InputDecoration(
-        isDense: true,
-        filled: true,
-        fillColor: hasError
-            ? scheme.errorContainer.withValues(alpha: 0.35)
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.45),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-        errorText: hasError ? widget.belowMinMessage : null,
-        errorMaxLines: 2,
-        errorStyle: theme.textTheme.labelSmall?.copyWith(
-          color: scheme.error,
-          fontWeight: FontWeight.w700,
-          height: 1.15,
-          fontSize: 10,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          borderSide: BorderSide(
-            color: hasError
-                ? scheme.error
-                : scheme.outlineVariant.withValues(alpha: 0.35),
-            width: hasError ? 1.4 : 1,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          borderSide: BorderSide(
-            color: hasError ? scheme.error : scheme.primary,
-            width: 1.4,
-          ),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          borderSide: BorderSide(color: scheme.error, width: 1.4),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          borderSide: BorderSide(color: scheme.error, width: 1.6),
-        ),
-      ),
-      onChanged: (raw) {
-        widget.onEdited(_parse(raw));
-      },
-      onEditingComplete: () {
-        _finalize();
-        _focusNode.unfocus();
-      },
-      onSubmitted: (_) {
-        _finalize();
-        _focusNode.unfocus();
-      },
-    );
-  }
-}
-
-class _CompactQtyField extends StatefulWidget {
-  const _CompactQtyField({required this.value, required this.onChanged});
-
-  final double value;
-  final ValueChanged<double> onChanged;
-
-  @override
-  State<_CompactQtyField> createState() => _CompactQtyFieldState();
-}
-
-class _CompactQtyFieldState extends State<_CompactQtyField> {
-  late final TextEditingController _controller;
-  late final FocusNode _focusNode;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController(text: _format(widget.value));
-    _focusNode = FocusNode(skipTraversal: true);
-  }
-
-  @override
-  void didUpdateWidget(covariant _CompactQtyField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Keep keyboard/focus while typing — only sync from parent when unfocused.
-    if (!_focusNode.hasFocus && oldWidget.value != widget.value) {
-      final next = _format(widget.value);
-      if (_controller.text != next) {
-        _controller.text = next;
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _focusNode.dispose();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  String _format(double v) {
-    if (v == v.roundToDouble()) {
-      return v.toInt().toString();
-    }
-    return v.toString();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return TextField(
-      controller: _controller,
-      focusNode: _focusNode,
-      textAlign: TextAlign.center,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      textInputAction: TextInputAction.done,
-      inputFormatters: const [WesternDigitsInputFormatter()],
-      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
-      decoration: InputDecoration(
-        isDense: true,
-        filled: true,
-        fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          borderSide: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.35),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.sm),
-          borderSide: BorderSide(color: scheme.primary, width: 1.3),
-        ),
-      ),
-      onChanged: (raw) {
-        final parsed = double.tryParse(
-          normalizeDigitsToWestern(raw).replaceAll(',', '.'),
-        );
-        if (parsed != null && parsed >= 0) {
-          widget.onChanged(parsed);
-        }
-      },
-      // Keep keyboard open after Done / submit.
-      onEditingComplete: () {},
-      onSubmitted: (_) {},
     );
   }
 }

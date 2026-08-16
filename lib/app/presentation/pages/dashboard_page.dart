@@ -13,6 +13,7 @@ import '../../notifications/presentation/providers/notifications_provider.dart';
 import '../../router/app_routes.dart';
 import '../../sync/app_bar_sync_actions.dart';
 import '../../theme/app_spacing.dart';
+import '../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../providers/dashboard_services_provider.dart';
 import '../providers/quick_actions_panel_provider.dart';
 import '../widgets/dashboard_recent_operations.dart';
@@ -55,7 +56,9 @@ class DashboardPage extends ConsumerWidget {
           ),
         ),
         data: (_) {
-          final modules = controller.resolveModules();
+          final permissions = ref.watch(currentPermissionsProvider);
+          final modules =
+              controller.resolveModules(permissions: permissions);
           return Padding(
             padding: AppConstants.pageInsets(context),
             child: SingleChildScrollView(

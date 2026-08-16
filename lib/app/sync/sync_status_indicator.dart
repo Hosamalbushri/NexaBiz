@@ -115,5 +115,6 @@ String localizedRecordSyncStatus(AppLocalizations l10n, SyncStatus status) {
     SyncStatus.syncing => l10n.syncStatusSyncing,
     SyncStatus.failed => l10n.syncStatusFailed,
     SyncStatus.conflict => l10n.syncStatusConflict,
+    SyncStatus.rejected => l10n.syncStatusRejected,
   };
 }

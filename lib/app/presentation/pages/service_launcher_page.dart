@@ -7,8 +7,10 @@ import '../../localization/app_localizations.dart';
 import '../../notifications/presentation/providers/notifications_provider.dart';
 import '../../router/app_routes.dart';
 import '../../sync/app_bar_sync_actions.dart';
+import '../../sync/sync_enabled_provider.dart';
 import '../../../core/modules/module_providers.dart';
 import '../../../core/widgets/custom_app_bar.dart';
+import '../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../../shared/widgets/service_launcher.dart';
 
 /// Services branch: launches business modules via the module registry.
@@ -19,7 +21,14 @@ class ServiceLauncherPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final registry = ref.watch(moduleRegistryProvider);
+    final permissions = ref.watch(currentPermissionsProvider);
+    final syncOn = ref.watch(syncEnabledProvider);
+    final remote = ref.watch(authStateProvider).isRemoteSession;
     final unread = ref.watch(unreadNotificationsCountProvider);
+    final modules = [
+      for (final module in registry.modulesVisibleTo(permissions))
+        if (module.id != 'administration' || (syncOn && remote)) module,
+    ];
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -35,7 +44,7 @@ class ServiceLauncherPage extends ConsumerWidget {
         child: ServiceLauncher(
           title: l10n.servicesTitle,
           subtitle: l10n.servicesSubtitle,
-          modules: registry.enabledModules,
+          modules: modules,
           onModuleSelected: (module) {
             if (!module.isEnabled) {
               return;

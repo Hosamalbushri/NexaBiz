@@ -5,6 +5,45 @@ import 'package:go_router/go_router.dart';
 import '../../app/localization/app_localizations.dart';
 import 'notification_badge.dart';
 
+/// Base title scale for [CustomAppBar].
+///
+/// Use [auto] to pick a smaller base size for long titles, then fit residual
+/// overflow with a soft scale-down.
+enum CustomAppBarTitleSize {
+  /// ~22sp — short titles.
+  large,
+
+  /// ~18sp — medium titles.
+  medium,
+
+  /// ~16sp — long titles / crowded toolbars.
+  small,
+
+  /// Chooses [large]/[medium]/[small] from title length, then fits to width.
+  auto,
+}
+
+extension CustomAppBarTitleSizeX on CustomAppBarTitleSize {
+  /// Resolved font size before width fitting.
+  double fontSizeFor(String title) {
+    final resolved = this == CustomAppBarTitleSize.auto
+        ? _autoForLength(title.trim().length)
+        : this;
+    return switch (resolved) {
+      CustomAppBarTitleSize.large => 22,
+      CustomAppBarTitleSize.medium => 18,
+      CustomAppBarTitleSize.small => 16,
+      CustomAppBarTitleSize.auto => 22,
+    };
+  }
+
+  static CustomAppBarTitleSize _autoForLength(int length) {
+    if (length <= 14) return CustomAppBarTitleSize.large;
+    if (length <= 24) return CustomAppBarTitleSize.medium;
+    return CustomAppBarTitleSize.small;
+  }
+}
+
 /// Visual configuration for [CustomAppBar].
 ///
 /// Use [CustomAppBarStyle.adaptive] for theme-aware defaults, or
@@ -24,6 +63,7 @@ class CustomAppBarStyle {
     this.horizontalPadding = 16,
     this.shadowColor,
     this.scrolledUnderElevation,
+    this.titleSize,
   });
 
   /// Toolbar body height excluding [PreferredSizeWidget] bottom content.
@@ -61,6 +101,9 @@ class CustomAppBarStyle {
 
   /// Elevation applied when content scrolls under the bar.
   final double? scrolledUnderElevation;
+
+  /// Base title size. Null keeps the previous style / [CustomAppBarTitleSize.auto].
+  final CustomAppBarTitleSize? titleSize;
 
   /// Creates a style that adapts to the current [ThemeData].
   factory CustomAppBarStyle.adaptive(BuildContext context) {
@@ -114,6 +157,7 @@ class CustomAppBarStyle {
       shadowColor: other.shadowColor ?? shadowColor,
       scrolledUnderElevation:
           other.scrolledUnderElevation ?? scrolledUnderElevation,
+      titleSize: other.titleSize ?? titleSize,
     );
   }
 }
@@ -154,6 +198,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     /// Use `false` on primary shell tabs so the title sits on the start edge
     /// (right in Arabic RTL).
     this.centerTitle,
+    /// When set, overrides [CustomAppBarStyle.titleSize].
+    ///
+    /// Defaults to [CustomAppBarTitleSize.auto] which shrinks long titles.
+    this.titleSize,
   });
 
   /// Primary title text.
@@ -242,6 +290,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// Optional override for title centering. See constructor docs.
   final bool? centerTitle;
 
+  /// Optional override for title size. See constructor docs.
+  final CustomAppBarTitleSize? titleSize;
+
   @override
   Size get preferredSize {
     final resolvedStyle = style ?? const CustomAppBarStyle();
@@ -267,7 +318,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           centerTitle != null
               ? CustomAppBarStyle(centerTitle: centerTitle!)
               : null,
+        )
+        .merge(
+          titleSize != null
+              ? CustomAppBarStyle(titleSize: titleSize)
+              : null,
         );
+    final resolvedTitleSize =
+        resolvedStyle.titleSize ?? CustomAppBarTitleSize.auto;
     final foreground = resolvedStyle.foregroundColor ?? colorScheme.onSurface;
     final mediaWidth = MediaQuery.sizeOf(context).width;
     final isCompact = mediaWidth < 360;
@@ -311,6 +369,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               title: title,
               foregroundColor: foreground,
               centerTitle: resolvedStyle.centerTitle,
+              titleSize: resolvedTitleSize,
               animate: animateContent && !searching,
             ),
       trailing: _buildTrailing(context, foreground, resolvedStyle),
@@ -643,32 +702,40 @@ class _CustomAppBarTitle extends StatelessWidget {
     required this.title,
     required this.foregroundColor,
     required this.centerTitle,
+    required this.titleSize,
     required this.animate,
   });
 
   final String title;
   final Color foregroundColor;
   final bool centerTitle;
+  final CustomAppBarTitleSize titleSize;
   final bool animate;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final fontSize = titleSize.fontSizeFor(title);
 
     final titleStyle = theme.textTheme.headlineSmall?.copyWith(
       fontWeight: FontWeight.w700,
       letterSpacing: -0.6,
       height: 1.05,
       color: foregroundColor,
-      fontSize: 22,
+      fontSize: fontSize,
     );
 
-    final content = Text(
-      title,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      textAlign: centerTitle ? TextAlign.center : TextAlign.start,
-      style: titleStyle,
+    final content = FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: centerTitle ? Alignment.center : AlignmentDirectional.centerStart,
+      child: Text(
+        title,
+        maxLines: 1,
+        softWrap: false,
+        overflow: TextOverflow.visible,
+        textAlign: centerTitle ? TextAlign.center : TextAlign.start,
+        style: titleStyle,
+      ),
     );
 
     if (!animate) {

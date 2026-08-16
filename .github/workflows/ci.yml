@@ -1,0 +1,102 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter:
+    name: Flutter analyze + test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install SQLite (Drift / tests)
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test --reporter expanded
+
+  backend:
+    name: Backend pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sync
+          POSTGRES_PASSWORD: sync
+          POSTGRES_DB: sync_experimental
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sync -d sync_experimental"
+          --health-interval 3s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql+psycopg2://sync:sync@localhost:5432/sync_experimental
+      TEST_DATABASE_URL: postgresql+psycopg2://sync:sync@localhost:5432/sync_experimental
+      ALLOW_DEV_TOKEN: "true"
+      DEV_API_TOKEN: test-token
+      APP_ENV: development
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Alembic upgrade (CI database)
+        run: alembic upgrade head
+
+      - name: Pytest
+        run: pytest -q --tb=short
+
+  secrets-hygiene:
+    name: Secrets hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject committed env / keystore files
+        run: |
+          set -euo pipefail
+          bad=$(git ls-files | grep -E '(^|/)\.env($|\.)|(\.jks|\.keystore|\.p12)$' || true)
+          # Allow documented examples only.
+          bad=$(echo "$bad" | grep -vE '\.env\.example$|\.env\.production\.example$' || true)
+          if [ -n "$bad" ]; then
+            echo "Refusing tracked secret-like files:"
+            echo "$bad"
+            exit 1
+          fi
+          echo "OK — no tracked .env / keystore secrets"

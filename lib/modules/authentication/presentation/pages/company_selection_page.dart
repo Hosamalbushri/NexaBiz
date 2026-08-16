@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../app/localization/app_localizations.dart';
-import '../../../../app/router/app_routes.dart';
 import '../providers/auth_providers.dart';
 
 class CompanySelectionPage extends ConsumerWidget {
@@ -31,9 +29,7 @@ class CompanySelectionPage extends ConsumerWidget {
               await ref
                   .read(authStateProvider.notifier)
                   .switchCompany(company.id);
-              if (context.mounted) {
-                context.go(AppRoutes.dashboard);
-              }
+              // GoRouter.redirect navigates after auth state updates.
             },
           );
         },

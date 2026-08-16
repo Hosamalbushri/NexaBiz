@@ -38,7 +38,8 @@ class SyncService:
     - UUID identity
     - server-authoritative versions
     - soft deletes
-    - conflict when server.version > base_version
+    - conflict when server.version > base_version (update/delete only)
+    - create is UUID ensure-exists (idempotent; never version-conflicts)
     - idempotent by operation_id
     """
 
@@ -315,14 +316,10 @@ class SyncService:
         )
         now = utcnow()
 
-        # Match InMemoryRemoteSyncApi conflict rule.
-        if existing is not None and existing.version > op.base_version:
-            self._raise_conflict(entity=existing, op=op)
-
+        # Create = ensure UUID exists. Dual-device seeds (same deterministic id)
+        # must ack the server row, never 409 on version.
         if op.type == SyncOperationType.create:
             if existing is not None:
-                # Idempotent create for same UUID when versions are compatible:
-                # return current authoritative state (no duplicate row).
                 return self._ack_from_entity(existing, operation_id=op.operation_id)
 
             version = (op.base_version or 0) + 1
@@ -349,6 +346,10 @@ class SyncService:
                 company_id=company_id, entity=entity, operation="create"
             )
             return self._ack_from_entity(entity, operation_id=op.operation_id)
+
+        # Match InMemoryRemoteSyncApi: version conflicts for update/delete only.
+        if existing is not None and existing.version > op.base_version:
+            self._raise_conflict(entity=existing, op=op)
 
         if existing is None:
             if op.type == SyncOperationType.delete:
@@ -377,6 +378,43 @@ class SyncService:
                     company_id=company_id, entity=entity, operation="delete"
                 )
                 return self._ack_from_entity(entity, operation_id=op.operation_id)
+
+            if op.type == SyncOperationType.update:
+                # Upsert missing entity — matches InMemoryRemoteSyncApi and
+                # covers offline devices whose local rows were never created on
+                # this server (e.g. DB reset / re-seed while Hive still has data).
+                version = (op.base_version or 0) + 1
+                payload = self._payload_for_store(
+                    op,
+                    deleted=False,
+                    version=version,
+                    updated_at=now,
+                    deleted_at=None,
+                )
+                entity = SyncEntity(
+                    company_id=company_id,
+                    entity_type=op.entity_type,
+                    entity_uuid=op.entity_id,
+                    version=version,
+                    payload=payload,
+                    created_at=now,
+                    updated_at=now,
+                    deleted_at=None,
+                )
+                self.db.add(entity)
+                self.db.flush()
+                self._record_change(
+                    company_id=company_id, entity=entity, operation="create"
+                )
+                sync_logger.info(
+                    "PUSH upsert-as-create operation_id=%s entity_type=%s entity_id=%s version=%s",
+                    op.operation_id,
+                    op.entity_type,
+                    op.entity_id,
+                    version,
+                )
+                return self._ack_from_entity(entity, operation_id=op.operation_id)
+
             raise NotFoundError(
                 f"Entity {op.entity_type}/{op.entity_id} not found for {op.type.value}"
             )

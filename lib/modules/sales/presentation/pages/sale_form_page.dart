@@ -11,6 +11,7 @@ import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/sale_settlement_type.dart';
+import '../../domain/services/device_sale_number.dart';
 import '../../domain/services/sale_currency_port.dart';
 import '../../domain/services/sale_customer_lookup_port.dart';
 import '../../domain/services/sale_product_catalog_port.dart';
@@ -264,6 +265,14 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
       return;
     }
     final l10n = AppLocalizations.of(context);
+    if (confirmAfter && !ref.read(salePostingEnabledProvider)) {
+      showAppSnackBar(
+        context,
+        message: l10n.salesPostRequiresInventory,
+        isSuccess: false,
+      );
+      return;
+    }
     final state = ref.read(saleComposerProvider);
     final loading = ref.read(loadingControllerProvider);
 
@@ -473,9 +482,11 @@ class _InvoiceMetaRow extends StatelessWidget {
     required this.invoiceNumber,
     required this.dateLabel,
     required this.onPickDate,
+    this.invoiceReference,
   });
 
   final String invoiceNumber;
+  final String? invoiceReference;
   final String dateLabel;
   final VoidCallback onPickDate;
 
@@ -489,6 +500,9 @@ class _InvoiceMetaRow extends StatelessWidget {
           child: _InvoiceMetaChip(
             label: l10n.salesInvoiceNumber,
             value: invoiceNumber,
+            secondaryValue: invoiceReference == null
+                ? null
+                : l10n.salesInvoiceReference(invoiceReference!),
             icon: Icons.tag_rounded,
             emphasized: true,
           ),
@@ -512,12 +526,14 @@ class _InvoiceMetaChip extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
+    this.secondaryValue,
     this.onTap,
     this.emphasized = false,
   });
 
   final String label;
   final String value;
+  final String? secondaryValue;
   final IconData icon;
   final VoidCallback? onTap;
   final bool emphasized;
@@ -598,6 +614,20 @@ class _InvoiceMetaChip extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (secondaryValue != null) ...[
+                      const SizedBox(height: 1),
+                      Text(
+                        secondaryValue!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 9,
+                          height: 1.1,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -874,8 +904,9 @@ class _InvoiceHeaderCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final dateLabel = DateFormat('d/M/yyyy').format(state.saleDate);
-    final number =
+    final numberRaw =
         state.previewSaleNumber ?? state.voucherBook?.previewNumber ?? '—';
+    final numberView = saleNumberView(numberRaw);
 
     return Material(
       color: theme.colorScheme.surface,
@@ -892,7 +923,10 @@ class _InvoiceHeaderCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _InvoiceMetaRow(
-              invoiceNumber: number,
+              invoiceNumber: numberView.primaryLabel,
+              invoiceReference: numberView.hasSeparateReference
+                  ? numberView.referenceLabel
+                  : null,
               dateLabel: dateLabel,
               onPickDate: onPickDate,
             ),

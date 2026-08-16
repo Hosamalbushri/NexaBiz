@@ -77,7 +77,7 @@ Products Excel import upserts by `item_code` and does **not** write Hive stock-c
 - Database class: `AccountingDatabase` in `lib/modules/accounting/data/database/`
 - Tables: `accounts`, `currency_rates`, `voucher_books`, `journal_entries`, `journal_lines`
 - Schema version: **6**
-- Sync entity type: `account` (rates, voucher books, and journals are local for now)
+- Sync entity types: `account`, `journal_entry` (rates and voucher books remain local for now)
 
 | Column | Notes |
 | --- | --- |

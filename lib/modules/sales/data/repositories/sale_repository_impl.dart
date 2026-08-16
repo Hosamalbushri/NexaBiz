@@ -247,10 +247,19 @@ class SaleRepositoryImpl implements SaleRepository {
   /// SQL text match on header + line snapshots (no Dart hydrate).
   Expression<bool> _matchesTextQuery($SalesTable t, String normalized) {
     final contains = '%$normalized%';
-    final header =
+    var header =
         t.saleNumber.collate(Collate.noCase).like(contains) |
         t.customerName.collate(Collate.noCase).like(contains) |
         t.customerCode.collate(Collate.noCase).like(contains);
+    // Short digit query (e.g. "42") also matches multi-device absolute
+    // numbers whose local sequence ends with that value (…000042).
+    if (RegExp(r'^\d{1,6}$').hasMatch(normalized)) {
+      final padded = normalized.padLeft(6, '0');
+      header =
+          header |
+          t.saleNumber.collate(Collate.noCase).like('%$padded') |
+          t.saleNumber.equals(normalized);
+    }
     final itemMatch = existsQuery(
       _db.select(_db.saleItems)
         ..where(
