@@ -21,6 +21,7 @@ import '../../permissions/receipts_payments_permission_package.dart';
 import '../providers/rp_providers.dart';
 import '../providers/transaction_list_provider.dart';
 import '../utils/rp_labels.dart';
+import '../widgets/rp_entry_lines_readonly_table.dart';
 import '../widgets/rp_error_messages.dart';
 import '../widgets/transaction_status_badge.dart';
 import 'receipts_payments_routes.dart';
@@ -29,6 +30,19 @@ class FinancialTransactionDetailsPage extends ConsumerWidget {
   const FinancialTransactionDetailsPage({super.key, required this.transactionId});
 
   final int transactionId;
+
+  void _back(BuildContext context, {TransactionType? type}) {
+    if (type != null) {
+      ReceiptsPaymentsRoutes.backToList(context, type: type);
+      return;
+    }
+    // Loading / not-found: prefer stack pop when possible.
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      ReceiptsPaymentsRoutes.goRoot(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,7 +56,7 @@ class FinancialTransactionDetailsPage extends ConsumerWidget {
         appBar: CustomAppBar(
           title: l10n.rpDetailsTitle,
           showBackButton: true,
-          onBack: () => ReceiptsPaymentsRoutes.backToList(context),
+          onBack: () => _back(context),
         ),
         body: AppLoading(message: l10n.rpLoading),
       ),
@@ -50,7 +64,7 @@ class FinancialTransactionDetailsPage extends ConsumerWidget {
         appBar: CustomAppBar(
           title: l10n.rpDetailsTitle,
           showBackButton: true,
-          onBack: () => ReceiptsPaymentsRoutes.backToList(context),
+          onBack: () => _back(context),
         ),
         body: AppErrorState(
           message: rpErrorMessage(l10n, error),
@@ -64,7 +78,7 @@ class FinancialTransactionDetailsPage extends ConsumerWidget {
             appBar: CustomAppBar(
               title: l10n.rpDetailsTitle,
               showBackButton: true,
-              onBack: () => ReceiptsPaymentsRoutes.backToList(context),
+              onBack: () => _back(context),
             ),
             body: AppErrorState(
               message: l10n.rpNotFound,
@@ -86,18 +100,30 @@ class _TransactionDetailsBody extends ConsumerWidget {
   final FinancialTransaction transaction;
 
   List<String> get _updatePermissions =>
-      transaction.transactionType.isReceipt
-      ? ReceiptsPaymentsPermissions.receiptsUpdate
-      : ReceiptsPaymentsPermissions.paymentsUpdate;
+      switch (transaction.transactionType) {
+        TransactionType.receipt => ReceiptsPaymentsPermissions.receiptsUpdate,
+        TransactionType.payment => ReceiptsPaymentsPermissions.paymentsUpdate,
+        TransactionType.transfer => ReceiptsPaymentsPermissions.transfersUpdate,
+        TransactionType.currencyExchange =>
+          ReceiptsPaymentsPermissions.exchangesUpdate,
+      };
 
-  List<String> get _postPermissions => transaction.transactionType.isReceipt
-      ? ReceiptsPaymentsPermissions.receiptsPost
-      : ReceiptsPaymentsPermissions.paymentsPost;
+  List<String> get _postPermissions => switch (transaction.transactionType) {
+        TransactionType.receipt => ReceiptsPaymentsPermissions.receiptsPost,
+        TransactionType.payment => ReceiptsPaymentsPermissions.paymentsPost,
+        TransactionType.transfer => ReceiptsPaymentsPermissions.transfersPost,
+        TransactionType.currencyExchange =>
+          ReceiptsPaymentsPermissions.exchangesPost,
+      };
 
   List<String> get _cancelPermissions =>
-      transaction.transactionType.isReceipt
-      ? ReceiptsPaymentsPermissions.receiptsCancel
-      : ReceiptsPaymentsPermissions.paymentsCancel;
+      switch (transaction.transactionType) {
+        TransactionType.receipt => ReceiptsPaymentsPermissions.receiptsCancel,
+        TransactionType.payment => ReceiptsPaymentsPermissions.paymentsCancel,
+        TransactionType.transfer => ReceiptsPaymentsPermissions.transfersCancel,
+        TransactionType.currencyExchange =>
+          ReceiptsPaymentsPermissions.exchangesCancel,
+      };
 
   Future<void> _runAction(
     BuildContext context,
@@ -139,6 +165,13 @@ class _TransactionDetailsBody extends ConsumerWidget {
     );
   }
 
+  void _backToTypedList(BuildContext context) {
+    ReceiptsPaymentsRoutes.backToList(
+      context,
+      type: transaction.transactionType,
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -149,17 +182,26 @@ class _TransactionDetailsBody extends ConsumerWidget {
     final canPost = auth.hasAnyPermission(_postPermissions);
     final canCancel = auth.hasAnyPermission(_cancelPermissions);
     final showPost = transaction.documentStatus.canPost && !transaction.isCancelled;
+    final showUnpost =
+        transaction.documentStatus.canUnpost && !transaction.isCancelled;
     final dateLabel =
         DateFormat('d/M/yyyy').format(transaction.transactionDate.toLocal());
+    final showParty = transaction.transactionType.isReceipt;
     final party = transaction.partyDisplayName.trim().isNotEmpty
         ? transaction.partyDisplayName
         : l10n.rpNoParty;
+    final amountColumnLabel = switch (transaction.transactionType) {
+      TransactionType.receipt => l10n.rpLineAmountCredit,
+      TransactionType.payment ||
+      TransactionType.transfer ||
+      TransactionType.currencyExchange => l10n.rpLineAmountDebit,
+    };
 
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) {
-          ReceiptsPaymentsRoutes.backToList(context);
+          _backToTypedList(context);
         }
       },
       child: Scaffold(
@@ -167,7 +209,7 @@ class _TransactionDetailsBody extends ConsumerWidget {
         appBar: CustomAppBar(
           title: formatSaleNumberPrimary(transaction.transactionNumber),
           showBackButton: true,
-          onBack: () => ReceiptsPaymentsRoutes.backToList(context),
+          onBack: () => _backToTypedList(context),
           actions: [
             if (transaction.documentStatus.isEditable &&
                 canUpdate &&
@@ -175,10 +217,24 @@ class _TransactionDetailsBody extends ConsumerWidget {
               CustomAppBarAction(
                 icon: Icons.edit_outlined,
                 tooltip: l10n.rpEditTitle,
-                onPressed: () =>
-                    ReceiptsPaymentsRoutes.pushEdit(context, transaction.id),
+                onPressed: () {
+                  if (transaction.transactionType.isTransfer) {
+                    ReceiptsPaymentsRoutes.pushEditTransfer(
+                      context,
+                      transaction.id,
+                    );
+                  } else if (transaction.transactionType.isCurrencyExchange) {
+                    ReceiptsPaymentsRoutes.pushEditExchange(
+                      context,
+                      transaction.id,
+                    );
+                  } else {
+                    ReceiptsPaymentsRoutes.pushEdit(context, transaction.id);
+                  }
+                },
               ),
             if ((showPost && canPost) ||
+                (showUnpost && canPost) ||
                 (transaction.documentStatus.canCancel &&
                     canCancel &&
                     !transaction.isCancelled))
@@ -197,6 +253,18 @@ class _TransactionDetailsBody extends ConsumerWidget {
                               .call(transaction.id);
                         },
                         successMessage: l10n.rpPosted,
+                      );
+                    case 'unpost':
+                      await _runAction(
+                        context,
+                        ref,
+                        loadingMessage: l10n.rpUnposting,
+                        action: () async {
+                          await ref
+                              .read(unpostFinancialTransactionProvider)
+                              .call(transaction.id);
+                        },
+                        successMessage: l10n.rpUnposted,
                       );
                     case 'cancel':
                       final ok = await showAppDialog(
@@ -224,7 +292,7 @@ class _TransactionDetailsBody extends ConsumerWidget {
                         successMessage: l10n.rpCancelled,
                         afterSuccess: () {
                           if (context.mounted) {
-                            ReceiptsPaymentsRoutes.backToList(context);
+                            _backToTypedList(context);
                           }
                         },
                       );
@@ -233,6 +301,8 @@ class _TransactionDetailsBody extends ConsumerWidget {
                 itemBuilder: (context) => [
                   if (showPost && canPost)
                     PopupMenuItem(value: 'post', child: Text(l10n.rpPost)),
+                  if (showUnpost && canPost)
+                    PopupMenuItem(value: 'unpost', child: Text(l10n.rpUnpost)),
                   if (transaction.documentStatus.canCancel &&
                       canCancel &&
                       !transaction.isCancelled)
@@ -257,7 +327,7 @@ class _TransactionDetailsBody extends ConsumerWidget {
               ),
           ],
         ),
-        bottomNavigationBar: (showPost && canPost)
+        bottomNavigationBar: (showPost && canPost) || (showUnpost && canPost)
             ? Material(
                 color: scheme.surface,
                 elevation: 8,
@@ -271,20 +341,38 @@ class _TransactionDetailsBody extends ConsumerWidget {
                     ),
                     child: FilledButton.icon(
                       onPressed: () {
-                        _runAction(
-                          context,
-                          ref,
-                          loadingMessage: l10n.rpPosting,
-                          action: () async {
-                            await ref
-                                .read(postFinancialTransactionProvider)
-                                .call(transaction.id);
-                          },
-                          successMessage: l10n.rpPosted,
-                        );
+                        if (showPost) {
+                          _runAction(
+                            context,
+                            ref,
+                            loadingMessage: l10n.rpPosting,
+                            action: () async {
+                              await ref
+                                  .read(postFinancialTransactionProvider)
+                                  .call(transaction.id);
+                            },
+                            successMessage: l10n.rpPosted,
+                          );
+                        } else {
+                          _runAction(
+                            context,
+                            ref,
+                            loadingMessage: l10n.rpUnposting,
+                            action: () async {
+                              await ref
+                                  .read(unpostFinancialTransactionProvider)
+                                  .call(transaction.id);
+                            },
+                            successMessage: l10n.rpUnposted,
+                          );
+                        }
                       },
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: Text(l10n.rpPost),
+                      icon: Icon(
+                        showPost
+                            ? Icons.check_circle_outline
+                            : Icons.undo_outlined,
+                      ),
+                      label: Text(showPost ? l10n.rpPost : l10n.rpUnpost),
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(48),
                       ),
@@ -298,53 +386,186 @@ class _TransactionDetailsBody extends ConsumerWidget {
           children: [
             _HeroCard(transaction: transaction),
             const SizedBox(height: AppSpacing.md),
-            _InfoRow(
-              label: l10n.rpDate,
-              value: dateLabel,
-            ),
-            _InfoRow(
-              label: l10n.rpSource,
-              value: rpTransactionSourceLabel(l10n, transaction.source),
-            ),
-            _InfoRow(
-              label: l10n.rpTypeLabel,
-              value: rpTransactionTypeLabel(l10n, transaction.transactionType),
-            ),
-            _InfoRow(
-              label: l10n.rpPaymentMethod,
-              value: rpPaymentMethodLabel(l10n, transaction.paymentMethod),
-            ),
-            _InfoRow(label: l10n.rpPartyName, value: party),
-            if (transaction.cashAccountName != null)
-              _InfoRow(
-                label: l10n.rpCashAccount,
-                value: transaction.cashAccountName!,
-              ),
-            ...[
-              for (final line in transaction.resolvedLines)
+            _MetaCard(
+              children: [
+                _InfoRow(label: l10n.rpDate, value: dateLabel),
                 _InfoRow(
-                  label: l10n.rpCounterAccount,
-                  value: [
-                    if ((line.accountCode ?? '').trim().isNotEmpty)
-                      line.accountCode!.trim(),
-                    line.accountName?.trim().isNotEmpty == true
-                        ? line.accountName!.trim()
-                        : line.accountId,
-                    '${line.amount.toStringAsFixed(2)} ${line.currencyCode}',
-                  ].join(' · '),
+                  label: l10n.rpSource,
+                  value: rpTransactionSourceLabel(l10n, transaction.source),
                 ),
+                _InfoRow(
+                  label: l10n.rpPaymentMethod,
+                  value: rpPaymentMethodLabel(l10n, transaction.paymentMethod),
+                ),
+                if (transaction.cashAccountName != null)
+                  _InfoRow(
+                    label: transaction.transactionType.isTransfer
+                        ? l10n.rpTransferFromAccount
+                        : (transaction.transactionType.isCurrencyExchange
+                            ? l10n.rpExchangeCashAccount
+                            : l10n.rpCashAccount),
+                    value: [
+                      if ((transaction.cashAccountCode ?? '').trim().isNotEmpty)
+                        transaction.cashAccountCode!.trim(),
+                      transaction.cashAccountName!.trim(),
+                    ].join(' — '),
+                  ),
+                if (transaction.transactionType.isTransfer &&
+                    (transaction.counterAccountName?.trim().isNotEmpty ??
+                        false))
+                  _InfoRow(
+                    label: l10n.rpTransferToAccount,
+                    value: [
+                      if ((transaction.counterAccountCode ?? '')
+                          .trim()
+                          .isNotEmpty)
+                        transaction.counterAccountCode!.trim(),
+                      transaction.counterAccountName!.trim(),
+                    ].join(' — '),
+                  ),
+                if (transaction.transactionType.isCurrencyExchange) ...[
+                  _InfoRow(
+                    label: l10n.rpExchangeFromCurrency,
+                    value: transaction.currencyCode,
+                  ),
+                  if (transaction.counterCurrencyCode.trim().isNotEmpty)
+                    _InfoRow(
+                      label: l10n.rpExchangeToCurrency,
+                      value: transaction.counterCurrencyCode,
+                    ),
+                ] else
+                  _InfoRow(
+                    label: l10n.rpCurrency,
+                    value: transaction.currencyCode,
+                  ),
+                if (transaction.exchangeRate > 0 &&
+                    transaction.exchangeRate != 1)
+                  _InfoRow(
+                    label: l10n.rpExchangeRate,
+                    value: transaction.exchangeRate.toStringAsFixed(4),
+                  ),
+                if (transaction.reference?.trim().isNotEmpty ?? false)
+                  _InfoRow(
+                    label: l10n.rpReference,
+                    value: transaction.reference!,
+                  ),
+                if (transaction.description?.trim().isNotEmpty ?? false)
+                  _InfoRow(
+                    label: l10n.rpDescription,
+                    value: transaction.description!,
+                  ),
+              ],
+            ),
+            if (showParty) ...[
+              const SizedBox(height: AppSpacing.md),
+              _PartyCard(partyName: party),
             ],
-            if (transaction.reference?.trim().isNotEmpty ?? false)
-              _InfoRow(label: l10n.rpReference, value: transaction.reference!),
-            if (transaction.description?.trim().isNotEmpty ?? false)
-              _InfoRow(
-                label: l10n.rpDescription,
-                value: transaction.description!,
-              ),
+            const SizedBox(height: AppSpacing.md),
+            RpEntryLinesReadonlyTable(
+              lines: transaction.resolvedLines,
+              amountColumnLabel: amountColumnLabel,
+            ),
             const SizedBox(height: AppSpacing.xl),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _PartyCard extends StatelessWidget {
+  const _PartyCard({required this.partyName});
+
+  final String partyName;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.4),
+        ),
+      ),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  scheme.primary.withValues(alpha: 0.18),
+                  scheme.primary.withValues(alpha: 0.06),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
+            child: Icon(
+              Icons.person_rounded,
+              color: scheme.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.rpPartyName,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  partyName,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    height: 1.25,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetaCard extends StatelessWidget {
+  const _MetaCard({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.4),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      child: Column(children: children),
     );
   }
 }

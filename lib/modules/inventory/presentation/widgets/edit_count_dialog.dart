@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/utils/grouped_decimal_input.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 
@@ -144,10 +144,9 @@ class _EditCountDialogState extends State<_EditCountDialog> {
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
                                   ),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'[0-9.]'),
-                                ),
+                              inputFormatters: const [
+                                WesternDigitsInputFormatter(),
+                                GroupedDecimalInputFormatter(decimalPlaces: 3),
                               ],
                               textInputAction: TextInputAction.next,
                               onSubmitted: (_) =>
@@ -171,10 +170,9 @@ class _EditCountDialogState extends State<_EditCountDialog> {
                                   const TextInputType.numberWithOptions(
                                     decimal: true,
                                   ),
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'[0-9.]'),
-                                ),
+                              inputFormatters: const [
+                                WesternDigitsInputFormatter(),
+                                GroupedDecimalInputFormatter(decimalPlaces: 3),
                               ],
                               textInputAction: TextInputAction.done,
                               onSubmitted: (_) => _submit(),

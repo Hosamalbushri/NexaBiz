@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:excel/excel.dart';
 
+import '../../../../core/utils/grouped_decimal_input.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/models/import_validation_exception.dart';
 import '../../domain/services/pack_size_parser.dart';
@@ -233,7 +234,7 @@ class ExcelImportDatasource {
     if (raw == null || raw.isEmpty) {
       return null;
     }
-    return double.tryParse(raw.replaceAll(',', ''));
+    return parseGroupedDecimal(raw);
   }
 
   int? _cellInt(List<Data?> row, int? index) {

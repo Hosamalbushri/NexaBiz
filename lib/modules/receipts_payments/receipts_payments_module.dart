@@ -7,11 +7,14 @@ import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
 import 'domain/entities/transaction_type.dart';
 import 'permissions/receipts_payments_permission_package.dart';
+import 'presentation/pages/cash_box_transfer_form_page.dart';
+import 'presentation/pages/currency_exchange_form_page.dart';
 import 'presentation/pages/financial_transaction_details_page.dart';
 import 'presentation/pages/financial_transaction_form_page.dart';
 import 'presentation/pages/receipts_payments_home_page.dart';
 import 'presentation/pages/receipts_payments_list_page.dart';
 import 'presentation/pages/receipts_payments_routes.dart';
+import 'presentation/pages/rp_posting_service_page.dart';
 import 'presentation/pages/rp_service_menu_page.dart';
 
 class ReceiptsPaymentsModule extends AppModule {
@@ -48,11 +51,31 @@ class ReceiptsPaymentsModule extends AppModule {
           anyOf: ReceiptsPaymentsPermissions.paymentsCreate,
         ),
         RouteAccessRule(
+          pathEquals: ReceiptsPaymentsRoutes.createTransfer,
+          anyOf: ReceiptsPaymentsPermissions.transfersCreate,
+        ),
+        RouteAccessRule(
+          pathEquals: ReceiptsPaymentsRoutes.createExchange,
+          anyOf: ReceiptsPaymentsPermissions.exchangesCreate,
+        ),
+        RouteAccessRule(
+          pathRegex: RegExp(r'^/receipts-payments/transfers/\d+/edit$'),
+          anyOf: ReceiptsPaymentsPermissions.transfersUpdate,
+        ),
+        RouteAccessRule(
+          pathRegex: RegExp(r'^/receipts-payments/exchanges/\d+/edit$'),
+          anyOf: ReceiptsPaymentsPermissions.exchangesUpdate,
+        ),
+        RouteAccessRule(
           pathRegex: RegExp(r'^/receipts-payments/\d+/edit$'),
           anyOf: [
             ...ReceiptsPaymentsPermissions.receiptsUpdate,
             ...ReceiptsPaymentsPermissions.paymentsUpdate,
           ],
+        ),
+        RouteAccessRule(
+          pathEquals: ReceiptsPaymentsRoutes.postingService,
+          anyOf: ReceiptsPaymentsPermissions.anyPost,
         ),
         RouteAccessRule(
           pathPrefix: ReceiptsPaymentsRoutes.root,
@@ -82,23 +105,19 @@ class ReceiptsPaymentsModule extends AppModule {
           builder: (context, state) => const ReceiptsPaymentsHomePage(),
           routes: [
             GoRoute(
-              path: 'list',
-              name: 'receiptsPaymentsList',
-              builder: (context, state) {
-                final typeParam = state.uri.queryParameters['type'];
-                final type = typeParam == null
-                    ? null
-                    : TransactionTypeX.fromStorage(typeParam);
-                return ReceiptsPaymentsListPage(initialType: type);
-              },
-            ),
-            GoRoute(
               path: 'receipts',
               name: 'receiptsService',
               builder: (context, state) => const RpServiceMenuPage(
                 type: TransactionType.receipt,
               ),
               routes: [
+                GoRoute(
+                  path: 'list',
+                  name: 'receiptsList',
+                  builder: (context, state) => const ReceiptsPaymentsListPage(
+                    transactionType: TransactionType.receipt,
+                  ),
+                ),
                 GoRoute(
                   path: 'create',
                   name: 'receiptsCreate',
@@ -116,6 +135,13 @@ class ReceiptsPaymentsModule extends AppModule {
               ),
               routes: [
                 GoRoute(
+                  path: 'list',
+                  name: 'paymentsList',
+                  builder: (context, state) => const ReceiptsPaymentsListPage(
+                    transactionType: TransactionType.payment,
+                  ),
+                ),
+                GoRoute(
                   path: 'create',
                   name: 'paymentsCreate',
                   builder: (context, state) => const FinancialTransactionFormPage(
@@ -123,6 +149,71 @@ class ReceiptsPaymentsModule extends AppModule {
                   ),
                 ),
               ],
+            ),
+            GoRoute(
+              path: 'transfers',
+              name: 'transfersService',
+              builder: (context, state) => const RpServiceMenuPage(
+                type: TransactionType.transfer,
+              ),
+              routes: [
+                GoRoute(
+                  path: 'list',
+                  name: 'transfersList',
+                  builder: (context, state) => const ReceiptsPaymentsListPage(
+                    transactionType: TransactionType.transfer,
+                  ),
+                ),
+                GoRoute(
+                  path: 'create',
+                  name: 'transfersCreate',
+                  builder: (context, state) =>
+                      const CashBoxTransferFormPage(),
+                ),
+                GoRoute(
+                  path: ':id/edit',
+                  name: 'transfersEdit',
+                  builder: (context, state) {
+                    final id = int.tryParse(state.pathParameters['id'] ?? '');
+                    return CashBoxTransferFormPage(transactionId: id ?? -1);
+                  },
+                ),
+              ],
+            ),
+            GoRoute(
+              path: 'exchanges',
+              name: 'exchangesService',
+              builder: (context, state) => const RpServiceMenuPage(
+                type: TransactionType.currencyExchange,
+              ),
+              routes: [
+                GoRoute(
+                  path: 'list',
+                  name: 'exchangesList',
+                  builder: (context, state) => const ReceiptsPaymentsListPage(
+                    transactionType: TransactionType.currencyExchange,
+                  ),
+                ),
+                GoRoute(
+                  path: 'create',
+                  name: 'exchangesCreate',
+                  builder: (context, state) =>
+                      const CurrencyExchangeFormPage(),
+                ),
+                GoRoute(
+                  path: ':id/edit',
+                  name: 'exchangesEdit',
+                  builder: (context, state) {
+                    final id = int.tryParse(state.pathParameters['id'] ?? '');
+                    return CurrencyExchangeFormPage(transactionId: id ?? -1);
+                  },
+                ),
+              ],
+            ),
+            GoRoute(
+              path: 'posting',
+              name: 'receiptsPaymentsPosting',
+              builder: (context, state) => const RpPostingServicePage(),
             ),
             GoRoute(
               path: ':id',

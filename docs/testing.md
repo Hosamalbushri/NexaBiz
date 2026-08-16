@@ -13,6 +13,8 @@ Accounting-focused coverage:
 | Journals, sale posting, statements | `test/sales_ledger_posting_test.dart` |
 | Phase 5 integrity, race token, scale, COA widget | `test/accounting_phase5_coverage_test.dart` |
 | System Setup coordinator / persistence | `test/system_setup_test.dart` |
+| Financial number parse / format / caret | `test/grouped_decimal_input_test.dart` |
+| `AppAmountField` / `FinancialNumberField` widgets | `test/app_amount_field_test.dart` |
 
 ## Expectations going forward
 

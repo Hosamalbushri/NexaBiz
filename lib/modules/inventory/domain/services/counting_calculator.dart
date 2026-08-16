@@ -1,3 +1,5 @@
+import '../../../../core/utils/grouped_decimal_input.dart';
+
 /// Result of converting main/secondary quantity inputs into a counted total.
 class CountPreview {
   const CountPreview({
@@ -44,8 +46,8 @@ class CountingCalculator {
     required String secondaryText,
     int? packSize,
   }) {
-    final main = double.tryParse(mainText.trim()) ?? 0;
-    final secondary = double.tryParse(secondaryText.trim()) ?? 0;
+    final main = parseGroupedDecimal(mainText) ?? 0;
+    final secondary = parseGroupedDecimal(secondaryText) ?? 0;
     final pack = (packSize ?? 1).toDouble();
     final total = main + (secondary / (pack <= 0 ? 1 : pack));
 
@@ -61,8 +63,8 @@ class CountingCalculator {
     required String secondaryText,
     int? packSize,
   }) {
-    final main = double.tryParse(mainText.trim()) ?? 0;
-    final secondary = double.tryParse(secondaryText.trim()) ?? 0;
+    final main = parseGroupedDecimal(mainText) ?? 0;
+    final secondary = parseGroupedDecimal(secondaryText) ?? 0;
     if (main < 0 || secondary < 0) {
       return const CountValidationResult.invalid(
         CountValidationError.negativeQuantity,
@@ -90,7 +92,7 @@ class CountingCalculator {
       );
     }
 
-    final secondary = double.tryParse(secondaryText.trim());
+    final secondary = parseGroupedDecimal(secondaryText);
     if (secondary == null) {
       return SecondaryInputResult(
         mainText: currentMainText,
@@ -100,7 +102,7 @@ class CountingCalculator {
 
     final wholePacks = secondary ~/ packSize;
     final remainder = secondary % packSize;
-    final currentMain = double.tryParse(currentMainText.trim()) ?? 0;
+    final currentMain = parseGroupedDecimal(currentMainText) ?? 0;
     final newMain = currentMain + wholePacks;
 
     return SecondaryInputResult(
@@ -110,9 +112,11 @@ class CountingCalculator {
   }
 
   String _formatNumber(num value) {
-    if (value == value.roundToDouble()) {
-      return value.toInt().toString();
-    }
-    return value.toString();
+    return formatGroupedDecimal(
+      value.toDouble(),
+      decimalPlaces: 3,
+      emptyWhenZero: false,
+      trimTrailingZeros: true,
+    );
   }
 }

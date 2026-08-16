@@ -656,7 +656,7 @@ class _FilledLineRowState extends State<_FilledLineRow> {
                 child: AppAmountField(
                   value: widget.line.amount,
                   emptyWhenZero: true,
-                  decimalPlaces: 2,
+                  decimalPlaces: 0,
                   variant: AppAmountFieldVariant.compact,
                   skipTraversal: true,
                   onChanged: widget.onAmountChanged,
@@ -802,9 +802,14 @@ class _DraftAccountRowState extends ConsumerState<_DraftAccountRow> {
 
   Future<void> _search(String query, int token) async {
     try {
+      final languageCode = Localizations.localeOf(context).languageCode;
       final results = await ref
           .read(rpTreasuryAccountPortProvider)
-          .searchPostingAccounts(query, limit: 20);
+          .searchPostingAccounts(
+            query,
+            limit: 50,
+            languageCode: languageCode,
+          );
       if (!mounted || !_session.isCurrent(token)) {
         return;
       }

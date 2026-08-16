@@ -12,7 +12,7 @@ import '../../domain/entities/transaction_type.dart';
 import '../../permissions/receipts_payments_permission_package.dart';
 import 'receipts_payments_routes.dart';
 
-/// Sub-menu for one R&P service (receipts or payments).
+/// Sub-menu for one R&P service (receipts, payments, transfers, or exchanges).
 class RpServiceMenuPage extends ConsumerWidget {
   const RpServiceMenuPage({super.key, required this.type});
 
@@ -22,23 +22,75 @@ class RpServiceMenuPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isReceipt = type == TransactionType.receipt;
+
+    final title = switch (type) {
+      TransactionType.receipt => l10n.rpServiceReceiptsTitle,
+      TransactionType.payment => l10n.rpServicePaymentsTitle,
+      TransactionType.transfer => l10n.rpServiceTransfersTitle,
+      TransactionType.currencyExchange => l10n.rpServiceExchangesTitle,
+    };
+    final subtitle = switch (type) {
+      TransactionType.receipt => l10n.rpServiceReceiptsSubtitle,
+      TransactionType.payment => l10n.rpServicePaymentsSubtitle,
+      TransactionType.transfer => l10n.rpServiceTransfersSubtitle,
+      TransactionType.currencyExchange => l10n.rpServiceExchangesSubtitle,
+    };
+    final viewTitle = switch (type) {
+      TransactionType.receipt => l10n.rpServiceViewReceipts,
+      TransactionType.payment => l10n.rpServiceViewPayments,
+      TransactionType.transfer => l10n.rpServiceViewTransfers,
+      TransactionType.currencyExchange => l10n.rpServiceViewExchanges,
+    };
+    final viewSubtitle = switch (type) {
+      TransactionType.receipt => l10n.rpServiceViewReceiptsSubtitle,
+      TransactionType.payment => l10n.rpServiceViewPaymentsSubtitle,
+      TransactionType.transfer => l10n.rpServiceViewTransfersSubtitle,
+      TransactionType.currencyExchange => l10n.rpServiceViewExchangesSubtitle,
+    };
+    final createTitle = switch (type) {
+      TransactionType.receipt => l10n.rpServiceCreateReceipt,
+      TransactionType.payment => l10n.rpServiceCreatePayment,
+      TransactionType.transfer => l10n.rpServiceCreateTransfer,
+      TransactionType.currencyExchange => l10n.rpServiceCreateExchange,
+    };
+    final createSubtitle = switch (type) {
+      TransactionType.receipt => l10n.rpCreateReceiptSubtitle,
+      TransactionType.payment => l10n.rpCreatePaymentSubtitle,
+      TransactionType.transfer => l10n.rpCreateTransferSubtitle,
+      TransactionType.currencyExchange => l10n.rpCreateExchangeSubtitle,
+    };
+    final viewPermissions = switch (type) {
+      TransactionType.receipt => ReceiptsPaymentsPermissions.receiptsView,
+      TransactionType.payment => ReceiptsPaymentsPermissions.paymentsView,
+      TransactionType.transfer => ReceiptsPaymentsPermissions.transfersView,
+      TransactionType.currencyExchange =>
+        ReceiptsPaymentsPermissions.exchangesView,
+    };
+    final createPermissions = switch (type) {
+      TransactionType.receipt => ReceiptsPaymentsPermissions.receiptsCreate,
+      TransactionType.payment => ReceiptsPaymentsPermissions.paymentsCreate,
+      TransactionType.transfer => ReceiptsPaymentsPermissions.transfersCreate,
+      TransactionType.currencyExchange =>
+        ReceiptsPaymentsPermissions.exchangesCreate,
+    };
+    final createIcon = switch (type) {
+      TransactionType.receipt => Icons.call_received_outlined,
+      TransactionType.payment => Icons.call_made_outlined,
+      TransactionType.transfer => Icons.swap_horiz_outlined,
+      TransactionType.currencyExchange => Icons.currency_exchange_outlined,
+    };
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
-        title: isReceipt
-            ? l10n.rpServiceReceiptsTitle
-            : l10n.rpServicePaymentsTitle,
+        title: title,
         showBackButton: true,
       ),
       body: ListView(
         padding: AppConstants.pageInsets(context),
         children: [
           Text(
-            isReceipt
-                ? l10n.rpServiceReceiptsSubtitle
-                : l10n.rpServicePaymentsSubtitle,
+            subtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.4,
@@ -46,17 +98,11 @@ class RpServiceMenuPage extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           PermissionGate(
-            anyOf: isReceipt
-                ? ReceiptsPaymentsPermissions.receiptsView
-                : ReceiptsPaymentsPermissions.paymentsView,
+            anyOf: viewPermissions,
             child: _MenuCard(
                   icon: Icons.list_alt_outlined,
-                  title: isReceipt
-                      ? l10n.rpServiceViewReceipts
-                      : l10n.rpServiceViewPayments,
-                  subtitle: isReceipt
-                      ? l10n.rpServiceViewReceiptsSubtitle
-                      : l10n.rpServiceViewPaymentsSubtitle,
+                  title: viewTitle,
+                  subtitle: viewSubtitle,
                   onTap: () =>
                       ReceiptsPaymentsRoutes.pushList(context, type: type),
                 )
@@ -66,24 +112,21 @@ class RpServiceMenuPage extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           PermissionGate(
-            anyOf: isReceipt
-                ? ReceiptsPaymentsPermissions.receiptsCreate
-                : ReceiptsPaymentsPermissions.paymentsCreate,
+            anyOf: createPermissions,
             child: _MenuCard(
-                  icon: isReceipt
-                      ? Icons.call_received_outlined
-                      : Icons.call_made_outlined,
-                  title: isReceipt
-                      ? l10n.rpServiceCreateReceipt
-                      : l10n.rpServiceCreatePayment,
-                  subtitle: isReceipt
-                      ? l10n.rpCreateReceiptSubtitle
-                      : l10n.rpCreatePaymentSubtitle,
+                  icon: createIcon,
+                  title: createTitle,
+                  subtitle: createSubtitle,
                   onTap: () {
-                    if (isReceipt) {
-                      ReceiptsPaymentsRoutes.pushCreateReceipt(context);
-                    } else {
-                      ReceiptsPaymentsRoutes.pushCreatePayment(context);
+                    switch (type) {
+                      case TransactionType.receipt:
+                        ReceiptsPaymentsRoutes.pushCreateReceipt(context);
+                      case TransactionType.payment:
+                        ReceiptsPaymentsRoutes.pushCreatePayment(context);
+                      case TransactionType.transfer:
+                        ReceiptsPaymentsRoutes.pushCreateTransfer(context);
+                      case TransactionType.currencyExchange:
+                        ReceiptsPaymentsRoutes.pushCreateExchange(context);
                     }
                   },
                 )

@@ -206,6 +206,18 @@ abstract class AppLocalizations {
   /// **'Payments'**
   String get rpListTitlePayments;
 
+  /// No description provided for @rpListTitleTransfers.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash box transfers'**
+  String get rpListTitleTransfers;
+
+  /// No description provided for @rpListTitleExchanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency exchange'**
+  String get rpListTitleExchanges;
+
   /// No description provided for @rpListCardSubtitle.
   ///
   /// In en, this message translates to:
@@ -230,6 +242,18 @@ abstract class AppLocalizations {
   /// **'New payment'**
   String get rpActionNewPayment;
 
+  /// No description provided for @rpActionNewTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'New transfer'**
+  String get rpActionNewTransfer;
+
+  /// No description provided for @rpActionNewExchange.
+  ///
+  /// In en, this message translates to:
+  /// **'New exchange'**
+  String get rpActionNewExchange;
+
   /// No description provided for @rpCreateReceiptSubtitle.
   ///
   /// In en, this message translates to:
@@ -241,6 +265,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pay from cash or bank'**
   String get rpCreatePaymentSubtitle;
+
+  /// No description provided for @rpCreateTransferSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Move cash between cash boxes'**
+  String get rpCreateTransferSubtitle;
+
+  /// No description provided for @rpCreateExchangeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert one currency to another in the same cash box'**
+  String get rpCreateExchangeSubtitle;
 
   /// No description provided for @rpServiceReceiptsTitle.
   ///
@@ -266,6 +302,30 @@ abstract class AppLocalizations {
   /// **'View payment vouchers or create a new one'**
   String get rpServicePaymentsSubtitle;
 
+  /// No description provided for @rpServiceTransfersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash box transfers'**
+  String get rpServiceTransfersTitle;
+
+  /// No description provided for @rpServiceTransfersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer between cash boxes or create a new voucher'**
+  String get rpServiceTransfersSubtitle;
+
+  /// No description provided for @rpServiceExchangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency exchange'**
+  String get rpServiceExchangesTitle;
+
+  /// No description provided for @rpServiceExchangesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View exchange vouchers or create a new one'**
+  String get rpServiceExchangesSubtitle;
+
   /// No description provided for @rpServiceViewReceipts.
   ///
   /// In en, this message translates to:
@@ -290,6 +350,30 @@ abstract class AppLocalizations {
   /// **'Browse and filter payment vouchers'**
   String get rpServiceViewPaymentsSubtitle;
 
+  /// No description provided for @rpServiceViewTransfers.
+  ///
+  /// In en, this message translates to:
+  /// **'All transfers'**
+  String get rpServiceViewTransfers;
+
+  /// No description provided for @rpServiceViewTransfersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse and filter cash box transfer vouchers'**
+  String get rpServiceViewTransfersSubtitle;
+
+  /// No description provided for @rpServiceViewExchanges.
+  ///
+  /// In en, this message translates to:
+  /// **'All exchanges'**
+  String get rpServiceViewExchanges;
+
+  /// No description provided for @rpServiceViewExchangesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse and filter currency exchange vouchers'**
+  String get rpServiceViewExchangesSubtitle;
+
   /// No description provided for @rpServiceCreateReceipt.
   ///
   /// In en, this message translates to:
@@ -301,6 +385,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New payment voucher'**
   String get rpServiceCreatePayment;
+
+  /// No description provided for @rpServiceCreateTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'New transfer voucher'**
+  String get rpServiceCreateTransfer;
+
+  /// No description provided for @rpServiceCreateExchange.
+  ///
+  /// In en, this message translates to:
+  /// **'New exchange voucher'**
+  String get rpServiceCreateExchange;
+
+  /// No description provided for @rpFormTitleReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'New receipt'**
+  String get rpFormTitleReceipt;
+
+  /// No description provided for @rpFormTitlePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'New payment'**
+  String get rpFormTitlePayment;
+
+  /// No description provided for @rpFormTitleTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'New cash box transfer'**
+  String get rpFormTitleTransfer;
+
+  /// No description provided for @rpFormTitleTransferEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit cash box transfer'**
+  String get rpFormTitleTransferEdit;
+
+  /// No description provided for @rpFormTitleExchange.
+  ///
+  /// In en, this message translates to:
+  /// **'New currency exchange'**
+  String get rpFormTitleExchange;
+
+  /// No description provided for @rpFormTitleExchangeEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit currency exchange'**
+  String get rpFormTitleExchangeEdit;
+
+  /// No description provided for @rpTransferFromAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'From cash box'**
+  String get rpTransferFromAccount;
+
+  /// No description provided for @rpTransferToAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'To cash box'**
+  String get rpTransferToAccount;
+
+  /// No description provided for @rpExchangeCashAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash box'**
+  String get rpExchangeCashAccount;
+
+  /// No description provided for @rpExchangeFromCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'From currency'**
+  String get rpExchangeFromCurrency;
+
+  /// No description provided for @rpExchangeToCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'To currency'**
+  String get rpExchangeToCurrency;
+
+  /// No description provided for @rpExchangeFromAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount given'**
+  String get rpExchangeFromAmount;
+
+  /// No description provided for @rpExchangeToAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount received'**
+  String get rpExchangeToAmount;
+
+  /// No description provided for @rpEmptyTitleTransfers.
+  ///
+  /// In en, this message translates to:
+  /// **'No transfers'**
+  String get rpEmptyTitleTransfers;
+
+  /// No description provided for @rpEmptyMessageTransfers.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a cash box transfer to get started.'**
+  String get rpEmptyMessageTransfers;
+
+  /// No description provided for @rpEmptyTitleExchanges.
+  ///
+  /// In en, this message translates to:
+  /// **'No exchanges'**
+  String get rpEmptyTitleExchanges;
+
+  /// No description provided for @rpEmptyMessageExchanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a currency exchange voucher to get started.'**
+  String get rpEmptyMessageExchanges;
+
+  /// No description provided for @rpDetailsTitleTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer details'**
+  String get rpDetailsTitleTransfer;
+
+  /// No description provided for @rpDetailsTitleExchange.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange details'**
+  String get rpDetailsTitleExchange;
 
   /// No description provided for @rpDashboardTodayReceipts.
   ///
@@ -356,18 +566,6 @@ abstract class AppLocalizations {
   /// **'Failed sync'**
   String get rpDashboardFailedSync;
 
-  /// No description provided for @rpFormTitleReceipt.
-  ///
-  /// In en, this message translates to:
-  /// **'New receipt'**
-  String get rpFormTitleReceipt;
-
-  /// No description provided for @rpFormTitlePayment.
-  ///
-  /// In en, this message translates to:
-  /// **'New payment'**
-  String get rpFormTitlePayment;
-
   /// No description provided for @rpFormSectionDocument.
   ///
   /// In en, this message translates to:
@@ -409,6 +607,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment from account'**
   String get rpDefaultGeneralDescription;
+
+  /// No description provided for @rpDefaultPaymentDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'خارج--{date}'**
+  String rpDefaultPaymentDescription(String date);
+
+  /// No description provided for @rpDefaultTransferDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer--{date}'**
+  String rpDefaultTransferDescription(String date);
+
+  /// No description provided for @rpDefaultExchangeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange--{date}'**
+  String rpDefaultExchangeDescription(String date);
 
   /// No description provided for @rpManualExchangeRate.
   ///
@@ -524,6 +740,216 @@ abstract class AppLocalizations {
   /// **'Transaction posted'**
   String get rpPosted;
 
+  /// No description provided for @rpUnpost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpost'**
+  String get rpUnpost;
+
+  /// No description provided for @rpUnposting.
+  ///
+  /// In en, this message translates to:
+  /// **'Unposting…'**
+  String get rpUnposting;
+
+  /// No description provided for @rpUnposted.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction unposted'**
+  String get rpUnposted;
+
+  /// No description provided for @rpPostingServiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Post / Unpost'**
+  String get rpPostingServiceTitle;
+
+  /// No description provided for @rpPostingServiceHubSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Post or unpost vouchers by type, date, or number'**
+  String get rpPostingServiceHubSubtitle;
+
+  /// No description provided for @rpPostingServiceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose voucher type and operation, then search by date range or number range. Apply to one selected voucher or to all results.'**
+  String get rpPostingServiceSubtitle;
+
+  /// No description provided for @rpPostingServiceDocumentType.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher type'**
+  String get rpPostingServiceDocumentType;
+
+  /// No description provided for @rpPostingServiceOperation.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation'**
+  String get rpPostingServiceOperation;
+
+  /// No description provided for @rpPostingServiceLookup.
+  ///
+  /// In en, this message translates to:
+  /// **'Find by'**
+  String get rpPostingServiceLookup;
+
+  /// No description provided for @rpPostingServicePickDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a date'**
+  String get rpPostingServicePickDate;
+
+  /// No description provided for @rpPostingServiceFromDate.
+  ///
+  /// In en, this message translates to:
+  /// **'From date'**
+  String get rpPostingServiceFromDate;
+
+  /// No description provided for @rpPostingServiceToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'To date'**
+  String get rpPostingServiceToDate;
+
+  /// No description provided for @rpPostingServiceFromNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'From number'**
+  String get rpPostingServiceFromNumber;
+
+  /// No description provided for @rpPostingServiceToNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'To number'**
+  String get rpPostingServiceToNumber;
+
+  /// No description provided for @rpPostingServiceNumberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 1'**
+  String get rpPostingServiceNumberHint;
+
+  /// No description provided for @rpPostingServiceDateRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Select from and to dates'**
+  String get rpPostingServiceDateRequired;
+
+  /// No description provided for @rpPostingServiceDateRangeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'From date must be on or before to date'**
+  String get rpPostingServiceDateRangeInvalid;
+
+  /// No description provided for @rpPostingServiceNumberRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter from and to voucher numbers'**
+  String get rpPostingServiceNumberRequired;
+
+  /// No description provided for @rpPostingServiceNumberRangeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'From number must be less than or equal to to number'**
+  String get rpPostingServiceNumberRangeInvalid;
+
+  /// No description provided for @rpPostingServiceSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Show vouchers'**
+  String get rpPostingServiceSearch;
+
+  /// No description provided for @rpPostingServiceResultsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No vouchers} one{1 voucher} other{{count} vouchers}}'**
+  String rpPostingServiceResultsCount(int count);
+
+  /// No description provided for @rpPostingServiceEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching vouchers for this filter.'**
+  String get rpPostingServiceEmpty;
+
+  /// No description provided for @rpPostingServiceSelectOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a voucher first'**
+  String get rpPostingServiceSelectOne;
+
+  /// No description provided for @rpPostingServiceApplySelectedPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Post selected'**
+  String get rpPostingServiceApplySelectedPost;
+
+  /// No description provided for @rpPostingServiceApplySelectedUnpost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpost selected'**
+  String get rpPostingServiceApplySelectedUnpost;
+
+  /// No description provided for @rpPostingServiceApplyAllPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Post all ({count})'**
+  String rpPostingServiceApplyAllPost(int count);
+
+  /// No description provided for @rpPostingServiceApplyAllUnpost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpost all ({count})'**
+  String rpPostingServiceApplyAllUnpost(int count);
+
+  /// No description provided for @rpPostingServiceConfirmOnePost.
+  ///
+  /// In en, this message translates to:
+  /// **'Post voucher {number}?'**
+  String rpPostingServiceConfirmOnePost(String number);
+
+  /// No description provided for @rpPostingServiceConfirmOneUnpost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpost voucher {number}?'**
+  String rpPostingServiceConfirmOneUnpost(String number);
+
+  /// No description provided for @rpPostingServiceConfirmAllPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Post all {count} vouchers in the list?'**
+  String rpPostingServiceConfirmAllPost(int count);
+
+  /// No description provided for @rpPostingServiceConfirmAllUnpost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpost all {count} vouchers in the list?'**
+  String rpPostingServiceConfirmAllUnpost(int count);
+
+  /// No description provided for @rpPostingServiceSuccessPost.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 voucher posted} other{{count} vouchers posted}}'**
+  String rpPostingServiceSuccessPost(int count);
+
+  /// No description provided for @rpPostingServiceSuccessUnpost.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 voucher unposted} other{{count} vouchers unposted}}'**
+  String rpPostingServiceSuccessUnpost(int count);
+
+  /// No description provided for @rpPostingServicePartial.
+  ///
+  /// In en, this message translates to:
+  /// **'{success} succeeded, {failed} failed'**
+  String rpPostingServicePartial(int success, int failed);
+
+  /// No description provided for @rpPostingServiceNoPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have permission to post or unpost vouchers.'**
+  String get rpPostingServiceNoPermission;
+
   /// No description provided for @rpCancelTitle.
   ///
   /// In en, this message translates to:
@@ -572,6 +998,42 @@ abstract class AppLocalizations {
   /// **'Create a receipt or payment to get started.'**
   String get rpEmptyMessage;
 
+  /// No description provided for @rpEmptyTitleReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'No receipts'**
+  String get rpEmptyTitleReceipts;
+
+  /// No description provided for @rpEmptyMessageReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a receipt voucher to get started.'**
+  String get rpEmptyMessageReceipts;
+
+  /// No description provided for @rpEmptyTitlePayments.
+  ///
+  /// In en, this message translates to:
+  /// **'No payments'**
+  String get rpEmptyTitlePayments;
+
+  /// No description provided for @rpEmptyMessagePayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a payment voucher to get started.'**
+  String get rpEmptyMessagePayments;
+
+  /// No description provided for @rpDetailsTitleReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt details'**
+  String get rpDetailsTitleReceipt;
+
+  /// No description provided for @rpDetailsTitlePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment details'**
+  String get rpDetailsTitlePayment;
+
   /// No description provided for @rpSearchHint.
   ///
   /// In en, this message translates to:
@@ -601,6 +1063,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Payment'**
   String get rpTypePayment;
+
+  /// No description provided for @rpTypeTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfer'**
+  String get rpTypeTransfer;
+
+  /// No description provided for @rpTypeExchange.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange'**
+  String get rpTypeExchange;
 
   /// No description provided for @rpStatusUnposted.
   ///
@@ -667,6 +1141,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Purchase-related payment'**
   String get rpSourcePurchaseRelatedPayment;
+
+  /// No description provided for @rpSourceCashBoxTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash box transfer'**
+  String get rpSourceCashBoxTransfer;
+
+  /// No description provided for @rpSourceCurrencyExchange.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency exchange'**
+  String get rpSourceCurrencyExchange;
 
   /// No description provided for @rpDate.
   ///
@@ -866,6 +1352,12 @@ abstract class AppLocalizations {
   /// **'Cash and counter accounts must be different'**
   String get rpErrorSameAccounts;
 
+  /// No description provided for @rpErrorCurrenciesMustDiffer.
+  ///
+  /// In en, this message translates to:
+  /// **'From and to currencies must be different'**
+  String get rpErrorCurrenciesMustDiffer;
+
   /// No description provided for @rpErrorVoucherBookRequired.
   ///
   /// In en, this message translates to:
@@ -883,6 +1375,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This transaction cannot be posted'**
   String get rpErrorCannotPost;
+
+  /// No description provided for @rpErrorCannotUnpost.
+  ///
+  /// In en, this message translates to:
+  /// **'This transaction cannot be unposted'**
+  String get rpErrorCannotUnpost;
 
   /// No description provided for @rpErrorCannotCancel.
   ///
@@ -949,6 +1447,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cash and bank payments'**
   String get adminPermServicePaymentsHint;
+
+  /// No description provided for @adminPermServiceTransfers.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash box transfers'**
+  String get adminPermServiceTransfers;
+
+  /// No description provided for @adminPermServiceTransfersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfers between cash boxes'**
+  String get adminPermServiceTransfersHint;
+
+  /// No description provided for @adminPermServiceExchanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency exchange'**
+  String get adminPermServiceExchanges;
+
+  /// No description provided for @adminPermServiceExchangesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert currencies within a cash box'**
+  String get adminPermServiceExchangesHint;
 
   /// No description provided for @adminPermServiceRpReports.
   ///
@@ -3437,7 +3959,7 @@ abstract class AppLocalizations {
   /// No description provided for @accountingVoucherBooksSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Open a section, then use tabs for each type (e.g. sales and sales returns). Each type has its own list and add action.'**
+  /// **'Open a section, then pick a book type from the list (e.g. receipts or transfers). Each type has its own book list and add action.'**
   String get accountingVoucherBooksSubtitle;
 
   /// No description provided for @accountingVoucherBooksEmptyTitle.
@@ -3668,6 +4190,24 @@ abstract class AppLocalizations {
   /// **'Payments'**
   String get accountingVoucherBookTypePayments;
 
+  /// No description provided for @accountingVoucherBookTypeTransfers.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash box transfers'**
+  String get accountingVoucherBookTypeTransfers;
+
+  /// No description provided for @accountingVoucherBookTypeExchanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency exchange'**
+  String get accountingVoucherBookTypeExchanges;
+
+  /// No description provided for @accountingVoucherBookTypeReceiptsPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts & expenses'**
+  String get accountingVoucherBookTypeReceiptsPayments;
+
   /// No description provided for @accountingVoucherBookTypePurchases.
   ///
   /// In en, this message translates to:
@@ -3779,7 +4319,7 @@ abstract class AppLocalizations {
   /// No description provided for @accountingFieldCodeHelper.
   ///
   /// In en, this message translates to:
-  /// **'When a parent is selected, the code is generated from it (e.g. 1221 → 12210001).'**
+  /// **'When a parent is selected, the next code after the highest sibling is generated (e.g. 1213 → 1214).'**
   String get accountingFieldCodeHelper;
 
   /// No description provided for @accountingGenerateCode.
@@ -3793,6 +4333,396 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add child account'**
   String get accountingAddChildAccount;
+
+  /// No description provided for @accountingImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import accounts'**
+  String get accountingImportTitle;
+
+  /// No description provided for @accountingImportPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Chart of Accounts'**
+  String get accountingImportPageTitle;
+
+  /// No description provided for @accountingImportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a parent group, load Excel or add rows, then save with optional opening balances.'**
+  String get accountingImportSubtitle;
+
+  /// No description provided for @accountingImportParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent group account'**
+  String get accountingImportParent;
+
+  /// No description provided for @accountingImportOpeningDebit.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening debit'**
+  String get accountingImportOpeningDebit;
+
+  /// No description provided for @accountingImportOpeningCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening credit'**
+  String get accountingImportOpeningCredit;
+
+  /// No description provided for @accountingImportCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get accountingImportCurrency;
+
+  /// No description provided for @accountingImportRowsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts to import'**
+  String get accountingImportRowsTitle;
+
+  /// No description provided for @accountingImportAddRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Add row'**
+  String get accountingImportAddRow;
+
+  /// No description provided for @accountingImportRemoveRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove row'**
+  String get accountingImportRemoveRow;
+
+  /// No description provided for @accountingImportEmptyRows.
+  ///
+  /// In en, this message translates to:
+  /// **'No rows yet. Pick an Excel file or add a row.'**
+  String get accountingImportEmptyRows;
+
+  /// No description provided for @accountingImportFormatHintTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel layout for accounts'**
+  String get accountingImportFormatHintTitle;
+
+  /// No description provided for @accountingImportFormatHintIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'First row = headers. Required: name. Use .xlsx or .xls. All rows are created under the selected parent group.'**
+  String get accountingImportFormatHintIntro;
+
+  /// No description provided for @accountingImportFormatColCodeAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Code · Code · رمز الحساب'**
+  String get accountingImportFormatColCodeAliases;
+
+  /// No description provided for @accountingImportFormatColNameAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Name · Name · اسم الحساب'**
+  String get accountingImportFormatColNameAliases;
+
+  /// No description provided for @accountingImportFormatColDebitAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Debit · Debit · مدين افتتاحي'**
+  String get accountingImportFormatColDebitAliases;
+
+  /// No description provided for @accountingImportFormatColCreditAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Credit · Credit · دائن افتتاحي'**
+  String get accountingImportFormatColCreditAliases;
+
+  /// No description provided for @accountingImportFormatColCurrencyAliases.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency · Currency Code · عملة'**
+  String get accountingImportFormatColCurrencyAliases;
+
+  /// No description provided for @accountingImportFormatSampleNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Without headers columns are read as: code, name, opening debit, opening credit, currency. Duplicate codes are skipped. Opening amounts post one journal against Capital (3100), balanced per currency.'**
+  String get accountingImportFormatSampleNote;
+
+  /// No description provided for @accountingImportInsertedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Inserted {count} accounts'**
+  String accountingImportInsertedCount(int count);
+
+  /// No description provided for @accountingImportSkippedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped {count} duplicates'**
+  String accountingImportSkippedCount(int count);
+
+  /// No description provided for @accountingImportOpeningPosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening balances journal posted against Capital.'**
+  String get accountingImportOpeningPosted;
+
+  /// No description provided for @accountingImportOpeningVoucherType.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening'**
+  String get accountingImportOpeningVoucherType;
+
+  /// No description provided for @accountingImportOpeningJournalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening balances from account import'**
+  String get accountingImportOpeningJournalDescription;
+
+  /// No description provided for @accountingImportErrorParentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a parent group account.'**
+  String get accountingImportErrorParentRequired;
+
+  /// No description provided for @accountingImportErrorParentNotGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'The parent must be a group account.'**
+  String get accountingImportErrorParentNotGroup;
+
+  /// No description provided for @accountingImportErrorNoRows.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one account with a name.'**
+  String get accountingImportErrorNoRows;
+
+  /// No description provided for @accountingImportErrorBothSides.
+  ///
+  /// In en, this message translates to:
+  /// **'A row cannot have both opening debit and credit.'**
+  String get accountingImportErrorBothSides;
+
+  /// No description provided for @accountingImportErrorCapitalMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Capital account (3100) was not found.'**
+  String get accountingImportErrorCapitalMissing;
+
+  /// No description provided for @accountingOpeningSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening import center'**
+  String get accountingOpeningSetupTitle;
+
+  /// No description provided for @accountingOpeningSetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import accounts, set multi-currency opening balances for any posting account, then post one journal against Capital (3100).'**
+  String get accountingOpeningSetupSubtitle;
+
+  /// No description provided for @accountingOpeningSetupStepImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import'**
+  String get accountingOpeningSetupStepImport;
+
+  /// No description provided for @accountingOpeningSetupStepBalances.
+  ///
+  /// In en, this message translates to:
+  /// **'Balances'**
+  String get accountingOpeningSetupStepBalances;
+
+  /// No description provided for @accountingOpeningSetupStepReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get accountingOpeningSetupStepReview;
+
+  /// No description provided for @accountingOpeningSetupStepImportHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create posting accounts under a parent group. Opening amounts are entered in the next step.'**
+  String get accountingOpeningSetupStepImportHint;
+
+  /// No description provided for @accountingOpeningSetupStepBalancesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add posting accounts and enter one currency line per configured currency (debit or credit). Only currencies enabled in Currency rates are available.'**
+  String get accountingOpeningSetupStepBalancesHint;
+
+  /// No description provided for @accountingOpeningSetupStepReviewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Review totals per currency, then post a single opening journal offset to Capital.'**
+  String get accountingOpeningSetupStepReviewHint;
+
+  /// No description provided for @accountingOpeningSetupImportFormatIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'First row = headers. Required: name. Use .xlsx or .xls. All rows are created under the selected parent group.'**
+  String get accountingOpeningSetupImportFormatIntro;
+
+  /// No description provided for @accountingOpeningSetupImportFormatNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Without headers columns are read as: code, name. Duplicate codes are skipped. Balances are set in step 2.'**
+  String get accountingOpeningSetupImportFormatNote;
+
+  /// No description provided for @accountingOpeningSetupAddAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Add posting account'**
+  String get accountingOpeningSetupAddAccount;
+
+  /// No description provided for @accountingOpeningSetupRemoveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove account'**
+  String get accountingOpeningSetupRemoveAccount;
+
+  /// No description provided for @accountingOpeningSetupAddCurrencyLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Add currency line'**
+  String get accountingOpeningSetupAddCurrencyLine;
+
+  /// No description provided for @accountingOpeningSetupImportBalancesExcel.
+  ///
+  /// In en, this message translates to:
+  /// **'Import balances from Excel'**
+  String get accountingOpeningSetupImportBalancesExcel;
+
+  /// No description provided for @accountingOpeningSetupEmptyBalances.
+  ///
+  /// In en, this message translates to:
+  /// **'No balance lines yet. Add a row or import balances from Excel.'**
+  String get accountingOpeningSetupEmptyBalances;
+
+  /// No description provided for @accountingOpeningSetupContinueToReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to review'**
+  String get accountingOpeningSetupContinueToReview;
+
+  /// No description provided for @accountingOpeningSetupBalancesRowsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening balance lines'**
+  String get accountingOpeningSetupBalancesRowsTitle;
+
+  /// No description provided for @accountingOpeningSetupBalancesFormatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel layout for opening balances'**
+  String get accountingOpeningSetupBalancesFormatTitle;
+
+  /// No description provided for @accountingOpeningSetupBalancesFormatNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Columns: Code or Account Id, Currency, Debit, Credit. Currency must already be enabled in Currency rates. Same account may appear once per currency. Rows merge into the current list.'**
+  String get accountingOpeningSetupBalancesFormatNote;
+
+  /// No description provided for @accountingOpeningSetupErrorCurrencyNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency is not configured in the system: {code}'**
+  String accountingOpeningSetupErrorCurrencyNotConfigured(String code);
+
+  /// No description provided for @accountingOpeningSetupErrorAccountRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an account for every balance line.'**
+  String get accountingOpeningSetupErrorAccountRequired;
+
+  /// No description provided for @accountingOpeningSetupReviewSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary by currency'**
+  String get accountingOpeningSetupReviewSummaryTitle;
+
+  /// No description provided for @accountingOpeningSetupCapitalOffset.
+  ///
+  /// In en, this message translates to:
+  /// **'Offset account: Capital ({code})'**
+  String accountingOpeningSetupCapitalOffset(String code);
+
+  /// No description provided for @accountingOpeningSetupNetVsCapital.
+  ///
+  /// In en, this message translates to:
+  /// **'Capital offset: {amount} ({side})'**
+  String accountingOpeningSetupNetVsCapital(String amount, String side);
+
+  /// No description provided for @accountingOpeningSetupLinesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} balance lines with amounts'**
+  String accountingOpeningSetupLinesCount(int count);
+
+  /// No description provided for @accountingOpeningSetupNoAmountsToPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least one debit or credit amount before posting.'**
+  String get accountingOpeningSetupNoAmountsToPost;
+
+  /// No description provided for @accountingOpeningSetupPostJournal.
+  ///
+  /// In en, this message translates to:
+  /// **'Post opening journal'**
+  String get accountingOpeningSetupPostJournal;
+
+  /// No description provided for @accountingOpeningSetupPosting.
+  ///
+  /// In en, this message translates to:
+  /// **'Posting opening journal…'**
+  String get accountingOpeningSetupPosting;
+
+  /// No description provided for @accountingOpeningSetupPostSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening journal posted successfully against Capital.'**
+  String get accountingOpeningSetupPostSuccess;
+
+  /// No description provided for @accountingOpeningSetupJournalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening balances'**
+  String get accountingOpeningSetupJournalDescription;
+
+  /// No description provided for @accountingOpeningSetupReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset session'**
+  String get accountingOpeningSetupReset;
+
+  /// No description provided for @accountingOpeningSetupCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import & opening balances'**
+  String get accountingOpeningSetupCardTitle;
+
+  /// No description provided for @accountingOpeningSetupCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import CoA accounts and post multi-currency opening balances.'**
+  String get accountingOpeningSetupCardSubtitle;
+
+  /// No description provided for @accountingOpeningSetupErrorDuplicateCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate currency for account: {name}'**
+  String accountingOpeningSetupErrorDuplicateCurrency(String name);
+
+  /// No description provided for @accountingOpeningSetupErrorAccountNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Account not found: {code}'**
+  String accountingOpeningSetupErrorAccountNotFound(String code);
+
+  /// No description provided for @accountingOpeningSetupErrorNoBalanceRows.
+  ///
+  /// In en, this message translates to:
+  /// **'No valid opening-balance rows found in the file.'**
+  String get accountingOpeningSetupErrorNoBalanceRows;
 
   /// No description provided for @accountingFieldParent.
   ///

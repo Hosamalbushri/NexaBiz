@@ -90,6 +90,63 @@ class ReceiptsPaymentsHomePage extends ConsumerWidget {
                     duration: 280.ms,
                   ),
             ),
+            const SizedBox(height: AppSpacing.md),
+            PermissionGate(
+              anyOf: ReceiptsPaymentsPermissions.transfersView,
+              child: _HubCard(
+                    icon: Icons.swap_horiz_outlined,
+                    title: l10n.rpServiceTransfersTitle,
+                    subtitle: l10n.rpServiceTransfersSubtitle,
+                    onTap: () =>
+                        ReceiptsPaymentsRoutes.pushTransfersMenu(context),
+                  )
+                  .animate()
+                  .fadeIn(delay: 120.ms, duration: 280.ms)
+                  .slideY(
+                    begin: 0.04,
+                    end: 0,
+                    delay: 120.ms,
+                    duration: 280.ms,
+                  ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            PermissionGate(
+              anyOf: ReceiptsPaymentsPermissions.exchangesView,
+              child: _HubCard(
+                    icon: Icons.currency_exchange_outlined,
+                    title: l10n.rpServiceExchangesTitle,
+                    subtitle: l10n.rpServiceExchangesSubtitle,
+                    onTap: () =>
+                        ReceiptsPaymentsRoutes.pushExchangesMenu(context),
+                  )
+                  .animate()
+                  .fadeIn(delay: 180.ms, duration: 280.ms)
+                  .slideY(
+                    begin: 0.04,
+                    end: 0,
+                    delay: 180.ms,
+                    duration: 280.ms,
+                  ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            PermissionGate(
+              anyOf: ReceiptsPaymentsPermissions.anyPost,
+              child: _HubCard(
+                    icon: Icons.fact_check_outlined,
+                    title: l10n.rpPostingServiceTitle,
+                    subtitle: l10n.rpPostingServiceHubSubtitle,
+                    onTap: () =>
+                        ReceiptsPaymentsRoutes.pushPostingService(context),
+                  )
+                  .animate()
+                  .fadeIn(delay: 240.ms, duration: 280.ms)
+                  .slideY(
+                    begin: 0.04,
+                    end: 0,
+                    delay: 240.ms,
+                    duration: 280.ms,
+                  ),
+            ),
           ],
         ),
       ),

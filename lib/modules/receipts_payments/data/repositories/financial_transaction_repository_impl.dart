@@ -91,6 +91,30 @@ class FinancialTransactionRepositoryImpl
           t.transactionDate
               .isSmallerOrEqualValue(BusinessDate.utcDayMs(filter.toDate!));
     }
+    if (filter.numberFrom != null || filter.numberTo != null) {
+      final from = filter.numberFrom ?? filter.numberTo!;
+      final to = filter.numberTo ?? filter.numberFrom!;
+      final lo = from <= to ? from : to;
+      final hi = from <= to ? to : from;
+      // Match absolute stored number or the short local sequence users see.
+      const stride = 1000000;
+      final absolute = CustomExpression<int>(
+        'CAST(transaction_number AS INTEGER)',
+      );
+      final local = CustomExpression<int>(
+        'CASE '
+        'WHEN CAST(transaction_number AS INTEGER) < $stride '
+        'THEN CAST(transaction_number AS INTEGER) '
+        'WHEN CAST(transaction_number AS INTEGER) % $stride = 0 '
+        'THEN $stride '
+        'ELSE CAST(transaction_number AS INTEGER) % $stride '
+        'END',
+      );
+      expr = expr &
+          ((absolute.isBiggerOrEqualValue(lo) &
+                  absolute.isSmallerOrEqualValue(hi)) |
+              (local.isBiggerOrEqualValue(lo) & local.isSmallerOrEqualValue(hi)));
+    }
     final q = filter.query.trim().toLowerCase();
     if (q.isNotEmpty) {
       final like = '%$q%';
@@ -174,6 +198,7 @@ class FinancialTransactionRepositoryImpl
       counterAccountName: row.counterAccountName,
       partyDisplayName: display,
       reference: row.reference,
+      description: row.description,
       documentStatus: TransactionStatusX.fromStorage(row.documentStatus),
       syncStatus: SyncStatusX.fromStorage(row.syncStatus),
     );
@@ -390,6 +415,34 @@ class FinancialTransactionRepositoryImpl
     }
     await _enqueue(posted, SyncOperationType.update);
     return posted;
+  }
+
+  @override
+  Future<FinancialTransaction> markUnposted(int id) async {
+    final existing = await getById(id);
+    if (existing == null) {
+      throw const FinancialTransactionException(
+        FinancialTransactionException.notFound,
+      );
+    }
+    final now = DateTime.now().toUtc();
+    await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id)))
+        .write(
+      FinancialTransactionsCompanion(
+        documentStatus: Value(TransactionStatus.unposted.storageValue),
+        updatedAt: Value(now.millisecondsSinceEpoch),
+        syncStatus: const Value('pending'),
+        version: Value(existing.version + 1),
+      ),
+    );
+    final unposted = await getById(id);
+    if (unposted == null) {
+      throw const FinancialTransactionException(
+        FinancialTransactionException.notFound,
+      );
+    }
+    await _enqueue(unposted, SyncOperationType.update);
+    return unposted;
   }
 
   @override

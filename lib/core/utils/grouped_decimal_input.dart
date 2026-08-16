@@ -3,42 +3,40 @@ import 'package:intl/intl.dart';
 
 import 'digit_normalization.dart';
 
+export 'digit_normalization.dart'
+    show normalizeDigitsToWestern, WesternDigitsInputFormatter;
+
 /// Parses a user-typed amount that may include thousand separators.
 ///
-/// Accepts Western/Arabic/Persian digits, `,` or `.` as decimal separator,
-/// and strips grouping commas/spaces.
+/// `,` / `٬` are **always** thousand separators — never fractions.
+/// Only `.` is accepted as a decimal point (when fractional input is allowed).
+///
+/// Returns a locale-independent [double], or `null` when empty/invalid.
 double? parseGroupedDecimal(String raw) {
   var text = normalizeDigitsToWestern(raw)
       .replaceAll('\u00A0', '')
       .replaceAll(' ', '')
-      .replaceAll('٬', '') // Arabic thousands separator
+      .replaceAll('٬', '')
+      .replaceAll(',', '')
       .trim();
-  if (text.isEmpty) {
+  if (text.isEmpty || text == '-' || text == '.' || text == '-.') {
     return null;
   }
-
-  // Keep the last `.` or `,` as the decimal separator when both appear.
-  final lastDot = text.lastIndexOf('.');
-  final lastComma = text.lastIndexOf(',');
-  if (lastDot >= 0 && lastComma >= 0) {
-    if (lastComma > lastDot) {
-      text = text.replaceAll('.', '').replaceAll(',', '.');
-    } else {
-      text = text.replaceAll(',', '');
-    }
-  } else if (lastComma >= 0) {
-    final parts = text.split(',');
-    if (parts.length == 2 && parts[1].length <= 2) {
-      text = '${parts[0]}.${parts[1]}';
-    } else {
-      text = text.replaceAll(',', '');
-    }
-  }
-
   return double.tryParse(text);
 }
 
-/// Formats [value] with thousand separators (e.g. `1,234.56`).
+final Map<String, NumberFormat> _formatCache = {};
+
+NumberFormat _numberFormat(String pattern) {
+  return _formatCache.putIfAbsent(
+    pattern,
+    () => NumberFormat(pattern, 'en_US'),
+  );
+}
+
+/// Formats [value] with thousand separators (e.g. `10,000` or `1,234.56`).
+///
+/// Display-only — never persist this string as a domain/database value.
 String formatGroupedDecimal(
   double value, {
   int decimalPlaces = 2,
@@ -48,27 +46,33 @@ String formatGroupedDecimal(
   if (emptyWhenZero && value == 0) {
     return '';
   }
+  if (decimalPlaces <= 0) {
+    return _numberFormat('#,##0').format(value.round());
+  }
   if (trimTrailingZeros && value == value.roundToDouble()) {
-    return NumberFormat('#,##0', 'en_US').format(value);
+    return _numberFormat('#,##0').format(value);
   }
   if (trimTrailingZeros) {
-    return NumberFormat('#,##0.##', 'en_US').format(value);
+    return _numberFormat('#,##0.##').format(value);
   }
-  final pattern = decimalPlaces <= 0
-      ? '#,##0'
-      : '#,##0.${'0' * decimalPlaces}';
-  return NumberFormat(pattern, 'en_US').format(value);
+  final pattern = '#,##0.${'0' * decimalPlaces}';
+  return _numberFormat(pattern).format(value);
 }
 
-/// Live formatter: thousand separators + optional fixed decimal places.
+/// Live formatter: thousand separators (`,`) and optional `.` decimals.
+///
+/// Preserves caret position by digit-count mapping so typing, backspace,
+/// mid-string edits, and selection replacement stay stable.
 class GroupedDecimalInputFormatter extends TextInputFormatter {
   const GroupedDecimalInputFormatter({
     this.decimalPlaces = 2,
     this.allowEmpty = true,
+    this.allowNegative = false,
   });
 
   final int decimalPlaces;
   final bool allowEmpty;
+  final bool allowNegative;
 
   @override
   TextEditingValue formatEditUpdate(
@@ -86,19 +90,41 @@ class GroupedDecimalInputFormatter extends TextInputFormatter {
       );
     }
 
-    // Digits before the caret (ignoring separators) — used to restore caret.
     final selectionEnd = newValue.selection.end;
     final rawBeforeCaret = selectionEnd < 0
         ? normalized
         : normalized.substring(0, selectionEnd.clamp(0, normalized.length));
-    final digitsBeforeCaret = _digitCount(rawBeforeCaret);
+    final digitsBeforeCaret = _significantCount(rawBeforeCaret);
 
     final stripped = _stripGrouping(normalized);
-    if (!_isValidPartial(stripped)) {
+    if (!_isValidPartial(
+      stripped,
+      decimalPlaces: decimalPlaces,
+      allowNegative: allowNegative,
+    )) {
       return oldValue;
     }
 
-    final parts = stripped.split('.');
+    final negative = allowNegative && stripped.startsWith('-');
+    final unsigned = negative ? stripped.substring(1) : stripped;
+
+    if (decimalPlaces <= 0) {
+      var intPart = unsigned.replaceAll('.', '');
+      intPart = intPart.replaceFirst(RegExp(r'^0+(?=\d)'), '');
+      if (intPart.isEmpty) {
+        intPart = negative ? '' : '0';
+      }
+      final grouped = _groupThousands(intPart);
+      final formatted = negative ? '-$grouped' : (grouped.isEmpty ? '0' : grouped);
+      return TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(
+          offset: _offsetForSignificantCount(formatted, digitsBeforeCaret),
+        ),
+      );
+    }
+
+    final parts = unsigned.split('.');
     var intPart = parts.isEmpty ? '' : parts.first;
     var fracPart = parts.length > 1 ? parts.sublist(1).join() : null;
 
@@ -106,43 +132,54 @@ class GroupedDecimalInputFormatter extends TextInputFormatter {
       fracPart = fracPart.substring(0, decimalPlaces);
     }
 
-    // Avoid leading zeros like 00012 → keep single 0 before decimal.
     intPart = intPart.replaceFirst(RegExp(r'^0+(?=\d)'), '');
     if (intPart.isEmpty) {
       intPart = '0';
     }
 
     final groupedInt = _groupThousands(intPart);
-    final formatted = fracPart == null
-        ? (stripped.endsWith('.') ? '$groupedInt.' : groupedInt)
+    var body = fracPart == null
+        ? (unsigned.endsWith('.') ? '$groupedInt.' : groupedInt)
         : '$groupedInt.$fracPart';
+    if (negative) {
+      body = '-$body';
+    }
 
     return TextEditingValue(
-      text: formatted,
+      text: body,
       selection: TextSelection.collapsed(
-        offset: _offsetForDigitCount(formatted, digitsBeforeCaret),
+        offset: _offsetForSignificantCount(body, digitsBeforeCaret),
       ),
     );
   }
 
+  /// Strips thousand separators. Comma is never a decimal point.
   static String _stripGrouping(String input) {
-    // Normalize Arabic decimal comma to `.`, drop thousand separators.
-    var text = input.replaceAll('٬', '').replaceAll(' ', '');
-    final lastComma = text.lastIndexOf(',');
-    final lastDot = text.lastIndexOf('.');
-    if (lastComma >= 0 && lastDot < 0) {
-      text = '${text.substring(0, lastComma)}.${text.substring(lastComma + 1)}';
-    } else {
-      text = text.replaceAll(',', '');
-    }
-    return text;
+    return input
+        .replaceAll('٬', '')
+        .replaceAll(' ', '')
+        .replaceAll(',', '');
   }
 
-  static bool _isValidPartial(String stripped) {
-    if (stripped == '.' || stripped == '0.') {
+  static bool _isValidPartial(
+    String stripped, {
+    required int decimalPlaces,
+    required bool allowNegative,
+  }) {
+    final body = stripped.startsWith('-') ? stripped.substring(1) : stripped;
+    if (stripped.startsWith('-') && !allowNegative) {
+      return false;
+    }
+    if (stripped == '-') {
+      return allowNegative;
+    }
+    if (decimalPlaces <= 0) {
+      return RegExp(r'^\d*$').hasMatch(body);
+    }
+    if (body == '.' || body == '0.') {
       return true;
     }
-    return RegExp(r'^\d*\.?\d*$').hasMatch(stripped);
+    return RegExp(r'^\d*\.?\d*$').hasMatch(body);
   }
 
   static String _groupThousands(String digits) {
@@ -160,26 +197,31 @@ class GroupedDecimalInputFormatter extends TextInputFormatter {
     return buf.toString();
   }
 
-  static int _digitCount(String text) {
+  /// Digits and optional leading minus / decimal point for caret mapping.
+  static int _significantCount(String text) {
     var count = 0;
     for (final c in text.codeUnits) {
       if (c >= 0x30 && c <= 0x39) {
+        count++;
+      } else if (c == 0x2E /* . */) {
+        count++;
+      } else if (c == 0x2D /* - */) {
         count++;
       }
     }
     return count;
   }
 
-  static int _offsetForDigitCount(String formatted, int digitCount) {
-    if (digitCount <= 0) {
+  static int _offsetForSignificantCount(String formatted, int target) {
+    if (target <= 0) {
       return 0;
     }
     var seen = 0;
     for (var i = 0; i < formatted.length; i++) {
       final c = formatted.codeUnitAt(i);
-      if (c >= 0x30 && c <= 0x39) {
+      if ((c >= 0x30 && c <= 0x39) || c == 0x2E || c == 0x2D) {
         seen++;
-        if (seen >= digitCount) {
+        if (seen >= target) {
           return i + 1;
         }
       }

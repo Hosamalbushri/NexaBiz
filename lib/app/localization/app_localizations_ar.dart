@@ -69,6 +69,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rpListTitlePayments => 'المدفوعات';
 
   @override
+  String get rpListTitleTransfers => 'النقل بين الصناديق';
+
+  @override
+  String get rpListTitleExchanges => 'مصارفة العملات';
+
+  @override
   String get rpListCardSubtitle => 'بحث وتصفية المقبوضات والمدفوعات';
 
   @override
@@ -81,10 +87,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rpActionNewPayment => 'صرف جديد';
 
   @override
+  String get rpActionNewTransfer => 'نقل جديد';
+
+  @override
+  String get rpActionNewExchange => 'مصارفة جديدة';
+
+  @override
   String get rpCreateReceiptSubtitle => 'تحصيل نقدي أو بنكي إلى الخزينة';
 
   @override
   String get rpCreatePaymentSubtitle => 'صرف من الصندوق أو البنك';
+
+  @override
+  String get rpCreateTransferSubtitle => 'نقل مبلغ بين صناديق النقد';
+
+  @override
+  String get rpCreateExchangeSubtitle => 'تبديل عملة إلى أخرى في نفس الصندوق';
 
   @override
   String get rpServiceReceiptsTitle => 'المقبوضات';
@@ -99,6 +117,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rpServicePaymentsSubtitle => 'عرض سندات الصرف أو إنشاء سند جديد';
 
   @override
+  String get rpServiceTransfersTitle => 'النقل بين الصناديق';
+
+  @override
+  String get rpServiceTransfersSubtitle => 'عرض سندات النقل أو إنشاء سند جديد';
+
+  @override
+  String get rpServiceExchangesTitle => 'مصارفة العملات';
+
+  @override
+  String get rpServiceExchangesSubtitle =>
+      'عرض سندات المصارفة أو إنشاء سند جديد';
+
+  @override
   String get rpServiceViewReceipts => 'جميع المقبوضات';
 
   @override
@@ -111,10 +142,87 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rpServiceViewPaymentsSubtitle => 'تصفح وتصفية سندات الصرف';
 
   @override
+  String get rpServiceViewTransfers => 'جميع سندات النقل';
+
+  @override
+  String get rpServiceViewTransfersSubtitle =>
+      'تصفح وتصفية سندات النقل بين الصناديق';
+
+  @override
+  String get rpServiceViewExchanges => 'جميع سندات المصارفة';
+
+  @override
+  String get rpServiceViewExchangesSubtitle =>
+      'تصفح وتصفية سندات مصارفة العملات';
+
+  @override
   String get rpServiceCreateReceipt => 'إنشاء سند قبض';
 
   @override
   String get rpServiceCreatePayment => 'إنشاء سند صرف';
+
+  @override
+  String get rpServiceCreateTransfer => 'إنشاء سند نقل';
+
+  @override
+  String get rpServiceCreateExchange => 'إنشاء سند مصارفة';
+
+  @override
+  String get rpFormTitleReceipt => 'سند قبض جديد';
+
+  @override
+  String get rpFormTitlePayment => 'سند صرف جديد';
+
+  @override
+  String get rpFormTitleTransfer => 'سند نقل بين الصناديق';
+
+  @override
+  String get rpFormTitleTransferEdit => 'تعديل سند النقل';
+
+  @override
+  String get rpFormTitleExchange => 'سند مصارفة عملات';
+
+  @override
+  String get rpFormTitleExchangeEdit => 'تعديل سند المصارفة';
+
+  @override
+  String get rpTransferFromAccount => 'من صندوق';
+
+  @override
+  String get rpTransferToAccount => 'إلى صندوق';
+
+  @override
+  String get rpExchangeCashAccount => 'الصندوق';
+
+  @override
+  String get rpExchangeFromCurrency => 'من عملة';
+
+  @override
+  String get rpExchangeToCurrency => 'إلى عملة';
+
+  @override
+  String get rpExchangeFromAmount => 'المبلغ المُعطى';
+
+  @override
+  String get rpExchangeToAmount => 'المبلغ المستلم';
+
+  @override
+  String get rpEmptyTitleTransfers => 'لا توجد سندات نقل';
+
+  @override
+  String get rpEmptyMessageTransfers => 'أنشئ سند نقل بين الصناديق للبدء.';
+
+  @override
+  String get rpEmptyTitleExchanges => 'لا توجد سندات مصارفة';
+
+  @override
+  String get rpEmptyMessageExchanges => 'أنشئ سند مصارفة عملات للبدء.';
+
+  @override
+  String get rpDetailsTitleTransfer => 'تفاصيل سند النقل';
+
+  @override
+  String get rpDetailsTitleExchange => 'تفاصيل سند المصارفة';
 
   @override
   String get rpDashboardTodayReceipts => 'مقبوضات اليوم';
@@ -144,12 +252,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rpDashboardFailedSync => 'فشل المزامنة';
 
   @override
-  String get rpFormTitleReceipt => 'قبض جديد';
-
-  @override
-  String get rpFormTitlePayment => 'صرف جديد';
-
-  @override
   String get rpFormSectionDocument => 'المستند';
 
   @override
@@ -169,6 +271,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rpDefaultGeneralDescription => 'دفعة من الحساب';
+
+  @override
+  String rpDefaultPaymentDescription(String date) {
+    return 'خارج--$date';
+  }
+
+  @override
+  String rpDefaultTransferDescription(String date) {
+    return 'نقل--$date';
+  }
+
+  @override
+  String rpDefaultExchangeDescription(String date) {
+    return 'مصارفة--$date';
+  }
 
   @override
   String get rpManualExchangeRate => 'سعر الصرف';
@@ -230,6 +347,155 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rpPosted => 'تم ترحيل الحركة';
 
   @override
+  String get rpUnpost => 'إلغاء الترحيل';
+
+  @override
+  String get rpUnposting => 'جارٍ إلغاء الترحيل…';
+
+  @override
+  String get rpUnposted => 'تم إلغاء ترحيل الحركة';
+
+  @override
+  String get rpPostingServiceTitle => 'الترحيل وإلغاء الترحيل';
+
+  @override
+  String get rpPostingServiceHubSubtitle =>
+      'ترحيل أو إلغاء ترحيل السندات حسب النوع والتاريخ أو الرقم';
+
+  @override
+  String get rpPostingServiceSubtitle =>
+      'اختر نوع السند ونوع العملية، ثم ابحث من تاريخ إلى تاريخ أو من رقم إلى رقم. يمكنك الترحيل لسند محدد أو للكل.';
+
+  @override
+  String get rpPostingServiceDocumentType => 'نوع السند';
+
+  @override
+  String get rpPostingServiceOperation => 'نوع العملية';
+
+  @override
+  String get rpPostingServiceLookup => 'البحث بواسطة';
+
+  @override
+  String get rpPostingServicePickDate => 'اختر التاريخ';
+
+  @override
+  String get rpPostingServiceFromDate => 'من تاريخ';
+
+  @override
+  String get rpPostingServiceToDate => 'إلى تاريخ';
+
+  @override
+  String get rpPostingServiceFromNumber => 'من رقم';
+
+  @override
+  String get rpPostingServiceToNumber => 'إلى رقم';
+
+  @override
+  String get rpPostingServiceNumberHint => 'مثال: 1';
+
+  @override
+  String get rpPostingServiceDateRequired => 'حدد من تاريخ وإلى تاريخ';
+
+  @override
+  String get rpPostingServiceDateRangeInvalid =>
+      'تاريخ البداية يجب أن يكون قبل أو يساوي تاريخ النهاية';
+
+  @override
+  String get rpPostingServiceNumberRequired => 'أدخل من رقم وإلى رقم';
+
+  @override
+  String get rpPostingServiceNumberRangeInvalid =>
+      'رقم البداية يجب أن يكون أصغر من أو يساوي رقم النهاية';
+
+  @override
+  String get rpPostingServiceSearch => 'عرض السندات';
+
+  @override
+  String rpPostingServiceResultsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count سندات',
+      one: 'سند واحد',
+      zero: 'لا سندات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get rpPostingServiceEmpty => 'لا توجد سندات مطابقة لهذا الفلتر.';
+
+  @override
+  String get rpPostingServiceSelectOne => 'حدد سنداً أولاً';
+
+  @override
+  String get rpPostingServiceApplySelectedPost => 'ترحيل المحدد';
+
+  @override
+  String get rpPostingServiceApplySelectedUnpost => 'إلغاء ترحيل المحدد';
+
+  @override
+  String rpPostingServiceApplyAllPost(int count) {
+    return 'ترحيل الكل ($count)';
+  }
+
+  @override
+  String rpPostingServiceApplyAllUnpost(int count) {
+    return 'إلغاء ترحيل الكل ($count)';
+  }
+
+  @override
+  String rpPostingServiceConfirmOnePost(String number) {
+    return 'ترحيل السند $number؟';
+  }
+
+  @override
+  String rpPostingServiceConfirmOneUnpost(String number) {
+    return 'إلغاء ترحيل السند $number؟';
+  }
+
+  @override
+  String rpPostingServiceConfirmAllPost(int count) {
+    return 'ترحيل كل السندات المعروضة ($count)؟';
+  }
+
+  @override
+  String rpPostingServiceConfirmAllUnpost(int count) {
+    return 'إلغاء ترحيل كل السندات المعروضة ($count)؟';
+  }
+
+  @override
+  String rpPostingServiceSuccessPost(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم ترحيل $count سندات',
+      one: 'تم ترحيل سند واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String rpPostingServiceSuccessUnpost(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم إلغاء ترحيل $count سندات',
+      one: 'تم إلغاء ترحيل سند واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String rpPostingServicePartial(int success, int failed) {
+    return 'نجح $success وفشل $failed';
+  }
+
+  @override
+  String get rpPostingServiceNoPermission =>
+      'ليس لديك صلاحية ترحيل أو إلغاء ترحيل السندات.';
+
+  @override
   String get rpCancelTitle => 'إلغاء الحركة';
 
   @override
@@ -256,6 +522,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get rpEmptyMessage => 'أنشئ قبضاً أو صرفاً للبدء.';
 
   @override
+  String get rpEmptyTitleReceipts => 'لا توجد مقبوضات';
+
+  @override
+  String get rpEmptyMessageReceipts => 'أنشئ سند قبض للبدء.';
+
+  @override
+  String get rpEmptyTitlePayments => 'لا توجد مدفوعات';
+
+  @override
+  String get rpEmptyMessagePayments => 'أنشئ سند صرف للبدء.';
+
+  @override
+  String get rpDetailsTitleReceipt => 'تفاصيل سند القبض';
+
+  @override
+  String get rpDetailsTitlePayment => 'تفاصيل سند الصرف';
+
+  @override
   String get rpSearchHint => 'ابحث بالرقم أو الطرف أو المرجع…';
 
   @override
@@ -269,6 +553,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rpTypePayment => 'صرف';
+
+  @override
+  String get rpTypeTransfer => 'نقل';
+
+  @override
+  String get rpTypeExchange => 'مصارفة';
 
   @override
   String get rpStatusUnposted => 'غير مرحّل';
@@ -302,6 +592,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rpSourcePurchaseRelatedPayment => 'صرف مرتبط بالمشتريات';
+
+  @override
+  String get rpSourceCashBoxTransfer => 'نقل بين الصناديق';
+
+  @override
+  String get rpSourceCurrencyExchange => 'مصارفة عملات';
 
   @override
   String get rpDate => 'التاريخ';
@@ -405,6 +701,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'يجب أن يختلف حساب الصندوق عن الحساب المقابل';
 
   @override
+  String get rpErrorCurrenciesMustDiffer =>
+      'يجب أن تختلف عملة المصدر عن عملة الهدف';
+
+  @override
   String get rpErrorVoucherBookRequired => 'اختر دفتر سندات';
 
   @override
@@ -412,6 +712,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rpErrorCannotPost => 'لا يمكن ترحيل هذه الحركة';
+
+  @override
+  String get rpErrorCannotUnpost => 'لا يمكن إلغاء ترحيل هذه الحركة';
 
   @override
   String get rpErrorCannotCancel => 'لا يمكن إلغاء هذه الحركة';
@@ -447,6 +750,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminPermServicePaymentsHint => 'المدفوعات النقدية والبنكية';
+
+  @override
+  String get adminPermServiceTransfers => 'النقل بين الصناديق';
+
+  @override
+  String get adminPermServiceTransfersHint => 'التحويلات بين حسابات الصناديق';
+
+  @override
+  String get adminPermServiceExchanges => 'مصارفة العملات';
+
+  @override
+  String get adminPermServiceExchangesHint => 'تبديل العملات داخل الصندوق';
 
   @override
   String get adminPermServiceRpReports => 'التقارير';
@@ -1797,7 +2112,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get accountingVoucherBooksSubtitle =>
-      'افتح قسماً ثم استخدم التبويبات لكل نوع (مثل المبيعات ومردود المبيعات). لكل نوع قائمة وزر إضافة خاص به.';
+      'افتح قسماً ثم اختر نوع الدفتر من القائمة (مثل المقبوضات أو النقل). لكل نوع قائمة دفاتر وزر إضافة خاص به.';
 
   @override
   String get accountingVoucherBooksEmptyTitle => 'لا توجد دفاتر';
@@ -1942,6 +2257,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountingVoucherBookTypePayments => 'مدفوعات';
 
   @override
+  String get accountingVoucherBookTypeTransfers => 'النقل بين الصناديق';
+
+  @override
+  String get accountingVoucherBookTypeExchanges => 'مصارفة العملات';
+
+  @override
+  String get accountingVoucherBookTypeReceiptsPayments =>
+      'المقبوضات والمصروفات';
+
+  @override
   String get accountingVoucherBookTypePurchases => 'مشتريات';
 
   @override
@@ -1998,13 +2323,257 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get accountingFieldCodeHelper =>
-      'عند اختيار حساب أب يُولَّد الرمز منه تلقائياً (مثال: 1221 ← 12210001).';
+      'عند اختيار حساب أب يُولَّد الرقم التالي تلقائياً بعد أعلى رقم موجود (مثال: 1213 ← 1214).';
 
   @override
   String get accountingGenerateCode => 'توليد الرمز';
 
   @override
   String get accountingAddChildAccount => 'إضافة حساب فرعي';
+
+  @override
+  String get accountingImportTitle => 'استيراد الحسابات';
+
+  @override
+  String get accountingImportPageTitle => 'استيراد دليل الحسابات';
+
+  @override
+  String get accountingImportSubtitle =>
+      'اختر حساباً أباً (مجموعة)، ثم ارفع Excel أو أضف صفوفاً يدوياً، واحفظ مع أرصدة افتتاحية اختيارية.';
+
+  @override
+  String get accountingImportParent => 'الحساب الأب (مجموعة)';
+
+  @override
+  String get accountingImportOpeningDebit => 'مدين افتتاحي';
+
+  @override
+  String get accountingImportOpeningCredit => 'دائن افتتاحي';
+
+  @override
+  String get accountingImportCurrency => 'العملة';
+
+  @override
+  String get accountingImportRowsTitle => 'الحسابات المراد استيرادها';
+
+  @override
+  String get accountingImportAddRow => 'إضافة صف';
+
+  @override
+  String get accountingImportRemoveRow => 'حذف الصف';
+
+  @override
+  String get accountingImportEmptyRows =>
+      'لا توجد صفوف بعد. اختر ملف Excel أو أضف صفاً.';
+
+  @override
+  String get accountingImportFormatHintTitle => 'تخطيط Excel للحسابات';
+
+  @override
+  String get accountingImportFormatHintIntro =>
+      'الصف الأول = عناوين. المطلوب: الاسم. استخدم .xlsx أو .xls. كل الصفوف تُنشأ تحت الحساب الأب المختار.';
+
+  @override
+  String get accountingImportFormatColCodeAliases =>
+      'Account Code · Code · رمز الحساب';
+
+  @override
+  String get accountingImportFormatColNameAliases =>
+      'Account Name · Name · اسم الحساب';
+
+  @override
+  String get accountingImportFormatColDebitAliases =>
+      'Opening Debit · Debit · مدين افتتاحي';
+
+  @override
+  String get accountingImportFormatColCreditAliases =>
+      'Opening Credit · Credit · دائن افتتاحي';
+
+  @override
+  String get accountingImportFormatColCurrencyAliases =>
+      'Currency · Currency Code · عملة';
+
+  @override
+  String get accountingImportFormatSampleNote =>
+      'بدون عناوين تُقرأ الأعمدة كـ: الرمز، الاسم، مدين افتتاحي، دائن افتتاحي، العملة. الرموز المكررة تُتخطى. الأرصدة الافتتاحية تُرحَّل بقيد واحد مقابل رأس المال (3100) مع موازنة لكل عملة.';
+
+  @override
+  String accountingImportInsertedCount(int count) {
+    return 'تم إدراج $count حساب';
+  }
+
+  @override
+  String accountingImportSkippedCount(int count) {
+    return 'تم تخطي $count مكرر';
+  }
+
+  @override
+  String get accountingImportOpeningPosted =>
+      'تم ترحيل قيد الأرصدة الافتتاحية مقابل رأس المال.';
+
+  @override
+  String get accountingImportOpeningVoucherType => 'افتتاحي';
+
+  @override
+  String get accountingImportOpeningJournalDescription =>
+      'أرصدة افتتاحية من استيراد الحسابات';
+
+  @override
+  String get accountingImportErrorParentRequired =>
+      'اختر حساباً أباً من نوع مجموعة.';
+
+  @override
+  String get accountingImportErrorParentNotGroup =>
+      'يجب أن يكون الحساب الأب مجموعة.';
+
+  @override
+  String get accountingImportErrorNoRows =>
+      'أضف حساباً واحداً على الأقل مع اسم.';
+
+  @override
+  String get accountingImportErrorBothSides =>
+      'لا يمكن أن يحتوي الصف على مدين ودائن افتتاحيين معاً.';
+
+  @override
+  String get accountingImportErrorCapitalMissing =>
+      'حساب رأس المال (3100) غير موجود.';
+
+  @override
+  String get accountingOpeningSetupTitle =>
+      'مركز الاستيراد والأرصدة الافتتاحية';
+
+  @override
+  String get accountingOpeningSetupSubtitle =>
+      'استورد الحسابات، عيّن أرصدة افتتاحية متعددة العملات لأي حساب ترحيل، ثم رحّل قيداً واحداً مقابل رأس المال (3100).';
+
+  @override
+  String get accountingOpeningSetupStepImport => 'استيراد';
+
+  @override
+  String get accountingOpeningSetupStepBalances => 'أرصدة';
+
+  @override
+  String get accountingOpeningSetupStepReview => 'مراجعة';
+
+  @override
+  String get accountingOpeningSetupStepImportHint =>
+      'أنشئ حسابات ترحيل تحت حساب أب مجموعة. المبالغ الافتتاحية تُدخل في الخطوة التالية.';
+
+  @override
+  String get accountingOpeningSetupStepBalancesHint =>
+      'أضف حسابات ترحيل وأدخل سطراً لكل عملة مهيأة (مدين أو دائن). تظهر فقط العملات المفعّلة في أسعار الصرف.';
+
+  @override
+  String get accountingOpeningSetupStepReviewHint =>
+      'راجع المجاميع لكل عملة، ثم رحّل قيد الافتتاح مقابل رأس المال.';
+
+  @override
+  String get accountingOpeningSetupImportFormatIntro =>
+      'الصف الأول = عناوين. المطلوب: الاسم. استخدم .xlsx أو .xls. كل الصفوف تُنشأ تحت الحساب الأب المختار.';
+
+  @override
+  String get accountingOpeningSetupImportFormatNote =>
+      'بدون عناوين تُقرأ الأعمدة كـ: الرمز، الاسم. الرموز المكررة تُتخطى. الأرصدة تُعيَّن في الخطوة 2.';
+
+  @override
+  String get accountingOpeningSetupAddAccount => 'إضافة حساب ترحيل';
+
+  @override
+  String get accountingOpeningSetupRemoveAccount => 'إزالة الحساب';
+
+  @override
+  String get accountingOpeningSetupAddCurrencyLine => 'إضافة سطر عملة';
+
+  @override
+  String get accountingOpeningSetupImportBalancesExcel =>
+      'استيراد أرصدة من Excel';
+
+  @override
+  String get accountingOpeningSetupEmptyBalances =>
+      'لا توجد أسطر رصيد بعد. أضف صفاً أو استورد أرصدة من Excel.';
+
+  @override
+  String get accountingOpeningSetupContinueToReview => 'متابعة إلى المراجعة';
+
+  @override
+  String get accountingOpeningSetupBalancesRowsTitle =>
+      'أسطر الأرصدة الافتتاحية';
+
+  @override
+  String get accountingOpeningSetupBalancesFormatTitle =>
+      'تخطيط Excel للأرصدة الافتتاحية';
+
+  @override
+  String get accountingOpeningSetupBalancesFormatNote =>
+      'الأعمدة: الرمز أو معرف الحساب، العملة، مدين، دائن. يجب أن تكون العملة مفعّلة مسبقاً في أسعار الصرف. نفس الحساب مرة واحدة لكل عملة. الصفوف تُدمج مع القائمة الحالية.';
+
+  @override
+  String accountingOpeningSetupErrorCurrencyNotConfigured(String code) {
+    return 'العملة غير مهيأة في النظام: $code';
+  }
+
+  @override
+  String get accountingOpeningSetupErrorAccountRequired =>
+      'اختر حساباً لكل سطر رصيد.';
+
+  @override
+  String get accountingOpeningSetupReviewSummaryTitle => 'ملخص حسب العملة';
+
+  @override
+  String accountingOpeningSetupCapitalOffset(String code) {
+    return 'حساب المقاصة: رأس المال ($code)';
+  }
+
+  @override
+  String accountingOpeningSetupNetVsCapital(String amount, String side) {
+    return 'مقابل رأس المال: $amount ($side)';
+  }
+
+  @override
+  String accountingOpeningSetupLinesCount(int count) {
+    return '$count أسطر رصيد بمبالغ';
+  }
+
+  @override
+  String get accountingOpeningSetupNoAmountsToPost =>
+      'أدخل مبلغ مدين أو دائن واحداً على الأقل قبل الترحيل.';
+
+  @override
+  String get accountingOpeningSetupPostJournal => 'ترحيل قيد الافتتاح';
+
+  @override
+  String get accountingOpeningSetupPosting => 'جاري ترحيل قيد الافتتاح…';
+
+  @override
+  String get accountingOpeningSetupPostSuccess =>
+      'تم ترحيل قيد الافتتاح بنجاح مقابل رأس المال.';
+
+  @override
+  String get accountingOpeningSetupJournalDescription => 'أرصدة افتتاحية';
+
+  @override
+  String get accountingOpeningSetupReset => 'إعادة تعيين الجلسة';
+
+  @override
+  String get accountingOpeningSetupCardTitle => 'الاستيراد والأرصدة الافتتاحية';
+
+  @override
+  String get accountingOpeningSetupCardSubtitle =>
+      'استيراد دليل الحسابات وترحيل أرصدة افتتاحية متعددة العملات.';
+
+  @override
+  String accountingOpeningSetupErrorDuplicateCurrency(String name) {
+    return 'تكرار عملة لنفس الحساب: $name';
+  }
+
+  @override
+  String accountingOpeningSetupErrorAccountNotFound(String code) {
+    return 'الحساب غير موجود: $code';
+  }
+
+  @override
+  String get accountingOpeningSetupErrorNoBalanceRows =>
+      'لا توجد صفوف أرصدة صالحة في الملف.';
 
   @override
   String get accountingFieldParent => 'الحساب الأب';

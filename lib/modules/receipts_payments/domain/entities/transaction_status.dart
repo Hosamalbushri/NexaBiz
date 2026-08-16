@@ -11,6 +11,8 @@ extension TransactionStatusX on TransactionStatus {
 
   bool get canPost => this == TransactionStatus.unposted;
 
+  bool get canUnpost => this == TransactionStatus.posted;
+
   bool get canCancel =>
       this == TransactionStatus.unposted || this == TransactionStatus.posted;
 

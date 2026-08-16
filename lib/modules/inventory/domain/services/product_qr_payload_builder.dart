@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../../../core/utils/grouped_decimal_input.dart';
 import '../entities/product.dart';
 
 /// Versioned, self-contained product QR payload (no URLs / network).
@@ -97,7 +98,7 @@ class ProductQrPayloadBuilder {
       return null;
     }
 
-    final price = double.tryParse(priceRaw.replaceAll(',', ''));
+    final price = parseGroupedDecimal(priceRaw);
     final packSize = int.tryParse(packRaw);
     if (price == null ||
         packSize == null ||

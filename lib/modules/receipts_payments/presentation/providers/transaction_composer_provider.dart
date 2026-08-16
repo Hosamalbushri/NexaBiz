@@ -325,9 +325,13 @@ class TransactionComposerController
     final sources = TransactionSourceX.forType(type);
     final defaultSource = sources.isNotEmpty
         ? sources.first
-        : (type.isReceipt
-            ? TransactionSource.manualReceipt
-            : TransactionSource.manualPayment);
+        : (type.isTransfer
+            ? TransactionSource.cashBoxTransfer
+            : (type.isCurrencyExchange
+                ? TransactionSource.currencyExchange
+                : (type.isReceipt
+                    ? TransactionSource.manualReceipt
+                    : TransactionSource.manualPayment)));
 
     final currencyPort = _ref.read(rpCurrencyPortProvider);
     final base = await currencyPort.baseCurrencyCode;

@@ -12,6 +12,7 @@ import '../../../../app/notifications/presentation/providers/notifications_provi
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/notifications/notification_type.dart';
+import '../../../../core/widgets/app_amount_field.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -40,7 +41,6 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   final _nameController = TextEditingController();
   final _barcodeController = TextEditingController();
   final _packSizeController = TextEditingController();
-  final _priceController = TextEditingController();
   static const _qrPayloadBuilder = ProductQrPayloadBuilder();
 
   var _hydrated = false;
@@ -48,6 +48,8 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   var _generatingBarcode = false;
   var _generatingCode = false;
   var _exportBusy = _CodeExportBusy.none;
+  var _price = 0.0;
+  var _priceError = false;
   DateTime? _createdAt;
   DateTime? _updatedAt;
   String? _uuid;
@@ -96,7 +98,6 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     _nameController.dispose();
     _barcodeController.dispose();
     _packSizeController.dispose();
-    _priceController.dispose();
     super.dispose();
   }
 
@@ -109,7 +110,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     _nameController.text = product.name;
     _barcodeController.text = product.barcode ?? '';
     _packSizeController.text = '${product.packSize}';
-    _priceController.text = product.price.toString();
+    _price = product.price;
     _createdAt = product.createdAt;
     _updatedAt = product.updatedAt;
     _uuid = product.uuid;
@@ -121,14 +122,12 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
       return null;
     }
     final packSize = int.tryParse(_packSizeController.text.trim());
-    final price = double.tryParse(
-      _priceController.text.trim().replaceAll(',', ''),
-    );
+    final price = _price;
     final name = _nameController.text.trim();
     final itemCode = _codeController.text.trim();
     if (packSize == null ||
         packSize < 1 ||
-        price == null ||
+        price < 0 ||
         name.isEmpty ||
         itemCode.isEmpty) {
       return null;
@@ -275,36 +274,23 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
               },
             ),
             const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _priceController,
-              readOnly: widget.isEditing,
-              enableInteractiveSelection: true,
-              decoration: InputDecoration(
-                labelText: l10n.price,
-                hintText: widget.isEditing ? null : l10n.priceRequiredHint,
-                helperText: widget.isEditing
-                    ? l10n.productsFieldLockedHint
-                    : null,
-                suffixIcon: widget.isEditing
-                    ? Icon(
-                        Icons.lock_outline,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      )
-                    : null,
-              ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              textInputAction: TextInputAction.done,
-              validator: (value) {
-                final price = double.tryParse(
-                  (value ?? '').trim().replaceAll(',', ''),
-                );
-                if (price == null || price < 0) {
-                  return l10n.productsInvalidForm;
-                }
-                return null;
+            AppAmountField(
+              value: _price,
+              onChanged: (value) {
+                setState(() {
+                  _price = value;
+                  _priceError = false;
+                });
               },
+              decimalPlaces: 2,
+              emptyWhenZero: false,
+              trimTrailingZeros: true,
+              label: l10n.price,
+              hint: widget.isEditing
+                  ? l10n.productsFieldLockedHint
+                  : l10n.priceRequiredHint,
+              readOnly: widget.isEditing,
+              errorText: _priceError ? l10n.productsInvalidForm : null,
             ),
             if (widget.isEditing) ...[
               const SizedBox(height: AppSpacing.xl),
@@ -509,6 +495,10 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
+    if (_price < 0) {
+      setState(() => _priceError = true);
+      return;
+    }
 
     final draft = ProductDraft(
       itemCode: _codeController.text.trim(),
@@ -517,7 +507,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
           ? null
           : _barcodeController.text.trim(),
       packSize: int.parse(_packSizeController.text.trim()),
-      price: double.parse(_priceController.text.trim().replaceAll(',', '')),
+      price: _price,
     );
 
     setState(() => _saving = true);

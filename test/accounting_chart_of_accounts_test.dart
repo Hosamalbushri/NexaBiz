@@ -356,6 +356,7 @@ void main() {
       final generator = AccountCodeGenerator(repo);
       final first = await generator.generate(
         parentAccountCode: customers!.accountCode,
+        parentAccountId: customers.uuid,
       );
       expect(first, '12210001');
 
@@ -370,15 +371,17 @@ void main() {
       );
       final second = await generator.generate(
         parentAccountCode: customers.accountCode,
+        parentAccountId: customers.uuid,
       );
       expect(second, '12210002');
 
-      // Sibling system codes under cash boxes (1211) must not block 12100001.
+      // Under cash boxes, continue after the highest sibling (1213 → 1214).
       final cashBoxes = await repo.getByAccountCode('1210');
       final cashBoxChild = await generator.generate(
         parentAccountCode: cashBoxes!.accountCode,
+        parentAccountId: cashBoxes.uuid,
       );
-      expect(cashBoxChild, '12100001');
+      expect(cashBoxChild, '1214');
     });
 
     test('rejects children under posting accounts', () async {
@@ -479,6 +482,38 @@ void main() {
       expect(await repo.getById(created.id), isNull);
       final tombstone = await repo.getByUuid(created.uuid);
       expect(tombstone!.isDeleted, isTrue);
+    });
+
+    test('re-insert same code after soft delete revives tombstone', () async {
+      await repo.ensureDefaultChartSeeded();
+      final assets = await repo.getByAccountCode('1000');
+      final created = await repo.insert(
+        AccountDraft(
+          parentId: assets!.uuid,
+          accountCode: '1411',
+          name: 'Temp Import',
+          accountType: AccountType.asset,
+          isGroup: false,
+        ),
+      );
+      final originalUuid = created.uuid;
+      await repo.softDelete(created.id);
+      expect(await repo.getByAccountCode('1411'), isNull);
+
+      final revived = await repo.insert(
+        AccountDraft(
+          parentId: assets.uuid,
+          accountCode: '1411',
+          name: 'Temp Import Again',
+          accountType: AccountType.asset,
+          isGroup: false,
+        ),
+      );
+      expect(revived.uuid, originalUuid);
+      expect(revived.isDeleted, isFalse);
+      expect(revived.isActive, isTrue);
+      expect(revived.name, 'Temp Import Again');
+      expect(await repo.getByAccountCode('1411'), isNotNull);
     });
   });
 

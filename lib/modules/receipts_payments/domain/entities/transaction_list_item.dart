@@ -18,6 +18,7 @@ class TransactionListItem {
     this.counterAccountName,
     this.partyDisplayName,
     this.reference,
+    this.description,
   });
 
   final int id;
@@ -31,6 +32,7 @@ class TransactionListItem {
   final String? counterAccountName;
   final String? partyDisplayName;
   final String? reference;
+  final String? description;
   final TransactionStatus documentStatus;
   final SyncStatus syncStatus;
 }

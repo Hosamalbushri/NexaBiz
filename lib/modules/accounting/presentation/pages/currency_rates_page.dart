@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -8,6 +7,7 @@ import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/settings/company/app_currency.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/widgets/app_amount_field.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_loading.dart';
@@ -275,8 +275,8 @@ class CurrencyRatesPage extends ConsumerWidget {
       return;
     }
 
-    final rate = double.tryParse(result.rateText.trim().replaceAll(',', '.'));
-    if (rate == null || rate <= 0) {
+    final rate = result.rate;
+    if (rate <= 0) {
       showAppSnackBar(
         context,
         message: l10n.accountingCurrencyRatesInvalid,
@@ -378,11 +378,9 @@ class CurrencyRatesPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final base = ref.read(accountingBaseCurrencyProvider);
-    final initialText = item.rate == null
-        ? ''
-        : _formatRate(item.rate!.rateToBase);
+    final initialRate = item.rate?.rateToBase ?? 0;
 
-    final raw = await showDialog<String>(
+    final rate = await showDialog<double>(
       context: context,
       builder: (dialogContext) {
         return _CurrencyRateEditDialog(
@@ -395,17 +393,16 @@ class CurrencyRatesPage extends ConsumerWidget {
           fieldHelper: l10n.accountingCurrencyRatesRateHelper(base.code),
           cancelLabel: l10n.cancel,
           confirmLabel: l10n.confirm,
-          initialText: initialText,
+          initialRate: initialRate,
         );
       },
     );
 
-    if (raw == null || !context.mounted) {
+    if (rate == null || !context.mounted) {
       return;
     }
 
-    final rate = double.tryParse(raw.trim().replaceAll(',', '.'));
-    if (rate == null || rate <= 0) {
+    if (rate <= 0) {
       showAppSnackBar(
         context,
         message: l10n.accountingCurrencyRatesInvalid,
@@ -441,10 +438,10 @@ class CurrencyRatesPage extends ConsumerWidget {
 }
 
 class _AddCurrencyResult {
-  const _AddCurrencyResult({required this.currency, required this.rateText});
+  const _AddCurrencyResult({required this.currency, required this.rate});
 
   final AppCurrency currency;
-  final String rateText;
+  final double rate;
 }
 
 class _CurrencyRateAddDialog extends StatefulWidget {
@@ -476,25 +473,18 @@ class _CurrencyRateAddDialog extends StatefulWidget {
 
 class _CurrencyRateAddDialogState extends State<_CurrencyRateAddDialog> {
   late AppCurrency _selected;
-  late final TextEditingController _controller;
+  var _rate = 0.0;
 
   @override
   void initState() {
     super.initState();
     _selected = widget.currencies.first;
-    _controller = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   void _submit() {
-    Navigator.of(
-      context,
-    ).pop(_AddCurrencyResult(currency: _selected, rateText: _controller.text));
+    Navigator.of(context).pop(
+      _AddCurrencyResult(currency: _selected, rate: _rate),
+    );
   }
 
   @override
@@ -533,19 +523,14 @@ class _CurrencyRateAddDialogState extends State<_CurrencyRateAddDialog> {
                 },
               ),
               const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: _controller,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                ],
-                decoration: InputDecoration(
-                  labelText: widget.fieldLabel,
-                  helperText: widget.fieldHelper,
-                  helperMaxLines: 3,
-                ),
+              AppAmountField(
+                value: _rate,
+                onChanged: (value) => setState(() => _rate = value),
+                decimalPlaces: 6,
+                emptyWhenZero: true,
+                trimTrailingZeros: true,
+                label: widget.fieldLabel,
+                hint: widget.fieldHelper,
                 autofocus: true,
                 onSubmitted: (_) => _submit(),
               ),
@@ -573,7 +558,7 @@ class _CurrencyRateEditDialog extends StatefulWidget {
     required this.fieldHelper,
     required this.cancelLabel,
     required this.confirmLabel,
-    required this.initialText,
+    required this.initialRate,
   });
 
   final String title;
@@ -582,7 +567,7 @@ class _CurrencyRateEditDialog extends StatefulWidget {
   final String fieldHelper;
   final String cancelLabel;
   final String confirmLabel;
-  final String initialText;
+  final double initialRate;
 
   @override
   State<_CurrencyRateEditDialog> createState() =>
@@ -590,22 +575,16 @@ class _CurrencyRateEditDialog extends StatefulWidget {
 }
 
 class _CurrencyRateEditDialogState extends State<_CurrencyRateEditDialog> {
-  late final TextEditingController _controller;
+  late double _rate;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialText);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+    _rate = widget.initialRate;
   }
 
   void _submit() {
-    Navigator.of(context).pop(_controller.text);
+    Navigator.of(context).pop(_rate);
   }
 
   @override
@@ -624,19 +603,14 @@ class _CurrencyRateEditDialogState extends State<_CurrencyRateEditDialog> {
             children: [
               Text(widget.hint, style: theme.textTheme.bodySmall),
               const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: _controller,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                ],
-                decoration: InputDecoration(
-                  labelText: widget.fieldLabel,
-                  helperText: widget.fieldHelper,
-                  helperMaxLines: 3,
-                ),
+              AppAmountField(
+                value: _rate,
+                onChanged: (value) => setState(() => _rate = value),
+                decimalPlaces: 6,
+                emptyWhenZero: true,
+                trimTrailingZeros: true,
+                label: widget.fieldLabel,
+                hint: widget.fieldHelper,
                 autofocus: true,
                 onSubmitted: (_) => _submit(),
               ),

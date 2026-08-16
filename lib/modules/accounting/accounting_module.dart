@@ -10,6 +10,7 @@ import 'permissions/accounting_permission_package.dart';
 import 'domain/entities/voucher_book_type.dart';
 import 'presentation/pages/account_details_page.dart';
 import 'presentation/pages/account_form_page.dart';
+import 'presentation/pages/accounts_opening_setup_page.dart';
 import 'presentation/pages/accounting_home_page.dart';
 import 'presentation/pages/accounting_reports_page.dart';
 import 'presentation/pages/accounting_routes.dart';
@@ -57,6 +58,17 @@ class AccountingModule extends AppModule {
         RouteAccessRule(
           pathEquals: AccountingRoutes.accountsCreate,
           anyOf: const ['accounting.accounts.create'],
+        ),
+        RouteAccessRule(
+          pathEquals: AccountingRoutes.accountsImport,
+          anyOf: const ['accounting.accounts.create'],
+        ),
+        RouteAccessRule(
+          pathEquals: AccountingRoutes.openingSetup,
+          anyOf: const [
+            'accounting.accounts.create',
+            'accounting.journals.create',
+          ],
         ),
         RouteAccessRule(
           pathRegex: RegExp(r'^/accounting/accounts/\d+/edit$'),
@@ -112,6 +124,11 @@ class AccountingModule extends AppModule {
       name: 'accounting',
       builder: (context, state) => const AccountingHomePage(),
       routes: [
+        GoRoute(
+          path: 'opening-setup',
+          name: 'accountingOpeningSetup',
+          builder: (context, state) => const AccountsOpeningSetupPage(),
+        ),
         GoRoute(
           path: 'currency-rates',
           name: 'accountingCurrencyRates',
@@ -190,6 +207,30 @@ class AccountingModule extends AppModule {
                 }
                 return VoucherBookSectionPage(section: section);
               },
+              routes: [
+                GoRoute(
+                  path: 'kind/:kindType',
+                  name: 'accountingVoucherBookKind',
+                  builder: (context, state) {
+                    final sectionRaw =
+                        state.pathParameters['sectionType'] ?? 'sales';
+                    final kindRaw = state.pathParameters['kindType'] ?? 'sales';
+                    late final VoucherBookType section;
+                    late final VoucherBookType kind;
+                    try {
+                      section = VoucherBookType.fromStorage(sectionRaw).section;
+                    } catch (_) {
+                      section = VoucherBookType.sales;
+                    }
+                    try {
+                      kind = VoucherBookType.fromStorage(kindRaw);
+                    } catch (_) {
+                      kind = VoucherBookType.leafKindsFor(section).first;
+                    }
+                    return VoucherBookKindPage(section: section, kind: kind);
+                  },
+                ),
+              ],
             ),
             GoRoute(
               path: ':id/edit',
@@ -216,6 +257,11 @@ class AccountingModule extends AppModule {
                 final parentId = state.uri.queryParameters['parentId'];
                 return AccountFormPage(initialParentId: parentId);
               },
+            ),
+            GoRoute(
+              path: 'import',
+              name: 'accountingAccountsImport',
+              redirect: (context, state) => AccountingRoutes.openingSetup,
             ),
             GoRoute(
               path: ':id',

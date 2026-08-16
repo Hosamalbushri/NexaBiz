@@ -18,22 +18,57 @@
   "rpListTitle": "الحركات",
   "rpListTitleReceipts": "المقبوضات",
   "rpListTitlePayments": "المدفوعات",
+  "rpListTitleTransfers": "النقل بين الصناديق",
+  "rpListTitleExchanges": "مصارفة العملات",
   "rpListCardSubtitle": "بحث وتصفية المقبوضات والمدفوعات",
   "rpActionViewAll": "كل الحركات",
   "rpActionNewReceipt": "قبض جديد",
   "rpActionNewPayment": "صرف جديد",
+  "rpActionNewTransfer": "نقل جديد",
+  "rpActionNewExchange": "مصارفة جديدة",
   "rpCreateReceiptSubtitle": "تحصيل نقدي أو بنكي إلى الخزينة",
   "rpCreatePaymentSubtitle": "صرف من الصندوق أو البنك",
+  "rpCreateTransferSubtitle": "نقل مبلغ بين صناديق النقد",
+  "rpCreateExchangeSubtitle": "تبديل عملة إلى أخرى في نفس الصندوق",
   "rpServiceReceiptsTitle": "المقبوضات",
   "rpServiceReceiptsSubtitle": "عرض سندات القبض أو إنشاء سند جديد",
   "rpServicePaymentsTitle": "المدفوعات",
   "rpServicePaymentsSubtitle": "عرض سندات الصرف أو إنشاء سند جديد",
+  "rpServiceTransfersTitle": "النقل بين الصناديق",
+  "rpServiceTransfersSubtitle": "عرض سندات النقل أو إنشاء سند جديد",
+  "rpServiceExchangesTitle": "مصارفة العملات",
+  "rpServiceExchangesSubtitle": "عرض سندات المصارفة أو إنشاء سند جديد",
   "rpServiceViewReceipts": "جميع المقبوضات",
   "rpServiceViewReceiptsSubtitle": "تصفح وتصفية سندات القبض",
   "rpServiceViewPayments": "جميع المدفوعات",
   "rpServiceViewPaymentsSubtitle": "تصفح وتصفية سندات الصرف",
+  "rpServiceViewTransfers": "جميع سندات النقل",
+  "rpServiceViewTransfersSubtitle": "تصفح وتصفية سندات النقل بين الصناديق",
+  "rpServiceViewExchanges": "جميع سندات المصارفة",
+  "rpServiceViewExchangesSubtitle": "تصفح وتصفية سندات مصارفة العملات",
   "rpServiceCreateReceipt": "إنشاء سند قبض",
   "rpServiceCreatePayment": "إنشاء سند صرف",
+  "rpServiceCreateTransfer": "إنشاء سند نقل",
+  "rpServiceCreateExchange": "إنشاء سند مصارفة",
+  "rpFormTitleReceipt": "سند قبض جديد",
+  "rpFormTitlePayment": "سند صرف جديد",
+  "rpFormTitleTransfer": "سند نقل بين الصناديق",
+  "rpFormTitleTransferEdit": "تعديل سند النقل",
+  "rpFormTitleExchange": "سند مصارفة عملات",
+  "rpFormTitleExchangeEdit": "تعديل سند المصارفة",
+  "rpTransferFromAccount": "من صندوق",
+  "rpTransferToAccount": "إلى صندوق",
+  "rpExchangeCashAccount": "الصندوق",
+  "rpExchangeFromCurrency": "من عملة",
+  "rpExchangeToCurrency": "إلى عملة",
+  "rpExchangeFromAmount": "المبلغ المُعطى",
+  "rpExchangeToAmount": "المبلغ المستلم",
+  "rpEmptyTitleTransfers": "لا توجد سندات نقل",
+  "rpEmptyMessageTransfers": "أنشئ سند نقل بين الصناديق للبدء.",
+  "rpEmptyTitleExchanges": "لا توجد سندات مصارفة",
+  "rpEmptyMessageExchanges": "أنشئ سند مصارفة عملات للبدء.",
+  "rpDetailsTitleTransfer": "تفاصيل سند النقل",
+  "rpDetailsTitleExchange": "تفاصيل سند المصارفة",
   "rpDashboardTodayReceipts": "مقبوضات اليوم",
   "rpDashboardTodayPayments": "مدفوعات اليوم",
   "rpDashboardPeriodReceipts": "مقبوضات الفترة",
@@ -43,8 +78,6 @@
   "rpDashboardBankMovement": "حركة البنك",
   "rpDashboardPendingSync": "بانتظار المزامنة",
   "rpDashboardFailedSync": "فشل المزامنة",
-  "rpFormTitleReceipt": "قبض جديد",
-  "rpFormTitlePayment": "صرف جديد",
   "rpFormSectionDocument": "المستند",
   "rpFormSectionAccounts": "الحسابات والمبلغ",
   "rpFormSectionParty": "الطرف",
@@ -52,6 +85,30 @@
   "rpFormSectionLines": "بنود القيد",
   "rpGeneralDescription": "البيان العام للسند",
   "rpDefaultGeneralDescription": "دفعة من الحساب",
+  "rpDefaultPaymentDescription": "خارج--{date}",
+  "@rpDefaultPaymentDescription": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "rpDefaultTransferDescription": "نقل--{date}",
+  "@rpDefaultTransferDescription": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "rpDefaultExchangeDescription": "مصارفة--{date}",
+  "@rpDefaultExchangeDescription": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "rpManualExchangeRate": "سعر الصرف",
   "rpManualExchangeRateHint": "1 {cash} = ؟ {party}",
   "@rpManualExchangeRateHint": {
@@ -77,6 +134,92 @@
   "rpPost": "ترحيل",
   "rpPosting": "جارٍ الترحيل…",
   "rpPosted": "تم ترحيل الحركة",
+  "rpUnpost": "إلغاء الترحيل",
+  "rpUnposting": "جارٍ إلغاء الترحيل…",
+  "rpUnposted": "تم إلغاء ترحيل الحركة",
+  "rpPostingServiceTitle": "الترحيل وإلغاء الترحيل",
+  "rpPostingServiceHubSubtitle": "ترحيل أو إلغاء ترحيل السندات حسب النوع والتاريخ أو الرقم",
+  "rpPostingServiceSubtitle": "اختر نوع السند ونوع العملية، ثم ابحث من تاريخ إلى تاريخ أو من رقم إلى رقم. يمكنك الترحيل لسند محدد أو للكل.",
+  "rpPostingServiceDocumentType": "نوع السند",
+  "rpPostingServiceOperation": "نوع العملية",
+  "rpPostingServiceLookup": "البحث بواسطة",
+  "rpPostingServicePickDate": "اختر التاريخ",
+  "rpPostingServiceFromDate": "من تاريخ",
+  "rpPostingServiceToDate": "إلى تاريخ",
+  "rpPostingServiceFromNumber": "من رقم",
+  "rpPostingServiceToNumber": "إلى رقم",
+  "rpPostingServiceNumberHint": "مثال: 1",
+  "rpPostingServiceDateRequired": "حدد من تاريخ وإلى تاريخ",
+  "rpPostingServiceDateRangeInvalid": "تاريخ البداية يجب أن يكون قبل أو يساوي تاريخ النهاية",
+  "rpPostingServiceNumberRequired": "أدخل من رقم وإلى رقم",
+  "rpPostingServiceNumberRangeInvalid": "رقم البداية يجب أن يكون أصغر من أو يساوي رقم النهاية",
+  "rpPostingServiceSearch": "عرض السندات",
+  "rpPostingServiceResultsCount": "{count, plural, =0{لا سندات} one{سند واحد} other{{count} سندات}}",
+  "@rpPostingServiceResultsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServiceEmpty": "لا توجد سندات مطابقة لهذا الفلتر.",
+  "rpPostingServiceSelectOne": "حدد سنداً أولاً",
+  "rpPostingServiceApplySelectedPost": "ترحيل المحدد",
+  "rpPostingServiceApplySelectedUnpost": "إلغاء ترحيل المحدد",
+  "rpPostingServiceApplyAllPost": "ترحيل الكل ({count})",
+  "@rpPostingServiceApplyAllPost": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServiceApplyAllUnpost": "إلغاء ترحيل الكل ({count})",
+  "@rpPostingServiceApplyAllUnpost": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServiceConfirmOnePost": "ترحيل السند {number}؟",
+  "@rpPostingServiceConfirmOnePost": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "rpPostingServiceConfirmOneUnpost": "إلغاء ترحيل السند {number}؟",
+  "@rpPostingServiceConfirmOneUnpost": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "rpPostingServiceConfirmAllPost": "ترحيل كل السندات المعروضة ({count})؟",
+  "@rpPostingServiceConfirmAllPost": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServiceConfirmAllUnpost": "إلغاء ترحيل كل السندات المعروضة ({count})؟",
+  "@rpPostingServiceConfirmAllUnpost": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServiceSuccessPost": "{count, plural, one{تم ترحيل سند واحد} other{تم ترحيل {count} سندات}}",
+  "@rpPostingServiceSuccessPost": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServiceSuccessUnpost": "{count, plural, one{تم إلغاء ترحيل سند واحد} other{تم إلغاء ترحيل {count} سندات}}",
+  "@rpPostingServiceSuccessUnpost": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServicePartial": "نجح {success} وفشل {failed}",
+  "@rpPostingServicePartial": {
+    "placeholders": {
+      "success": {"type": "int"},
+      "failed": {"type": "int"}
+    }
+  },
+  "rpPostingServiceNoPermission": "ليس لديك صلاحية ترحيل أو إلغاء ترحيل السندات.",
   "rpCancelTitle": "إلغاء الحركة",
   "rpCancelMessage": "إلغاء {number}؟ سيتم إبطال القيد المحاسبي المرتبط.",
   "@rpCancelMessage": {
@@ -90,11 +233,19 @@
   "rpNotFound": "الحركة غير موجودة",
   "rpEmptyTitle": "لا توجد حركات",
   "rpEmptyMessage": "أنشئ قبضاً أو صرفاً للبدء.",
+  "rpEmptyTitleReceipts": "لا توجد مقبوضات",
+  "rpEmptyMessageReceipts": "أنشئ سند قبض للبدء.",
+  "rpEmptyTitlePayments": "لا توجد مدفوعات",
+  "rpEmptyMessagePayments": "أنشئ سند صرف للبدء.",
+  "rpDetailsTitleReceipt": "تفاصيل سند القبض",
+  "rpDetailsTitlePayment": "تفاصيل سند الصرف",
   "rpSearchHint": "ابحث بالرقم أو الطرف أو المرجع…",
   "rpTypeAll": "الكل",
   "rpTypeLabel": "النوع",
   "rpTypeReceipt": "قبض",
   "rpTypePayment": "صرف",
+  "rpTypeTransfer": "نقل",
+  "rpTypeExchange": "مصارفة",
   "rpStatusUnposted": "غير مرحّل",
   "rpStatusPosted": "مرحّل",
   "rpSource": "المصدر",
@@ -106,6 +257,8 @@
   "rpSourceOtherPayment": "صرف أخرى",
   "rpSourceSalesRelatedReceipt": "قبض مرتبط بالمبيعات",
   "rpSourcePurchaseRelatedPayment": "صرف مرتبط بالمشتريات",
+  "rpSourceCashBoxTransfer": "نقل بين الصناديق",
+  "rpSourceCurrencyExchange": "مصارفة عملات",
   "rpDate": "التاريخ",
   "rpAmount": "المبلغ",
   "rpLineAmountCredit": "المبلغ (دائن)",
@@ -139,9 +292,11 @@
   "rpErrorCounterAccountRequired": "الحساب المقابل مطلوب",
   "rpErrorCustomerRequired": "العميل مطلوب لهذا المصدر",
   "rpErrorSameAccounts": "يجب أن يختلف حساب الصندوق عن الحساب المقابل",
+  "rpErrorCurrenciesMustDiffer": "يجب أن تختلف عملة المصدر عن عملة الهدف",
   "rpErrorVoucherBookRequired": "اختر دفتر سندات",
   "rpErrorNotEditable": "لا يمكن تعديل الحركات المرحّلة",
   "rpErrorCannotPost": "لا يمكن ترحيل هذه الحركة",
+  "rpErrorCannotUnpost": "لا يمكن إلغاء ترحيل هذه الحركة",
   "rpErrorCannotCancel": "لا يمكن إلغاء هذه الحركة",
   "rpErrorAlreadyCancelled": "الحركة ملغاة مسبقاً",
   "rpErrorCurrencyRequired": "العملة مطلوبة",
@@ -153,6 +308,10 @@
   "adminPermServiceReceiptsHint": "المقبوضات النقدية والبنكية",
   "adminPermServicePayments": "المدفوعات",
   "adminPermServicePaymentsHint": "المدفوعات النقدية والبنكية",
+  "adminPermServiceTransfers": "النقل بين الصناديق",
+  "adminPermServiceTransfersHint": "التحويلات بين حسابات الصناديق",
+  "adminPermServiceExchanges": "مصارفة العملات",
+  "adminPermServiceExchangesHint": "تبديل العملات داخل الصندوق",
   "adminPermServiceRpReports": "التقارير",
   "adminPermServiceRpReportsHint": "تقارير المقبوضات والمدفوعات",
   "adminPermServiceRpSync": "المزامنة",
@@ -675,7 +834,7 @@
   "accountingCurrencyRatesSaved": "تم حفظ سعر العملة.",
   "accountingVoucherBooksTitle": "دفاتر السندات",
   "accountingVoucherBooksCardSubtitle": "تهيئة دفاتر الترقيم للمبيعات والمقبوضات وغيرها.",
-  "accountingVoucherBooksSubtitle": "افتح قسماً ثم استخدم التبويبات لكل نوع (مثل المبيعات ومردود المبيعات). لكل نوع قائمة وزر إضافة خاص به.",
+  "accountingVoucherBooksSubtitle": "افتح قسماً ثم اختر نوع الدفتر من القائمة (مثل المقبوضات أو النقل). لكل نوع قائمة دفاتر وزر إضافة خاص به.",
   "accountingVoucherBooksEmptyTitle": "لا توجد دفاتر",
   "accountingVoucherBooksEmptyMessage": "أضف دفتراً تحت قسم لتهيئة أرقام السندات المتسلسلة.",
   "accountingVoucherBooksAdd": "إضافة دفتر",
@@ -746,6 +905,9 @@
   "accountingVoucherBookTypeSalesReturns": "مردود المبيعات",
   "accountingVoucherBookTypeReceipts": "مقبوضات",
   "accountingVoucherBookTypePayments": "مدفوعات",
+  "accountingVoucherBookTypeTransfers": "النقل بين الصناديق",
+  "accountingVoucherBookTypeExchanges": "مصارفة العملات",
+  "accountingVoucherBookTypeReceiptsPayments": "المقبوضات والمصروفات",
   "accountingVoucherBookTypePurchases": "مشتريات",
   "accountingVoucherBookTypePurchaseReturns": "مردود المشتريات",
   "accountingVoucherBookTypeJournal": "قيود يومية",
@@ -764,9 +926,133 @@
   "accountingHideInactive": "إخفاء غير النشطة",
   "accountingFieldName": "اسم الحساب",
   "accountingFieldCode": "رمز الحساب",
-  "accountingFieldCodeHelper": "عند اختيار حساب أب يُولَّد الرمز منه تلقائياً (مثال: 1221 ← 12210001).",
+  "accountingFieldCodeHelper": "عند اختيار حساب أب يُولَّد الرقم التالي تلقائياً بعد أعلى رقم موجود (مثال: 1213 ← 1214).",
   "accountingGenerateCode": "توليد الرمز",
   "accountingAddChildAccount": "إضافة حساب فرعي",
+  "accountingImportTitle": "استيراد الحسابات",
+  "accountingImportPageTitle": "استيراد دليل الحسابات",
+  "accountingImportSubtitle": "اختر حساباً أباً (مجموعة)، ثم ارفع Excel أو أضف صفوفاً يدوياً، واحفظ مع أرصدة افتتاحية اختيارية.",
+  "accountingImportParent": "الحساب الأب (مجموعة)",
+  "accountingImportOpeningDebit": "مدين افتتاحي",
+  "accountingImportOpeningCredit": "دائن افتتاحي",
+  "accountingImportCurrency": "العملة",
+  "accountingImportRowsTitle": "الحسابات المراد استيرادها",
+  "accountingImportAddRow": "إضافة صف",
+  "accountingImportRemoveRow": "حذف الصف",
+  "accountingImportEmptyRows": "لا توجد صفوف بعد. اختر ملف Excel أو أضف صفاً.",
+  "accountingImportFormatHintTitle": "تخطيط Excel للحسابات",
+  "accountingImportFormatHintIntro": "الصف الأول = عناوين. المطلوب: الاسم. استخدم .xlsx أو .xls. كل الصفوف تُنشأ تحت الحساب الأب المختار.",
+  "accountingImportFormatColCodeAliases": "Account Code · Code · رمز الحساب",
+  "accountingImportFormatColNameAliases": "Account Name · Name · اسم الحساب",
+  "accountingImportFormatColDebitAliases": "Opening Debit · Debit · مدين افتتاحي",
+  "accountingImportFormatColCreditAliases": "Opening Credit · Credit · دائن افتتاحي",
+  "accountingImportFormatColCurrencyAliases": "Currency · Currency Code · عملة",
+  "accountingImportFormatSampleNote": "بدون عناوين تُقرأ الأعمدة كـ: الرمز، الاسم، مدين افتتاحي، دائن افتتاحي، العملة. الرموز المكررة تُتخطى. الأرصدة الافتتاحية تُرحَّل بقيد واحد مقابل رأس المال (3100) مع موازنة لكل عملة.",
+  "accountingImportInsertedCount": "تم إدراج {count} حساب",
+  "@accountingImportInsertedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accountingImportSkippedCount": "تم تخطي {count} مكرر",
+  "@accountingImportSkippedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accountingImportOpeningPosted": "تم ترحيل قيد الأرصدة الافتتاحية مقابل رأس المال.",
+  "accountingImportOpeningVoucherType": "افتتاحي",
+  "accountingImportOpeningJournalDescription": "أرصدة افتتاحية من استيراد الحسابات",
+  "accountingImportErrorParentRequired": "اختر حساباً أباً من نوع مجموعة.",
+  "accountingImportErrorParentNotGroup": "يجب أن يكون الحساب الأب مجموعة.",
+  "accountingImportErrorNoRows": "أضف حساباً واحداً على الأقل مع اسم.",
+  "accountingImportErrorBothSides": "لا يمكن أن يحتوي الصف على مدين ودائن افتتاحيين معاً.",
+  "accountingImportErrorCapitalMissing": "حساب رأس المال (3100) غير موجود.",
+  "accountingOpeningSetupTitle": "مركز الاستيراد والأرصدة الافتتاحية",
+  "accountingOpeningSetupSubtitle": "استورد الحسابات، عيّن أرصدة افتتاحية متعددة العملات لأي حساب ترحيل، ثم رحّل قيداً واحداً مقابل رأس المال (3100).",
+  "accountingOpeningSetupStepImport": "استيراد",
+  "accountingOpeningSetupStepBalances": "أرصدة",
+  "accountingOpeningSetupStepReview": "مراجعة",
+  "accountingOpeningSetupStepImportHint": "أنشئ حسابات ترحيل تحت حساب أب مجموعة. المبالغ الافتتاحية تُدخل في الخطوة التالية.",
+  "accountingOpeningSetupStepBalancesHint": "أضف حسابات ترحيل وأدخل سطراً لكل عملة مهيأة (مدين أو دائن). تظهر فقط العملات المفعّلة في أسعار الصرف.",
+  "accountingOpeningSetupStepReviewHint": "راجع المجاميع لكل عملة، ثم رحّل قيد الافتتاح مقابل رأس المال.",
+  "accountingOpeningSetupImportFormatIntro": "الصف الأول = عناوين. المطلوب: الاسم. استخدم .xlsx أو .xls. كل الصفوف تُنشأ تحت الحساب الأب المختار.",
+  "accountingOpeningSetupImportFormatNote": "بدون عناوين تُقرأ الأعمدة كـ: الرمز، الاسم. الرموز المكررة تُتخطى. الأرصدة تُعيَّن في الخطوة 2.",
+  "accountingOpeningSetupAddAccount": "إضافة حساب ترحيل",
+  "accountingOpeningSetupRemoveAccount": "إزالة الحساب",
+  "accountingOpeningSetupAddCurrencyLine": "إضافة سطر عملة",
+  "accountingOpeningSetupImportBalancesExcel": "استيراد أرصدة من Excel",
+  "accountingOpeningSetupEmptyBalances": "لا توجد أسطر رصيد بعد. أضف صفاً أو استورد أرصدة من Excel.",
+  "accountingOpeningSetupContinueToReview": "متابعة إلى المراجعة",
+  "accountingOpeningSetupBalancesRowsTitle": "أسطر الأرصدة الافتتاحية",
+  "accountingOpeningSetupBalancesFormatTitle": "تخطيط Excel للأرصدة الافتتاحية",
+  "accountingOpeningSetupBalancesFormatNote": "الأعمدة: الرمز أو معرف الحساب، العملة، مدين، دائن. يجب أن تكون العملة مفعّلة مسبقاً في أسعار الصرف. نفس الحساب مرة واحدة لكل عملة. الصفوف تُدمج مع القائمة الحالية.",
+  "accountingOpeningSetupErrorCurrencyNotConfigured": "العملة غير مهيأة في النظام: {code}",
+  "@accountingOpeningSetupErrorCurrencyNotConfigured": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "accountingOpeningSetupErrorAccountRequired": "اختر حساباً لكل سطر رصيد.",
+  "accountingOpeningSetupReviewSummaryTitle": "ملخص حسب العملة",
+  "accountingOpeningSetupCapitalOffset": "حساب المقاصة: رأس المال ({code})",
+  "@accountingOpeningSetupCapitalOffset": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "accountingOpeningSetupNetVsCapital": "مقابل رأس المال: {amount} ({side})",
+  "@accountingOpeningSetupNetVsCapital": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "side": {
+        "type": "String"
+      }
+    }
+  },
+  "accountingOpeningSetupLinesCount": "{count} أسطر رصيد بمبالغ",
+  "@accountingOpeningSetupLinesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accountingOpeningSetupNoAmountsToPost": "أدخل مبلغ مدين أو دائن واحداً على الأقل قبل الترحيل.",
+  "accountingOpeningSetupPostJournal": "ترحيل قيد الافتتاح",
+  "accountingOpeningSetupPosting": "جاري ترحيل قيد الافتتاح…",
+  "accountingOpeningSetupPostSuccess": "تم ترحيل قيد الافتتاح بنجاح مقابل رأس المال.",
+  "accountingOpeningSetupJournalDescription": "أرصدة افتتاحية",
+  "accountingOpeningSetupReset": "إعادة تعيين الجلسة",
+  "accountingOpeningSetupCardTitle": "الاستيراد والأرصدة الافتتاحية",
+  "accountingOpeningSetupCardSubtitle": "استيراد دليل الحسابات وترحيل أرصدة افتتاحية متعددة العملات.",
+  "accountingOpeningSetupErrorDuplicateCurrency": "تكرار عملة لنفس الحساب: {name}",
+  "@accountingOpeningSetupErrorDuplicateCurrency": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "accountingOpeningSetupErrorAccountNotFound": "الحساب غير موجود: {code}",
+  "@accountingOpeningSetupErrorAccountNotFound": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "accountingOpeningSetupErrorNoBalanceRows": "لا توجد صفوف أرصدة صالحة في الملف.",
   "accountingFieldParent": "الحساب الأب",
   "accountingFieldType": "نوع الحساب",
   "accountingFieldDescription": "الوصف",

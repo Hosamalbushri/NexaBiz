@@ -17,7 +17,30 @@ abstract final class ReceiptsPaymentsPermissions {
   static const paymentsPost = ['payments.post'];
   static const paymentsCancel = ['payments.cancel'];
 
-  static const anyView = ['receipts.view', 'payments.view'];
+  static const transfersView = ['transfers.view'];
+  static const transfersCreate = ['transfers.create'];
+  static const transfersUpdate = ['transfers.update'];
+  static const transfersPost = ['transfers.post'];
+  static const transfersCancel = ['transfers.cancel'];
+
+  static const exchangesView = ['exchanges.view'];
+  static const exchangesCreate = ['exchanges.create'];
+  static const exchangesUpdate = ['exchanges.update'];
+  static const exchangesPost = ['exchanges.post'];
+  static const exchangesCancel = ['exchanges.cancel'];
+
+  static const anyView = [
+    'receipts.view',
+    'payments.view',
+    'transfers.view',
+    'exchanges.view',
+  ];
+  static const anyPost = [
+    'receipts.post',
+    'payments.post',
+    'transfers.post',
+    'exchanges.post',
+  ];
   static const reportsView = ['receipts_payments.reports.view'];
   static const reportsExport = ['receipts_payments.reports.export'];
   static const sync = ['receipts_payments.sync'];
@@ -74,6 +97,52 @@ PermissionPackageDef receiptsPaymentsPermissionPackage() {
           ),
           StandardPermissionOps.custom(
             code: 'payments.cancel',
+            icon: Icons.cancel_outlined,
+            label: (l10n) => l10n.adminPermActionCancel,
+          ),
+        ],
+      ),
+      PermissionServiceDef(
+        id: 'transfers',
+        icon: Icons.swap_horiz_outlined,
+        titleBuilder: (context) =>
+            AppLocalizations.of(context).adminPermServiceTransfers,
+        subtitleBuilder: (context) =>
+            AppLocalizations.of(context).adminPermServiceTransfersHint,
+        operations: [
+          StandardPermissionOps.view('transfers.view'),
+          StandardPermissionOps.create('transfers.create'),
+          StandardPermissionOps.update('transfers.update'),
+          StandardPermissionOps.custom(
+            code: 'transfers.post',
+            icon: Icons.check_circle_outline,
+            label: (l10n) => l10n.adminPermActionPost,
+          ),
+          StandardPermissionOps.custom(
+            code: 'transfers.cancel',
+            icon: Icons.cancel_outlined,
+            label: (l10n) => l10n.adminPermActionCancel,
+          ),
+        ],
+      ),
+      PermissionServiceDef(
+        id: 'exchanges',
+        icon: Icons.currency_exchange_outlined,
+        titleBuilder: (context) =>
+            AppLocalizations.of(context).adminPermServiceExchanges,
+        subtitleBuilder: (context) =>
+            AppLocalizations.of(context).adminPermServiceExchangesHint,
+        operations: [
+          StandardPermissionOps.view('exchanges.view'),
+          StandardPermissionOps.create('exchanges.create'),
+          StandardPermissionOps.update('exchanges.update'),
+          StandardPermissionOps.custom(
+            code: 'exchanges.post',
+            icon: Icons.check_circle_outline,
+            label: (l10n) => l10n.adminPermActionPost,
+          ),
+          StandardPermissionOps.custom(
+            code: 'exchanges.cancel',
             icon: Icons.cancel_outlined,
             label: (l10n) => l10n.adminPermActionCancel,
           ),

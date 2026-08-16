@@ -19,7 +19,7 @@ import '../providers/voucher_book_providers.dart';
 import '../widgets/voucher_book_labels.dart';
 import 'accounting_routes.dart';
 
-/// Section page with a tab per leaf book type (e.g. Sales / Sales returns).
+/// Section hub: either a single book list, or a list of kinds to open.
 class VoucherBookSectionPage extends ConsumerWidget {
   const VoucherBookSectionPage({super.key, required this.section});
 
@@ -70,8 +70,8 @@ class VoucherBookSectionPage extends ConsumerWidget {
         }
 
         if (kinds.length == 1) {
-          return _SingleKindScaffold(
-            sectionLabel: voucherBookSectionLabel(l10n, section),
+          return _KindBooksScaffold(
+            title: voucherBookSectionLabel(l10n, section),
             kind: kinds.first,
             parentId: node.group.uuid,
             books: node.children
@@ -80,33 +80,93 @@ class VoucherBookSectionPage extends ConsumerWidget {
           );
         }
 
-        return DefaultTabController(
-          length: kinds.length,
-          child: Scaffold(
-            backgroundColor: theme.colorScheme.surfaceContainerLowest,
-            appBar: CustomAppBar(
-              title: voucherBookSectionLabel(l10n, section),
-              showBackButton: true,
-              bottom: TabBar(
-                isScrollable: kinds.length > 3,
-                tabs: [
-                  for (final kind in kinds)
-                    Tab(text: voucherBookTypeLabel(l10n, kind)),
-                ],
-              ),
-            ),
-            body: TabBarView(
-              children: [
-                for (final kind in kinds)
-                  _KindBooksTab(
+        return Scaffold(
+          backgroundColor: theme.colorScheme.surfaceContainerLowest,
+          appBar: CustomAppBar(
+            title: voucherBookSectionLabel(l10n, section),
+            showBackButton: true,
+          ),
+          body: ListView.separated(
+            padding: AppConstants.pageInsets(context),
+            itemCount: kinds.length,
+            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+            itemBuilder: (context, index) {
+              final kind = kinds[index];
+              final books = node!.children
+                  .where((b) => b.bookType == kind)
+                  .toList(growable: false);
+              return Material(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  onTap: () => AccountingRoutes.pushVoucherBookKind(
+                    context,
+                    section: section,
                     kind: kind,
-                    parentId: node.group.uuid,
-                    books: node.children
-                        .where((b) => b.bookType == kind)
-                        .toList(growable: false),
                   ),
-              ],
-            ),
+                  child: Ink(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant
+                            .withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.12),
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.sm),
+                            ),
+                            child: Icon(
+                              voucherBookTypeIcon(kind),
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  voucherBookTypeLabel(l10n, kind),
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  l10n.accountingVoucherBooksSectionCount(
+                                    books.length,
+                                  ),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 16,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         );
       },
@@ -114,15 +174,72 @@ class VoucherBookSectionPage extends ConsumerWidget {
   }
 }
 
-class _SingleKindScaffold extends StatelessWidget {
-  const _SingleKindScaffold({
-    required this.sectionLabel,
+/// Books list for one leaf kind under a section.
+class VoucherBookKindPage extends ConsumerWidget {
+  const VoucherBookKindPage({
+    super.key,
+    required this.section,
+    required this.kind,
+  });
+
+  final VoucherBookType section;
+  final VoucherBookType kind;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final sectionsAsync = ref.watch(voucherBookSectionsProvider);
+    final title = voucherBookTypeLabel(l10n, kind);
+
+    return sectionsAsync.when(
+      loading: () => Scaffold(
+        appBar: CustomAppBar(title: title, showBackButton: true),
+        body: const AppLoading(),
+      ),
+      error: (e, _) => Scaffold(
+        appBar: CustomAppBar(title: title, showBackButton: true),
+        body: AppErrorState(message: e.toString()),
+      ),
+      data: (sections) {
+        VoucherBookSectionNode? node;
+        for (final s in sections) {
+          if (s.group.bookType.section == section.section) {
+            node = s;
+            break;
+          }
+        }
+        if (node == null) {
+          return Scaffold(
+            appBar: CustomAppBar(title: title, showBackButton: true),
+            body: AppEmptyState(
+              title: l10n.accountingVoucherBooksEmptyTitle,
+              subtitle: l10n.accountingVoucherBooksEmptyMessage,
+              icon: voucherBookTypeIcon(kind),
+            ),
+          );
+        }
+        return _KindBooksScaffold(
+          title: title,
+          kind: kind,
+          parentId: node.group.uuid,
+          books: node.children
+              .where((b) => b.bookType == kind)
+              .toList(growable: false),
+        );
+      },
+    );
+  }
+}
+
+class _KindBooksScaffold extends StatelessWidget {
+  const _KindBooksScaffold({
+    required this.title,
     required this.kind,
     required this.parentId,
     required this.books,
   });
 
-  final String sectionLabel;
+  final String title;
   final VoucherBookType kind;
   final String parentId;
   final List<VoucherBook> books;
@@ -132,35 +249,9 @@ class _SingleKindScaffold extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(title: sectionLabel, showBackButton: true),
+      appBar: CustomAppBar(title: title, showBackButton: true),
       floatingActionButton: _AddBookFab(parentId: parentId, bookType: kind),
       body: _BooksList(books: books, parentId: parentId, bookType: kind),
-    );
-  }
-}
-
-class _KindBooksTab extends StatelessWidget {
-  const _KindBooksTab({
-    required this.kind,
-    required this.parentId,
-    required this.books,
-  });
-
-  final VoucherBookType kind;
-  final String parentId;
-  final List<VoucherBook> books;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        _BooksList(books: books, parentId: parentId, bookType: kind),
-        PositionedDirectional(
-          end: AppSpacing.md,
-          bottom: AppSpacing.md,
-          child: _AddBookFab(parentId: parentId, bookType: kind),
-        ),
-      ],
     );
   }
 }

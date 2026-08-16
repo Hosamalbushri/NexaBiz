@@ -120,7 +120,10 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
       }
       final code = await ref
           .read(accountCodeGeneratorProvider)
-          .generate(parentAccountCode: parent.accountCode);
+          .generate(
+            parentAccountCode: parent.accountCode,
+            parentAccountId: parent.uuid,
+          );
       if (!mounted) {
         return;
       }

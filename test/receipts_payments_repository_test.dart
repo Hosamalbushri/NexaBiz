@@ -114,7 +114,8 @@ void main() {
     expect(created.transactionNumber, '1');
     expect(created.amount, 25);
     expect(created.syncStatus, SyncStatus.pending);
-    expect(ledger.synced, isEmpty);
+    // Create always syncs the journal (posted or unposted draft entry).
+    expect(ledger.synced, [created.uuid]);
   });
 
   test('create posted receipt syncs ledger', () async {
@@ -142,7 +143,8 @@ void main() {
     );
     final posted = await post(created.id);
     expect(posted.documentStatus, TransactionStatus.posted);
-    expect(ledger.synced, [posted.uuid]);
+    // create + post each call syncTransaction
+    expect(ledger.synced, [posted.uuid, posted.uuid]);
 
     final cancel = CancelFinancialTransaction(
       repository: repo,

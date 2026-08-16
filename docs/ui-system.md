@@ -54,6 +54,7 @@ From `lib/core/widgets/` (also exported via `app_widgets.dart` for the App* set)
 - `AppButton`
 - `AppCard`
 - `AppTextField`
+- `AppAmountField` / `FinancialNumberField` — financial & quantity numeric input (see [financial-numeric-input.md](financial-numeric-input.md))
 - `AppSearchBar`
 - `AppDialog` / `showAppDialog`
 - `AppBottomSheet` / `showAppBottomSheet`

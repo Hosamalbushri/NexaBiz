@@ -18,6 +18,8 @@ class TransactionListFilter {
     this.counterAccountId,
     this.fromDate,
     this.toDate,
+    this.numberFrom,
+    this.numberTo,
     this.cashAccountCodePrefix,
   });
 
@@ -32,6 +34,12 @@ class TransactionListFilter {
   final String? counterAccountId;
   final DateTime? fromDate;
   final DateTime? toDate;
+
+  /// Inclusive absolute or local voucher-number lower bound.
+  final int? numberFrom;
+
+  /// Inclusive absolute or local voucher-number upper bound.
+  final int? numberTo;
 
   /// Matches `cash_account_code LIKE '[prefix]%'` (e.g. `1211`, `1212`).
   final String? cashAccountCodePrefix;
@@ -58,6 +66,10 @@ class TransactionListFilter {
     bool clearFromDate = false,
     DateTime? toDate,
     bool clearToDate = false,
+    int? numberFrom,
+    bool clearNumberFrom = false,
+    int? numberTo,
+    bool clearNumberTo = false,
     String? cashAccountCodePrefix,
     bool clearCashAccountCodePrefix = false,
   }) {
@@ -82,6 +94,8 @@ class TransactionListFilter {
           : (counterAccountId ?? this.counterAccountId),
       fromDate: clearFromDate ? null : (fromDate ?? this.fromDate),
       toDate: clearToDate ? null : (toDate ?? this.toDate),
+      numberFrom: clearNumberFrom ? null : (numberFrom ?? this.numberFrom),
+      numberTo: clearNumberTo ? null : (numberTo ?? this.numberTo),
       cashAccountCodePrefix: clearCashAccountCodePrefix
           ? null
           : (cashAccountCodePrefix ?? this.cashAccountCodePrefix),
@@ -100,5 +114,7 @@ class TransactionListFilter {
       counterAccountId != null ||
       fromDate != null ||
       toDate != null ||
+      numberFrom != null ||
+      numberTo != null ||
       cashAccountCodePrefix != null;
 }

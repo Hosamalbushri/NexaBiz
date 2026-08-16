@@ -1,6 +1,7 @@
 import '../entities/financial_transaction.dart';
 import '../entities/financial_transaction_line.dart';
 import '../entities/transaction_source.dart';
+import '../entities/transaction_type.dart';
 import '../models/financial_transaction_exception.dart';
 import '../services/rp_money.dart';
 
@@ -33,6 +34,91 @@ class FinancialTransactionValidator {
         FinancialTransactionException.counterAccountRequired,
       );
     }
+
+    if (draft.transactionType.isTransfer) {
+      if (lines.length != 1) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.counterAccountRequired,
+        );
+      }
+      final toId = lines.first.accountId.trim();
+      if (toId.isEmpty) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.counterAccountRequired,
+        );
+      }
+      if (toId == cashId) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.sameAccounts,
+        );
+      }
+      if (lines.first.amount <= 0) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.counterAmountMustBePositive,
+        );
+      }
+      final lineCurrency = lines.first.currencyCode.trim();
+      if (lineCurrency.isEmpty) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.currencyRequired,
+        );
+      }
+      if (lineCurrency.toUpperCase() != currency.toUpperCase()) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.unbalanced,
+        );
+      }
+      if ((RpMoney.round(draft.amount) - RpMoney.round(lines.first.amount))
+              .abs() >=
+          0.005) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.unbalanced,
+        );
+      }
+      return;
+    }
+
+    if (draft.transactionType.isCurrencyExchange) {
+      if (lines.length != 1) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.counterAccountRequired,
+        );
+      }
+      final toId = lines.first.accountId.trim();
+      if (toId.isEmpty || toId != cashId) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.cashAccountRequired,
+        );
+      }
+      final toCurrency = lines.first.currencyCode.trim();
+      if (toCurrency.isEmpty) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.currencyRequired,
+        );
+      }
+      if (toCurrency.toUpperCase() == currency.toUpperCase()) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.currenciesMustDiffer,
+        );
+      }
+      if (lines.first.amount <= 0) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.counterAmountMustBePositive,
+        );
+      }
+      final fromRate = draft.exchangeRate <= 0 ? 1.0 : draft.exchangeRate;
+      final toRate =
+          lines.first.exchangeRate <= 0 ? 1.0 : lines.first.exchangeRate;
+      final fromBase = RpMoney.round(draft.amount * fromRate);
+      final toBase = RpMoney.round(lines.first.amount * toRate);
+      if ((fromBase - toBase).abs() >= 0.005) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.unbalanced,
+        );
+      }
+      return;
+    }
+
     for (final line in lines) {
       final accountId = line.accountId.trim();
       if (accountId.isEmpty) {

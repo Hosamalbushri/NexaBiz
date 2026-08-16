@@ -16,10 +16,13 @@ String rpErrorMessage(AppLocalizations l10n, Object error) {
       FinancialTransactionException.customerRequired =>
         l10n.rpErrorCustomerRequired,
       FinancialTransactionException.sameAccounts => l10n.rpErrorSameAccounts,
+      FinancialTransactionException.currenciesMustDiffer =>
+        l10n.rpErrorCurrenciesMustDiffer,
       FinancialTransactionException.voucherBookRequired =>
         l10n.rpErrorVoucherBookRequired,
       FinancialTransactionException.notEditable => l10n.rpErrorNotEditable,
       FinancialTransactionException.cannotPost => l10n.rpErrorCannotPost,
+      FinancialTransactionException.cannotUnpost => l10n.rpErrorCannotUnpost,
       FinancialTransactionException.cannotCancel => l10n.rpErrorCannotCancel,
       FinancialTransactionException.alreadyCancelled =>
         l10n.rpErrorAlreadyCancelled,

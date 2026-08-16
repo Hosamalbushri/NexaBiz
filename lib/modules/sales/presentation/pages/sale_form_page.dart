@@ -7,6 +7,7 @@ import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/services/loading_providers.dart';
+import '../../../../core/widgets/app_amount_field.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -41,7 +42,6 @@ class SaleFormPage extends ConsumerStatefulWidget {
 }
 
 class _SaleFormPageState extends ConsumerState<SaleFormPage> {
-  final _discountController = TextEditingController(text: '0');
   final _customerNameController = TextEditingController();
   var _loading = true;
   var _loaded = false;
@@ -61,7 +61,6 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
 
   @override
   void dispose() {
-    _discountController.dispose();
     _customerNameController.dispose();
     super.dispose();
   }
@@ -112,7 +111,6 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
               throw const _SaleLoadNotFound();
             }
             composer.loadFromSale(sale);
-            _discountController.text = _num(sale.discountValue);
             _customerNameController.text = sale.customerName ?? '';
             if (sale.cashAccountId != null) {
               final cash = await treasury.findById(sale.cashAccountId!);
@@ -175,13 +173,6 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
         _loadError = saleErrorMessage(l10n, e);
       });
     }
-  }
-
-  String _num(double value) {
-    if (value == value.roundToDouble()) {
-      return value.toInt().toString();
-    }
-    return value.toString();
   }
 
   Future<void> _pickDate() async {
@@ -423,7 +414,6 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
       onCurrencyChanged: (code, rate) {
         composer.setCurrency(code: code, rateToBase: rate);
       },
-      discountController: _discountController,
       onDiscountChanged: (value) => composer.setDiscount(
         type: state.discountType,
         value: value,
@@ -880,7 +870,6 @@ class _InvoiceHeaderCard extends StatelessWidget {
     required this.onPickBook,
     required this.onPickCash,
     required this.onCurrencyChanged,
-    required this.discountController,
     required this.onDiscountChanged,
   });
 
@@ -896,7 +885,6 @@ class _InvoiceHeaderCard extends StatelessWidget {
   final VoidCallback onPickBook;
   final VoidCallback onPickCash;
   final void Function(String code, double rate) onCurrencyChanged;
-  final TextEditingController discountController;
   final ValueChanged<double> onDiscountChanged;
 
   @override
@@ -1129,36 +1117,15 @@ class _InvoiceHeaderCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          TextField(
-                            controller: discountController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              height: 1.1,
-                            ),
-                            decoration: InputDecoration(
-                              isDense: true,
-                              filled: false,
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                              hintText: '0',
-                              hintStyle: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.28,
-                                ),
-                              ),
-                            ),
-                            onChanged: (raw) {
-                              final value =
-                                  double.tryParse(raw.replaceAll(',', '.')) ??
-                                  0;
-                              onDiscountChanged(value);
-                            },
+                          AppAmountField(
+                            value: state.discountValue,
+                            onChanged: onDiscountChanged,
+                            decimalPlaces: 2,
+                            emptyWhenZero: false,
+                            trimTrailingZeros: true,
+                            variant: AppAmountFieldVariant.bare,
+                            hint: '0',
+                            textAlign: TextAlign.start,
                           ),
                         ],
                       ),

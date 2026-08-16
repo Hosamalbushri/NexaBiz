@@ -99,6 +99,73 @@ class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
+  /// Soft-deleted row that still occupies [accountCode] (DB UNIQUE includes tombstones).
+  Future<AccountRow?> _findDeletedByAccountCode(String accountCode) async {
+    final code = _normalizeCode(accountCode);
+    if (code.isEmpty) {
+      return null;
+    }
+    return (_db.select(_db.accounts)..where(
+          (t) =>
+              t.accountCode.equals(code) & t.deletedAt.isNotNull(),
+        ))
+        .getSingleOrNull();
+  }
+
+  /// Reuses a soft-deleted row so the UNIQUE [account_code] can be reclaimed.
+  Future<Account> _reviveDeletedAccount(
+    AccountRow tombstone,
+    AccountDraft draft,
+  ) async {
+    final parent = draft.parentId == null
+        ? null
+        : await getByUuid(draft.parentId!);
+    final existing = _map(tombstone);
+    final all = await getAll(includeInactive: true);
+    _validator.validateHierarchy(
+      draft: draft,
+      parent: parent,
+      existing: existing,
+      allAccounts: all,
+    );
+
+    final code = _normalizeCode(draft.accountCode);
+    final name = _normalizeName(draft.name);
+    final description = _normalizeDescription(draft.description);
+    await _assertUniqueCode(code, excludingId: tombstone.id);
+
+    final level = await _resolveLevel(draft.parentId);
+    final now = DateTime.now().toUtc();
+    final nextVersion = tombstone.version + 1;
+
+    await (_db.update(_db.accounts)..where((t) => t.id.equals(tombstone.id)))
+        .write(
+      AccountsCompanion(
+        parentId: Value(draft.parentId),
+        accountCode: Value(code),
+        name: Value(name),
+        description: Value(description),
+        accountType: Value(draft.accountType.storageValue),
+        normalBalance: Value(draft.normalBalance.storageValue),
+        level: Value(level),
+        isGroup: Value(draft.isGroup),
+        isActive: Value(draft.isActive),
+        isSystemAccount: Value(draft.isSystemAccount),
+        deletedAt: const Value(null),
+        updatedAt: Value(now.millisecondsSinceEpoch),
+        syncStatus: const Value('pending'),
+        version: Value(nextVersion),
+      ),
+    );
+
+    final revived = await getById(tombstone.id);
+    if (revived == null) {
+      throw const AccountException(AccountException.notFound);
+    }
+    await _enqueue(revived, SyncOperationType.update);
+    return revived;
+  }
+
   Future<int> _resolveLevel(String? parentId) async {
     if (parentId == null) {
       return 0;
@@ -339,6 +406,12 @@ class AccountRepositoryImpl implements AccountRepository {
     final code = _normalizeCode(draft.accountCode);
     final name = _normalizeName(draft.name);
     final description = _normalizeDescription(draft.description);
+
+    final tombstone = await _findDeletedByAccountCode(code);
+    if (tombstone != null) {
+      return _reviveDeletedAccount(tombstone, draft);
+    }
+
     await _assertUniqueCode(code);
 
     final level = await _resolveLevel(draft.parentId);

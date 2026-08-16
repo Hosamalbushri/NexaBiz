@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../../app/theme/app_radius.dart';
-import '../utils/digit_normalization.dart';
 import '../utils/grouped_decimal_input.dart';
 
 export '../utils/grouped_decimal_input.dart'
@@ -12,19 +11,26 @@ export '../utils/grouped_decimal_input.dart'
         parseGroupedDecimal,
         GroupedDecimalInputFormatter;
 
-/// Visual density for [AppAmountField].
+/// Visual density for [AppAmountField] / [FinancialNumberField].
 enum AppAmountFieldVariant {
   /// Full Material form field (labels, suffix currency, etc.).
   form,
 
   /// Dense centered cell for tables / spreadsheets.
   compact,
+
+  /// Borderless / unfilled — embeds inside custom cards (e.g. discount row).
+  bare,
 }
 
-/// Shared amount input with live thousand separators.
+/// Canonical financial/quantity numeric input for the whole app.
 ///
-/// Primary platform control for money/quantity entry — use across Sales,
-/// Receipts & Payments, Accounting, and future modules.
+/// Prefer this (or the [FinancialNumberField] typedef) over ad-hoc
+/// [TextField]s with manual comma stripping.
+///
+/// - **Display:** thousand separators while typing (`1,250,000.75`)
+/// - **Domain:** [onChanged] always receives a raw [double]
+/// - **Caret:** preserved across formatting; focus defaults caret to end
 ///
 /// ```dart
 /// AppAmountField(
@@ -32,6 +38,7 @@ enum AppAmountFieldVariant {
 ///   onChanged: setAmount,
 ///   label: 'Amount',
 ///   suffixText: 'SAR',
+///   decimalPlaces: 2,
 /// )
 /// ```
 class AppAmountField extends StatefulWidget {
@@ -42,16 +49,21 @@ class AppAmountField extends StatefulWidget {
     this.decimalPlaces = 2,
     this.emptyWhenZero = false,
     this.trimTrailingZeros = true,
+    this.allowNegative = false,
     this.variant = AppAmountFieldVariant.form,
     this.label,
     this.hint,
+    this.prefixText,
     this.suffixText,
     this.errorText,
     this.enabled = true,
+    this.readOnly = false,
     this.textAlign,
     this.focusNode,
     this.autofocus = false,
     this.skipTraversal = false,
+    this.selectAllOnFocus = false,
+    this.placeCaretAtEndOnFocus = true,
     this.textInputAction = TextInputAction.done,
     this.keepFocusOnSubmit = false,
     this.onEditingComplete,
@@ -67,16 +79,28 @@ class AppAmountField extends StatefulWidget {
   final int decimalPlaces;
   final bool emptyWhenZero;
   final bool trimTrailingZeros;
+  final bool allowNegative;
   final AppAmountFieldVariant variant;
   final String? label;
   final String? hint;
+  final String? prefixText;
   final String? suffixText;
   final String? errorText;
   final bool enabled;
+  final bool readOnly;
   final TextAlign? textAlign;
   final FocusNode? focusNode;
   final bool autofocus;
   final bool skipTraversal;
+
+  /// When true, focuses by selecting the whole value.
+  final bool selectAllOnFocus;
+
+  /// When true (default), tabbing / focusing with caret at start moves it
+  /// to the end so Backspace removes the last digit. Mid-field taps keep
+  /// their caret position.
+  final bool placeCaretAtEndOnFocus;
+
   final TextInputAction textInputAction;
 
   /// When true, Done/submit does not unfocus (spreadsheet-style).
@@ -88,6 +112,9 @@ class AppAmountField extends StatefulWidget {
   @override
   State<AppAmountField> createState() => _AppAmountFieldState();
 }
+
+/// Alias matching product docs — same widget as [AppAmountField].
+typedef FinancialNumberField = AppAmountField;
 
 class _AppAmountFieldState extends State<AppAmountField> {
   late final TextEditingController _controller;
@@ -120,7 +147,8 @@ class _AppAmountFieldState extends State<AppAmountField> {
         (oldWidget.value != widget.value ||
             oldWidget.decimalPlaces != widget.decimalPlaces ||
             oldWidget.emptyWhenZero != widget.emptyWhenZero ||
-            oldWidget.trimTrailingZeros != widget.trimTrailingZeros)) {
+            oldWidget.trimTrailingZeros != widget.trimTrailingZeros ||
+            oldWidget.allowNegative != widget.allowNegative)) {
       _writeFormatted(widget.value);
     }
   }
@@ -134,9 +162,36 @@ class _AppAmountFieldState extends State<AppAmountField> {
   }
 
   void _onFocusChange() {
-    if (!_focus.hasFocus) {
-      _writeFormatted(widget.value);
+    if (_focus.hasFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_focus.hasFocus) {
+          return;
+        }
+        final text = _controller.text;
+        if (text.isEmpty) {
+          return;
+        }
+        if (widget.selectAllOnFocus) {
+          _controller.selection = TextSelection(
+            baseOffset: 0,
+            extentOffset: text.length,
+          );
+          return;
+        }
+        if (!widget.placeCaretAtEndOnFocus) {
+          return;
+        }
+        final sel = _controller.selection;
+        // Tab-in / default focus often lands at offset 0. Mid taps keep offset.
+        if (sel.isCollapsed && sel.baseOffset == 0) {
+          _controller.selection = TextSelection.collapsed(
+            offset: text.length,
+          );
+        }
+      });
+      return;
     }
+    _writeFormatted(widget.value);
   }
 
   String _format(double value) {
@@ -154,20 +209,33 @@ class _AppAmountFieldState extends State<AppAmountField> {
       return;
     }
     _syncing = true;
-    _controller.text = next;
+    _controller.value = TextEditingValue(
+      text: next,
+      selection: TextSelection.collapsed(offset: next.length),
+    );
     _syncing = false;
+  }
+
+  double _parse(String raw) {
+    final parsed = parseGroupedDecimal(raw) ?? 0;
+    if (!widget.allowNegative && parsed < 0) {
+      return 0;
+    }
+    if (widget.decimalPlaces <= 0) {
+      return parsed.roundToDouble();
+    }
+    return parsed;
   }
 
   void _handleRawChanged(String raw) {
     if (_syncing) {
       return;
     }
-    final parsed = parseGroupedDecimal(raw) ?? 0;
-    widget.onChanged(parsed);
+    widget.onChanged(_parse(raw));
   }
 
   void _handleSubmit() {
-    final parsed = parseGroupedDecimal(_controller.text) ?? 0;
+    final parsed = _parse(_controller.text);
     _writeFormatted(parsed);
     widget.onSubmitted?.call(parsed);
     widget.onEditingComplete?.call();
@@ -188,13 +256,17 @@ class _AppAmountFieldState extends State<AppAmountField> {
 
     final formatters = <TextInputFormatter>[
       const WesternDigitsInputFormatter(),
-      GroupedDecimalInputFormatter(decimalPlaces: widget.decimalPlaces),
+      GroupedDecimalInputFormatter(
+        decimalPlaces: widget.decimalPlaces,
+        allowNegative: widget.allowNegative,
+      ),
     ];
 
     final decoration = switch (widget.variant) {
       AppAmountFieldVariant.form => InputDecoration(
           labelText: widget.label,
           hintText: widget.hint,
+          prefixText: widget.prefixText,
           suffixText: widget.suffixText,
           errorText: widget.errorText,
         ),
@@ -206,6 +278,8 @@ class _AppAmountFieldState extends State<AppAmountField> {
               : scheme.surfaceContainerHighest.withValues(alpha: 0.45),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+          prefixText: widget.prefixText,
+          suffixText: widget.suffixText,
           errorText: widget.errorText,
           errorMaxLines: 2,
           errorStyle: theme.textTheme.labelSmall?.copyWith(
@@ -234,17 +308,36 @@ class _AppAmountFieldState extends State<AppAmountField> {
             ),
           ),
         ),
+      AppAmountFieldVariant.bare => InputDecoration(
+          isDense: true,
+          filled: false,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          disabledBorder: InputBorder.none,
+          errorBorder: InputBorder.none,
+          focusedErrorBorder: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
+          hintText: widget.hint,
+          prefixText: widget.prefixText,
+          suffixText: widget.suffixText,
+          errorText: widget.errorText,
+        ),
     };
 
     return TextField(
       controller: _controller,
       focusNode: _focus,
       enabled: widget.enabled,
+      readOnly: widget.readOnly,
       autofocus: widget.autofocus,
       textAlign: align,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      keyboardType: TextInputType.numberWithOptions(
+        decimal: widget.decimalPlaces > 0,
+        signed: widget.allowNegative,
+      ),
       textInputAction: widget.textInputAction,
-      inputFormatters: formatters,
+      inputFormatters: widget.readOnly ? const [] : formatters,
       style: theme.textTheme.bodyMedium?.copyWith(
         fontWeight: widget.variant == AppAmountFieldVariant.compact
             ? FontWeight.w800
@@ -252,9 +345,9 @@ class _AppAmountFieldState extends State<AppAmountField> {
         color: hasError ? scheme.error : null,
       ),
       decoration: decoration,
-      onChanged: _handleRawChanged,
-      onEditingComplete: _handleSubmit,
-      onSubmitted: (_) => _handleSubmit(),
+      onChanged: widget.readOnly ? null : _handleRawChanged,
+      onEditingComplete: widget.readOnly ? null : _handleSubmit,
+      onSubmitted: widget.readOnly ? null : (_) => _handleSubmit(),
     );
   }
 }

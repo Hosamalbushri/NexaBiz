@@ -101,13 +101,21 @@ class _FinancialTransactionFormPageState
             composer.loadFromTransaction(txn);
             _syncControllersFromState();
             final treasury = ref.read(rpTreasuryAccountPortProvider);
-            final cash = await treasury.findById(txn.cashAccountId);
+            final languageCode =
+                Localizations.localeOf(context).languageCode;
+            final cash = await treasury.findById(
+              txn.cashAccountId,
+              languageCode: languageCode,
+            );
             if (cash != null) {
               composer.setCashAccount(cash);
             }
             final resolved = txn.resolvedLines;
             for (var i = 0; i < resolved.length; i++) {
-              final account = await treasury.findById(resolved[i].accountId);
+              final account = await treasury.findById(
+                resolved[i].accountId,
+                languageCode: languageCode,
+              );
               if (account != null) {
                 composer.setLineAccount(i, account);
               }
@@ -121,9 +129,12 @@ class _FinancialTransactionFormPageState
               }
             }
           } else {
+            final dateLabel = DateFormat('d/M/yyyy').format(DateTime.now());
             await composer.loadDefaults(
               _resolvedType,
-              defaultDescription: l10n.rpDefaultGeneralDescription,
+              defaultDescription: _resolvedType.isPayment
+                  ? l10n.rpDefaultPaymentDescription(dateLabel)
+                  : l10n.rpDefaultGeneralDescription,
             );
             _syncControllersFromState();
           }
@@ -170,8 +181,24 @@ class _FinancialTransactionFormPageState
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked != null) {
-      ref.read(transactionComposerProvider.notifier).setDate(picked);
+    if (picked == null) {
+      return;
+    }
+    final notifier = ref.read(transactionComposerProvider.notifier);
+    notifier.setDate(picked);
+    if (!_resolvedType.isPayment || !mounted) {
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    final currentDescription =
+        ref.read(transactionComposerProvider).description?.trim() ?? '';
+    final previousLabel = DateFormat('d/M/yyyy').format(current);
+    final autoPrevious = l10n.rpDefaultPaymentDescription(previousLabel);
+    if (currentDescription.isEmpty || currentDescription == autoPrevious) {
+      final nextLabel = DateFormat('d/M/yyyy').format(picked);
+      final nextDescription = l10n.rpDefaultPaymentDescription(nextLabel);
+      notifier.setDescription(nextDescription);
+      _descriptionController.text = nextDescription;
     }
   }
 
@@ -692,16 +719,17 @@ class _HeaderCard extends StatelessWidget {
               ),
             ],
             const SizedBox(height: AppSpacing.md),
-            RpCashAccountSearchField(
+            RpCashAccountDropdown(
               label: l10n.rpCashAccount,
               selected: cashAccount,
-              hintText: l10n.rpSearchAccountHint,
+              hintText: l10n.rpCashAccount,
               onSelected: onCashSelected,
             ),
             const SizedBox(height: AppSpacing.md),
             AppAmountField(
               value: cashAmount,
               onChanged: onCashAmountChanged,
+              decimalPlaces: 0,
               emptyWhenZero: true,
               label: l10n.rpCashAmount,
               suffixText: currencyCode,

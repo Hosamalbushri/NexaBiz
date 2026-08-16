@@ -131,6 +131,13 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
           onSearch: () => _setSearchExpanded(true),
           showCloseSearch: _searchExpanded,
           onCloseSearch: () => _setSearchExpanded(false),
+          actions: [
+            IconButton(
+              tooltip: l10n.accountingImportTitle,
+              onPressed: () => AccountingRoutes.pushAccountsImport(context),
+              icon: const Icon(Icons.upload_file_outlined),
+            ),
+          ],
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () => AccountingRoutes.pushAccountsCreate(context),

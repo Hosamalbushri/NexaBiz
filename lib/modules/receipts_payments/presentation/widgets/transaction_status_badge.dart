@@ -45,7 +45,7 @@ class TransactionStatusBadge extends StatelessWidget {
 }
 
 String formatRpMoney(BuildContext context, double value) {
-  return formatAppAmount(context, value);
+  return formatAppAmount(context, value, decimalPlaces: 0);
 }
 
 class RpMoneyText extends StatelessWidget {
@@ -57,6 +57,11 @@ class RpMoneyText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppAmountText(value, style: style, textAlign: textAlign);
+    return AppAmountText(
+      value,
+      decimalPlaces: 0,
+      style: style,
+      textAlign: textAlign,
+    );
   }
 }

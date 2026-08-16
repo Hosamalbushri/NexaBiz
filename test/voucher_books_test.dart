@@ -46,6 +46,19 @@ void main() {
       1,
     );
 
+    final rp = tree.firstWhere(
+      (n) => n.group.bookType == VoucherBookType.receiptsPayments,
+    );
+    expect(
+      rp.children.map((c) => c.bookType),
+      containsAll([
+        VoucherBookType.receipts,
+        VoucherBookType.payments,
+        VoucherBookType.transfers,
+        VoucherBookType.exchanges,
+      ]),
+    );
+
     final allLeaves = tree.expand((n) => n.children).toList(growable: false);
     expect(allLeaves.length, DefaultVoucherBooks.seeds.length);
     for (final seed in DefaultVoucherBooks.seeds) {

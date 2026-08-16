@@ -128,7 +128,7 @@ void main() {
       expect(() => workflow.assertCanPost(txn()), returnsNormally);
     });
 
-    test('blocks edit/post on posted', () {
+    test('blocks edit/post on posted; allows unpost', () {
       final posted = txn(status: TransactionStatus.posted);
       expect(
         () => workflow.assertCanEdit(posted),
@@ -138,7 +138,21 @@ void main() {
         () => workflow.assertCanPost(posted),
         throwsA(isA<FinancialTransactionException>()),
       );
+      expect(() => workflow.assertCanUnpost(posted), returnsNormally);
       expect(() => workflow.assertCanCancel(posted), returnsNormally);
+    });
+
+    test('blocks unpost on unposted', () {
+      expect(
+        () => workflow.assertCanUnpost(txn()),
+        throwsA(
+          isA<FinancialTransactionException>().having(
+            (e) => e.code,
+            'code',
+            FinancialTransactionException.cannotUnpost,
+          ),
+        ),
+      );
     });
 
     test('blocks cancel when already cancelled', () {

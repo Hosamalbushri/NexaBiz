@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/utils/grouped_decimal_input.dart';
 import '../../../../core/widgets/app_text_field.dart';
 
 class QuantityInputCard extends StatelessWidget {
@@ -30,6 +30,11 @@ class QuantityInputCard extends StatelessWidget {
   final VoidCallback onSave;
   final bool enabled;
 
+  static const _qtyFormatters = [
+    WesternDigitsInputFormatter(),
+    GroupedDecimalInputFormatter(decimalPlaces: 3),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context);
@@ -55,9 +60,7 @@ class QuantityInputCard extends StatelessWidget {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-              ],
+              inputFormatters: _qtyFormatters,
               onChanged: onMainChanged,
               onSubmitted: (_) => onMainSubmitted(),
               textInputAction: TextInputAction.next,
@@ -71,9 +74,7 @@ class QuantityInputCard extends StatelessWidget {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-              ],
+              inputFormatters: _qtyFormatters,
               onChanged: onSecondaryChanged,
               onSubmitted: (_) => onSave(),
               textInputAction: TextInputAction.done,

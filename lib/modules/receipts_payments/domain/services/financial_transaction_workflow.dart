@@ -21,6 +21,14 @@ class FinancialTransactionWorkflow {
     }
   }
 
+  void assertCanUnpost(FinancialTransaction txn) {
+    if (txn.isCancelled || !txn.documentStatus.canUnpost) {
+      throw const FinancialTransactionException(
+        FinancialTransactionException.cannotUnpost,
+      );
+    }
+  }
+
   void assertCanCancel(FinancialTransaction txn) {
     if (txn.isCancelled) {
       throw const FinancialTransactionException(

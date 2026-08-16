@@ -249,6 +249,41 @@ class PostFinancialTransaction {
   }
 }
 
+class UnpostFinancialTransaction {
+  UnpostFinancialTransaction({
+    required FinancialTransactionRepository repository,
+    FinancialTransactionWorkflow workflow =
+        const FinancialTransactionWorkflow(),
+    RpLedgerPostingPort ledgerPosting = const NoOpRpLedgerPostingPort(),
+  }) : _repository = repository,
+       _workflow = workflow,
+       _ledgerPosting = ledgerPosting;
+
+  final FinancialTransactionRepository _repository;
+  final FinancialTransactionWorkflow _workflow;
+  final RpLedgerPostingPort _ledgerPosting;
+
+  Future<FinancialTransaction> call(int id) async {
+    final existing = await _repository.getById(id);
+    if (existing == null) {
+      throw const FinancialTransactionException(
+        FinancialTransactionException.notFound,
+      );
+    }
+    _workflow.assertCanUnpost(existing);
+    final unposted = await _repository.markUnposted(id);
+    try {
+      await _ledgerPosting.syncTransaction(unposted);
+    } catch (_) {
+      await _repository.markPosted(id);
+      throw const FinancialTransactionException(
+        FinancialTransactionException.ledgerPostingFailed,
+      );
+    }
+    return unposted;
+  }
+}
+
 class CancelFinancialTransaction {
   CancelFinancialTransaction({
     required FinancialTransactionRepository repository,

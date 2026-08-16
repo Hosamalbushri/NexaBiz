@@ -18,6 +18,8 @@ String rpTransactionTypeLabel(AppLocalizations l10n, TransactionType type) {
   return switch (type) {
     TransactionType.receipt => l10n.rpTypeReceipt,
     TransactionType.payment => l10n.rpTypePayment,
+    TransactionType.transfer => l10n.rpTypeTransfer,
+    TransactionType.currencyExchange => l10n.rpTypeExchange,
   };
 }
 
@@ -35,6 +37,8 @@ String rpTransactionSourceLabel(
     TransactionSource.salesRelatedReceipt => l10n.rpSourceSalesRelatedReceipt,
     TransactionSource.purchaseRelatedPayment =>
       l10n.rpSourcePurchaseRelatedPayment,
+    TransactionSource.cashBoxTransfer => l10n.rpSourceCashBoxTransfer,
+    TransactionSource.currencyExchange => l10n.rpSourceCurrencyExchange,
   };
 }
 

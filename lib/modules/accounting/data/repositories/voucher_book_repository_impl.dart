@@ -18,10 +18,16 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
 
   static const Map<VoucherBookType, String> _defaultSectionNamesEn = {
     VoucherBookType.sales: 'Sales',
-    VoucherBookType.receipts: 'Receipts',
-    VoucherBookType.payments: 'Payments',
+    VoucherBookType.receiptsPayments: 'Receipts & payments',
     VoucherBookType.purchases: 'Purchases',
     VoucherBookType.journal: 'Journal',
+  };
+
+  static const Map<VoucherBookType, String> _defaultSectionNamesAr = {
+    VoucherBookType.sales: 'المبيعات',
+    VoucherBookType.receiptsPayments: 'المقبوضات والمصروفات',
+    VoucherBookType.purchases: 'المشتريات',
+    VoucherBookType.journal: 'القيود',
   };
 
   VoucherBook _map(VoucherBookRow row) {
@@ -50,7 +56,12 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   List<VoucherBookSectionNode> _buildTree(List<VoucherBook> all) {
     final groups =
         all
-            .where((b) => b.isGroup && b.parentId == null)
+            .where(
+              (b) =>
+                  b.isGroup &&
+                  b.parentId == null &&
+                  VoucherBookType.sections.contains(b.bookType),
+            )
             .toList(growable: false)
           ..sort((a, b) {
             final ai = VoucherBookType.sections.indexOf(a.bookType);
@@ -171,13 +182,16 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
         continue;
       }
       final uuid = generateUuidV4();
+      final name = _defaultSectionNamesAr[section] ??
+          _defaultSectionNamesEn[section] ??
+          section.name;
       await _db
           .into(_db.voucherBooks)
           .insert(
             VoucherBooksCompanion.insert(
               uuid: uuid,
               parentId: const Value(null),
-              name: _defaultSectionNamesEn[section] ?? section.name,
+              name: name,
               bookType: section.storageValue,
               isGroup: const Value(true),
               nextNumber: const Value(1),
@@ -190,7 +204,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
       groupsByType[section] = VoucherBook(
         id: 0,
         uuid: uuid,
-        name: _defaultSectionNamesEn[section] ?? section.name,
+        name: name,
         bookType: section,
         isGroup: true,
         currentNumber: 1,
@@ -203,10 +217,44 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
 
     // Attach legacy flat leaf books to their section group.
     var refreshed = await getAll();
-    final groupUuidBySection = <VoucherBookType, String>{
+    var groupUuidBySection = <VoucherBookType, String>{
       for (final g in refreshed.where((b) => b.isGroup && b.parentId == null))
         g.bookType: g.uuid,
     };
+
+    // Migrate legacy Receipts / Payments section groups into Receipts & payments.
+    final rpHubUuid = groupUuidBySection[VoucherBookType.receiptsPayments];
+    if (rpHubUuid != null) {
+      for (final legacy in const [
+        VoucherBookType.receipts,
+        VoucherBookType.payments,
+      ]) {
+        final legacyGroup = groupsByType[legacy];
+        if (legacyGroup == null) {
+          continue;
+        }
+        final children = await getChildren(legacyGroup.uuid);
+        for (final child in children) {
+          await (_db.update(
+            _db.voucherBooks,
+          )..where((t) => t.id.equals(child.id))).write(
+            VoucherBooksCompanion(
+              parentId: Value(rpHubUuid),
+              updatedAt: Value(nowMs),
+            ),
+          );
+        }
+        await (_db.delete(
+          _db.voucherBooks,
+        )..where((t) => t.id.equals(legacyGroup.id))).go();
+        groupsByType.remove(legacy);
+      }
+      refreshed = await getAll();
+      groupUuidBySection = {
+        for (final g in refreshed.where((b) => b.isGroup && b.parentId == null))
+          g.bookType: g.uuid,
+      };
+    }
 
     for (final book in refreshed) {
       if (book.isGroup) {

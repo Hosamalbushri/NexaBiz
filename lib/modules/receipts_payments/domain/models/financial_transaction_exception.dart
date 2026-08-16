@@ -9,8 +9,10 @@ class FinancialTransactionException implements Exception {
   static const counterAccountRequired = 'counter_account_required';
   static const customerRequired = 'customer_required';
   static const sameAccounts = 'same_accounts';
+  static const currenciesMustDiffer = 'currencies_must_differ';
   static const notEditable = 'not_editable';
   static const cannotPost = 'cannot_post';
+  static const cannotUnpost = 'cannot_unpost';
   static const cannotCancel = 'cannot_cancel';
   static const alreadyCancelled = 'already_cancelled';
   static const ledgerPostingFailed = 'ledger_posting_failed';

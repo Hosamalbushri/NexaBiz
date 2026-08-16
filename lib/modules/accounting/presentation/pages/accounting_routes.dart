@@ -10,6 +10,8 @@ class AccountingRoutes {
   static const String root = '/accounting';
   static const String accounts = '/accounting/accounts';
   static const String accountsCreate = '/accounting/accounts/create';
+  static const String accountsImport = '/accounting/accounts/import';
+  static const String openingSetup = '/accounting/opening-setup';
   static const String currencyRates = '/accounting/currency-rates';
   static const String voucherBooks = '/accounting/voucher-books';
   static const String voucherBooksCreate = '/accounting/voucher-books/new';
@@ -25,6 +27,12 @@ class AccountingRoutes {
 
   static String voucherBookSection(VoucherBookType section) =>
       '/accounting/voucher-books/section/${section.section.storageValue}';
+
+  static String voucherBookKind({
+    required VoucherBookType section,
+    required VoucherBookType kind,
+  }) =>
+      '/accounting/voucher-books/section/${section.section.storageValue}/kind/${kind.storageValue}';
 
   static String journalDetails(String uuid) => '/accounting/journals/$uuid';
 
@@ -62,6 +70,13 @@ class AccountingRoutes {
     BuildContext context,
     VoucherBookType section,
   ) => context.push(voucherBookSection(section));
+
+  static void pushVoucherBookKind(
+    BuildContext context, {
+    required VoucherBookType section,
+    required VoucherBookType kind,
+  }) =>
+      context.push(voucherBookKind(section: section, kind: kind));
 
   static void pushVoucherBookCreate(
     BuildContext context, {
@@ -102,6 +117,14 @@ class AccountingRoutes {
       ).toString(),
     );
   }
+
+  static void pushAccountsImport(BuildContext context) =>
+      context.push(openingSetup);
+
+  static void pushOpeningSetup(BuildContext context) =>
+      context.push(openingSetup);
+
+  static void goOpeningSetup(BuildContext context) => context.go(openingSetup);
 
   static void pushAccountDetails(BuildContext context, int id) =>
       context.push(accountDetails(id));

@@ -1,6 +1,7 @@
 import '../../modules/accounting/domain/entities/account.dart';
 import '../../modules/accounting/domain/repositories/account_repository.dart';
 import '../../modules/accounting/domain/services/account_labels.dart';
+import '../../modules/accounting/domain/services/cash_box_accounts.dart';
 import '../../modules/sales/domain/services/sale_treasury_account_port.dart';
 
 /// App adapter: Sales cash/treasury boxes → Accounting Chart of Accounts.
@@ -10,19 +11,6 @@ class AccountingSaleTreasuryAdapter implements SaleTreasuryAccountPort {
   final AccountRepository _repository;
 
   static const _systemCash = 'system:cash';
-  static const _systemBank = 'system:bank';
-
-  bool _isCashLike(Account account) {
-    if (!account.canPost) {
-      return false;
-    }
-    final description = account.description?.trim();
-    if (description == _systemCash || description == _systemBank) {
-      return true;
-    }
-    final code = account.accountCode.trim();
-    return code.startsWith('1211') || code.startsWith('1212');
-  }
 
   SaleAccountRef _map(Account account) {
     return SaleAccountRef(
@@ -36,7 +24,7 @@ class AccountingSaleTreasuryAdapter implements SaleTreasuryAccountPort {
   Future<List<Account>> _cashLikeAccounts() async {
     await _repository.ensureDefaultChartSeeded();
     final all = await _repository.getAll();
-    return all.where(_isCashLike).toList(growable: false);
+    return CashBoxAccounts.postingUnderCashBoxes(all);
   }
 
   @override
@@ -48,7 +36,11 @@ class AccountingSaleTreasuryAdapter implements SaleTreasuryAccountPort {
   @override
   Future<SaleAccountRef?> findById(String accountId) async {
     final account = await _repository.getByUuid(accountId);
-    if (account == null || !_isCashLike(account)) {
+    if (account == null) {
+      return null;
+    }
+    final all = await _repository.getAll();
+    if (!CashBoxAccounts.isCashBoxPosting(account, all)) {
       return null;
     }
     return _map(account);

@@ -6,6 +6,7 @@ import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/settings/company/company_profile_providers.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/widgets/app_amount_field.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -34,13 +35,8 @@ class JournalEntryFormPage extends ConsumerStatefulWidget {
 
 class _LineForm {
   String? accountUuid;
-  final debitController = TextEditingController();
-  final creditController = TextEditingController();
-
-  void dispose() {
-    debitController.dispose();
-    creditController.dispose();
-  }
+  double debit = 0;
+  double credit = 0;
 }
 
 class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
@@ -58,9 +54,6 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
   void dispose() {
     _voucherController.dispose();
     _descriptionController.dispose();
-    for (final line in _lines) {
-      line.dispose();
-    }
     super.dispose();
   }
 
@@ -73,21 +66,14 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
     _entryDate = entry.entryDate.toLocal();
     _currencyCode = entry.currencyCode;
     _isPosted = entry.isPosted;
-    for (final line in _lines) {
-      line.dispose();
-    }
     _lines
       ..clear()
       ..addAll([
         for (final line in entry.lines)
           _LineForm()
             ..accountUuid = line.accountUuid
-            ..debitController.text = line.debit > 0
-                ? line.debit.toStringAsFixed(2)
-                : ''
-            ..creditController.text = line.credit > 0
-                ? line.credit.toStringAsFixed(2)
-                : '',
+            ..debit = line.debit > 0 ? line.debit : 0
+            ..credit = line.credit > 0 ? line.credit : 0,
       ]);
     if (_lines.length < 2) {
       _lines.add(_LineForm());
@@ -277,33 +263,37 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
-                    controller: line.debitController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: l10n.accountingJournalDebit,
-                    ),
+                  child: AppAmountField(
+                    value: line.debit,
+                    label: l10n.accountingJournalDebit,
+                    emptyWhenZero: true,
+                    onChanged: (value) => setState(() {
+                      line.debit = value;
+                      if (value > 0) {
+                        line.credit = 0;
+                      }
+                    }),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: TextFormField(
-                    controller: line.creditController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: l10n.accountingJournalCredit,
-                    ),
+                  child: AppAmountField(
+                    value: line.credit,
+                    label: l10n.accountingJournalCredit,
+                    emptyWhenZero: true,
+                    onChanged: (value) => setState(() {
+                      line.credit = value;
+                      if (value > 0) {
+                        line.debit = 0;
+                      }
+                    }),
                   ),
                 ),
                 if (_lines.length > 2)
                   IconButton(
                     onPressed: () {
                       setState(() {
-                        _lines.removeAt(index).dispose();
+                        _lines.removeAt(index);
                       });
                     },
                     icon: const Icon(Icons.delete_outline),
@@ -324,12 +314,8 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
 
     final drafts = <JournalLineDraft>[];
     for (final line in _lines) {
-      final debit = JournalMoney.clampNonNegative(
-        double.tryParse(line.debitController.text.trim()) ?? 0,
-      );
-      final credit = JournalMoney.clampNonNegative(
-        double.tryParse(line.creditController.text.trim()) ?? 0,
-      );
+      final debit = JournalMoney.clampNonNegative(line.debit);
+      final credit = JournalMoney.clampNonNegative(line.credit);
       if (debit == 0 && credit == 0) {
         continue;
       }

@@ -43,6 +43,16 @@ class DefaultVoucherBooks {
       nameAr: 'دفتر المدفوعات الرئيسي',
     ),
     DefaultVoucherBookSeed(
+      bookType: VoucherBookType.transfers,
+      nameEn: 'Main cash transfer book',
+      nameAr: 'دفتر النقل بين الصناديق الرئيسي',
+    ),
+    DefaultVoucherBookSeed(
+      bookType: VoucherBookType.exchanges,
+      nameEn: 'Main currency exchange book',
+      nameAr: 'دفتر مصارفة العملات الرئيسي',
+    ),
+    DefaultVoucherBookSeed(
       bookType: VoucherBookType.purchases,
       nameEn: 'Main purchases book',
       nameAr: 'دفتر المشتريات الرئيسي',

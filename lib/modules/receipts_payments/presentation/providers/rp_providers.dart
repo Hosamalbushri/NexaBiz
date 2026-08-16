@@ -102,6 +102,14 @@ final postFinancialTransactionProvider = Provider<PostFinancialTransaction>((
   );
 });
 
+final unpostFinancialTransactionProvider =
+    Provider<UnpostFinancialTransaction>((ref) {
+  return UnpostFinancialTransaction(
+    repository: ref.watch(financialTransactionRepositoryProvider),
+    ledgerPosting: ref.watch(rpLedgerPostingPortProvider),
+  );
+});
+
 final cancelFinancialTransactionProvider =
     Provider<CancelFinancialTransaction>((ref) {
   return CancelFinancialTransaction(

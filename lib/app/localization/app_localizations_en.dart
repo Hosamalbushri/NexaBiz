@@ -69,6 +69,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rpListTitlePayments => 'Payments';
 
   @override
+  String get rpListTitleTransfers => 'Cash box transfers';
+
+  @override
+  String get rpListTitleExchanges => 'Currency exchange';
+
+  @override
   String get rpListCardSubtitle => 'Search and filter receipts and payments';
 
   @override
@@ -81,10 +87,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rpActionNewPayment => 'New payment';
 
   @override
+  String get rpActionNewTransfer => 'New transfer';
+
+  @override
+  String get rpActionNewExchange => 'New exchange';
+
+  @override
   String get rpCreateReceiptSubtitle => 'Collect cash or bank into treasury';
 
   @override
   String get rpCreatePaymentSubtitle => 'Pay from cash or bank';
+
+  @override
+  String get rpCreateTransferSubtitle => 'Move cash between cash boxes';
+
+  @override
+  String get rpCreateExchangeSubtitle =>
+      'Convert one currency to another in the same cash box';
 
   @override
   String get rpServiceReceiptsTitle => 'Receipts';
@@ -101,6 +120,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'View payment vouchers or create a new one';
 
   @override
+  String get rpServiceTransfersTitle => 'Cash box transfers';
+
+  @override
+  String get rpServiceTransfersSubtitle =>
+      'Transfer between cash boxes or create a new voucher';
+
+  @override
+  String get rpServiceExchangesTitle => 'Currency exchange';
+
+  @override
+  String get rpServiceExchangesSubtitle =>
+      'View exchange vouchers or create a new one';
+
+  @override
   String get rpServiceViewReceipts => 'All receipts';
 
   @override
@@ -115,10 +148,89 @@ class AppLocalizationsEn extends AppLocalizations {
       'Browse and filter payment vouchers';
 
   @override
+  String get rpServiceViewTransfers => 'All transfers';
+
+  @override
+  String get rpServiceViewTransfersSubtitle =>
+      'Browse and filter cash box transfer vouchers';
+
+  @override
+  String get rpServiceViewExchanges => 'All exchanges';
+
+  @override
+  String get rpServiceViewExchangesSubtitle =>
+      'Browse and filter currency exchange vouchers';
+
+  @override
   String get rpServiceCreateReceipt => 'New receipt voucher';
 
   @override
   String get rpServiceCreatePayment => 'New payment voucher';
+
+  @override
+  String get rpServiceCreateTransfer => 'New transfer voucher';
+
+  @override
+  String get rpServiceCreateExchange => 'New exchange voucher';
+
+  @override
+  String get rpFormTitleReceipt => 'New receipt';
+
+  @override
+  String get rpFormTitlePayment => 'New payment';
+
+  @override
+  String get rpFormTitleTransfer => 'New cash box transfer';
+
+  @override
+  String get rpFormTitleTransferEdit => 'Edit cash box transfer';
+
+  @override
+  String get rpFormTitleExchange => 'New currency exchange';
+
+  @override
+  String get rpFormTitleExchangeEdit => 'Edit currency exchange';
+
+  @override
+  String get rpTransferFromAccount => 'From cash box';
+
+  @override
+  String get rpTransferToAccount => 'To cash box';
+
+  @override
+  String get rpExchangeCashAccount => 'Cash box';
+
+  @override
+  String get rpExchangeFromCurrency => 'From currency';
+
+  @override
+  String get rpExchangeToCurrency => 'To currency';
+
+  @override
+  String get rpExchangeFromAmount => 'Amount given';
+
+  @override
+  String get rpExchangeToAmount => 'Amount received';
+
+  @override
+  String get rpEmptyTitleTransfers => 'No transfers';
+
+  @override
+  String get rpEmptyMessageTransfers =>
+      'Create a cash box transfer to get started.';
+
+  @override
+  String get rpEmptyTitleExchanges => 'No exchanges';
+
+  @override
+  String get rpEmptyMessageExchanges =>
+      'Create a currency exchange voucher to get started.';
+
+  @override
+  String get rpDetailsTitleTransfer => 'Transfer details';
+
+  @override
+  String get rpDetailsTitleExchange => 'Exchange details';
 
   @override
   String get rpDashboardTodayReceipts => 'Today\'s receipts';
@@ -148,12 +260,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rpDashboardFailedSync => 'Failed sync';
 
   @override
-  String get rpFormTitleReceipt => 'New receipt';
-
-  @override
-  String get rpFormTitlePayment => 'New payment';
-
-  @override
   String get rpFormSectionDocument => 'Document';
 
   @override
@@ -173,6 +279,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rpDefaultGeneralDescription => 'Payment from account';
+
+  @override
+  String rpDefaultPaymentDescription(String date) {
+    return 'خارج--$date';
+  }
+
+  @override
+  String rpDefaultTransferDescription(String date) {
+    return 'Transfer--$date';
+  }
+
+  @override
+  String rpDefaultExchangeDescription(String date) {
+    return 'Exchange--$date';
+  }
 
   @override
   String get rpManualExchangeRate => 'Exchange rate';
@@ -234,6 +355,156 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rpPosted => 'Transaction posted';
 
   @override
+  String get rpUnpost => 'Unpost';
+
+  @override
+  String get rpUnposting => 'Unposting…';
+
+  @override
+  String get rpUnposted => 'Transaction unposted';
+
+  @override
+  String get rpPostingServiceTitle => 'Post / Unpost';
+
+  @override
+  String get rpPostingServiceHubSubtitle =>
+      'Post or unpost vouchers by type, date, or number';
+
+  @override
+  String get rpPostingServiceSubtitle =>
+      'Choose voucher type and operation, then search by date range or number range. Apply to one selected voucher or to all results.';
+
+  @override
+  String get rpPostingServiceDocumentType => 'Voucher type';
+
+  @override
+  String get rpPostingServiceOperation => 'Operation';
+
+  @override
+  String get rpPostingServiceLookup => 'Find by';
+
+  @override
+  String get rpPostingServicePickDate => 'Select a date';
+
+  @override
+  String get rpPostingServiceFromDate => 'From date';
+
+  @override
+  String get rpPostingServiceToDate => 'To date';
+
+  @override
+  String get rpPostingServiceFromNumber => 'From number';
+
+  @override
+  String get rpPostingServiceToNumber => 'To number';
+
+  @override
+  String get rpPostingServiceNumberHint => 'e.g. 1';
+
+  @override
+  String get rpPostingServiceDateRequired => 'Select from and to dates';
+
+  @override
+  String get rpPostingServiceDateRangeInvalid =>
+      'From date must be on or before to date';
+
+  @override
+  String get rpPostingServiceNumberRequired =>
+      'Enter from and to voucher numbers';
+
+  @override
+  String get rpPostingServiceNumberRangeInvalid =>
+      'From number must be less than or equal to to number';
+
+  @override
+  String get rpPostingServiceSearch => 'Show vouchers';
+
+  @override
+  String rpPostingServiceResultsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count vouchers',
+      one: '1 voucher',
+      zero: 'No vouchers',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get rpPostingServiceEmpty => 'No matching vouchers for this filter.';
+
+  @override
+  String get rpPostingServiceSelectOne => 'Select a voucher first';
+
+  @override
+  String get rpPostingServiceApplySelectedPost => 'Post selected';
+
+  @override
+  String get rpPostingServiceApplySelectedUnpost => 'Unpost selected';
+
+  @override
+  String rpPostingServiceApplyAllPost(int count) {
+    return 'Post all ($count)';
+  }
+
+  @override
+  String rpPostingServiceApplyAllUnpost(int count) {
+    return 'Unpost all ($count)';
+  }
+
+  @override
+  String rpPostingServiceConfirmOnePost(String number) {
+    return 'Post voucher $number?';
+  }
+
+  @override
+  String rpPostingServiceConfirmOneUnpost(String number) {
+    return 'Unpost voucher $number?';
+  }
+
+  @override
+  String rpPostingServiceConfirmAllPost(int count) {
+    return 'Post all $count vouchers in the list?';
+  }
+
+  @override
+  String rpPostingServiceConfirmAllUnpost(int count) {
+    return 'Unpost all $count vouchers in the list?';
+  }
+
+  @override
+  String rpPostingServiceSuccessPost(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count vouchers posted',
+      one: '1 voucher posted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String rpPostingServiceSuccessUnpost(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count vouchers unposted',
+      one: '1 voucher unposted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String rpPostingServicePartial(int success, int failed) {
+    return '$success succeeded, $failed failed';
+  }
+
+  @override
+  String get rpPostingServiceNoPermission =>
+      'You do not have permission to post or unpost vouchers.';
+
+  @override
   String get rpCancelTitle => 'Cancel transaction';
 
   @override
@@ -260,6 +531,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rpEmptyMessage => 'Create a receipt or payment to get started.';
 
   @override
+  String get rpEmptyTitleReceipts => 'No receipts';
+
+  @override
+  String get rpEmptyMessageReceipts =>
+      'Create a receipt voucher to get started.';
+
+  @override
+  String get rpEmptyTitlePayments => 'No payments';
+
+  @override
+  String get rpEmptyMessagePayments =>
+      'Create a payment voucher to get started.';
+
+  @override
+  String get rpDetailsTitleReceipt => 'Receipt details';
+
+  @override
+  String get rpDetailsTitlePayment => 'Payment details';
+
+  @override
   String get rpSearchHint => 'Search number, party, reference…';
 
   @override
@@ -273,6 +564,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rpTypePayment => 'Payment';
+
+  @override
+  String get rpTypeTransfer => 'Transfer';
+
+  @override
+  String get rpTypeExchange => 'Exchange';
 
   @override
   String get rpStatusUnposted => 'Unposted';
@@ -306,6 +603,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rpSourcePurchaseRelatedPayment => 'Purchase-related payment';
+
+  @override
+  String get rpSourceCashBoxTransfer => 'Cash box transfer';
+
+  @override
+  String get rpSourceCurrencyExchange => 'Currency exchange';
 
   @override
   String get rpDate => 'Date';
@@ -409,6 +712,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Cash and counter accounts must be different';
 
   @override
+  String get rpErrorCurrenciesMustDiffer =>
+      'From and to currencies must be different';
+
+  @override
   String get rpErrorVoucherBookRequired => 'Select a voucher book';
 
   @override
@@ -416,6 +723,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rpErrorCannotPost => 'This transaction cannot be posted';
+
+  @override
+  String get rpErrorCannotUnpost => 'This transaction cannot be unposted';
 
   @override
   String get rpErrorCannotCancel => 'This transaction cannot be cancelled';
@@ -451,6 +761,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminPermServicePaymentsHint => 'Cash and bank payments';
+
+  @override
+  String get adminPermServiceTransfers => 'Cash box transfers';
+
+  @override
+  String get adminPermServiceTransfersHint => 'Transfers between cash boxes';
+
+  @override
+  String get adminPermServiceExchanges => 'Currency exchange';
+
+  @override
+  String get adminPermServiceExchangesHint =>
+      'Convert currencies within a cash box';
 
   @override
   String get adminPermServiceRpReports => 'Reports';
@@ -1814,7 +2137,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountingVoucherBooksSubtitle =>
-      'Open a section, then use tabs for each type (e.g. sales and sales returns). Each type has its own list and add action.';
+      'Open a section, then pick a book type from the list (e.g. receipts or transfers). Each type has its own book list and add action.';
 
   @override
   String get accountingVoucherBooksEmptyTitle => 'No voucher books';
@@ -1960,6 +2283,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountingVoucherBookTypePayments => 'Payments';
 
   @override
+  String get accountingVoucherBookTypeTransfers => 'Cash box transfers';
+
+  @override
+  String get accountingVoucherBookTypeExchanges => 'Currency exchange';
+
+  @override
+  String get accountingVoucherBookTypeReceiptsPayments => 'Receipts & expenses';
+
+  @override
   String get accountingVoucherBookTypePurchases => 'Purchases';
 
   @override
@@ -2017,13 +2349,255 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountingFieldCodeHelper =>
-      'When a parent is selected, the code is generated from it (e.g. 1221 → 12210001).';
+      'When a parent is selected, the next code after the highest sibling is generated (e.g. 1213 → 1214).';
 
   @override
   String get accountingGenerateCode => 'Generate code';
 
   @override
   String get accountingAddChildAccount => 'Add child account';
+
+  @override
+  String get accountingImportTitle => 'Import accounts';
+
+  @override
+  String get accountingImportPageTitle => 'Import Chart of Accounts';
+
+  @override
+  String get accountingImportSubtitle =>
+      'Choose a parent group, load Excel or add rows, then save with optional opening balances.';
+
+  @override
+  String get accountingImportParent => 'Parent group account';
+
+  @override
+  String get accountingImportOpeningDebit => 'Opening debit';
+
+  @override
+  String get accountingImportOpeningCredit => 'Opening credit';
+
+  @override
+  String get accountingImportCurrency => 'Currency';
+
+  @override
+  String get accountingImportRowsTitle => 'Accounts to import';
+
+  @override
+  String get accountingImportAddRow => 'Add row';
+
+  @override
+  String get accountingImportRemoveRow => 'Remove row';
+
+  @override
+  String get accountingImportEmptyRows =>
+      'No rows yet. Pick an Excel file or add a row.';
+
+  @override
+  String get accountingImportFormatHintTitle => 'Excel layout for accounts';
+
+  @override
+  String get accountingImportFormatHintIntro =>
+      'First row = headers. Required: name. Use .xlsx or .xls. All rows are created under the selected parent group.';
+
+  @override
+  String get accountingImportFormatColCodeAliases =>
+      'Account Code · Code · رمز الحساب';
+
+  @override
+  String get accountingImportFormatColNameAliases =>
+      'Account Name · Name · اسم الحساب';
+
+  @override
+  String get accountingImportFormatColDebitAliases =>
+      'Opening Debit · Debit · مدين افتتاحي';
+
+  @override
+  String get accountingImportFormatColCreditAliases =>
+      'Opening Credit · Credit · دائن افتتاحي';
+
+  @override
+  String get accountingImportFormatColCurrencyAliases =>
+      'Currency · Currency Code · عملة';
+
+  @override
+  String get accountingImportFormatSampleNote =>
+      'Without headers columns are read as: code, name, opening debit, opening credit, currency. Duplicate codes are skipped. Opening amounts post one journal against Capital (3100), balanced per currency.';
+
+  @override
+  String accountingImportInsertedCount(int count) {
+    return 'Inserted $count accounts';
+  }
+
+  @override
+  String accountingImportSkippedCount(int count) {
+    return 'Skipped $count duplicates';
+  }
+
+  @override
+  String get accountingImportOpeningPosted =>
+      'Opening balances journal posted against Capital.';
+
+  @override
+  String get accountingImportOpeningVoucherType => 'Opening';
+
+  @override
+  String get accountingImportOpeningJournalDescription =>
+      'Opening balances from account import';
+
+  @override
+  String get accountingImportErrorParentRequired =>
+      'Select a parent group account.';
+
+  @override
+  String get accountingImportErrorParentNotGroup =>
+      'The parent must be a group account.';
+
+  @override
+  String get accountingImportErrorNoRows =>
+      'Add at least one account with a name.';
+
+  @override
+  String get accountingImportErrorBothSides =>
+      'A row cannot have both opening debit and credit.';
+
+  @override
+  String get accountingImportErrorCapitalMissing =>
+      'Capital account (3100) was not found.';
+
+  @override
+  String get accountingOpeningSetupTitle => 'Opening import center';
+
+  @override
+  String get accountingOpeningSetupSubtitle =>
+      'Import accounts, set multi-currency opening balances for any posting account, then post one journal against Capital (3100).';
+
+  @override
+  String get accountingOpeningSetupStepImport => 'Import';
+
+  @override
+  String get accountingOpeningSetupStepBalances => 'Balances';
+
+  @override
+  String get accountingOpeningSetupStepReview => 'Review';
+
+  @override
+  String get accountingOpeningSetupStepImportHint =>
+      'Create posting accounts under a parent group. Opening amounts are entered in the next step.';
+
+  @override
+  String get accountingOpeningSetupStepBalancesHint =>
+      'Add posting accounts and enter one currency line per configured currency (debit or credit). Only currencies enabled in Currency rates are available.';
+
+  @override
+  String get accountingOpeningSetupStepReviewHint =>
+      'Review totals per currency, then post a single opening journal offset to Capital.';
+
+  @override
+  String get accountingOpeningSetupImportFormatIntro =>
+      'First row = headers. Required: name. Use .xlsx or .xls. All rows are created under the selected parent group.';
+
+  @override
+  String get accountingOpeningSetupImportFormatNote =>
+      'Without headers columns are read as: code, name. Duplicate codes are skipped. Balances are set in step 2.';
+
+  @override
+  String get accountingOpeningSetupAddAccount => 'Add posting account';
+
+  @override
+  String get accountingOpeningSetupRemoveAccount => 'Remove account';
+
+  @override
+  String get accountingOpeningSetupAddCurrencyLine => 'Add currency line';
+
+  @override
+  String get accountingOpeningSetupImportBalancesExcel =>
+      'Import balances from Excel';
+
+  @override
+  String get accountingOpeningSetupEmptyBalances =>
+      'No balance lines yet. Add a row or import balances from Excel.';
+
+  @override
+  String get accountingOpeningSetupContinueToReview => 'Continue to review';
+
+  @override
+  String get accountingOpeningSetupBalancesRowsTitle => 'Opening balance lines';
+
+  @override
+  String get accountingOpeningSetupBalancesFormatTitle =>
+      'Excel layout for opening balances';
+
+  @override
+  String get accountingOpeningSetupBalancesFormatNote =>
+      'Columns: Code or Account Id, Currency, Debit, Credit. Currency must already be enabled in Currency rates. Same account may appear once per currency. Rows merge into the current list.';
+
+  @override
+  String accountingOpeningSetupErrorCurrencyNotConfigured(String code) {
+    return 'Currency is not configured in the system: $code';
+  }
+
+  @override
+  String get accountingOpeningSetupErrorAccountRequired =>
+      'Select an account for every balance line.';
+
+  @override
+  String get accountingOpeningSetupReviewSummaryTitle => 'Summary by currency';
+
+  @override
+  String accountingOpeningSetupCapitalOffset(String code) {
+    return 'Offset account: Capital ($code)';
+  }
+
+  @override
+  String accountingOpeningSetupNetVsCapital(String amount, String side) {
+    return 'Capital offset: $amount ($side)';
+  }
+
+  @override
+  String accountingOpeningSetupLinesCount(int count) {
+    return '$count balance lines with amounts';
+  }
+
+  @override
+  String get accountingOpeningSetupNoAmountsToPost =>
+      'Enter at least one debit or credit amount before posting.';
+
+  @override
+  String get accountingOpeningSetupPostJournal => 'Post opening journal';
+
+  @override
+  String get accountingOpeningSetupPosting => 'Posting opening journal…';
+
+  @override
+  String get accountingOpeningSetupPostSuccess =>
+      'Opening journal posted successfully against Capital.';
+
+  @override
+  String get accountingOpeningSetupJournalDescription => 'Opening balances';
+
+  @override
+  String get accountingOpeningSetupReset => 'Reset session';
+
+  @override
+  String get accountingOpeningSetupCardTitle => 'Import & opening balances';
+
+  @override
+  String get accountingOpeningSetupCardSubtitle =>
+      'Import CoA accounts and post multi-currency opening balances.';
+
+  @override
+  String accountingOpeningSetupErrorDuplicateCurrency(String name) {
+    return 'Duplicate currency for account: $name';
+  }
+
+  @override
+  String accountingOpeningSetupErrorAccountNotFound(String code) {
+    return 'Account not found: $code';
+  }
+
+  @override
+  String get accountingOpeningSetupErrorNoBalanceRows =>
+      'No valid opening-balance rows found in the file.';
 
   @override
   String get accountingFieldParent => 'Parent account';

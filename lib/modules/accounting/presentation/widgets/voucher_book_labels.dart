@@ -9,10 +9,14 @@ String voucherBookTypeLabel(AppLocalizations l10n, VoucherBookType type) {
     VoucherBookType.salesReturns => l10n.accountingVoucherBookTypeSalesReturns,
     VoucherBookType.receipts => l10n.accountingVoucherBookTypeReceipts,
     VoucherBookType.payments => l10n.accountingVoucherBookTypePayments,
+    VoucherBookType.transfers => l10n.accountingVoucherBookTypeTransfers,
+    VoucherBookType.exchanges => l10n.accountingVoucherBookTypeExchanges,
     VoucherBookType.purchases => l10n.accountingVoucherBookTypePurchases,
     VoucherBookType.purchaseReturns =>
       l10n.accountingVoucherBookTypePurchaseReturns,
     VoucherBookType.journal => l10n.accountingVoucherBookTypeJournal,
+    VoucherBookType.receiptsPayments =>
+      l10n.accountingVoucherBookTypeReceiptsPayments,
   };
 }
 
@@ -26,8 +30,11 @@ IconData voucherBookTypeIcon(VoucherBookType type) {
     VoucherBookType.salesReturns => Icons.assignment_return_outlined,
     VoucherBookType.receipts => Icons.call_received_outlined,
     VoucherBookType.payments => Icons.call_made_outlined,
+    VoucherBookType.transfers => Icons.swap_horiz_outlined,
+    VoucherBookType.exchanges => Icons.currency_exchange_outlined,
     VoucherBookType.purchases => Icons.shopping_cart_outlined,
     VoucherBookType.purchaseReturns => Icons.undo_outlined,
     VoucherBookType.journal => Icons.menu_book_outlined,
+    VoucherBookType.receiptsPayments => Icons.account_balance_wallet_outlined,
   };
 }

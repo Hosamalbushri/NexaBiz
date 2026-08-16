@@ -18,22 +18,57 @@
   "rpListTitle": "Transactions",
   "rpListTitleReceipts": "Receipts",
   "rpListTitlePayments": "Payments",
+  "rpListTitleTransfers": "Cash box transfers",
+  "rpListTitleExchanges": "Currency exchange",
   "rpListCardSubtitle": "Search and filter receipts and payments",
   "rpActionViewAll": "All transactions",
   "rpActionNewReceipt": "New receipt",
   "rpActionNewPayment": "New payment",
+  "rpActionNewTransfer": "New transfer",
+  "rpActionNewExchange": "New exchange",
   "rpCreateReceiptSubtitle": "Collect cash or bank into treasury",
   "rpCreatePaymentSubtitle": "Pay from cash or bank",
+  "rpCreateTransferSubtitle": "Move cash between cash boxes",
+  "rpCreateExchangeSubtitle": "Convert one currency to another in the same cash box",
   "rpServiceReceiptsTitle": "Receipts",
   "rpServiceReceiptsSubtitle": "View receipt vouchers or create a new one",
   "rpServicePaymentsTitle": "Payments",
   "rpServicePaymentsSubtitle": "View payment vouchers or create a new one",
+  "rpServiceTransfersTitle": "Cash box transfers",
+  "rpServiceTransfersSubtitle": "Transfer between cash boxes or create a new voucher",
+  "rpServiceExchangesTitle": "Currency exchange",
+  "rpServiceExchangesSubtitle": "View exchange vouchers or create a new one",
   "rpServiceViewReceipts": "All receipts",
   "rpServiceViewReceiptsSubtitle": "Browse and filter receipt vouchers",
   "rpServiceViewPayments": "All payments",
   "rpServiceViewPaymentsSubtitle": "Browse and filter payment vouchers",
+  "rpServiceViewTransfers": "All transfers",
+  "rpServiceViewTransfersSubtitle": "Browse and filter cash box transfer vouchers",
+  "rpServiceViewExchanges": "All exchanges",
+  "rpServiceViewExchangesSubtitle": "Browse and filter currency exchange vouchers",
   "rpServiceCreateReceipt": "New receipt voucher",
   "rpServiceCreatePayment": "New payment voucher",
+  "rpServiceCreateTransfer": "New transfer voucher",
+  "rpServiceCreateExchange": "New exchange voucher",
+  "rpFormTitleReceipt": "New receipt",
+  "rpFormTitlePayment": "New payment",
+  "rpFormTitleTransfer": "New cash box transfer",
+  "rpFormTitleTransferEdit": "Edit cash box transfer",
+  "rpFormTitleExchange": "New currency exchange",
+  "rpFormTitleExchangeEdit": "Edit currency exchange",
+  "rpTransferFromAccount": "From cash box",
+  "rpTransferToAccount": "To cash box",
+  "rpExchangeCashAccount": "Cash box",
+  "rpExchangeFromCurrency": "From currency",
+  "rpExchangeToCurrency": "To currency",
+  "rpExchangeFromAmount": "Amount given",
+  "rpExchangeToAmount": "Amount received",
+  "rpEmptyTitleTransfers": "No transfers",
+  "rpEmptyMessageTransfers": "Create a cash box transfer to get started.",
+  "rpEmptyTitleExchanges": "No exchanges",
+  "rpEmptyMessageExchanges": "Create a currency exchange voucher to get started.",
+  "rpDetailsTitleTransfer": "Transfer details",
+  "rpDetailsTitleExchange": "Exchange details",
   "rpDashboardTodayReceipts": "Today's receipts",
   "rpDashboardTodayPayments": "Today's payments",
   "rpDashboardPeriodReceipts": "Period receipts",
@@ -43,8 +78,6 @@
   "rpDashboardBankMovement": "Bank movement",
   "rpDashboardPendingSync": "Pending sync",
   "rpDashboardFailedSync": "Failed sync",
-  "rpFormTitleReceipt": "New receipt",
-  "rpFormTitlePayment": "New payment",
   "rpFormSectionDocument": "Document",
   "rpFormSectionAccounts": "Accounts & amount",
   "rpFormSectionParty": "Party",
@@ -52,6 +85,30 @@
   "rpFormSectionLines": "Entry lines",
   "rpGeneralDescription": "Voucher description",
   "rpDefaultGeneralDescription": "Payment from account",
+  "rpDefaultPaymentDescription": "خارج--{date}",
+  "@rpDefaultPaymentDescription": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "rpDefaultTransferDescription": "Transfer--{date}",
+  "@rpDefaultTransferDescription": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "rpDefaultExchangeDescription": "Exchange--{date}",
+  "@rpDefaultExchangeDescription": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "rpManualExchangeRate": "Exchange rate",
   "rpManualExchangeRateHint": "1 {cash} = ? {party}",
   "@rpManualExchangeRateHint": {
@@ -77,6 +134,92 @@
   "rpPost": "Post",
   "rpPosting": "Posting…",
   "rpPosted": "Transaction posted",
+  "rpUnpost": "Unpost",
+  "rpUnposting": "Unposting…",
+  "rpUnposted": "Transaction unposted",
+  "rpPostingServiceTitle": "Post / Unpost",
+  "rpPostingServiceHubSubtitle": "Post or unpost vouchers by type, date, or number",
+  "rpPostingServiceSubtitle": "Choose voucher type and operation, then search by date range or number range. Apply to one selected voucher or to all results.",
+  "rpPostingServiceDocumentType": "Voucher type",
+  "rpPostingServiceOperation": "Operation",
+  "rpPostingServiceLookup": "Find by",
+  "rpPostingServicePickDate": "Select a date",
+  "rpPostingServiceFromDate": "From date",
+  "rpPostingServiceToDate": "To date",
+  "rpPostingServiceFromNumber": "From number",
+  "rpPostingServiceToNumber": "To number",
+  "rpPostingServiceNumberHint": "e.g. 1",
+  "rpPostingServiceDateRequired": "Select from and to dates",
+  "rpPostingServiceDateRangeInvalid": "From date must be on or before to date",
+  "rpPostingServiceNumberRequired": "Enter from and to voucher numbers",
+  "rpPostingServiceNumberRangeInvalid": "From number must be less than or equal to to number",
+  "rpPostingServiceSearch": "Show vouchers",
+  "rpPostingServiceResultsCount": "{count, plural, =0{No vouchers} one{1 voucher} other{{count} vouchers}}",
+  "@rpPostingServiceResultsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServiceEmpty": "No matching vouchers for this filter.",
+  "rpPostingServiceSelectOne": "Select a voucher first",
+  "rpPostingServiceApplySelectedPost": "Post selected",
+  "rpPostingServiceApplySelectedUnpost": "Unpost selected",
+  "rpPostingServiceApplyAllPost": "Post all ({count})",
+  "@rpPostingServiceApplyAllPost": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServiceApplyAllUnpost": "Unpost all ({count})",
+  "@rpPostingServiceApplyAllUnpost": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServiceConfirmOnePost": "Post voucher {number}?",
+  "@rpPostingServiceConfirmOnePost": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "rpPostingServiceConfirmOneUnpost": "Unpost voucher {number}?",
+  "@rpPostingServiceConfirmOneUnpost": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "rpPostingServiceConfirmAllPost": "Post all {count} vouchers in the list?",
+  "@rpPostingServiceConfirmAllPost": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServiceConfirmAllUnpost": "Unpost all {count} vouchers in the list?",
+  "@rpPostingServiceConfirmAllUnpost": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServiceSuccessPost": "{count, plural, one{1 voucher posted} other{{count} vouchers posted}}",
+  "@rpPostingServiceSuccessPost": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServiceSuccessUnpost": "{count, plural, one{1 voucher unposted} other{{count} vouchers unposted}}",
+  "@rpPostingServiceSuccessUnpost": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rpPostingServicePartial": "{success} succeeded, {failed} failed",
+  "@rpPostingServicePartial": {
+    "placeholders": {
+      "success": {"type": "int"},
+      "failed": {"type": "int"}
+    }
+  },
+  "rpPostingServiceNoPermission": "You do not have permission to post or unpost vouchers.",
   "rpCancelTitle": "Cancel transaction",
   "rpCancelMessage": "Cancel {number}? The linked accounting entry will be voided.",
   "@rpCancelMessage": {
@@ -90,11 +233,19 @@
   "rpNotFound": "Transaction not found",
   "rpEmptyTitle": "No transactions",
   "rpEmptyMessage": "Create a receipt or payment to get started.",
+  "rpEmptyTitleReceipts": "No receipts",
+  "rpEmptyMessageReceipts": "Create a receipt voucher to get started.",
+  "rpEmptyTitlePayments": "No payments",
+  "rpEmptyMessagePayments": "Create a payment voucher to get started.",
+  "rpDetailsTitleReceipt": "Receipt details",
+  "rpDetailsTitlePayment": "Payment details",
   "rpSearchHint": "Search number, party, reference…",
   "rpTypeAll": "All",
   "rpTypeLabel": "Type",
   "rpTypeReceipt": "Receipt",
   "rpTypePayment": "Payment",
+  "rpTypeTransfer": "Transfer",
+  "rpTypeExchange": "Exchange",
   "rpStatusUnposted": "Unposted",
   "rpStatusPosted": "Posted",
   "rpSource": "Source",
@@ -106,6 +257,8 @@
   "rpSourceOtherPayment": "Other payment",
   "rpSourceSalesRelatedReceipt": "Sales-related receipt",
   "rpSourcePurchaseRelatedPayment": "Purchase-related payment",
+  "rpSourceCashBoxTransfer": "Cash box transfer",
+  "rpSourceCurrencyExchange": "Currency exchange",
   "rpDate": "Date",
   "rpAmount": "Amount",
   "rpLineAmountCredit": "Amount (Credit)",
@@ -139,9 +292,11 @@
   "rpErrorCounterAccountRequired": "Counter account is required",
   "rpErrorCustomerRequired": "Customer is required for this source",
   "rpErrorSameAccounts": "Cash and counter accounts must be different",
+  "rpErrorCurrenciesMustDiffer": "From and to currencies must be different",
   "rpErrorVoucherBookRequired": "Select a voucher book",
   "rpErrorNotEditable": "Posted transactions cannot be edited",
   "rpErrorCannotPost": "This transaction cannot be posted",
+  "rpErrorCannotUnpost": "This transaction cannot be unposted",
   "rpErrorCannotCancel": "This transaction cannot be cancelled",
   "rpErrorAlreadyCancelled": "Transaction is already cancelled",
   "rpErrorCurrencyRequired": "Currency is required",
@@ -153,6 +308,10 @@
   "adminPermServiceReceiptsHint": "Cash and bank receipts",
   "adminPermServicePayments": "Payments",
   "adminPermServicePaymentsHint": "Cash and bank payments",
+  "adminPermServiceTransfers": "Cash box transfers",
+  "adminPermServiceTransfersHint": "Transfers between cash boxes",
+  "adminPermServiceExchanges": "Currency exchange",
+  "adminPermServiceExchangesHint": "Convert currencies within a cash box",
   "adminPermServiceRpReports": "Reports",
   "adminPermServiceRpReportsHint": "Receipts and payments reports",
   "adminPermServiceRpSync": "Synchronization",
@@ -675,7 +834,7 @@
   "accountingCurrencyRatesSaved": "Currency rate saved.",
   "accountingVoucherBooksTitle": "Voucher books",
   "accountingVoucherBooksCardSubtitle": "Set up numbering books for sales, receipts, and other vouchers.",
-  "accountingVoucherBooksSubtitle": "Open a section, then use tabs for each type (e.g. sales and sales returns). Each type has its own list and add action.",
+  "accountingVoucherBooksSubtitle": "Open a section, then pick a book type from the list (e.g. receipts or transfers). Each type has its own book list and add action.",
   "accountingVoucherBooksEmptyTitle": "No voucher books",
   "accountingVoucherBooksEmptyMessage": "Add a book under a section to prepare sequential voucher numbers.",
   "accountingVoucherBooksAdd": "Add book",
@@ -746,6 +905,9 @@
   "accountingVoucherBookTypeSalesReturns": "Sales returns",
   "accountingVoucherBookTypeReceipts": "Receipts",
   "accountingVoucherBookTypePayments": "Payments",
+  "accountingVoucherBookTypeTransfers": "Cash box transfers",
+  "accountingVoucherBookTypeExchanges": "Currency exchange",
+  "accountingVoucherBookTypeReceiptsPayments": "Receipts & expenses",
   "accountingVoucherBookTypePurchases": "Purchases",
   "accountingVoucherBookTypePurchaseReturns": "Purchase returns",
   "accountingVoucherBookTypeJournal": "Journal",
@@ -764,9 +926,133 @@
   "accountingHideInactive": "Hide inactive",
   "accountingFieldName": "Account name",
   "accountingFieldCode": "Account code",
-  "accountingFieldCodeHelper": "When a parent is selected, the code is generated from it (e.g. 1221 → 12210001).",
+  "accountingFieldCodeHelper": "When a parent is selected, the next code after the highest sibling is generated (e.g. 1213 → 1214).",
   "accountingGenerateCode": "Generate code",
   "accountingAddChildAccount": "Add child account",
+  "accountingImportTitle": "Import accounts",
+  "accountingImportPageTitle": "Import Chart of Accounts",
+  "accountingImportSubtitle": "Choose a parent group, load Excel or add rows, then save with optional opening balances.",
+  "accountingImportParent": "Parent group account",
+  "accountingImportOpeningDebit": "Opening debit",
+  "accountingImportOpeningCredit": "Opening credit",
+  "accountingImportCurrency": "Currency",
+  "accountingImportRowsTitle": "Accounts to import",
+  "accountingImportAddRow": "Add row",
+  "accountingImportRemoveRow": "Remove row",
+  "accountingImportEmptyRows": "No rows yet. Pick an Excel file or add a row.",
+  "accountingImportFormatHintTitle": "Excel layout for accounts",
+  "accountingImportFormatHintIntro": "First row = headers. Required: name. Use .xlsx or .xls. All rows are created under the selected parent group.",
+  "accountingImportFormatColCodeAliases": "Account Code · Code · رمز الحساب",
+  "accountingImportFormatColNameAliases": "Account Name · Name · اسم الحساب",
+  "accountingImportFormatColDebitAliases": "Opening Debit · Debit · مدين افتتاحي",
+  "accountingImportFormatColCreditAliases": "Opening Credit · Credit · دائن افتتاحي",
+  "accountingImportFormatColCurrencyAliases": "Currency · Currency Code · عملة",
+  "accountingImportFormatSampleNote": "Without headers columns are read as: code, name, opening debit, opening credit, currency. Duplicate codes are skipped. Opening amounts post one journal against Capital (3100), balanced per currency.",
+  "accountingImportInsertedCount": "Inserted {count} accounts",
+  "@accountingImportInsertedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accountingImportSkippedCount": "Skipped {count} duplicates",
+  "@accountingImportSkippedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accountingImportOpeningPosted": "Opening balances journal posted against Capital.",
+  "accountingImportOpeningVoucherType": "Opening",
+  "accountingImportOpeningJournalDescription": "Opening balances from account import",
+  "accountingImportErrorParentRequired": "Select a parent group account.",
+  "accountingImportErrorParentNotGroup": "The parent must be a group account.",
+  "accountingImportErrorNoRows": "Add at least one account with a name.",
+  "accountingImportErrorBothSides": "A row cannot have both opening debit and credit.",
+  "accountingImportErrorCapitalMissing": "Capital account (3100) was not found.",
+  "accountingOpeningSetupTitle": "Opening import center",
+  "accountingOpeningSetupSubtitle": "Import accounts, set multi-currency opening balances for any posting account, then post one journal against Capital (3100).",
+  "accountingOpeningSetupStepImport": "Import",
+  "accountingOpeningSetupStepBalances": "Balances",
+  "accountingOpeningSetupStepReview": "Review",
+  "accountingOpeningSetupStepImportHint": "Create posting accounts under a parent group. Opening amounts are entered in the next step.",
+  "accountingOpeningSetupStepBalancesHint": "Add posting accounts and enter one currency line per configured currency (debit or credit). Only currencies enabled in Currency rates are available.",
+  "accountingOpeningSetupStepReviewHint": "Review totals per currency, then post a single opening journal offset to Capital.",
+  "accountingOpeningSetupImportFormatIntro": "First row = headers. Required: name. Use .xlsx or .xls. All rows are created under the selected parent group.",
+  "accountingOpeningSetupImportFormatNote": "Without headers columns are read as: code, name. Duplicate codes are skipped. Balances are set in step 2.",
+  "accountingOpeningSetupAddAccount": "Add posting account",
+  "accountingOpeningSetupRemoveAccount": "Remove account",
+  "accountingOpeningSetupAddCurrencyLine": "Add currency line",
+  "accountingOpeningSetupImportBalancesExcel": "Import balances from Excel",
+  "accountingOpeningSetupEmptyBalances": "No balance lines yet. Add a row or import balances from Excel.",
+  "accountingOpeningSetupContinueToReview": "Continue to review",
+  "accountingOpeningSetupBalancesRowsTitle": "Opening balance lines",
+  "accountingOpeningSetupBalancesFormatTitle": "Excel layout for opening balances",
+  "accountingOpeningSetupBalancesFormatNote": "Columns: Code or Account Id, Currency, Debit, Credit. Currency must already be enabled in Currency rates. Same account may appear once per currency. Rows merge into the current list.",
+  "accountingOpeningSetupErrorCurrencyNotConfigured": "Currency is not configured in the system: {code}",
+  "@accountingOpeningSetupErrorCurrencyNotConfigured": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "accountingOpeningSetupErrorAccountRequired": "Select an account for every balance line.",
+  "accountingOpeningSetupReviewSummaryTitle": "Summary by currency",
+  "accountingOpeningSetupCapitalOffset": "Offset account: Capital ({code})",
+  "@accountingOpeningSetupCapitalOffset": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "accountingOpeningSetupNetVsCapital": "Capital offset: {amount} ({side})",
+  "@accountingOpeningSetupNetVsCapital": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "side": {
+        "type": "String"
+      }
+    }
+  },
+  "accountingOpeningSetupLinesCount": "{count} balance lines with amounts",
+  "@accountingOpeningSetupLinesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "accountingOpeningSetupNoAmountsToPost": "Enter at least one debit or credit amount before posting.",
+  "accountingOpeningSetupPostJournal": "Post opening journal",
+  "accountingOpeningSetupPosting": "Posting opening journal…",
+  "accountingOpeningSetupPostSuccess": "Opening journal posted successfully against Capital.",
+  "accountingOpeningSetupJournalDescription": "Opening balances",
+  "accountingOpeningSetupReset": "Reset session",
+  "accountingOpeningSetupCardTitle": "Import & opening balances",
+  "accountingOpeningSetupCardSubtitle": "Import CoA accounts and post multi-currency opening balances.",
+  "accountingOpeningSetupErrorDuplicateCurrency": "Duplicate currency for account: {name}",
+  "@accountingOpeningSetupErrorDuplicateCurrency": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "accountingOpeningSetupErrorAccountNotFound": "Account not found: {code}",
+  "@accountingOpeningSetupErrorAccountNotFound": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "accountingOpeningSetupErrorNoBalanceRows": "No valid opening-balance rows found in the file.",
   "accountingFieldParent": "Parent account",
   "accountingFieldType": "Account type",
   "accountingFieldDescription": "Description",

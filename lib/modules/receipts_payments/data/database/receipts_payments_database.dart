@@ -15,7 +15,7 @@ class ReceiptsPaymentsDatabase extends _$ReceiptsPaymentsDatabase {
   ReceiptsPaymentsDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -52,13 +52,25 @@ class ReceiptsPaymentsDatabase extends _$ReceiptsPaymentsDatabase {
               financialTransactions.linesJson,
             );
           }
+          if (from < 4) {
+            // Receipts and payments books share the same device-lane absolute
+            // numbers (each book starts at sequence 1). Uniqueness must be
+            // scoped per voucher book, not globally.
+            await customStatement('DROP INDEX IF EXISTS idx_ft_number_active');
+            await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_ft_book_number_active '
+              'ON financial_transactions (voucher_book_id, transaction_number) '
+              'WHERE deleted_at IS NULL AND voucher_book_id IS NOT NULL',
+            );
+          }
         },
       );
 
   Future<void> _createIndexes() async {
     await customStatement(
-      'CREATE UNIQUE INDEX IF NOT EXISTS idx_ft_number_active '
-      'ON financial_transactions (transaction_number) WHERE deleted_at IS NULL',
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_ft_book_number_active '
+      'ON financial_transactions (voucher_book_id, transaction_number) '
+      'WHERE deleted_at IS NULL AND voucher_book_id IS NOT NULL',
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_ft_type_date '

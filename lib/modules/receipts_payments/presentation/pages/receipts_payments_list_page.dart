@@ -23,10 +23,11 @@ import '../widgets/transaction_filter_bar.dart';
 import '../widgets/transaction_status_badge.dart';
 import 'receipts_payments_routes.dart';
 
+/// Typed list of receipt or payment vouchers (separate routes per type).
 class ReceiptsPaymentsListPage extends ConsumerStatefulWidget {
-  const ReceiptsPaymentsListPage({super.key, this.initialType});
+  const ReceiptsPaymentsListPage({super.key, required this.transactionType});
 
-  final TransactionType? initialType;
+  final TransactionType transactionType;
 
   @override
   ConsumerState<ReceiptsPaymentsListPage> createState() =>
@@ -41,16 +42,32 @@ class _ReceiptsPaymentsListPageState
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    if (widget.initialType != null) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _lockTypeFilter();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant ReceiptsPaymentsListPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.transactionType != widget.transactionType) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) {
-          return;
+        if (mounted) {
+          _lockTypeFilter();
         }
-        final current = ref.read(transactionListFilterProvider);
-        ref.read(transactionListFilterProvider.notifier).state =
-            current.copyWith(transactionType: widget.initialType);
       });
     }
+  }
+
+  void _lockTypeFilter() {
+    final current = ref.read(transactionListFilterProvider);
+    if (current.transactionType == widget.transactionType) {
+      return;
+    }
+    ref.read(transactionListFilterProvider.notifier).state =
+        current.copyWith(transactionType: widget.transactionType);
   }
 
   @override
@@ -74,21 +91,79 @@ class _ReceiptsPaymentsListPageState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final asyncList = ref.watch(transactionListProvider);
     final filter = ref.watch(transactionListFilterProvider);
-    final type = filter.transactionType;
+    if (filter.transactionType != widget.transactionType) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _lockTypeFilter();
+        }
+      });
+    }
+    final asyncList = ref.watch(transactionListProvider);
+    final type = widget.transactionType;
+    final title = switch (type) {
+      TransactionType.receipt => l10n.rpListTitleReceipts,
+      TransactionType.payment => l10n.rpListTitlePayments,
+      TransactionType.transfer => l10n.rpListTitleTransfers,
+      TransactionType.currencyExchange => l10n.rpListTitleExchanges,
+    };
+    final createPermissions = switch (type) {
+      TransactionType.receipt => ReceiptsPaymentsPermissions.receiptsCreate,
+      TransactionType.payment => ReceiptsPaymentsPermissions.paymentsCreate,
+      TransactionType.transfer => ReceiptsPaymentsPermissions.transfersCreate,
+      TransactionType.currencyExchange =>
+        ReceiptsPaymentsPermissions.exchangesCreate,
+    };
+    final actionLabel = switch (type) {
+      TransactionType.receipt => l10n.rpActionNewReceipt,
+      TransactionType.payment => l10n.rpActionNewPayment,
+      TransactionType.transfer => l10n.rpActionNewTransfer,
+      TransactionType.currencyExchange => l10n.rpActionNewExchange,
+    };
+    final emptyTitle = switch (type) {
+      TransactionType.receipt => l10n.rpEmptyTitleReceipts,
+      TransactionType.payment => l10n.rpEmptyTitlePayments,
+      TransactionType.transfer => l10n.rpEmptyTitleTransfers,
+      TransactionType.currencyExchange => l10n.rpEmptyTitleExchanges,
+    };
+    final emptyMessage = switch (type) {
+      TransactionType.receipt => l10n.rpEmptyMessageReceipts,
+      TransactionType.payment => l10n.rpEmptyMessagePayments,
+      TransactionType.transfer => l10n.rpEmptyMessageTransfers,
+      TransactionType.currencyExchange => l10n.rpEmptyMessageExchanges,
+    };
+    final emptyIcon = switch (type) {
+      TransactionType.receipt => Icons.call_received_outlined,
+      TransactionType.payment => Icons.call_made_outlined,
+      TransactionType.transfer => Icons.swap_horiz_outlined,
+      TransactionType.currencyExchange => Icons.currency_exchange_outlined,
+    };
 
     return Scaffold(
       backgroundColor: scheme.surfaceContainerLowest,
       appBar: CustomAppBar(
-        title: switch (type) {
-          TransactionType.receipt => l10n.rpListTitleReceipts,
-          TransactionType.payment => l10n.rpListTitlePayments,
-          null => l10n.rpListTitle,
-        },
+        title: title,
         showBackButton: true,
       ),
-      floatingActionButton: _buildFab(context, l10n, type),
+      floatingActionButton: PermissionGate(
+        anyOf: createPermissions,
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            switch (type) {
+              case TransactionType.receipt:
+                ReceiptsPaymentsRoutes.pushCreateReceipt(context);
+              case TransactionType.payment:
+                ReceiptsPaymentsRoutes.pushCreatePayment(context);
+              case TransactionType.transfer:
+                ReceiptsPaymentsRoutes.pushCreateTransfer(context);
+              case TransactionType.currencyExchange:
+                ReceiptsPaymentsRoutes.pushCreateExchange(context);
+            }
+          },
+          icon: const Icon(Icons.add_rounded),
+          label: Text(actionLabel),
+        ),
+      ),
       body: Column(
         children: [
           const TransactionFilterBar(),
@@ -110,12 +185,36 @@ class _ReceiptsPaymentsListPageState
                 data: (listState) {
                   final items = listState.items;
                   if (items.isEmpty) {
+                    final canCreate = ref
+                        .read(authStateProvider)
+                        .hasAnyPermission(createPermissions);
                     return AppEmptyState(
-                      title: l10n.rpEmptyTitle,
-                      subtitle: l10n.rpEmptyMessage,
-                      icon: Icons.account_balance_wallet_outlined,
-                      actionLabel: _emptyActionLabel(l10n, type),
-                      onAction: _emptyAction(context, type),
+                      title: emptyTitle,
+                      subtitle: emptyMessage,
+                      icon: emptyIcon,
+                      actionLabel: canCreate ? actionLabel : null,
+                      onAction: canCreate
+                          ? () {
+                              switch (type) {
+                                case TransactionType.receipt:
+                                  ReceiptsPaymentsRoutes.pushCreateReceipt(
+                                    context,
+                                  );
+                                case TransactionType.payment:
+                                  ReceiptsPaymentsRoutes.pushCreatePayment(
+                                    context,
+                                  );
+                                case TransactionType.transfer:
+                                  ReceiptsPaymentsRoutes.pushCreateTransfer(
+                                    context,
+                                  );
+                                case TransactionType.currencyExchange:
+                                  ReceiptsPaymentsRoutes.pushCreateExchange(
+                                    context,
+                                  );
+                              }
+                            }
+                          : null,
                     );
                   }
                   final footer = listState.hasMore ? 1 : 0;
@@ -150,104 +249,6 @@ class _ReceiptsPaymentsListPageState
       ),
     );
   }
-
-  Widget? _buildFab(
-    BuildContext context,
-    AppLocalizations l10n,
-    TransactionType? type,
-  ) {
-    if (type == TransactionType.receipt) {
-      return PermissionGate(
-        anyOf: ReceiptsPaymentsPermissions.receiptsCreate,
-        child: FloatingActionButton.extended(
-          onPressed: () => ReceiptsPaymentsRoutes.pushCreateReceipt(context),
-          icon: const Icon(Icons.add_rounded),
-          label: Text(l10n.rpActionNewReceipt),
-        ),
-      );
-    }
-    if (type == TransactionType.payment) {
-      return PermissionGate(
-        anyOf: ReceiptsPaymentsPermissions.paymentsCreate,
-        child: FloatingActionButton.extended(
-          onPressed: () => ReceiptsPaymentsRoutes.pushCreatePayment(context),
-          icon: const Icon(Icons.add_rounded),
-          label: Text(l10n.rpActionNewPayment),
-        ),
-      );
-    }
-    return PermissionGate(
-      anyOf: [
-        ...ReceiptsPaymentsPermissions.receiptsCreate,
-        ...ReceiptsPaymentsPermissions.paymentsCreate,
-      ],
-      child: FloatingActionButton(
-        onPressed: () => _showCreateMenu(context),
-        child: const Icon(Icons.add_rounded),
-      ),
-    );
-  }
-
-  void _showCreateMenu(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final auth = ref.read(authStateProvider);
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (auth.hasAnyPermission(ReceiptsPaymentsPermissions.receiptsCreate))
-                ListTile(
-                  leading: const Icon(Icons.call_received_outlined),
-                  title: Text(l10n.rpActionNewReceipt),
-                  onTap: () {
-                    Navigator.of(ctx).pop();
-                    ReceiptsPaymentsRoutes.pushCreateReceipt(context);
-                  },
-                ),
-              if (auth.hasAnyPermission(ReceiptsPaymentsPermissions.paymentsCreate))
-                ListTile(
-                  leading: const Icon(Icons.call_made_outlined),
-                  title: Text(l10n.rpActionNewPayment),
-                  onTap: () {
-                    Navigator.of(ctx).pop();
-                    ReceiptsPaymentsRoutes.pushCreatePayment(context);
-                  },
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  String? _emptyActionLabel(AppLocalizations l10n, TransactionType? type) {
-    final auth = ref.read(authStateProvider);
-    if (type == TransactionType.receipt &&
-        auth.hasAnyPermission(ReceiptsPaymentsPermissions.receiptsCreate)) {
-      return l10n.rpActionNewReceipt;
-    }
-    if (type == TransactionType.payment &&
-        auth.hasAnyPermission(ReceiptsPaymentsPermissions.paymentsCreate)) {
-      return l10n.rpActionNewPayment;
-    }
-    return null;
-  }
-
-  VoidCallback? _emptyAction(BuildContext context, TransactionType? type) {
-    final auth = ref.read(authStateProvider);
-    if (type == TransactionType.receipt &&
-        auth.hasAnyPermission(ReceiptsPaymentsPermissions.receiptsCreate)) {
-      return () => ReceiptsPaymentsRoutes.pushCreateReceipt(context);
-    }
-    if (type == TransactionType.payment &&
-        auth.hasAnyPermission(ReceiptsPaymentsPermissions.paymentsCreate)) {
-      return () => ReceiptsPaymentsRoutes.pushCreatePayment(context);
-    }
-    return null;
-  }
 }
 
 class _TransactionListTile extends StatelessWidget {
@@ -261,12 +262,17 @@ class _TransactionListTile extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final date = DateFormat('d/M/yyyy').format(item.transactionDate.toLocal());
+    final showParty = item.transactionType.isReceipt;
     final party = (item.partyDisplayName?.trim().isNotEmpty ?? false)
         ? item.partyDisplayName!.trim()
         : l10n.rpNoParty;
-    final typeIcon = item.transactionType.isReceipt
-        ? Icons.call_received_outlined
-        : Icons.call_made_outlined;
+    final description = item.description?.trim() ?? '';
+    final typeIcon = switch (item.transactionType) {
+      TransactionType.receipt => Icons.call_received_outlined,
+      TransactionType.payment => Icons.call_made_outlined,
+      TransactionType.transfer => Icons.swap_horiz_outlined,
+      TransactionType.currencyExchange => Icons.currency_exchange_outlined,
+    };
 
     return Material(
       color: scheme.surface,
@@ -310,16 +316,30 @@ class _TransactionListTile extends StatelessWidget {
                               letterSpacing: -0.2,
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            party,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w600,
+                          if (showParty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              party,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
+                          ],
+                          if (description.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -361,20 +381,15 @@ class _TransactionListTile extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      rpTransactionTypeLabel(l10n, item.transactionType),
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
+                    const Spacer(),
+                    TransactionStatusBadge(
+                      status: item.documentStatus,
+                      label: rpTransactionStatusLabel(
+                        l10n,
+                        item.documentStatus,
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                TransactionStatusBadge(
-                  status: item.documentStatus,
-                  label: rpTransactionStatusLabel(l10n, item.documentStatus),
                 ),
               ],
             ),

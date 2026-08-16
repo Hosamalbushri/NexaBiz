@@ -10,6 +10,8 @@ enum TransactionSource {
   otherPayment,
   salesRelatedReceipt,
   purchaseRelatedPayment,
+  cashBoxTransfer,
+  currencyExchange,
 }
 
 extension TransactionSourceX on TransactionSource {
@@ -25,10 +27,28 @@ extension TransactionSourceX on TransactionSource {
         _ => false,
       };
 
-  bool get isPaymentSource => !isReceiptSource;
+  bool get isPaymentSource => switch (this) {
+        TransactionSource.manualPayment ||
+        TransactionSource.expensePayment ||
+        TransactionSource.otherPayment ||
+        TransactionSource.purchaseRelatedPayment => true,
+        _ => false,
+      };
 
-  TransactionType get defaultTransactionType =>
-      isReceiptSource ? TransactionType.receipt : TransactionType.payment;
+  bool get isTransferSource => this == TransactionSource.cashBoxTransfer;
+
+  bool get isCurrencyExchangeSource =>
+      this == TransactionSource.currencyExchange;
+
+  TransactionType get defaultTransactionType {
+    if (isTransferSource) {
+      return TransactionType.transfer;
+    }
+    if (isCurrencyExchangeSource) {
+      return TransactionType.currencyExchange;
+    }
+    return isReceiptSource ? TransactionType.receipt : TransactionType.payment;
+  }
 
   static TransactionSource fromStorage(String? value) {
     if (value == null || value.isEmpty) {
@@ -42,9 +62,18 @@ extension TransactionSourceX on TransactionSource {
 
   static List<TransactionSource> forType(TransactionType type) {
     return TransactionSource.values
-        .where(
-          (s) => type.isReceipt ? s.isReceiptSource : s.isPaymentSource,
-        )
+        .where((s) {
+          if (type.isTransfer) {
+            return s.isTransferSource;
+          }
+          if (type.isCurrencyExchange) {
+            return s.isCurrencyExchangeSource;
+          }
+          if (type.isReceipt) {
+            return s.isReceiptSource;
+          }
+          return s.isPaymentSource;
+        })
         .toList(growable: false);
   }
 }

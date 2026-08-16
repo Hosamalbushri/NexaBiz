@@ -1,16 +1,20 @@
 /// Kind / section for voucher books.
 ///
-/// Section roots (groups) use [sales], [receipts], [payments], [purchases],
+/// Section roots (groups) use [sales], [receiptsPayments], [purchases],
 /// [journal]. Leaf books under a section may use the same value or a related
-/// kind such as [salesReturns] / [purchaseReturns].
+/// kind such as [salesReturns] / [purchaseReturns] / [transfers] / [exchanges].
 enum VoucherBookType {
   sales,
   salesReturns,
   receipts,
   payments,
+  transfers,
+  exchanges,
   purchases,
   purchaseReturns,
-  journal;
+  journal,
+  /// Combined R&P hub: receipts, payments, cash transfers, currency exchange.
+  receiptsPayments;
 
   String get storageValue => name;
 
@@ -21,8 +25,11 @@ enum VoucherBookType {
       VoucherBookType.salesReturns => VoucherBookType.sales,
       VoucherBookType.purchases ||
       VoucherBookType.purchaseReturns => VoucherBookType.purchases,
-      VoucherBookType.receipts => VoucherBookType.receipts,
-      VoucherBookType.payments => VoucherBookType.payments,
+      VoucherBookType.receipts ||
+      VoucherBookType.payments ||
+      VoucherBookType.transfers ||
+      VoucherBookType.exchanges ||
+      VoucherBookType.receiptsPayments => VoucherBookType.receiptsPayments,
       VoucherBookType.journal => VoucherBookType.journal,
     };
   }
@@ -30,8 +37,7 @@ enum VoucherBookType {
   /// Types allowed as section group roots (and default seed folders).
   static const List<VoucherBookType> sections = [
     VoucherBookType.sales,
-    VoucherBookType.receipts,
-    VoucherBookType.payments,
+    VoucherBookType.receiptsPayments,
     VoucherBookType.purchases,
     VoucherBookType.journal,
   ];
@@ -47,8 +53,12 @@ enum VoucherBookType {
         VoucherBookType.purchases,
         VoucherBookType.purchaseReturns,
       ],
-      VoucherBookType.receipts => const [VoucherBookType.receipts],
-      VoucherBookType.payments => const [VoucherBookType.payments],
+      VoucherBookType.receiptsPayments => const [
+        VoucherBookType.receipts,
+        VoucherBookType.payments,
+        VoucherBookType.transfers,
+        VoucherBookType.exchanges,
+      ],
       VoucherBookType.journal => const [VoucherBookType.journal],
       _ => const [],
     };

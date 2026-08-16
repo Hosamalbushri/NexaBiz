@@ -18,6 +18,8 @@ abstract class FinancialTransactionRepository {
 
   Future<FinancialTransaction> markPosted(int id);
 
+  Future<FinancialTransaction> markUnposted(int id);
+
   Future<FinancialTransaction> markCancelled(int id);
 
   Future<void> softDelete(int id);

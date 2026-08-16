@@ -5,7 +5,7 @@ import '../../modules/receipts_payments/domain/services/rp_voucher_book_port.dar
 import '../../modules/sales/data/sale_number_block_store.dart';
 import '../../modules/sales/domain/services/device_sale_number.dart';
 
-/// App adapter: receipts/payments numbering → Accounting voucher books.
+/// App adapter: receipts/payments/transfers numbering → Accounting voucher books.
 ///
 /// Reuses the Sales device-lane + offline block store pattern.
 class AccountingRpVoucherBookAdapter implements RpVoucherBookPort {
@@ -23,14 +23,25 @@ class AccountingRpVoucherBookAdapter implements RpVoucherBookPort {
 
   int get _base => deviceSaleNumberBase(deviceId);
 
-  VoucherBookType _sectionFor(TransactionType type) => type.isReceipt
-      ? VoucherBookType.receipts
-      : VoucherBookType.payments;
+  VoucherBookType _bookTypeFor(TransactionType type) => switch (type) {
+        TransactionType.receipt => VoucherBookType.receipts,
+        TransactionType.payment => VoucherBookType.payments,
+        TransactionType.transfer => VoucherBookType.transfers,
+        TransactionType.currencyExchange => VoucherBookType.exchanges,
+      };
+
+  TransactionType? _typeForBook(VoucherBookType bookType) => switch (bookType) {
+        VoucherBookType.receipts => TransactionType.receipt,
+        VoucherBookType.payments => TransactionType.payment,
+        VoucherBookType.transfers => TransactionType.transfer,
+        VoucherBookType.exchanges => TransactionType.currencyExchange,
+        _ => null,
+      };
 
   @override
   Future<List<RpVoucherBookRef>> listActiveBooks(TransactionType type) async {
     await _repository.ensureDefaultSections();
-    final books = await _repository.getByType(_sectionFor(type));
+    final books = await _repository.getByType(_bookTypeFor(type));
     final refs = <RpVoucherBookRef>[];
     for (final b in books) {
       if (b.isGroup || !b.isActive) continue;
@@ -51,14 +62,10 @@ class AccountingRpVoucherBookAdapter implements RpVoucherBookPort {
   Future<RpVoucherBookRef?> findById(String bookId) async {
     final book = await _repository.getByUuid(bookId);
     if (book == null || book.isGroup || !book.isActive) return null;
-    final section = book.bookType.section;
-    if (section != VoucherBookType.receipts &&
-        section != VoucherBookType.payments) {
+    final type = _typeForBook(book.bookType);
+    if (type == null) {
       return null;
     }
-    final type = section == VoucherBookType.receipts
-        ? TransactionType.receipt
-        : TransactionType.payment;
     return _toRef(
       book.uuid,
       book.name,
@@ -97,8 +104,8 @@ class AccountingRpVoucherBookAdapter implements RpVoucherBookPort {
     if (book == null || book.isGroup || !book.isActive) {
       throw StateError('Voucher book unavailable: $bookId');
     }
-    final expected = _sectionFor(type);
-    if (book.bookType.section != expected) {
+    final expected = _bookTypeFor(type);
+    if (book.bookType != expected) {
       throw StateError('Voucher book type mismatch for $bookId');
     }
 
