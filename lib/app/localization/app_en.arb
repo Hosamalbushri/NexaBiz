@@ -756,7 +756,103 @@
   "accountingJournalTotals": "Totals",
   "accountingJournalPickAccount": "Select account",
   "accountingJournalErrorUnbalanced": "Total debit must equal total credit.",
-  "accountingJournalErrorPeriodClosed": "This date falls in a closed fiscal period.",
+  "accountingJournalErrorPeriodClosed": "This date is not within an open accounting period. Please open the period.",
+  "accountingJournalErrorOutsideFiscalYear": "This date is not within any defined fiscal year.",
+  "accountingFiscalYearsTitle": "Fiscal years",
+  "accountingFiscalYearsSubtitle": "Create fiscal years, open and close accounting periods.",
+  "accountingFiscalYearsEmptyTitle": "No fiscal years yet",
+  "accountingFiscalYearsEmptyMessage": "Create a fiscal year to control which periods accept postings.",
+  "accountingFiscalYearsAdd": "New fiscal year",
+  "accountingFiscalYearDetails": "Fiscal year",
+  "accountingFiscalYearCreateTitle": "Create fiscal year",
+  "accountingFiscalYearCode": "Code",
+  "accountingFiscalYearName": "Name",
+  "accountingFiscalYearStart": "Start date",
+  "accountingFiscalYearEnd": "End date",
+  "accountingFiscalYearPeriods": "Number of periods",
+  "accountingFiscalYearFxEnabled": "Foreign currency revaluation",
+  "accountingFiscalYearFxGainAccount": "FX gain account",
+  "accountingFiscalYearFxLossAccount": "FX loss account",
+  "accountingFiscalYearPreview": "Period preview",
+  "accountingFiscalYearCreated": "Fiscal year created. Open a period before posting.",
+  "accountingFiscalYearOpenPeriods": "Open periods: {count}",
+  "@accountingFiscalYearOpenPeriods": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "accountingFiscalYearClosedPeriods": "Closed periods: {count}",
+  "@accountingFiscalYearClosedPeriods": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "accountingFiscalYearFxSummary": "Foreign exchange revaluation",
+  "accountingFiscalYearFxGains": "FX gains",
+  "accountingFiscalYearFxLosses": "FX losses",
+  "accountingFiscalYearFxNet": "Net FX difference",
+  "accountingFiscalYearFxDeferredHint": "Automatic FX journals are deferred until base carrying amounts are stored on ledger lines.",
+  "accountingPeriodColumnNumber": "#",
+  "accountingPeriodColumnName": "Period",
+  "accountingPeriodColumnRange": "Date range",
+  "accountingPeriodColumnStatus": "Status",
+  "accountingPeriodColumnActions": "Actions",
+  "accountingPeriodStatusClosed": "Closed",
+  "accountingPeriodStatusOpen": "Open",
+  "accountingPeriodStatusClosing": "Closing",
+  "accountingPeriodStatusReopened": "Reopened",
+  "accountingPeriodOpen": "Open",
+  "accountingPeriodClose": "Close",
+  "accountingPeriodReopen": "Reopen",
+  "accountingPeriodOpenConfirmTitle": "Open {name}?",
+  "@accountingPeriodOpenConfirmTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "accountingPeriodOpenConfirmMessage": "Transactions dated between {start} and {end} will become available for accounting operations.",
+  "@accountingPeriodOpenConfirmMessage": {
+    "placeholders": {
+      "start": { "type": "String" },
+      "end": { "type": "String" }
+    }
+  },
+  "accountingPeriodCloseTitle": "Close {name}",
+  "@accountingPeriodCloseTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "accountingPeriodCloseUnposted": "Unposted journals: {count}",
+  "@accountingPeriodCloseUnposted": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "accountingPeriodCloseMissingRates": "Missing exchange rates: {codes}",
+  "@accountingPeriodCloseMissingRates": {
+    "placeholders": {
+      "codes": { "type": "String" }
+    }
+  },
+  "accountingPeriodCloseBlocked": "Resolve the issues above before closing.",
+  "accountingPeriodCloseSuccess": "Period closed.",
+  "accountingPeriodOpenSuccess": "Period opened.",
+  "accountingPeriodReopenTitle": "Reopen {name}?",
+  "@accountingPeriodReopenTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "accountingPeriodReopenReason": "Reason",
+  "accountingPeriodReopenSuccess": "Period reopened.",
+  "accountingFiscalWizardStepYear": "Fiscal year",
+  "accountingFiscalWizardStepPeriods": "Periods",
+  "accountingFiscalWizardStepFx": "Currency",
+  "accountingFiscalWizardStepPreview": "Preview",
+  "accountingFiscalWizardNext": "Next",
+  "accountingFiscalWizardBack": "Back",
+  "accountingFiscalWizardCreate": "Create fiscal year",
   "accountingJournalErrorLines": "Add at least two balanced lines.",
   "accountingJournalManualType": "Manual journal",
   "accountingChartOfAccounts": "Chart of Accounts",
@@ -1159,6 +1255,7 @@
   "accountingAccountSalesRevenue": "Sales Revenue",
   "accountingAccountOtherRevenue": "Other Revenue",
   "accountingAccountPurchaseDiscounts": "Purchase Discounts",
+  "accountingAccountFxGain": "Foreign Exchange Gains",
   "accountingAccountExpenses": "Expenses",
   "accountingAccountCogs": "Cost of Goods Sold",
   "accountingAccountInventoryAdjustments": "Inventory Adjustments",
@@ -1173,6 +1270,7 @@
   "accountingAccountShippingDelivery": "Shipping and Delivery",
   "accountingAccountMaintenance": "Maintenance",
   "accountingAccountOtherExpenses": "Other Expenses",
+  "accountingAccountFxLoss": "Foreign Exchange Losses",
   "inventoryStockCountService": "Stock count",
   "inventoryStockCountServiceDescription": "Count items, import stock lists, and view count reports.",
   "inventoryProductsService": "Products",
@@ -2153,6 +2251,12 @@
   "adminPermServiceCurrencyRatesHint": "Exchange rates maintenance",
   "adminPermServiceVoucherBooks": "Voucher books",
   "adminPermServiceVoucherBooksHint": "Numbering books by document type",
+  "adminPermServiceFiscalYears": "Fiscal years",
+  "adminPermServiceFiscalYearsHint": "Fiscal years and accounting periods",
+  "adminPermActionOpenPeriod": "Open period",
+  "adminPermActionClosePeriod": "Close period",
+  "adminPermActionReopenPeriod": "Reopen period",
+  "adminPermActionConfigureFx": "Configure FX revaluation",
   "adminPermServiceAccountingReports": "Accounting reports",
   "adminPermServiceAccountingReportsHint": "Accounting report hub",
   "adminPermServiceSalesPeriod": "Sales period report",

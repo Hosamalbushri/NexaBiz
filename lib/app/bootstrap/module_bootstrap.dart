@@ -142,6 +142,8 @@ List<Override> moduleRegistryOverrides() {
     rpLedgerPostingPortProvider.overrideWith((ref) {
       return AccountingRpLedgerAdapter(
         posting: ref.watch(journalPostingServiceProvider),
+        accounts: ref.watch(accountRepositoryProvider),
+        fiscalYears: ref.watch(fiscalYearRepositoryProvider),
       );
     }),
     rpVoucherBookPortProvider.overrideWith((ref) {

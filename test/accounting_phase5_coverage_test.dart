@@ -21,9 +21,9 @@ import 'package:stock_count/modules/accounting/domain/models/account_exception.d
 import 'package:stock_count/modules/accounting/domain/models/account_tree_node.dart';
 import 'package:stock_count/modules/accounting/domain/models/journal_exception.dart';
 import 'package:stock_count/modules/accounting/domain/repositories/journal_repository.dart';
-import 'package:stock_count/modules/accounting/domain/services/fiscal_period_policy.dart';
 import 'package:stock_count/modules/accounting/domain/services/journal_posting_service.dart';
 import 'package:stock_count/modules/accounting/presentation/widgets/account_tree.dart';
+import 'helpers/journal_posting_test_helper.dart';
 import 'package:stock_count/modules/sales/domain/entities/discount_type.dart';
 import 'package:stock_count/modules/sales/domain/entities/payment_method.dart';
 import 'package:stock_count/modules/sales/domain/entities/payment_status.dart';
@@ -225,13 +225,10 @@ void main() {
     });
 
     JournalPostingService postingService({DateTime? closedThrough}) {
-      return JournalPostingService(
-        journals: journals,
-        fiscalPolicyReader: () => FiscalPeriodPolicy(
-          fiscalYearStartMonth: 1,
-          closedThrough: closedThrough,
-        ),
-      );
+      return journalPostingWithLegacyPolicy(
+      journals: journals,
+      closedThrough: closedThrough,
+    );
     }
 
     test('softDeleteByUuid hides ledger reads but keeps audit lines', () async {

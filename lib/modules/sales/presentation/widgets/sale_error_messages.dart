@@ -1,8 +1,13 @@
 import '../../../../app/localization/app_localizations.dart';
+import '../../../accounting/domain/models/journal_exception.dart';
+import '../../../accounting/presentation/widgets/journal_exception_messages.dart';
 import '../../domain/models/sale_exception.dart';
 
 /// Maps sales domain / unexpected errors to user-facing localized text.
 String saleErrorMessage(AppLocalizations l10n, Object error) {
+  if (error is JournalException) {
+    return journalExceptionMessage(l10n, error);
+  }
   if (error is SaleException) {
     return switch (error.code) {
       SaleException.emptyItems => l10n.salesErrorEmptyItems,

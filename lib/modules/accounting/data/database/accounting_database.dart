@@ -2,10 +2,14 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
+import 'tables/accounting_periods_table.dart';
 import 'tables/accounts_table.dart';
+import 'tables/currency_rate_history_table.dart';
 import 'tables/currency_rates_table.dart';
+import 'tables/fiscal_years_table.dart';
 import 'tables/journal_entries_table.dart';
 import 'tables/journal_lines_table.dart';
+import 'tables/period_closing_records_table.dart';
 import 'tables/voucher_books_table.dart';
 
 part 'accounting_database.g.dart';
@@ -14,9 +18,13 @@ part 'accounting_database.g.dart';
   tables: [
     Accounts,
     CurrencyRates,
+    CurrencyRateHistory,
     VoucherBooks,
     JournalEntries,
     JournalLines,
+    FiscalYears,
+    AccountingPeriods,
+    PeriodClosingRecords,
   ],
 )
 class AccountingDatabase extends _$AccountingDatabase {
@@ -27,7 +35,7 @@ class AccountingDatabase extends _$AccountingDatabase {
   AccountingDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -54,6 +62,10 @@ class AccountingDatabase extends _$AccountingDatabase {
         'ON currency_rates (currency_code)',
       );
       await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_currency_rate_history_lookup '
+        'ON currency_rate_history (currency_code, as_of_date)',
+      );
+      await customStatement(
         'CREATE INDEX IF NOT EXISTS idx_voucher_books_type '
         'ON voucher_books (book_type)',
       );
@@ -62,6 +74,7 @@ class AccountingDatabase extends _$AccountingDatabase {
         'ON voucher_books (parent_id)',
       );
       await _createJournalIndexes();
+      await _createFiscalIndexes();
     },
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
@@ -109,8 +122,98 @@ class AccountingDatabase extends _$AccountingDatabase {
           'ON journal_entries (sync_status)',
         );
       }
+      if (from < 10) {
+        await m.createTable(fiscalYears);
+        await m.createTable(accountingPeriods);
+        await m.createTable(periodClosingRecords);
+        await _createFiscalIndexes();
+      }
+      if (from < 11) {
+        await m.addColumn(journalLines, journalLines.exchangeRateToBase);
+        await m.addColumn(journalLines, journalLines.baseDebit);
+        await m.addColumn(journalLines, journalLines.baseCredit);
+        await m.createTable(currencyRateHistory);
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_currency_rate_history_lookup '
+          'ON currency_rate_history (currency_code, as_of_date)',
+        );
+        await _backfillJournalBaseAmounts();
+        await _seedRateHistoryFromCurrentRates();
+      }
     },
   );
+
+  /// Approximate backfill: rate 1 then apply known current rates for foreign.
+  Future<void> _backfillJournalBaseAmounts() async {
+    await customStatement('''
+      UPDATE journal_lines
+      SET exchange_rate_to_base = 1,
+          base_debit = debit,
+          base_credit = credit
+    ''');
+    await customStatement('''
+      UPDATE journal_lines
+      SET exchange_rate_to_base = (
+            SELECT rate_to_base FROM currency_rates
+            WHERE UPPER(currency_rates.currency_code) =
+                  UPPER(journal_lines.currency_code)
+            LIMIT 1
+          ),
+          base_debit = ROUND(debit * (
+            SELECT rate_to_base FROM currency_rates
+            WHERE UPPER(currency_rates.currency_code) =
+                  UPPER(journal_lines.currency_code)
+            LIMIT 1
+          ), 2),
+          base_credit = ROUND(credit * (
+            SELECT rate_to_base FROM currency_rates
+            WHERE UPPER(currency_rates.currency_code) =
+                  UPPER(journal_lines.currency_code)
+            LIMIT 1
+          ), 2)
+      WHERE EXISTS (
+        SELECT 1 FROM currency_rates
+        WHERE UPPER(currency_rates.currency_code) =
+              UPPER(journal_lines.currency_code)
+      )
+    ''');
+  }
+
+  Future<void> _seedRateHistoryFromCurrentRates() async {
+    final now = DateTime.now().toUtc();
+    final day = DateTime.utc(now.year, now.month, now.day);
+    final dayMs = day.millisecondsSinceEpoch;
+    final createdAt = now.millisecondsSinceEpoch;
+    await customStatement(
+      '''
+      INSERT OR IGNORE INTO currency_rate_history
+        (currency_code, as_of_date, rate_to_base, created_at, notes)
+      SELECT currency_code, ?, rate_to_base, ?, notes
+      FROM currency_rates
+      ''',
+      [dayMs, createdAt],
+    );
+  }
+
+  Future<void> _createFiscalIndexes() async {
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_accounting_periods_dates '
+      'ON accounting_periods (start_date, end_date)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_accounting_periods_fy '
+      'ON accounting_periods (fiscal_year_uuid)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_fiscal_years_dates '
+      'ON fiscal_years (start_date, end_date)',
+    );
+    await customStatement(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_period_closing_completed '
+      'ON period_closing_records (period_uuid) '
+      'WHERE status = \'completed\'',
+    );
+  }
 
   Future<void> _createJournalIndexes() async {
     await customStatement(

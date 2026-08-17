@@ -19,6 +19,12 @@ class AccountingRoutes {
   static const String journals = '/accounting/journals';
   static const String journalsCreate = '/accounting/journals/new';
 
+  static const String fiscalYears = '/accounting/fiscal-years';
+  static const String fiscalYearsCreate = '/accounting/fiscal-years/new';
+
+  static String fiscalYearDetails(String uuid) =>
+      '/accounting/fiscal-years/$uuid';
+
   static String accountDetails(int id) => '/accounting/accounts/$id';
 
   static String accountEdit(int id) => '/accounting/accounts/$id/edit';
@@ -54,6 +60,15 @@ class AccountingRoutes {
       context.push(voucherBooks);
 
   static void pushReports(BuildContext context) => context.push(reports);
+
+  static void pushFiscalYears(BuildContext context) =>
+      context.push(fiscalYears);
+
+  static void pushFiscalYearCreate(BuildContext context) =>
+      context.push(fiscalYearsCreate);
+
+  static void pushFiscalYearDetails(BuildContext context, String uuid) =>
+      context.push(fiscalYearDetails(uuid));
 
   static void pushJournals(BuildContext context) => context.push(journals);
 

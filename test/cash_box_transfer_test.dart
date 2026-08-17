@@ -2,8 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/receipts_payments/accounting_rp_ledger_adapter.dart';
 import 'package:stock_count/modules/accounting/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/domain/repositories/journal_repository.dart';
-import 'package:stock_count/modules/accounting/domain/services/fiscal_period_policy.dart';
-import 'package:stock_count/modules/accounting/domain/services/journal_posting_service.dart';
 import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction.dart';
 import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction_line.dart';
 import 'package:stock_count/modules/receipts_payments/domain/entities/rp_payment_method.dart';
@@ -11,6 +9,8 @@ import 'package:stock_count/modules/receipts_payments/domain/entities/transactio
 import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_type.dart';
 import 'package:stock_count/modules/receipts_payments/domain/models/financial_transaction_exception.dart';
 import 'package:stock_count/modules/receipts_payments/domain/services/financial_transaction_validator.dart';
+import 'helpers/fake_account_repository.dart';
+import 'helpers/journal_posting_test_helper.dart';
 
 class _RecordingJournals implements JournalRepository {
   JournalEntryDraft? lastDraft;
@@ -107,6 +107,13 @@ class _RecordingJournals implements JournalRepository {
     bool? isPosted,
   }) async =>
       0;
+
+  @override
+  Future<List<MonetaryFxPositionRow>> listMonetaryFxPositions({
+    required DateTime asOfInclusive,
+    required String baseCurrencyCode,
+  }) async =>
+      const [];
 }
 
 void main() {
@@ -168,11 +175,8 @@ void main() {
   test('ledger posts Dr destination and Cr source for transfer', () async {
     final journals = _RecordingJournals();
     final adapter = AccountingRpLedgerAdapter(
-      posting: JournalPostingService(
-        journals: journals,
-        fiscalPolicyReader: () =>
-            const FiscalPeriodPolicy(fiscalYearStartMonth: 1),
-      ),
+      posting: journalPostingWithLegacyPolicy(journals: journals),
+      accounts: FakeAccountRepository.withSystemFx(),
     );
 
     final txn = FinancialTransaction(

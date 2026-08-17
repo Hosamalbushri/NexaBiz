@@ -1,7 +1,12 @@
 import '../../../../app/localization/app_localizations.dart';
+import '../../../accounting/domain/models/journal_exception.dart';
+import '../../../accounting/presentation/widgets/journal_exception_messages.dart';
 import '../../domain/models/financial_transaction_exception.dart';
 
 String rpErrorMessage(AppLocalizations l10n, Object error) {
+  if (error is JournalException) {
+    return journalExceptionMessage(l10n, error);
+  }
   if (error is FinancialTransactionException) {
     return switch (error.code) {
       FinancialTransactionException.notFound => l10n.rpNotFound,

@@ -70,6 +70,43 @@ PermissionPackageDef accountingPermissionPackage() {
         ],
       ),
       PermissionServiceDef(
+        id: 'fiscal_years',
+        icon: Icons.date_range_outlined,
+        titleBuilder: (context) =>
+            AppLocalizations.of(context).adminPermServiceFiscalYears,
+        subtitleBuilder: (context) =>
+            AppLocalizations.of(context).adminPermServiceFiscalYearsHint,
+        operations: [
+          StandardPermissionOps.view('accounting.fiscal_years.view'),
+          StandardPermissionOps.create('accounting.fiscal_years.create'),
+          StandardPermissionOps.update('accounting.fiscal_years.update'),
+          PermissionOperationDef(
+            code: 'accounting.fiscal_years.open_period',
+            icon: Icons.lock_open_outlined,
+            labelBuilder: (context) =>
+                AppLocalizations.of(context).adminPermActionOpenPeriod,
+          ),
+          PermissionOperationDef(
+            code: 'accounting.fiscal_years.close_period',
+            icon: Icons.lock_outlined,
+            labelBuilder: (context) =>
+                AppLocalizations.of(context).adminPermActionClosePeriod,
+          ),
+          PermissionOperationDef(
+            code: 'accounting.fiscal_years.reopen_period',
+            icon: Icons.restart_alt_outlined,
+            labelBuilder: (context) =>
+                AppLocalizations.of(context).adminPermActionReopenPeriod,
+          ),
+          PermissionOperationDef(
+            code: 'accounting.fiscal_years.configure_fx',
+            icon: Icons.currency_exchange_outlined,
+            labelBuilder: (context) =>
+                AppLocalizations.of(context).adminPermActionConfigureFx,
+          ),
+        ],
+      ),
+      PermissionServiceDef(
         id: 'reports',
         icon: Icons.assessment_outlined,
         titleBuilder: (context) =>

@@ -40,9 +40,28 @@ class CurrencyRateDraft {
     required this.currencyCode,
     required this.rateToBase,
     this.notes,
+    this.asOfDate,
   });
 
   final String currencyCode;
+  final double rateToBase;
+  final String? notes;
+
+  /// When set, history is written for this UTC day (default: today).
+  final DateTime? asOfDate;
+}
+
+/// One dated rate observation.
+class CurrencyRateHistoryEntry {
+  const CurrencyRateHistoryEntry({
+    required this.currencyCode,
+    required this.asOfDate,
+    required this.rateToBase,
+    this.notes,
+  });
+
+  final String currencyCode;
+  final DateTime asOfDate;
   final double rateToBase;
   final String? notes;
 }

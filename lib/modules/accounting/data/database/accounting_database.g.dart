@@ -1418,6 +1418,429 @@ class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
   }
 }
 
+class $CurrencyRateHistoryTable extends CurrencyRateHistory
+    with TableInfo<$CurrencyRateHistoryTable, CurrencyRateHistoryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CurrencyRateHistoryTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 3,
+      maxTextLength: 8,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _asOfDateMeta = const VerificationMeta(
+    'asOfDate',
+  );
+  @override
+  late final GeneratedColumn<int> asOfDate = GeneratedColumn<int>(
+    'as_of_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rateToBaseMeta = const VerificationMeta(
+    'rateToBase',
+  );
+  @override
+  late final GeneratedColumn<double> rateToBase = GeneratedColumn<double>(
+    'rate_to_base',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    currencyCode,
+    asOfDate,
+    rateToBase,
+    createdAt,
+    notes,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'currency_rate_history';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CurrencyRateHistoryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_currencyCodeMeta);
+    }
+    if (data.containsKey('as_of_date')) {
+      context.handle(
+        _asOfDateMeta,
+        asOfDate.isAcceptableOrUnknown(data['as_of_date']!, _asOfDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_asOfDateMeta);
+    }
+    if (data.containsKey('rate_to_base')) {
+      context.handle(
+        _rateToBaseMeta,
+        rateToBase.isAcceptableOrUnknown(
+          data['rate_to_base']!,
+          _rateToBaseMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_rateToBaseMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {currencyCode, asOfDate},
+  ];
+  @override
+  CurrencyRateHistoryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CurrencyRateHistoryRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      )!,
+      asOfDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}as_of_date'],
+      )!,
+      rateToBase: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}rate_to_base'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+    );
+  }
+
+  @override
+  $CurrencyRateHistoryTable createAlias(String alias) {
+    return $CurrencyRateHistoryTable(attachedDatabase, alias);
+  }
+}
+
+class CurrencyRateHistoryRow extends DataClass
+    implements Insertable<CurrencyRateHistoryRow> {
+  final int id;
+  final String currencyCode;
+
+  /// UTC midnight of the rate day (milliseconds since epoch).
+  final int asOfDate;
+
+  /// Units of base currency for 1 unit of [currencyCode].
+  final double rateToBase;
+  final int createdAt;
+  final String? notes;
+  const CurrencyRateHistoryRow({
+    required this.id,
+    required this.currencyCode,
+    required this.asOfDate,
+    required this.rateToBase,
+    required this.createdAt,
+    this.notes,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['currency_code'] = Variable<String>(currencyCode);
+    map['as_of_date'] = Variable<int>(asOfDate);
+    map['rate_to_base'] = Variable<double>(rateToBase);
+    map['created_at'] = Variable<int>(createdAt);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    return map;
+  }
+
+  CurrencyRateHistoryCompanion toCompanion(bool nullToAbsent) {
+    return CurrencyRateHistoryCompanion(
+      id: Value(id),
+      currencyCode: Value(currencyCode),
+      asOfDate: Value(asOfDate),
+      rateToBase: Value(rateToBase),
+      createdAt: Value(createdAt),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+    );
+  }
+
+  factory CurrencyRateHistoryRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CurrencyRateHistoryRow(
+      id: serializer.fromJson<int>(json['id']),
+      currencyCode: serializer.fromJson<String>(json['currencyCode']),
+      asOfDate: serializer.fromJson<int>(json['asOfDate']),
+      rateToBase: serializer.fromJson<double>(json['rateToBase']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      notes: serializer.fromJson<String?>(json['notes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'currencyCode': serializer.toJson<String>(currencyCode),
+      'asOfDate': serializer.toJson<int>(asOfDate),
+      'rateToBase': serializer.toJson<double>(rateToBase),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'notes': serializer.toJson<String?>(notes),
+    };
+  }
+
+  CurrencyRateHistoryRow copyWith({
+    int? id,
+    String? currencyCode,
+    int? asOfDate,
+    double? rateToBase,
+    int? createdAt,
+    Value<String?> notes = const Value.absent(),
+  }) => CurrencyRateHistoryRow(
+    id: id ?? this.id,
+    currencyCode: currencyCode ?? this.currencyCode,
+    asOfDate: asOfDate ?? this.asOfDate,
+    rateToBase: rateToBase ?? this.rateToBase,
+    createdAt: createdAt ?? this.createdAt,
+    notes: notes.present ? notes.value : this.notes,
+  );
+  CurrencyRateHistoryRow copyWithCompanion(CurrencyRateHistoryCompanion data) {
+    return CurrencyRateHistoryRow(
+      id: data.id.present ? data.id.value : this.id,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
+      asOfDate: data.asOfDate.present ? data.asOfDate.value : this.asOfDate,
+      rateToBase: data.rateToBase.present
+          ? data.rateToBase.value
+          : this.rateToBase,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      notes: data.notes.present ? data.notes.value : this.notes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CurrencyRateHistoryRow(')
+          ..write('id: $id, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('asOfDate: $asOfDate, ')
+          ..write('rateToBase: $rateToBase, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('notes: $notes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, currencyCode, asOfDate, rateToBase, createdAt, notes);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CurrencyRateHistoryRow &&
+          other.id == this.id &&
+          other.currencyCode == this.currencyCode &&
+          other.asOfDate == this.asOfDate &&
+          other.rateToBase == this.rateToBase &&
+          other.createdAt == this.createdAt &&
+          other.notes == this.notes);
+}
+
+class CurrencyRateHistoryCompanion
+    extends UpdateCompanion<CurrencyRateHistoryRow> {
+  final Value<int> id;
+  final Value<String> currencyCode;
+  final Value<int> asOfDate;
+  final Value<double> rateToBase;
+  final Value<int> createdAt;
+  final Value<String?> notes;
+  const CurrencyRateHistoryCompanion({
+    this.id = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.asOfDate = const Value.absent(),
+    this.rateToBase = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.notes = const Value.absent(),
+  });
+  CurrencyRateHistoryCompanion.insert({
+    this.id = const Value.absent(),
+    required String currencyCode,
+    required int asOfDate,
+    required double rateToBase,
+    required int createdAt,
+    this.notes = const Value.absent(),
+  }) : currencyCode = Value(currencyCode),
+       asOfDate = Value(asOfDate),
+       rateToBase = Value(rateToBase),
+       createdAt = Value(createdAt);
+  static Insertable<CurrencyRateHistoryRow> custom({
+    Expression<int>? id,
+    Expression<String>? currencyCode,
+    Expression<int>? asOfDate,
+    Expression<double>? rateToBase,
+    Expression<int>? createdAt,
+    Expression<String>? notes,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (currencyCode != null) 'currency_code': currencyCode,
+      if (asOfDate != null) 'as_of_date': asOfDate,
+      if (rateToBase != null) 'rate_to_base': rateToBase,
+      if (createdAt != null) 'created_at': createdAt,
+      if (notes != null) 'notes': notes,
+    });
+  }
+
+  CurrencyRateHistoryCompanion copyWith({
+    Value<int>? id,
+    Value<String>? currencyCode,
+    Value<int>? asOfDate,
+    Value<double>? rateToBase,
+    Value<int>? createdAt,
+    Value<String?>? notes,
+  }) {
+    return CurrencyRateHistoryCompanion(
+      id: id ?? this.id,
+      currencyCode: currencyCode ?? this.currencyCode,
+      asOfDate: asOfDate ?? this.asOfDate,
+      rateToBase: rateToBase ?? this.rateToBase,
+      createdAt: createdAt ?? this.createdAt,
+      notes: notes ?? this.notes,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
+    if (asOfDate.present) {
+      map['as_of_date'] = Variable<int>(asOfDate.value);
+    }
+    if (rateToBase.present) {
+      map['rate_to_base'] = Variable<double>(rateToBase.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CurrencyRateHistoryCompanion(')
+          ..write('id: $id, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('asOfDate: $asOfDate, ')
+          ..write('rateToBase: $rateToBase, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('notes: $notes')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $VoucherBooksTable extends VoucherBooks
     with TableInfo<$VoucherBooksTable, VoucherBookRow> {
   @override
@@ -3204,6 +3627,42 @@ class $JournalLinesTable extends JournalLines
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _exchangeRateToBaseMeta =
+      const VerificationMeta('exchangeRateToBase');
+  @override
+  late final GeneratedColumn<double> exchangeRateToBase =
+      GeneratedColumn<double>(
+        'exchange_rate_to_base',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(1),
+      );
+  static const VerificationMeta _baseDebitMeta = const VerificationMeta(
+    'baseDebit',
+  );
+  @override
+  late final GeneratedColumn<double> baseDebit = GeneratedColumn<double>(
+    'base_debit',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _baseCreditMeta = const VerificationMeta(
+    'baseCredit',
+  );
+  @override
+  late final GeneratedColumn<double> baseCredit = GeneratedColumn<double>(
+    'base_credit',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _lineDescriptionMeta = const VerificationMeta(
     'lineDescription',
   );
@@ -3250,6 +3709,9 @@ class $JournalLinesTable extends JournalLines
     accountUuid,
     debit,
     credit,
+    exchangeRateToBase,
+    baseDebit,
+    baseCredit,
     lineDescription,
     currencyCode,
     sortOrder,
@@ -3306,6 +3768,27 @@ class $JournalLinesTable extends JournalLines
       context.handle(
         _creditMeta,
         credit.isAcceptableOrUnknown(data['credit']!, _creditMeta),
+      );
+    }
+    if (data.containsKey('exchange_rate_to_base')) {
+      context.handle(
+        _exchangeRateToBaseMeta,
+        exchangeRateToBase.isAcceptableOrUnknown(
+          data['exchange_rate_to_base']!,
+          _exchangeRateToBaseMeta,
+        ),
+      );
+    }
+    if (data.containsKey('base_debit')) {
+      context.handle(
+        _baseDebitMeta,
+        baseDebit.isAcceptableOrUnknown(data['base_debit']!, _baseDebitMeta),
+      );
+    }
+    if (data.containsKey('base_credit')) {
+      context.handle(
+        _baseCreditMeta,
+        baseCredit.isAcceptableOrUnknown(data['base_credit']!, _baseCreditMeta),
       );
     }
     if (data.containsKey('line_description')) {
@@ -3367,6 +3850,18 @@ class $JournalLinesTable extends JournalLines
         DriftSqlType.double,
         data['${effectivePrefix}credit'],
       )!,
+      exchangeRateToBase: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}exchange_rate_to_base'],
+      )!,
+      baseDebit: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}base_debit'],
+      )!,
+      baseCredit: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}base_credit'],
+      )!,
       lineDescription: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}line_description'],
@@ -3399,6 +3894,15 @@ class JournalLineRow extends DataClass implements Insertable<JournalLineRow> {
   final String accountUuid;
   final double debit;
   final double credit;
+
+  /// Units of company base currency per 1 unit of [currencyCode] at booking.
+  final double exchangeRateToBase;
+
+  /// Debit amount in company base currency.
+  final double baseDebit;
+
+  /// Credit amount in company base currency.
+  final double baseCredit;
   final String? lineDescription;
   final String currencyCode;
   final int sortOrder;
@@ -3409,6 +3913,9 @@ class JournalLineRow extends DataClass implements Insertable<JournalLineRow> {
     required this.accountUuid,
     required this.debit,
     required this.credit,
+    required this.exchangeRateToBase,
+    required this.baseDebit,
+    required this.baseCredit,
     this.lineDescription,
     required this.currencyCode,
     required this.sortOrder,
@@ -3422,6 +3929,9 @@ class JournalLineRow extends DataClass implements Insertable<JournalLineRow> {
     map['account_uuid'] = Variable<String>(accountUuid);
     map['debit'] = Variable<double>(debit);
     map['credit'] = Variable<double>(credit);
+    map['exchange_rate_to_base'] = Variable<double>(exchangeRateToBase);
+    map['base_debit'] = Variable<double>(baseDebit);
+    map['base_credit'] = Variable<double>(baseCredit);
     if (!nullToAbsent || lineDescription != null) {
       map['line_description'] = Variable<String>(lineDescription);
     }
@@ -3438,6 +3948,9 @@ class JournalLineRow extends DataClass implements Insertable<JournalLineRow> {
       accountUuid: Value(accountUuid),
       debit: Value(debit),
       credit: Value(credit),
+      exchangeRateToBase: Value(exchangeRateToBase),
+      baseDebit: Value(baseDebit),
+      baseCredit: Value(baseCredit),
       lineDescription: lineDescription == null && nullToAbsent
           ? const Value.absent()
           : Value(lineDescription),
@@ -3458,6 +3971,11 @@ class JournalLineRow extends DataClass implements Insertable<JournalLineRow> {
       accountUuid: serializer.fromJson<String>(json['accountUuid']),
       debit: serializer.fromJson<double>(json['debit']),
       credit: serializer.fromJson<double>(json['credit']),
+      exchangeRateToBase: serializer.fromJson<double>(
+        json['exchangeRateToBase'],
+      ),
+      baseDebit: serializer.fromJson<double>(json['baseDebit']),
+      baseCredit: serializer.fromJson<double>(json['baseCredit']),
       lineDescription: serializer.fromJson<String?>(json['lineDescription']),
       currencyCode: serializer.fromJson<String>(json['currencyCode']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
@@ -3473,6 +3991,9 @@ class JournalLineRow extends DataClass implements Insertable<JournalLineRow> {
       'accountUuid': serializer.toJson<String>(accountUuid),
       'debit': serializer.toJson<double>(debit),
       'credit': serializer.toJson<double>(credit),
+      'exchangeRateToBase': serializer.toJson<double>(exchangeRateToBase),
+      'baseDebit': serializer.toJson<double>(baseDebit),
+      'baseCredit': serializer.toJson<double>(baseCredit),
       'lineDescription': serializer.toJson<String?>(lineDescription),
       'currencyCode': serializer.toJson<String>(currencyCode),
       'sortOrder': serializer.toJson<int>(sortOrder),
@@ -3486,6 +4007,9 @@ class JournalLineRow extends DataClass implements Insertable<JournalLineRow> {
     String? accountUuid,
     double? debit,
     double? credit,
+    double? exchangeRateToBase,
+    double? baseDebit,
+    double? baseCredit,
     Value<String?> lineDescription = const Value.absent(),
     String? currencyCode,
     int? sortOrder,
@@ -3496,6 +4020,9 @@ class JournalLineRow extends DataClass implements Insertable<JournalLineRow> {
     accountUuid: accountUuid ?? this.accountUuid,
     debit: debit ?? this.debit,
     credit: credit ?? this.credit,
+    exchangeRateToBase: exchangeRateToBase ?? this.exchangeRateToBase,
+    baseDebit: baseDebit ?? this.baseDebit,
+    baseCredit: baseCredit ?? this.baseCredit,
     lineDescription: lineDescription.present
         ? lineDescription.value
         : this.lineDescription,
@@ -3512,6 +4039,13 @@ class JournalLineRow extends DataClass implements Insertable<JournalLineRow> {
           : this.accountUuid,
       debit: data.debit.present ? data.debit.value : this.debit,
       credit: data.credit.present ? data.credit.value : this.credit,
+      exchangeRateToBase: data.exchangeRateToBase.present
+          ? data.exchangeRateToBase.value
+          : this.exchangeRateToBase,
+      baseDebit: data.baseDebit.present ? data.baseDebit.value : this.baseDebit,
+      baseCredit: data.baseCredit.present
+          ? data.baseCredit.value
+          : this.baseCredit,
       lineDescription: data.lineDescription.present
           ? data.lineDescription.value
           : this.lineDescription,
@@ -3531,6 +4065,9 @@ class JournalLineRow extends DataClass implements Insertable<JournalLineRow> {
           ..write('accountUuid: $accountUuid, ')
           ..write('debit: $debit, ')
           ..write('credit: $credit, ')
+          ..write('exchangeRateToBase: $exchangeRateToBase, ')
+          ..write('baseDebit: $baseDebit, ')
+          ..write('baseCredit: $baseCredit, ')
           ..write('lineDescription: $lineDescription, ')
           ..write('currencyCode: $currencyCode, ')
           ..write('sortOrder: $sortOrder')
@@ -3546,6 +4083,9 @@ class JournalLineRow extends DataClass implements Insertable<JournalLineRow> {
     accountUuid,
     debit,
     credit,
+    exchangeRateToBase,
+    baseDebit,
+    baseCredit,
     lineDescription,
     currencyCode,
     sortOrder,
@@ -3560,6 +4100,9 @@ class JournalLineRow extends DataClass implements Insertable<JournalLineRow> {
           other.accountUuid == this.accountUuid &&
           other.debit == this.debit &&
           other.credit == this.credit &&
+          other.exchangeRateToBase == this.exchangeRateToBase &&
+          other.baseDebit == this.baseDebit &&
+          other.baseCredit == this.baseCredit &&
           other.lineDescription == this.lineDescription &&
           other.currencyCode == this.currencyCode &&
           other.sortOrder == this.sortOrder);
@@ -3572,6 +4115,9 @@ class JournalLinesCompanion extends UpdateCompanion<JournalLineRow> {
   final Value<String> accountUuid;
   final Value<double> debit;
   final Value<double> credit;
+  final Value<double> exchangeRateToBase;
+  final Value<double> baseDebit;
+  final Value<double> baseCredit;
   final Value<String?> lineDescription;
   final Value<String> currencyCode;
   final Value<int> sortOrder;
@@ -3582,6 +4128,9 @@ class JournalLinesCompanion extends UpdateCompanion<JournalLineRow> {
     this.accountUuid = const Value.absent(),
     this.debit = const Value.absent(),
     this.credit = const Value.absent(),
+    this.exchangeRateToBase = const Value.absent(),
+    this.baseDebit = const Value.absent(),
+    this.baseCredit = const Value.absent(),
     this.lineDescription = const Value.absent(),
     this.currencyCode = const Value.absent(),
     this.sortOrder = const Value.absent(),
@@ -3593,6 +4142,9 @@ class JournalLinesCompanion extends UpdateCompanion<JournalLineRow> {
     required String accountUuid,
     this.debit = const Value.absent(),
     this.credit = const Value.absent(),
+    this.exchangeRateToBase = const Value.absent(),
+    this.baseDebit = const Value.absent(),
+    this.baseCredit = const Value.absent(),
     this.lineDescription = const Value.absent(),
     required String currencyCode,
     this.sortOrder = const Value.absent(),
@@ -3607,6 +4159,9 @@ class JournalLinesCompanion extends UpdateCompanion<JournalLineRow> {
     Expression<String>? accountUuid,
     Expression<double>? debit,
     Expression<double>? credit,
+    Expression<double>? exchangeRateToBase,
+    Expression<double>? baseDebit,
+    Expression<double>? baseCredit,
     Expression<String>? lineDescription,
     Expression<String>? currencyCode,
     Expression<int>? sortOrder,
@@ -3618,6 +4173,10 @@ class JournalLinesCompanion extends UpdateCompanion<JournalLineRow> {
       if (accountUuid != null) 'account_uuid': accountUuid,
       if (debit != null) 'debit': debit,
       if (credit != null) 'credit': credit,
+      if (exchangeRateToBase != null)
+        'exchange_rate_to_base': exchangeRateToBase,
+      if (baseDebit != null) 'base_debit': baseDebit,
+      if (baseCredit != null) 'base_credit': baseCredit,
       if (lineDescription != null) 'line_description': lineDescription,
       if (currencyCode != null) 'currency_code': currencyCode,
       if (sortOrder != null) 'sort_order': sortOrder,
@@ -3631,6 +4190,9 @@ class JournalLinesCompanion extends UpdateCompanion<JournalLineRow> {
     Value<String>? accountUuid,
     Value<double>? debit,
     Value<double>? credit,
+    Value<double>? exchangeRateToBase,
+    Value<double>? baseDebit,
+    Value<double>? baseCredit,
     Value<String?>? lineDescription,
     Value<String>? currencyCode,
     Value<int>? sortOrder,
@@ -3642,6 +4204,9 @@ class JournalLinesCompanion extends UpdateCompanion<JournalLineRow> {
       accountUuid: accountUuid ?? this.accountUuid,
       debit: debit ?? this.debit,
       credit: credit ?? this.credit,
+      exchangeRateToBase: exchangeRateToBase ?? this.exchangeRateToBase,
+      baseDebit: baseDebit ?? this.baseDebit,
+      baseCredit: baseCredit ?? this.baseCredit,
       lineDescription: lineDescription ?? this.lineDescription,
       currencyCode: currencyCode ?? this.currencyCode,
       sortOrder: sortOrder ?? this.sortOrder,
@@ -3669,6 +4234,15 @@ class JournalLinesCompanion extends UpdateCompanion<JournalLineRow> {
     if (credit.present) {
       map['credit'] = Variable<double>(credit.value);
     }
+    if (exchangeRateToBase.present) {
+      map['exchange_rate_to_base'] = Variable<double>(exchangeRateToBase.value);
+    }
+    if (baseDebit.present) {
+      map['base_debit'] = Variable<double>(baseDebit.value);
+    }
+    if (baseCredit.present) {
+      map['base_credit'] = Variable<double>(baseCredit.value);
+    }
     if (lineDescription.present) {
       map['line_description'] = Variable<String>(lineDescription.value);
     }
@@ -3690,9 +4264,2848 @@ class JournalLinesCompanion extends UpdateCompanion<JournalLineRow> {
           ..write('accountUuid: $accountUuid, ')
           ..write('debit: $debit, ')
           ..write('credit: $credit, ')
+          ..write('exchangeRateToBase: $exchangeRateToBase, ')
+          ..write('baseDebit: $baseDebit, ')
+          ..write('baseCredit: $baseCredit, ')
           ..write('lineDescription: $lineDescription, ')
           ..write('currencyCode: $currencyCode, ')
           ..write('sortOrder: $sortOrder')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FiscalYearsTable extends FiscalYears
+    with TableInfo<$FiscalYearsTable, FiscalYearRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FiscalYearsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 32,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 128,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<int> startDate = GeneratedColumn<int>(
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endDateMeta = const VerificationMeta(
+    'endDate',
+  );
+  @override
+  late final GeneratedColumn<int> endDate = GeneratedColumn<int>(
+    'end_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _baseCurrencyCodeMeta = const VerificationMeta(
+    'baseCurrencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> baseCurrencyCode = GeneratedColumn<String>(
+    'base_currency_code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 3,
+      maxTextLength: 8,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodCountMeta = const VerificationMeta(
+    'periodCount',
+  );
+  @override
+  late final GeneratedColumn<int> periodCount = GeneratedColumn<int>(
+    'period_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodFrequencyMeta = const VerificationMeta(
+    'periodFrequency',
+  );
+  @override
+  late final GeneratedColumn<String> periodFrequency = GeneratedColumn<String>(
+    'period_frequency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('monthly'),
+  );
+  static const VerificationMeta _fxRevaluationEnabledMeta =
+      const VerificationMeta('fxRevaluationEnabled');
+  @override
+  late final GeneratedColumn<bool> fxRevaluationEnabled = GeneratedColumn<bool>(
+    'fx_revaluation_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("fx_revaluation_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _fxGainAccountUuidMeta = const VerificationMeta(
+    'fxGainAccountUuid',
+  );
+  @override
+  late final GeneratedColumn<String> fxGainAccountUuid =
+      GeneratedColumn<String>(
+        'fx_gain_account_uuid',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _fxLossAccountUuidMeta = const VerificationMeta(
+    'fxLossAccountUuid',
+  );
+  @override
+  late final GeneratedColumn<String> fxLossAccountUuid =
+      GeneratedColumn<String>(
+        'fx_loss_account_uuid',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _closedAtMeta = const VerificationMeta(
+    'closedAt',
+  );
+  @override
+  late final GeneratedColumn<int> closedAt = GeneratedColumn<int>(
+    'closed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _closedByMeta = const VerificationMeta(
+    'closedBy',
+  );
+  @override
+  late final GeneratedColumn<String> closedBy = GeneratedColumn<String>(
+    'closed_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    uuid,
+    code,
+    name,
+    startDate,
+    endDate,
+    status,
+    baseCurrencyCode,
+    periodCount,
+    periodFrequency,
+    fxRevaluationEnabled,
+    fxGainAccountUuid,
+    fxLossAccountUuid,
+    createdAt,
+    updatedAt,
+    closedAt,
+    createdBy,
+    closedBy,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'fiscal_years';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FiscalYearRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+        _codeMeta,
+        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(
+        _endDateMeta,
+        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endDateMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('base_currency_code')) {
+      context.handle(
+        _baseCurrencyCodeMeta,
+        baseCurrencyCode.isAcceptableOrUnknown(
+          data['base_currency_code']!,
+          _baseCurrencyCodeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_baseCurrencyCodeMeta);
+    }
+    if (data.containsKey('period_count')) {
+      context.handle(
+        _periodCountMeta,
+        periodCount.isAcceptableOrUnknown(
+          data['period_count']!,
+          _periodCountMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_periodCountMeta);
+    }
+    if (data.containsKey('period_frequency')) {
+      context.handle(
+        _periodFrequencyMeta,
+        periodFrequency.isAcceptableOrUnknown(
+          data['period_frequency']!,
+          _periodFrequencyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fx_revaluation_enabled')) {
+      context.handle(
+        _fxRevaluationEnabledMeta,
+        fxRevaluationEnabled.isAcceptableOrUnknown(
+          data['fx_revaluation_enabled']!,
+          _fxRevaluationEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fx_gain_account_uuid')) {
+      context.handle(
+        _fxGainAccountUuidMeta,
+        fxGainAccountUuid.isAcceptableOrUnknown(
+          data['fx_gain_account_uuid']!,
+          _fxGainAccountUuidMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fx_loss_account_uuid')) {
+      context.handle(
+        _fxLossAccountUuidMeta,
+        fxLossAccountUuid.isAcceptableOrUnknown(
+          data['fx_loss_account_uuid']!,
+          _fxLossAccountUuidMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('closed_at')) {
+      context.handle(
+        _closedAtMeta,
+        closedAt.isAcceptableOrUnknown(data['closed_at']!, _closedAtMeta),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('closed_by')) {
+      context.handle(
+        _closedByMeta,
+        closedBy.isAcceptableOrUnknown(data['closed_by']!, _closedByMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FiscalYearRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FiscalYearRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_date'],
+      )!,
+      endDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_date'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      baseCurrencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}base_currency_code'],
+      )!,
+      periodCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}period_count'],
+      )!,
+      periodFrequency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period_frequency'],
+      )!,
+      fxRevaluationEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}fx_revaluation_enabled'],
+      )!,
+      fxGainAccountUuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fx_gain_account_uuid'],
+      ),
+      fxLossAccountUuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fx_loss_account_uuid'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      closedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}closed_at'],
+      ),
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      ),
+      closedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}closed_by'],
+      ),
+    );
+  }
+
+  @override
+  $FiscalYearsTable createAlias(String alias) {
+    return $FiscalYearsTable(attachedDatabase, alias);
+  }
+}
+
+class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
+  final int id;
+  final String uuid;
+  final String code;
+  final String name;
+
+  /// Inclusive start (UTC day epoch ms).
+  final int startDate;
+
+  /// Inclusive end (UTC day epoch ms).
+  final int endDate;
+
+  /// `open` | `closed`
+  final String status;
+  final String baseCurrencyCode;
+  final int periodCount;
+
+  /// `monthly` (extensible).
+  final String periodFrequency;
+  final bool fxRevaluationEnabled;
+  final String? fxGainAccountUuid;
+  final String? fxLossAccountUuid;
+  final int createdAt;
+  final int updatedAt;
+  final int? closedAt;
+  final String? createdBy;
+  final String? closedBy;
+  const FiscalYearRow({
+    required this.id,
+    required this.uuid,
+    required this.code,
+    required this.name,
+    required this.startDate,
+    required this.endDate,
+    required this.status,
+    required this.baseCurrencyCode,
+    required this.periodCount,
+    required this.periodFrequency,
+    required this.fxRevaluationEnabled,
+    this.fxGainAccountUuid,
+    this.fxLossAccountUuid,
+    required this.createdAt,
+    required this.updatedAt,
+    this.closedAt,
+    this.createdBy,
+    this.closedBy,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
+    map['code'] = Variable<String>(code);
+    map['name'] = Variable<String>(name);
+    map['start_date'] = Variable<int>(startDate);
+    map['end_date'] = Variable<int>(endDate);
+    map['status'] = Variable<String>(status);
+    map['base_currency_code'] = Variable<String>(baseCurrencyCode);
+    map['period_count'] = Variable<int>(periodCount);
+    map['period_frequency'] = Variable<String>(periodFrequency);
+    map['fx_revaluation_enabled'] = Variable<bool>(fxRevaluationEnabled);
+    if (!nullToAbsent || fxGainAccountUuid != null) {
+      map['fx_gain_account_uuid'] = Variable<String>(fxGainAccountUuid);
+    }
+    if (!nullToAbsent || fxLossAccountUuid != null) {
+      map['fx_loss_account_uuid'] = Variable<String>(fxLossAccountUuid);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    if (!nullToAbsent || closedAt != null) {
+      map['closed_at'] = Variable<int>(closedAt);
+    }
+    if (!nullToAbsent || createdBy != null) {
+      map['created_by'] = Variable<String>(createdBy);
+    }
+    if (!nullToAbsent || closedBy != null) {
+      map['closed_by'] = Variable<String>(closedBy);
+    }
+    return map;
+  }
+
+  FiscalYearsCompanion toCompanion(bool nullToAbsent) {
+    return FiscalYearsCompanion(
+      id: Value(id),
+      uuid: Value(uuid),
+      code: Value(code),
+      name: Value(name),
+      startDate: Value(startDate),
+      endDate: Value(endDate),
+      status: Value(status),
+      baseCurrencyCode: Value(baseCurrencyCode),
+      periodCount: Value(periodCount),
+      periodFrequency: Value(periodFrequency),
+      fxRevaluationEnabled: Value(fxRevaluationEnabled),
+      fxGainAccountUuid: fxGainAccountUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fxGainAccountUuid),
+      fxLossAccountUuid: fxLossAccountUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fxLossAccountUuid),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      closedAt: closedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closedAt),
+      createdBy: createdBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdBy),
+      closedBy: closedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closedBy),
+    );
+  }
+
+  factory FiscalYearRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FiscalYearRow(
+      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      code: serializer.fromJson<String>(json['code']),
+      name: serializer.fromJson<String>(json['name']),
+      startDate: serializer.fromJson<int>(json['startDate']),
+      endDate: serializer.fromJson<int>(json['endDate']),
+      status: serializer.fromJson<String>(json['status']),
+      baseCurrencyCode: serializer.fromJson<String>(json['baseCurrencyCode']),
+      periodCount: serializer.fromJson<int>(json['periodCount']),
+      periodFrequency: serializer.fromJson<String>(json['periodFrequency']),
+      fxRevaluationEnabled: serializer.fromJson<bool>(
+        json['fxRevaluationEnabled'],
+      ),
+      fxGainAccountUuid: serializer.fromJson<String?>(
+        json['fxGainAccountUuid'],
+      ),
+      fxLossAccountUuid: serializer.fromJson<String?>(
+        json['fxLossAccountUuid'],
+      ),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      closedAt: serializer.fromJson<int?>(json['closedAt']),
+      createdBy: serializer.fromJson<String?>(json['createdBy']),
+      closedBy: serializer.fromJson<String?>(json['closedBy']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
+      'code': serializer.toJson<String>(code),
+      'name': serializer.toJson<String>(name),
+      'startDate': serializer.toJson<int>(startDate),
+      'endDate': serializer.toJson<int>(endDate),
+      'status': serializer.toJson<String>(status),
+      'baseCurrencyCode': serializer.toJson<String>(baseCurrencyCode),
+      'periodCount': serializer.toJson<int>(periodCount),
+      'periodFrequency': serializer.toJson<String>(periodFrequency),
+      'fxRevaluationEnabled': serializer.toJson<bool>(fxRevaluationEnabled),
+      'fxGainAccountUuid': serializer.toJson<String?>(fxGainAccountUuid),
+      'fxLossAccountUuid': serializer.toJson<String?>(fxLossAccountUuid),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+      'closedAt': serializer.toJson<int?>(closedAt),
+      'createdBy': serializer.toJson<String?>(createdBy),
+      'closedBy': serializer.toJson<String?>(closedBy),
+    };
+  }
+
+  FiscalYearRow copyWith({
+    int? id,
+    String? uuid,
+    String? code,
+    String? name,
+    int? startDate,
+    int? endDate,
+    String? status,
+    String? baseCurrencyCode,
+    int? periodCount,
+    String? periodFrequency,
+    bool? fxRevaluationEnabled,
+    Value<String?> fxGainAccountUuid = const Value.absent(),
+    Value<String?> fxLossAccountUuid = const Value.absent(),
+    int? createdAt,
+    int? updatedAt,
+    Value<int?> closedAt = const Value.absent(),
+    Value<String?> createdBy = const Value.absent(),
+    Value<String?> closedBy = const Value.absent(),
+  }) => FiscalYearRow(
+    id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
+    code: code ?? this.code,
+    name: name ?? this.name,
+    startDate: startDate ?? this.startDate,
+    endDate: endDate ?? this.endDate,
+    status: status ?? this.status,
+    baseCurrencyCode: baseCurrencyCode ?? this.baseCurrencyCode,
+    periodCount: periodCount ?? this.periodCount,
+    periodFrequency: periodFrequency ?? this.periodFrequency,
+    fxRevaluationEnabled: fxRevaluationEnabled ?? this.fxRevaluationEnabled,
+    fxGainAccountUuid: fxGainAccountUuid.present
+        ? fxGainAccountUuid.value
+        : this.fxGainAccountUuid,
+    fxLossAccountUuid: fxLossAccountUuid.present
+        ? fxLossAccountUuid.value
+        : this.fxLossAccountUuid,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    closedAt: closedAt.present ? closedAt.value : this.closedAt,
+    createdBy: createdBy.present ? createdBy.value : this.createdBy,
+    closedBy: closedBy.present ? closedBy.value : this.closedBy,
+  );
+  FiscalYearRow copyWithCompanion(FiscalYearsCompanion data) {
+    return FiscalYearRow(
+      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      code: data.code.present ? data.code.value : this.code,
+      name: data.name.present ? data.name.value : this.name,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      status: data.status.present ? data.status.value : this.status,
+      baseCurrencyCode: data.baseCurrencyCode.present
+          ? data.baseCurrencyCode.value
+          : this.baseCurrencyCode,
+      periodCount: data.periodCount.present
+          ? data.periodCount.value
+          : this.periodCount,
+      periodFrequency: data.periodFrequency.present
+          ? data.periodFrequency.value
+          : this.periodFrequency,
+      fxRevaluationEnabled: data.fxRevaluationEnabled.present
+          ? data.fxRevaluationEnabled.value
+          : this.fxRevaluationEnabled,
+      fxGainAccountUuid: data.fxGainAccountUuid.present
+          ? data.fxGainAccountUuid.value
+          : this.fxGainAccountUuid,
+      fxLossAccountUuid: data.fxLossAccountUuid.present
+          ? data.fxLossAccountUuid.value
+          : this.fxLossAccountUuid,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      closedAt: data.closedAt.present ? data.closedAt.value : this.closedAt,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      closedBy: data.closedBy.present ? data.closedBy.value : this.closedBy,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FiscalYearRow(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('status: $status, ')
+          ..write('baseCurrencyCode: $baseCurrencyCode, ')
+          ..write('periodCount: $periodCount, ')
+          ..write('periodFrequency: $periodFrequency, ')
+          ..write('fxRevaluationEnabled: $fxRevaluationEnabled, ')
+          ..write('fxGainAccountUuid: $fxGainAccountUuid, ')
+          ..write('fxLossAccountUuid: $fxLossAccountUuid, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('closedAt: $closedAt, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('closedBy: $closedBy')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    uuid,
+    code,
+    name,
+    startDate,
+    endDate,
+    status,
+    baseCurrencyCode,
+    periodCount,
+    periodFrequency,
+    fxRevaluationEnabled,
+    fxGainAccountUuid,
+    fxLossAccountUuid,
+    createdAt,
+    updatedAt,
+    closedAt,
+    createdBy,
+    closedBy,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FiscalYearRow &&
+          other.id == this.id &&
+          other.uuid == this.uuid &&
+          other.code == this.code &&
+          other.name == this.name &&
+          other.startDate == this.startDate &&
+          other.endDate == this.endDate &&
+          other.status == this.status &&
+          other.baseCurrencyCode == this.baseCurrencyCode &&
+          other.periodCount == this.periodCount &&
+          other.periodFrequency == this.periodFrequency &&
+          other.fxRevaluationEnabled == this.fxRevaluationEnabled &&
+          other.fxGainAccountUuid == this.fxGainAccountUuid &&
+          other.fxLossAccountUuid == this.fxLossAccountUuid &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.closedAt == this.closedAt &&
+          other.createdBy == this.createdBy &&
+          other.closedBy == this.closedBy);
+}
+
+class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
+  final Value<int> id;
+  final Value<String> uuid;
+  final Value<String> code;
+  final Value<String> name;
+  final Value<int> startDate;
+  final Value<int> endDate;
+  final Value<String> status;
+  final Value<String> baseCurrencyCode;
+  final Value<int> periodCount;
+  final Value<String> periodFrequency;
+  final Value<bool> fxRevaluationEnabled;
+  final Value<String?> fxGainAccountUuid;
+  final Value<String?> fxLossAccountUuid;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<int?> closedAt;
+  final Value<String?> createdBy;
+  final Value<String?> closedBy;
+  const FiscalYearsCompanion({
+    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.code = const Value.absent(),
+    this.name = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.status = const Value.absent(),
+    this.baseCurrencyCode = const Value.absent(),
+    this.periodCount = const Value.absent(),
+    this.periodFrequency = const Value.absent(),
+    this.fxRevaluationEnabled = const Value.absent(),
+    this.fxGainAccountUuid = const Value.absent(),
+    this.fxLossAccountUuid = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.closedAt = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.closedBy = const Value.absent(),
+  });
+  FiscalYearsCompanion.insert({
+    this.id = const Value.absent(),
+    required String uuid,
+    required String code,
+    required String name,
+    required int startDate,
+    required int endDate,
+    required String status,
+    required String baseCurrencyCode,
+    required int periodCount,
+    this.periodFrequency = const Value.absent(),
+    this.fxRevaluationEnabled = const Value.absent(),
+    this.fxGainAccountUuid = const Value.absent(),
+    this.fxLossAccountUuid = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.closedAt = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.closedBy = const Value.absent(),
+  }) : uuid = Value(uuid),
+       code = Value(code),
+       name = Value(name),
+       startDate = Value(startDate),
+       endDate = Value(endDate),
+       status = Value(status),
+       baseCurrencyCode = Value(baseCurrencyCode),
+       periodCount = Value(periodCount),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<FiscalYearRow> custom({
+    Expression<int>? id,
+    Expression<String>? uuid,
+    Expression<String>? code,
+    Expression<String>? name,
+    Expression<int>? startDate,
+    Expression<int>? endDate,
+    Expression<String>? status,
+    Expression<String>? baseCurrencyCode,
+    Expression<int>? periodCount,
+    Expression<String>? periodFrequency,
+    Expression<bool>? fxRevaluationEnabled,
+    Expression<String>? fxGainAccountUuid,
+    Expression<String>? fxLossAccountUuid,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? closedAt,
+    Expression<String>? createdBy,
+    Expression<String>? closedBy,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
+      if (code != null) 'code': code,
+      if (name != null) 'name': name,
+      if (startDate != null) 'start_date': startDate,
+      if (endDate != null) 'end_date': endDate,
+      if (status != null) 'status': status,
+      if (baseCurrencyCode != null) 'base_currency_code': baseCurrencyCode,
+      if (periodCount != null) 'period_count': periodCount,
+      if (periodFrequency != null) 'period_frequency': periodFrequency,
+      if (fxRevaluationEnabled != null)
+        'fx_revaluation_enabled': fxRevaluationEnabled,
+      if (fxGainAccountUuid != null) 'fx_gain_account_uuid': fxGainAccountUuid,
+      if (fxLossAccountUuid != null) 'fx_loss_account_uuid': fxLossAccountUuid,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (closedAt != null) 'closed_at': closedAt,
+      if (createdBy != null) 'created_by': createdBy,
+      if (closedBy != null) 'closed_by': closedBy,
+    });
+  }
+
+  FiscalYearsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? uuid,
+    Value<String>? code,
+    Value<String>? name,
+    Value<int>? startDate,
+    Value<int>? endDate,
+    Value<String>? status,
+    Value<String>? baseCurrencyCode,
+    Value<int>? periodCount,
+    Value<String>? periodFrequency,
+    Value<bool>? fxRevaluationEnabled,
+    Value<String?>? fxGainAccountUuid,
+    Value<String?>? fxLossAccountUuid,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+    Value<int?>? closedAt,
+    Value<String?>? createdBy,
+    Value<String?>? closedBy,
+  }) {
+    return FiscalYearsCompanion(
+      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
+      code: code ?? this.code,
+      name: name ?? this.name,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      status: status ?? this.status,
+      baseCurrencyCode: baseCurrencyCode ?? this.baseCurrencyCode,
+      periodCount: periodCount ?? this.periodCount,
+      periodFrequency: periodFrequency ?? this.periodFrequency,
+      fxRevaluationEnabled: fxRevaluationEnabled ?? this.fxRevaluationEnabled,
+      fxGainAccountUuid: fxGainAccountUuid ?? this.fxGainAccountUuid,
+      fxLossAccountUuid: fxLossAccountUuid ?? this.fxLossAccountUuid,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      closedAt: closedAt ?? this.closedAt,
+      createdBy: createdBy ?? this.createdBy,
+      closedBy: closedBy ?? this.closedBy,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<int>(startDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<int>(endDate.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (baseCurrencyCode.present) {
+      map['base_currency_code'] = Variable<String>(baseCurrencyCode.value);
+    }
+    if (periodCount.present) {
+      map['period_count'] = Variable<int>(periodCount.value);
+    }
+    if (periodFrequency.present) {
+      map['period_frequency'] = Variable<String>(periodFrequency.value);
+    }
+    if (fxRevaluationEnabled.present) {
+      map['fx_revaluation_enabled'] = Variable<bool>(
+        fxRevaluationEnabled.value,
+      );
+    }
+    if (fxGainAccountUuid.present) {
+      map['fx_gain_account_uuid'] = Variable<String>(fxGainAccountUuid.value);
+    }
+    if (fxLossAccountUuid.present) {
+      map['fx_loss_account_uuid'] = Variable<String>(fxLossAccountUuid.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (closedAt.present) {
+      map['closed_at'] = Variable<int>(closedAt.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (closedBy.present) {
+      map['closed_by'] = Variable<String>(closedBy.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FiscalYearsCompanion(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('status: $status, ')
+          ..write('baseCurrencyCode: $baseCurrencyCode, ')
+          ..write('periodCount: $periodCount, ')
+          ..write('periodFrequency: $periodFrequency, ')
+          ..write('fxRevaluationEnabled: $fxRevaluationEnabled, ')
+          ..write('fxGainAccountUuid: $fxGainAccountUuid, ')
+          ..write('fxLossAccountUuid: $fxLossAccountUuid, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('closedAt: $closedAt, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('closedBy: $closedBy')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AccountingPeriodsTable extends AccountingPeriods
+    with TableInfo<$AccountingPeriodsTable, AccountingPeriodRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AccountingPeriodsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _fiscalYearUuidMeta = const VerificationMeta(
+    'fiscalYearUuid',
+  );
+  @override
+  late final GeneratedColumn<String> fiscalYearUuid = GeneratedColumn<String>(
+    'fiscal_year_uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodNumberMeta = const VerificationMeta(
+    'periodNumber',
+  );
+  @override
+  late final GeneratedColumn<int> periodNumber = GeneratedColumn<int>(
+    'period_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<int> startDate = GeneratedColumn<int>(
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endDateMeta = const VerificationMeta(
+    'endDate',
+  );
+  @override
+  late final GeneratedColumn<int> endDate = GeneratedColumn<int>(
+    'end_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _openedAtMeta = const VerificationMeta(
+    'openedAt',
+  );
+  @override
+  late final GeneratedColumn<int> openedAt = GeneratedColumn<int>(
+    'opened_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _openedByMeta = const VerificationMeta(
+    'openedBy',
+  );
+  @override
+  late final GeneratedColumn<String> openedBy = GeneratedColumn<String>(
+    'opened_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _closedAtMeta = const VerificationMeta(
+    'closedAt',
+  );
+  @override
+  late final GeneratedColumn<int> closedAt = GeneratedColumn<int>(
+    'closed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _closedByMeta = const VerificationMeta(
+    'closedBy',
+  );
+  @override
+  late final GeneratedColumn<String> closedBy = GeneratedColumn<String>(
+    'closed_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reopenedAtMeta = const VerificationMeta(
+    'reopenedAt',
+  );
+  @override
+  late final GeneratedColumn<int> reopenedAt = GeneratedColumn<int>(
+    'reopened_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reopenedByMeta = const VerificationMeta(
+    'reopenedBy',
+  );
+  @override
+  late final GeneratedColumn<String> reopenedBy = GeneratedColumn<String>(
+    'reopened_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reopenReasonMeta = const VerificationMeta(
+    'reopenReason',
+  );
+  @override
+  late final GeneratedColumn<String> reopenReason = GeneratedColumn<String>(
+    'reopen_reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    uuid,
+    fiscalYearUuid,
+    periodNumber,
+    name,
+    startDate,
+    endDate,
+    status,
+    openedAt,
+    openedBy,
+    closedAt,
+    closedBy,
+    reopenedAt,
+    reopenedBy,
+    reopenReason,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'accounting_periods';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AccountingPeriodRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('fiscal_year_uuid')) {
+      context.handle(
+        _fiscalYearUuidMeta,
+        fiscalYearUuid.isAcceptableOrUnknown(
+          data['fiscal_year_uuid']!,
+          _fiscalYearUuidMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fiscalYearUuidMeta);
+    }
+    if (data.containsKey('period_number')) {
+      context.handle(
+        _periodNumberMeta,
+        periodNumber.isAcceptableOrUnknown(
+          data['period_number']!,
+          _periodNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_periodNumberMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(
+        _endDateMeta,
+        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endDateMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('opened_at')) {
+      context.handle(
+        _openedAtMeta,
+        openedAt.isAcceptableOrUnknown(data['opened_at']!, _openedAtMeta),
+      );
+    }
+    if (data.containsKey('opened_by')) {
+      context.handle(
+        _openedByMeta,
+        openedBy.isAcceptableOrUnknown(data['opened_by']!, _openedByMeta),
+      );
+    }
+    if (data.containsKey('closed_at')) {
+      context.handle(
+        _closedAtMeta,
+        closedAt.isAcceptableOrUnknown(data['closed_at']!, _closedAtMeta),
+      );
+    }
+    if (data.containsKey('closed_by')) {
+      context.handle(
+        _closedByMeta,
+        closedBy.isAcceptableOrUnknown(data['closed_by']!, _closedByMeta),
+      );
+    }
+    if (data.containsKey('reopened_at')) {
+      context.handle(
+        _reopenedAtMeta,
+        reopenedAt.isAcceptableOrUnknown(data['reopened_at']!, _reopenedAtMeta),
+      );
+    }
+    if (data.containsKey('reopened_by')) {
+      context.handle(
+        _reopenedByMeta,
+        reopenedBy.isAcceptableOrUnknown(data['reopened_by']!, _reopenedByMeta),
+      );
+    }
+    if (data.containsKey('reopen_reason')) {
+      context.handle(
+        _reopenReasonMeta,
+        reopenReason.isAcceptableOrUnknown(
+          data['reopen_reason']!,
+          _reopenReasonMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {fiscalYearUuid, periodNumber},
+  ];
+  @override
+  AccountingPeriodRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AccountingPeriodRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      fiscalYearUuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fiscal_year_uuid'],
+      )!,
+      periodNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}period_number'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_date'],
+      )!,
+      endDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_date'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      openedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}opened_at'],
+      ),
+      openedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}opened_by'],
+      ),
+      closedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}closed_at'],
+      ),
+      closedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}closed_by'],
+      ),
+      reopenedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reopened_at'],
+      ),
+      reopenedBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reopened_by'],
+      ),
+      reopenReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reopen_reason'],
+      ),
+    );
+  }
+
+  @override
+  $AccountingPeriodsTable createAlias(String alias) {
+    return $AccountingPeriodsTable(attachedDatabase, alias);
+  }
+}
+
+class AccountingPeriodRow extends DataClass
+    implements Insertable<AccountingPeriodRow> {
+  final int id;
+  final String uuid;
+  final String fiscalYearUuid;
+  final int periodNumber;
+  final String name;
+
+  /// Inclusive start (UTC day epoch ms).
+  final int startDate;
+
+  /// Inclusive end (UTC day epoch ms).
+  final int endDate;
+
+  /// `closed` | `open` | `closing` | `reopened`
+  final String status;
+  final int? openedAt;
+  final String? openedBy;
+  final int? closedAt;
+  final String? closedBy;
+  final int? reopenedAt;
+  final String? reopenedBy;
+  final String? reopenReason;
+  const AccountingPeriodRow({
+    required this.id,
+    required this.uuid,
+    required this.fiscalYearUuid,
+    required this.periodNumber,
+    required this.name,
+    required this.startDate,
+    required this.endDate,
+    required this.status,
+    this.openedAt,
+    this.openedBy,
+    this.closedAt,
+    this.closedBy,
+    this.reopenedAt,
+    this.reopenedBy,
+    this.reopenReason,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
+    map['fiscal_year_uuid'] = Variable<String>(fiscalYearUuid);
+    map['period_number'] = Variable<int>(periodNumber);
+    map['name'] = Variable<String>(name);
+    map['start_date'] = Variable<int>(startDate);
+    map['end_date'] = Variable<int>(endDate);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || openedAt != null) {
+      map['opened_at'] = Variable<int>(openedAt);
+    }
+    if (!nullToAbsent || openedBy != null) {
+      map['opened_by'] = Variable<String>(openedBy);
+    }
+    if (!nullToAbsent || closedAt != null) {
+      map['closed_at'] = Variable<int>(closedAt);
+    }
+    if (!nullToAbsent || closedBy != null) {
+      map['closed_by'] = Variable<String>(closedBy);
+    }
+    if (!nullToAbsent || reopenedAt != null) {
+      map['reopened_at'] = Variable<int>(reopenedAt);
+    }
+    if (!nullToAbsent || reopenedBy != null) {
+      map['reopened_by'] = Variable<String>(reopenedBy);
+    }
+    if (!nullToAbsent || reopenReason != null) {
+      map['reopen_reason'] = Variable<String>(reopenReason);
+    }
+    return map;
+  }
+
+  AccountingPeriodsCompanion toCompanion(bool nullToAbsent) {
+    return AccountingPeriodsCompanion(
+      id: Value(id),
+      uuid: Value(uuid),
+      fiscalYearUuid: Value(fiscalYearUuid),
+      periodNumber: Value(periodNumber),
+      name: Value(name),
+      startDate: Value(startDate),
+      endDate: Value(endDate),
+      status: Value(status),
+      openedAt: openedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(openedAt),
+      openedBy: openedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(openedBy),
+      closedAt: closedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closedAt),
+      closedBy: closedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closedBy),
+      reopenedAt: reopenedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reopenedAt),
+      reopenedBy: reopenedBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reopenedBy),
+      reopenReason: reopenReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reopenReason),
+    );
+  }
+
+  factory AccountingPeriodRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AccountingPeriodRow(
+      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      fiscalYearUuid: serializer.fromJson<String>(json['fiscalYearUuid']),
+      periodNumber: serializer.fromJson<int>(json['periodNumber']),
+      name: serializer.fromJson<String>(json['name']),
+      startDate: serializer.fromJson<int>(json['startDate']),
+      endDate: serializer.fromJson<int>(json['endDate']),
+      status: serializer.fromJson<String>(json['status']),
+      openedAt: serializer.fromJson<int?>(json['openedAt']),
+      openedBy: serializer.fromJson<String?>(json['openedBy']),
+      closedAt: serializer.fromJson<int?>(json['closedAt']),
+      closedBy: serializer.fromJson<String?>(json['closedBy']),
+      reopenedAt: serializer.fromJson<int?>(json['reopenedAt']),
+      reopenedBy: serializer.fromJson<String?>(json['reopenedBy']),
+      reopenReason: serializer.fromJson<String?>(json['reopenReason']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
+      'fiscalYearUuid': serializer.toJson<String>(fiscalYearUuid),
+      'periodNumber': serializer.toJson<int>(periodNumber),
+      'name': serializer.toJson<String>(name),
+      'startDate': serializer.toJson<int>(startDate),
+      'endDate': serializer.toJson<int>(endDate),
+      'status': serializer.toJson<String>(status),
+      'openedAt': serializer.toJson<int?>(openedAt),
+      'openedBy': serializer.toJson<String?>(openedBy),
+      'closedAt': serializer.toJson<int?>(closedAt),
+      'closedBy': serializer.toJson<String?>(closedBy),
+      'reopenedAt': serializer.toJson<int?>(reopenedAt),
+      'reopenedBy': serializer.toJson<String?>(reopenedBy),
+      'reopenReason': serializer.toJson<String?>(reopenReason),
+    };
+  }
+
+  AccountingPeriodRow copyWith({
+    int? id,
+    String? uuid,
+    String? fiscalYearUuid,
+    int? periodNumber,
+    String? name,
+    int? startDate,
+    int? endDate,
+    String? status,
+    Value<int?> openedAt = const Value.absent(),
+    Value<String?> openedBy = const Value.absent(),
+    Value<int?> closedAt = const Value.absent(),
+    Value<String?> closedBy = const Value.absent(),
+    Value<int?> reopenedAt = const Value.absent(),
+    Value<String?> reopenedBy = const Value.absent(),
+    Value<String?> reopenReason = const Value.absent(),
+  }) => AccountingPeriodRow(
+    id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
+    fiscalYearUuid: fiscalYearUuid ?? this.fiscalYearUuid,
+    periodNumber: periodNumber ?? this.periodNumber,
+    name: name ?? this.name,
+    startDate: startDate ?? this.startDate,
+    endDate: endDate ?? this.endDate,
+    status: status ?? this.status,
+    openedAt: openedAt.present ? openedAt.value : this.openedAt,
+    openedBy: openedBy.present ? openedBy.value : this.openedBy,
+    closedAt: closedAt.present ? closedAt.value : this.closedAt,
+    closedBy: closedBy.present ? closedBy.value : this.closedBy,
+    reopenedAt: reopenedAt.present ? reopenedAt.value : this.reopenedAt,
+    reopenedBy: reopenedBy.present ? reopenedBy.value : this.reopenedBy,
+    reopenReason: reopenReason.present ? reopenReason.value : this.reopenReason,
+  );
+  AccountingPeriodRow copyWithCompanion(AccountingPeriodsCompanion data) {
+    return AccountingPeriodRow(
+      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      fiscalYearUuid: data.fiscalYearUuid.present
+          ? data.fiscalYearUuid.value
+          : this.fiscalYearUuid,
+      periodNumber: data.periodNumber.present
+          ? data.periodNumber.value
+          : this.periodNumber,
+      name: data.name.present ? data.name.value : this.name,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      status: data.status.present ? data.status.value : this.status,
+      openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
+      openedBy: data.openedBy.present ? data.openedBy.value : this.openedBy,
+      closedAt: data.closedAt.present ? data.closedAt.value : this.closedAt,
+      closedBy: data.closedBy.present ? data.closedBy.value : this.closedBy,
+      reopenedAt: data.reopenedAt.present
+          ? data.reopenedAt.value
+          : this.reopenedAt,
+      reopenedBy: data.reopenedBy.present
+          ? data.reopenedBy.value
+          : this.reopenedBy,
+      reopenReason: data.reopenReason.present
+          ? data.reopenReason.value
+          : this.reopenReason,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountingPeriodRow(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('fiscalYearUuid: $fiscalYearUuid, ')
+          ..write('periodNumber: $periodNumber, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('status: $status, ')
+          ..write('openedAt: $openedAt, ')
+          ..write('openedBy: $openedBy, ')
+          ..write('closedAt: $closedAt, ')
+          ..write('closedBy: $closedBy, ')
+          ..write('reopenedAt: $reopenedAt, ')
+          ..write('reopenedBy: $reopenedBy, ')
+          ..write('reopenReason: $reopenReason')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    uuid,
+    fiscalYearUuid,
+    periodNumber,
+    name,
+    startDate,
+    endDate,
+    status,
+    openedAt,
+    openedBy,
+    closedAt,
+    closedBy,
+    reopenedAt,
+    reopenedBy,
+    reopenReason,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AccountingPeriodRow &&
+          other.id == this.id &&
+          other.uuid == this.uuid &&
+          other.fiscalYearUuid == this.fiscalYearUuid &&
+          other.periodNumber == this.periodNumber &&
+          other.name == this.name &&
+          other.startDate == this.startDate &&
+          other.endDate == this.endDate &&
+          other.status == this.status &&
+          other.openedAt == this.openedAt &&
+          other.openedBy == this.openedBy &&
+          other.closedAt == this.closedAt &&
+          other.closedBy == this.closedBy &&
+          other.reopenedAt == this.reopenedAt &&
+          other.reopenedBy == this.reopenedBy &&
+          other.reopenReason == this.reopenReason);
+}
+
+class AccountingPeriodsCompanion extends UpdateCompanion<AccountingPeriodRow> {
+  final Value<int> id;
+  final Value<String> uuid;
+  final Value<String> fiscalYearUuid;
+  final Value<int> periodNumber;
+  final Value<String> name;
+  final Value<int> startDate;
+  final Value<int> endDate;
+  final Value<String> status;
+  final Value<int?> openedAt;
+  final Value<String?> openedBy;
+  final Value<int?> closedAt;
+  final Value<String?> closedBy;
+  final Value<int?> reopenedAt;
+  final Value<String?> reopenedBy;
+  final Value<String?> reopenReason;
+  const AccountingPeriodsCompanion({
+    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.fiscalYearUuid = const Value.absent(),
+    this.periodNumber = const Value.absent(),
+    this.name = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.status = const Value.absent(),
+    this.openedAt = const Value.absent(),
+    this.openedBy = const Value.absent(),
+    this.closedAt = const Value.absent(),
+    this.closedBy = const Value.absent(),
+    this.reopenedAt = const Value.absent(),
+    this.reopenedBy = const Value.absent(),
+    this.reopenReason = const Value.absent(),
+  });
+  AccountingPeriodsCompanion.insert({
+    this.id = const Value.absent(),
+    required String uuid,
+    required String fiscalYearUuid,
+    required int periodNumber,
+    required String name,
+    required int startDate,
+    required int endDate,
+    required String status,
+    this.openedAt = const Value.absent(),
+    this.openedBy = const Value.absent(),
+    this.closedAt = const Value.absent(),
+    this.closedBy = const Value.absent(),
+    this.reopenedAt = const Value.absent(),
+    this.reopenedBy = const Value.absent(),
+    this.reopenReason = const Value.absent(),
+  }) : uuid = Value(uuid),
+       fiscalYearUuid = Value(fiscalYearUuid),
+       periodNumber = Value(periodNumber),
+       name = Value(name),
+       startDate = Value(startDate),
+       endDate = Value(endDate),
+       status = Value(status);
+  static Insertable<AccountingPeriodRow> custom({
+    Expression<int>? id,
+    Expression<String>? uuid,
+    Expression<String>? fiscalYearUuid,
+    Expression<int>? periodNumber,
+    Expression<String>? name,
+    Expression<int>? startDate,
+    Expression<int>? endDate,
+    Expression<String>? status,
+    Expression<int>? openedAt,
+    Expression<String>? openedBy,
+    Expression<int>? closedAt,
+    Expression<String>? closedBy,
+    Expression<int>? reopenedAt,
+    Expression<String>? reopenedBy,
+    Expression<String>? reopenReason,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
+      if (fiscalYearUuid != null) 'fiscal_year_uuid': fiscalYearUuid,
+      if (periodNumber != null) 'period_number': periodNumber,
+      if (name != null) 'name': name,
+      if (startDate != null) 'start_date': startDate,
+      if (endDate != null) 'end_date': endDate,
+      if (status != null) 'status': status,
+      if (openedAt != null) 'opened_at': openedAt,
+      if (openedBy != null) 'opened_by': openedBy,
+      if (closedAt != null) 'closed_at': closedAt,
+      if (closedBy != null) 'closed_by': closedBy,
+      if (reopenedAt != null) 'reopened_at': reopenedAt,
+      if (reopenedBy != null) 'reopened_by': reopenedBy,
+      if (reopenReason != null) 'reopen_reason': reopenReason,
+    });
+  }
+
+  AccountingPeriodsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? uuid,
+    Value<String>? fiscalYearUuid,
+    Value<int>? periodNumber,
+    Value<String>? name,
+    Value<int>? startDate,
+    Value<int>? endDate,
+    Value<String>? status,
+    Value<int?>? openedAt,
+    Value<String?>? openedBy,
+    Value<int?>? closedAt,
+    Value<String?>? closedBy,
+    Value<int?>? reopenedAt,
+    Value<String?>? reopenedBy,
+    Value<String?>? reopenReason,
+  }) {
+    return AccountingPeriodsCompanion(
+      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
+      fiscalYearUuid: fiscalYearUuid ?? this.fiscalYearUuid,
+      periodNumber: periodNumber ?? this.periodNumber,
+      name: name ?? this.name,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      status: status ?? this.status,
+      openedAt: openedAt ?? this.openedAt,
+      openedBy: openedBy ?? this.openedBy,
+      closedAt: closedAt ?? this.closedAt,
+      closedBy: closedBy ?? this.closedBy,
+      reopenedAt: reopenedAt ?? this.reopenedAt,
+      reopenedBy: reopenedBy ?? this.reopenedBy,
+      reopenReason: reopenReason ?? this.reopenReason,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (fiscalYearUuid.present) {
+      map['fiscal_year_uuid'] = Variable<String>(fiscalYearUuid.value);
+    }
+    if (periodNumber.present) {
+      map['period_number'] = Variable<int>(periodNumber.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<int>(startDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<int>(endDate.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (openedAt.present) {
+      map['opened_at'] = Variable<int>(openedAt.value);
+    }
+    if (openedBy.present) {
+      map['opened_by'] = Variable<String>(openedBy.value);
+    }
+    if (closedAt.present) {
+      map['closed_at'] = Variable<int>(closedAt.value);
+    }
+    if (closedBy.present) {
+      map['closed_by'] = Variable<String>(closedBy.value);
+    }
+    if (reopenedAt.present) {
+      map['reopened_at'] = Variable<int>(reopenedAt.value);
+    }
+    if (reopenedBy.present) {
+      map['reopened_by'] = Variable<String>(reopenedBy.value);
+    }
+    if (reopenReason.present) {
+      map['reopen_reason'] = Variable<String>(reopenReason.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountingPeriodsCompanion(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('fiscalYearUuid: $fiscalYearUuid, ')
+          ..write('periodNumber: $periodNumber, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('status: $status, ')
+          ..write('openedAt: $openedAt, ')
+          ..write('openedBy: $openedBy, ')
+          ..write('closedAt: $closedAt, ')
+          ..write('closedBy: $closedBy, ')
+          ..write('reopenedAt: $reopenedAt, ')
+          ..write('reopenedBy: $reopenedBy, ')
+          ..write('reopenReason: $reopenReason')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PeriodClosingRecordsTable extends PeriodClosingRecords
+    with TableInfo<$PeriodClosingRecordsTable, PeriodClosingRecordRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PeriodClosingRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _fiscalYearUuidMeta = const VerificationMeta(
+    'fiscalYearUuid',
+  );
+  @override
+  late final GeneratedColumn<String> fiscalYearUuid = GeneratedColumn<String>(
+    'fiscal_year_uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _periodUuidMeta = const VerificationMeta(
+    'periodUuid',
+  );
+  @override
+  late final GeneratedColumn<String> periodUuid = GeneratedColumn<String>(
+    'period_uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _closingDateMeta = const VerificationMeta(
+    'closingDate',
+  );
+  @override
+  late final GeneratedColumn<int> closingDate = GeneratedColumn<int>(
+    'closing_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fxRevaluationEnabledMeta =
+      const VerificationMeta('fxRevaluationEnabled');
+  @override
+  late final GeneratedColumn<bool> fxRevaluationEnabled = GeneratedColumn<bool>(
+    'fx_revaluation_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("fx_revaluation_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _fxRevaluationExecutedMeta =
+      const VerificationMeta('fxRevaluationExecuted');
+  @override
+  late final GeneratedColumn<bool> fxRevaluationExecuted =
+      GeneratedColumn<bool>(
+        'fx_revaluation_executed',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("fx_revaluation_executed" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _fxSkipReasonMeta = const VerificationMeta(
+    'fxSkipReason',
+  );
+  @override
+  late final GeneratedColumn<String> fxSkipReason = GeneratedColumn<String>(
+    'fx_skip_reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _fxGainMeta = const VerificationMeta('fxGain');
+  @override
+  late final GeneratedColumn<double> fxGain = GeneratedColumn<double>(
+    'fx_gain',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _fxLossMeta = const VerificationMeta('fxLoss');
+  @override
+  late final GeneratedColumn<double> fxLoss = GeneratedColumn<double>(
+    'fx_loss',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _netFxDifferenceMeta = const VerificationMeta(
+    'netFxDifference',
+  );
+  @override
+  late final GeneratedColumn<double> netFxDifference = GeneratedColumn<double>(
+    'net_fx_difference',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _journalEntryUuidMeta = const VerificationMeta(
+    'journalEntryUuid',
+  );
+  @override
+  late final GeneratedColumn<String> journalEntryUuid = GeneratedColumn<String>(
+    'journal_entry_uuid',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdByMeta = const VerificationMeta(
+    'createdBy',
+  );
+  @override
+  late final GeneratedColumn<String> createdBy = GeneratedColumn<String>(
+    'created_by',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    uuid,
+    fiscalYearUuid,
+    periodUuid,
+    closingDate,
+    status,
+    fxRevaluationEnabled,
+    fxRevaluationExecuted,
+    fxSkipReason,
+    fxGain,
+    fxLoss,
+    netFxDifference,
+    journalEntryUuid,
+    createdBy,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'period_closing_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PeriodClosingRecordRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('fiscal_year_uuid')) {
+      context.handle(
+        _fiscalYearUuidMeta,
+        fiscalYearUuid.isAcceptableOrUnknown(
+          data['fiscal_year_uuid']!,
+          _fiscalYearUuidMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fiscalYearUuidMeta);
+    }
+    if (data.containsKey('period_uuid')) {
+      context.handle(
+        _periodUuidMeta,
+        periodUuid.isAcceptableOrUnknown(data['period_uuid']!, _periodUuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_periodUuidMeta);
+    }
+    if (data.containsKey('closing_date')) {
+      context.handle(
+        _closingDateMeta,
+        closingDate.isAcceptableOrUnknown(
+          data['closing_date']!,
+          _closingDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_closingDateMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('fx_revaluation_enabled')) {
+      context.handle(
+        _fxRevaluationEnabledMeta,
+        fxRevaluationEnabled.isAcceptableOrUnknown(
+          data['fx_revaluation_enabled']!,
+          _fxRevaluationEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fx_revaluation_executed')) {
+      context.handle(
+        _fxRevaluationExecutedMeta,
+        fxRevaluationExecuted.isAcceptableOrUnknown(
+          data['fx_revaluation_executed']!,
+          _fxRevaluationExecutedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fx_skip_reason')) {
+      context.handle(
+        _fxSkipReasonMeta,
+        fxSkipReason.isAcceptableOrUnknown(
+          data['fx_skip_reason']!,
+          _fxSkipReasonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('fx_gain')) {
+      context.handle(
+        _fxGainMeta,
+        fxGain.isAcceptableOrUnknown(data['fx_gain']!, _fxGainMeta),
+      );
+    }
+    if (data.containsKey('fx_loss')) {
+      context.handle(
+        _fxLossMeta,
+        fxLoss.isAcceptableOrUnknown(data['fx_loss']!, _fxLossMeta),
+      );
+    }
+    if (data.containsKey('net_fx_difference')) {
+      context.handle(
+        _netFxDifferenceMeta,
+        netFxDifference.isAcceptableOrUnknown(
+          data['net_fx_difference']!,
+          _netFxDifferenceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('journal_entry_uuid')) {
+      context.handle(
+        _journalEntryUuidMeta,
+        journalEntryUuid.isAcceptableOrUnknown(
+          data['journal_entry_uuid']!,
+          _journalEntryUuidMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_by')) {
+      context.handle(
+        _createdByMeta,
+        createdBy.isAcceptableOrUnknown(data['created_by']!, _createdByMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PeriodClosingRecordRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PeriodClosingRecordRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      fiscalYearUuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fiscal_year_uuid'],
+      )!,
+      periodUuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period_uuid'],
+      )!,
+      closingDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}closing_date'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      fxRevaluationEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}fx_revaluation_enabled'],
+      )!,
+      fxRevaluationExecuted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}fx_revaluation_executed'],
+      )!,
+      fxSkipReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fx_skip_reason'],
+      ),
+      fxGain: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}fx_gain'],
+      )!,
+      fxLoss: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}fx_loss'],
+      )!,
+      netFxDifference: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}net_fx_difference'],
+      )!,
+      journalEntryUuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}journal_entry_uuid'],
+      ),
+      createdBy: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PeriodClosingRecordsTable createAlias(String alias) {
+    return $PeriodClosingRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class PeriodClosingRecordRow extends DataClass
+    implements Insertable<PeriodClosingRecordRow> {
+  final int id;
+  final String uuid;
+  final String fiscalYearUuid;
+  final String periodUuid;
+  final int closingDate;
+
+  /// `completed` | `failed`
+  final String status;
+  final bool fxRevaluationEnabled;
+  final bool fxRevaluationExecuted;
+  final String? fxSkipReason;
+  final double fxGain;
+  final double fxLoss;
+  final double netFxDifference;
+  final String? journalEntryUuid;
+  final String? createdBy;
+  final int createdAt;
+  const PeriodClosingRecordRow({
+    required this.id,
+    required this.uuid,
+    required this.fiscalYearUuid,
+    required this.periodUuid,
+    required this.closingDate,
+    required this.status,
+    required this.fxRevaluationEnabled,
+    required this.fxRevaluationExecuted,
+    this.fxSkipReason,
+    required this.fxGain,
+    required this.fxLoss,
+    required this.netFxDifference,
+    this.journalEntryUuid,
+    this.createdBy,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
+    map['fiscal_year_uuid'] = Variable<String>(fiscalYearUuid);
+    map['period_uuid'] = Variable<String>(periodUuid);
+    map['closing_date'] = Variable<int>(closingDate);
+    map['status'] = Variable<String>(status);
+    map['fx_revaluation_enabled'] = Variable<bool>(fxRevaluationEnabled);
+    map['fx_revaluation_executed'] = Variable<bool>(fxRevaluationExecuted);
+    if (!nullToAbsent || fxSkipReason != null) {
+      map['fx_skip_reason'] = Variable<String>(fxSkipReason);
+    }
+    map['fx_gain'] = Variable<double>(fxGain);
+    map['fx_loss'] = Variable<double>(fxLoss);
+    map['net_fx_difference'] = Variable<double>(netFxDifference);
+    if (!nullToAbsent || journalEntryUuid != null) {
+      map['journal_entry_uuid'] = Variable<String>(journalEntryUuid);
+    }
+    if (!nullToAbsent || createdBy != null) {
+      map['created_by'] = Variable<String>(createdBy);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  PeriodClosingRecordsCompanion toCompanion(bool nullToAbsent) {
+    return PeriodClosingRecordsCompanion(
+      id: Value(id),
+      uuid: Value(uuid),
+      fiscalYearUuid: Value(fiscalYearUuid),
+      periodUuid: Value(periodUuid),
+      closingDate: Value(closingDate),
+      status: Value(status),
+      fxRevaluationEnabled: Value(fxRevaluationEnabled),
+      fxRevaluationExecuted: Value(fxRevaluationExecuted),
+      fxSkipReason: fxSkipReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fxSkipReason),
+      fxGain: Value(fxGain),
+      fxLoss: Value(fxLoss),
+      netFxDifference: Value(netFxDifference),
+      journalEntryUuid: journalEntryUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(journalEntryUuid),
+      createdBy: createdBy == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdBy),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory PeriodClosingRecordRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PeriodClosingRecordRow(
+      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      fiscalYearUuid: serializer.fromJson<String>(json['fiscalYearUuid']),
+      periodUuid: serializer.fromJson<String>(json['periodUuid']),
+      closingDate: serializer.fromJson<int>(json['closingDate']),
+      status: serializer.fromJson<String>(json['status']),
+      fxRevaluationEnabled: serializer.fromJson<bool>(
+        json['fxRevaluationEnabled'],
+      ),
+      fxRevaluationExecuted: serializer.fromJson<bool>(
+        json['fxRevaluationExecuted'],
+      ),
+      fxSkipReason: serializer.fromJson<String?>(json['fxSkipReason']),
+      fxGain: serializer.fromJson<double>(json['fxGain']),
+      fxLoss: serializer.fromJson<double>(json['fxLoss']),
+      netFxDifference: serializer.fromJson<double>(json['netFxDifference']),
+      journalEntryUuid: serializer.fromJson<String?>(json['journalEntryUuid']),
+      createdBy: serializer.fromJson<String?>(json['createdBy']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
+      'fiscalYearUuid': serializer.toJson<String>(fiscalYearUuid),
+      'periodUuid': serializer.toJson<String>(periodUuid),
+      'closingDate': serializer.toJson<int>(closingDate),
+      'status': serializer.toJson<String>(status),
+      'fxRevaluationEnabled': serializer.toJson<bool>(fxRevaluationEnabled),
+      'fxRevaluationExecuted': serializer.toJson<bool>(fxRevaluationExecuted),
+      'fxSkipReason': serializer.toJson<String?>(fxSkipReason),
+      'fxGain': serializer.toJson<double>(fxGain),
+      'fxLoss': serializer.toJson<double>(fxLoss),
+      'netFxDifference': serializer.toJson<double>(netFxDifference),
+      'journalEntryUuid': serializer.toJson<String?>(journalEntryUuid),
+      'createdBy': serializer.toJson<String?>(createdBy),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  PeriodClosingRecordRow copyWith({
+    int? id,
+    String? uuid,
+    String? fiscalYearUuid,
+    String? periodUuid,
+    int? closingDate,
+    String? status,
+    bool? fxRevaluationEnabled,
+    bool? fxRevaluationExecuted,
+    Value<String?> fxSkipReason = const Value.absent(),
+    double? fxGain,
+    double? fxLoss,
+    double? netFxDifference,
+    Value<String?> journalEntryUuid = const Value.absent(),
+    Value<String?> createdBy = const Value.absent(),
+    int? createdAt,
+  }) => PeriodClosingRecordRow(
+    id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
+    fiscalYearUuid: fiscalYearUuid ?? this.fiscalYearUuid,
+    periodUuid: periodUuid ?? this.periodUuid,
+    closingDate: closingDate ?? this.closingDate,
+    status: status ?? this.status,
+    fxRevaluationEnabled: fxRevaluationEnabled ?? this.fxRevaluationEnabled,
+    fxRevaluationExecuted: fxRevaluationExecuted ?? this.fxRevaluationExecuted,
+    fxSkipReason: fxSkipReason.present ? fxSkipReason.value : this.fxSkipReason,
+    fxGain: fxGain ?? this.fxGain,
+    fxLoss: fxLoss ?? this.fxLoss,
+    netFxDifference: netFxDifference ?? this.netFxDifference,
+    journalEntryUuid: journalEntryUuid.present
+        ? journalEntryUuid.value
+        : this.journalEntryUuid,
+    createdBy: createdBy.present ? createdBy.value : this.createdBy,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  PeriodClosingRecordRow copyWithCompanion(PeriodClosingRecordsCompanion data) {
+    return PeriodClosingRecordRow(
+      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      fiscalYearUuid: data.fiscalYearUuid.present
+          ? data.fiscalYearUuid.value
+          : this.fiscalYearUuid,
+      periodUuid: data.periodUuid.present
+          ? data.periodUuid.value
+          : this.periodUuid,
+      closingDate: data.closingDate.present
+          ? data.closingDate.value
+          : this.closingDate,
+      status: data.status.present ? data.status.value : this.status,
+      fxRevaluationEnabled: data.fxRevaluationEnabled.present
+          ? data.fxRevaluationEnabled.value
+          : this.fxRevaluationEnabled,
+      fxRevaluationExecuted: data.fxRevaluationExecuted.present
+          ? data.fxRevaluationExecuted.value
+          : this.fxRevaluationExecuted,
+      fxSkipReason: data.fxSkipReason.present
+          ? data.fxSkipReason.value
+          : this.fxSkipReason,
+      fxGain: data.fxGain.present ? data.fxGain.value : this.fxGain,
+      fxLoss: data.fxLoss.present ? data.fxLoss.value : this.fxLoss,
+      netFxDifference: data.netFxDifference.present
+          ? data.netFxDifference.value
+          : this.netFxDifference,
+      journalEntryUuid: data.journalEntryUuid.present
+          ? data.journalEntryUuid.value
+          : this.journalEntryUuid,
+      createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PeriodClosingRecordRow(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('fiscalYearUuid: $fiscalYearUuid, ')
+          ..write('periodUuid: $periodUuid, ')
+          ..write('closingDate: $closingDate, ')
+          ..write('status: $status, ')
+          ..write('fxRevaluationEnabled: $fxRevaluationEnabled, ')
+          ..write('fxRevaluationExecuted: $fxRevaluationExecuted, ')
+          ..write('fxSkipReason: $fxSkipReason, ')
+          ..write('fxGain: $fxGain, ')
+          ..write('fxLoss: $fxLoss, ')
+          ..write('netFxDifference: $netFxDifference, ')
+          ..write('journalEntryUuid: $journalEntryUuid, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    uuid,
+    fiscalYearUuid,
+    periodUuid,
+    closingDate,
+    status,
+    fxRevaluationEnabled,
+    fxRevaluationExecuted,
+    fxSkipReason,
+    fxGain,
+    fxLoss,
+    netFxDifference,
+    journalEntryUuid,
+    createdBy,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PeriodClosingRecordRow &&
+          other.id == this.id &&
+          other.uuid == this.uuid &&
+          other.fiscalYearUuid == this.fiscalYearUuid &&
+          other.periodUuid == this.periodUuid &&
+          other.closingDate == this.closingDate &&
+          other.status == this.status &&
+          other.fxRevaluationEnabled == this.fxRevaluationEnabled &&
+          other.fxRevaluationExecuted == this.fxRevaluationExecuted &&
+          other.fxSkipReason == this.fxSkipReason &&
+          other.fxGain == this.fxGain &&
+          other.fxLoss == this.fxLoss &&
+          other.netFxDifference == this.netFxDifference &&
+          other.journalEntryUuid == this.journalEntryUuid &&
+          other.createdBy == this.createdBy &&
+          other.createdAt == this.createdAt);
+}
+
+class PeriodClosingRecordsCompanion
+    extends UpdateCompanion<PeriodClosingRecordRow> {
+  final Value<int> id;
+  final Value<String> uuid;
+  final Value<String> fiscalYearUuid;
+  final Value<String> periodUuid;
+  final Value<int> closingDate;
+  final Value<String> status;
+  final Value<bool> fxRevaluationEnabled;
+  final Value<bool> fxRevaluationExecuted;
+  final Value<String?> fxSkipReason;
+  final Value<double> fxGain;
+  final Value<double> fxLoss;
+  final Value<double> netFxDifference;
+  final Value<String?> journalEntryUuid;
+  final Value<String?> createdBy;
+  final Value<int> createdAt;
+  const PeriodClosingRecordsCompanion({
+    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.fiscalYearUuid = const Value.absent(),
+    this.periodUuid = const Value.absent(),
+    this.closingDate = const Value.absent(),
+    this.status = const Value.absent(),
+    this.fxRevaluationEnabled = const Value.absent(),
+    this.fxRevaluationExecuted = const Value.absent(),
+    this.fxSkipReason = const Value.absent(),
+    this.fxGain = const Value.absent(),
+    this.fxLoss = const Value.absent(),
+    this.netFxDifference = const Value.absent(),
+    this.journalEntryUuid = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  PeriodClosingRecordsCompanion.insert({
+    this.id = const Value.absent(),
+    required String uuid,
+    required String fiscalYearUuid,
+    required String periodUuid,
+    required int closingDate,
+    required String status,
+    this.fxRevaluationEnabled = const Value.absent(),
+    this.fxRevaluationExecuted = const Value.absent(),
+    this.fxSkipReason = const Value.absent(),
+    this.fxGain = const Value.absent(),
+    this.fxLoss = const Value.absent(),
+    this.netFxDifference = const Value.absent(),
+    this.journalEntryUuid = const Value.absent(),
+    this.createdBy = const Value.absent(),
+    required int createdAt,
+  }) : uuid = Value(uuid),
+       fiscalYearUuid = Value(fiscalYearUuid),
+       periodUuid = Value(periodUuid),
+       closingDate = Value(closingDate),
+       status = Value(status),
+       createdAt = Value(createdAt);
+  static Insertable<PeriodClosingRecordRow> custom({
+    Expression<int>? id,
+    Expression<String>? uuid,
+    Expression<String>? fiscalYearUuid,
+    Expression<String>? periodUuid,
+    Expression<int>? closingDate,
+    Expression<String>? status,
+    Expression<bool>? fxRevaluationEnabled,
+    Expression<bool>? fxRevaluationExecuted,
+    Expression<String>? fxSkipReason,
+    Expression<double>? fxGain,
+    Expression<double>? fxLoss,
+    Expression<double>? netFxDifference,
+    Expression<String>? journalEntryUuid,
+    Expression<String>? createdBy,
+    Expression<int>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
+      if (fiscalYearUuid != null) 'fiscal_year_uuid': fiscalYearUuid,
+      if (periodUuid != null) 'period_uuid': periodUuid,
+      if (closingDate != null) 'closing_date': closingDate,
+      if (status != null) 'status': status,
+      if (fxRevaluationEnabled != null)
+        'fx_revaluation_enabled': fxRevaluationEnabled,
+      if (fxRevaluationExecuted != null)
+        'fx_revaluation_executed': fxRevaluationExecuted,
+      if (fxSkipReason != null) 'fx_skip_reason': fxSkipReason,
+      if (fxGain != null) 'fx_gain': fxGain,
+      if (fxLoss != null) 'fx_loss': fxLoss,
+      if (netFxDifference != null) 'net_fx_difference': netFxDifference,
+      if (journalEntryUuid != null) 'journal_entry_uuid': journalEntryUuid,
+      if (createdBy != null) 'created_by': createdBy,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  PeriodClosingRecordsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? uuid,
+    Value<String>? fiscalYearUuid,
+    Value<String>? periodUuid,
+    Value<int>? closingDate,
+    Value<String>? status,
+    Value<bool>? fxRevaluationEnabled,
+    Value<bool>? fxRevaluationExecuted,
+    Value<String?>? fxSkipReason,
+    Value<double>? fxGain,
+    Value<double>? fxLoss,
+    Value<double>? netFxDifference,
+    Value<String?>? journalEntryUuid,
+    Value<String?>? createdBy,
+    Value<int>? createdAt,
+  }) {
+    return PeriodClosingRecordsCompanion(
+      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
+      fiscalYearUuid: fiscalYearUuid ?? this.fiscalYearUuid,
+      periodUuid: periodUuid ?? this.periodUuid,
+      closingDate: closingDate ?? this.closingDate,
+      status: status ?? this.status,
+      fxRevaluationEnabled: fxRevaluationEnabled ?? this.fxRevaluationEnabled,
+      fxRevaluationExecuted:
+          fxRevaluationExecuted ?? this.fxRevaluationExecuted,
+      fxSkipReason: fxSkipReason ?? this.fxSkipReason,
+      fxGain: fxGain ?? this.fxGain,
+      fxLoss: fxLoss ?? this.fxLoss,
+      netFxDifference: netFxDifference ?? this.netFxDifference,
+      journalEntryUuid: journalEntryUuid ?? this.journalEntryUuid,
+      createdBy: createdBy ?? this.createdBy,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (fiscalYearUuid.present) {
+      map['fiscal_year_uuid'] = Variable<String>(fiscalYearUuid.value);
+    }
+    if (periodUuid.present) {
+      map['period_uuid'] = Variable<String>(periodUuid.value);
+    }
+    if (closingDate.present) {
+      map['closing_date'] = Variable<int>(closingDate.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (fxRevaluationEnabled.present) {
+      map['fx_revaluation_enabled'] = Variable<bool>(
+        fxRevaluationEnabled.value,
+      );
+    }
+    if (fxRevaluationExecuted.present) {
+      map['fx_revaluation_executed'] = Variable<bool>(
+        fxRevaluationExecuted.value,
+      );
+    }
+    if (fxSkipReason.present) {
+      map['fx_skip_reason'] = Variable<String>(fxSkipReason.value);
+    }
+    if (fxGain.present) {
+      map['fx_gain'] = Variable<double>(fxGain.value);
+    }
+    if (fxLoss.present) {
+      map['fx_loss'] = Variable<double>(fxLoss.value);
+    }
+    if (netFxDifference.present) {
+      map['net_fx_difference'] = Variable<double>(netFxDifference.value);
+    }
+    if (journalEntryUuid.present) {
+      map['journal_entry_uuid'] = Variable<String>(journalEntryUuid.value);
+    }
+    if (createdBy.present) {
+      map['created_by'] = Variable<String>(createdBy.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PeriodClosingRecordsCompanion(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('fiscalYearUuid: $fiscalYearUuid, ')
+          ..write('periodUuid: $periodUuid, ')
+          ..write('closingDate: $closingDate, ')
+          ..write('status: $status, ')
+          ..write('fxRevaluationEnabled: $fxRevaluationEnabled, ')
+          ..write('fxRevaluationExecuted: $fxRevaluationExecuted, ')
+          ..write('fxSkipReason: $fxSkipReason, ')
+          ..write('fxGain: $fxGain, ')
+          ..write('fxLoss: $fxLoss, ')
+          ..write('netFxDifference: $netFxDifference, ')
+          ..write('journalEntryUuid: $journalEntryUuid, ')
+          ..write('createdBy: $createdBy, ')
+          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
@@ -3703,9 +7116,16 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
   $AccountingDatabaseManager get managers => $AccountingDatabaseManager(this);
   late final $AccountsTable accounts = $AccountsTable(this);
   late final $CurrencyRatesTable currencyRates = $CurrencyRatesTable(this);
+  late final $CurrencyRateHistoryTable currencyRateHistory =
+      $CurrencyRateHistoryTable(this);
   late final $VoucherBooksTable voucherBooks = $VoucherBooksTable(this);
   late final $JournalEntriesTable journalEntries = $JournalEntriesTable(this);
   late final $JournalLinesTable journalLines = $JournalLinesTable(this);
+  late final $FiscalYearsTable fiscalYears = $FiscalYearsTable(this);
+  late final $AccountingPeriodsTable accountingPeriods =
+      $AccountingPeriodsTable(this);
+  late final $PeriodClosingRecordsTable periodClosingRecords =
+      $PeriodClosingRecordsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3713,9 +7133,13 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     accounts,
     currencyRates,
+    currencyRateHistory,
     voucherBooks,
     journalEntries,
     journalLines,
+    fiscalYears,
+    accountingPeriods,
+    periodClosingRecords,
   ];
 }
 
@@ -4380,6 +7804,239 @@ typedef $$CurrencyRatesTableProcessedTableManager =
         >,
       ),
       CurrencyRateRow,
+      PrefetchHooks Function()
+    >;
+typedef $$CurrencyRateHistoryTableCreateCompanionBuilder =
+    CurrencyRateHistoryCompanion Function({
+      Value<int> id,
+      required String currencyCode,
+      required int asOfDate,
+      required double rateToBase,
+      required int createdAt,
+      Value<String?> notes,
+    });
+typedef $$CurrencyRateHistoryTableUpdateCompanionBuilder =
+    CurrencyRateHistoryCompanion Function({
+      Value<int> id,
+      Value<String> currencyCode,
+      Value<int> asOfDate,
+      Value<double> rateToBase,
+      Value<int> createdAt,
+      Value<String?> notes,
+    });
+
+class $$CurrencyRateHistoryTableFilterComposer
+    extends Composer<_$AccountingDatabase, $CurrencyRateHistoryTable> {
+  $$CurrencyRateHistoryTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get asOfDate => $composableBuilder(
+    column: $table.asOfDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get rateToBase => $composableBuilder(
+    column: $table.rateToBase,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CurrencyRateHistoryTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $CurrencyRateHistoryTable> {
+  $$CurrencyRateHistoryTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get asOfDate => $composableBuilder(
+    column: $table.asOfDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get rateToBase => $composableBuilder(
+    column: $table.rateToBase,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CurrencyRateHistoryTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $CurrencyRateHistoryTable> {
+  $$CurrencyRateHistoryTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get asOfDate =>
+      $composableBuilder(column: $table.asOfDate, builder: (column) => column);
+
+  GeneratedColumn<double> get rateToBase => $composableBuilder(
+    column: $table.rateToBase,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+}
+
+class $$CurrencyRateHistoryTableTableManager
+    extends
+        RootTableManager<
+          _$AccountingDatabase,
+          $CurrencyRateHistoryTable,
+          CurrencyRateHistoryRow,
+          $$CurrencyRateHistoryTableFilterComposer,
+          $$CurrencyRateHistoryTableOrderingComposer,
+          $$CurrencyRateHistoryTableAnnotationComposer,
+          $$CurrencyRateHistoryTableCreateCompanionBuilder,
+          $$CurrencyRateHistoryTableUpdateCompanionBuilder,
+          (
+            CurrencyRateHistoryRow,
+            BaseReferences<
+              _$AccountingDatabase,
+              $CurrencyRateHistoryTable,
+              CurrencyRateHistoryRow
+            >,
+          ),
+          CurrencyRateHistoryRow,
+          PrefetchHooks Function()
+        > {
+  $$CurrencyRateHistoryTableTableManager(
+    _$AccountingDatabase db,
+    $CurrencyRateHistoryTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CurrencyRateHistoryTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CurrencyRateHistoryTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$CurrencyRateHistoryTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
+                Value<int> asOfDate = const Value.absent(),
+                Value<double> rateToBase = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+              }) => CurrencyRateHistoryCompanion(
+                id: id,
+                currencyCode: currencyCode,
+                asOfDate: asOfDate,
+                rateToBase: rateToBase,
+                createdAt: createdAt,
+                notes: notes,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String currencyCode,
+                required int asOfDate,
+                required double rateToBase,
+                required int createdAt,
+                Value<String?> notes = const Value.absent(),
+              }) => CurrencyRateHistoryCompanion.insert(
+                id: id,
+                currencyCode: currencyCode,
+                asOfDate: asOfDate,
+                rateToBase: rateToBase,
+                createdAt: createdAt,
+                notes: notes,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CurrencyRateHistoryTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AccountingDatabase,
+      $CurrencyRateHistoryTable,
+      CurrencyRateHistoryRow,
+      $$CurrencyRateHistoryTableFilterComposer,
+      $$CurrencyRateHistoryTableOrderingComposer,
+      $$CurrencyRateHistoryTableAnnotationComposer,
+      $$CurrencyRateHistoryTableCreateCompanionBuilder,
+      $$CurrencyRateHistoryTableUpdateCompanionBuilder,
+      (
+        CurrencyRateHistoryRow,
+        BaseReferences<
+          _$AccountingDatabase,
+          $CurrencyRateHistoryTable,
+          CurrencyRateHistoryRow
+        >,
+      ),
+      CurrencyRateHistoryRow,
       PrefetchHooks Function()
     >;
 typedef $$VoucherBooksTableCreateCompanionBuilder =
@@ -5175,6 +8832,9 @@ typedef $$JournalLinesTableCreateCompanionBuilder =
       required String accountUuid,
       Value<double> debit,
       Value<double> credit,
+      Value<double> exchangeRateToBase,
+      Value<double> baseDebit,
+      Value<double> baseCredit,
       Value<String?> lineDescription,
       required String currencyCode,
       Value<int> sortOrder,
@@ -5187,6 +8847,9 @@ typedef $$JournalLinesTableUpdateCompanionBuilder =
       Value<String> accountUuid,
       Value<double> debit,
       Value<double> credit,
+      Value<double> exchangeRateToBase,
+      Value<double> baseDebit,
+      Value<double> baseCredit,
       Value<String?> lineDescription,
       Value<String> currencyCode,
       Value<int> sortOrder,
@@ -5228,6 +8891,21 @@ class $$JournalLinesTableFilterComposer
 
   ColumnFilters<double> get credit => $composableBuilder(
     column: $table.credit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get exchangeRateToBase => $composableBuilder(
+    column: $table.exchangeRateToBase,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get baseDebit => $composableBuilder(
+    column: $table.baseDebit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get baseCredit => $composableBuilder(
+    column: $table.baseCredit,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5286,6 +8964,21 @@ class $$JournalLinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get exchangeRateToBase => $composableBuilder(
+    column: $table.exchangeRateToBase,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get baseDebit => $composableBuilder(
+    column: $table.baseDebit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get baseCredit => $composableBuilder(
+    column: $table.baseCredit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get lineDescription => $composableBuilder(
     column: $table.lineDescription,
     builder: (column) => ColumnOrderings(column),
@@ -5330,6 +9023,19 @@ class $$JournalLinesTableAnnotationComposer
 
   GeneratedColumn<double> get credit =>
       $composableBuilder(column: $table.credit, builder: (column) => column);
+
+  GeneratedColumn<double> get exchangeRateToBase => $composableBuilder(
+    column: $table.exchangeRateToBase,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get baseDebit =>
+      $composableBuilder(column: $table.baseDebit, builder: (column) => column);
+
+  GeneratedColumn<double> get baseCredit => $composableBuilder(
+    column: $table.baseCredit,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get lineDescription => $composableBuilder(
     column: $table.lineDescription,
@@ -5388,6 +9094,9 @@ class $$JournalLinesTableTableManager
                 Value<String> accountUuid = const Value.absent(),
                 Value<double> debit = const Value.absent(),
                 Value<double> credit = const Value.absent(),
+                Value<double> exchangeRateToBase = const Value.absent(),
+                Value<double> baseDebit = const Value.absent(),
+                Value<double> baseCredit = const Value.absent(),
                 Value<String?> lineDescription = const Value.absent(),
                 Value<String> currencyCode = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
@@ -5398,6 +9107,9 @@ class $$JournalLinesTableTableManager
                 accountUuid: accountUuid,
                 debit: debit,
                 credit: credit,
+                exchangeRateToBase: exchangeRateToBase,
+                baseDebit: baseDebit,
+                baseCredit: baseCredit,
                 lineDescription: lineDescription,
                 currencyCode: currencyCode,
                 sortOrder: sortOrder,
@@ -5410,6 +9122,9 @@ class $$JournalLinesTableTableManager
                 required String accountUuid,
                 Value<double> debit = const Value.absent(),
                 Value<double> credit = const Value.absent(),
+                Value<double> exchangeRateToBase = const Value.absent(),
+                Value<double> baseDebit = const Value.absent(),
+                Value<double> baseCredit = const Value.absent(),
                 Value<String?> lineDescription = const Value.absent(),
                 required String currencyCode,
                 Value<int> sortOrder = const Value.absent(),
@@ -5420,6 +9135,9 @@ class $$JournalLinesTableTableManager
                 accountUuid: accountUuid,
                 debit: debit,
                 credit: credit,
+                exchangeRateToBase: exchangeRateToBase,
+                baseDebit: baseDebit,
+                baseCredit: baseCredit,
                 lineDescription: lineDescription,
                 currencyCode: currencyCode,
                 sortOrder: sortOrder,
@@ -5453,6 +9171,1288 @@ typedef $$JournalLinesTableProcessedTableManager =
       JournalLineRow,
       PrefetchHooks Function()
     >;
+typedef $$FiscalYearsTableCreateCompanionBuilder =
+    FiscalYearsCompanion Function({
+      Value<int> id,
+      required String uuid,
+      required String code,
+      required String name,
+      required int startDate,
+      required int endDate,
+      required String status,
+      required String baseCurrencyCode,
+      required int periodCount,
+      Value<String> periodFrequency,
+      Value<bool> fxRevaluationEnabled,
+      Value<String?> fxGainAccountUuid,
+      Value<String?> fxLossAccountUuid,
+      required int createdAt,
+      required int updatedAt,
+      Value<int?> closedAt,
+      Value<String?> createdBy,
+      Value<String?> closedBy,
+    });
+typedef $$FiscalYearsTableUpdateCompanionBuilder =
+    FiscalYearsCompanion Function({
+      Value<int> id,
+      Value<String> uuid,
+      Value<String> code,
+      Value<String> name,
+      Value<int> startDate,
+      Value<int> endDate,
+      Value<String> status,
+      Value<String> baseCurrencyCode,
+      Value<int> periodCount,
+      Value<String> periodFrequency,
+      Value<bool> fxRevaluationEnabled,
+      Value<String?> fxGainAccountUuid,
+      Value<String?> fxLossAccountUuid,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+      Value<int?> closedAt,
+      Value<String?> createdBy,
+      Value<String?> closedBy,
+    });
+
+class $$FiscalYearsTableFilterComposer
+    extends Composer<_$AccountingDatabase, $FiscalYearsTable> {
+  $$FiscalYearsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get baseCurrencyCode => $composableBuilder(
+    column: $table.baseCurrencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get periodCount => $composableBuilder(
+    column: $table.periodCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get periodFrequency => $composableBuilder(
+    column: $table.periodFrequency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get fxRevaluationEnabled => $composableBuilder(
+    column: $table.fxRevaluationEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fxGainAccountUuid => $composableBuilder(
+    column: $table.fxGainAccountUuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fxLossAccountUuid => $composableBuilder(
+    column: $table.fxLossAccountUuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get closedBy => $composableBuilder(
+    column: $table.closedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FiscalYearsTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $FiscalYearsTable> {
+  $$FiscalYearsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get baseCurrencyCode => $composableBuilder(
+    column: $table.baseCurrencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get periodCount => $composableBuilder(
+    column: $table.periodCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get periodFrequency => $composableBuilder(
+    column: $table.periodFrequency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get fxRevaluationEnabled => $composableBuilder(
+    column: $table.fxRevaluationEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fxGainAccountUuid => $composableBuilder(
+    column: $table.fxGainAccountUuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fxLossAccountUuid => $composableBuilder(
+    column: $table.fxLossAccountUuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get closedBy => $composableBuilder(
+    column: $table.closedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FiscalYearsTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $FiscalYearsTable> {
+  $$FiscalYearsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<int> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get baseCurrencyCode => $composableBuilder(
+    column: $table.baseCurrencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get periodCount => $composableBuilder(
+    column: $table.periodCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get periodFrequency => $composableBuilder(
+    column: $table.periodFrequency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get fxRevaluationEnabled => $composableBuilder(
+    column: $table.fxRevaluationEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fxGainAccountUuid => $composableBuilder(
+    column: $table.fxGainAccountUuid,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fxLossAccountUuid => $composableBuilder(
+    column: $table.fxLossAccountUuid,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get closedAt =>
+      $composableBuilder(column: $table.closedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<String> get closedBy =>
+      $composableBuilder(column: $table.closedBy, builder: (column) => column);
+}
+
+class $$FiscalYearsTableTableManager
+    extends
+        RootTableManager<
+          _$AccountingDatabase,
+          $FiscalYearsTable,
+          FiscalYearRow,
+          $$FiscalYearsTableFilterComposer,
+          $$FiscalYearsTableOrderingComposer,
+          $$FiscalYearsTableAnnotationComposer,
+          $$FiscalYearsTableCreateCompanionBuilder,
+          $$FiscalYearsTableUpdateCompanionBuilder,
+          (
+            FiscalYearRow,
+            BaseReferences<
+              _$AccountingDatabase,
+              $FiscalYearsTable,
+              FiscalYearRow
+            >,
+          ),
+          FiscalYearRow,
+          PrefetchHooks Function()
+        > {
+  $$FiscalYearsTableTableManager(
+    _$AccountingDatabase db,
+    $FiscalYearsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FiscalYearsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FiscalYearsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FiscalYearsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
+                Value<String> code = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> startDate = const Value.absent(),
+                Value<int> endDate = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> baseCurrencyCode = const Value.absent(),
+                Value<int> periodCount = const Value.absent(),
+                Value<String> periodFrequency = const Value.absent(),
+                Value<bool> fxRevaluationEnabled = const Value.absent(),
+                Value<String?> fxGainAccountUuid = const Value.absent(),
+                Value<String?> fxLossAccountUuid = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<int?> closedAt = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<String?> closedBy = const Value.absent(),
+              }) => FiscalYearsCompanion(
+                id: id,
+                uuid: uuid,
+                code: code,
+                name: name,
+                startDate: startDate,
+                endDate: endDate,
+                status: status,
+                baseCurrencyCode: baseCurrencyCode,
+                periodCount: periodCount,
+                periodFrequency: periodFrequency,
+                fxRevaluationEnabled: fxRevaluationEnabled,
+                fxGainAccountUuid: fxGainAccountUuid,
+                fxLossAccountUuid: fxLossAccountUuid,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                closedAt: closedAt,
+                createdBy: createdBy,
+                closedBy: closedBy,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String uuid,
+                required String code,
+                required String name,
+                required int startDate,
+                required int endDate,
+                required String status,
+                required String baseCurrencyCode,
+                required int periodCount,
+                Value<String> periodFrequency = const Value.absent(),
+                Value<bool> fxRevaluationEnabled = const Value.absent(),
+                Value<String?> fxGainAccountUuid = const Value.absent(),
+                Value<String?> fxLossAccountUuid = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+                Value<int?> closedAt = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<String?> closedBy = const Value.absent(),
+              }) => FiscalYearsCompanion.insert(
+                id: id,
+                uuid: uuid,
+                code: code,
+                name: name,
+                startDate: startDate,
+                endDate: endDate,
+                status: status,
+                baseCurrencyCode: baseCurrencyCode,
+                periodCount: periodCount,
+                periodFrequency: periodFrequency,
+                fxRevaluationEnabled: fxRevaluationEnabled,
+                fxGainAccountUuid: fxGainAccountUuid,
+                fxLossAccountUuid: fxLossAccountUuid,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                closedAt: closedAt,
+                createdBy: createdBy,
+                closedBy: closedBy,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FiscalYearsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AccountingDatabase,
+      $FiscalYearsTable,
+      FiscalYearRow,
+      $$FiscalYearsTableFilterComposer,
+      $$FiscalYearsTableOrderingComposer,
+      $$FiscalYearsTableAnnotationComposer,
+      $$FiscalYearsTableCreateCompanionBuilder,
+      $$FiscalYearsTableUpdateCompanionBuilder,
+      (
+        FiscalYearRow,
+        BaseReferences<_$AccountingDatabase, $FiscalYearsTable, FiscalYearRow>,
+      ),
+      FiscalYearRow,
+      PrefetchHooks Function()
+    >;
+typedef $$AccountingPeriodsTableCreateCompanionBuilder =
+    AccountingPeriodsCompanion Function({
+      Value<int> id,
+      required String uuid,
+      required String fiscalYearUuid,
+      required int periodNumber,
+      required String name,
+      required int startDate,
+      required int endDate,
+      required String status,
+      Value<int?> openedAt,
+      Value<String?> openedBy,
+      Value<int?> closedAt,
+      Value<String?> closedBy,
+      Value<int?> reopenedAt,
+      Value<String?> reopenedBy,
+      Value<String?> reopenReason,
+    });
+typedef $$AccountingPeriodsTableUpdateCompanionBuilder =
+    AccountingPeriodsCompanion Function({
+      Value<int> id,
+      Value<String> uuid,
+      Value<String> fiscalYearUuid,
+      Value<int> periodNumber,
+      Value<String> name,
+      Value<int> startDate,
+      Value<int> endDate,
+      Value<String> status,
+      Value<int?> openedAt,
+      Value<String?> openedBy,
+      Value<int?> closedAt,
+      Value<String?> closedBy,
+      Value<int?> reopenedAt,
+      Value<String?> reopenedBy,
+      Value<String?> reopenReason,
+    });
+
+class $$AccountingPeriodsTableFilterComposer
+    extends Composer<_$AccountingDatabase, $AccountingPeriodsTable> {
+  $$AccountingPeriodsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fiscalYearUuid => $composableBuilder(
+    column: $table.fiscalYearUuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get periodNumber => $composableBuilder(
+    column: $table.periodNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get openedAt => $composableBuilder(
+    column: $table.openedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get openedBy => $composableBuilder(
+    column: $table.openedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get closedBy => $composableBuilder(
+    column: $table.closedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reopenedAt => $composableBuilder(
+    column: $table.reopenedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reopenedBy => $composableBuilder(
+    column: $table.reopenedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reopenReason => $composableBuilder(
+    column: $table.reopenReason,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AccountingPeriodsTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $AccountingPeriodsTable> {
+  $$AccountingPeriodsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fiscalYearUuid => $composableBuilder(
+    column: $table.fiscalYearUuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get periodNumber => $composableBuilder(
+    column: $table.periodNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endDate => $composableBuilder(
+    column: $table.endDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get openedAt => $composableBuilder(
+    column: $table.openedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get openedBy => $composableBuilder(
+    column: $table.openedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get closedAt => $composableBuilder(
+    column: $table.closedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get closedBy => $composableBuilder(
+    column: $table.closedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reopenedAt => $composableBuilder(
+    column: $table.reopenedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reopenedBy => $composableBuilder(
+    column: $table.reopenedBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reopenReason => $composableBuilder(
+    column: $table.reopenReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AccountingPeriodsTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $AccountingPeriodsTable> {
+  $$AccountingPeriodsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get fiscalYearUuid => $composableBuilder(
+    column: $table.fiscalYearUuid,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get periodNumber => $composableBuilder(
+    column: $table.periodNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<int> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get openedAt =>
+      $composableBuilder(column: $table.openedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get openedBy =>
+      $composableBuilder(column: $table.openedBy, builder: (column) => column);
+
+  GeneratedColumn<int> get closedAt =>
+      $composableBuilder(column: $table.closedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get closedBy =>
+      $composableBuilder(column: $table.closedBy, builder: (column) => column);
+
+  GeneratedColumn<int> get reopenedAt => $composableBuilder(
+    column: $table.reopenedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reopenedBy => $composableBuilder(
+    column: $table.reopenedBy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get reopenReason => $composableBuilder(
+    column: $table.reopenReason,
+    builder: (column) => column,
+  );
+}
+
+class $$AccountingPeriodsTableTableManager
+    extends
+        RootTableManager<
+          _$AccountingDatabase,
+          $AccountingPeriodsTable,
+          AccountingPeriodRow,
+          $$AccountingPeriodsTableFilterComposer,
+          $$AccountingPeriodsTableOrderingComposer,
+          $$AccountingPeriodsTableAnnotationComposer,
+          $$AccountingPeriodsTableCreateCompanionBuilder,
+          $$AccountingPeriodsTableUpdateCompanionBuilder,
+          (
+            AccountingPeriodRow,
+            BaseReferences<
+              _$AccountingDatabase,
+              $AccountingPeriodsTable,
+              AccountingPeriodRow
+            >,
+          ),
+          AccountingPeriodRow,
+          PrefetchHooks Function()
+        > {
+  $$AccountingPeriodsTableTableManager(
+    _$AccountingDatabase db,
+    $AccountingPeriodsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AccountingPeriodsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AccountingPeriodsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AccountingPeriodsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
+                Value<String> fiscalYearUuid = const Value.absent(),
+                Value<int> periodNumber = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> startDate = const Value.absent(),
+                Value<int> endDate = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> openedAt = const Value.absent(),
+                Value<String?> openedBy = const Value.absent(),
+                Value<int?> closedAt = const Value.absent(),
+                Value<String?> closedBy = const Value.absent(),
+                Value<int?> reopenedAt = const Value.absent(),
+                Value<String?> reopenedBy = const Value.absent(),
+                Value<String?> reopenReason = const Value.absent(),
+              }) => AccountingPeriodsCompanion(
+                id: id,
+                uuid: uuid,
+                fiscalYearUuid: fiscalYearUuid,
+                periodNumber: periodNumber,
+                name: name,
+                startDate: startDate,
+                endDate: endDate,
+                status: status,
+                openedAt: openedAt,
+                openedBy: openedBy,
+                closedAt: closedAt,
+                closedBy: closedBy,
+                reopenedAt: reopenedAt,
+                reopenedBy: reopenedBy,
+                reopenReason: reopenReason,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String uuid,
+                required String fiscalYearUuid,
+                required int periodNumber,
+                required String name,
+                required int startDate,
+                required int endDate,
+                required String status,
+                Value<int?> openedAt = const Value.absent(),
+                Value<String?> openedBy = const Value.absent(),
+                Value<int?> closedAt = const Value.absent(),
+                Value<String?> closedBy = const Value.absent(),
+                Value<int?> reopenedAt = const Value.absent(),
+                Value<String?> reopenedBy = const Value.absent(),
+                Value<String?> reopenReason = const Value.absent(),
+              }) => AccountingPeriodsCompanion.insert(
+                id: id,
+                uuid: uuid,
+                fiscalYearUuid: fiscalYearUuid,
+                periodNumber: periodNumber,
+                name: name,
+                startDate: startDate,
+                endDate: endDate,
+                status: status,
+                openedAt: openedAt,
+                openedBy: openedBy,
+                closedAt: closedAt,
+                closedBy: closedBy,
+                reopenedAt: reopenedAt,
+                reopenedBy: reopenedBy,
+                reopenReason: reopenReason,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AccountingPeriodsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AccountingDatabase,
+      $AccountingPeriodsTable,
+      AccountingPeriodRow,
+      $$AccountingPeriodsTableFilterComposer,
+      $$AccountingPeriodsTableOrderingComposer,
+      $$AccountingPeriodsTableAnnotationComposer,
+      $$AccountingPeriodsTableCreateCompanionBuilder,
+      $$AccountingPeriodsTableUpdateCompanionBuilder,
+      (
+        AccountingPeriodRow,
+        BaseReferences<
+          _$AccountingDatabase,
+          $AccountingPeriodsTable,
+          AccountingPeriodRow
+        >,
+      ),
+      AccountingPeriodRow,
+      PrefetchHooks Function()
+    >;
+typedef $$PeriodClosingRecordsTableCreateCompanionBuilder =
+    PeriodClosingRecordsCompanion Function({
+      Value<int> id,
+      required String uuid,
+      required String fiscalYearUuid,
+      required String periodUuid,
+      required int closingDate,
+      required String status,
+      Value<bool> fxRevaluationEnabled,
+      Value<bool> fxRevaluationExecuted,
+      Value<String?> fxSkipReason,
+      Value<double> fxGain,
+      Value<double> fxLoss,
+      Value<double> netFxDifference,
+      Value<String?> journalEntryUuid,
+      Value<String?> createdBy,
+      required int createdAt,
+    });
+typedef $$PeriodClosingRecordsTableUpdateCompanionBuilder =
+    PeriodClosingRecordsCompanion Function({
+      Value<int> id,
+      Value<String> uuid,
+      Value<String> fiscalYearUuid,
+      Value<String> periodUuid,
+      Value<int> closingDate,
+      Value<String> status,
+      Value<bool> fxRevaluationEnabled,
+      Value<bool> fxRevaluationExecuted,
+      Value<String?> fxSkipReason,
+      Value<double> fxGain,
+      Value<double> fxLoss,
+      Value<double> netFxDifference,
+      Value<String?> journalEntryUuid,
+      Value<String?> createdBy,
+      Value<int> createdAt,
+    });
+
+class $$PeriodClosingRecordsTableFilterComposer
+    extends Composer<_$AccountingDatabase, $PeriodClosingRecordsTable> {
+  $$PeriodClosingRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fiscalYearUuid => $composableBuilder(
+    column: $table.fiscalYearUuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get periodUuid => $composableBuilder(
+    column: $table.periodUuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get closingDate => $composableBuilder(
+    column: $table.closingDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get fxRevaluationEnabled => $composableBuilder(
+    column: $table.fxRevaluationEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get fxRevaluationExecuted => $composableBuilder(
+    column: $table.fxRevaluationExecuted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fxSkipReason => $composableBuilder(
+    column: $table.fxSkipReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get fxGain => $composableBuilder(
+    column: $table.fxGain,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get fxLoss => $composableBuilder(
+    column: $table.fxLoss,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get netFxDifference => $composableBuilder(
+    column: $table.netFxDifference,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get journalEntryUuid => $composableBuilder(
+    column: $table.journalEntryUuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PeriodClosingRecordsTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $PeriodClosingRecordsTable> {
+  $$PeriodClosingRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fiscalYearUuid => $composableBuilder(
+    column: $table.fiscalYearUuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get periodUuid => $composableBuilder(
+    column: $table.periodUuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get closingDate => $composableBuilder(
+    column: $table.closingDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get fxRevaluationEnabled => $composableBuilder(
+    column: $table.fxRevaluationEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get fxRevaluationExecuted => $composableBuilder(
+    column: $table.fxRevaluationExecuted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fxSkipReason => $composableBuilder(
+    column: $table.fxSkipReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get fxGain => $composableBuilder(
+    column: $table.fxGain,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get fxLoss => $composableBuilder(
+    column: $table.fxLoss,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get netFxDifference => $composableBuilder(
+    column: $table.netFxDifference,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get journalEntryUuid => $composableBuilder(
+    column: $table.journalEntryUuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdBy => $composableBuilder(
+    column: $table.createdBy,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PeriodClosingRecordsTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $PeriodClosingRecordsTable> {
+  $$PeriodClosingRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get fiscalYearUuid => $composableBuilder(
+    column: $table.fiscalYearUuid,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get periodUuid => $composableBuilder(
+    column: $table.periodUuid,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get closingDate => $composableBuilder(
+    column: $table.closingDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<bool> get fxRevaluationEnabled => $composableBuilder(
+    column: $table.fxRevaluationEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get fxRevaluationExecuted => $composableBuilder(
+    column: $table.fxRevaluationExecuted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get fxSkipReason => $composableBuilder(
+    column: $table.fxSkipReason,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get fxGain =>
+      $composableBuilder(column: $table.fxGain, builder: (column) => column);
+
+  GeneratedColumn<double> get fxLoss =>
+      $composableBuilder(column: $table.fxLoss, builder: (column) => column);
+
+  GeneratedColumn<double> get netFxDifference => $composableBuilder(
+    column: $table.netFxDifference,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get journalEntryUuid => $composableBuilder(
+    column: $table.journalEntryUuid,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get createdBy =>
+      $composableBuilder(column: $table.createdBy, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$PeriodClosingRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$AccountingDatabase,
+          $PeriodClosingRecordsTable,
+          PeriodClosingRecordRow,
+          $$PeriodClosingRecordsTableFilterComposer,
+          $$PeriodClosingRecordsTableOrderingComposer,
+          $$PeriodClosingRecordsTableAnnotationComposer,
+          $$PeriodClosingRecordsTableCreateCompanionBuilder,
+          $$PeriodClosingRecordsTableUpdateCompanionBuilder,
+          (
+            PeriodClosingRecordRow,
+            BaseReferences<
+              _$AccountingDatabase,
+              $PeriodClosingRecordsTable,
+              PeriodClosingRecordRow
+            >,
+          ),
+          PeriodClosingRecordRow,
+          PrefetchHooks Function()
+        > {
+  $$PeriodClosingRecordsTableTableManager(
+    _$AccountingDatabase db,
+    $PeriodClosingRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PeriodClosingRecordsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PeriodClosingRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PeriodClosingRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
+                Value<String> fiscalYearUuid = const Value.absent(),
+                Value<String> periodUuid = const Value.absent(),
+                Value<int> closingDate = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<bool> fxRevaluationEnabled = const Value.absent(),
+                Value<bool> fxRevaluationExecuted = const Value.absent(),
+                Value<String?> fxSkipReason = const Value.absent(),
+                Value<double> fxGain = const Value.absent(),
+                Value<double> fxLoss = const Value.absent(),
+                Value<double> netFxDifference = const Value.absent(),
+                Value<String?> journalEntryUuid = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+              }) => PeriodClosingRecordsCompanion(
+                id: id,
+                uuid: uuid,
+                fiscalYearUuid: fiscalYearUuid,
+                periodUuid: periodUuid,
+                closingDate: closingDate,
+                status: status,
+                fxRevaluationEnabled: fxRevaluationEnabled,
+                fxRevaluationExecuted: fxRevaluationExecuted,
+                fxSkipReason: fxSkipReason,
+                fxGain: fxGain,
+                fxLoss: fxLoss,
+                netFxDifference: netFxDifference,
+                journalEntryUuid: journalEntryUuid,
+                createdBy: createdBy,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String uuid,
+                required String fiscalYearUuid,
+                required String periodUuid,
+                required int closingDate,
+                required String status,
+                Value<bool> fxRevaluationEnabled = const Value.absent(),
+                Value<bool> fxRevaluationExecuted = const Value.absent(),
+                Value<String?> fxSkipReason = const Value.absent(),
+                Value<double> fxGain = const Value.absent(),
+                Value<double> fxLoss = const Value.absent(),
+                Value<double> netFxDifference = const Value.absent(),
+                Value<String?> journalEntryUuid = const Value.absent(),
+                Value<String?> createdBy = const Value.absent(),
+                required int createdAt,
+              }) => PeriodClosingRecordsCompanion.insert(
+                id: id,
+                uuid: uuid,
+                fiscalYearUuid: fiscalYearUuid,
+                periodUuid: periodUuid,
+                closingDate: closingDate,
+                status: status,
+                fxRevaluationEnabled: fxRevaluationEnabled,
+                fxRevaluationExecuted: fxRevaluationExecuted,
+                fxSkipReason: fxSkipReason,
+                fxGain: fxGain,
+                fxLoss: fxLoss,
+                netFxDifference: netFxDifference,
+                journalEntryUuid: journalEntryUuid,
+                createdBy: createdBy,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PeriodClosingRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AccountingDatabase,
+      $PeriodClosingRecordsTable,
+      PeriodClosingRecordRow,
+      $$PeriodClosingRecordsTableFilterComposer,
+      $$PeriodClosingRecordsTableOrderingComposer,
+      $$PeriodClosingRecordsTableAnnotationComposer,
+      $$PeriodClosingRecordsTableCreateCompanionBuilder,
+      $$PeriodClosingRecordsTableUpdateCompanionBuilder,
+      (
+        PeriodClosingRecordRow,
+        BaseReferences<
+          _$AccountingDatabase,
+          $PeriodClosingRecordsTable,
+          PeriodClosingRecordRow
+        >,
+      ),
+      PeriodClosingRecordRow,
+      PrefetchHooks Function()
+    >;
 
 class $AccountingDatabaseManager {
   final _$AccountingDatabase _db;
@@ -5461,10 +10461,18 @@ class $AccountingDatabaseManager {
       $$AccountsTableTableManager(_db, _db.accounts);
   $$CurrencyRatesTableTableManager get currencyRates =>
       $$CurrencyRatesTableTableManager(_db, _db.currencyRates);
+  $$CurrencyRateHistoryTableTableManager get currencyRateHistory =>
+      $$CurrencyRateHistoryTableTableManager(_db, _db.currencyRateHistory);
   $$VoucherBooksTableTableManager get voucherBooks =>
       $$VoucherBooksTableTableManager(_db, _db.voucherBooks);
   $$JournalEntriesTableTableManager get journalEntries =>
       $$JournalEntriesTableTableManager(_db, _db.journalEntries);
   $$JournalLinesTableTableManager get journalLines =>
       $$JournalLinesTableTableManager(_db, _db.journalLines);
+  $$FiscalYearsTableTableManager get fiscalYears =>
+      $$FiscalYearsTableTableManager(_db, _db.fiscalYears);
+  $$AccountingPeriodsTableTableManager get accountingPeriods =>
+      $$AccountingPeriodsTableTableManager(_db, _db.accountingPeriods);
+  $$PeriodClosingRecordsTableTableManager get periodClosingRecords =>
+      $$PeriodClosingRecordsTableTableManager(_db, _db.periodClosingRecords);
 }

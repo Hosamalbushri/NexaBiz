@@ -72,6 +72,10 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
     }
 
     final currency = sale.currencyCode.trim().toUpperCase();
+    final baseCurrency = sale.baseCurrencyCode.trim().toUpperCase().isEmpty
+        ? currency
+        : sale.baseCurrencyCode.trim().toUpperCase();
+    final rate = sale.exchangeRate <= 0 ? 1.0 : sale.exchangeRate;
     final customerLabel = sale.customerName?.trim() ?? '';
     final isCredit = sale.settlementType == SaleSettlementType.credit;
     final voucherType = isCredit
@@ -89,6 +93,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
           debit: netAmount,
           credit: 0,
           currencyCode: currency,
+          exchangeRateToBase: rate,
           lineDescription: description,
           sortOrder: 0,
         ),
@@ -98,6 +103,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
           debit: discountAmount,
           credit: 0,
           currencyCode: currency,
+          exchangeRateToBase: rate,
           lineDescription: 'خصم $description',
           sortOrder: 1,
         ),
@@ -106,6 +112,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
         debit: 0,
         credit: revenueCredit,
         currencyCode: currency,
+        exchangeRateToBase: rate,
         lineDescription: description,
         sortOrder: 2,
       ),
@@ -117,6 +124,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
         voucherNumber: sale.saleNumber,
         voucherType: voucherType,
         currencyCode: currency,
+        baseCurrencyCode: baseCurrency,
         description: description,
         isPosted: sale.saleStatus.isPosted,
         sourceType: sourceType,

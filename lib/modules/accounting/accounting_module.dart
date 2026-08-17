@@ -16,6 +16,9 @@ import 'presentation/pages/accounting_reports_page.dart';
 import 'presentation/pages/accounting_routes.dart';
 import 'presentation/pages/chart_of_accounts_page.dart';
 import 'presentation/pages/currency_rates_page.dart';
+import 'presentation/pages/fiscal_year_create_page.dart';
+import 'presentation/pages/fiscal_year_details_page.dart';
+import 'presentation/pages/fiscal_years_page.dart';
 import 'presentation/pages/journal_entries_page.dart';
 import 'presentation/pages/journal_entry_details_page.dart';
 import 'presentation/pages/journal_entry_form_page.dart';
@@ -79,6 +82,18 @@ class AccountingModule extends AppModule {
           anyOf: const ['accounting.journals.create'],
         ),
         RouteAccessRule(
+          pathEquals: AccountingRoutes.fiscalYearsCreate,
+          anyOf: const ['accounting.fiscal_years.create'],
+        ),
+        RouteAccessRule(
+          pathPrefix: AccountingRoutes.fiscalYears,
+          anyOf: const [
+            'accounting.fiscal_years.view',
+            'accounting.fiscal_years.create',
+            'accounting.fiscal_years.update',
+          ],
+        ),
+        RouteAccessRule(
           pathRegex: RegExp(r'^/accounting/journals/[^/]+/edit$'),
           anyOf: const ['accounting.journals.update'],
         ),
@@ -133,6 +148,26 @@ class AccountingModule extends AppModule {
           path: 'currency-rates',
           name: 'accountingCurrencyRates',
           builder: (context, state) => const CurrencyRatesPage(),
+        ),
+        GoRoute(
+          path: 'fiscal-years',
+          name: 'accountingFiscalYears',
+          builder: (context, state) => const FiscalYearsPage(),
+          routes: [
+            GoRoute(
+              path: 'new',
+              name: 'accountingFiscalYearsCreate',
+              builder: (context, state) => const FiscalYearCreatePage(),
+            ),
+            GoRoute(
+              path: ':uuid',
+              name: 'accountingFiscalYearDetails',
+              builder: (context, state) {
+                final uuid = state.pathParameters['uuid'] ?? '';
+                return FiscalYearDetailsPage(fiscalYearUuid: uuid);
+              },
+            ),
+          ],
         ),
         GoRoute(
           path: 'reports',

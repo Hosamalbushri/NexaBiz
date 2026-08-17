@@ -1,3 +1,4 @@
+import '../../../accounting/domain/models/journal_exception.dart';
 import '../entities/sale.dart';
 import '../entities/sale_item.dart';
 import '../entities/sale_status.dart';
@@ -81,6 +82,9 @@ class CreateSale {
     if (!integrated) {
       try {
         await _ledgerPosting.syncSale(sale);
+      } on JournalException {
+        await _repository.softDelete(sale.id);
+        rethrow;
       } catch (_) {
         await _repository.softDelete(sale.id);
         throw const SaleException(SaleException.ledgerPostingFailed);
@@ -277,7 +281,7 @@ class ConfirmSale {
     if (!integrated) {
       try {
         await _ledgerPosting.syncSale(updated);
-      } catch (_) {
+      } catch (e) {
         await _repository.updateStatus(
           id,
           SaleStatusUpdate(
@@ -290,6 +294,9 @@ class ConfirmSale {
           await _inventoryEffect.onCancelled(updated);
         } catch (_) {
           // Best-effort reverse; surface ledger failure to the caller.
+        }
+        if (e is JournalException) {
+          rethrow;
         }
         throw const SaleException(SaleException.ledgerPostingFailed);
       }

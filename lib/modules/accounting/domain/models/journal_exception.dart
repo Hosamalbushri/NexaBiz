@@ -13,6 +13,7 @@ class JournalException implements Exception {
   static const String discountAccountMissing = 'discount_account_missing';
   static const String notFound = 'not_found';
   static const String periodClosed = 'period_closed';
+  static const String outsideFiscalYear = 'outside_fiscal_year';
 
   final String code;
   final String? message;

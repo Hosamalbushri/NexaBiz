@@ -20,8 +20,8 @@ import 'package:stock_count/modules/accounting/domain/entities/journal_entry.dar
 import 'package:stock_count/modules/accounting/domain/models/account_exception.dart';
 import 'package:stock_count/modules/accounting/domain/models/journal_exception.dart';
 import 'package:stock_count/modules/accounting/domain/repositories/journal_repository.dart';
-import 'package:stock_count/modules/accounting/domain/services/fiscal_period_policy.dart';
 import 'package:stock_count/modules/accounting/domain/services/journal_posting_service.dart';
+import 'helpers/journal_posting_test_helper.dart';
 import 'package:stock_count/modules/reports/domain/services/account_statement_report_data_port.dart';
 import 'package:stock_count/modules/sales/domain/entities/discount_type.dart';
 import 'package:stock_count/modules/sales/domain/entities/payment_method.dart';
@@ -88,12 +88,9 @@ void main() {
   }
 
   JournalPostingService postingService({DateTime? closedThrough}) {
-    return JournalPostingService(
+    return journalPostingWithLegacyPolicy(
       journals: journals,
-      fiscalPolicyReader: () => FiscalPeriodPolicy(
-        fiscalYearStartMonth: 1,
-        closedThrough: closedThrough,
-      ),
+      closedThrough: closedThrough,
     );
   }
 

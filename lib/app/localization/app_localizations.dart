@@ -3731,8 +3731,338 @@ abstract class AppLocalizations {
   /// No description provided for @accountingJournalErrorPeriodClosed.
   ///
   /// In en, this message translates to:
-  /// **'This date falls in a closed fiscal period.'**
+  /// **'This date is not within an open accounting period. Please open the period.'**
   String get accountingJournalErrorPeriodClosed;
+
+  /// No description provided for @accountingJournalErrorOutsideFiscalYear.
+  ///
+  /// In en, this message translates to:
+  /// **'This date is not within any defined fiscal year.'**
+  String get accountingJournalErrorOutsideFiscalYear;
+
+  /// No description provided for @accountingFiscalYearsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fiscal years'**
+  String get accountingFiscalYearsTitle;
+
+  /// No description provided for @accountingFiscalYearsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create fiscal years, open and close accounting periods.'**
+  String get accountingFiscalYearsSubtitle;
+
+  /// No description provided for @accountingFiscalYearsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No fiscal years yet'**
+  String get accountingFiscalYearsEmptyTitle;
+
+  /// No description provided for @accountingFiscalYearsEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a fiscal year to control which periods accept postings.'**
+  String get accountingFiscalYearsEmptyMessage;
+
+  /// No description provided for @accountingFiscalYearsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'New fiscal year'**
+  String get accountingFiscalYearsAdd;
+
+  /// No description provided for @accountingFiscalYearDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Fiscal year'**
+  String get accountingFiscalYearDetails;
+
+  /// No description provided for @accountingFiscalYearCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create fiscal year'**
+  String get accountingFiscalYearCreateTitle;
+
+  /// No description provided for @accountingFiscalYearCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get accountingFiscalYearCode;
+
+  /// No description provided for @accountingFiscalYearName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get accountingFiscalYearName;
+
+  /// No description provided for @accountingFiscalYearStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get accountingFiscalYearStart;
+
+  /// No description provided for @accountingFiscalYearEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get accountingFiscalYearEnd;
+
+  /// No description provided for @accountingFiscalYearPeriods.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of periods'**
+  String get accountingFiscalYearPeriods;
+
+  /// No description provided for @accountingFiscalYearFxEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Foreign currency revaluation'**
+  String get accountingFiscalYearFxEnabled;
+
+  /// No description provided for @accountingFiscalYearFxGainAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'FX gain account'**
+  String get accountingFiscalYearFxGainAccount;
+
+  /// No description provided for @accountingFiscalYearFxLossAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'FX loss account'**
+  String get accountingFiscalYearFxLossAccount;
+
+  /// No description provided for @accountingFiscalYearPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Period preview'**
+  String get accountingFiscalYearPreview;
+
+  /// No description provided for @accountingFiscalYearCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Fiscal year created. Open a period before posting.'**
+  String get accountingFiscalYearCreated;
+
+  /// No description provided for @accountingFiscalYearOpenPeriods.
+  ///
+  /// In en, this message translates to:
+  /// **'Open periods: {count}'**
+  String accountingFiscalYearOpenPeriods(int count);
+
+  /// No description provided for @accountingFiscalYearClosedPeriods.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed periods: {count}'**
+  String accountingFiscalYearClosedPeriods(int count);
+
+  /// No description provided for @accountingFiscalYearFxSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Foreign exchange revaluation'**
+  String get accountingFiscalYearFxSummary;
+
+  /// No description provided for @accountingFiscalYearFxGains.
+  ///
+  /// In en, this message translates to:
+  /// **'FX gains'**
+  String get accountingFiscalYearFxGains;
+
+  /// No description provided for @accountingFiscalYearFxLosses.
+  ///
+  /// In en, this message translates to:
+  /// **'FX losses'**
+  String get accountingFiscalYearFxLosses;
+
+  /// No description provided for @accountingFiscalYearFxNet.
+  ///
+  /// In en, this message translates to:
+  /// **'Net FX difference'**
+  String get accountingFiscalYearFxNet;
+
+  /// No description provided for @accountingFiscalYearFxDeferredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic FX journals are deferred until base carrying amounts are stored on ledger lines.'**
+  String get accountingFiscalYearFxDeferredHint;
+
+  /// No description provided for @accountingPeriodColumnNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'#'**
+  String get accountingPeriodColumnNumber;
+
+  /// No description provided for @accountingPeriodColumnName.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get accountingPeriodColumnName;
+
+  /// No description provided for @accountingPeriodColumnRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Date range'**
+  String get accountingPeriodColumnRange;
+
+  /// No description provided for @accountingPeriodColumnStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get accountingPeriodColumnStatus;
+
+  /// No description provided for @accountingPeriodColumnActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get accountingPeriodColumnActions;
+
+  /// No description provided for @accountingPeriodStatusClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get accountingPeriodStatusClosed;
+
+  /// No description provided for @accountingPeriodStatusOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get accountingPeriodStatusOpen;
+
+  /// No description provided for @accountingPeriodStatusClosing.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing'**
+  String get accountingPeriodStatusClosing;
+
+  /// No description provided for @accountingPeriodStatusReopened.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopened'**
+  String get accountingPeriodStatusReopened;
+
+  /// No description provided for @accountingPeriodOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get accountingPeriodOpen;
+
+  /// No description provided for @accountingPeriodClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get accountingPeriodClose;
+
+  /// No description provided for @accountingPeriodReopen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen'**
+  String get accountingPeriodReopen;
+
+  /// No description provided for @accountingPeriodOpenConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {name}?'**
+  String accountingPeriodOpenConfirmTitle(String name);
+
+  /// No description provided for @accountingPeriodOpenConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions dated between {start} and {end} will become available for accounting operations.'**
+  String accountingPeriodOpenConfirmMessage(String start, String end);
+
+  /// No description provided for @accountingPeriodCloseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Close {name}'**
+  String accountingPeriodCloseTitle(String name);
+
+  /// No description provided for @accountingPeriodCloseUnposted.
+  ///
+  /// In en, this message translates to:
+  /// **'Unposted journals: {count}'**
+  String accountingPeriodCloseUnposted(int count);
+
+  /// No description provided for @accountingPeriodCloseMissingRates.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing exchange rates: {codes}'**
+  String accountingPeriodCloseMissingRates(String codes);
+
+  /// No description provided for @accountingPeriodCloseBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolve the issues above before closing.'**
+  String get accountingPeriodCloseBlocked;
+
+  /// No description provided for @accountingPeriodCloseSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Period closed.'**
+  String get accountingPeriodCloseSuccess;
+
+  /// No description provided for @accountingPeriodOpenSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Period opened.'**
+  String get accountingPeriodOpenSuccess;
+
+  /// No description provided for @accountingPeriodReopenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen {name}?'**
+  String accountingPeriodReopenTitle(String name);
+
+  /// No description provided for @accountingPeriodReopenReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get accountingPeriodReopenReason;
+
+  /// No description provided for @accountingPeriodReopenSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Period reopened.'**
+  String get accountingPeriodReopenSuccess;
+
+  /// No description provided for @accountingFiscalWizardStepYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Fiscal year'**
+  String get accountingFiscalWizardStepYear;
+
+  /// No description provided for @accountingFiscalWizardStepPeriods.
+  ///
+  /// In en, this message translates to:
+  /// **'Periods'**
+  String get accountingFiscalWizardStepPeriods;
+
+  /// No description provided for @accountingFiscalWizardStepFx.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get accountingFiscalWizardStepFx;
+
+  /// No description provided for @accountingFiscalWizardStepPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get accountingFiscalWizardStepPreview;
+
+  /// No description provided for @accountingFiscalWizardNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get accountingFiscalWizardNext;
+
+  /// No description provided for @accountingFiscalWizardBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get accountingFiscalWizardBack;
+
+  /// No description provided for @accountingFiscalWizardCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create fiscal year'**
+  String get accountingFiscalWizardCreate;
 
   /// No description provided for @accountingJournalErrorLines.
   ///
@@ -5276,6 +5606,12 @@ abstract class AppLocalizations {
   /// **'Purchase Discounts'**
   String get accountingAccountPurchaseDiscounts;
 
+  /// No description provided for @accountingAccountFxGain.
+  ///
+  /// In en, this message translates to:
+  /// **'Foreign Exchange Gains'**
+  String get accountingAccountFxGain;
+
   /// No description provided for @accountingAccountExpenses.
   ///
   /// In en, this message translates to:
@@ -5359,6 +5695,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other Expenses'**
   String get accountingAccountOtherExpenses;
+
+  /// No description provided for @accountingAccountFxLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Foreign Exchange Losses'**
+  String get accountingAccountFxLoss;
 
   /// No description provided for @inventoryStockCountService.
   ///
@@ -9901,6 +10243,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Numbering books by document type'**
   String get adminPermServiceVoucherBooksHint;
+
+  /// No description provided for @adminPermServiceFiscalYears.
+  ///
+  /// In en, this message translates to:
+  /// **'Fiscal years'**
+  String get adminPermServiceFiscalYears;
+
+  /// No description provided for @adminPermServiceFiscalYearsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fiscal years and accounting periods'**
+  String get adminPermServiceFiscalYearsHint;
+
+  /// No description provided for @adminPermActionOpenPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Open period'**
+  String get adminPermActionOpenPeriod;
+
+  /// No description provided for @adminPermActionClosePeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Close period'**
+  String get adminPermActionClosePeriod;
+
+  /// No description provided for @adminPermActionReopenPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen period'**
+  String get adminPermActionReopenPeriod;
+
+  /// No description provided for @adminPermActionConfigureFx.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure FX revaluation'**
+  String get adminPermActionConfigureFx;
 
   /// No description provided for @adminPermServiceAccountingReports.
   ///

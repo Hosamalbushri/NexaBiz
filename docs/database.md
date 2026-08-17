@@ -112,6 +112,19 @@ Base currency comes from company setup (`CompanyProfile.defaultCurrencyCode`).
 
 Currencies are **enabled on demand**: the rates list shows the base currency plus only currencies that have a `currency_rates` row (not the full catalog). The catalog (`AppCurrencies`, including YER) is used when picking a currency to add.
 
+Upserting a rate also writes/updates **`currency_rate_history`** for the as-of UTC day (`currency_code` + `as_of_date` unique). Lookups for posting/closing use `getRateOn(code, date)` (on or before the date).
+
+### Drift — journal entries / lines (Accounting)
+
+Schema bump through **v11**. Local ledger (sync queue for journals where enabled).
+
+| Table | Notes |
+| --- | --- |
+| `journal_entries` | Header: `entry_date`, `voucher_number`, `voucher_type`, description, currency, `is_posted`, `source_type`/`source_id` (e.g. `sale` + sale uuid), soft `deleted_at` |
+| `journal_lines` | `entry_uuid`, `account_uuid`, `debit`/`credit`, `exchange_rate_to_base`, `base_debit`/`base_credit`, line description, currency, `sort_order` |
+
+Multi-currency journals must balance in **base** amounts. Period-end FX revaluation uses asset/liability foreign positions from these base columns.
+
 ### Drift — voucher books (Accounting)
 
 | Column | Notes |
@@ -131,9 +144,9 @@ Currencies are **enabled on demand**: the rates list shows the base currency plu
 
 Default section groups (Sales / Receipts / Payments / Purchases / Journal) are ensured on open, and **one default leaf book per kind** is seeded when missing (see `DefaultVoucherBooks`). UI: section list → section page with **tabs per leaf type** (e.g. Sales / Sales returns), each with its own list + add action. Each section may have **many** child books. Setup UI: `/accounting/voucher-books`. Allocation via `VoucherBookRepository.allocateNextNumber` (atomic, leaf only). See ADR-010.
 
-### Drift — journal entries / lines (Accounting)
+### Drift — journal entries / lines (legacy note)
 
-Schema bump **5 → 6**. Local ledger only in this slice (no cloud sync yet).
+Schema history included bump **5 → 6**. Local ledger; journals may enqueue sync.
 
 | Table | Notes |
 | --- | --- |

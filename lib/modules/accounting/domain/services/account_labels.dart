@@ -102,6 +102,7 @@ class AccountLabels {
       'sales_revenue' => l10n.accountingAccountSalesRevenue,
       'other_revenue' => l10n.accountingAccountOtherRevenue,
       'purchase_discounts' => l10n.accountingAccountPurchaseDiscounts,
+      'fx_gain' => l10n.accountingAccountFxGain,
       'expenses' => l10n.accountingAccountExpenses,
       'cost_of_goods_sold' => l10n.accountingAccountCogs,
       'inventory_adjustments' => l10n.accountingAccountInventoryAdjustments,
@@ -116,6 +117,7 @@ class AccountLabels {
       'shipping_delivery' => l10n.accountingAccountShippingDelivery,
       'maintenance' => l10n.accountingAccountMaintenance,
       'other_expenses' => l10n.accountingAccountOtherExpenses,
+      'fx_loss' => l10n.accountingAccountFxLoss,
       _ => null,
     };
   }

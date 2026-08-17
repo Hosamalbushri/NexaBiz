@@ -1975,7 +1975,193 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get accountingJournalErrorPeriodClosed =>
-      'هذا التاريخ ضمن فترة مالية مغلقة.';
+      'هذا التاريخ ليس ضمن فترة محاسبية مفتوحة. يرجى فتح الفترة.';
+
+  @override
+  String get accountingJournalErrorOutsideFiscalYear =>
+      'هذا التاريخ خارج أي سنة مالية مُعرّفة.';
+
+  @override
+  String get accountingFiscalYearsTitle => 'السنوات المالية';
+
+  @override
+  String get accountingFiscalYearsSubtitle =>
+      'إنشاء السنوات المالية وفتح وإغلاق الفترات المحاسبية.';
+
+  @override
+  String get accountingFiscalYearsEmptyTitle => 'لا توجد سنوات مالية بعد';
+
+  @override
+  String get accountingFiscalYearsEmptyMessage =>
+      'أنشئ سنة مالية للتحكم في الفترات التي تقبل الترحيل.';
+
+  @override
+  String get accountingFiscalYearsAdd => 'سنة مالية جديدة';
+
+  @override
+  String get accountingFiscalYearDetails => 'السنة المالية';
+
+  @override
+  String get accountingFiscalYearCreateTitle => 'إنشاء سنة مالية';
+
+  @override
+  String get accountingFiscalYearCode => 'الرمز';
+
+  @override
+  String get accountingFiscalYearName => 'الاسم';
+
+  @override
+  String get accountingFiscalYearStart => 'تاريخ البداية';
+
+  @override
+  String get accountingFiscalYearEnd => 'تاريخ النهاية';
+
+  @override
+  String get accountingFiscalYearPeriods => 'عدد الفترات';
+
+  @override
+  String get accountingFiscalYearFxEnabled => 'إعادة تقييم العملات الأجنبية';
+
+  @override
+  String get accountingFiscalYearFxGainAccount => 'حساب أرباح فروقات العملة';
+
+  @override
+  String get accountingFiscalYearFxLossAccount => 'حساب خسائر فروقات العملة';
+
+  @override
+  String get accountingFiscalYearPreview => 'معاينة الفترات';
+
+  @override
+  String get accountingFiscalYearCreated =>
+      'تم إنشاء السنة المالية. افتح فترة قبل الترحيل.';
+
+  @override
+  String accountingFiscalYearOpenPeriods(int count) {
+    return 'الفترات المفتوحة: $count';
+  }
+
+  @override
+  String accountingFiscalYearClosedPeriods(int count) {
+    return 'الفترات المغلقة: $count';
+  }
+
+  @override
+  String get accountingFiscalYearFxSummary => 'إعادة تقييم العملات الأجنبية';
+
+  @override
+  String get accountingFiscalYearFxGains => 'أرباح فروقات العملة';
+
+  @override
+  String get accountingFiscalYearFxLosses => 'خسائر فروقات العملة';
+
+  @override
+  String get accountingFiscalYearFxNet => 'صافي فرق العملة';
+
+  @override
+  String get accountingFiscalYearFxDeferredHint =>
+      'قيود إعادة التقييم الآلية مؤجلة حتى تُخزَّن مبالغ الأساس على بنود القيود.';
+
+  @override
+  String get accountingPeriodColumnNumber => '#';
+
+  @override
+  String get accountingPeriodColumnName => 'الفترة';
+
+  @override
+  String get accountingPeriodColumnRange => 'المدى الزمني';
+
+  @override
+  String get accountingPeriodColumnStatus => 'الحالة';
+
+  @override
+  String get accountingPeriodColumnActions => 'إجراءات';
+
+  @override
+  String get accountingPeriodStatusClosed => 'مغلقة';
+
+  @override
+  String get accountingPeriodStatusOpen => 'مفتوحة';
+
+  @override
+  String get accountingPeriodStatusClosing => 'جاري الإغلاق';
+
+  @override
+  String get accountingPeriodStatusReopened => 'أُعيد فتحها';
+
+  @override
+  String get accountingPeriodOpen => 'فتح';
+
+  @override
+  String get accountingPeriodClose => 'إغلاق';
+
+  @override
+  String get accountingPeriodReopen => 'إعادة فتح';
+
+  @override
+  String accountingPeriodOpenConfirmTitle(String name) {
+    return 'فتح $name؟';
+  }
+
+  @override
+  String accountingPeriodOpenConfirmMessage(String start, String end) {
+    return 'ستصبح العمليات بتاريخ بين $start و$end متاحة للترحيل المحاسبي.';
+  }
+
+  @override
+  String accountingPeriodCloseTitle(String name) {
+    return 'إغلاق $name';
+  }
+
+  @override
+  String accountingPeriodCloseUnposted(int count) {
+    return 'قيود غير مرحلة: $count';
+  }
+
+  @override
+  String accountingPeriodCloseMissingRates(String codes) {
+    return 'أسعار صرف ناقصة: $codes';
+  }
+
+  @override
+  String get accountingPeriodCloseBlocked => 'عالج المشكلات أعلاه قبل الإغلاق.';
+
+  @override
+  String get accountingPeriodCloseSuccess => 'تم إغلاق الفترة.';
+
+  @override
+  String get accountingPeriodOpenSuccess => 'تم فتح الفترة.';
+
+  @override
+  String accountingPeriodReopenTitle(String name) {
+    return 'إعادة فتح $name؟';
+  }
+
+  @override
+  String get accountingPeriodReopenReason => 'السبب';
+
+  @override
+  String get accountingPeriodReopenSuccess => 'أُعيد فتح الفترة.';
+
+  @override
+  String get accountingFiscalWizardStepYear => 'السنة المالية';
+
+  @override
+  String get accountingFiscalWizardStepPeriods => 'الفترات';
+
+  @override
+  String get accountingFiscalWizardStepFx => 'العملة';
+
+  @override
+  String get accountingFiscalWizardStepPreview => 'معاينة';
+
+  @override
+  String get accountingFiscalWizardNext => 'التالي';
+
+  @override
+  String get accountingFiscalWizardBack => 'رجوع';
+
+  @override
+  String get accountingFiscalWizardCreate => 'إنشاء السنة المالية';
 
   @override
   String get accountingJournalErrorLines => 'أضف سطرين متوازنين على الأقل.';
@@ -2865,6 +3051,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountingAccountPurchaseDiscounts => 'خصم مكتسب على المشتريات';
 
   @override
+  String get accountingAccountFxGain => 'أرباح فروق العملة';
+
+  @override
   String get accountingAccountExpenses => 'المصروفات';
 
   @override
@@ -2905,6 +3094,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get accountingAccountOtherExpenses => 'مصروفات أخرى';
+
+  @override
+  String get accountingAccountFxLoss => 'خسائر فروق العملة';
 
   @override
   String get inventoryStockCountService => 'الجرد';
@@ -5371,6 +5563,25 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get adminPermServiceVoucherBooksHint =>
       'دفاتر الترقيم حسب نوع المستند';
+
+  @override
+  String get adminPermServiceFiscalYears => 'السنوات المالية';
+
+  @override
+  String get adminPermServiceFiscalYearsHint =>
+      'السنوات المالية والفترات المحاسبية';
+
+  @override
+  String get adminPermActionOpenPeriod => 'فتح فترة';
+
+  @override
+  String get adminPermActionClosePeriod => 'إغلاق فترة';
+
+  @override
+  String get adminPermActionReopenPeriod => 'إعادة فتح فترة';
+
+  @override
+  String get adminPermActionConfigureFx => 'إعداد إعادة تقييم العملة';
 
   @override
   String get adminPermServiceAccountingReports => 'تقارير المحاسبة';

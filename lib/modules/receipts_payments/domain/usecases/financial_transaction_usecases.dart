@@ -1,3 +1,4 @@
+import '../../../accounting/domain/models/journal_exception.dart';
 import '../entities/financial_transaction.dart';
 import '../entities/transaction_dashboard_summary.dart';
 import '../entities/transaction_list_item.dart';
@@ -90,6 +91,9 @@ class CreateFinancialTransaction {
     final created = await _repository.insert(merged, transactionNumber: number);
     try {
       await _ledgerPosting.syncTransaction(created);
+    } on JournalException {
+      await _repository.softDelete(created.id);
+      rethrow;
     } catch (_) {
       await _repository.softDelete(created.id);
       throw const FinancialTransactionException(
@@ -166,6 +170,8 @@ class UpdateFinancialTransaction {
     final updated = await _repository.update(id, merged);
     try {
       await _ledgerPosting.syncTransaction(updated);
+    } on JournalException {
+      rethrow;
     } catch (_) {
       throw const FinancialTransactionException(
         FinancialTransactionException.ledgerPostingFailed,
@@ -200,7 +206,7 @@ class PostFinancialTransaction {
     final posted = await _repository.markPosted(id);
     try {
       await _ledgerPosting.syncTransaction(posted);
-    } catch (_) {
+    } catch (e) {
       await _repository.update(
         id,
         FinancialTransactionDraft(
@@ -241,6 +247,9 @@ class PostFinancialTransaction {
           lines: existing.lines,
         ),
       );
+      if (e is JournalException) {
+        rethrow;
+      }
       throw const FinancialTransactionException(
         FinancialTransactionException.ledgerPostingFailed,
       );
@@ -274,6 +283,9 @@ class UnpostFinancialTransaction {
     final unposted = await _repository.markUnposted(id);
     try {
       await _ledgerPosting.syncTransaction(unposted);
+    } on JournalException {
+      await _repository.markPosted(id);
+      rethrow;
     } catch (_) {
       await _repository.markPosted(id);
       throw const FinancialTransactionException(

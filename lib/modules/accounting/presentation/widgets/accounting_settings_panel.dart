@@ -23,7 +23,9 @@ class AccountingSettingsPanel extends ConsumerWidget {
       children: [
         SettingsSubSection(
           title: l10n.accountingFiscalClosedSectionTitle,
-          subtitle: l10n.accountingFiscalClosedSectionSubtitle,
+          subtitle:
+              '${l10n.accountingFiscalClosedSectionSubtitle} '
+              '${l10n.accountingFiscalYearsSubtitle}',
           child: Column(
             children: [
               ListTile(

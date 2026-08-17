@@ -8,7 +8,9 @@ import '../../../../core/utils/id_generator.dart';
 import '../../domain/entities/journal_entry.dart';
 import '../../domain/models/journal_exception.dart';
 import '../../domain/repositories/account_repository.dart';
+import '../../domain/repositories/currency_rate_repository.dart';
 import '../../domain/repositories/journal_repository.dart';
+import '../../domain/services/journal_base_amount_resolver.dart';
 import '../../domain/services/journal_money.dart';
 import '../database/accounting_database.dart';
 
@@ -16,12 +18,15 @@ class JournalRepositoryImpl implements JournalRepository {
   JournalRepositoryImpl(
     this._db, {
     required AccountRepository accounts,
+    CurrencyRateRepository? rates,
     SyncQueue? syncQueue,
   }) : _accounts = accounts,
+       _rates = rates,
        _syncQueue = syncQueue;
 
   final AccountingDatabase _db;
   final AccountRepository _accounts;
+  final CurrencyRateRepository? _rates;
   final SyncQueue? _syncQueue;
 
   static const entityType = 'journal_entry';
@@ -33,21 +38,24 @@ class JournalRepositoryImpl implements JournalRepository {
       throw const JournalException(JournalException.emptyLines);
     }
 
-    // Round at the write boundary so debit/credit stay cent-stable in REAL.
-    final lines = [
-      for (final line in draft.lines)
-        JournalLineDraft(
-          accountUuid: line.accountUuid,
-          debit: JournalMoney.clampNonNegative(line.debit),
-          credit: JournalMoney.clampNonNegative(line.credit),
-          currencyCode: line.currencyCode,
-          lineDescription: line.lineDescription,
-          sortOrder: line.sortOrder,
-        ),
-    ];
+    final baseCode = (draft.baseCurrencyCode ?? draft.currencyCode)
+        .trim()
+        .toUpperCase();
+    final lines = _rates != null
+        ? await JournalBaseAmountResolver(_rates!).resolve(
+            entryDate: draft.entryDate,
+            baseCurrencyCode: baseCode,
+            lines: draft.lines,
+          )
+        : [
+            for (final line in draft.lines)
+              _resolveLineWithoutRates(line, baseCode),
+          ];
 
     var totalDebitCents = 0;
     var totalCreditCents = 0;
+    var totalBaseDebitCents = 0;
+    var totalBaseCreditCents = 0;
     final currencies = <String>{};
     for (final line in lines) {
       if (line.debit > 0 && line.credit > 0) {
@@ -59,15 +67,24 @@ class JournalRepositoryImpl implements JournalRepository {
       currencies.add(line.currencyCode.trim().toUpperCase());
       totalDebitCents += JournalMoney.toCents(line.debit);
       totalCreditCents += JournalMoney.toCents(line.credit);
+      totalBaseDebitCents += JournalMoney.toCents(line.baseDebit ?? 0);
+      totalBaseCreditCents += JournalMoney.toCents(line.baseCredit ?? 0);
     }
 
-    final skipBalance = draft.allowUnbalancedMultiCurrency &&
-        currencies.length > 1;
-    if (!skipBalance && totalDebitCents != totalCreditCents) {
+    final skipForeignBalance =
+        draft.allowUnbalancedMultiCurrency && currencies.length > 1;
+    if (!skipForeignBalance && totalDebitCents != totalCreditCents) {
       throw JournalException(
         JournalException.unbalanced,
         'debit=${JournalMoney.fromCents(totalDebitCents)} '
         'credit=${JournalMoney.fromCents(totalCreditCents)}',
+      );
+    }
+    if (totalBaseDebitCents != totalBaseCreditCents) {
+      throw JournalException(
+        JournalException.unbalanced,
+        'baseDebit=${JournalMoney.fromCents(totalBaseDebitCents)} '
+        'baseCredit=${JournalMoney.fromCents(totalBaseCreditCents)}',
       );
     }
 
@@ -176,6 +193,9 @@ class JournalRepositoryImpl implements JournalRepository {
                 accountUuid: line.accountUuid,
                 debit: Value(line.debit),
                 credit: Value(line.credit),
+                exchangeRateToBase: Value(line.exchangeRateToBase ?? 1),
+                baseDebit: Value(line.baseDebit ?? 0),
+                baseCredit: Value(line.baseCredit ?? 0),
                 lineDescription: Value(line.lineDescription?.trim()),
                 currencyCode: line.currencyCode.trim().toUpperCase(),
                 sortOrder: Value(line.sortOrder != 0 ? line.sortOrder : order),
@@ -599,9 +619,41 @@ class JournalRepositoryImpl implements JournalRepository {
           credit: row.credit,
           currencyCode: row.currencyCode,
           sortOrder: row.sortOrder,
+          exchangeRateToBase: row.exchangeRateToBase,
+          baseDebit: row.baseDebit,
+          baseCredit: row.baseCredit,
           lineDescription: row.lineDescription,
         ),
     ];
+  }
+
+  JournalLineDraft _resolveLineWithoutRates(
+    JournalLineDraft line,
+    String baseCode,
+  ) {
+    final code = line.currencyCode.trim().toUpperCase();
+    final debit = JournalMoney.clampNonNegative(line.debit);
+    final credit = JournalMoney.clampNonNegative(line.credit);
+    final rate = (line.exchangeRateToBase != null &&
+            line.exchangeRateToBase! > 0)
+        ? line.exchangeRateToBase!
+        : (code == baseCode || code.isEmpty ? 1.0 : 1.0);
+    return JournalLineDraft(
+      accountUuid: line.accountUuid,
+      debit: debit,
+      credit: credit,
+      currencyCode: code,
+      lineDescription: line.lineDescription,
+      sortOrder: line.sortOrder,
+      uuid: line.uuid,
+      exchangeRateToBase: rate,
+      baseDebit: line.baseDebit != null
+          ? JournalMoney.clampNonNegative(line.baseDebit!)
+          : JournalMoney.round(debit * rate),
+      baseCredit: line.baseCredit != null
+          ? JournalMoney.clampNonNegative(line.baseCredit!)
+          : JournalMoney.round(credit * rate),
+    );
   }
 
   JournalEntry _mapEntry(JournalEntryRow row, List<JournalLine> lines) {
@@ -659,6 +711,9 @@ class JournalRepositoryImpl implements JournalRepository {
         'accountCode': account?.accountCode,
         'debit': line.debit,
         'credit': line.credit,
+        'exchangeRateToBase': line.exchangeRateToBase,
+        'baseDebit': line.baseDebit,
+        'baseCredit': line.baseCredit,
         'currencyCode': line.currencyCode,
         'lineDescription': line.lineDescription,
         'sortOrder': line.sortOrder,
@@ -812,6 +867,9 @@ class JournalRepositoryImpl implements JournalRepository {
       String accountUuid,
       double debit,
       double credit,
+      double exchangeRateToBase,
+      double baseDebit,
+      double baseCredit,
       String currencyCode,
       String? lineDescription,
       int sortOrder,
@@ -823,13 +881,25 @@ class JournalRepositoryImpl implements JournalRepository {
         accountCode: line['accountCode']?.toString(),
       );
       final lineUuidRaw = line['uuid']?.toString().trim();
+      final debit = (line['debit'] as num?)?.toDouble() ?? 0;
+      final credit = (line['credit'] as num?)?.toDouble() ?? 0;
+      final rate = (line['exchangeRateToBase'] as num?)?.toDouble() ?? 1;
+      final baseDebit =
+          (line['baseDebit'] as num?)?.toDouble() ??
+          JournalMoney.round(debit * rate);
+      final baseCredit =
+          (line['baseCredit'] as num?)?.toDouble() ??
+          JournalMoney.round(credit * rate);
       resolvedLines.add((
         uuid: (lineUuidRaw != null && lineUuidRaw.isNotEmpty)
             ? lineUuidRaw
             : generateUuidV4(),
         accountUuid: accountUuid,
-        debit: (line['debit'] as num?)?.toDouble() ?? 0,
-        credit: (line['credit'] as num?)?.toDouble() ?? 0,
+        debit: debit,
+        credit: credit,
+        exchangeRateToBase: rate,
+        baseDebit: baseDebit,
+        baseCredit: baseCredit,
         currencyCode:
             (line['currencyCode']?.toString() ?? 'SAR').trim().toUpperCase(),
         lineDescription: line['lineDescription']?.toString(),
@@ -921,6 +991,9 @@ class JournalRepositoryImpl implements JournalRepository {
                   accountUuid: line.accountUuid,
                   debit: Value(line.debit),
                   credit: Value(line.credit),
+                  exchangeRateToBase: Value(line.exchangeRateToBase),
+                  baseDebit: Value(line.baseDebit),
+                  baseCredit: Value(line.baseCredit),
                   lineDescription: Value(line.lineDescription?.trim()),
                   currencyCode: line.currencyCode,
                   sortOrder: Value(line.sortOrder),
@@ -931,5 +1004,50 @@ class JournalRepositoryImpl implements JournalRepository {
     });
 
     await _syncQueue?.removeForEntity(entityType: entityType, entityId: uuid);
+  }
+
+  @override
+  Future<List<MonetaryFxPositionRow>> listMonetaryFxPositions({
+    required DateTime asOfInclusive,
+    required String baseCurrencyCode,
+  }) async {
+    final asOfMs = BusinessDate.utcDayMs(asOfInclusive);
+    final base = baseCurrencyCode.trim().toUpperCase();
+    final rows = await _db
+        .customSelect(
+          '''
+          SELECT jl.account_uuid AS account_uuid,
+                 UPPER(jl.currency_code) AS currency_code,
+                 SUM(jl.debit - jl.credit) AS foreign_balance,
+                 SUM(jl.base_debit - jl.base_credit) AS booked_base
+          FROM journal_lines jl
+          INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid
+          INNER JOIN accounts a ON a.uuid = jl.account_uuid
+          WHERE je.deleted_at IS NULL
+            AND je.is_posted = 1
+            AND je.entry_date <= ?
+            AND UPPER(jl.currency_code) != ?
+            AND a.account_type IN ('asset', 'liability')
+            AND a.is_group = 0
+            AND a.deleted_at IS NULL
+          GROUP BY jl.account_uuid, UPPER(jl.currency_code)
+          HAVING ABS(SUM(jl.debit - jl.credit)) > 0.0001
+          ''',
+          variables: [
+            Variable.withInt(asOfMs),
+            Variable.withString(base),
+          ],
+          readsFrom: {_db.journalLines, _db.journalEntries, _db.accounts},
+        )
+        .get();
+    return [
+      for (final row in rows)
+        MonetaryFxPositionRow(
+          accountUuid: row.read<String>('account_uuid'),
+          currencyCode: row.read<String>('currency_code'),
+          foreignBalance: row.read<double>('foreign_balance'),
+          bookedBase: row.read<double>('booked_base'),
+        ),
+    ];
   }
 }

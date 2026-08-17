@@ -1,9 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/receipts_payments/accounting_rp_ledger_adapter.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/domain/repositories/journal_repository.dart';
-import 'package:stock_count/modules/accounting/domain/services/fiscal_period_policy.dart';
-import 'package:stock_count/modules/accounting/domain/services/journal_posting_service.dart';
 import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction.dart';
 import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction_line.dart';
 import 'package:stock_count/modules/receipts_payments/domain/entities/rp_payment_method.dart';
@@ -12,6 +11,8 @@ import 'package:stock_count/modules/receipts_payments/domain/entities/transactio
 import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_type.dart';
 import 'package:stock_count/modules/receipts_payments/domain/models/financial_transaction_exception.dart';
 import 'package:stock_count/modules/receipts_payments/domain/services/financial_transaction_validator.dart';
+import 'helpers/fake_account_repository.dart';
+import 'helpers/journal_posting_test_helper.dart';
 
 class _RecordingJournals implements JournalRepository {
   JournalEntryDraft? lastDraft;
@@ -108,6 +109,13 @@ class _RecordingJournals implements JournalRepository {
     bool? isPosted,
   }) async =>
       0;
+
+  @override
+  Future<List<MonetaryFxPositionRow>> listMonetaryFxPositions({
+    required DateTime asOfInclusive,
+    required String baseCurrencyCode,
+  }) async =>
+      const [];
 }
 
 void main() {
@@ -166,18 +174,12 @@ void main() {
     );
   });
 
-  test('rejects unbalanced base equivalents', () {
+  test('allows base difference for realized FX on exchange', () {
     expect(
       () => validator.validate(
         exchangeDraft(fromAmount: 100, toAmount: 50, toRate: 3.75),
       ),
-      throwsA(
-        isA<FinancialTransactionException>().having(
-          (e) => e.code,
-          'code',
-          FinancialTransactionException.unbalanced,
-        ),
-      ),
+      returnsNormally,
     );
   });
 
@@ -189,11 +191,8 @@ void main() {
       () async {
     final journals = _RecordingJournals();
     final adapter = AccountingRpLedgerAdapter(
-      posting: JournalPostingService(
-        journals: journals,
-        fiscalPolicyReader: () =>
-            const FiscalPeriodPolicy(fiscalYearStartMonth: 1),
-      ),
+      posting: journalPostingWithLegacyPolicy(journals: journals),
+      accounts: FakeAccountRepository.withSystemFx(),
     );
 
     final now = DateTime.utc(2026, 3, 1);
@@ -204,11 +203,11 @@ void main() {
       source: TransactionSource.currencyExchange,
       transactionNumber: '1',
       transactionDate: now,
-      amount: 100,
+      amount: 375,
       currencyCode: 'SAR',
       baseCurrencyCode: 'SAR',
       exchangeRate: 1,
-      counterAmount: 26.67,
+      counterAmount: 100,
       counterCurrencyCode: 'USD',
       counterExchangeRate: 3.75,
       cashAccountId: 'cash-1',
@@ -223,7 +222,7 @@ void main() {
         FinancialTransactionLine(
           accountId: 'cash-1',
           accountName: 'Main cash',
-          amount: 26.67,
+          amount: 100,
           currencyCode: 'USD',
           exchangeRate: 3.75,
           lineOrder: 0,
@@ -238,10 +237,63 @@ void main() {
     expect(draft.allowUnbalancedMultiCurrency, isTrue);
     expect(draft.lines, hasLength(2));
     expect(draft.lines[0].accountUuid, 'cash-1');
-    expect(draft.lines[0].debit, 26.67);
+    expect(draft.lines[0].debit, 100);
     expect(draft.lines[0].currencyCode, 'USD');
     expect(draft.lines[1].accountUuid, 'cash-1');
-    expect(draft.lines[1].credit, 100);
+    expect(draft.lines[1].credit, 375);
     expect(draft.lines[1].currencyCode, 'SAR');
+  });
+
+  test('ledger posts FX gain when to-base exceeds from-base', () async {
+    final journals = _RecordingJournals();
+    final accounts = FakeAccountRepository.withSystemFx();
+    final adapter = AccountingRpLedgerAdapter(
+      posting: journalPostingWithLegacyPolicy(journals: journals),
+      accounts: accounts,
+    );
+
+    final now = DateTime.utc(2026, 3, 1);
+    final txn = FinancialTransaction(
+      id: 2,
+      uuid: 'fx-2',
+      transactionType: TransactionType.currencyExchange,
+      source: TransactionSource.currencyExchange,
+      transactionNumber: '2',
+      transactionDate: now,
+      amount: 100,
+      currencyCode: 'SAR',
+      baseCurrencyCode: 'SAR',
+      exchangeRate: 1,
+      counterAmount: 30,
+      counterCurrencyCode: 'USD',
+      counterExchangeRate: 3.75,
+      cashAccountId: 'cash-1',
+      cashAccountName: 'Main cash',
+      counterAccountId: 'cash-1',
+      counterAccountName: 'Main cash',
+      paymentMethod: RpPaymentMethod.cash,
+      documentStatus: TransactionStatus.posted,
+      createdAt: now,
+      updatedAt: now,
+      lines: const [
+        FinancialTransactionLine(
+          accountId: 'cash-1',
+          accountName: 'Main cash',
+          amount: 30,
+          currencyCode: 'USD',
+          exchangeRate: 3.75,
+          lineOrder: 0,
+        ),
+      ],
+    );
+
+    await adapter.syncTransaction(txn);
+
+    final draft = journals.lastDraft!;
+    expect(draft.lines, hasLength(3));
+    final fxLine = draft.lines[2];
+    expect(fxLine.accountUuid, systemAccountUuid('fx_gain'));
+    expect(fxLine.credit, 12.5);
+    expect(fxLine.currencyCode, 'SAR');
   });
 }

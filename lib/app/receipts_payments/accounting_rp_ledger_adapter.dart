@@ -1,4 +1,8 @@
+import '../../core/utils/id_generator.dart';
 import '../../modules/accounting/domain/entities/journal_entry.dart';
+import '../../modules/accounting/domain/repositories/account_repository.dart';
+import '../../modules/accounting/domain/repositories/fiscal_year_repository.dart';
+import '../../modules/accounting/domain/services/account_labels.dart';
 import '../../modules/accounting/domain/services/journal_money.dart';
 import '../../modules/accounting/domain/services/journal_posting_service.dart';
 import '../../modules/receipts_payments/domain/entities/financial_transaction.dart';
@@ -7,22 +11,19 @@ import '../../modules/receipts_payments/domain/entities/transaction_status.dart'
 import '../../modules/receipts_payments/domain/entities/transaction_type.dart';
 import '../../modules/receipts_payments/domain/services/rp_ledger_posting_port.dart';
 
-/// App adapter: receipt/payment/transfer → local journal via [JournalPostingService].
-///
-/// Receipt: Dr cash · Cr counter line(s)
-/// Payment: Dr counter line(s) · Cr cash
-/// Transfer: Dr destination (to) · Cr source (from)
-///
-/// Cash and counter amounts/currencies are independent (multi-currency
-/// receipts where cash is SAR and party AR is YER, etc.).
-///
-/// Cash-box line narrative is always `account name - statement`; counter
-/// lines keep the statement (or their own line description) only.
+/// App adapter: receipt/payment/transfer/exchange → local journal.
 class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
-  AccountingRpLedgerAdapter({required JournalPostingService posting})
-      : _posting = posting;
+  AccountingRpLedgerAdapter({
+    required JournalPostingService posting,
+    required AccountRepository accounts,
+    FiscalYearRepository? fiscalYears,
+  }) : _posting = posting,
+       _accounts = accounts,
+       _fiscalYears = fiscalYears;
 
   final JournalPostingService _posting;
+  final AccountRepository _accounts;
+  final FiscalYearRepository? _fiscalYears;
 
   static String sourceTypeFor(TransactionType type) => switch (type) {
         TransactionType.receipt => 'receipt',
@@ -94,17 +95,30 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
     return txn.partyDisplayName.trim();
   }
 
+  double _headerRate(FinancialTransaction txn) =>
+      txn.exchangeRate <= 0 ? 1.0 : txn.exchangeRate;
+
+  double _lineRate(FinancialTransaction txn, FinancialTransactionLine line) =>
+      line.exchangeRate <= 0 ? _headerRate(txn) : line.exchangeRate;
+
   @override
   Future<void> syncTransaction(FinancialTransaction txn) async {
     final cashAmount = JournalMoney.round(txn.amount);
-    if (cashAmount <= 0) return;
+    if (cashAmount <= 0) {
+      return;
+    }
 
     final allocations = txn.resolvedLines
         .where((line) => line.amount > 0 && line.accountId.trim().isNotEmpty)
         .toList();
-    if (allocations.isEmpty) return;
+    if (allocations.isEmpty) {
+      return;
+    }
 
     final cashCurrency = txn.currencyCode.trim().toUpperCase();
+    final baseCurrency = txn.baseCurrencyCode.trim().toUpperCase().isEmpty
+        ? cashCurrency
+        : txn.baseCurrencyCode.trim().toUpperCase();
     final multiCurrency = txn.transactionType.isCurrencyExchange ||
         allocations.any(
           (line) => line.currencyCode.trim().toUpperCase() != cashCurrency,
@@ -122,6 +136,12 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
     final lines = <JournalLineDraft>[];
     if (txn.transactionType.isCurrencyExchange) {
       final to = allocations.first;
+      final fromRate = _headerRate(txn);
+      final toRate = _lineRate(txn, to);
+      final toAmount = JournalMoney.round(to.amount);
+      final fromBase = JournalMoney.round(cashAmount * fromRate);
+      final toBase = JournalMoney.round(toAmount * toRate);
+      final baseDiff = JournalMoney.round(toBase - fromBase);
       final boxName = txn.cashAccountName;
       final toNarrative = _accountLineDescription(
         accountName: boxName,
@@ -134,9 +154,12 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
       lines.add(
         JournalLineDraft(
           accountUuid: txn.cashAccountId,
-          debit: JournalMoney.round(to.amount),
+          debit: toAmount,
           credit: 0,
           currencyCode: to.currencyCode.trim().toUpperCase(),
+          exchangeRateToBase: toRate,
+          baseDebit: toBase,
+          baseCredit: 0,
           lineDescription: toNarrative,
           sortOrder: 0,
         ),
@@ -147,12 +170,52 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
           debit: 0,
           credit: cashAmount,
           currencyCode: cashCurrency,
+          exchangeRateToBase: fromRate,
+          baseDebit: 0,
+          baseCredit: fromBase,
           lineDescription: fromNarrative,
           sortOrder: 1,
         ),
       );
+      if (baseDiff.abs() >= 0.005) {
+        final fx = await _resolveFxAccounts(
+          entryDate: txn.transactionDate,
+          preferFiscalYear: true,
+        );
+        final absDiff = baseDiff.abs();
+        if (baseDiff > 0) {
+          lines.add(
+            JournalLineDraft(
+              accountUuid: fx.gainUuid,
+              debit: 0,
+              credit: absDiff,
+              currencyCode: baseCurrency,
+              exchangeRateToBase: 1,
+              baseDebit: 0,
+              baseCredit: absDiff,
+              lineDescription: 'FX gain — $fallbackNarrative',
+              sortOrder: 2,
+            ),
+          );
+        } else {
+          lines.add(
+            JournalLineDraft(
+              accountUuid: fx.lossUuid,
+              debit: absDiff,
+              credit: 0,
+              currencyCode: baseCurrency,
+              exchangeRateToBase: 1,
+              baseDebit: absDiff,
+              baseCredit: 0,
+              lineDescription: 'FX loss — $fallbackNarrative',
+              sortOrder: 2,
+            ),
+          );
+        }
+      }
     } else if (txn.transactionType.isTransfer) {
       final to = allocations.first;
+      final rate = _headerRate(txn);
       final toNarrative = _accountLineDescription(
         accountName: to.accountName ?? txn.counterAccountName,
         fallbackNarrative: fallbackNarrative,
@@ -167,6 +230,7 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
           debit: JournalMoney.round(to.amount),
           credit: 0,
           currencyCode: to.currencyCode.trim().toUpperCase(),
+          exchangeRateToBase: rate,
           lineDescription: toNarrative,
           sortOrder: 0,
         ),
@@ -177,11 +241,13 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
           debit: 0,
           credit: cashAmount,
           currencyCode: cashCurrency,
+          exchangeRateToBase: rate,
           lineDescription: fromNarrative,
           sortOrder: 1,
         ),
       );
     } else if (txn.transactionType.isReceipt) {
+      final cashRate = _headerRate(txn);
       final cashNarrative = cashBoxLineDescription(
         txn: txn,
         allocations: allocations,
@@ -193,6 +259,7 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
           debit: cashAmount,
           credit: 0,
           currencyCode: cashCurrency,
+          exchangeRateToBase: cashRate,
           lineDescription: cashNarrative,
           sortOrder: 0,
         ),
@@ -208,12 +275,14 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
             debit: 0,
             credit: JournalMoney.round(line.amount),
             currencyCode: line.currencyCode.trim().toUpperCase(),
+            exchangeRateToBase: _lineRate(txn, line),
             lineDescription: narrative,
             sortOrder: i + 1,
           ),
         );
       }
     } else {
+      final cashRate = _headerRate(txn);
       final cashNarrative = cashBoxLineDescription(
         txn: txn,
         allocations: allocations,
@@ -230,6 +299,7 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
             debit: JournalMoney.round(line.amount),
             credit: 0,
             currencyCode: line.currencyCode.trim().toUpperCase(),
+            exchangeRateToBase: _lineRate(txn, line),
             lineDescription: narrative,
             sortOrder: i,
           ),
@@ -241,6 +311,7 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
           debit: 0,
           credit: cashAmount,
           currencyCode: cashCurrency,
+          exchangeRateToBase: cashRate,
           lineDescription: cashNarrative,
           sortOrder: allocations.length,
         ),
@@ -253,6 +324,7 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
         voucherNumber: txn.transactionNumber,
         voucherType: voucherType,
         currencyCode: cashCurrency,
+        baseCurrencyCode: baseCurrency,
         description: txn.description?.trim().isNotEmpty == true
             ? txn.description!.trim()
             : description,
@@ -263,6 +335,47 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
         lines: lines,
       ),
     );
+  }
+
+  Future<({String gainUuid, String lossUuid})> _resolveFxAccounts({
+    required DateTime entryDate,
+    required bool preferFiscalYear,
+  }) async {
+    if (preferFiscalYear && _fiscalYears != null) {
+      final period = await _fiscalYears!.findPeriodContaining(entryDate);
+      if (period != null) {
+        final fy = await _fiscalYears!.getByUuid(period.fiscalYearUuid);
+        final gain = fy?.fxGainAccountUuid?.trim() ?? '';
+        final loss = fy?.fxLossAccountUuid?.trim() ?? '';
+        if (fy != null &&
+            fy.fxRevaluationEnabled &&
+            gain.isNotEmpty &&
+            loss.isNotEmpty) {
+          return (gainUuid: gain, lossUuid: loss);
+        }
+      }
+    }
+
+    final gain = await _systemAccountUuid('fx_gain') ??
+        systemAccountUuid('fx_gain');
+    final loss = await _systemAccountUuid('fx_loss') ??
+        systemAccountUuid('fx_loss');
+    return (gainUuid: gain, lossUuid: loss);
+  }
+
+  Future<String?> _systemAccountUuid(String systemKey) async {
+    final preferred = systemAccountUuid(systemKey);
+    final byUuid = await _accounts.getByUuid(preferred);
+    if (byUuid != null && byUuid.canPost) {
+      return byUuid.uuid;
+    }
+    final all = await _accounts.getAll(includeInactive: false);
+    for (final account in all) {
+      if (AccountLabels.systemKeyOf(account) == systemKey && account.canPost) {
+        return account.uuid;
+      }
+    }
+    return preferred;
   }
 
   @override

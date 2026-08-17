@@ -6,7 +6,8 @@ Accepted — 2026-08-13
 Amended — 2026-08-14 (standalone cash + credit sale journals on save; post marks sale+journal posted)  
 Amended — 2026-08-14 (JournalPostingService + fiscal closed-through; manual journal UI)  
 **Superseded in part — 2026-08-15:** dual standalone/integrated **user switch removed**. The product always runs as **local accounting** (former standalone).  
-**Amended — 2026-08-16 (Phase 5):** when sync is enabled, `journal_entry` replicates as offline-first events (see ADR-006); not server-side posting.
+**Amended — 2026-08-16 (Phase 5):** when sync is enabled, `journal_entry` replicates as offline-first events (see ADR-006); not server-side posting.  
+**Amended — 2026-08-17:** managed fiscal years / accounting periods — see [ADR-013](ADR-013-fiscal-years-and-periods.md). Legacy `closedThrough` remains fallback when no FY rows exist.
 ## Context
 
 The Accounting module provides Chart of Accounts, journals, and reports. A dual mode (local vs ERP-integrated) existed as a settings/wizard choice. Integrated ERP connectors were never productized; the switch added complexity without value.

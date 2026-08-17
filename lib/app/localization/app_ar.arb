@@ -756,7 +756,103 @@
   "accountingJournalTotals": "الإجماليات",
   "accountingJournalPickAccount": "اختر حساباً",
   "accountingJournalErrorUnbalanced": "يجب أن يتساوى إجمالي المدين مع إجمالي الدائن.",
-  "accountingJournalErrorPeriodClosed": "هذا التاريخ ضمن فترة مالية مغلقة.",
+  "accountingJournalErrorPeriodClosed": "هذا التاريخ ليس ضمن فترة محاسبية مفتوحة. يرجى فتح الفترة.",
+  "accountingJournalErrorOutsideFiscalYear": "هذا التاريخ خارج أي سنة مالية مُعرّفة.",
+  "accountingFiscalYearsTitle": "السنوات المالية",
+  "accountingFiscalYearsSubtitle": "إنشاء السنوات المالية وفتح وإغلاق الفترات المحاسبية.",
+  "accountingFiscalYearsEmptyTitle": "لا توجد سنوات مالية بعد",
+  "accountingFiscalYearsEmptyMessage": "أنشئ سنة مالية للتحكم في الفترات التي تقبل الترحيل.",
+  "accountingFiscalYearsAdd": "سنة مالية جديدة",
+  "accountingFiscalYearDetails": "السنة المالية",
+  "accountingFiscalYearCreateTitle": "إنشاء سنة مالية",
+  "accountingFiscalYearCode": "الرمز",
+  "accountingFiscalYearName": "الاسم",
+  "accountingFiscalYearStart": "تاريخ البداية",
+  "accountingFiscalYearEnd": "تاريخ النهاية",
+  "accountingFiscalYearPeriods": "عدد الفترات",
+  "accountingFiscalYearFxEnabled": "إعادة تقييم العملات الأجنبية",
+  "accountingFiscalYearFxGainAccount": "حساب أرباح فروقات العملة",
+  "accountingFiscalYearFxLossAccount": "حساب خسائر فروقات العملة",
+  "accountingFiscalYearPreview": "معاينة الفترات",
+  "accountingFiscalYearCreated": "تم إنشاء السنة المالية. افتح فترة قبل الترحيل.",
+  "accountingFiscalYearOpenPeriods": "الفترات المفتوحة: {count}",
+  "@accountingFiscalYearOpenPeriods": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "accountingFiscalYearClosedPeriods": "الفترات المغلقة: {count}",
+  "@accountingFiscalYearClosedPeriods": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "accountingFiscalYearFxSummary": "إعادة تقييم العملات الأجنبية",
+  "accountingFiscalYearFxGains": "أرباح فروقات العملة",
+  "accountingFiscalYearFxLosses": "خسائر فروقات العملة",
+  "accountingFiscalYearFxNet": "صافي فرق العملة",
+  "accountingFiscalYearFxDeferredHint": "قيود إعادة التقييم الآلية مؤجلة حتى تُخزَّن مبالغ الأساس على بنود القيود.",
+  "accountingPeriodColumnNumber": "#",
+  "accountingPeriodColumnName": "الفترة",
+  "accountingPeriodColumnRange": "المدى الزمني",
+  "accountingPeriodColumnStatus": "الحالة",
+  "accountingPeriodColumnActions": "إجراءات",
+  "accountingPeriodStatusClosed": "مغلقة",
+  "accountingPeriodStatusOpen": "مفتوحة",
+  "accountingPeriodStatusClosing": "جاري الإغلاق",
+  "accountingPeriodStatusReopened": "أُعيد فتحها",
+  "accountingPeriodOpen": "فتح",
+  "accountingPeriodClose": "إغلاق",
+  "accountingPeriodReopen": "إعادة فتح",
+  "accountingPeriodOpenConfirmTitle": "فتح {name}؟",
+  "@accountingPeriodOpenConfirmTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "accountingPeriodOpenConfirmMessage": "ستصبح العمليات بتاريخ بين {start} و{end} متاحة للترحيل المحاسبي.",
+  "@accountingPeriodOpenConfirmMessage": {
+    "placeholders": {
+      "start": { "type": "String" },
+      "end": { "type": "String" }
+    }
+  },
+  "accountingPeriodCloseTitle": "إغلاق {name}",
+  "@accountingPeriodCloseTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "accountingPeriodCloseUnposted": "قيود غير مرحلة: {count}",
+  "@accountingPeriodCloseUnposted": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "accountingPeriodCloseMissingRates": "أسعار صرف ناقصة: {codes}",
+  "@accountingPeriodCloseMissingRates": {
+    "placeholders": {
+      "codes": { "type": "String" }
+    }
+  },
+  "accountingPeriodCloseBlocked": "عالج المشكلات أعلاه قبل الإغلاق.",
+  "accountingPeriodCloseSuccess": "تم إغلاق الفترة.",
+  "accountingPeriodOpenSuccess": "تم فتح الفترة.",
+  "accountingPeriodReopenTitle": "إعادة فتح {name}؟",
+  "@accountingPeriodReopenTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "accountingPeriodReopenReason": "السبب",
+  "accountingPeriodReopenSuccess": "أُعيد فتح الفترة.",
+  "accountingFiscalWizardStepYear": "السنة المالية",
+  "accountingFiscalWizardStepPeriods": "الفترات",
+  "accountingFiscalWizardStepFx": "العملة",
+  "accountingFiscalWizardStepPreview": "معاينة",
+  "accountingFiscalWizardNext": "التالي",
+  "accountingFiscalWizardBack": "رجوع",
+  "accountingFiscalWizardCreate": "إنشاء السنة المالية",
   "accountingJournalErrorLines": "أضف سطرين متوازنين على الأقل.",
   "accountingJournalManualType": "قيد يدوي",
   "accountingChartOfAccounts": "الدليل المحاسبي",
@@ -1159,6 +1255,7 @@
   "accountingAccountSalesRevenue": "إيرادات المبيعات",
   "accountingAccountOtherRevenue": "إيرادات أخرى",
   "accountingAccountPurchaseDiscounts": "خصم مكتسب على المشتريات",
+  "accountingAccountFxGain": "أرباح فروق العملة",
   "accountingAccountExpenses": "المصروفات",
   "accountingAccountCogs": "تكلفة البضاعة المباعة",
   "accountingAccountInventoryAdjustments": "تسويات / عجز مخزون",
@@ -1173,6 +1270,7 @@
   "accountingAccountShippingDelivery": "نقل وتوصيل",
   "accountingAccountMaintenance": "صيانة",
   "accountingAccountOtherExpenses": "مصروفات أخرى",
+  "accountingAccountFxLoss": "خسائر فروق العملة",
   "inventoryStockCountService": "الجرد",
   "inventoryStockCountServiceDescription": "عدّ الأصناف واستيراد قوائم المخزون وعرض تقارير الجرد.",
   "inventoryProductsService": "المنتجات",
@@ -2153,6 +2251,12 @@
   "adminPermServiceCurrencyRatesHint": "صيانة أسعار الصرف",
   "adminPermServiceVoucherBooks": "دفاتر السندات",
   "adminPermServiceVoucherBooksHint": "دفاتر الترقيم حسب نوع المستند",
+  "adminPermServiceFiscalYears": "السنوات المالية",
+  "adminPermServiceFiscalYearsHint": "السنوات المالية والفترات المحاسبية",
+  "adminPermActionOpenPeriod": "فتح فترة",
+  "adminPermActionClosePeriod": "إغلاق فترة",
+  "adminPermActionReopenPeriod": "إعادة فتح فترة",
+  "adminPermActionConfigureFx": "إعداد إعادة تقييم العملة",
   "adminPermServiceAccountingReports": "تقارير المحاسبة",
   "adminPermServiceAccountingReportsHint": "مركز تقارير المحاسبة",
   "adminPermServiceSalesPeriod": "تقرير فترة المبيعات",

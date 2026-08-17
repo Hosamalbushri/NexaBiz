@@ -236,10 +236,12 @@ void main() {
       await expectSystem(code: '2210', isGroup: false); // long-term loans
       await expectSystem(code: '4200', isGroup: true); // other revenue group
       await expectSystem(code: '4210', isGroup: false); // purchase discounts
+      await expectSystem(code: '4220', isGroup: false); // FX gains
       await expectSystem(code: '5150', isGroup: false); // inventory adjustments
       await expectSystem(code: '5160', isGroup: false); // sales returns
       await expectSystem(code: '5170', isGroup: false); // sales discounts
       await expectSystem(code: '5500', isGroup: false); // bank charges
+      await expectSystem(code: '5910', isGroup: false); // FX losses
 
       final cashBoxes = await repo.getByAccountCode('1210');
       final cash = await repo.getByAccountCode('1211');
@@ -250,8 +252,14 @@ void main() {
       expect(bank!.parentId, cashBoxes.uuid);
 
       final purchaseDiscounts = await repo.getByAccountCode('4210');
+      final fxGain = await repo.getByAccountCode('4220');
       final otherRevenue = await repo.getByAccountCode('4200');
       expect(purchaseDiscounts!.parentId, otherRevenue!.uuid);
+      expect(fxGain!.parentId, otherRevenue.uuid);
+
+      final fxLoss = await repo.getByAccountCode('5910');
+      final expenses = await repo.getByAccountCode('5000');
+      expect(fxLoss!.parentId, expenses!.uuid);
 
       final suppliers = await repo.getByAccountCode('2111');
       final currentLiabilities = await repo.getByAccountCode('2100');

@@ -11,6 +11,9 @@ class JournalLine {
     required this.credit,
     required this.currencyCode,
     required this.sortOrder,
+    this.exchangeRateToBase = 1,
+    this.baseDebit = 0,
+    this.baseCredit = 0,
     this.lineDescription,
   });
 
@@ -22,6 +25,11 @@ class JournalLine {
   final double credit;
   final String currencyCode;
   final int sortOrder;
+
+  /// Units of company base per 1 unit of [currencyCode] at booking.
+  final double exchangeRateToBase;
+  final double baseDebit;
+  final double baseCredit;
   final String? lineDescription;
 }
 
@@ -35,6 +43,9 @@ class JournalLineDraft {
     this.lineDescription,
     this.sortOrder = 0,
     this.uuid,
+    this.exchangeRateToBase,
+    this.baseDebit,
+    this.baseCredit,
   });
 
   final String accountUuid;
@@ -46,6 +57,11 @@ class JournalLineDraft {
 
   /// When set (e.g. remote apply), preserves line identity across devices.
   final String? uuid;
+
+  /// Optional booking rate; resolver fills when null.
+  final double? exchangeRateToBase;
+  final double? baseDebit;
+  final double? baseCredit;
 }
 
 /// Posted (or draft) journal entry with lines.
@@ -103,6 +119,7 @@ class JournalEntryDraft {
     this.sourceId,
     this.uuid,
     this.allowUnbalancedMultiCurrency = false,
+    this.baseCurrencyCode,
   });
 
   final DateTime entryDate;
@@ -118,9 +135,12 @@ class JournalEntryDraft {
   /// When set, replaces that existing non-deleted entry in place.
   final String? uuid;
 
-  /// When true and lines use more than one currency, skip numeric debit=credit
-  /// checks so cash/party legs can keep native amounts (e.g. SAR vs YER).
+  /// When true and lines use more than one currency, skip raw debit=credit
+  /// checks; base-currency debit/credit must still balance.
   final bool allowUnbalancedMultiCurrency;
+
+  /// Company base currency used to resolve missing line base amounts.
+  final String? baseCurrencyCode;
 }
 
 /// Lightweight journal list row (no lines loaded).

@@ -1,6 +1,6 @@
 import '../entities/journal_entry.dart';
 import '../repositories/journal_repository.dart';
-import 'fiscal_period_policy.dart';
+import 'accounting_period_validator.dart';
 
 /// Application entry point for posting journals (UI, Sales, imports, sync).
 ///
@@ -10,15 +10,15 @@ import 'fiscal_period_policy.dart';
 class JournalPostingService {
   const JournalPostingService({
     required JournalRepository journals,
-    required FiscalPeriodPolicy Function() fiscalPolicyReader,
+    required AccountingPeriodValidator periodValidator,
   }) : _journals = journals,
-       _fiscalPolicyReader = fiscalPolicyReader;
+       _periodValidator = periodValidator;
 
   final JournalRepository _journals;
-  final FiscalPeriodPolicy Function() _fiscalPolicyReader;
+  final AccountingPeriodValidator _periodValidator;
 
   Future<JournalEntry> post(JournalEntryDraft draft) async {
-    _fiscalPolicyReader().assertEntryAllowed(draft.entryDate);
+    await _periodValidator.assertEntryAllowed(draft.entryDate);
     return _journals.post(draft);
   }
 
@@ -31,7 +31,7 @@ class JournalPostingService {
       sourceId: sourceId,
     );
     if (existing != null) {
-      _fiscalPolicyReader().assertEntryAllowed(existing.entryDate);
+      await _periodValidator.assertEntryAllowed(existing.entryDate);
     }
     await _journals.softDeleteBySource(
       sourceType: sourceType,
@@ -42,7 +42,7 @@ class JournalPostingService {
   Future<void> softDeleteByUuid(String uuid) async {
     final existing = await _journals.getByUuid(uuid);
     if (existing != null) {
-      _fiscalPolicyReader().assertEntryAllowed(existing.entryDate);
+      await _periodValidator.assertEntryAllowed(existing.entryDate);
     }
     await _journals.softDeleteByUuid(uuid);
   }

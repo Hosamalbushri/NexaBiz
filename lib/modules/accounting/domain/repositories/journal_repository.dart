@@ -90,4 +90,25 @@ abstract class JournalRepository {
     String? currencyCode,
     bool? isPosted,
   });
+
+  /// Asset/liability foreign positions as of [asOfInclusive] (posted only).
+  Future<List<MonetaryFxPositionRow>> listMonetaryFxPositions({
+    required DateTime asOfInclusive,
+    required String baseCurrencyCode,
+  });
+}
+
+/// Aggregated foreign monetary position used for FX revaluation.
+class MonetaryFxPositionRow {
+  const MonetaryFxPositionRow({
+    required this.accountUuid,
+    required this.currencyCode,
+    required this.foreignBalance,
+    required this.bookedBase,
+  });
+
+  final String accountUuid;
+  final String currencyCode;
+  final double foreignBalance;
+  final double bookedBase;
 }

@@ -109,9 +109,8 @@ class FinancialTransactionValidator {
       final fromRate = draft.exchangeRate <= 0 ? 1.0 : draft.exchangeRate;
       final toRate =
           lines.first.exchangeRate <= 0 ? 1.0 : lines.first.exchangeRate;
-      final fromBase = RpMoney.round(draft.amount * fromRate);
-      final toBase = RpMoney.round(lines.first.amount * toRate);
-      if ((fromBase - toBase).abs() >= 0.005) {
+      // Base equivalents may differ; ledger posts the difference to FX P&L.
+      if (fromRate <= 0 || toRate <= 0) {
         throw const FinancialTransactionException(
           FinancialTransactionException.unbalanced,
         );

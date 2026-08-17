@@ -104,6 +104,21 @@ class AccountingHomePage extends ConsumerWidget {
                 ),
             const SizedBox(height: AppSpacing.md),
             _ServiceCard(
+                  icon: Icons.date_range_outlined,
+                  title: l10n.accountingFiscalYearsTitle,
+                  subtitle: l10n.accountingFiscalYearsSubtitle,
+                  onTap: () => AccountingRoutes.pushFiscalYears(context),
+                )
+                .animate(delay: 100.ms)
+                .fadeIn(duration: 220.ms)
+                .moveY(
+                  begin: 8,
+                  end: 0,
+                  duration: 240.ms,
+                  curve: Curves.easeOutCubic,
+                ),
+            const SizedBox(height: AppSpacing.md),
+            _ServiceCard(
                   icon: Icons.currency_exchange_outlined,
                   title: l10n.accountingCurrencyRatesTitle,
                   subtitle: l10n.accountingCurrencyRatesCardSubtitle,

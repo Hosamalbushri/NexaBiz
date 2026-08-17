@@ -2000,7 +2000,194 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountingJournalErrorPeriodClosed =>
-      'This date falls in a closed fiscal period.';
+      'This date is not within an open accounting period. Please open the period.';
+
+  @override
+  String get accountingJournalErrorOutsideFiscalYear =>
+      'This date is not within any defined fiscal year.';
+
+  @override
+  String get accountingFiscalYearsTitle => 'Fiscal years';
+
+  @override
+  String get accountingFiscalYearsSubtitle =>
+      'Create fiscal years, open and close accounting periods.';
+
+  @override
+  String get accountingFiscalYearsEmptyTitle => 'No fiscal years yet';
+
+  @override
+  String get accountingFiscalYearsEmptyMessage =>
+      'Create a fiscal year to control which periods accept postings.';
+
+  @override
+  String get accountingFiscalYearsAdd => 'New fiscal year';
+
+  @override
+  String get accountingFiscalYearDetails => 'Fiscal year';
+
+  @override
+  String get accountingFiscalYearCreateTitle => 'Create fiscal year';
+
+  @override
+  String get accountingFiscalYearCode => 'Code';
+
+  @override
+  String get accountingFiscalYearName => 'Name';
+
+  @override
+  String get accountingFiscalYearStart => 'Start date';
+
+  @override
+  String get accountingFiscalYearEnd => 'End date';
+
+  @override
+  String get accountingFiscalYearPeriods => 'Number of periods';
+
+  @override
+  String get accountingFiscalYearFxEnabled => 'Foreign currency revaluation';
+
+  @override
+  String get accountingFiscalYearFxGainAccount => 'FX gain account';
+
+  @override
+  String get accountingFiscalYearFxLossAccount => 'FX loss account';
+
+  @override
+  String get accountingFiscalYearPreview => 'Period preview';
+
+  @override
+  String get accountingFiscalYearCreated =>
+      'Fiscal year created. Open a period before posting.';
+
+  @override
+  String accountingFiscalYearOpenPeriods(int count) {
+    return 'Open periods: $count';
+  }
+
+  @override
+  String accountingFiscalYearClosedPeriods(int count) {
+    return 'Closed periods: $count';
+  }
+
+  @override
+  String get accountingFiscalYearFxSummary => 'Foreign exchange revaluation';
+
+  @override
+  String get accountingFiscalYearFxGains => 'FX gains';
+
+  @override
+  String get accountingFiscalYearFxLosses => 'FX losses';
+
+  @override
+  String get accountingFiscalYearFxNet => 'Net FX difference';
+
+  @override
+  String get accountingFiscalYearFxDeferredHint =>
+      'Automatic FX journals are deferred until base carrying amounts are stored on ledger lines.';
+
+  @override
+  String get accountingPeriodColumnNumber => '#';
+
+  @override
+  String get accountingPeriodColumnName => 'Period';
+
+  @override
+  String get accountingPeriodColumnRange => 'Date range';
+
+  @override
+  String get accountingPeriodColumnStatus => 'Status';
+
+  @override
+  String get accountingPeriodColumnActions => 'Actions';
+
+  @override
+  String get accountingPeriodStatusClosed => 'Closed';
+
+  @override
+  String get accountingPeriodStatusOpen => 'Open';
+
+  @override
+  String get accountingPeriodStatusClosing => 'Closing';
+
+  @override
+  String get accountingPeriodStatusReopened => 'Reopened';
+
+  @override
+  String get accountingPeriodOpen => 'Open';
+
+  @override
+  String get accountingPeriodClose => 'Close';
+
+  @override
+  String get accountingPeriodReopen => 'Reopen';
+
+  @override
+  String accountingPeriodOpenConfirmTitle(String name) {
+    return 'Open $name?';
+  }
+
+  @override
+  String accountingPeriodOpenConfirmMessage(String start, String end) {
+    return 'Transactions dated between $start and $end will become available for accounting operations.';
+  }
+
+  @override
+  String accountingPeriodCloseTitle(String name) {
+    return 'Close $name';
+  }
+
+  @override
+  String accountingPeriodCloseUnposted(int count) {
+    return 'Unposted journals: $count';
+  }
+
+  @override
+  String accountingPeriodCloseMissingRates(String codes) {
+    return 'Missing exchange rates: $codes';
+  }
+
+  @override
+  String get accountingPeriodCloseBlocked =>
+      'Resolve the issues above before closing.';
+
+  @override
+  String get accountingPeriodCloseSuccess => 'Period closed.';
+
+  @override
+  String get accountingPeriodOpenSuccess => 'Period opened.';
+
+  @override
+  String accountingPeriodReopenTitle(String name) {
+    return 'Reopen $name?';
+  }
+
+  @override
+  String get accountingPeriodReopenReason => 'Reason';
+
+  @override
+  String get accountingPeriodReopenSuccess => 'Period reopened.';
+
+  @override
+  String get accountingFiscalWizardStepYear => 'Fiscal year';
+
+  @override
+  String get accountingFiscalWizardStepPeriods => 'Periods';
+
+  @override
+  String get accountingFiscalWizardStepFx => 'Currency';
+
+  @override
+  String get accountingFiscalWizardStepPreview => 'Preview';
+
+  @override
+  String get accountingFiscalWizardNext => 'Next';
+
+  @override
+  String get accountingFiscalWizardBack => 'Back';
+
+  @override
+  String get accountingFiscalWizardCreate => 'Create fiscal year';
 
   @override
   String get accountingJournalErrorLines => 'Add at least two balanced lines.';
@@ -2894,6 +3081,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountingAccountPurchaseDiscounts => 'Purchase Discounts';
 
   @override
+  String get accountingAccountFxGain => 'Foreign Exchange Gains';
+
+  @override
   String get accountingAccountExpenses => 'Expenses';
 
   @override
@@ -2934,6 +3124,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountingAccountOtherExpenses => 'Other Expenses';
+
+  @override
+  String get accountingAccountFxLoss => 'Foreign Exchange Losses';
 
   @override
   String get inventoryStockCountService => 'Stock count';
@@ -5437,6 +5630,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminPermServiceVoucherBooksHint =>
       'Numbering books by document type';
+
+  @override
+  String get adminPermServiceFiscalYears => 'Fiscal years';
+
+  @override
+  String get adminPermServiceFiscalYearsHint =>
+      'Fiscal years and accounting periods';
+
+  @override
+  String get adminPermActionOpenPeriod => 'Open period';
+
+  @override
+  String get adminPermActionClosePeriod => 'Close period';
+
+  @override
+  String get adminPermActionReopenPeriod => 'Reopen period';
+
+  @override
+  String get adminPermActionConfigureFx => 'Configure FX revaluation';
 
   @override
   String get adminPermServiceAccountingReports => 'Accounting reports';

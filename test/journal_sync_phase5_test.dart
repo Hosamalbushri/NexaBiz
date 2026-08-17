@@ -22,8 +22,7 @@ import 'package:stock_count/modules/accounting/data/repositories/journal_reposit
 import 'package:stock_count/modules/accounting/data/sync/accounting_sync_handlers.dart';
 import 'package:stock_count/modules/accounting/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/domain/entities/account_type.dart';
-import 'package:stock_count/modules/accounting/domain/services/fiscal_period_policy.dart';
-import 'package:stock_count/modules/accounting/domain/services/journal_posting_service.dart';
+import 'helpers/journal_posting_test_helper.dart';
 import 'package:stock_count/modules/sales/domain/entities/discount_type.dart';
 import 'package:stock_count/modules/sales/domain/entities/payment_method.dart';
 import 'package:stock_count/modules/sales/domain/entities/payment_status.dart';
@@ -122,11 +121,7 @@ void main() {
     );
     expect(cashA.uuid, isNot(cashBLocal.uuid));
 
-    final postingA = JournalPostingService(
-      journals: journalsA,
-      fiscalPolicyReader: () =>
-          const FiscalPeriodPolicy(fiscalYearStartMonth: 1),
-    );
+    final postingA = journalPostingWithLegacyPolicy(journals: journalsA);
     final ledgerA = AccountingSaleLedgerAdapter(
       posting: postingA,
       accounts: accountsA,

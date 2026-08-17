@@ -10,6 +10,7 @@ import '../entities/account_type.dart';
 /// - Sales / Treasury: `cash_boxes`, `cash`, `bank`, `petty_cash`, `sales_revenue`,
 ///   `sales_returns`, `sales_discounts`, `vat_output`, `cost_of_goods_sold`,
 ///   `customer_advances`
+/// - FX revaluation: `fx_gain`, `fx_loss`
 /// - Customers: `customers` (group `1221`)
 /// - Inventory: `inventory`, `inventory_in_transit`, `inventory_adjustments`,
 ///   `cost_of_goods_sold`
@@ -299,6 +300,14 @@ class DefaultChartOfAccounts {
       accountType: AccountType.revenue,
       isGroup: false,
     ),
+    DefaultAccountSeed(
+      systemKey: 'fx_gain',
+      parentKey: 'other_revenue',
+      accountCode: '4220',
+      name: 'Foreign Exchange Gains',
+      accountType: AccountType.revenue,
+      isGroup: false,
+    ),
     // Expenses
     DefaultAccountSeed(
       systemKey: 'expenses',
@@ -409,6 +418,14 @@ class DefaultChartOfAccounts {
       parentKey: 'expenses',
       accountCode: '5900',
       name: 'Other Expenses',
+      accountType: AccountType.expense,
+      isGroup: false,
+    ),
+    DefaultAccountSeed(
+      systemKey: 'fx_loss',
+      parentKey: 'expenses',
+      accountCode: '5910',
+      name: 'Foreign Exchange Losses',
       accountType: AccountType.expense,
       isGroup: false,
     ),

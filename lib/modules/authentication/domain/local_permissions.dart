@@ -88,6 +88,13 @@ const List<String> kAllLocalPermissions = [
   'accounting.voucher_books.create',
   'accounting.voucher_books.update',
   'accounting.voucher_books.delete',
+  'accounting.fiscal_years.view',
+  'accounting.fiscal_years.create',
+  'accounting.fiscal_years.update',
+  'accounting.fiscal_years.open_period',
+  'accounting.fiscal_years.close_period',
+  'accounting.fiscal_years.reopen_period',
+  'accounting.fiscal_years.configure_fx',
   'accounting.reports.view',
   // Receipts & Payments
   'receipts.view',

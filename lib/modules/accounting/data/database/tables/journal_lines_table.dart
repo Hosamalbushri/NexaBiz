@@ -17,6 +17,15 @@ class JournalLines extends Table {
 
   RealColumn get credit => real().withDefault(const Constant(0))();
 
+  /// Units of company base currency per 1 unit of [currencyCode] at booking.
+  RealColumn get exchangeRateToBase => real().withDefault(const Constant(1))();
+
+  /// Debit amount in company base currency.
+  RealColumn get baseDebit => real().withDefault(const Constant(0))();
+
+  /// Credit amount in company base currency.
+  RealColumn get baseCredit => real().withDefault(const Constant(0))();
+
   TextColumn get lineDescription => text().nullable()();
 
   TextColumn get currencyCode => text().withLength(min: 3, max: 8)();

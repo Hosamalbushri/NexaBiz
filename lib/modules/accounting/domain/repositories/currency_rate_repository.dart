@@ -8,8 +8,17 @@ abstract class CurrencyRateRepository {
 
   Future<CurrencyRate?> getByCode(String currencyCode);
 
-  /// Insert or update by currency code.
+  /// Insert or update by currency code (also writes/updates daily history).
   Future<CurrencyRate> upsert(CurrencyRateDraft draft);
 
   Future<void> deleteByCode(String currencyCode);
+
+  /// Rate on or before [asOf] (UTC day). Null when no history/current row.
+  Future<double?> getRateOn(String currencyCode, DateTime asOf);
+
+  /// Recent history rows for [currencyCode], newest first.
+  Future<List<CurrencyRateHistoryEntry>> listHistory(
+    String currencyCode, {
+    int limit = 30,
+  });
 }
