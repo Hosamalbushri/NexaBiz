@@ -15,6 +15,8 @@ SUPPORTED_ENTITY_TYPES = frozenset(
         "customer",
         "account",
         "journal_entry",
+        "fiscal_year",
+        "currency_rate",
         "sale",
         "financial_transaction",
     }

@@ -32,14 +32,16 @@ class AccountingReportsPage extends StatelessWidget {
       _ReportEntry(
         icon: Icons.balance_outlined,
         title: l10n.accountingReportTrialBalanceTitle,
-        subtitle: l10n.accountingReportComingSoonSubtitle,
-        available: false,
+        subtitle: l10n.reportsTrialBalanceSubtitle,
+        path: '/module-reports/trial-balance',
+        available: true,
       ),
       _ReportEntry(
         icon: Icons.receipt_long_outlined,
         title: l10n.accountingReportJournalTitle,
-        subtitle: l10n.accountingReportComingSoonSubtitle,
-        available: false,
+        subtitle: l10n.reportsJournalBookSubtitle,
+        path: '/module-reports/journal-book',
+        available: true,
       ),
     ];
 

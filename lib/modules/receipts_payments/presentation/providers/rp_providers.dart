@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/sync/sync_providers.dart';
+import '../../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../data/database/receipts_payments_database.dart';
 import '../../data/repositories/financial_transaction_repository_impl.dart';
 import '../../domain/entities/financial_transaction.dart';
@@ -80,6 +81,7 @@ final createFinancialTransactionProvider =
     Provider<CreateFinancialTransaction>((ref) {
   return CreateFinancialTransaction(
     repository: ref.watch(financialTransactionRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
     voucherBookPort: ref.watch(rpVoucherBookPortProvider),
     ledgerPosting: ref.watch(rpLedgerPostingPortProvider),
   );
@@ -98,6 +100,7 @@ final postFinancialTransactionProvider = Provider<PostFinancialTransaction>((
 ) {
   return PostFinancialTransaction(
     repository: ref.watch(financialTransactionRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
     ledgerPosting: ref.watch(rpLedgerPostingPortProvider),
   );
 });
@@ -114,6 +117,7 @@ final cancelFinancialTransactionProvider =
     Provider<CancelFinancialTransaction>((ref) {
   return CancelFinancialTransaction(
     repository: ref.watch(financialTransactionRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
     ledgerPosting: ref.watch(rpLedgerPostingPortProvider),
   );
 });

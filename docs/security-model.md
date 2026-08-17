@@ -14,13 +14,16 @@
 
 | Data | Storage | Notes |
 |------|---------|-------|
-| Access/refresh tokens | `flutter_secure_storage` | Required |
-| Auth snapshot (roles/perms) | Hive settings | UX offline; not a secret vault |
+| Access/refresh tokens | `flutter_secure_storage` | Required; AES Hive fallback if plugin unavailable |
+| Auth snapshot / local users | Hive `local_auth_v2` | AES at rest (key in secure storage) |
+| Sync queue | Hive `sync_queue_v2` | AES at rest; payloads include PII / amounts |
 | Customers/sales/accounts | Drift SQLite | Unencrypted; OS sandbox |
-| Sync queue | Hive | Contains business payloads |
 
-Full DB encryption is **not** enabled yet — tradeoffs (key management,
-performance, backup) should be decided before production.
+Hive AES key: `HiveEncryptionKeyStore` (32 bytes in secure storage, or
+degraded Hive `hive_key_fallback` when secure storage is unavailable).
+
+Full Drift SQLCipher is **not** enabled yet — tradeoffs (key management,
+performance, backup, five DB openers) remain deferred.
 
 ## Production hardening remaining
 
@@ -28,7 +31,8 @@ performance, backup) should be decided before production.
 - Strong `JWT_SECRET`, HTTPS-only, tighter CORS
 - Rate limiting on login/refresh
 - Per-tenant local DB isolation on company/user switch
-- Optional SQLCipher / encrypted Hive
+- Optional SQLCipher for Drift databases
 - Remove seed default passwords
 - Lifespan handlers instead of deprecated `on_event`
 - Broader automated IDOR / privilege-escalation suite
+- Third-party crash reporting (Sentry); local `AppErrorLog` is in place

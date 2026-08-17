@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../database/encrypted_hive_box.dart';
 import '../database/hive_boxes.dart';
 import 'sync_operation.dart';
 import 'sync_operation_adapter.dart';
@@ -32,10 +33,13 @@ class SyncQueue {
       return _box!;
     }
     await registerAdapter();
-    if (Hive.isBoxOpen(HiveBoxes.syncQueue)) {
-      _box = Hive.box<SyncOperation>(HiveBoxes.syncQueue);
+    if (Hive.isBoxOpen(HiveBoxes.syncQueueEncrypted)) {
+      _box = Hive.box<SyncOperation>(HiveBoxes.syncQueueEncrypted);
     } else {
-      _box = await Hive.openBox<SyncOperation>(HiveBoxes.syncQueue);
+      _box = await EncryptedHive.openMigrated<SyncOperation>(
+        encryptedBoxName: HiveBoxes.syncQueueEncrypted,
+        legacyPlainBoxName: HiveBoxes.syncQueue,
+      );
     }
     return _box!;
   }

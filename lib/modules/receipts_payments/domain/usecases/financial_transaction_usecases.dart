@@ -1,4 +1,6 @@
+import '../../../../core/permissions/permission_guard.dart';
 import '../../../accounting/domain/models/journal_exception.dart';
+import '../../permissions/receipts_payments_permission_package.dart';
 import '../entities/financial_transaction.dart';
 import '../entities/transaction_dashboard_summary.dart';
 import '../entities/transaction_list_item.dart';
@@ -61,22 +63,26 @@ class GetTransactionDashboard {
 class CreateFinancialTransaction {
   CreateFinancialTransaction({
     required FinancialTransactionRepository repository,
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
     RpVoucherBookPort voucherBookPort = const NoOpRpVoucherBookPort(),
     RpLedgerPostingPort ledgerPosting = const NoOpRpLedgerPostingPort(),
     FinancialTransactionValidator validator =
         const FinancialTransactionValidator(),
   }) : _repository = repository,
+       _guard = permissionGuard,
        _voucherBookPort = voucherBookPort,
        _ledgerPosting = ledgerPosting,
        _validator = validator;
 
   final FinancialTransactionRepository _repository;
+  final PermissionGuard _guard;
   final RpVoucherBookPort _voucherBookPort;
   final RpLedgerPostingPort _ledgerPosting;
   final FinancialTransactionValidator _validator;
 
   Future<FinancialTransaction> call(FinancialTransactionDraft draft) async {
     final merged = normalizeFinancialTransactionDraft(draft);
+    _guard.requireAny(ReceiptsPaymentsPermissions.createFor(merged.transactionType));
     _validator.validate(merged);
     final bookId = merged.voucherBookId?.trim();
     if (bookId == null || bookId.isEmpty) {
@@ -184,14 +190,17 @@ class UpdateFinancialTransaction {
 class PostFinancialTransaction {
   PostFinancialTransaction({
     required FinancialTransactionRepository repository,
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
     FinancialTransactionWorkflow workflow =
         const FinancialTransactionWorkflow(),
     RpLedgerPostingPort ledgerPosting = const NoOpRpLedgerPostingPort(),
   }) : _repository = repository,
+       _guard = permissionGuard,
        _workflow = workflow,
        _ledgerPosting = ledgerPosting;
 
   final FinancialTransactionRepository _repository;
+  final PermissionGuard _guard;
   final FinancialTransactionWorkflow _workflow;
   final RpLedgerPostingPort _ledgerPosting;
 
@@ -202,6 +211,9 @@ class PostFinancialTransaction {
         FinancialTransactionException.notFound,
       );
     }
+    _guard.requireAny(
+      ReceiptsPaymentsPermissions.postFor(existing.transactionType),
+    );
     _workflow.assertCanPost(existing);
     final posted = await _repository.markPosted(id);
     try {
@@ -299,14 +311,17 @@ class UnpostFinancialTransaction {
 class CancelFinancialTransaction {
   CancelFinancialTransaction({
     required FinancialTransactionRepository repository,
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
     FinancialTransactionWorkflow workflow =
         const FinancialTransactionWorkflow(),
     RpLedgerPostingPort ledgerPosting = const NoOpRpLedgerPostingPort(),
   }) : _repository = repository,
+       _guard = permissionGuard,
        _workflow = workflow,
        _ledgerPosting = ledgerPosting;
 
   final FinancialTransactionRepository _repository;
+  final PermissionGuard _guard;
   final FinancialTransactionWorkflow _workflow;
   final RpLedgerPostingPort _ledgerPosting;
 
@@ -317,6 +332,9 @@ class CancelFinancialTransaction {
         FinancialTransactionException.notFound,
       );
     }
+    _guard.requireAny(
+      ReceiptsPaymentsPermissions.cancelFor(existing.transactionType),
+    );
     _workflow.assertCanCancel(existing);
     await _ledgerPosting.voidTransaction(existing);
     return _repository.markCancelled(id);

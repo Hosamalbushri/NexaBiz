@@ -79,6 +79,7 @@ void main() {
     final journalsA = JournalRepositoryImpl(
       dbA,
       accounts: accountsA,
+      periodValidator: legacyPeriodValidator(),
       syncQueue: queueA,
     );
     await accountsA.ensureDefaultChartSeeded();
@@ -89,6 +90,7 @@ void main() {
     final journalsB = JournalRepositoryImpl(
       dbB,
       accounts: accountsB,
+      periodValidator: legacyPeriodValidator(),
       syncQueue: queueB,
     );
     await accountsB.ensureDefaultChartSeeded();

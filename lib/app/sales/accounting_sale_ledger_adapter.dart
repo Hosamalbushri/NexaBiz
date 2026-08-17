@@ -47,7 +47,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
     };
     if (netAmount > 0 &&
         (debitAccountId == null || debitAccountId.isEmpty)) {
-      return;
+      throw const JournalException(JournalException.debitAccountMissing);
     }
 
     await _accounts.ensureDefaultChartSeeded();
@@ -136,7 +136,7 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
 
   @override
   Future<void> voidSale(Sale sale) async {
-    await _posting.softDeleteBySource(
+    await _posting.voidBySource(
       sourceType: sourceType,
       sourceId: sale.uuid,
     );

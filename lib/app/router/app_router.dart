@@ -6,6 +6,7 @@ import '../../modules/app_lock/domain/entities/app_lock_state.dart';
 import '../../modules/app_lock/presentation/pages/app_lock_page.dart';
 import '../../modules/app_lock/presentation/pages/app_lock_routes.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
+import '../../modules/authentication/presentation/pages/login_page.dart';
 import '../../modules/authentication/presentation/pages/sync_login_page.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
@@ -30,6 +31,7 @@ import 'app_routes.dart';
 bool _isAppLockExempt(String path) {
   return path == AppRoutes.splash ||
       path == AppRoutes.onboarding ||
+      path == AppRoutes.login ||
       path == SystemSetupRoutes.root ||
       path == AppLockRoutes.root;
 }
@@ -47,9 +49,9 @@ bool _isPermissionExempt(String path) {
 
 /// Composes splash, persistent [AppShell] chrome, shell branches, and modules.
 ///
-/// No login gate — local admin session is established silently at bootstrap.
-/// App Lock is a separate local gate via [appLockControllerProvider].
-/// Module paths are redirected when the session lacks required permissions.
+/// Unauthenticated users are redirected to [AppRoutes.login]. App Lock is a
+/// separate local gate via [appLockControllerProvider]. Module paths are
+/// redirected when the session lacks required permissions.
 ///
 /// Important: this provider must not [Ref.watch] anything that changes often.
 /// Recreating [GoRouter] while the old one is still mounted reuses the same
@@ -69,6 +71,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final path = state.uri.path;
       if (path == AppRoutes.root || path.isEmpty) {
+        return AppRoutes.dashboard;
+      }
+
+      final auth = ref.read(authStateProvider);
+      final onLogin = path == AppRoutes.login;
+      if (auth.status == AuthStatus.unauthenticated) {
+        if (path == AppRoutes.splash || onLogin) {
+          return null;
+        }
+        return AppRoutes.login;
+      }
+      if (auth.isAuthenticated && onLogin) {
         return AppRoutes.dashboard;
       }
 
@@ -97,7 +111,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (!_isPermissionExempt(path)) {
         final required = registry.requiredPermissionsForPath(path);
         if (required != null && required.isNotEmpty) {
-          final auth = ref.read(authStateProvider);
           if (!auth.hasAnyPermission(required)) {
             return AppRoutes.services;
           }
@@ -112,6 +125,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.splash,
         name: 'splash',
         builder: (context, state) => const SplashPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.login,
+        name: 'login',
+        builder: (context, state) => const LoginPage(),
       ),
       GoRoute(
         path: AppRoutes.onboarding,

@@ -38,9 +38,12 @@ class ReportsHomePage extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           for (final entry in catalog) ...[
             _ReportCatalogTile(
-              icon: entry.id == 'account_statement'
-                  ? Icons.menu_book_outlined
-                  : Icons.receipt_long_outlined,
+              icon: switch (entry.id) {
+                'account_statement' => Icons.menu_book_outlined,
+                'trial_balance' => Icons.balance_outlined,
+                'journal_book' => Icons.receipt_long_outlined,
+                _ => Icons.receipt_long_outlined,
+              },
               title: _titleFor(l10n, entry.titleKey),
               subtitle: _titleFor(l10n, entry.subtitleKey),
               onTap: () => context.push(entry.routePath),
@@ -59,6 +62,10 @@ class ReportsHomePage extends ConsumerWidget {
       'reportsAccountStatementTitle' => l10n.reportsAccountStatementTitle,
       'reportsAccountStatementSubtitle' =>
         l10n.reportsAccountStatementSubtitle,
+      'reportsTrialBalanceTitle' => l10n.reportsTrialBalanceTitle,
+      'reportsTrialBalanceSubtitle' => l10n.reportsTrialBalanceSubtitle,
+      'reportsJournalBookTitle' => l10n.reportsJournalBookTitle,
+      'reportsJournalBookSubtitle' => l10n.reportsJournalBookSubtitle,
       _ => key,
     };
   }

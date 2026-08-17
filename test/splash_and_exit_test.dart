@@ -11,6 +11,10 @@ import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/app/splash/splash_page.dart';
 import 'package:stock_count/app/theme/app_theme.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
+import 'package:stock_count/modules/authentication/domain/entities/auth_session.dart';
+import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
+import 'package:stock_count/modules/authentication/domain/local_permissions.dart';
+import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/modules/system_setup/domain/entities/system_setup_state.dart';
 import 'package:stock_count/modules/system_setup/domain/ports/system_setup_seed_port.dart';
 import 'package:stock_count/modules/system_setup/domain/repositories/system_setup_state_repository.dart';
@@ -90,6 +94,49 @@ List<Override> setupOverrides(
   ];
 }
 
+AuthState _testAuthenticatedState() {
+  return AuthState(
+    status: AuthStatus.authenticated,
+    session: AuthSessionSnapshot(
+      user: const AuthUser(
+        id: LocalAuthDefaults.adminUserId,
+        name: LocalAuthDefaults.adminName,
+        email: LocalAuthDefaults.adminEmail,
+        isSuperAdmin: true,
+      ),
+      companies: const [
+        AuthCompany(
+          id: LocalAuthDefaults.companyId,
+          name: LocalAuthDefaults.companyName,
+          code: LocalAuthDefaults.companyCode,
+          role: LocalAuthDefaults.adminRole,
+        ),
+      ],
+      roles: const [LocalAuthDefaults.adminRole],
+      permissions: {...kAllLocalPermissions},
+      capturedAt: DateTime.utc(2026, 8, 14),
+      currentCompanyId: LocalAuthDefaults.companyId,
+      deviceId: 'test-device',
+      sessionId: 'test-session',
+    ),
+  );
+}
+
+Future<void> _seedAuthenticated(Ref ref) async {
+  // Yield so we are not mutating auth during FutureProvider initialization.
+  await Future<void>.delayed(Duration.zero);
+  ref.read(authStateProvider.notifier).replaceStateForTest(
+        _testAuthenticatedState(),
+      );
+}
+
+Future<void> _seedUnauthenticated(Ref ref) async {
+  await Future<void>.delayed(Duration.zero);
+  ref.read(authStateProvider.notifier).replaceStateForTest(
+        const AuthState(status: AuthStatus.unauthenticated),
+      );
+}
+
 void main() {
   Widget wrapDialog({
     required Widget child,
@@ -116,6 +163,11 @@ void main() {
         GoRoute(
           path: AppRoutes.splash,
           builder: (context, state) => const SplashPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.login,
+          builder: (context, state) =>
+              const Scaffold(body: Text('LoginShell')),
         ),
         GoRoute(
           path: AppRoutes.dashboard,
@@ -156,6 +208,7 @@ void main() {
             ...setupOverrides(_readyProgress()),
             appInitializationProvider.overrideWith((ref) async {
               await Future<void>.delayed(const Duration(milliseconds: 300));
+              await _seedAuthenticated(ref);
             }),
           ],
         ),
@@ -179,7 +232,9 @@ void main() {
         wrapSplash(
           overrides: [
             ...setupOverrides(_readyProgress()),
-            appInitializationProvider.overrideWith((ref) async {}),
+            appInitializationProvider.overrideWith((ref) async {
+              await _seedAuthenticated(ref);
+            }),
           ],
         ),
       );
@@ -195,7 +250,9 @@ void main() {
         wrapSplash(
           overrides: [
             ...setupOverrides(_freshProgress()),
-            appInitializationProvider.overrideWith((ref) async {}),
+            appInitializationProvider.overrideWith((ref) async {
+              await _seedAuthenticated(ref);
+            }),
           ],
         ),
       );
@@ -214,7 +271,9 @@ void main() {
         wrapSplash(
           overrides: [
             ...setupOverrides(_freshProgress(), onboardingCompleted: true),
-            appInitializationProvider.overrideWith((ref) async {}),
+            appInitializationProvider.overrideWith((ref) async {
+              await _seedAuthenticated(ref);
+            }),
           ],
         ),
       );
@@ -238,6 +297,7 @@ void main() {
               if (attempts == 1) {
                 throw StateError('bootstrap failed');
               }
+              await _seedAuthenticated(ref);
             }),
           ],
         ),
@@ -253,6 +313,24 @@ void main() {
 
       expect(attempts, 2);
       expect(find.text('DashboardShell'), findsOneWidget);
+    });
+
+    testWidgets('navigates to login when unauthenticated', (tester) async {
+      await tester.pumpWidget(
+        wrapSplash(
+          overrides: [
+            ...setupOverrides(_readyProgress()),
+            appInitializationProvider.overrideWith((ref) async {
+              await _seedUnauthenticated(ref);
+            }),
+          ],
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('LoginShell'), findsOneWidget);
+      expect(find.text('DashboardShell'), findsNothing);
     });
   });
 

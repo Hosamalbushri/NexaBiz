@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/presentation/providers/dashboard_services_provider.dart';
 import '../../../../app/settings/company/company_profile_providers.dart';
 import '../../../../core/sync/sync_providers.dart';
+import '../../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../data/repositories/fiscal_year_repository_impl.dart';
 import '../../data/repositories/journal_repository_impl.dart';
 import '../../domain/entities/fiscal_year.dart';
@@ -24,6 +25,7 @@ final journalRepositoryImplProvider = Provider<JournalRepositoryImpl>((ref) {
   return JournalRepositoryImpl(
     ref.watch(accountingDatabaseProvider),
     accounts: ref.watch(accountRepositoryProvider),
+    periodValidator: ref.watch(accountingPeriodValidatorProvider),
     rates: ref.watch(currencyRateRepositoryProvider),
     syncQueue: ref.watch(syncQueueProvider),
   );
@@ -50,8 +52,16 @@ final fiscalPeriodPolicyProvider = Provider<FiscalPeriodPolicy>((ref) {
   );
 });
 
+final fiscalYearRepositoryImplProvider =
+    Provider<FiscalYearRepositoryImpl>((ref) {
+  return FiscalYearRepositoryImpl(
+    ref.watch(accountingDatabaseProvider),
+    syncQueue: ref.watch(syncQueueProvider),
+  );
+});
+
 final fiscalYearRepositoryProvider = Provider<FiscalYearRepository>((ref) {
-  return FiscalYearRepositoryImpl(ref.watch(accountingDatabaseProvider));
+  return ref.watch(fiscalYearRepositoryImplProvider);
 });
 
 final accountingPeriodValidatorProvider =
@@ -73,19 +83,26 @@ final createFiscalYearUseCaseProvider = Provider<CreateFiscalYear>((ref) {
   return CreateFiscalYear(
     repository: ref.watch(fiscalYearRepositoryProvider),
     accounts: ref.watch(accountRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
   );
 });
 
 final openAccountingPeriodUseCaseProvider = Provider<OpenAccountingPeriod>((
   ref,
 ) {
-  return OpenAccountingPeriod(ref.watch(fiscalYearRepositoryProvider));
+  return OpenAccountingPeriod(
+    ref.watch(fiscalYearRepositoryProvider),
+    ref.watch(permissionGuardProvider),
+  );
 });
 
 final reopenAccountingPeriodUseCaseProvider = Provider<ReopenAccountingPeriod>((
   ref,
 ) {
-  return ReopenAccountingPeriod(ref.watch(fiscalYearRepositoryProvider));
+  return ReopenAccountingPeriod(
+    ref.watch(fiscalYearRepositoryProvider),
+    ref.watch(permissionGuardProvider),
+  );
 });
 
 final periodClosingServiceProvider = Provider<PeriodClosingService>((ref) {
@@ -94,6 +111,7 @@ final periodClosingServiceProvider = Provider<PeriodClosingService>((ref) {
     rates: ref.watch(currencyRateRepositoryProvider),
     posting: ref.watch(journalPostingServiceProvider),
     journals: ref.watch(journalRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
   );
 });
 
@@ -120,7 +138,10 @@ final fiscalYearClosingsProvider = FutureProvider.autoDispose
     });
 
 final postJournalEntryUseCaseProvider = Provider<PostJournalEntry>((ref) {
-  return PostJournalEntry(ref.watch(journalPostingServiceProvider));
+  return PostJournalEntry(
+    ref.watch(journalPostingServiceProvider),
+    ref.watch(permissionGuardProvider),
+  );
 });
 
 final getJournalEntryByUuidUseCaseProvider = Provider<GetJournalEntryByUuid>((
@@ -134,10 +155,13 @@ final listJournalEntryHeadersUseCaseProvider =
       return ListJournalEntryHeaders(ref.watch(journalRepositoryProvider));
     });
 
-final softDeleteJournalEntryUseCaseProvider = Provider<SoftDeleteJournalEntry>((
+final softDeleteJournalEntryUseCaseProvider = Provider<VoidJournalEntry>((
   ref,
 ) {
-  return SoftDeleteJournalEntry(ref.watch(journalPostingServiceProvider));
+  return VoidJournalEntry(
+    ref.watch(journalPostingServiceProvider),
+    ref.watch(permissionGuardProvider),
+  );
 });
 
 final journalListQueryProvider = StateProvider.autoDispose<String>((ref) => '');

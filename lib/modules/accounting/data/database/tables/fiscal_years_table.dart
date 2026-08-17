@@ -44,4 +44,11 @@ class FiscalYears extends Table {
   TextColumn get createdBy => text().nullable()();
 
   TextColumn get closedBy => text().nullable()();
+
+  TextColumn get syncStatus =>
+      text().withLength(min: 1, max: 16).withDefault(const Constant('synced'))();
+
+  IntColumn get lastSyncedAt => integer().nullable()();
+
+  IntColumn get version => integer().withDefault(const Constant(1))();
 }

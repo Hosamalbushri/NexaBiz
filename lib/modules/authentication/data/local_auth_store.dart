@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../../../core/database/encrypted_hive_box.dart';
 import '../../../core/database/hive_boxes.dart';
 import '../../../core/utils/id_generator.dart';
 import '../domain/entities/auth_session.dart';
@@ -13,7 +14,8 @@ import '../domain/local_permissions.dart';
 class LocalAuthStore {
   LocalAuthStore();
 
-  static const boxName = HiveBoxes.localAuth;
+  static const boxName = HiveBoxes.localAuthEncrypted;
+  static const _legacyBoxName = HiveBoxes.localAuth;
   static const _usersKey = 'users';
   static const _companiesKey = 'companies';
   static const _sessionKey = 'session_snapshot';
@@ -23,7 +25,10 @@ class LocalAuthStore {
     if (Hive.isBoxOpen(boxName)) {
       return Hive.box<dynamic>(boxName);
     }
-    return Hive.openBox<dynamic>(boxName);
+    return EncryptedHive.openMigrated<dynamic>(
+      encryptedBoxName: boxName,
+      legacyPlainBoxName: _legacyBoxName,
+    );
   }
 
   /// Ensures local company + admin with full permissions exist.

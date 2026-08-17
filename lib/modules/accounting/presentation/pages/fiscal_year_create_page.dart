@@ -7,6 +7,7 @@ import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/settings/company/company_profile_providers.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/permissions/permission_error_messages.dart';
 import '../../../../core/utils/business_date.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -151,7 +152,12 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
       if (!mounted) {
         return;
       }
-      showAppSnackBar(context, message: e.toString(), isSuccess: false);
+      showAppSnackBar(
+        context,
+        message:
+            permissionDeniedMessage(l10n, e) ?? l10n.somethingWentWrong,
+        isSuccess: false,
+      );
     } finally {
       if (mounted) {
         setState(() => _saving = false);

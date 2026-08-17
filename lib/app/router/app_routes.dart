@@ -6,6 +6,9 @@ class AppRoutes {
 
   static const String splash = '/splash';
 
+  /// Local offline sign-in (required when no restored session).
+  static const String login = '/login';
+
   /// First-launch welcome / product tour (before System Setup).
   static const String onboarding = '/onboarding';
 

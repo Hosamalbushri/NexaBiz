@@ -123,12 +123,22 @@ JournalPostingService journalPostingWithLegacyPolicy({
 }) {
   return JournalPostingService(
     journals: journals,
-    periodValidator: AccountingPeriodValidator(
-      repository: EmptyFiscalYearRepository(),
-      legacyPolicyReader: () => FiscalPeriodPolicy(
-        fiscalYearStartMonth: fiscalYearStartMonth,
-        closedThrough: closedThrough,
-      ),
+    periodValidator: legacyPeriodValidator(
+      closedThrough: closedThrough,
+      fiscalYearStartMonth: fiscalYearStartMonth,
+    ),
+  );
+}
+
+AccountingPeriodValidator legacyPeriodValidator({
+  DateTime? closedThrough,
+  int fiscalYearStartMonth = 1,
+}) {
+  return AccountingPeriodValidator(
+    repository: EmptyFiscalYearRepository(),
+    legacyPolicyReader: () => FiscalPeriodPolicy(
+      fiscalYearStartMonth: fiscalYearStartMonth,
+      closedThrough: closedThrough,
     ),
   );
 }

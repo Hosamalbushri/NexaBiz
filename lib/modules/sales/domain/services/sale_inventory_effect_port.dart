@@ -2,11 +2,9 @@ import '../entities/sale.dart';
 
 /// Optional inventory side-effects when sales change status.
 ///
-/// Default is no-op — there is no stock ledger yet. App may wire a future
-/// Inventory adapter without Sales importing Inventory types.
-///
-/// Sale posting (ترحيل) stays blocked while [NoOpSaleInventoryEffectPort]
-/// is registered; wiring a real adapter unlocks posting.
+/// Default provider is no-op — App wires [SoftSaleInventoryEffectAdapter] (or a
+/// future stock-ledger adapter) via bootstrap. Sale posting (ترحيل) stays
+/// blocked while [NoOpSaleInventoryEffectPort] is registered.
 abstract class SaleInventoryEffectPort {
   Future<void> onConfirmed(Sale sale);
 

@@ -3,13 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/settings/company/app_currency.dart';
 import '../../../../app/settings/company/company_profile.dart';
 import '../../../../app/settings/company/company_profile_providers.dart';
+import '../../../../core/sync/sync_providers.dart';
 import '../../data/repositories/currency_rate_repository_impl.dart';
 import '../../domain/entities/currency_rate.dart';
 import '../../domain/repositories/currency_rate_repository.dart';
 import 'account_providers.dart';
 
+final currencyRateRepositoryImplProvider =
+    Provider<CurrencyRateRepositoryImpl>((ref) {
+  return CurrencyRateRepositoryImpl(
+    ref.watch(accountingDatabaseProvider),
+    syncQueue: ref.watch(syncQueueProvider),
+  );
+});
+
 final currencyRateRepositoryProvider = Provider<CurrencyRateRepository>((ref) {
-  return CurrencyRateRepositoryImpl(ref.watch(accountingDatabaseProvider));
+  return ref.watch(currencyRateRepositoryImplProvider);
 });
 
 final currencyRatesProvider = StreamProvider<List<CurrencyRate>>((ref) {

@@ -12,6 +12,8 @@ import 'presentation/pages/reports_home_page.dart';
 import 'presentation/pages/reports_routes.dart';
 import 'presentation/pages/rp_transaction_report_page.dart';
 import 'presentation/pages/sales_period_report_page.dart';
+import 'presentation/pages/trial_balance_report_page.dart';
+import 'presentation/pages/journal_book_report_page.dart';
 import 'domain/services/rp_report_data_port.dart';
 
 /// Platform reports module — generic PDF catalog, preview, print/share.
@@ -42,6 +44,8 @@ class ReportsModule extends AppModule {
         'reports.view',
         'reports.sales_period.view',
         'reports.account_statement.view',
+        'reports.trial_balance.view',
+        'reports.journal_book.view',
         'receipts_payments.reports.view',
       ];
 
@@ -82,6 +86,16 @@ class ReportsModule extends AppModule {
           path: 'account-statement',
           name: 'reportsAccountStatement',
           builder: (context, state) => const AccountStatementReportPage(),
+        ),
+        GoRoute(
+          path: 'trial-balance',
+          name: 'reportsTrialBalance',
+          builder: (context, state) => const TrialBalanceReportPage(),
+        ),
+        GoRoute(
+          path: 'journal-book',
+          name: 'reportsJournalBook',
+          builder: (context, state) => const JournalBookReportPage(),
         ),
         GoRoute(
           path: 'rp-receipts',

@@ -383,6 +383,15 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
         message: journalExceptionMessage(l10n, e),
         isSuccess: false,
       );
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      showAppSnackBar(
+        context,
+        message: journalExceptionMessage(l10n, e),
+        isSuccess: false,
+      );
     } finally {
       if (mounted) {
         setState(() => _saving = false);

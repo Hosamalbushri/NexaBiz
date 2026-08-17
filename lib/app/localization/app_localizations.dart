@@ -1658,6 +1658,144 @@ abstract class AppLocalizations {
   /// **'Print a cumulative Chart of Accounts statement in the account currency (classic layout).'**
   String get reportsAccountStatementSubtitle;
 
+  /// No description provided for @reportsTrialBalanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial balance'**
+  String get reportsTrialBalanceTitle;
+
+  /// No description provided for @reportsTrialBalanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit and credit totals by account in base currency for a date range.'**
+  String get reportsTrialBalanceSubtitle;
+
+  /// No description provided for @reportsTrialBalanceColCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get reportsTrialBalanceColCode;
+
+  /// No description provided for @reportsTrialBalanceColName.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get reportsTrialBalanceColName;
+
+  /// No description provided for @reportsTrialBalanceColDebit.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit'**
+  String get reportsTrialBalanceColDebit;
+
+  /// No description provided for @reportsTrialBalanceColCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get reportsTrialBalanceColCredit;
+
+  /// No description provided for @reportsTrialBalanceTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'Totals'**
+  String get reportsTrialBalanceTotals;
+
+  /// No description provided for @reportsTrialBalanceBalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get reportsTrialBalanceBalanced;
+
+  /// No description provided for @reportsTrialBalanceUnbalanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbalanced'**
+  String get reportsTrialBalanceUnbalanced;
+
+  /// No description provided for @reportsTrialBalanceEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No ledger activity for the selected filters.'**
+  String get reportsTrialBalanceEmpty;
+
+  /// No description provided for @reportsTrialBalancePostedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted entries only'**
+  String get reportsTrialBalancePostedOnly;
+
+  /// No description provided for @reportsJournalBookTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal book'**
+  String get reportsJournalBookTitle;
+
+  /// No description provided for @reportsJournalBookSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chronological journal lines in base currency for a date range.'**
+  String get reportsJournalBookSubtitle;
+
+  /// No description provided for @reportsJournalBookColDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get reportsJournalBookColDate;
+
+  /// No description provided for @reportsJournalBookColVoucher.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher#'**
+  String get reportsJournalBookColVoucher;
+
+  /// No description provided for @reportsJournalBookColType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get reportsJournalBookColType;
+
+  /// No description provided for @reportsJournalBookColDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get reportsJournalBookColDescription;
+
+  /// No description provided for @reportsJournalBookColAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get reportsJournalBookColAccount;
+
+  /// No description provided for @reportsJournalBookColDebit.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit'**
+  String get reportsJournalBookColDebit;
+
+  /// No description provided for @reportsJournalBookColCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get reportsJournalBookColCredit;
+
+  /// No description provided for @reportsJournalBookTotals.
+  ///
+  /// In en, this message translates to:
+  /// **'Totals'**
+  String get reportsJournalBookTotals;
+
+  /// No description provided for @reportsJournalBookEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No journal lines for the selected filters.'**
+  String get reportsJournalBookEmpty;
+
+  /// No description provided for @reportsJournalBookPostedOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted entries only'**
+  String get reportsJournalBookPostedOnly;
+
   /// No description provided for @reportsAccountStatementFilters.
   ///
   /// In en, this message translates to:
@@ -3599,25 +3737,25 @@ abstract class AppLocalizations {
   /// No description provided for @accountingJournalVoid.
   ///
   /// In en, this message translates to:
-  /// **'Void entry'**
+  /// **'Reverse / void'**
   String get accountingJournalVoid;
 
   /// No description provided for @accountingJournalVoidConfirmTitle.
   ///
   /// In en, this message translates to:
-  /// **'Void this journal?'**
+  /// **'Reverse this journal?'**
   String get accountingJournalVoidConfirmTitle;
 
   /// No description provided for @accountingJournalVoidConfirmMessage.
   ///
   /// In en, this message translates to:
-  /// **'The entry will be soft-deleted and removed from ledgers. Lines are kept for audit.'**
+  /// **'A balanced reversing entry will be posted. The original entry stays on the books for audit.'**
   String get accountingJournalVoidConfirmMessage;
 
   /// No description provided for @accountingJournalVoidedSuccess.
   ///
   /// In en, this message translates to:
-  /// **'Journal voided.'**
+  /// **'Journal reversed.'**
   String get accountingJournalVoidedSuccess;
 
   /// No description provided for @accountingJournalNotFound.
@@ -3739,6 +3877,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This date is not within any defined fiscal year.'**
   String get accountingJournalErrorOutsideFiscalYear;
+
+  /// No description provided for @accountingJournalErrorPostedImmutable.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted journals cannot be deleted. Use an accounting reversal.'**
+  String get accountingJournalErrorPostedImmutable;
+
+  /// No description provided for @accountingJournalErrorAlreadyReversed.
+  ///
+  /// In en, this message translates to:
+  /// **'This journal has already been reversed.'**
+  String get accountingJournalErrorAlreadyReversed;
+
+  /// No description provided for @accountingJournalErrorDebitAccountMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'A debit account (customer AR or cash) is required before ledger posting.'**
+  String get accountingJournalErrorDebitAccountMissing;
 
   /// No description provided for @accountingFiscalYearsTitle.
   ///
@@ -8156,6 +8312,12 @@ abstract class AppLocalizations {
   /// **'Something went wrong'**
   String get somethingWentWrong;
 
+  /// No description provided for @permissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have permission to perform this action.'**
+  String get permissionDenied;
+
   /// No description provided for @errorStateSubtitle.
   ///
   /// In en, this message translates to:
@@ -9377,7 +9539,7 @@ abstract class AppLocalizations {
   /// No description provided for @authLoginLocalHint.
   ///
   /// In en, this message translates to:
-  /// **'Offline local login. Default admin has full permissions.'**
+  /// **'Sign in with your local offline account. Change the default admin password after first login.'**
   String get authLoginLocalHint;
 
   /// No description provided for @authEmailLabel.
@@ -10315,6 +10477,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Customer / account statement with export'**
   String get adminPermServiceAccountStatementHint;
+
+  /// No description provided for @adminPermServiceTrialBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial balance'**
+  String get adminPermServiceTrialBalance;
+
+  /// No description provided for @adminPermServiceTrialBalanceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial balance report with export'**
+  String get adminPermServiceTrialBalanceHint;
+
+  /// No description provided for @adminPermServiceJournalBook.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal book'**
+  String get adminPermServiceJournalBook;
+
+  /// No description provided for @adminPermServiceJournalBookHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal book report with export'**
+  String get adminPermServiceJournalBookHint;
 
   /// No description provided for @adminPermServiceDevicesHint.
   ///

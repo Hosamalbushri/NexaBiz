@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/sync/sync_providers.dart';
+import '../../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../data/database/accounting_database.dart';
 import '../../data/repositories/account_repository_impl.dart';
 import '../../domain/entities/account.dart';
@@ -66,7 +67,10 @@ final deactivateAccountUseCaseProvider = Provider<DeactivateAccount>((ref) {
 });
 
 final softDeleteAccountUseCaseProvider = Provider<SoftDeleteAccount>((ref) {
-  return SoftDeleteAccount(ref.watch(accountRepositoryProvider));
+  return SoftDeleteAccount(
+    ref.watch(accountRepositoryProvider),
+    ref.watch(permissionGuardProvider),
+  );
 });
 
 final ensureDefaultChartUseCaseProvider =

@@ -1,13 +1,22 @@
+import '../../../../core/permissions/permission_guard.dart';
+import '../../permissions/accounting_permissions.dart';
 import '../entities/journal_entry.dart';
 import '../repositories/journal_repository.dart';
 import '../services/journal_posting_service.dart';
 
 class PostJournalEntry {
-  const PostJournalEntry(this._posting);
+  const PostJournalEntry(
+    this._posting, [
+    this._guard = const AllowAllPermissionGuard(),
+  ]);
 
   final JournalPostingService _posting;
+  final PermissionGuard _guard;
 
-  Future<JournalEntry> call(JournalEntryDraft draft) => _posting.post(draft);
+  Future<JournalEntry> call(JournalEntryDraft draft) {
+    _guard.requireAny(AccountingPermissions.journalsCreate);
+    return _posting.post(draft);
+  }
 }
 
 class GetJournalEntryByUuid {
@@ -43,9 +52,32 @@ class ListJournalEntryHeaders {
 }
 
 class SoftDeleteJournalEntry {
-  const SoftDeleteJournalEntry(this._posting);
+  const SoftDeleteJournalEntry(
+    this._posting, [
+    this._guard = const AllowAllPermissionGuard(),
+  ]);
 
   final JournalPostingService _posting;
+  final PermissionGuard _guard;
 
-  Future<void> call(String uuid) => _posting.softDeleteByUuid(uuid);
+  Future<void> call(String uuid) {
+    _guard.requireAny(AccountingPermissions.journalsDelete);
+    return _posting.voidByUuid(uuid);
+  }
+}
+
+/// Voids a journal (reverse if posted, soft-delete if draft).
+class VoidJournalEntry {
+  const VoidJournalEntry(
+    this._posting, [
+    this._guard = const AllowAllPermissionGuard(),
+  ]);
+
+  final JournalPostingService _posting;
+  final PermissionGuard _guard;
+
+  Future<void> call(String uuid) {
+    _guard.requireAny(AccountingPermissions.journalsDelete);
+    return _posting.voidByUuid(uuid);
+  }
 }

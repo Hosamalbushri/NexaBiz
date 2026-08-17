@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../connectivity/connectivity_service.dart';
+import '../database/encrypted_hive_box.dart';
 import '../database/hive_boxes.dart';
 import '../network/http_client_providers.dart';
 import '../network/http_remote_sync_api.dart';
@@ -40,27 +41,26 @@ final syncOsBackgroundBridgeProvider = Provider<SyncOsBackgroundBridge>((ref) {
   return const NoOpSyncOsBackgroundBridge();
 });
 
-/// Experimental sync API config (HTTP by default → LAN backend).
+/// Experimental sync API config (fail-closed: sync off until configured).
 ///
-/// [AppBootstrap] overwrites [deviceId] with a per-install UUID from Hive.
+/// [AppBootstrap] overwrites [deviceId] with a per-install UUID from Hive and
+/// may apply a saved server URL/token from settings.
 final syncApiConfigProvider = StateProvider<SyncApiConfig>((ref) {
   return SyncApiConfig.fromEnvironment();
 });
 
-/// Remote sync API. Uses HTTP whenever a base URL is configured.
+/// Remote sync API. Uses HTTP only when the endpoint is usable (URL + token +
+/// HTTPS, or plain HTTP when [SyncApiConfig.allowInsecureHttp] is true).
 ///
 /// Important: do **not** key this off [SyncApiConfig.enabled]. That flag is
 /// flipped when the user opts into sync; watching it would recreate
 /// [SyncManager] / [SyncEnabledController] and reset the enable toggle.
 final remoteSyncApiProvider = Provider<RemoteSyncApi>((ref) {
-  final baseUrl = ref.watch(
-    syncApiConfigProvider.select((c) => c.baseUrl.trim()),
-  );
-  if (baseUrl.isEmpty) {
+  final config = ref.watch(syncApiConfigProvider);
+  if (!config.hasUsableHttpEndpoint) {
     return InMemoryRemoteSyncApi();
   }
 
-  final config = ref.read(syncApiConfigProvider);
   final api = HttpRemoteSyncApi(
     config: config,
     authenticatedClient: ref.watch(syncAuthenticatedHttpClientProvider),
@@ -93,10 +93,13 @@ final latestSyncPassMetricsProvider = StreamProvider<SyncPassMetrics?>((ref) asy
   }
 });
 
-/// Opens the durable sync queue box during app bootstrap.
+/// Opens the durable (AES-encrypted) sync queue box during app bootstrap.
 Future<void> openSyncQueueBox() async {
   await SyncQueue.registerAdapter();
-  if (!Hive.isBoxOpen(HiveBoxes.syncQueue)) {
-    await Hive.openBox<SyncOperation>(HiveBoxes.syncQueue);
+  if (!Hive.isBoxOpen(HiveBoxes.syncQueueEncrypted)) {
+    await EncryptedHive.openMigrated<SyncOperation>(
+      encryptedBoxName: HiveBoxes.syncQueueEncrypted,
+      legacyPlainBoxName: HiveBoxes.syncQueue,
+    );
   }
 }

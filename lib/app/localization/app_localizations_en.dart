@@ -878,6 +878,79 @@ class AppLocalizationsEn extends AppLocalizations {
       'Print a cumulative Chart of Accounts statement in the account currency (classic layout).';
 
   @override
+  String get reportsTrialBalanceTitle => 'Trial balance';
+
+  @override
+  String get reportsTrialBalanceSubtitle =>
+      'Debit and credit totals by account in base currency for a date range.';
+
+  @override
+  String get reportsTrialBalanceColCode => 'Code';
+
+  @override
+  String get reportsTrialBalanceColName => 'Account';
+
+  @override
+  String get reportsTrialBalanceColDebit => 'Debit';
+
+  @override
+  String get reportsTrialBalanceColCredit => 'Credit';
+
+  @override
+  String get reportsTrialBalanceTotals => 'Totals';
+
+  @override
+  String get reportsTrialBalanceBalanced => 'Balanced';
+
+  @override
+  String get reportsTrialBalanceUnbalanced => 'Unbalanced';
+
+  @override
+  String get reportsTrialBalanceEmpty =>
+      'No ledger activity for the selected filters.';
+
+  @override
+  String get reportsTrialBalancePostedOnly => 'Posted entries only';
+
+  @override
+  String get reportsJournalBookTitle => 'Journal book';
+
+  @override
+  String get reportsJournalBookSubtitle =>
+      'Chronological journal lines in base currency for a date range.';
+
+  @override
+  String get reportsJournalBookColDate => 'Date';
+
+  @override
+  String get reportsJournalBookColVoucher => 'Voucher#';
+
+  @override
+  String get reportsJournalBookColType => 'Type';
+
+  @override
+  String get reportsJournalBookColDescription => 'Description';
+
+  @override
+  String get reportsJournalBookColAccount => 'Account';
+
+  @override
+  String get reportsJournalBookColDebit => 'Debit';
+
+  @override
+  String get reportsJournalBookColCredit => 'Credit';
+
+  @override
+  String get reportsJournalBookTotals => 'Totals';
+
+  @override
+  String get reportsJournalBookEmpty =>
+      'No journal lines for the selected filters.';
+
+  @override
+  String get reportsJournalBookPostedOnly => 'Posted entries only';
+
+  @override
   String get reportsAccountStatementFilters => 'Statement filters';
 
   @override
@@ -1929,17 +2002,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountingJournalSavedSuccess => 'Journal saved.';
 
   @override
-  String get accountingJournalVoid => 'Void entry';
+  String get accountingJournalVoid => 'Reverse / void';
 
   @override
-  String get accountingJournalVoidConfirmTitle => 'Void this journal?';
+  String get accountingJournalVoidConfirmTitle => 'Reverse this journal?';
 
   @override
   String get accountingJournalVoidConfirmMessage =>
-      'The entry will be soft-deleted and removed from ledgers. Lines are kept for audit.';
+      'A balanced reversing entry will be posted. The original entry stays on the books for audit.';
 
   @override
-  String get accountingJournalVoidedSuccess => 'Journal voided.';
+  String get accountingJournalVoidedSuccess => 'Journal reversed.';
 
   @override
   String get accountingJournalNotFound => 'Journal entry not found.';
@@ -2005,6 +2078,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get accountingJournalErrorOutsideFiscalYear =>
       'This date is not within any defined fiscal year.';
+
+  @override
+  String get accountingJournalErrorPostedImmutable =>
+      'Posted journals cannot be deleted. Use an accounting reversal.';
+
+  @override
+  String get accountingJournalErrorAlreadyReversed =>
+      'This journal has already been reversed.';
+
+  @override
+  String get accountingJournalErrorDebitAccountMissing =>
+      'A debit account (customer AR or cash) is required before ledger posting.';
 
   @override
   String get accountingFiscalYearsTitle => 'Fiscal years';
@@ -4472,6 +4557,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get somethingWentWrong => 'Something went wrong';
 
   @override
+  String get permissionDenied =>
+      'You do not have permission to perform this action.';
+
+  @override
   String get errorStateSubtitle =>
       'Please try again. If the problem continues, check your data and return later.';
 
@@ -5156,7 +5245,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authLoginLocalHint =>
-      'Offline local login. Default admin has full permissions.';
+      'Sign in with your local offline account. Change the default admin password after first login.';
 
   @override
   String get authEmailLabel => 'Email';
@@ -5668,6 +5757,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminPermServiceAccountStatementHint =>
       'Customer / account statement with export';
+
+  @override
+  String get adminPermServiceTrialBalance => 'Trial balance';
+
+  @override
+  String get adminPermServiceTrialBalanceHint =>
+      'Trial balance report with export';
+
+  @override
+  String get adminPermServiceJournalBook => 'Journal book';
+
+  @override
+  String get adminPermServiceJournalBookHint =>
+      'Journal book report with export';
 
   @override
   String get adminPermServiceDevicesHint => 'Registered sync devices';

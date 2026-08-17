@@ -56,6 +56,13 @@ void main() {
       db,
       accounts: accounts,
       rates: rates,
+      periodValidator: AccountingPeriodValidator(
+        repository: fyRepo,
+        legacyPolicyReader: () => const FiscalPeriodPolicy(
+          fiscalYearStartMonth: 1,
+          closedThrough: null,
+        ),
+      ),
       syncQueue: queue,
     );
     posting = JournalPostingService(

@@ -865,6 +865,78 @@ class AppLocalizationsAr extends AppLocalizations {
       'اطبع كشف حساب تراكمي بعملة الحساب وفق النموذج المحاسبي الكلاسيكي.';
 
   @override
+  String get reportsTrialBalanceTitle => 'ميزان المراجعة';
+
+  @override
+  String get reportsTrialBalanceSubtitle =>
+      'إجمالي المدين والدائن لكل حساب بالعملة الأساسية ضمن فترة.';
+
+  @override
+  String get reportsTrialBalanceColCode => 'الرمز';
+
+  @override
+  String get reportsTrialBalanceColName => 'الحساب';
+
+  @override
+  String get reportsTrialBalanceColDebit => 'مدين';
+
+  @override
+  String get reportsTrialBalanceColCredit => 'دائن';
+
+  @override
+  String get reportsTrialBalanceTotals => 'الإجماليات';
+
+  @override
+  String get reportsTrialBalanceBalanced => 'متوازن';
+
+  @override
+  String get reportsTrialBalanceUnbalanced => 'غير متوازن';
+
+  @override
+  String get reportsTrialBalanceEmpty =>
+      'لا توجد حركة دفترية للمعايير المحددة.';
+
+  @override
+  String get reportsTrialBalancePostedOnly => 'القيود المرحلة فقط';
+
+  @override
+  String get reportsJournalBookTitle => 'دفتر اليومية';
+
+  @override
+  String get reportsJournalBookSubtitle =>
+      'قيود اليومية مرتبة زمنياً بالعملة الأساسية ضمن فترة.';
+
+  @override
+  String get reportsJournalBookColDate => 'التاريخ';
+
+  @override
+  String get reportsJournalBookColVoucher => 'رقم السند';
+
+  @override
+  String get reportsJournalBookColType => 'النوع';
+
+  @override
+  String get reportsJournalBookColDescription => 'البيان';
+
+  @override
+  String get reportsJournalBookColAccount => 'الحساب';
+
+  @override
+  String get reportsJournalBookColDebit => 'مدين';
+
+  @override
+  String get reportsJournalBookColCredit => 'دائن';
+
+  @override
+  String get reportsJournalBookTotals => 'الإجماليات';
+
+  @override
+  String get reportsJournalBookEmpty => 'لا توجد قيود للمعايير المحددة.';
+
+  @override
+  String get reportsJournalBookPostedOnly => 'القيود المرحلة فقط';
+
+  @override
   String get reportsAccountStatementFilters => 'معايير الكشف';
 
   @override
@@ -1904,17 +1976,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountingJournalSavedSuccess => 'تم حفظ القيد.';
 
   @override
-  String get accountingJournalVoid => 'إلغاء القيد';
+  String get accountingJournalVoid => 'عكس / إلغاء القيد';
 
   @override
-  String get accountingJournalVoidConfirmTitle => 'إلغاء هذا القيد؟';
+  String get accountingJournalVoidConfirmTitle => 'عكس هذا القيد؟';
 
   @override
   String get accountingJournalVoidConfirmMessage =>
-      'سيتم حذف القيد بشكل ناعم وإزالته من الدفاتر. تُحفظ الأسطر للمراجعة.';
+      'سيتم إنشاء قيد عكسي متوازن. القيد الأصلي يبقى في الدفاتر للمراجعة.';
 
   @override
-  String get accountingJournalVoidedSuccess => 'تم إلغاء القيد.';
+  String get accountingJournalVoidedSuccess => 'تم عكس القيد.';
 
   @override
   String get accountingJournalNotFound => 'القيد غير موجود.';
@@ -1980,6 +2052,18 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get accountingJournalErrorOutsideFiscalYear =>
       'هذا التاريخ خارج أي سنة مالية مُعرّفة.';
+
+  @override
+  String get accountingJournalErrorPostedImmutable =>
+      'لا يمكن حذف قيد مرحّل. استخدم العكس المحاسبي.';
+
+  @override
+  String get accountingJournalErrorAlreadyReversed =>
+      'تم عكس هذا القيد مسبقاً.';
+
+  @override
+  String get accountingJournalErrorDebitAccountMissing =>
+      'حساب المدين (العميل أو الصندوق) مطلوب قبل الترحيل المحاسبي.';
 
   @override
   String get accountingFiscalYearsTitle => 'السنوات المالية';
@@ -4421,6 +4505,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get somethingWentWrong => 'حدث خطأ ما';
 
   @override
+  String get permissionDenied => 'ليست لديك صلاحية لتنفيذ هذا الإجراء.';
+
+  @override
   String get errorStateSubtitle =>
       'حاول مرة أخرى. إذا استمرت المشكلة، تحقق من البيانات ثم عد لاحقاً.';
 
@@ -5096,7 +5183,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get authLoginLocalHint =>
-      'دخول محلي دون إنترنت. حساب الأدمن الافتراضي يملك كل الصلاحيات.';
+      'سجّل الدخول بحسابك المحلي دون إنترنت. غيّر كلمة مرور الأدمن الافتراضية بعد أول دخول.';
 
   @override
   String get authEmailLabel => 'البريد الإلكتروني';
@@ -5601,6 +5688,19 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get adminPermServiceAccountStatementHint =>
       'كشف حساب عميل/حساب مع التصدير';
+
+  @override
+  String get adminPermServiceTrialBalance => 'ميزان المراجعة';
+
+  @override
+  String get adminPermServiceTrialBalanceHint =>
+      'تقرير ميزان المراجعة مع التصدير';
+
+  @override
+  String get adminPermServiceJournalBook => 'دفتر اليومية';
+
+  @override
+  String get adminPermServiceJournalBookHint => 'تقرير دفتر اليومية مع التصدير';
 
   @override
   String get adminPermServiceDevicesHint => 'أجهزة المزامنة المسجّلة';

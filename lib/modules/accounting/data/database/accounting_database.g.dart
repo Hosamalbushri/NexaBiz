@@ -1065,6 +1065,20 @@ class $CurrencyRatesTable extends CurrencyRates
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
   static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
     'currencyCode',
   );
@@ -1112,13 +1126,56 @@ class $CurrencyRatesTable extends CurrencyRates
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('synced'),
+  );
+  static const VerificationMeta _lastSyncedAtMeta = const VerificationMeta(
+    'lastSyncedAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastSyncedAt = GeneratedColumn<int>(
+    'last_synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    uuid,
     currencyCode,
     rateToBase,
     updatedAt,
     notes,
+    syncStatus,
+    lastSyncedAt,
+    version,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1134,6 +1191,14 @@ class $CurrencyRatesTable extends CurrencyRates
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
     }
     if (data.containsKey('currency_code')) {
       context.handle(
@@ -1171,6 +1236,27 @@ class $CurrencyRatesTable extends CurrencyRates
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
       );
     }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+        _lastSyncedAtMeta,
+        lastSyncedAt.isAcceptableOrUnknown(
+          data['last_synced_at']!,
+          _lastSyncedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
     return context;
   }
 
@@ -1183,6 +1269,10 @@ class $CurrencyRatesTable extends CurrencyRates
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}id'],
+      )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
       )!,
       currencyCode: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -1200,6 +1290,18 @@ class $CurrencyRatesTable extends CurrencyRates
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
       ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_synced_at'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
     );
   }
 
@@ -1212,6 +1314,9 @@ class $CurrencyRatesTable extends CurrencyRates
 class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
   final int id;
 
+  /// Sync identity (stable across devices). Business key remains [currencyCode].
+  final String uuid;
+
   /// ISO-like currency code (e.g. `USD`). Unique.
   final String currencyCode;
 
@@ -1220,35 +1325,54 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
   final double rateToBase;
   final int updatedAt;
   final String? notes;
+  final String syncStatus;
+  final int? lastSyncedAt;
+  final int version;
   const CurrencyRateRow({
     required this.id,
+    required this.uuid,
     required this.currencyCode,
     required this.rateToBase,
     required this.updatedAt,
     this.notes,
+    required this.syncStatus,
+    this.lastSyncedAt,
+    required this.version,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['currency_code'] = Variable<String>(currencyCode);
     map['rate_to_base'] = Variable<double>(rateToBase);
     map['updated_at'] = Variable<int>(updatedAt);
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<int>(lastSyncedAt);
+    }
+    map['version'] = Variable<int>(version);
     return map;
   }
 
   CurrencyRatesCompanion toCompanion(bool nullToAbsent) {
     return CurrencyRatesCompanion(
       id: Value(id),
+      uuid: Value(uuid),
       currencyCode: Value(currencyCode),
       rateToBase: Value(rateToBase),
       updatedAt: Value(updatedAt),
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
+      syncStatus: Value(syncStatus),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+      version: Value(version),
     );
   }
 
@@ -1259,10 +1383,14 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CurrencyRateRow(
       id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       currencyCode: serializer.fromJson<String>(json['currencyCode']),
       rateToBase: serializer.fromJson<double>(json['rateToBase']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       notes: serializer.fromJson<String?>(json['notes']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
+      version: serializer.fromJson<int>(json['version']),
     );
   }
   @override
@@ -1270,29 +1398,42 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'currencyCode': serializer.toJson<String>(currencyCode),
       'rateToBase': serializer.toJson<double>(rateToBase),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'notes': serializer.toJson<String?>(notes),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
+      'version': serializer.toJson<int>(version),
     };
   }
 
   CurrencyRateRow copyWith({
     int? id,
+    String? uuid,
     String? currencyCode,
     double? rateToBase,
     int? updatedAt,
     Value<String?> notes = const Value.absent(),
+    String? syncStatus,
+    Value<int?> lastSyncedAt = const Value.absent(),
+    int? version,
   }) => CurrencyRateRow(
     id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
     currencyCode: currencyCode ?? this.currencyCode,
     rateToBase: rateToBase ?? this.rateToBase,
     updatedAt: updatedAt ?? this.updatedAt,
     notes: notes.present ? notes.value : this.notes,
+    syncStatus: syncStatus ?? this.syncStatus,
+    lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+    version: version ?? this.version,
   );
   CurrencyRateRow copyWithCompanion(CurrencyRatesCompanion data) {
     return CurrencyRateRow(
       id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
       currencyCode: data.currencyCode.present
           ? data.currencyCode.value
           : this.currencyCode,
@@ -1301,6 +1442,13 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
           : this.rateToBase,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       notes: data.notes.present ? data.notes.value : this.notes,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+      version: data.version.present ? data.version.value : this.version,
     );
   }
 
@@ -1308,79 +1456,125 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
   String toString() {
     return (StringBuffer('CurrencyRateRow(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('currencyCode: $currencyCode, ')
           ..write('rateToBase: $rateToBase, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('version: $version')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, currencyCode, rateToBase, updatedAt, notes);
+  int get hashCode => Object.hash(
+    id,
+    uuid,
+    currencyCode,
+    rateToBase,
+    updatedAt,
+    notes,
+    syncStatus,
+    lastSyncedAt,
+    version,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CurrencyRateRow &&
           other.id == this.id &&
+          other.uuid == this.uuid &&
           other.currencyCode == this.currencyCode &&
           other.rateToBase == this.rateToBase &&
           other.updatedAt == this.updatedAt &&
-          other.notes == this.notes);
+          other.notes == this.notes &&
+          other.syncStatus == this.syncStatus &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.version == this.version);
 }
 
 class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
   final Value<int> id;
+  final Value<String> uuid;
   final Value<String> currencyCode;
   final Value<double> rateToBase;
   final Value<int> updatedAt;
   final Value<String?> notes;
+  final Value<String> syncStatus;
+  final Value<int?> lastSyncedAt;
+  final Value<int> version;
   const CurrencyRatesCompanion({
     this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.currencyCode = const Value.absent(),
     this.rateToBase = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.notes = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.version = const Value.absent(),
   });
   CurrencyRatesCompanion.insert({
     this.id = const Value.absent(),
+    required String uuid,
     required String currencyCode,
     required double rateToBase,
     required int updatedAt,
     this.notes = const Value.absent(),
-  }) : currencyCode = Value(currencyCode),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.version = const Value.absent(),
+  }) : uuid = Value(uuid),
+       currencyCode = Value(currencyCode),
        rateToBase = Value(rateToBase),
        updatedAt = Value(updatedAt);
   static Insertable<CurrencyRateRow> custom({
     Expression<int>? id,
+    Expression<String>? uuid,
     Expression<String>? currencyCode,
     Expression<double>? rateToBase,
     Expression<int>? updatedAt,
     Expression<String>? notes,
+    Expression<String>? syncStatus,
+    Expression<int>? lastSyncedAt,
+    Expression<int>? version,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (currencyCode != null) 'currency_code': currencyCode,
       if (rateToBase != null) 'rate_to_base': rateToBase,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (notes != null) 'notes': notes,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (version != null) 'version': version,
     });
   }
 
   CurrencyRatesCompanion copyWith({
     Value<int>? id,
+    Value<String>? uuid,
     Value<String>? currencyCode,
     Value<double>? rateToBase,
     Value<int>? updatedAt,
     Value<String?>? notes,
+    Value<String>? syncStatus,
+    Value<int?>? lastSyncedAt,
+    Value<int>? version,
   }) {
     return CurrencyRatesCompanion(
       id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       currencyCode: currencyCode ?? this.currencyCode,
       rateToBase: rateToBase ?? this.rateToBase,
       updatedAt: updatedAt ?? this.updatedAt,
       notes: notes ?? this.notes,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      version: version ?? this.version,
     );
   }
 
@@ -1389,6 +1583,9 @@ class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (currencyCode.present) {
       map['currency_code'] = Variable<String>(currencyCode.value);
@@ -1402,6 +1599,15 @@ class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<int>(lastSyncedAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
     return map;
   }
 
@@ -1409,10 +1615,14 @@ class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
   String toString() {
     return (StringBuffer('CurrencyRatesCompanion(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('currencyCode: $currencyCode, ')
           ..write('rateToBase: $rateToBase, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('version: $version')
           ..write(')'))
         .toString();
   }
@@ -4500,6 +4710,45 @@ class $FiscalYearsTable extends FiscalYears
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('synced'),
+  );
+  static const VerificationMeta _lastSyncedAtMeta = const VerificationMeta(
+    'lastSyncedAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastSyncedAt = GeneratedColumn<int>(
+    'last_synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4520,6 +4769,9 @@ class $FiscalYearsTable extends FiscalYears
     closedAt,
     createdBy,
     closedBy,
+    syncStatus,
+    lastSyncedAt,
+    version,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4676,6 +4928,27 @@ class $FiscalYearsTable extends FiscalYears
         closedBy.isAcceptableOrUnknown(data['closed_by']!, _closedByMeta),
       );
     }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+        _lastSyncedAtMeta,
+        lastSyncedAt.isAcceptableOrUnknown(
+          data['last_synced_at']!,
+          _lastSyncedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
     return context;
   }
 
@@ -4757,6 +5030,18 @@ class $FiscalYearsTable extends FiscalYears
         DriftSqlType.string,
         data['${effectivePrefix}closed_by'],
       ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_synced_at'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
     );
   }
 
@@ -4793,6 +5078,9 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
   final int? closedAt;
   final String? createdBy;
   final String? closedBy;
+  final String syncStatus;
+  final int? lastSyncedAt;
+  final int version;
   const FiscalYearRow({
     required this.id,
     required this.uuid,
@@ -4812,6 +5100,9 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
     this.closedAt,
     this.createdBy,
     this.closedBy,
+    required this.syncStatus,
+    this.lastSyncedAt,
+    required this.version,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4844,6 +5135,11 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
     if (!nullToAbsent || closedBy != null) {
       map['closed_by'] = Variable<String>(closedBy);
     }
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<int>(lastSyncedAt);
+    }
+    map['version'] = Variable<int>(version);
     return map;
   }
 
@@ -4877,6 +5173,11 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
       closedBy: closedBy == null && nullToAbsent
           ? const Value.absent()
           : Value(closedBy),
+      syncStatus: Value(syncStatus),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+      version: Value(version),
     );
   }
 
@@ -4910,6 +5211,9 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
       closedAt: serializer.fromJson<int?>(json['closedAt']),
       createdBy: serializer.fromJson<String?>(json['createdBy']),
       closedBy: serializer.fromJson<String?>(json['closedBy']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
+      version: serializer.fromJson<int>(json['version']),
     );
   }
   @override
@@ -4934,6 +5238,9 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
       'closedAt': serializer.toJson<int?>(closedAt),
       'createdBy': serializer.toJson<String?>(createdBy),
       'closedBy': serializer.toJson<String?>(closedBy),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
+      'version': serializer.toJson<int>(version),
     };
   }
 
@@ -4956,6 +5263,9 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
     Value<int?> closedAt = const Value.absent(),
     Value<String?> createdBy = const Value.absent(),
     Value<String?> closedBy = const Value.absent(),
+    String? syncStatus,
+    Value<int?> lastSyncedAt = const Value.absent(),
+    int? version,
   }) => FiscalYearRow(
     id: id ?? this.id,
     uuid: uuid ?? this.uuid,
@@ -4979,6 +5289,9 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
     closedAt: closedAt.present ? closedAt.value : this.closedAt,
     createdBy: createdBy.present ? createdBy.value : this.createdBy,
     closedBy: closedBy.present ? closedBy.value : this.closedBy,
+    syncStatus: syncStatus ?? this.syncStatus,
+    lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+    version: version ?? this.version,
   );
   FiscalYearRow copyWithCompanion(FiscalYearsCompanion data) {
     return FiscalYearRow(
@@ -5012,6 +5325,13 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
       closedAt: data.closedAt.present ? data.closedAt.value : this.closedAt,
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
       closedBy: data.closedBy.present ? data.closedBy.value : this.closedBy,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+      version: data.version.present ? data.version.value : this.version,
     );
   }
 
@@ -5035,13 +5355,16 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
           ..write('updatedAt: $updatedAt, ')
           ..write('closedAt: $closedAt, ')
           ..write('createdBy: $createdBy, ')
-          ..write('closedBy: $closedBy')
+          ..write('closedBy: $closedBy, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('version: $version')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     uuid,
     code,
@@ -5060,7 +5383,10 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
     closedAt,
     createdBy,
     closedBy,
-  );
+    syncStatus,
+    lastSyncedAt,
+    version,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5082,7 +5408,10 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
           other.updatedAt == this.updatedAt &&
           other.closedAt == this.closedAt &&
           other.createdBy == this.createdBy &&
-          other.closedBy == this.closedBy);
+          other.closedBy == this.closedBy &&
+          other.syncStatus == this.syncStatus &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.version == this.version);
 }
 
 class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
@@ -5104,6 +5433,9 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
   final Value<int?> closedAt;
   final Value<String?> createdBy;
   final Value<String?> closedBy;
+  final Value<String> syncStatus;
+  final Value<int?> lastSyncedAt;
+  final Value<int> version;
   const FiscalYearsCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
@@ -5123,6 +5455,9 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
     this.closedAt = const Value.absent(),
     this.createdBy = const Value.absent(),
     this.closedBy = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.version = const Value.absent(),
   });
   FiscalYearsCompanion.insert({
     this.id = const Value.absent(),
@@ -5143,6 +5478,9 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
     this.closedAt = const Value.absent(),
     this.createdBy = const Value.absent(),
     this.closedBy = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.version = const Value.absent(),
   }) : uuid = Value(uuid),
        code = Value(code),
        name = Value(name),
@@ -5172,6 +5510,9 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
     Expression<int>? closedAt,
     Expression<String>? createdBy,
     Expression<String>? closedBy,
+    Expression<String>? syncStatus,
+    Expression<int>? lastSyncedAt,
+    Expression<int>? version,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -5193,6 +5534,9 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
       if (closedAt != null) 'closed_at': closedAt,
       if (createdBy != null) 'created_by': createdBy,
       if (closedBy != null) 'closed_by': closedBy,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (version != null) 'version': version,
     });
   }
 
@@ -5215,6 +5559,9 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
     Value<int?>? closedAt,
     Value<String?>? createdBy,
     Value<String?>? closedBy,
+    Value<String>? syncStatus,
+    Value<int?>? lastSyncedAt,
+    Value<int>? version,
   }) {
     return FiscalYearsCompanion(
       id: id ?? this.id,
@@ -5235,6 +5582,9 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
       closedAt: closedAt ?? this.closedAt,
       createdBy: createdBy ?? this.createdBy,
       closedBy: closedBy ?? this.closedBy,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      version: version ?? this.version,
     );
   }
 
@@ -5297,6 +5647,15 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
     if (closedBy.present) {
       map['closed_by'] = Variable<String>(closedBy.value);
     }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<int>(lastSyncedAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
     return map;
   }
 
@@ -5320,7 +5679,10 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
           ..write('updatedAt: $updatedAt, ')
           ..write('closedAt: $closedAt, ')
           ..write('createdBy: $createdBy, ')
-          ..write('closedBy: $closedBy')
+          ..write('closedBy: $closedBy, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('version: $version')
           ..write(')'))
         .toString();
   }
@@ -7601,18 +7963,26 @@ typedef $$AccountsTableProcessedTableManager =
 typedef $$CurrencyRatesTableCreateCompanionBuilder =
     CurrencyRatesCompanion Function({
       Value<int> id,
+      required String uuid,
       required String currencyCode,
       required double rateToBase,
       required int updatedAt,
       Value<String?> notes,
+      Value<String> syncStatus,
+      Value<int?> lastSyncedAt,
+      Value<int> version,
     });
 typedef $$CurrencyRatesTableUpdateCompanionBuilder =
     CurrencyRatesCompanion Function({
       Value<int> id,
+      Value<String> uuid,
       Value<String> currencyCode,
       Value<double> rateToBase,
       Value<int> updatedAt,
       Value<String?> notes,
+      Value<String> syncStatus,
+      Value<int?> lastSyncedAt,
+      Value<int> version,
     });
 
 class $$CurrencyRatesTableFilterComposer
@@ -7626,6 +7996,11 @@ class $$CurrencyRatesTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7648,6 +8023,21 @@ class $$CurrencyRatesTableFilterComposer
     column: $table.notes,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$CurrencyRatesTableOrderingComposer
@@ -7661,6 +8051,11 @@ class $$CurrencyRatesTableOrderingComposer
   });
   ColumnOrderings<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -7683,6 +8078,21 @@ class $$CurrencyRatesTableOrderingComposer
     column: $table.notes,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CurrencyRatesTableAnnotationComposer
@@ -7696,6 +8106,9 @@ class $$CurrencyRatesTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<String> get currencyCode => $composableBuilder(
     column: $table.currencyCode,
@@ -7712,6 +8125,19 @@ class $$CurrencyRatesTableAnnotationComposer
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
 }
 
 class $$CurrencyRatesTableTableManager
@@ -7752,30 +8178,46 @@ class $$CurrencyRatesTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
                 Value<String> currencyCode = const Value.absent(),
                 Value<double> rateToBase = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
               }) => CurrencyRatesCompanion(
                 id: id,
+                uuid: uuid,
                 currencyCode: currencyCode,
                 rateToBase: rateToBase,
                 updatedAt: updatedAt,
                 notes: notes,
+                syncStatus: syncStatus,
+                lastSyncedAt: lastSyncedAt,
+                version: version,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                required String uuid,
                 required String currencyCode,
                 required double rateToBase,
                 required int updatedAt,
                 Value<String?> notes = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
               }) => CurrencyRatesCompanion.insert(
                 id: id,
+                uuid: uuid,
                 currencyCode: currencyCode,
                 rateToBase: rateToBase,
                 updatedAt: updatedAt,
                 notes: notes,
+                syncStatus: syncStatus,
+                lastSyncedAt: lastSyncedAt,
+                version: version,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -9191,6 +9633,9 @@ typedef $$FiscalYearsTableCreateCompanionBuilder =
       Value<int?> closedAt,
       Value<String?> createdBy,
       Value<String?> closedBy,
+      Value<String> syncStatus,
+      Value<int?> lastSyncedAt,
+      Value<int> version,
     });
 typedef $$FiscalYearsTableUpdateCompanionBuilder =
     FiscalYearsCompanion Function({
@@ -9212,6 +9657,9 @@ typedef $$FiscalYearsTableUpdateCompanionBuilder =
       Value<int?> closedAt,
       Value<String?> createdBy,
       Value<String?> closedBy,
+      Value<String> syncStatus,
+      Value<int?> lastSyncedAt,
+      Value<int> version,
     });
 
 class $$FiscalYearsTableFilterComposer
@@ -9310,6 +9758,21 @@ class $$FiscalYearsTableFilterComposer
 
   ColumnFilters<String> get closedBy => $composableBuilder(
     column: $table.closedBy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -9412,6 +9875,21 @@ class $$FiscalYearsTableOrderingComposer
     column: $table.closedBy,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$FiscalYearsTableAnnotationComposer
@@ -9488,6 +9966,19 @@ class $$FiscalYearsTableAnnotationComposer
 
   GeneratedColumn<String> get closedBy =>
       $composableBuilder(column: $table.closedBy, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
 }
 
 class $$FiscalYearsTableTableManager
@@ -9545,6 +10036,9 @@ class $$FiscalYearsTableTableManager
                 Value<int?> closedAt = const Value.absent(),
                 Value<String?> createdBy = const Value.absent(),
                 Value<String?> closedBy = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
               }) => FiscalYearsCompanion(
                 id: id,
                 uuid: uuid,
@@ -9564,6 +10058,9 @@ class $$FiscalYearsTableTableManager
                 closedAt: closedAt,
                 createdBy: createdBy,
                 closedBy: closedBy,
+                syncStatus: syncStatus,
+                lastSyncedAt: lastSyncedAt,
+                version: version,
               ),
           createCompanionCallback:
               ({
@@ -9585,6 +10082,9 @@ class $$FiscalYearsTableTableManager
                 Value<int?> closedAt = const Value.absent(),
                 Value<String?> createdBy = const Value.absent(),
                 Value<String?> closedBy = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
               }) => FiscalYearsCompanion.insert(
                 id: id,
                 uuid: uuid,
@@ -9604,6 +10104,9 @@ class $$FiscalYearsTableTableManager
                 closedAt: closedAt,
                 createdBy: createdBy,
                 closedBy: closedBy,
+                syncStatus: syncStatus,
+                lastSyncedAt: lastSyncedAt,
+                version: version,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

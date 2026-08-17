@@ -154,16 +154,25 @@ Flutter يحوّلها إلى `SyncConflictFailure` ويعلّم السجل ال
 
 ### التفعيل للجهاز الحقيقي
 
-الافتراضي الحالي يشير إلى الشبكة المحلية التجريبية:
+الافتراضي **مغلق** (fail-closed):
 
-- `SYNC_API_ENABLED=true` (افتراضي)
-- `SYNC_API_BASE_URL=http://192.168.8.110:8000`
+- `SYNC_API_ENABLED=false` ما لم تُمرَّر dart-defines صراحة
+- لا يوجد URL أو token افتراضي مشترك في البناء
+- HTTP غير المشفّر يتطلب `--dart-define=SYNC_API_ALLOW_INSECURE_HTTP=true`
 
-في إعدادات المزامنة يظهر سطر:
+مثال جهاز حقيقي على LAN:
 
-`Sync backend → HTTP http://192.168.8.110:8000`
+```bash
+flutter run \
+  --dart-define=SYNC_API_ENABLED=true \
+  --dart-define=SYNC_API_BASE_URL=http://192.168.8.110:8000 \
+  --dart-define=SYNC_API_TOKEN=your-local-dev-token \
+  --dart-define=SYNC_API_ALLOW_INSECURE_HTTP=true
+```
 
-إن ظهر `In-memory` فالجهاز لا يتصل بالخادم.
+في إعدادات المزامنة يظهر سطر مثل `HTTP http://…` عند التهيئة الصحيحة، وإلا `Local only`.
+
+إن ظهر `Local only` / In-memory فالجهاز لا يتصل بالخادم.
 
 ### Cursor السحب
 

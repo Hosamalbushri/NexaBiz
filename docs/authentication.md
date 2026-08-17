@@ -9,23 +9,31 @@
 On app start:
 
 1. Seed local admin + company in Hive (if missing).
-2. Restore local session, or auto-login as local admin.
-3. Splash → **System Setup** (if incomplete) or **Dashboard**.
+2. Restore a **previously saved** local session, or show **Sign in**.
+3. There is **no silent auto-login** and credentials are **never prefilled**.
+4. After sign-in → System Setup (if incomplete) or Dashboard.
 
-Local credentials (offline only):
+First-install local credentials (change immediately after first login):
 
 | Field | Value |
 |-------|--------|
 | Email | `admin@local` |
 | Password | `admin123` |
 
+These values exist only to bootstrap an empty local store. They must not appear
+in UI fields and must be changed before any shared or production use.
+
 ### Enabling synchronization
 
-1. Settings → Data & Sync → set Server URL
+1. Settings → Data & Sync → set Server URL (HTTPS) and token
 2. Toggle **Enable synchronization**
 3. Authentication page opens (`POST /api/v1/auth/login`)
 4. On success: tokens stored securely, sync enabled, initial sync runs
 5. On failure: sync remains disabled; no tokens stored
+
+Compile-time sync defaults are **fail-closed** (`SYNC_API_ENABLED=false`, empty
+URL/token). LAN HTTP requires explicit
+`--dart-define=SYNC_API_ALLOW_INSECURE_HTTP=true`.
 
 Seeded backend admin (development):
 

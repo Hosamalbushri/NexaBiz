@@ -14,6 +14,10 @@ class JournalException implements Exception {
   static const String notFound = 'not_found';
   static const String periodClosed = 'period_closed';
   static const String outsideFiscalYear = 'outside_fiscal_year';
+  static const String postedImmutable = 'posted_immutable';
+  static const String notPosted = 'not_posted';
+  static const String alreadyReversed = 'already_reversed';
+  static const String debitAccountMissing = 'debit_account_missing';
 
   final String code;
   final String? message;

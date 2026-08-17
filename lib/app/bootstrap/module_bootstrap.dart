@@ -35,6 +35,8 @@ import '../receipts_payments/customers_rp_lookup_adapter.dart';
 import '../reports/account_statement_report_data_adapter.dart';
 import '../reports/rp_report_data_adapter.dart';
 import '../reports/sales_period_report_data_adapter.dart';
+import '../reports/trial_balance_report_data_adapter.dart';
+import '../reports/journal_book_report_data_adapter.dart';
 import '../sales/accounting_sale_bridge_adapter.dart';
 import '../sales/accounting_sale_currency_adapter.dart';
 import '../sales/accounting_sale_ledger_adapter.dart';
@@ -42,6 +44,7 @@ import '../sales/accounting_sale_treasury_adapter.dart';
 import '../sales/accounting_sale_voucher_book_adapter.dart';
 import '../sales/customers_sale_lookup_adapter.dart';
 import '../sales/inventory_sale_product_catalog_adapter.dart';
+import '../sales/soft_sale_inventory_effect_adapter.dart';
 import '../system_setup/accounting_system_setup_seed_adapter.dart';
 
 /// App composition root: registers enabled business modules.
@@ -106,6 +109,9 @@ List<Override> moduleRegistryOverrides() {
         scanResolver: ref.watch(productScanResolverProvider),
       );
     }),
+    saleInventoryEffectPortProvider.overrideWith(
+      (ref) => const SoftSaleInventoryEffectAdapter(),
+    ),
     saleAccountingBridgePortProvider.overrideWith((ref) {
       return AccountingSaleBridgeAdapter(
         integration: ref.watch(accountingIntegrationPortProvider),
@@ -193,6 +199,20 @@ List<Override> moduleRegistryOverrides() {
         loadSalesForAccount: (accountUuid) =>
             ref.read(saleRepositoryProvider).listByAccountLink(accountUuid),
         ledger: ref.watch(saleLedgerPostingPortProvider),
+      );
+    }),
+    trialBalanceReportDataPortProvider.overrideWith((ref) {
+      return TrialBalanceReportDataAdapter(
+        journals: ref.watch(journalRepositoryProvider),
+        loadCompanyProfile: () =>
+            ref.read(settingsRepositoryProvider).loadCompanyProfile(),
+      );
+    }),
+    journalBookReportDataPortProvider.overrideWith((ref) {
+      return JournalBookReportDataAdapter(
+        journals: ref.watch(journalRepositoryProvider),
+        loadCompanyProfile: () =>
+            ref.read(settingsRepositoryProvider).loadCompanyProfile(),
       );
     }),
     rpReportDataPortProvider.overrideWith((ref) {

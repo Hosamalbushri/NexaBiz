@@ -1,15 +1,21 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/localization/app_localizations.dart';
+import '../../../../app/presentation/providers/dashboard_services_provider.dart';
+import '../../../../app/router/app_routes.dart';
 import '../../../../core/errors/app_failure.dart';
 import '../../../../core/sync/sync_providers.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../modules/system_setup/presentation/pages/system_setup_routes.dart';
+import '../../../../modules/system_setup/presentation/providers/system_setup_providers.dart';
 import '../../domain/local_permissions.dart';
 import '../providers/auth_providers.dart';
 
+/// Local offline sign-in (no password prefill).
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -18,8 +24,8 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  final _email = TextEditingController(text: LocalAuthDefaults.adminEmail);
-  final _password = TextEditingController(text: LocalAuthDefaults.adminPassword);
+  final _email = TextEditingController();
+  final _password = TextEditingController();
   var _loading = false;
   String? _error;
 
@@ -48,14 +54,29 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             .read(syncApiConfigProvider)
             .copyWith(deviceId: deviceId);
       }
-      await ref.read(authStateProvider.notifier).login(
+      await ref.read(authStateProvider.notifier).loginLocal(
             email: _email.text.trim(),
-            password: _password.text.trim(),
+            password: _password.text,
             companyId: LocalAuthDefaults.companyId,
             deviceId: deviceId,
             deviceName: 'local',
             platform: defaultTargetPlatform.name,
           );
+      if (!mounted) return;
+      final ready =
+          await ref.read(systemInitializationCoordinatorProvider).isReady();
+      if (!mounted) return;
+      if (ready) {
+        context.go(AppRoutes.dashboard);
+        return;
+      }
+      final onboardingDone = await ref
+          .read(settingsRepositoryProvider)
+          .loadOnboardingCompleted();
+      if (!mounted) return;
+      context.go(
+        onboardingDone ? SystemSetupRoutes.root : AppRoutes.onboarding,
+      );
     } on AuthenticationFailure {
       setState(() => _error = l10n.authLoginFailed);
     } on NetworkFailure {
@@ -99,6 +120,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   TextField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [AutofillHints.username],
                     textInputAction: TextInputAction.next,
                     decoration: InputDecoration(labelText: l10n.authEmailLabel),
                   ),
@@ -106,6 +128,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   TextField(
                     controller: _password,
                     obscureText: true,
+                    autofillHints: const [AutofillHints.password],
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _loading ? null : _submit(),
                     decoration: InputDecoration(

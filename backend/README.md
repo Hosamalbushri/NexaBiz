@@ -105,19 +105,24 @@ Enable the HTTP remote (default remains in-memory so existing tests stay offline
 flutter run \
   --dart-define=SYNC_API_ENABLED=true \
   --dart-define=SYNC_API_BASE_URL=http://192.168.8.110:8000 \
-  --dart-define=SYNC_API_TOKEN=dev-sync-token-change-me \
+  --dart-define=SYNC_API_TOKEN=your-local-dev-token \
+  --dart-define=SYNC_API_ALLOW_INSECURE_HTTP=true \
   --dart-define=SYNC_API_DEVICE_ID=00000000-0000-4000-8000-0000000000a1
 
 # Android emulator (special loopback to host)
 flutter run \
   --dart-define=SYNC_API_ENABLED=true \
   --dart-define=SYNC_API_BASE_URL=http://10.0.2.2:8000 \
-  --dart-define=SYNC_API_TOKEN=dev-sync-token-change-me \
+  --dart-define=SYNC_API_TOKEN=your-local-dev-token \
+  --dart-define=SYNC_API_ALLOW_INSECURE_HTTP=true \
   --dart-define=SYNC_API_DEVICE_ID=00000000-0000-4000-8000-0000000000a1
 ```
 
 Use a **different** `SYNC_API_DEVICE_ID` (and optionally user id) for Device B.
 Keep the same `SYNC_API_COMPANY_ID` so both devices share tenant data.
+
+Without `SYNC_API_ALLOW_INSECURE_HTTP=true`, plain `http://` endpoints stay
+disabled (Flutter fail-closed defaults). Prefer HTTPS outside the lab.
 
 Phone and PC must be on the same Wi‑Fi; confirm from the phone browser:
 `http://192.168.8.110:8000/health` → `{"status":"ok",...}`.

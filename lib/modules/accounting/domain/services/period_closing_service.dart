@@ -1,5 +1,7 @@
+import '../../../../core/permissions/permission_guard.dart';
 import '../../../../core/utils/business_date.dart';
 import '../../../../core/utils/id_generator.dart';
+import '../../permissions/accounting_permissions.dart';
 import '../entities/accounting_period_status.dart';
 import '../entities/fiscal_year.dart';
 import '../entities/journal_entry.dart';
@@ -17,16 +19,20 @@ class CreateFiscalYear {
   CreateFiscalYear({
     required FiscalYearRepository repository,
     required AccountRepository accounts,
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
     AccountingPeriodGenerator generator = const AccountingPeriodGenerator(),
   }) : _repository = repository,
        _accounts = accounts,
+       _guard = permissionGuard,
        _generator = generator;
 
   final FiscalYearRepository _repository;
   final AccountRepository _accounts;
+  final PermissionGuard _guard;
   final AccountingPeriodGenerator _generator;
 
   Future<FiscalYear> call(FiscalYearDraft draft) async {
+    _guard.requireAny(AccountingPermissions.fiscalYearsCreate);
     if (draft.fxRevaluationEnabled) {
       final gain = draft.fxGainAccountUuid?.trim() ?? '';
       final loss = draft.fxLossAccountUuid?.trim() ?? '';
@@ -60,29 +66,39 @@ class CreateFiscalYear {
 
 /// Opens a closed/reopened-eligible period for posting.
 class OpenAccountingPeriod {
-  OpenAccountingPeriod(this._repository);
+  OpenAccountingPeriod(
+    this._repository, [
+    this._guard = const AllowAllPermissionGuard(),
+  ]);
 
   final FiscalYearRepository _repository;
+  final PermissionGuard _guard;
 
   Future<AccountingPeriod> call({
     required String periodUuid,
     required String openedBy,
   }) {
+    _guard.requireAny(AccountingPermissions.openPeriod);
     return _repository.openPeriod(periodUuid: periodUuid, openedBy: openedBy);
   }
 }
 
 /// Reopens a closed period with an audit reason.
 class ReopenAccountingPeriod {
-  ReopenAccountingPeriod(this._repository);
+  ReopenAccountingPeriod(
+    this._repository, [
+    this._guard = const AllowAllPermissionGuard(),
+  ]);
 
   final FiscalYearRepository _repository;
+  final PermissionGuard _guard;
 
   Future<AccountingPeriod> call({
     required String periodUuid,
     required String reopenedBy,
     required String reason,
   }) {
+    _guard.requireAny(AccountingPermissions.reopenPeriod);
     final trimmed = reason.trim();
     if (trimmed.isEmpty) {
       throw const FiscalYearException(FiscalYearException.reopenReasonRequired);
@@ -102,15 +118,18 @@ class PeriodClosingService {
     required CurrencyRateRepository rates,
     required JournalPostingService posting,
     required JournalRepository journals,
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
   }) : _repository = repository,
        _rates = rates,
        _posting = posting,
-       _journals = journals;
+       _journals = journals,
+       _guard = permissionGuard;
 
   final FiscalYearRepository _repository;
   final CurrencyRateRepository _rates;
   final JournalPostingService _posting;
   final JournalRepository _journals;
+  final PermissionGuard _guard;
 
   static const fxSkipInsufficientData = 'insufficient_currency_position_data';
   static const fxSourceType = 'period_fx';
@@ -187,6 +206,7 @@ class PeriodClosingService {
     required String periodUuid,
     required String closedBy,
   }) async {
+    _guard.requireAny(AccountingPermissions.closePeriod);
     final period = await _repository.getPeriodByUuid(periodUuid);
     if (period == null) {
       throw const FiscalYearException(FiscalYearException.periodNotFound);

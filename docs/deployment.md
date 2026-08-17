@@ -77,8 +77,16 @@ Always migrate **before** rolling new API replicas that depend on new columns.
 ```bash
 flutter build appbundle --release \
   --dart-define=SYNC_API_ENABLED=true \
-  --dart-define=SYNC_API_BASE_URL=https://sync.example.com
+  --dart-define=SYNC_API_BASE_URL=https://sync.example.com \
+  --dart-define=SYNC_API_TOKEN="$SYNC_API_TOKEN"
 ```
+
+Do **not** ship builds with:
+
+- `SYNC_API_ENABLED` defaulting on
+- baked-in shared tokens
+- `SYNC_API_ALLOW_INSECURE_HTTP=true`
+- HTTP (non-TLS) base URLs
 
 Store signing keys outside git (Play App Signing or CI secrets).
 
@@ -89,3 +97,5 @@ Store signing keys outside git (Play App Signing or CI secrets).
 - [ ] Migration included when schema changed  
 - [ ] Staging smoke passed  
 - [ ] Canary plan noted in the PR description  
+- [ ] Sync dart-defines are explicit HTTPS + unique token (or sync left disabled)  
+- [ ] Local admin password changed from the first-install default  

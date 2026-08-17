@@ -8,6 +8,8 @@ class ReportsRoutes {
   static const String root = '/module-reports';
   static const String salesPeriod = '/module-reports/sales-period';
   static const String accountStatement = '/module-reports/account-statement';
+  static const String trialBalance = '/module-reports/trial-balance';
+  static const String journalBook = '/module-reports/journal-book';
   static const String rpReceipts = '/module-reports/rp-receipts';
   static const String rpPayments = '/module-reports/rp-payments';
   static const String rpCashMovement = '/module-reports/rp-cash-movement';
@@ -25,6 +27,12 @@ class ReportsRoutes {
 
   static void pushAccountStatement(BuildContext context) =>
       context.push(accountStatement);
+
+  static void pushTrialBalance(BuildContext context) =>
+      context.push(trialBalance);
+
+  static void pushJournalBook(BuildContext context) =>
+      context.push(journalBook);
 
   static void pushPreview(BuildContext context) => context.push(preview);
 }

@@ -380,7 +380,7 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
 
   @override
   Future<void> voidTransaction(FinancialTransaction txn) async {
-    await _posting.softDeleteBySource(
+    await _posting.voidBySource(
       sourceType: sourceTypeFor(txn.transactionType),
       sourceId: txn.uuid,
     );

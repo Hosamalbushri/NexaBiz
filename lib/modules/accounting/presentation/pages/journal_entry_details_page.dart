@@ -237,6 +237,15 @@ class JournalEntryDetailsPage extends ConsumerWidget {
         message: journalExceptionMessage(l10n, e),
         isSuccess: false,
       );
+    } catch (e) {
+      if (!context.mounted) {
+        return;
+      }
+      showAppSnackBar(
+        context,
+        message: journalExceptionMessage(l10n, e),
+        isSuccess: false,
+      );
     }
   }
 }

@@ -1,6 +1,6 @@
 # Authorization (RBAC)
 
-> Experimental — not production-ready.
+> Experimental — offline-first domain checks + UX gates; sync backend still experimental.
 
 ## Model
 
@@ -17,9 +17,18 @@ Examples: `sales.create`, `customers.view`, `users.manage`, `sync.execute`.
 | Layer | Role |
 |-------|------|
 | Flutter `PermissionGate` / `requiredAnyPermissions` | UX only (menu + actions) |
-| FastAPI `PermissionChecker` / `require_permissions` | Security |
+| Flutter use cases via `PermissionGuard` | **Offline mutation boundary** (P0 financial actions) |
+| FastAPI `PermissionChecker` / `require_permissions` | Security for sync/admin APIs |
 | Sync push | `sync.execute` + entity operation permission |
 | Last-admin guard | Server rejects deactivating the last active super admin |
+
+Critical mutate use cases call `permissionGuardProvider` → `CallbackPermissionGuard`
+backed by the session permission snapshot (`authStateProvider`). Missing grants
+throw `PermissionDeniedException` before repositories run.
+
+Covered today (domain): journal post/void, account soft-delete, fiscal year
+create / open / close / reopen period, sale create/confirm/cancel, R&P
+create/post/cancel.
 
 ## Sync enable + auth
 

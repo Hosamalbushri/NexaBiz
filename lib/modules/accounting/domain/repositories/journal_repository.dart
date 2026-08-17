@@ -38,16 +38,25 @@ abstract class JournalRepository {
     required String sourceId,
   });
 
-  /// Soft-deletes the entry for a source document.
+  /// Soft-deletes a **draft** (unposted) entry for a source document.
   ///
-  /// Applies to both posted and unposted entries (phase-1 void). Header is
-  /// tombstoned; lines remain for audit. Ledger queries ignore deleted headers.
+  /// Throws [JournalException.postedImmutable] when the active entry is posted.
+  /// Use [JournalPostingService.voidBySource] to reverse posted entries.
   Future<void> softDeleteBySource({
     required String sourceType,
     required String sourceId,
   });
 
+  /// Soft-deletes a **draft** entry by UUID.
+  ///
+  /// Throws [JournalException.postedImmutable] when posted.
   Future<void> softDeleteByUuid(String uuid);
+
+  /// Tombstones a posted entry after an operational reverse (source reuse).
+  ///
+  /// Only [JournalPostingService.voidBySource] should call this, and only after
+  /// a reversing entry exists so active ledgers stay balanced (both removed).
+  Future<void> softDeletePostedAfterReverse(String uuid);
 
   /// Lightweight journal headers with debit/credit totals (no lines).
   Future<List<JournalEntryHeader>> listHeaders({
@@ -96,6 +105,20 @@ abstract class JournalRepository {
     required DateTime asOfInclusive,
     required String baseCurrencyCode,
   });
+
+  /// Trial balance rows: SUM(base_debit) / SUM(base_credit) per posting account.
+  Future<List<TrialBalanceRow>> listTrialBalance({
+    DateTime? fromDate,
+    DateTime? toDate,
+    bool? isPosted,
+  });
+
+  /// Journal book (دفتر اليومية) lines in entry order, base currency amounts.
+  Future<List<JournalBookLineRow>> listJournalBookLines({
+    DateTime? fromDate,
+    DateTime? toDate,
+    bool? isPosted,
+  });
 }
 
 /// Aggregated foreign monetary position used for FX revaluation.
@@ -111,4 +134,52 @@ class MonetaryFxPositionRow {
   final String currencyCode;
   final double foreignBalance;
   final double bookedBase;
+}
+
+/// One trial-balance account aggregate in company base currency.
+class TrialBalanceRow {
+  const TrialBalanceRow({
+    required this.accountUuid,
+    required this.accountCode,
+    required this.accountName,
+    required this.debit,
+    required this.credit,
+  });
+
+  final String accountUuid;
+  final String accountCode;
+  final String accountName;
+
+  /// SUM(base_debit)
+  final double debit;
+
+  /// SUM(base_credit)
+  final double credit;
+}
+
+/// One journal-book line in company base currency.
+class JournalBookLineRow {
+  const JournalBookLineRow({
+    required this.entryDate,
+    required this.voucherNumber,
+    required this.voucherType,
+    required this.description,
+    required this.accountCode,
+    required this.accountName,
+    required this.debit,
+    required this.credit,
+  });
+
+  final DateTime entryDate;
+  final String voucherNumber;
+  final String voucherType;
+  final String description;
+  final String accountCode;
+  final String accountName;
+
+  /// base_debit
+  final double debit;
+
+  /// base_credit
+  final double credit;
 }

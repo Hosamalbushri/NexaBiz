@@ -2,13 +2,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../../../core/database/encrypted_hive_box.dart';
+import '../../../core/database/hive_boxes.dart';
 import '../../../core/network/token_store.dart';
 
 /// Token store: prefers [FlutterSecureStorage], falls back to a private Hive box
 /// when the secure-storage plugin is unavailable (e.g. hot-restart after add).
 ///
 /// Passwords are never stored. Tokens are never written to SharedPreferences
-/// or the general settings Hive box.
+/// or the general settings Hive box. The Hive fallback is AES-encrypted.
 class SecureTokenStorage implements TokenStore {
   SecureTokenStorage({FlutterSecureStorage? secureStorage})
       : _secure = secureStorage ??
@@ -19,7 +21,6 @@ class SecureTokenStorage implements TokenStore {
   static const _accessKey = 'auth_access_token';
   static const _refreshKey = 'auth_refresh_token';
   static const _expiresAtKey = 'auth_access_expires_at';
-  static const _boxName = 'auth_token_store';
 
   final FlutterSecureStorage _secure;
   bool? _secureAvailable;
@@ -38,10 +39,20 @@ class SecureTokenStorage implements TokenStore {
   }
 
   Future<Box<String>> _hiveBox() async {
-    if (Hive.isBoxOpen(_boxName)) {
-      return Hive.box<String>(_boxName);
+    if (Hive.isBoxOpen(HiveBoxes.authTokenStoreEncrypted)) {
+      return Hive.box<String>(HiveBoxes.authTokenStoreEncrypted);
     }
-    return Hive.openBox<String>(_boxName);
+    return EncryptedHive.openMigrated<String>(
+      encryptedBoxName: HiveBoxes.authTokenStoreEncrypted,
+      legacyPlainBoxName: HiveBoxes.authTokenStore,
+    );
+  }
+
+  Future<bool> _hiveFallbackExists() async {
+    return Hive.isBoxOpen(HiveBoxes.authTokenStoreEncrypted) ||
+        await Hive.boxExists(HiveBoxes.authTokenStoreEncrypted) ||
+        Hive.isBoxOpen(HiveBoxes.authTokenStore) ||
+        await Hive.boxExists(HiveBoxes.authTokenStore);
   }
 
   @override
@@ -59,7 +70,7 @@ class SecureTokenStorage implements TokenStore {
       await _secure.write(key: _refreshKey, value: refreshToken);
       await _secure.write(key: _expiresAtKey, value: expiresAt);
       // Clear any legacy Hive copy so tokens are not duplicated.
-      if (Hive.isBoxOpen(_boxName) || await Hive.boxExists(_boxName)) {
+      if (await _hiveFallbackExists()) {
         final box = await _hiveBox();
         await box.clear();
       }
@@ -103,7 +114,7 @@ class SecureTokenStorage implements TokenStore {
       await _secure.delete(key: _refreshKey);
       await _secure.delete(key: _expiresAtKey);
     }
-    if (Hive.isBoxOpen(_boxName) || await Hive.boxExists(_boxName)) {
+    if (await _hiveFallbackExists()) {
       final box = await _hiveBox();
       await box.delete(_accessKey);
       await box.delete(_refreshKey);

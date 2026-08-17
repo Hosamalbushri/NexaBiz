@@ -1,3 +1,5 @@
+import '../../../../core/permissions/permission_guard.dart';
+import '../../permissions/accounting_permissions.dart';
 import '../entities/account.dart';
 import '../entities/account_type.dart';
 import '../repositories/account_repository.dart';
@@ -64,11 +66,18 @@ class DeactivateAccount {
 }
 
 class SoftDeleteAccount {
-  const SoftDeleteAccount(this._repository);
+  const SoftDeleteAccount(
+    this._repository, [
+    this._guard = const AllowAllPermissionGuard(),
+  ]);
 
   final AccountRepository _repository;
+  final PermissionGuard _guard;
 
-  Future<void> call(int id) => _repository.softDelete(id);
+  Future<void> call(int id) {
+    _guard.requireAny(AccountingPermissions.accountsDelete);
+    return _repository.softDelete(id);
+  }
 }
 
 class EnsureDefaultChartOfAccounts {

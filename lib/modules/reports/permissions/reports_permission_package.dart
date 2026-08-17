@@ -43,6 +43,36 @@ PermissionPackageDef reportsPermissionPackage() {
           StandardPermissionOps.exportOp('reports.account_statement.export'),
         ],
       ),
+      PermissionServiceDef(
+        id: 'trial_balance',
+        icon: Icons.balance_outlined,
+        titleBuilder: (context) =>
+            AppLocalizations.of(context).adminPermServiceTrialBalance,
+        subtitleBuilder: (context) =>
+            AppLocalizations.of(context).adminPermServiceTrialBalanceHint,
+        operations: [
+          StandardPermissionOps.view(
+            'reports.trial_balance.view',
+            legacyCodes: const ['reports.view'],
+          ),
+          StandardPermissionOps.exportOp('reports.trial_balance.export'),
+        ],
+      ),
+      PermissionServiceDef(
+        id: 'journal_book',
+        icon: Icons.receipt_long_outlined,
+        titleBuilder: (context) =>
+            AppLocalizations.of(context).adminPermServiceJournalBook,
+        subtitleBuilder: (context) =>
+            AppLocalizations.of(context).adminPermServiceJournalBookHint,
+        operations: [
+          StandardPermissionOps.view(
+            'reports.journal_book.view',
+            legacyCodes: const ['reports.view'],
+          ),
+          StandardPermissionOps.exportOp('reports.journal_book.export'),
+        ],
+      ),
     ],
   );
 }

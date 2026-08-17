@@ -10,30 +10,40 @@ import '../../domain/models/journal_exception.dart';
 import '../../domain/repositories/account_repository.dart';
 import '../../domain/repositories/currency_rate_repository.dart';
 import '../../domain/repositories/journal_repository.dart';
+import '../../domain/services/accounting_period_validator.dart';
 import '../../domain/services/journal_base_amount_resolver.dart';
 import '../../domain/services/journal_money.dart';
 import '../database/accounting_database.dart';
+
+/// Source type used by reversing journals (`sourceId` = original entry UUID).
+const kJournalReverseSourceType = 'journal_reverse';
 
 class JournalRepositoryImpl implements JournalRepository {
   JournalRepositoryImpl(
     this._db, {
     required AccountRepository accounts,
+    required AccountingPeriodValidator periodValidator,
     CurrencyRateRepository? rates,
     SyncQueue? syncQueue,
   }) : _accounts = accounts,
+       _periodValidator = periodValidator,
        _rates = rates,
        _syncQueue = syncQueue;
 
   final AccountingDatabase _db;
   final AccountRepository _accounts;
+  final AccountingPeriodValidator _periodValidator;
   final CurrencyRateRepository? _rates;
   final SyncQueue? _syncQueue;
 
   static const entityType = 'journal_entry';
   static const sourceSale = 'sale';
+  static const reverseSourceType = kJournalReverseSourceType;
 
   @override
   Future<JournalEntry> post(JournalEntryDraft draft) async {
+    await _periodValidator.assertEntryAllowed(draft.entryDate);
+
     if (draft.lines.isEmpty) {
       throw const JournalException(JournalException.emptyLines);
     }
@@ -253,11 +263,28 @@ class JournalRepositoryImpl implements JournalRepository {
                   t.deletedAt.isNull(),
             ))
             .get();
-    if (rows.isEmpty) {
-      return null;
+    for (final row in rows) {
+      // Posted originals that already have an active reverse are not "active"
+      // for source replacement (sale re-post after void).
+      if (sourceType.trim() != reverseSourceType &&
+          await _hasActiveReverse(row.uuid)) {
+        continue;
+      }
+      return _mapEntry(row, await _linesFor(row.uuid));
     }
-    final entry = rows.first;
-    return _mapEntry(entry, await _linesFor(entry.uuid));
+    return null;
+  }
+
+  Future<bool> _hasActiveReverse(String entryUuid) async {
+    final rows =
+        await (_db.select(_db.journalEntries)..where(
+              (t) =>
+                  t.sourceType.equals(reverseSourceType) &
+                  t.sourceId.equals(entryUuid) &
+                  t.deletedAt.isNull(),
+            ))
+            .get();
+    return rows.isNotEmpty;
   }
 
   @override
@@ -265,8 +292,6 @@ class JournalRepositoryImpl implements JournalRepository {
     required String sourceType,
     required String sourceId,
   }) async {
-    // Phase-1 void: tombstone the header for both posted and unposted entries.
-    // Lines are retained for audit; all ledger reads filter deletedAt.isNull().
     final existing = await findBySource(
       sourceType: sourceType,
       sourceId: sourceId,
@@ -274,26 +299,10 @@ class JournalRepositoryImpl implements JournalRepository {
     if (existing == null) {
       return;
     }
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final nextVersion = existing.version + 1;
-    await (_db.update(_db.journalEntries)..where(
-          (t) =>
-              t.sourceType.equals(sourceType.trim()) &
-              t.sourceId.equals(sourceId.trim()) &
-              t.deletedAt.isNull(),
-        ))
-        .write(
-          JournalEntriesCompanion(
-            deletedAt: Value(now),
-            updatedAt: Value(now),
-            syncStatus: const Value('pending'),
-            version: Value(nextVersion),
-          ),
-        );
-    final tombstone = await _getByUuidIncludingDeleted(existing.uuid);
-    if (tombstone != null) {
-      await _enqueue(tombstone, SyncOperationType.delete);
+    if (existing.isPosted) {
+      throw const JournalException(JournalException.postedImmutable);
     }
+    await _tombstoneUuid(existing.uuid, existing.version);
   }
 
   @override
@@ -306,10 +315,30 @@ class JournalRepositoryImpl implements JournalRepository {
     if (existing == null) {
       return;
     }
+    if (existing.isPosted) {
+      throw const JournalException(JournalException.postedImmutable);
+    }
+    await _tombstoneUuid(trimmed, existing.version);
+  }
+
+  @override
+  Future<void> softDeletePostedAfterReverse(String uuid) async {
+    final trimmed = uuid.trim();
+    if (trimmed.isEmpty) {
+      return;
+    }
+    final existing = await getByUuid(trimmed);
+    if (existing == null) {
+      return;
+    }
+    await _tombstoneUuid(trimmed, existing.version);
+  }
+
+  Future<void> _tombstoneUuid(String uuid, int version) async {
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final nextVersion = existing.version + 1;
+    final nextVersion = version + 1;
     await (_db.update(_db.journalEntries)..where(
-          (t) => t.uuid.equals(trimmed) & t.deletedAt.isNull(),
+          (t) => t.uuid.equals(uuid) & t.deletedAt.isNull(),
         ))
         .write(
           JournalEntriesCompanion(
@@ -319,7 +348,7 @@ class JournalRepositoryImpl implements JournalRepository {
             version: Value(nextVersion),
           ),
         );
-    final tombstone = await _getByUuidIncludingDeleted(trimmed);
+    final tombstone = await _getByUuidIncludingDeleted(uuid);
     if (tombstone != null) {
       await _enqueue(tombstone, SyncOperationType.delete);
     }
@@ -1047,6 +1076,135 @@ class JournalRepositoryImpl implements JournalRepository {
           currencyCode: row.read<String>('currency_code'),
           foreignBalance: row.read<double>('foreign_balance'),
           bookedBase: row.read<double>('booked_base'),
+        ),
+    ];
+  }
+
+  @override
+  Future<List<TrialBalanceRow>> listTrialBalance({
+    DateTime? fromDate,
+    DateTime? toDate,
+    bool? isPosted,
+  }) async {
+    final variables = <Variable<Object>>[];
+    final sql = StringBuffer(
+      '''
+      SELECT a.uuid AS account_uuid,
+             a.account_code AS account_code,
+             a.name AS account_name,
+             COALESCE(SUM(jl.base_debit), 0.0) AS debit,
+             COALESCE(SUM(jl.base_credit), 0.0) AS credit
+      FROM journal_lines jl
+      INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid
+      INNER JOIN accounts a ON a.uuid = jl.account_uuid
+      WHERE je.deleted_at IS NULL
+        AND a.is_group = 0
+        AND a.deleted_at IS NULL
+      ''',
+    );
+    if (fromDate != null) {
+      sql.write('AND je.entry_date >= ? ');
+      variables.add(Variable.withInt(BusinessDate.utcDayMs(fromDate)));
+    }
+    if (toDate != null) {
+      sql.write('AND je.entry_date <= ? ');
+      variables.add(Variable.withInt(BusinessDate.utcDayMs(toDate)));
+    }
+    if (isPosted != null) {
+      sql.write('AND je.is_posted = ? ');
+      variables.add(Variable.withBool(isPosted));
+    }
+    sql.write(
+      '''
+      GROUP BY a.uuid, a.account_code, a.name
+      HAVING ABS(SUM(jl.base_debit)) + ABS(SUM(jl.base_credit)) > 0.0001
+      ORDER BY a.account_code
+      ''',
+    );
+
+    final rows = await _db
+        .customSelect(
+          sql.toString(),
+          variables: variables,
+          readsFrom: {_db.journalLines, _db.journalEntries, _db.accounts},
+        )
+        .get();
+    return [
+      for (final row in rows)
+        TrialBalanceRow(
+          accountUuid: row.read<String>('account_uuid'),
+          accountCode: row.read<String>('account_code'),
+          accountName: row.read<String>('account_name'),
+          debit: JournalMoney.round(row.read<double>('debit')),
+          credit: JournalMoney.round(row.read<double>('credit')),
+        ),
+    ];
+  }
+
+  @override
+  Future<List<JournalBookLineRow>> listJournalBookLines({
+    DateTime? fromDate,
+    DateTime? toDate,
+    bool? isPosted,
+  }) async {
+    final variables = <Variable<Object>>[];
+    final sql = StringBuffer(
+      '''
+      SELECT je.entry_date AS entry_date,
+             je.voucher_number AS voucher_number,
+             je.voucher_type AS voucher_type,
+             COALESCE(NULLIF(TRIM(je.description), ''), jl.line_description, '')
+               AS description,
+             a.account_code AS account_code,
+             a.name AS account_name,
+             jl.base_debit AS debit,
+             jl.base_credit AS credit
+      FROM journal_lines jl
+      INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid
+      INNER JOIN accounts a ON a.uuid = jl.account_uuid
+      WHERE je.deleted_at IS NULL
+        AND a.deleted_at IS NULL
+      ''',
+    );
+    if (fromDate != null) {
+      sql.write('AND je.entry_date >= ? ');
+      variables.add(Variable.withInt(BusinessDate.utcDayMs(fromDate)));
+    }
+    if (toDate != null) {
+      sql.write('AND je.entry_date <= ? ');
+      variables.add(Variable.withInt(BusinessDate.utcDayMs(toDate)));
+    }
+    if (isPosted != null) {
+      sql.write('AND je.is_posted = ? ');
+      variables.add(Variable.withBool(isPosted));
+    }
+    sql.write(
+      '''
+      ORDER BY je.entry_date ASC, je.id ASC, jl.sort_order ASC, jl.id ASC
+      ''',
+    );
+
+    final rows = await _db
+        .customSelect(
+          sql.toString(),
+          variables: variables,
+          readsFrom: {_db.journalLines, _db.journalEntries, _db.accounts},
+        )
+        .get();
+    return [
+      for (final row in rows)
+        JournalBookLineRow(
+          entryDate: DateTime.fromMillisecondsSinceEpoch(
+            row.read<int>('entry_date'),
+            isUtc: true,
+          ),
+          voucherNumber: row.read<String>('voucher_number'),
+          voucherType: row.read<String>('voucher_type'),
+          description: row.read<String>('description'),
+          accountCode: row.read<String>('account_code'),
+          accountName: row.read<String>('account_name'),
+          debit: JournalMoney.round(row.read<double>('debit')),
+          credit: JournalMoney.round(row.read<double>('credit')),
         ),
     ];
   }

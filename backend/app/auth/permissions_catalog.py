@@ -119,6 +119,12 @@ ACCOUNTING_CURRENCY_RATES_VIEW = "accounting.currency_rates.view"
 ACCOUNTING_CURRENCY_RATES_CREATE = "accounting.currency_rates.create"
 ACCOUNTING_CURRENCY_RATES_UPDATE = "accounting.currency_rates.update"
 ACCOUNTING_CURRENCY_RATES_DELETE = "accounting.currency_rates.delete"
+ACCOUNTING_FISCAL_YEARS_VIEW = "accounting.fiscal_years.view"
+ACCOUNTING_FISCAL_YEARS_CREATE = "accounting.fiscal_years.create"
+ACCOUNTING_FISCAL_YEARS_UPDATE = "accounting.fiscal_years.update"
+ACCOUNTING_FISCAL_YEARS_OPEN_PERIOD = "accounting.fiscal_years.open_period"
+ACCOUNTING_FISCAL_YEARS_CLOSE_PERIOD = "accounting.fiscal_years.close_period"
+ACCOUNTING_FISCAL_YEARS_REOPEN_PERIOD = "accounting.fiscal_years.reopen_period"
 ACCOUNTING_VOUCHER_BOOKS_VIEW = "accounting.voucher_books.view"
 ACCOUNTING_VOUCHER_BOOKS_CREATE = "accounting.voucher_books.create"
 ACCOUNTING_VOUCHER_BOOKS_UPDATE = "accounting.voucher_books.update"
@@ -150,6 +156,10 @@ REPORTS_SALES_PERIOD_VIEW = "reports.sales_period.view"
 REPORTS_SALES_PERIOD_EXPORT = "reports.sales_period.export"
 REPORTS_ACCOUNT_STATEMENT_VIEW = "reports.account_statement.view"
 REPORTS_ACCOUNT_STATEMENT_EXPORT = "reports.account_statement.export"
+REPORTS_TRIAL_BALANCE_VIEW = "reports.trial_balance.view"
+REPORTS_TRIAL_BALANCE_EXPORT = "reports.trial_balance.export"
+REPORTS_JOURNAL_BOOK_VIEW = "reports.journal_book.view"
+REPORTS_JOURNAL_BOOK_EXPORT = "reports.journal_book.export"
 
 # Settings / sync / devices
 SETTINGS_VIEW = "settings.view"
@@ -243,6 +253,12 @@ ALL_PERMISSIONS: tuple[tuple[str, str], ...] = (
     (ACCOUNTING_CURRENCY_RATES_CREATE, "Create currency rates"),
     (ACCOUNTING_CURRENCY_RATES_UPDATE, "Update currency rates"),
     (ACCOUNTING_CURRENCY_RATES_DELETE, "Delete currency rates"),
+    (ACCOUNTING_FISCAL_YEARS_VIEW, "View fiscal years"),
+    (ACCOUNTING_FISCAL_YEARS_CREATE, "Create fiscal years"),
+    (ACCOUNTING_FISCAL_YEARS_UPDATE, "Update fiscal years"),
+    (ACCOUNTING_FISCAL_YEARS_OPEN_PERIOD, "Open accounting periods"),
+    (ACCOUNTING_FISCAL_YEARS_CLOSE_PERIOD, "Close accounting periods"),
+    (ACCOUNTING_FISCAL_YEARS_REOPEN_PERIOD, "Reopen accounting periods"),
     (ACCOUNTING_VOUCHER_BOOKS_VIEW, "View voucher books"),
     (ACCOUNTING_VOUCHER_BOOKS_CREATE, "Create voucher books"),
     (ACCOUNTING_VOUCHER_BOOKS_UPDATE, "Update voucher books"),
@@ -268,6 +284,10 @@ ALL_PERMISSIONS: tuple[tuple[str, str], ...] = (
     (REPORTS_SALES_PERIOD_EXPORT, "Export sales period report"),
     (REPORTS_ACCOUNT_STATEMENT_VIEW, "View account statement report"),
     (REPORTS_ACCOUNT_STATEMENT_EXPORT, "Export account statement report"),
+    (REPORTS_TRIAL_BALANCE_VIEW, "View trial balance report"),
+    (REPORTS_TRIAL_BALANCE_EXPORT, "Export trial balance report"),
+    (REPORTS_JOURNAL_BOOK_VIEW, "View journal book report"),
+    (REPORTS_JOURNAL_BOOK_EXPORT, "Export journal book report"),
     # Settings / sync / devices
     (SETTINGS_VIEW, "View settings"),
     (SETTINGS_UPDATE, "Update settings"),
@@ -298,6 +318,12 @@ SYNC_ENTITY_PERMISSIONS: dict[tuple[str, str], str] = {
     ("journal_entry", "create"): ACCOUNTING_JOURNALS_CREATE,
     ("journal_entry", "update"): ACCOUNTING_JOURNALS_UPDATE,
     ("journal_entry", "delete"): ACCOUNTING_JOURNALS_DELETE,
+    ("currency_rate", "create"): ACCOUNTING_CURRENCY_RATES_CREATE,
+    ("currency_rate", "update"): ACCOUNTING_CURRENCY_RATES_UPDATE,
+    ("currency_rate", "delete"): ACCOUNTING_CURRENCY_RATES_DELETE,
+    ("fiscal_year", "create"): ACCOUNTING_FISCAL_YEARS_CREATE,
+    ("fiscal_year", "update"): ACCOUNTING_FISCAL_YEARS_UPDATE,
+    ("fiscal_year", "delete"): ACCOUNTING_FISCAL_YEARS_UPDATE,
     ("financial_transaction", "create"): RECEIPTS_CREATE,
     ("financial_transaction", "update"): RECEIPTS_UPDATE,
     ("financial_transaction", "delete"): RECEIPTS_CANCEL,
@@ -326,6 +352,8 @@ PERMISSION_ALIASES: dict[str, tuple[str, ...]] = {
     CUSTOMERS_MASTER_DELETE: (CUSTOMERS_DELETE,),
     REPORTS_SALES_PERIOD_VIEW: (REPORTS_VIEW,),
     REPORTS_ACCOUNT_STATEMENT_VIEW: (REPORTS_VIEW,),
+    REPORTS_TRIAL_BALANCE_VIEW: (REPORTS_VIEW,),
+    REPORTS_JOURNAL_BOOK_VIEW: (REPORTS_VIEW,),
     # Reverse: holding a service code also satisfies legacy checks.
     INVENTORY_VIEW: (INVENTORY_STOCK_COUNT_VIEW,),
     INVENTORY_ADJUST: (INVENTORY_STOCK_COUNT_ADJUST,),
@@ -343,7 +371,12 @@ PERMISSION_ALIASES: dict[str, tuple[str, ...]] = {
     CUSTOMERS_CREATE: (CUSTOMERS_MASTER_CREATE,),
     CUSTOMERS_UPDATE: (CUSTOMERS_MASTER_UPDATE,),
     CUSTOMERS_DELETE: (CUSTOMERS_MASTER_DELETE,),
-    REPORTS_VIEW: (REPORTS_SALES_PERIOD_VIEW, REPORTS_ACCOUNT_STATEMENT_VIEW),
+    REPORTS_VIEW: (
+        REPORTS_SALES_PERIOD_VIEW,
+        REPORTS_ACCOUNT_STATEMENT_VIEW,
+        REPORTS_TRIAL_BALANCE_VIEW,
+        REPORTS_JOURNAL_BOOK_VIEW,
+    ),
 }
 
 
@@ -430,6 +463,12 @@ _ACCOUNTING_FULL = (
     ACCOUNTING_CURRENCY_RATES_CREATE,
     ACCOUNTING_CURRENCY_RATES_UPDATE,
     ACCOUNTING_CURRENCY_RATES_DELETE,
+    ACCOUNTING_FISCAL_YEARS_VIEW,
+    ACCOUNTING_FISCAL_YEARS_CREATE,
+    ACCOUNTING_FISCAL_YEARS_UPDATE,
+    ACCOUNTING_FISCAL_YEARS_OPEN_PERIOD,
+    ACCOUNTING_FISCAL_YEARS_CLOSE_PERIOD,
+    ACCOUNTING_FISCAL_YEARS_REOPEN_PERIOD,
     ACCOUNTING_VOUCHER_BOOKS_VIEW,
     ACCOUNTING_VOUCHER_BOOKS_CREATE,
     ACCOUNTING_VOUCHER_BOOKS_UPDATE,
@@ -443,6 +482,10 @@ _REPORTS_FULL = (
     REPORTS_SALES_PERIOD_EXPORT,
     REPORTS_ACCOUNT_STATEMENT_VIEW,
     REPORTS_ACCOUNT_STATEMENT_EXPORT,
+    REPORTS_TRIAL_BALANCE_VIEW,
+    REPORTS_TRIAL_BALANCE_EXPORT,
+    REPORTS_JOURNAL_BOOK_VIEW,
+    REPORTS_JOURNAL_BOOK_EXPORT,
 )
 
 _RECEIPTS_PAYMENTS_FULL = (

@@ -57,7 +57,7 @@ void main() {
     queue = SyncQueue(box: syncBox);
     db = AccountingDatabase.memory();
     accounts = AccountRepositoryImpl(db, syncQueue: queue);
-    journals = JournalRepositoryImpl(db, accounts: accounts, syncQueue: queue);
+    journals = JournalRepositoryImpl(db, accounts: accounts, periodValidator: legacyPeriodValidator(), syncQueue: queue);
     rates = CurrencyRateRepositoryImpl(db);
     await accounts.ensureDefaultChartSeeded();
     customerCodeSeq = 0;
@@ -269,8 +269,8 @@ void main() {
         ),
       );
 
-      // Soft-deleted journals still block account soft-delete (audit history).
-      await journals.softDeleteBySource(
+      // Reversed journals still block account soft-delete (audit history).
+      await journalPostingWithLegacyPolicy(journals: journals).voidBySource(
         sourceType: 'sale',
         sourceId: 'sale-in-use',
       );
@@ -634,6 +634,31 @@ void main() {
       );
       expect(movements.where((m) => m.entryUuid != null), hasLength(1));
       expect(movements.single.debit, 120);
+    });
+
+    test('cash sale without cash account fails hard', () async {
+      final sale = _sale(
+        settlement: SaleSettlementType.cash,
+        customerAccountId: null,
+        cashAccountId: null,
+        total: 50,
+        uuid: 'cccccccc-bbbb-cccc-dddd-ffffffffffff',
+        saleStatus: SaleStatus.unposted,
+      );
+      await expectLater(
+        adapter.syncSale(sale),
+        throwsA(
+          isA<JournalException>().having(
+            (e) => e.code,
+            'code',
+            JournalException.debitAccountMissing,
+          ),
+        ),
+      );
+      expect(
+        await journals.findBySource(sourceType: 'sale', sourceId: sale.uuid),
+        isNull,
+      );
     });
 
     test('cash sale syncs Dr cash / Cr 4100', () async {

@@ -126,6 +126,10 @@ const List<String> kAllLocalPermissions = [
   'reports.sales_period.export',
   'reports.account_statement.view',
   'reports.account_statement.export',
+  'reports.trial_balance.view',
+  'reports.trial_balance.export',
+  'reports.journal_book.view',
+  'reports.journal_book.export',
   // Settings / sync / devices
   'settings.view',
   'settings.update',
@@ -136,6 +140,9 @@ const List<String> kAllLocalPermissions = [
 ];
 
 /// Default offline admin (created on first launch).
+///
+/// The password is intentionally weak for empty local installs — operators
+/// must change it after first login. The UI never prefills these values.
 class LocalAuthDefaults {
   const LocalAuthDefaults._();
 

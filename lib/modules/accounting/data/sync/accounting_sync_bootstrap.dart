@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/sync/sync_providers.dart';
 import '../../presentation/providers/account_providers.dart';
+import '../../presentation/providers/currency_rate_providers.dart';
 import '../../presentation/providers/journal_providers.dart';
 import 'accounting_sync_handlers.dart';
 
@@ -18,6 +19,18 @@ void registerAccountingSyncHandlers(Ref ref) {
   manager.registerHandler(
     JournalSyncHandler(
       repository: ref.read(journalRepositoryImplProvider),
+      remote: remote,
+    ),
+  );
+  manager.registerHandler(
+    CurrencyRateSyncHandler(
+      repository: ref.read(currencyRateRepositoryImplProvider),
+      remote: remote,
+    ),
+  );
+  manager.registerHandler(
+    FiscalYearSyncHandler(
+      repository: ref.read(fiscalYearRepositoryImplProvider),
       remote: remote,
     ),
   );

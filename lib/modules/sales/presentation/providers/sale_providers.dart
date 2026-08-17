@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/sync/sync_providers.dart';
+import '../../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../data/database/sales_database.dart';
 import '../../data/datasources/sale_invoice_pdf_printer.dart';
 import '../../data/repositories/sale_repository_impl.dart';
@@ -116,6 +117,7 @@ final createSaleUseCaseProvider = Provider<CreateSale>((ref) {
   return CreateSale(
     repository: ref.watch(saleRepositoryProvider),
     numberAllocator: ref.watch(saleNumberAllocatorPortProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
     voucherBookPort: ref.watch(saleVoucherBookPortProvider),
     ledgerPosting: ref.watch(saleLedgerPostingPortProvider),
     accountingBridge: ref.watch(saleAccountingBridgePortProvider),
@@ -135,6 +137,7 @@ final confirmSaleUseCaseProvider = Provider<ConfirmSale>((ref) {
     repository: ref.watch(saleRepositoryProvider),
     accountingBridge: ref.watch(saleAccountingBridgePortProvider),
     inventoryEffect: ref.watch(saleInventoryEffectPortProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
     ledgerPosting: ref.watch(saleLedgerPostingPortProvider),
   );
 });
@@ -143,6 +146,7 @@ final cancelSaleUseCaseProvider = Provider<CancelSale>((ref) {
   return CancelSale(
     repository: ref.watch(saleRepositoryProvider),
     inventoryEffect: ref.watch(saleInventoryEffectPortProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
     ledgerPosting: ref.watch(saleLedgerPostingPortProvider),
   );
 });

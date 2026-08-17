@@ -120,7 +120,7 @@ void main() {
       db = AccountingDatabase.memory();
       fyRepo = FiscalYearRepositoryImpl(db);
       accounts = AccountRepositoryImpl(db, syncQueue: queue);
-      journals = JournalRepositoryImpl(db, accounts: accounts, syncQueue: queue);
+      journals = JournalRepositoryImpl(db, accounts: accounts, periodValidator: legacyPeriodValidator(), syncQueue: queue);
       await accounts.ensureDefaultChartSeeded();
     });
 

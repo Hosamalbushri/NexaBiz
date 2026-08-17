@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/app_error_state.dart';
+import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
 import '../../modules/system_setup/presentation/providers/system_setup_providers.dart';
 import '../bootstrap/app_initialization.dart';
@@ -14,7 +15,8 @@ import 'widgets/splash_brand.dart';
 
 /// Application splash: waits for [appInitializationProvider], then enters app.
 ///
-/// First launch: onboarding → System Setup. After setup is complete: dashboard.
+/// First launch: login (if needed) → onboarding → System Setup.
+/// After setup is complete: dashboard (when authenticated).
 class SplashPage extends ConsumerWidget {
   const SplashPage({super.key});
 
@@ -34,6 +36,11 @@ class SplashPage extends ConsumerWidget {
             }
             final location = GoRouterState.of(context).uri.path;
             if (location != AppRoutes.splash) {
+              return;
+            }
+            final auth = ref.read(authStateProvider);
+            if (!auth.isAuthenticated) {
+              context.go(AppRoutes.login);
               return;
             }
             final ready = await ref

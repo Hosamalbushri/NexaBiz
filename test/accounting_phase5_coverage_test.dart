@@ -212,7 +212,7 @@ void main() {
       queue = SyncQueue(box: syncBox);
       db = AccountingDatabase.memory();
       accounts = AccountRepositoryImpl(db, syncQueue: queue);
-      journals = JournalRepositoryImpl(db, accounts: accounts, syncQueue: queue);
+      journals = JournalRepositoryImpl(db, accounts: accounts, periodValidator: legacyPeriodValidator(), syncQueue: queue);
       await accounts.ensureDefaultChartSeeded();
     });
 
@@ -231,7 +231,48 @@ void main() {
     );
     }
 
-    test('softDeleteByUuid hides ledger reads but keeps audit lines', () async {
+    test('softDeleteByUuid rejects posted journals', () async {
+      final cash = (await accounts.getByAccountCode('1211'))!;
+      final revenue = (await accounts.getByAccountCode('4100'))!;
+
+      final posted = await journals.post(
+        JournalEntryDraft(
+          entryDate: DateTime.utc(2026, 8, 10),
+          voucherNumber: 'JV-del',
+          voucherType: 'قيود يومية',
+          currencyCode: 'YER',
+          lines: [
+            JournalLineDraft(
+              accountUuid: cash.uuid,
+              debit: 50,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: revenue.uuid,
+              debit: 0,
+              credit: 50,
+              currencyCode: 'YER',
+            ),
+          ],
+        ),
+      );
+
+      await expectLater(
+        journals.softDeleteByUuid(posted.uuid),
+        throwsA(
+          isA<JournalException>().having(
+            (e) => e.code,
+            'code',
+            JournalException.postedImmutable,
+          ),
+        ),
+      );
+      expect(await journals.getByUuid(posted.uuid), isNotNull);
+    });
+
+    test('softDeleteByUuid hides draft ledger reads but keeps audit lines',
+        () async {
       final cash = (await accounts.getByAccountCode('1211'))!;
       final revenue = (await accounts.getByAccountCode('4100'))!;
       final custom = await accounts.insert(
@@ -244,12 +285,13 @@ void main() {
         ),
       );
 
-      final posted = await journals.post(
+      final draft = await journals.post(
         JournalEntryDraft(
           entryDate: DateTime.utc(2026, 8, 10),
-          voucherNumber: 'JV-del',
+          voucherNumber: 'JV-draft-del',
           voucherType: 'قيود يومية',
           currencyCode: 'YER',
+          isPosted: false,
           lines: [
             JournalLineDraft(
               accountUuid: custom.uuid,
@@ -267,9 +309,9 @@ void main() {
         ),
       );
 
-      await journals.softDeleteByUuid(posted.uuid);
+      await journals.softDeleteByUuid(draft.uuid);
 
-      expect(await journals.getByUuid(posted.uuid), isNull);
+      expect(await journals.getByUuid(draft.uuid), isNull);
       expect(
         await journals.listMovementsForAccount(accountUuid: custom.uuid),
         isEmpty,
@@ -282,7 +324,7 @@ void main() {
         0,
       );
       final headers = await journals.listHeaders(limit: 50);
-      expect(headers.any((h) => h.uuid == posted.uuid), isFalse);
+      expect(headers.any((h) => h.uuid == draft.uuid), isFalse);
 
       expect(await accounts.isUsedInTransactions(custom.uuid), isTrue);
       await expectLater(
@@ -297,13 +339,60 @@ void main() {
       );
     });
 
-    test('soft-delete then re-post same source creates a new active entry',
+    test('voidByUuid posts reversing entry for posted journals', () async {
+      final cash = (await accounts.getByAccountCode('1211'))!;
+      final revenue = (await accounts.getByAccountCode('4100'))!;
+      final posting = postingService();
+
+      final posted = await posting.post(
+        JournalEntryDraft(
+          entryDate: DateTime.utc(2026, 8, 10),
+          voucherNumber: 'JV-rev',
+          voucherType: 'قيود يومية',
+          currencyCode: 'YER',
+          lines: [
+            JournalLineDraft(
+              accountUuid: cash.uuid,
+              debit: 40,
+              credit: 0,
+              currencyCode: 'YER',
+            ),
+            JournalLineDraft(
+              accountUuid: revenue.uuid,
+              debit: 0,
+              credit: 40,
+              currencyCode: 'YER',
+            ),
+          ],
+        ),
+      );
+
+      await posting.voidByUuid(posted.uuid);
+
+      expect(await journals.getByUuid(posted.uuid), isNotNull);
+      final reverse = await journals.findBySource(
+        sourceType: JournalPostingService.reverseSourceType,
+        sourceId: posted.uuid,
+      );
+      expect(reverse, isNotNull);
+      expect(reverse!.lines.where((l) => l.debit > 0).single.debit, 40);
+
+      final netCash = await journals.sumNetBefore(
+        accountUuid: cash.uuid,
+        beforeDate: DateTime.utc(2026, 8, 11),
+        isPosted: true,
+      );
+      expect(netCash, 0);
+    });
+
+    test('void then re-post same source creates a new active entry',
         () async {
       final cash = (await accounts.getByAccountCode('1211'))!;
       final revenue = (await accounts.getByAccountCode('4100'))!;
       const sourceId = 'sale-void-repost';
+      final posting = postingService();
 
-      final first = await journals.post(
+      final first = await posting.post(
         JournalEntryDraft(
           entryDate: DateTime.utc(2026, 8, 4),
           voucherNumber: 'S-1',
@@ -327,7 +416,7 @@ void main() {
           ],
         ),
       );
-      await journals.softDeleteBySource(
+      await posting.voidBySource(
         sourceType: 'sale',
         sourceId: sourceId,
       );
@@ -335,8 +424,10 @@ void main() {
         await journals.findBySource(sourceType: 'sale', sourceId: sourceId),
         isNull,
       );
+      // Operational void tombstones original + reverse after reverse (source reuse).
+      expect(await journals.getByUuid(first.uuid), isNull);
 
-      final second = await journals.post(
+      final second = await posting.post(
         JournalEntryDraft(
           entryDate: DateTime.utc(2026, 8, 5),
           voucherNumber: 'S-2',
@@ -369,7 +460,7 @@ void main() {
       expect(found?.uuid, second.uuid);
     });
 
-    test('sale adapter soft-delete + re-sync stays single active journal',
+    test('sale adapter void + re-sync stays single active journal',
         () async {
       final cash = (await accounts.getByAccountCode('1211'))!;
       final adapter = AccountingSaleLedgerAdapter(
@@ -408,7 +499,7 @@ void main() {
       expect(again.lines.where((l) => l.debit > 0).single.debit, 30);
     });
 
-    test('JournalPostingService blocks soft-delete in closed period', () async {
+    test('JournalPostingService blocks void in closed period', () async {
       final cash = (await accounts.getByAccountCode('1211'))!;
       final revenue = (await accounts.getByAccountCode('4100'))!;
       final open = postingService();
@@ -437,7 +528,7 @@ void main() {
 
       final closed = postingService(closedThrough: DateTime.utc(2026, 8, 15));
       await expectLater(
-        closed.softDeleteByUuid(entry.uuid),
+        closed.voidByUuid(entry.uuid),
         throwsA(
           isA<JournalException>().having(
             (e) => e.code,
@@ -447,6 +538,51 @@ void main() {
         ),
       );
       expect(await journals.getByUuid(entry.uuid), isNotNull);
+    });
+
+    test('repository.post enforces closed period at persistence layer', () async {
+      final cash = (await accounts.getByAccountCode('1211'))!;
+      final revenue = (await accounts.getByAccountCode('4100'))!;
+      final closedRepo = JournalRepositoryImpl(
+        db,
+        accounts: accounts,
+        periodValidator: legacyPeriodValidator(
+          closedThrough: DateTime.utc(2026, 8, 15),
+        ),
+        syncQueue: queue,
+      );
+
+      await expectLater(
+        closedRepo.post(
+          JournalEntryDraft(
+            entryDate: DateTime.utc(2026, 8, 1),
+            voucherNumber: 'JV-bypass',
+            voucherType: 'قيود يومية',
+            currencyCode: 'YER',
+            lines: [
+              JournalLineDraft(
+                accountUuid: cash.uuid,
+                debit: 5,
+                credit: 0,
+                currencyCode: 'YER',
+              ),
+              JournalLineDraft(
+                accountUuid: revenue.uuid,
+                debit: 0,
+                credit: 5,
+                currencyCode: 'YER',
+              ),
+            ],
+          ),
+        ),
+        throwsA(
+          isA<JournalException>().having(
+            (e) => e.code,
+            'code',
+            JournalException.periodClosed,
+          ),
+        ),
+      );
     });
 
     test('replace by draft.uuid updates in place', () async {

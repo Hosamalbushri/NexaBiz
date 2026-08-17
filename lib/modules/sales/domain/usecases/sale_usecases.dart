@@ -1,4 +1,6 @@
+import '../../../../core/permissions/permission_guard.dart';
 import '../../../accounting/domain/models/journal_exception.dart';
+import '../../permissions/sales_permission_package.dart';
 import '../entities/sale.dart';
 import '../entities/sale_item.dart';
 import '../entities/sale_status.dart';
@@ -36,6 +38,7 @@ class CreateSale {
   CreateSale({
     required SaleRepository repository,
     required SaleNumberAllocatorPort numberAllocator,
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
     SaleVoucherBookPort voucherBookPort = const NoOpSaleVoucherBookPort(),
     SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
     SaleAccountingBridgePort accountingBridge =
@@ -44,6 +47,7 @@ class CreateSale {
     SaleCalculationService calculator = const SaleCalculationService(),
   }) : _repository = repository,
        _numberAllocator = numberAllocator,
+       _guard = permissionGuard,
        _voucherBookPort = voucherBookPort,
        _ledgerPosting = ledgerPosting,
        _accountingBridge = accountingBridge,
@@ -52,6 +56,7 @@ class CreateSale {
 
   final SaleRepository _repository;
   final SaleNumberAllocatorPort _numberAllocator;
+  final PermissionGuard _guard;
   final SaleVoucherBookPort _voucherBookPort;
   final SaleLedgerPostingPort _ledgerPosting;
   final SaleAccountingBridgePort _accountingBridge;
@@ -59,6 +64,7 @@ class CreateSale {
   final SaleCalculationService _calculator;
 
   Future<Sale> call(SaleDraft draft) async {
+    _guard.requireAny(SalesPermissions.create);
     final merged = _normalize(draft);
     _validator.validate(merged);
     final summary = _calculator.calculate(
@@ -210,21 +216,25 @@ class ConfirmSale {
     required SaleRepository repository,
     required SaleAccountingBridgePort accountingBridge,
     required SaleInventoryEffectPort inventoryEffect,
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
     SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
     SaleWorkflowService workflow = const SaleWorkflowService(),
   }) : _repository = repository,
        _accountingBridge = accountingBridge,
        _inventoryEffect = inventoryEffect,
+       _guard = permissionGuard,
        _ledgerPosting = ledgerPosting,
        _workflow = workflow;
 
   final SaleRepository _repository;
   final SaleAccountingBridgePort _accountingBridge;
   final SaleInventoryEffectPort _inventoryEffect;
+  final PermissionGuard _guard;
   final SaleLedgerPostingPort _ledgerPosting;
   final SaleWorkflowService _workflow;
 
   Future<Sale> call(int id) async {
+    _guard.requireAny(SalesPermissions.post);
     if (!isSalePostingEnabled(_inventoryEffect)) {
       throw const SaleException(SaleException.postingRequiresInventory);
     }
@@ -309,19 +319,23 @@ class CancelSale {
   CancelSale({
     required SaleRepository repository,
     required SaleInventoryEffectPort inventoryEffect,
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
     SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
     SaleWorkflowService workflow = const SaleWorkflowService(),
   }) : _repository = repository,
        _inventoryEffect = inventoryEffect,
+       _guard = permissionGuard,
        _ledgerPosting = ledgerPosting,
        _workflow = workflow;
 
   final SaleRepository _repository;
   final SaleInventoryEffectPort _inventoryEffect;
+  final PermissionGuard _guard;
   final SaleLedgerPostingPort _ledgerPosting;
   final SaleWorkflowService _workflow;
 
   Future<void> call(int id) async {
+    _guard.requireAny(SalesPermissions.cancel);
     final sale = await _repository.getById(id);
     if (sale == null) {
       throw const SaleException(SaleException.notFound);

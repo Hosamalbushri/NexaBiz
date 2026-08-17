@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/app_failure.dart';
@@ -5,6 +6,7 @@ import '../../../../core/network/authenticated_http_client.dart';
 import '../../../../core/network/http_client_providers.dart';
 import '../../../../core/network/sync_api_config.dart';
 import '../../../../core/network/token_refresh_outcome.dart';
+import '../../../../core/permissions/permission_guard.dart';
 import '../../../../core/sync/sync_providers.dart';
 import '../../data/auth_repository_impl.dart';
 import '../../data/local_auth_repository.dart';
@@ -12,7 +14,6 @@ import '../../data/local_auth_store.dart';
 import '../../data/secure_token_storage.dart';
 import '../../data/sync_login_credential_store.dart';
 import '../../domain/entities/auth_session.dart';
-import '../../domain/local_permissions.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 /// Mutable callbacks shared between HTTP client and auth without Riverpod cycles.
@@ -185,8 +186,14 @@ class AuthController extends StateNotifier<AuthState> {
     state = next;
   }
 
-  /// Offline-first bootstrap: restore remote sync session if present, else
-  /// silent local admin so the app remains usable without sync.
+  /// Widget-test helper: seed session without Hive/repositories.
+  @visibleForTesting
+  void replaceStateForTest(AuthState next) => _set(next);
+
+  /// Offline-first bootstrap: restore an existing session only.
+  ///
+  /// Does **not** silently log in as the seeded admin. Missing session →
+  /// [AuthStatus.unauthenticated] so the UI can show [LoginPage].
   Future<void> bootstrap({bool preferRemote = false}) async {
     try {
       if (preferRemote) {
@@ -207,15 +214,11 @@ class AuthController extends StateNotifier<AuthState> {
           return;
         }
       }
-      var session = await _local.restoreSession();
-      session ??= await _local.login(
-        email: LocalAuthDefaults.adminEmail,
-        password: LocalAuthDefaults.adminPassword,
-        companyId: LocalAuthDefaults.companyId,
-        deviceId: 'local-device',
-        deviceName: 'Local',
-        platform: 'local',
-      );
+      final session = await _local.restoreSession();
+      if (session == null) {
+        _set(const AuthState(status: AuthStatus.unauthenticated));
+        return;
+      }
       _set(_stateFor(session, AuthBackend.local));
     } catch (e) {
       _set(
@@ -225,6 +228,28 @@ class AuthController extends StateNotifier<AuthState> {
         ),
       );
     }
+  }
+
+  /// Local offline login against the Hive identity store.
+  Future<void> loginLocal({
+    required String email,
+    required String password,
+    String? companyId,
+    required String deviceId,
+    required String deviceName,
+    required String platform,
+    String? appVersion,
+  }) async {
+    final session = await _local.login(
+      email: email,
+      password: password,
+      companyId: companyId,
+      deviceId: deviceId,
+      deviceName: deviceName,
+      platform: platform,
+      appVersion: appVersion,
+    );
+    _set(_stateFor(session, AuthBackend.local));
   }
 
   /// Remote login used when enabling synchronization. Does not persist the
@@ -260,7 +285,7 @@ class AuthController extends StateNotifier<AuthState> {
     required String platform,
     String? appVersion,
   }) async {
-    await loginForSync(
+    await loginLocal(
       email: email,
       password: password,
       companyId: companyId,
@@ -439,4 +464,11 @@ final authStateProvider =
 
 final currentPermissionsProvider = Provider<Set<String>>((ref) {
   return ref.watch(authStateProvider).session?.permissions ?? {};
+});
+
+/// Domain RBAC gate — use cases must call [PermissionGuard.requireAny].
+final permissionGuardProvider = Provider<PermissionGuard>((ref) {
+  return CallbackPermissionGuard((codes) {
+    return ref.read(authStateProvider).hasAnyPermission(codes);
+  });
 });

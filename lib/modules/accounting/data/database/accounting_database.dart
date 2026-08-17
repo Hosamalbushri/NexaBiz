@@ -35,7 +35,7 @@ class AccountingDatabase extends _$AccountingDatabase {
   AccountingDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -60,6 +60,14 @@ class AccountingDatabase extends _$AccountingDatabase {
       await customStatement(
         'CREATE INDEX IF NOT EXISTS idx_currency_rates_code '
         'ON currency_rates (currency_code)',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_currency_rates_sync '
+        'ON currency_rates (sync_status)',
+      );
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_fiscal_years_sync '
+        'ON fiscal_years (sync_status)',
       );
       await customStatement(
         'CREATE INDEX IF NOT EXISTS idx_currency_rate_history_lookup '
@@ -140,8 +148,64 @@ class AccountingDatabase extends _$AccountingDatabase {
         await _backfillJournalBaseAmounts();
         await _seedRateHistoryFromCurrentRates();
       }
+      if (from < 12) {
+        // uuid cannot use Migrator.addColumn as NOT NULL without a unique default.
+        await customStatement(
+          'ALTER TABLE currency_rates ADD COLUMN uuid TEXT',
+        );
+        await customStatement(
+          "ALTER TABLE currency_rates ADD COLUMN sync_status "
+          "TEXT NOT NULL DEFAULT 'synced'",
+        );
+        await customStatement(
+          'ALTER TABLE currency_rates ADD COLUMN last_synced_at INTEGER',
+        );
+        await customStatement(
+          'ALTER TABLE currency_rates ADD COLUMN version '
+          'INTEGER NOT NULL DEFAULT 1',
+        );
+        await _backfillCurrencyRateUuids();
+        await customStatement(
+          'CREATE UNIQUE INDEX IF NOT EXISTS idx_currency_rates_uuid '
+          'ON currency_rates (uuid)',
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_currency_rates_sync '
+          'ON currency_rates (sync_status)',
+        );
+        await m.addColumn(fiscalYears, fiscalYears.syncStatus);
+        await m.addColumn(fiscalYears, fiscalYears.lastSyncedAt);
+        await m.addColumn(fiscalYears, fiscalYears.version);
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_fiscal_years_sync '
+          'ON fiscal_years (sync_status)',
+        );
+      }
     },
   );
+
+  /// Assign stable UUIDs to pre-sync currency rate rows.
+  Future<void> _backfillCurrencyRateUuids() async {
+    final rows = await customSelect(
+      'SELECT id, uuid FROM currency_rates',
+      readsFrom: {currencyRates},
+    ).get();
+    for (final row in rows) {
+      final uuid = row.read<String?>('uuid');
+      if (uuid != null && uuid.length == 36) {
+        continue;
+      }
+      final id = row.read<int>('id');
+      // Deterministic-enough local UUID for upgrade path (not cryptographic).
+      final generated =
+          '${id.toRadixString(16).padLeft(8, '0')}-0000-4000-8000-'
+          '${id.toRadixString(16).padLeft(12, '0')}';
+      await customStatement(
+        'UPDATE currency_rates SET uuid = ? WHERE id = ?',
+        [generated, id],
+      );
+    }
+  }
 
   /// Approximate backfill: rate 1 then apply known current rates for foreign.
   Future<void> _backfillJournalBaseAmounts() async {

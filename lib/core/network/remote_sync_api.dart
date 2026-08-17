@@ -25,7 +25,8 @@ class SyncBatchPushItemResult {
 /// Minimal remote sync API used by feature handlers.
 ///
 /// Use [HttpRemoteSyncApi] against the experimental FastAPI backend
-/// (`SYNC_API_ENABLED=true`), or [InMemoryRemoteSyncApi] for offline tests.
+/// (`SYNC_API_ENABLED=true` with a usable HTTPS endpoint, or HTTP when
+/// `SYNC_API_ALLOW_INSECURE_HTTP=true`), or [InMemoryRemoteSyncApi] otherwise.
 abstract class RemoteSyncApi {
   Future<SyncUploadAck> push({
     required String entityType,

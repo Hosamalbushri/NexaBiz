@@ -70,6 +70,9 @@ class _RecordingJournals implements JournalRepository {
   Future<void> softDeleteByUuid(String uuid) async {}
 
   @override
+  Future<void> softDeletePostedAfterReverse(String uuid) async {}
+
+  @override
   Future<List<JournalEntryHeader>> listHeaders({
     DateTime? fromDate,
     DateTime? toDate,
@@ -114,6 +117,22 @@ class _RecordingJournals implements JournalRepository {
   Future<List<MonetaryFxPositionRow>> listMonetaryFxPositions({
     required DateTime asOfInclusive,
     required String baseCurrencyCode,
+  }) async =>
+      const [];
+
+  @override
+  Future<List<TrialBalanceRow>> listTrialBalance({
+    DateTime? fromDate,
+    DateTime? toDate,
+    bool? isPosted,
+  }) async =>
+      const [];
+
+  @override
+  Future<List<JournalBookLineRow>> listJournalBookLines({
+    DateTime? fromDate,
+    DateTime? toDate,
+    bool? isPosted,
   }) async =>
       const [];
 }

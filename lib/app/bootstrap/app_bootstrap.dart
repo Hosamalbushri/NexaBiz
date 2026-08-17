@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../core/database/hive_boxes.dart';
 import '../../core/database/hive_initializer.dart';
 import '../../core/di/app_providers.dart';
+import '../../core/network/sync_api_config.dart';
 import '../../core/sync/sync_providers.dart';
 import '../../core/sync/sync_cursor_store.dart';
 import '../../core/sync/sync_metrics_store.dart';
@@ -51,13 +52,18 @@ class AppBootstrap {
     ref.read(localeProvider.notifier).state = locale;
 
     final envConfig = ref.read(syncApiConfigProvider);
-    final resolvedUrl = syncServerUrl ?? envConfig.baseUrl;
-    final resolvedToken = syncServerToken ?? envConfig.apiToken;
+    final resolvedUrl = (syncServerUrl ?? envConfig.baseUrl).trim();
+    final resolvedToken = (syncServerToken ?? envConfig.apiToken).trim();
+    final endpointUsable = SyncApiConfig.isHttpEndpointUsable(
+      baseUrl: resolvedUrl,
+      apiToken: resolvedToken,
+      allowInsecureHttp: envConfig.allowInsecureHttp,
+    );
     ref.read(syncApiConfigProvider.notifier).state = envConfig.copyWith(
       deviceId: deviceId,
       baseUrl: resolvedUrl,
       apiToken: resolvedToken,
-      enabled: syncEnabled && resolvedUrl.trim().isNotEmpty,
+      enabled: syncEnabled && endpointUsable,
     );
 
     await ref.read(localAuthStoreProvider).ensureSeeded();

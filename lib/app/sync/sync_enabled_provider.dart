@@ -204,21 +204,20 @@ class SyncEnabledController extends StateNotifier<bool> {
 
     final current = _readConfig();
     final auth = _readAuth();
-    final canRun = state && auth.canUseRemoteSync && url.isNotEmpty;
+    final wantEnabled = state && auth.canUseRemoteSync;
     _writeConfig(
       current.copyWith(
         baseUrl: url.isEmpty ? current.baseUrl : url,
         apiToken: token.isEmpty ? current.apiToken : token,
-        enabled: canRun,
+        enabled: wantEnabled,
       ),
     );
   }
 
   void _applyHttpEnabled(bool syncRuntimeEnabled) {
     final current = _readConfig();
-    final hasUrl = current.baseUrl.trim().isNotEmpty;
     _writeConfig(
-      current.copyWith(enabled: syncRuntimeEnabled && hasUrl),
+      current.copyWith(enabled: syncRuntimeEnabled),
     );
   }
 }
