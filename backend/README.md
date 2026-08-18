@@ -68,11 +68,26 @@ X-Device-Id:  <unique-per-device>
 
 ## Local tests (no Docker)
 
+**Requires Python 3.11+** (Docker image uses 3.12). If `pip install` fails with
+`No matching distribution found for fastapi==0.116.1`, your default `python3` is
+too old — recreate the venv with a newer interpreter:
+
 ```bash
 cd backend
-python3 -m venv .venv
+python3.12 -m venv .venv   # or python3.13 / python3.11
 source .venv/bin/activate
+python --version             # must be 3.11+
+pip install -U pip
 pip install -r requirements.txt
+pytest -q
+```
+
+Quick setup (auto-picks the newest python3.11+ on PATH):
+
+```bash
+cd backend
+./scripts/setup_venv.sh
+source .venv/bin/activate
 pytest -q
 ```
 
@@ -83,11 +98,71 @@ tests use in-memory SQLite. Production-guard unit tests need no database.
 ./scripts/migrate.sh
 APP_ENV=production JWT_SECRET="$(openssl rand -hex 32)" ALLOW_DEV_TOKEN=false \
   CORS_ORIGINS=https://app.example.com SEED_ADMIN_PASSWORD='Strong!change-me' \
+  AUTH_RATE_LIMIT_PER_MINUTE=20 \
   ./scripts/check_production_settings.sh
 ```
 
 CI: GitHub Actions runs Flutter + backend pytest + secrets hygiene
 (`.github/workflows/ci.yml`). See [`docs/deployment.md`](../docs/deployment.md).
+
+## Namecheap / cPanel (Setup Python App)
+
+**Do not use Python 3.6.** The venv path `…/3.6/bin/activate` means FastAPI
+0.116 and Pydantic 2.x cannot install. Delete the app and recreate with the
+**highest Python available** (3.11+ preferred; at least 3.9).
+
+| Field | Value |
+| --- | --- |
+| Python version | **3.11+** (switch version → wait up to 5 min → Restart) |
+| Application root | e.g. `test-python` — upload **contents of `backend/`** here (`app/`, `alembic/`, `passenger_wsgi.py`, `requirements.txt`) |
+| Application startup file | `passenger_wsgi.py` |
+| Application entry point | `application` |
+| Configuration files | `requirements.txt` → **Run Pip Install** |
+
+Environment variables (cPanel → Python app → Environment variables):
+
+```text
+APP_ENV=production
+ALLOW_DEV_TOKEN=false
+DATABASE_URL=postgresql+psycopg2://user:pass@127.0.0.1:5432/dbname
+JWT_SECRET=<openssl rand -hex 32>
+CORS_ORIGINS=https://test.rawnaqq.com
+SEED_ADMIN_PASSWORD=<strong unique password>
+AUTH_RATE_LIMIT_PER_MINUTE=20
+```
+
+Use **`127.0.0.1`** not `localhost` in `DATABASE_URL` on cPanel — `localhost` may
+resolve to IPv6 `::1` and Postgres rejects it (`pg_hba.conf`).
+
+**PostgreSQL:** shared cPanel usually has MySQL only. Use external Postgres
+(Neon, Supabase, Railway, or a VPS) and put the URL in `DATABASE_URL`.
+
+After first deploy, run migrations once (Execute python script):
+
+```text
+-m alembic upgrade head
+```
+
+**pytest on the server:** sync API tests use in-memory SQLite and do not need
+Postgres. Upload latest `tests/conftest.py` and `tests/test_sync_api.py`, then:
+
+```bash
+pytest tests/test_sync_api.py -q
+```
+
+Auth/RBAC tests need a real Postgres URL in `TEST_DATABASE_URL` (also use
+`127.0.0.1` not `localhost`) **and** migrated schema:
+
+```bash
+export TEST_DATABASE_URL='postgresql+psycopg2://USER:PASS@127.0.0.1:5432/DB'
+alembic upgrade head
+pytest tests/test_auth_rbac.py -q
+```
+
+Without migrations, auth tests **skip** (they check for the `permissions` table).
+
+Recommended for production: **VPS + Docker** (`docker compose up`) instead of
+shared WSGI — simpler upgrades and native uvicorn.
 
 ## Flutter connection
 

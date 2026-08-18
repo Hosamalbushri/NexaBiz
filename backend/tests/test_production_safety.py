@@ -77,5 +77,19 @@ def test_production_accepts_hardened_settings() -> None:
         jwt_secret="a" * 32,
         cors_origins="https://app.example.com",
         seed_admin_password="StrongPass!not-default-99",
+        auth_rate_limit_per_minute=20,
     )
     settings.assert_safe_for_environment()
+
+
+def test_productionish_rejects_disabled_auth_rate_limit() -> None:
+    settings = Settings(
+        app_env="production",
+        allow_dev_token=False,
+        jwt_secret="a" * 32,
+        cors_origins="https://app.example.com",
+        seed_admin_password="StrongPass!not-default-99",
+        auth_rate_limit_per_minute=0,
+    )
+    with pytest.raises(RuntimeError, match="AUTH_RATE_LIMIT_PER_MINUTE"):
+        settings.assert_safe_for_environment()

@@ -41,8 +41,12 @@ from app.auth.schemas import (
 from app.auth.service import AuthService
 from app.auth.admin_safety import (
     ensure_not_last_admin,
+    filter_assignable_permission_codes,
+    require_assignable_role,
     require_company_scope,
+    require_manageable_role,
     require_manageable_user,
+    require_viewable_role,
 )
 from app.auth.tokens import utcnow
 from app.core.config import Settings, get_settings
@@ -132,6 +136,12 @@ def create_user(
             is_super_admin=body.is_super_admin and auth.user.is_super_admin,
         )
         if company_id is not None and body.role_id is not None:
+            require_assignable_role(
+                db,
+                auth,
+                body.role_id,
+                company_id=company_id,
+            )
             db.add(
                 CompanyUser(
                     id=uuid.uuid4(),
@@ -366,7 +376,11 @@ def create_role(
     )
     db.add(role)
     db.flush()
-    _set_role_permissions(db, role.id, body.permission_codes)
+    _set_role_permissions(
+        db,
+        role.id,
+        filter_assignable_permission_codes(auth, body.permission_codes),
+    )
     write_audit(
         db,
         action="role.created",
@@ -391,9 +405,7 @@ def get_role(
         PermissionChecker(ROLES_VIEW, ROLES_MANAGE, any_of=True)
     ),
 ) -> dict:
-    role = db.get(Role, role_id)
-    if role is None:
-        raise NotFoundError("Role not found")
+    role = require_viewable_role(db, auth, role_id)
     codes = (
         db.execute(
             select(Permission.code)
@@ -423,17 +435,14 @@ def update_role(
         PermissionChecker(ROLES_UPDATE, ROLES_MANAGE, any_of=True)
     ),
 ) -> dict:
-    role = db.get(Role, role_id)
-    if role is None:
-        raise NotFoundError("Role not found")
-    if role.system_role and role.company_id is None and not auth.user.is_super_admin:
-        raise ValidationAppError("Cannot modify platform system roles")
+    role = require_manageable_role(db, auth, role_id)
     if body.name is not None:
         role.name = body.name
     if body.description is not None:
         role.description = body.description
     if body.permission_codes is not None:
-        _set_role_permissions(db, role.id, body.permission_codes)
+        filtered = filter_assignable_permission_codes(auth, body.permission_codes)
+        _set_role_permissions(db, role.id, filtered)
         write_audit(
             db,
             action="role.permissions_changed",
@@ -441,7 +450,7 @@ def update_role(
             company_id=auth.company_id,
             entity_type="role",
             entity_id=str(role.id),
-            metadata={"permissions": body.permission_codes},
+            metadata={"permissions": filtered},
         )
     role.updated_at = utcnow()
     try:
@@ -460,9 +469,7 @@ def delete_role(
         PermissionChecker(ROLES_DELETE, ROLES_MANAGE, any_of=True)
     ),
 ) -> dict:
-    role = db.get(Role, role_id)
-    if role is None:
-        raise NotFoundError("Role not found")
+    role = require_manageable_role(db, auth, role_id)
     if role.system_role:
         raise ValidationAppError("Cannot delete system roles")
     db.delete(role)
@@ -666,6 +673,12 @@ def add_member(
     ).scalar_one_or_none()
     if existing is not None:
         raise ValidationAppError("User already a member")
+    require_assignable_role(
+        db,
+        auth,
+        body.role_id,
+        company_id=company_id,
+    )
     membership = CompanyUser(
         id=uuid.uuid4(),
         company_id=company_id,
@@ -708,6 +721,12 @@ def update_member(
     if membership is None or membership.company_id != company_id:
         raise NotFoundError("Membership not found")
     if body.role_id is not None:
+        require_assignable_role(
+            db,
+            auth,
+            body.role_id,
+            company_id=company_id,
+        )
         membership.role_id = body.role_id
         write_audit(
             db,
@@ -719,6 +738,14 @@ def update_member(
             metadata={"role_id": str(body.role_id)},
         )
     if body.status is not None:
+        member_user = db.get(User, membership.user_id)
+        if member_user is not None:
+            ensure_not_last_admin(
+                db,
+                member_user,
+                company_id=company_id,
+                next_status=body.status,
+            )
         membership.status = body.status
     membership.updated_at = utcnow()
     try:
@@ -742,6 +769,14 @@ def remove_member(
     membership = db.get(CompanyUser, membership_id)
     if membership is None or membership.company_id != company_id:
         raise NotFoundError("Membership not found")
+    member_user = db.get(User, membership.user_id)
+    if member_user is not None:
+        ensure_not_last_admin(
+            db,
+            member_user,
+            company_id=company_id,
+            next_status="inactive",
+        )
     membership.status = "inactive"
     membership.updated_at = utcnow()
     try:

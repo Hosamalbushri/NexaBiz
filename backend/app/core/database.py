@@ -11,9 +11,14 @@ class Base(DeclarativeBase):
 
 
 settings = get_settings()
+_connect_args: dict[str, object] = {}
+if settings.database_url.startswith("postgresql"):
+    # Avoid LiteSpeed 500 timeouts when Postgres is unreachable.
+    _connect_args["connect_timeout"] = 5
 engine = create_engine(
     settings.database_url,
     pool_pre_ping=True,
+    connect_args=_connect_args,
 )
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 

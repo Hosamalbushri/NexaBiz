@@ -10,15 +10,11 @@ from sqlalchemy import JSON, Uuid, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+os.environ["APP_ENV"] = "development"
 os.environ["DEV_API_TOKEN"] = "test-token"
 os.environ["ALLOW_DEV_TOKEN"] = "true"
-# Rewrite docker-compose hostname so host-side pytest can reach published Postgres.
-_db = os.environ.get("DATABASE_URL", "")
-if not _db or "@db:" in _db or "@db/" in _db:
-    os.environ["DATABASE_URL"] = os.environ.get(
-        "TEST_DATABASE_URL",
-        "postgresql+psycopg2://sync:sync@localhost:5432/sync_experimental",
-    )
+os.environ["AUTH_RATE_LIMIT_PER_MINUTE"] = "0"
+os.environ["DATABASE_URL"] = "sqlite+pysqlite:///:memory:"
 os.environ.setdefault(
     "DEFAULT_COMPANY_ID", "00000000-0000-4000-8000-000000000001"
 )
@@ -72,10 +68,15 @@ def db_session() -> Generator[Session, None, None]:
 
 
 @pytest.fixture()
-def client(db_session: Session) -> Generator[TestClient, None, None]:
+def client(
+    db_session: Session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generator[TestClient, None, None]:
     def _override_db() -> Generator[Session, None, None]:
         yield db_session
 
+    # Lifespan calls SessionLocal + Postgres; tests use in-memory SQLite instead.
+    monkeypatch.setattr("app.main._seed_on_startup", lambda: None)
     app.dependency_overrides[get_db] = _override_db
     with TestClient(app) as test_client:
         yield test_client

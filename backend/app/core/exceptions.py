@@ -95,13 +95,15 @@ class ConflictError(AppError):
         )
 
 
-class DuplicateOperationError(AppError):
-    def __init__(self, message: str = "Duplicate operation") -> None:
+class TooManyRequestsError(AppError):
+    def __init__(self, message: str = "Too many requests", *, retry_after: int = 60) -> None:
         super().__init__(
-            code="duplicate_operation",
+            code="rate_limited",
             message=message,
-            status_code=status.HTTP_409_CONFLICT,
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            details={"retry_after": retry_after},
         )
+        self.retry_after = retry_after
 
 
 async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
@@ -112,7 +114,11 @@ async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
             "details": exc.details,
         }
     }
-    return JSONResponse(status_code=exc.status_code, content=body)
+    headers: dict[str, str] = {}
+    retry_after = getattr(exc, "retry_after", None)
+    if retry_after is not None:
+        headers["Retry-After"] = str(retry_after)
+    return JSONResponse(status_code=exc.status_code, content=body, headers=headers)
 
 
 async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse:
@@ -125,6 +131,8 @@ async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse
         code = "not_found"
     elif exc.status_code == 422:
         code = "validation_error"
+    elif exc.status_code == 429:
+        code = "rate_limited"
     return JSONResponse(
         status_code=exc.status_code,
         content={

@@ -1,13 +1,18 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Absolute path so Passenger cwd (often the domain docroot) cannot load another app's .env.
+_BACKEND_ROOT = Path(__file__).resolve().parents[2]
+_ENV_FILE = _BACKEND_ROOT / ".env"
 
 
 class Settings(BaseSettings):
     """Runtime configuration for the experimental sync + identity API."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=_ENV_FILE if _ENV_FILE.is_file() else None,
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -40,6 +45,9 @@ class Settings(BaseSettings):
 
     # Comma-separated origins; empty / * means allow all in development.
     cors_origins: str = "*"
+
+    # Login / refresh sliding window. 0 disables (tests). Production must be > 0.
+    auth_rate_limit_per_minute: int = 20
 
     # Seed bootstrap admin (created once by seed script / startup).
     seed_admin_email: str = "admin@example.com"
@@ -84,6 +92,11 @@ class Settings(BaseSettings):
             raise RuntimeError(
                 "SEED_ADMIN_PASSWORD must be changed before "
                 f"{self.app_env!r} deploy"
+            )
+        if self.auth_rate_limit_per_minute <= 0:
+            raise RuntimeError(
+                "AUTH_RATE_LIMIT_PER_MINUTE must be > 0 in "
+                f"{self.app_env!r}"
             )
 
 
