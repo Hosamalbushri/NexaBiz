@@ -686,6 +686,13 @@ class CustomerRepositoryImpl implements CustomerRepository {
       return;
     }
 
+    // Stale remote: incoming version <= local version → skip (idempotent pull).
+    // Prevents a re-delivered remote change from silently overwriting local edits
+    // made between the first and second apply of the same remote change.
+    if (existingByUuid != null && version <= existingByUuid.version) {
+      return;
+    }
+
     // Business-key merge: both devices imported the same customerCode with
     // different UUIDs. Prefer the remote UUID so pull can insert/update.
     if (existingByUuid == null && deletedAtMs == null) {

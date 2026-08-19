@@ -4,6 +4,7 @@
 # Purpose: exercise the existing Flutter offline-first SyncManager against a
 # real HTTP API + PostgreSQL without replacing the Flutter sync engine.
 #
+# Laravel native equivalent (same API contracts): see ../backend-laravel
 # Release / CI / staging gates: see ../docs/deployment.md
 
 ## Architecture

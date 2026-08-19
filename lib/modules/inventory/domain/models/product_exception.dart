@@ -9,6 +9,7 @@ class ProductException implements Exception {
   static const String invalidPrice = 'invalid_price';
   static const String invalidItemCode = 'invalid_item_code';
   static const String invalidName = 'invalid_name';
+  static const String insufficientStock = 'insufficient_stock';
 
   final String code;
   final String? message;

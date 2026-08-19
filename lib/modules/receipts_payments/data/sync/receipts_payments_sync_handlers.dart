@@ -7,14 +7,16 @@ import '../repositories/financial_transaction_repository_impl.dart';
 class FinancialTransactionSyncHandler implements SyncEntityHandler {
   FinancialTransactionSyncHandler({
     required FinancialTransactionRepositoryImpl repository,
-    required RemoteSyncApi remote,
+    required RemoteSyncApi Function() remoteProvider,
     this.conflictResolver = const ConflictResolver(),
   }) : _repository = repository,
-       _remote = remote;
+       _remoteProvider = remoteProvider;
 
   final FinancialTransactionRepositoryImpl _repository;
-  final RemoteSyncApi _remote;
+  final RemoteSyncApi Function() _remoteProvider;
   final ConflictResolver conflictResolver;
+
+  RemoteSyncApi get _remote => _remoteProvider();
 
   @override
   String get entityType => FinancialTransactionRepositoryImpl.entityType;

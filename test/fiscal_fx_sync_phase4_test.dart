@@ -96,10 +96,10 @@ void main() {
     final managerA = SyncManager(
       queue: queueA,
       connectivity: connectivity,
-      remote: remote,
+      remoteProvider: () => remote,
     );
     managerA.registerHandler(
-      CurrencyRateSyncHandler(repository: ratesA, remote: remote),
+      CurrencyRateSyncHandler(repository: ratesA, remoteProvider: () => remote),
     );
     await managerA.start(enabled: true);
     final passA = await managerA.syncNow();
@@ -108,10 +108,10 @@ void main() {
     final managerB = SyncManager(
       queue: queueB,
       connectivity: connectivity,
-      remote: remote,
+      remoteProvider: () => remote,
     );
     managerB.registerHandler(
-      CurrencyRateSyncHandler(repository: ratesB, remote: remote),
+      CurrencyRateSyncHandler(repository: ratesB, remoteProvider: () => remote),
     );
     await managerB.start(enabled: true);
     final passB = await managerB.syncNow();
@@ -177,10 +177,10 @@ void main() {
     final managerA = SyncManager(
       queue: queueA,
       connectivity: connectivity,
-      remote: remote,
+      remoteProvider: () => remote,
     );
     managerA.registerHandler(
-      FiscalYearSyncHandler(repository: fyA, remote: remote),
+      FiscalYearSyncHandler(repository: fyA, remoteProvider: () => remote),
     );
     await managerA.start(enabled: true);
     final passA = await managerA.syncNow();
@@ -189,10 +189,10 @@ void main() {
     final managerB = SyncManager(
       queue: queueB,
       connectivity: connectivity,
-      remote: remote,
+      remoteProvider: () => remote,
     );
     managerB.registerHandler(
-      FiscalYearSyncHandler(repository: fyB, remote: remote),
+      FiscalYearSyncHandler(repository: fyB, remoteProvider: () => remote),
     );
     await managerB.start(enabled: true);
     final passB = await managerB.syncNow();

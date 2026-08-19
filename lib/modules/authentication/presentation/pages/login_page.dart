@@ -63,6 +63,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             platform: defaultTargetPlatform.name,
           );
       if (!mounted) return;
+      if (ref.read(authStateProvider).mustChangePassword) {
+        context.go(AppRoutes.changePassword);
+        return;
+      }
       final ready =
           await ref.read(systemInitializationCoordinatorProvider).isReady();
       if (!mounted) return;

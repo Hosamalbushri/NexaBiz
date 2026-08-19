@@ -8,14 +8,16 @@ import '../repositories/sale_repository_impl.dart';
 class SaleSyncHandler implements SyncEntityHandler {
   SaleSyncHandler({
     required SaleRepositoryImpl repository,
-    required RemoteSyncApi remote,
+    required RemoteSyncApi Function() remoteProvider,
     this.conflictResolver = const ConflictResolver(),
   }) : _repository = repository,
-       _remote = remote;
+       _remoteProvider = remoteProvider;
 
   final SaleRepositoryImpl _repository;
-  final RemoteSyncApi _remote;
+  final RemoteSyncApi Function() _remoteProvider;
   final ConflictResolver conflictResolver;
+
+  RemoteSyncApi get _remote => _remoteProvider();
 
   @override
   String get entityType => SaleRepositoryImpl.entityType;

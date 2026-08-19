@@ -710,6 +710,27 @@ class FinancialTransactionRepositoryImpl
           ..where((t) => t.uuid.equals(uuid)))
         .getSingleOrNull();
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final remoteVersion = (payload['version'] as int?) ?? 1;
+
+    // Dirty local: pending/conflict/syncing → mark conflict if remote is newer.
+    final localStatus = SyncStatusX.fromStorage(existing?.syncStatus ?? 'synced');
+    if (existing != null &&
+        (localStatus.needsUpload ||
+            localStatus == SyncStatus.conflict ||
+            localStatus == SyncStatus.syncing)) {
+      if (remoteVersion > existing.version) {
+        await (_db.update(_db.financialTransactions)
+              ..where((t) => t.uuid.equals(uuid)))
+            .write(const FinancialTransactionsCompanion(
+                syncStatus: Value('conflict')));
+      }
+      return;
+    }
+
+    // Stale remote: incoming version <= local → skip (idempotent pull).
+    if (existing != null && remoteVersion <= existing.version) {
+      return;
+    }
     final companion = FinancialTransactionsCompanion(
       uuid: Value(uuid),
       transactionNumber: Value(

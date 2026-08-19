@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:drift_flutter/drift_flutter.dart';
+import 'package:stock_count/core/database/encrypted_drift_connection.dart';
 
 import 'tables/customers_table.dart';
 
@@ -8,8 +8,8 @@ part 'customers_database.g.dart';
 
 @DriftDatabase(tables: [Customers])
 class CustomersDatabase extends _$CustomersDatabase {
-  CustomersDatabase([QueryExecutor? executor])
-    : super(executor ?? _openConnection());
+  CustomersDatabase({String? name, QueryExecutor? executor})
+    : super(executor ?? _openConnection(name ?? 'customers_master'));
 
   /// In-memory database for tests.
   CustomersDatabase.memory() : super(NativeDatabase.memory());
@@ -54,7 +54,7 @@ class CustomersDatabase extends _$CustomersDatabase {
     );
   }
 
-  static QueryExecutor _openConnection() {
-    return driftDatabase(name: 'customers_master');
+  static QueryExecutor _openConnection(String name) {
+    return encryptedDriftDatabase(name: name);
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/database/tenant_database_name.dart';
 import '../../../../core/sync/sync_providers.dart';
+import '../../../../core/tenancy/session_company.dart';
 import '../../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../data/database/receipts_payments_database.dart';
 import '../../data/repositories/financial_transaction_repository_impl.dart';
@@ -17,7 +19,12 @@ import '../../domain/usecases/financial_transaction_usecases.dart';
 final receiptsPaymentsDatabaseProvider = Provider<ReceiptsPaymentsDatabase>((
   ref,
 ) {
-  final db = ReceiptsPaymentsDatabase();
+  final db = ReceiptsPaymentsDatabase(
+    name: tenantScopedName(
+      'receipts_payments',
+      ref.watch(sessionCompanyIdProvider),
+    ),
+  );
   ref.onDispose(db.close);
   ref.keepAlive();
   return db;
@@ -25,16 +32,16 @@ final receiptsPaymentsDatabaseProvider = Provider<ReceiptsPaymentsDatabase>((
 
 final financialTransactionRepositoryImplProvider =
     Provider<FinancialTransactionRepositoryImpl>((ref) {
-  return FinancialTransactionRepositoryImpl(
-    ref.watch(receiptsPaymentsDatabaseProvider),
-    syncQueue: ref.watch(syncQueueProvider),
-  );
-});
+      return FinancialTransactionRepositoryImpl(
+        ref.watch(receiptsPaymentsDatabaseProvider),
+        syncQueue: ref.watch(syncQueueProvider),
+      );
+    });
 
 final financialTransactionRepositoryProvider =
     Provider<FinancialTransactionRepository>((ref) {
-  return ref.watch(financialTransactionRepositoryImplProvider);
-});
+      return ref.watch(financialTransactionRepositoryImplProvider);
+    });
 
 final rpTreasuryAccountPortProvider = Provider<RpTreasuryAccountPort>((ref) {
   return const NoOpRpTreasuryAccountPort();
@@ -57,17 +64,17 @@ final rpCurrencyPortProvider = Provider<RpCurrencyPort>((ref) {
 });
 final getFinancialTransactionByIdProvider =
     Provider<GetFinancialTransactionById>((ref) {
-  return GetFinancialTransactionById(
-    ref.watch(financialTransactionRepositoryProvider),
-  );
-});
+      return GetFinancialTransactionById(
+        ref.watch(financialTransactionRepositoryProvider),
+      );
+    });
 
 final searchFinancialTransactionsProvider =
     Provider<SearchFinancialTransactions>((ref) {
-  return SearchFinancialTransactions(
-    ref.watch(financialTransactionRepositoryProvider),
-  );
-});
+      return SearchFinancialTransactions(
+        ref.watch(financialTransactionRepositoryProvider),
+      );
+    });
 
 final getTransactionDashboardProvider = Provider<GetTransactionDashboard>((
   ref,
@@ -77,23 +84,25 @@ final getTransactionDashboardProvider = Provider<GetTransactionDashboard>((
   );
 });
 
-final createFinancialTransactionProvider =
-    Provider<CreateFinancialTransaction>((ref) {
-  return CreateFinancialTransaction(
-    repository: ref.watch(financialTransactionRepositoryProvider),
-    permissionGuard: ref.watch(permissionGuardProvider),
-    voucherBookPort: ref.watch(rpVoucherBookPortProvider),
-    ledgerPosting: ref.watch(rpLedgerPostingPortProvider),
-  );
-});
+final createFinancialTransactionProvider = Provider<CreateFinancialTransaction>(
+  (ref) {
+    return CreateFinancialTransaction(
+      repository: ref.watch(financialTransactionRepositoryProvider),
+      permissionGuard: ref.watch(permissionGuardProvider),
+      voucherBookPort: ref.watch(rpVoucherBookPortProvider),
+      ledgerPosting: ref.watch(rpLedgerPostingPortProvider),
+    );
+  },
+);
 
-final updateFinancialTransactionProvider =
-    Provider<UpdateFinancialTransaction>((ref) {
-  return UpdateFinancialTransaction(
-    repository: ref.watch(financialTransactionRepositoryProvider),
-    ledgerPosting: ref.watch(rpLedgerPostingPortProvider),
-  );
-});
+final updateFinancialTransactionProvider = Provider<UpdateFinancialTransaction>(
+  (ref) {
+    return UpdateFinancialTransaction(
+      repository: ref.watch(financialTransactionRepositoryProvider),
+      ledgerPosting: ref.watch(rpLedgerPostingPortProvider),
+    );
+  },
+);
 
 final postFinancialTransactionProvider = Provider<PostFinancialTransaction>((
   ref,
@@ -105,41 +114,43 @@ final postFinancialTransactionProvider = Provider<PostFinancialTransaction>((
   );
 });
 
-final unpostFinancialTransactionProvider =
-    Provider<UnpostFinancialTransaction>((ref) {
-  return UnpostFinancialTransaction(
-    repository: ref.watch(financialTransactionRepositoryProvider),
-    ledgerPosting: ref.watch(rpLedgerPostingPortProvider),
-  );
-});
+final unpostFinancialTransactionProvider = Provider<UnpostFinancialTransaction>(
+  (ref) {
+    return UnpostFinancialTransaction(
+      repository: ref.watch(financialTransactionRepositoryProvider),
+      ledgerPosting: ref.watch(rpLedgerPostingPortProvider),
+    );
+  },
+);
 
-final cancelFinancialTransactionProvider =
-    Provider<CancelFinancialTransaction>((ref) {
-  return CancelFinancialTransaction(
-    repository: ref.watch(financialTransactionRepositoryProvider),
-    permissionGuard: ref.watch(permissionGuardProvider),
-    ledgerPosting: ref.watch(rpLedgerPostingPortProvider),
-  );
-});
+final cancelFinancialTransactionProvider = Provider<CancelFinancialTransaction>(
+  (ref) {
+    return CancelFinancialTransaction(
+      repository: ref.watch(financialTransactionRepositoryProvider),
+      permissionGuard: ref.watch(permissionGuardProvider),
+      ledgerPosting: ref.watch(rpLedgerPostingPortProvider),
+    );
+  },
+);
 
 final financialTransactionByIdProvider =
     FutureProvider.family<FinancialTransaction?, int>((ref, id) {
-  return ref.watch(getFinancialTransactionByIdProvider)(id);
-});
+      return ref.watch(getFinancialTransactionByIdProvider)(id);
+    });
 
 final transactionDashboardProvider =
     FutureProvider.autoDispose<TransactionDashboardSummary>((ref) async {
-  final now = DateTime.now();
-  final todayStart = DateTime(now.year, now.month, now.day);
-  final todayEnd = todayStart
-      .add(const Duration(days: 1))
-      .subtract(const Duration(microseconds: 1));
-  final periodFrom = DateTime(now.year, now.month, 1);
-  final periodTo = DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999);
-  return ref.watch(getTransactionDashboardProvider)(
-    periodFrom: periodFrom,
-    periodTo: periodTo,
-    todayStart: todayStart,
-    todayEnd: todayEnd,
-  );
-});
+      final now = DateTime.now();
+      final todayStart = DateTime(now.year, now.month, now.day);
+      final todayEnd = todayStart
+          .add(const Duration(days: 1))
+          .subtract(const Duration(microseconds: 1));
+      final periodFrom = DateTime(now.year, now.month, 1);
+      final periodTo = DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999);
+      return ref.watch(getTransactionDashboardProvider)(
+        periodFrom: periodFrom,
+        periodTo: periodTo,
+        todayStart: todayStart,
+        todayEnd: todayEnd,
+      );
+    });

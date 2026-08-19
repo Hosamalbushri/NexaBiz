@@ -151,6 +151,20 @@ class LocalAuthRepository implements AuthRepository {
     // Local-only: device id already bound on the session snapshot.
   }
 
+  Future<AuthSessionSnapshot> changePassword({
+    required String userId,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final snapshot = await _store.changePassword(
+      userId: userId,
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+    );
+    _emit(snapshot);
+    return snapshot;
+  }
+
   void dispose() {
     _sessionController.close();
   }

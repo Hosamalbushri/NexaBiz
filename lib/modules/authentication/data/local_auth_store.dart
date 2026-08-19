@@ -9,6 +9,7 @@ import '../../../core/utils/id_generator.dart';
 import '../domain/entities/auth_session.dart';
 import '../domain/entities/auth_user.dart';
 import '../domain/local_permissions.dart';
+import '../domain/models/password_change_exception.dart';
 
 /// Offline identity store (Hive). No network required.
 class LocalAuthStore {
@@ -43,6 +44,7 @@ class LocalAuthStore {
           users.any((u) => u.email == LocalAuthDefaults.adminEmail);
       if (adminExists) {
         await _syncSuperAdminPermissions(box, users);
+        await _flagDefaultPasswordUsers(box);
         return;
       }
     }
@@ -56,6 +58,7 @@ class LocalAuthStore {
       passwordHash: _hashPassword(LocalAuthDefaults.adminPassword, salt),
       status: 'active',
       isSuperAdmin: true,
+      mustChangePassword: true,
       companyIds: const [LocalAuthDefaults.companyId],
       rolesByCompany: const {
         LocalAuthDefaults.companyId: LocalAuthDefaults.adminRole,
@@ -121,6 +124,7 @@ class LocalAuthStore {
           passwordHash: user.passwordHash,
           status: user.status,
           isSuperAdmin: user.isSuperAdmin,
+          mustChangePassword: user.mustChangePassword,
           companyIds: user.companyIds,
           rolesByCompany: user.rolesByCompany,
           permissionsByCompany: nextPerms,
@@ -241,6 +245,18 @@ class LocalAuthStore {
         LocalAuthDefaults.adminRole,
     ];
 
+    var mustChange = matched.mustChangePassword ||
+        _usesDefaultPassword(matched);
+    if (mustChange && !matched.mustChangePassword) {
+      await _writeUsers(box, [
+        for (final u in users)
+          if (u.id == matched.id)
+            u.copyWith(mustChangePassword: true)
+          else
+            u,
+      ]);
+    }
+
     final snapshot = AuthSessionSnapshot(
       user: AuthUser(
         id: matched.id,
@@ -256,6 +272,7 @@ class LocalAuthStore {
       currentCompanyId: selectedId,
       deviceId: deviceId,
       sessionId: generateUuidV4(),
+      mustChangePassword: mustChange,
     );
     await saveSession(snapshot);
     return snapshot;
@@ -289,6 +306,17 @@ class LocalAuthStore {
             !snapshot.permissions.containsAll(kAllLocalPermissions)) {
           snapshot = snapshot.copyWith(permissions: merged);
           await saveSession(snapshot);
+        }
+      }
+      final users = _readUsers(box);
+      for (final u in users) {
+        if (u.id == snapshot.user.id) {
+          final mustChange = u.mustChangePassword || _usesDefaultPassword(u);
+          if (mustChange != snapshot.mustChangePassword) {
+            snapshot = snapshot.copyWith(mustChangePassword: mustChange);
+            await saveSession(snapshot);
+          }
+          break;
         }
       }
       return snapshot;
@@ -362,9 +390,61 @@ class LocalAuthStore {
       currentCompanyId: companyId,
       deviceId: next.deviceId,
       sessionId: next.sessionId,
+      mustChangePassword: user.mustChangePassword || _usesDefaultPassword(user),
     );
     await saveSession(withCompanies);
     return withCompanies;
+  }
+
+  /// Replaces the local password and clears [mustChangePassword].
+  Future<AuthSessionSnapshot> changePassword({
+    required String userId,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final next = newPassword.trim();
+    if (next.length < 8) {
+      throw const PasswordChangeException(PasswordChangeException.tooShort);
+    }
+    if (next == LocalAuthDefaults.adminPassword) {
+      throw const PasswordChangeException(PasswordChangeException.sameAsDefault);
+    }
+
+    final box = await _box();
+    final users = _readUsers(box);
+    _LocalUserRecord? user;
+    for (final u in users) {
+      if (u.id == userId) {
+        user = u;
+        break;
+      }
+    }
+    if (user == null) {
+      throw const PasswordChangeException(PasswordChangeException.notFound);
+    }
+    final hash = _hashPassword(currentPassword, user.passwordSalt);
+    if (hash != user.passwordHash) {
+      throw const PasswordChangeException(PasswordChangeException.wrongCurrent);
+    }
+
+    final salt = generateUuidV4();
+    final updated = user.copyWith(
+      passwordSalt: salt,
+      passwordHash: _hashPassword(next, salt),
+      mustChangePassword: false,
+    );
+    await _writeUsers(box, [
+      for (final u in users)
+        if (u.id == userId) updated else u,
+    ]);
+
+    final existing = await loadSession();
+    if (existing == null || existing.user.id != userId) {
+      throw const PasswordChangeException(PasswordChangeException.notFound);
+    }
+    final snapshot = existing.copyWith(mustChangePassword: false);
+    await saveSession(snapshot);
+    return snapshot;
   }
 
   List<_LocalUserRecord> _readUsers(Box<dynamic> box) {
@@ -375,6 +455,35 @@ class LocalAuthStore {
         if (item is Map)
           _LocalUserRecord.fromJson(Map<String, dynamic>.from(item)),
     ];
+  }
+
+  Future<void> _writeUsers(Box<dynamic> box, List<_LocalUserRecord> users) {
+    return box.put(_usersKey, [for (final u in users) u.toJson()]);
+  }
+
+  Future<void> _flagDefaultPasswordUsers(Box<dynamic> box) async {
+    final users = _readUsers(box);
+    var changed = false;
+    final next = <_LocalUserRecord>[];
+    for (final u in users) {
+      if (!u.mustChangePassword && _usesDefaultPassword(u)) {
+        changed = true;
+        next.add(u.copyWith(mustChangePassword: true));
+      } else {
+        next.add(u);
+      }
+    }
+    if (changed) {
+      await _writeUsers(box, next);
+    }
+  }
+
+  bool _usesDefaultPassword(_LocalUserRecord user) {
+    if (user.passwordSalt.isEmpty || user.passwordHash.isEmpty) {
+      return false;
+    }
+    return user.passwordHash ==
+        _hashPassword(LocalAuthDefaults.adminPassword, user.passwordSalt);
   }
 
   List<AuthCompany> _readCompanies(Box<dynamic> box) {
@@ -405,6 +514,7 @@ class _LocalUserRecord {
     required this.companyIds,
     required this.rolesByCompany,
     required this.permissionsByCompany,
+    this.mustChangePassword = false,
   });
 
   final String id;
@@ -414,9 +524,30 @@ class _LocalUserRecord {
   final String passwordHash;
   final String status;
   final bool isSuperAdmin;
+  final bool mustChangePassword;
   final List<String> companyIds;
   final Map<String, String> rolesByCompany;
   final Map<String, List<String>> permissionsByCompany;
+
+  _LocalUserRecord copyWith({
+    String? passwordSalt,
+    String? passwordHash,
+    bool? mustChangePassword,
+  }) {
+    return _LocalUserRecord(
+      id: id,
+      name: name,
+      email: email,
+      passwordSalt: passwordSalt ?? this.passwordSalt,
+      passwordHash: passwordHash ?? this.passwordHash,
+      status: status,
+      isSuperAdmin: isSuperAdmin,
+      mustChangePassword: mustChangePassword ?? this.mustChangePassword,
+      companyIds: companyIds,
+      rolesByCompany: rolesByCompany,
+      permissionsByCompany: permissionsByCompany,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -426,6 +557,7 @@ class _LocalUserRecord {
     'passwordHash': passwordHash,
     'status': status,
     'isSuperAdmin': isSuperAdmin,
+    'mustChangePassword': mustChangePassword,
     'companyIds': companyIds,
     'rolesByCompany': rolesByCompany,
     'permissionsByCompany': permissionsByCompany,
@@ -442,6 +574,7 @@ class _LocalUserRecord {
       passwordHash: json['passwordHash'] as String? ?? '',
       status: json['status'] as String? ?? 'active',
       isSuperAdmin: json['isSuperAdmin'] == true,
+      mustChangePassword: json['mustChangePassword'] == true,
       companyIds: [
         if (json['companyIds'] is List)
           for (final id in json['companyIds'] as List)

@@ -22,7 +22,7 @@ class SyncManager {
     required SyncQueue queue,
     required ConnectivityService connectivity,
     ConflictResolver conflictResolver = const ConflictResolver(),
-    RemoteSyncApi? remote,
+    RemoteSyncApi Function()? remoteProvider,
     SyncMetricsStore? metricsStore,
     void Function(SyncPassResult result)? onMeaningfulPass,
     DateTime Function()? clock,
@@ -30,7 +30,7 @@ class SyncManager {
   }) : _queue = queue,
        _connectivity = connectivity,
        _conflictResolver = conflictResolver,
-       _remote = remote,
+       _remoteProvider = remoteProvider,
        _metricsStore = metricsStore,
        _onMeaningfulPass = onMeaningfulPass,
        _clock = clock ?? _defaultClock;
@@ -40,10 +40,12 @@ class SyncManager {
   final SyncQueue _queue;
   final ConnectivityService _connectivity;
   final ConflictResolver _conflictResolver;
-  final RemoteSyncApi? _remote;
+  final RemoteSyncApi Function()? _remoteProvider;
   final SyncMetricsStore? _metricsStore;
   final void Function(SyncPassResult result)? _onMeaningfulPass;
   final DateTime Function() _clock;
+
+  RemoteSyncApi? get _remote => _remoteProvider?.call();
 
   /// Max operations per `/sync/push/batch` request.
   final int batchChunkSize;
@@ -159,7 +161,9 @@ class SyncManager {
             const SyncPassResult(outcome: SyncPassOutcome.skippedDisabled),
           );
         }
-        if (!_connectivity.isOnline) {
+        // Plugin "offline" is often wrong on Android. Skip auto passes only;
+        // a user tap should still attempt HTTP (TLS/timeouts are the truth).
+        if (!_connectivity.isOnline && trigger != SyncPassTrigger.manual) {
           await _refreshOverview();
           return annotate(
             const SyncPassResult(outcome: SyncPassOutcome.skippedOffline),
@@ -553,6 +557,9 @@ class SyncManager {
             );
             downloaded++;
             appliedForType++;
+          } on AuthenticationFailure {
+            await handler.abandonPull();
+            rethrow;
           } catch (_) {
             failed++;
             appliedAll = false;

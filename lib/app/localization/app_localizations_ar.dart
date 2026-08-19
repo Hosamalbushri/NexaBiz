@@ -5183,7 +5183,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get authLoginLocalHint =>
-      'سجّل الدخول بحسابك المحلي دون إنترنت. غيّر كلمة مرور الأدمن الافتراضية بعد أول دخول.';
+      'سجّل الدخول بحسابك المحلي دون إنترنت. يجب تغيير كلمة مرور الأدمن الافتراضية قبل استخدام التطبيق.';
 
   @override
   String get authEmailLabel => 'البريد الإلكتروني';
@@ -5196,6 +5196,38 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get authSigningIn => 'جاري الدخول…';
+
+  @override
+  String get authChangePasswordTitle => 'تغيير كلمة المرور';
+
+  @override
+  String get authChangePasswordHint =>
+      'لا يمكن استخدام كلمة مرور الأدمن الافتراضية في الإنتاج. اختر كلمة مرور جديدة من 8 أحرف على الأقل.';
+
+  @override
+  String get authCurrentPasswordLabel => 'كلمة المرور الحالية';
+
+  @override
+  String get authNewPasswordLabel => 'كلمة المرور الجديدة';
+
+  @override
+  String get authConfirmPasswordLabel => 'تأكيد كلمة المرور الجديدة';
+
+  @override
+  String get authChangePasswordAction => 'حفظ كلمة المرور';
+
+  @override
+  String get authChangingPassword => 'جاري الحفظ…';
+
+  @override
+  String get authPasswordMismatch => 'كلمتا المرور غير متطابقتين.';
+
+  @override
+  String get authPasswordWrongCurrent => 'كلمة المرور الحالية غير صحيحة.';
+
+  @override
+  String get authPasswordSameAsDefault =>
+      'اختر كلمة مرور مختلفة عن كلمة المرور الافتراضية.';
 
   @override
   String get authBiometricSignIn => 'الدخول بالبصمة';

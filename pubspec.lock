@@ -5,18 +5,18 @@ packages:
     dependency: transitive
     description:
       name: _fe_analyzer_shared
-      sha256: "3b19a47f6ea7c2632760777c78174f47f6aec1e05f0cd611380d4593b8af1dbc"
+      sha256: cd6add6f846f35fb79f3c315296703c1a24f3cfd7f4739d91a74961c1c7e9f1b
       url: "https://pub.dev"
     source: hosted
-    version: "96.0.0"
+    version: "100.0.0"
   analyzer:
     dependency: transitive
     description:
       name: analyzer
-      sha256: "0c516bc4ad36a1a75759e54d5047cb9d15cded4459df01aa35a0b5ec7db2c2a0"
+      sha256: "6ba98576948803398b69e3a444df24eacdbe12ed699c7014e120ea38552debbf"
       url: "https://pub.dev"
     source: hosted
-    version: "10.2.0"
+    version: "13.0.0"
   archive:
     dependency: transitive
     description:
@@ -221,10 +221,10 @@ packages:
     dependency: transitive
     description:
       name: dart_style
-      sha256: "29f7ecc274a86d32920b1d9cfc7502fa87220da41ec60b55f329559d5732e2b2"
+      sha256: "59d53ef8eaed9d288ed9767618e2b31c4fa0383a127db59d5eb2e737a7638a60"
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.7"
+    version: "3.1.9"
   dbus:
     dependency: transitive
     description:
@@ -237,26 +237,26 @@ packages:
     dependency: "direct main"
     description:
       name: drift
-      sha256: "970cd188fddb111b26ea6a9b07a62bf5c2432d74147b8122c67044ae3b97e99e"
+      sha256: "3a3f1f6f905037d7426e4c445854139fd6a3d592135f7c96d7931682b73d16f4"
       url: "https://pub.dev"
     source: hosted
-    version: "2.31.0"
+    version: "2.34.3"
   drift_dev:
     dependency: "direct dev"
     description:
       name: drift_dev
-      sha256: "917184b2fb867b70a548a83bf0d36268423b38d39968c06cce4905683da49587"
+      sha256: "735aad3c34215805c66bd518c8812fa4f83b5534b2c13c4092c970c04a7e9983"
       url: "https://pub.dev"
     source: hosted
-    version: "2.31.0"
+    version: "2.34.5"
   drift_flutter:
     dependency: "direct main"
     description:
       name: drift_flutter
-      sha256: c07120854742a0cae2f7501a0da02493addde550db6641d284983c08762e60a7
+      sha256: "91acf4bee7c3c84467cba46455aa70e5292a3b889f4582645d74f2e5a8c106f2"
       url: "https://pub.dev"
     source: hosted
-    version: "0.2.8"
+    version: "0.3.1"
   equatable:
     dependency: transitive
     description:
@@ -553,18 +553,10 @@ packages:
     dependency: transitive
     description:
       name: jni
-      sha256: c2230682d5bc2362c1c9e8d3c7f406d9cbba23ab3f2e203a025dd47e0fb2e68f
+      sha256: d2c361082d554d4593c3012e26f6b188f902acd291330f13d6427641a92b3da1
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0"
-  jni_flutter:
-    dependency: transitive
-    description:
-      name: jni_flutter
-      sha256: "8b59e590786050b1cd866677dddaf76b1ade5e7bc751abe04b86e84d379d3ba6"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.1"
+    version: "0.14.2"
   js:
     dependency: transitive
     description:
@@ -709,6 +701,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.4.0"
+  native_toolchain_c:
+    dependency: transitive
+    description:
+      name: native_toolchain_c
+      sha256: f9c168717100ae6d9fee9ffb0be379bf1f8b26b0f6bcbd4fdddcd931993a6a72
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.19.2"
   nm:
     dependency: transitive
     description:
@@ -777,10 +777,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_android
-      sha256: "69cbd515a62b94d32a7944f086b2f82b4ac40a1d45bebfc00813a430ab2dabcd"
+      sha256: "149441ca6e4f38193b2e004c0ca6376a3d11f51fa5a77552d8bd4d2b0c0912ba"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.1"
+    version: "2.2.23"
   path_provider_foundation:
     dependency: transitive
     description:
@@ -917,6 +917,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.6.1"
+  sentry:
+    dependency: transitive
+    description:
+      name: sentry
+      sha256: c2ecd8abe82e63cdcb6947f71320612ced56e10ba94db7529d85cc02be47cb3b
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.27.0"
+  sentry_flutter:
+    dependency: "direct main"
+    description:
+      name: sentry_flutter
+      sha256: ec89cc6ba939ca19155ea83900d9740a36544f50b3b6baf265518e3348fb0f50
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.27.0"
   share_plus:
     dependency: "direct main"
     description:
@@ -978,30 +994,38 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.2"
-  sqlite3:
-    dependency: "direct dev"
+  sqlcipher_flutter_libs:
+    dependency: transitive
     description:
-      name: sqlite3
-      sha256: "3145bd74dcdb4fd6f5c6dda4d4e4490a8087d7f286a14dee5d37087290f0f8a2"
+      name: sqlcipher_flutter_libs
+      sha256: "38d62d659d2fb8739bf25a42c9a350d1fdd6c29a5a61f13a946778ec75d27929"
       url: "https://pub.dev"
     source: hosted
-    version: "2.9.4"
-  sqlite3_flutter_libs:
+    version: "0.7.0+eol"
+  sqlite3:
     dependency: "direct main"
     description:
-      name: sqlite3_flutter_libs
-      sha256: eeb9e3a45207649076b808f8a5a74d68770d0b7f26ccef6d5f43106eee5375ad
+      name: sqlite3
+      sha256: "64b2c63c8232dd20d14b34105a81ebfd74320442e8451f836179ec89986aa478"
       url: "https://pub.dev"
     source: hosted
-    version: "0.5.42"
+    version: "3.5.1"
+  sqlite3_flutter_libs:
+    dependency: transitive
+    description:
+      name: sqlite3_flutter_libs
+      sha256: "3ed7553eee7bb368f8950f58ba29f634e06e813c029aff6a0d60862b96de8454"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.0+eol"
   sqlparser:
     dependency: transitive
     description:
       name: sqlparser
-      sha256: "337e9997f7141ffdd054259128553c348635fa318f7ca492f07a4ab76f850d19"
+      sha256: "772bb2f6f5bce0631a60f26b57d6e8882e1105c22345b05c163ee6ee5d7ba32d"
       url: "https://pub.dev"
     source: hosted
-    version: "0.43.1"
+    version: "0.45.0"
   stack_trace:
     dependency: transitive
     description:

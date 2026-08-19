@@ -9,14 +9,16 @@ import '../repositories/product_repository_impl.dart';
 class ProductSyncHandler implements SyncEntityHandler {
   ProductSyncHandler({
     required ProductRepositoryImpl repository,
-    required RemoteSyncApi remote,
+    required RemoteSyncApi Function() remoteProvider,
     this.conflictResolver = const ConflictResolver(),
   }) : _repository = repository,
-       _remote = remote;
+       _remoteProvider = remoteProvider;
 
   final ProductRepositoryImpl _repository;
-  final RemoteSyncApi _remote;
+  final RemoteSyncApi Function() _remoteProvider;
   final ConflictResolver conflictResolver;
+
+  RemoteSyncApi get _remote => _remoteProvider();
 
   @override
   String get entityType => ProductRepositoryImpl.entityType;
@@ -94,14 +96,16 @@ class ProductSyncHandler implements SyncEntityHandler {
 class InventoryItemSyncHandler implements SyncEntityHandler {
   InventoryItemSyncHandler({
     required InventoryRepositoryImpl repository,
-    required RemoteSyncApi remote,
+    required RemoteSyncApi Function() remoteProvider,
     this.conflictResolver = const ConflictResolver(),
   }) : _repository = repository,
-       _remote = remote;
+       _remoteProvider = remoteProvider;
 
   final InventoryRepositoryImpl _repository;
-  final RemoteSyncApi _remote;
+  final RemoteSyncApi Function() _remoteProvider;
   final ConflictResolver conflictResolver;
+
+  RemoteSyncApi get _remote => _remoteProvider();
 
   @override
   String get entityType => InventoryRepositoryImpl.entityType;

@@ -6,6 +6,7 @@ import '../../modules/app_lock/domain/entities/app_lock_state.dart';
 import '../../modules/app_lock/presentation/pages/app_lock_page.dart';
 import '../../modules/app_lock/presentation/pages/app_lock_routes.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
+import '../../modules/authentication/presentation/pages/change_password_page.dart';
 import '../../modules/authentication/presentation/pages/login_page.dart';
 import '../../modules/authentication/presentation/pages/sync_login_page.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
@@ -32,6 +33,7 @@ bool _isAppLockExempt(String path) {
   return path == AppRoutes.splash ||
       path == AppRoutes.onboarding ||
       path == AppRoutes.login ||
+      path == AppRoutes.changePassword ||
       path == SystemSetupRoutes.root ||
       path == AppLockRoutes.root;
 }
@@ -83,6 +85,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return AppRoutes.login;
       }
       if (auth.isAuthenticated && onLogin) {
+        if (auth.mustChangePassword) {
+          return AppRoutes.changePassword;
+        }
+        return AppRoutes.dashboard;
+      }
+
+      if (auth.isAuthenticated &&
+          auth.mustChangePassword &&
+          path != AppRoutes.changePassword &&
+          path != AppRoutes.splash) {
+        return AppRoutes.changePassword;
+      }
+
+      if (auth.isAuthenticated &&
+          !auth.mustChangePassword &&
+          path == AppRoutes.changePassword) {
         return AppRoutes.dashboard;
       }
 
@@ -130,6 +148,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.login,
         name: 'login',
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.changePassword,
+        name: 'changePassword',
+        builder: (context, state) => const ChangePasswordPage(),
       ),
       GoRoute(
         path: AppRoutes.onboarding,

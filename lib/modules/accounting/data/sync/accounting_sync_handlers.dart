@@ -11,14 +11,16 @@ import '../repositories/journal_repository_impl.dart';
 class AccountSyncHandler implements SyncEntityHandler {
   AccountSyncHandler({
     required AccountRepositoryImpl repository,
-    required RemoteSyncApi remote,
+    required RemoteSyncApi Function() remoteProvider,
     this.conflictResolver = const ConflictResolver(),
   }) : _repository = repository,
-       _remote = remote;
+       _remoteProvider = remoteProvider;
 
   final AccountRepositoryImpl _repository;
-  final RemoteSyncApi _remote;
+  final RemoteSyncApi Function() _remoteProvider;
   final ConflictResolver conflictResolver;
+
+  RemoteSyncApi get _remote => _remoteProvider();
 
   @override
   String get entityType => AccountRepositoryImpl.entityType;
@@ -96,14 +98,16 @@ class AccountSyncHandler implements SyncEntityHandler {
 class JournalSyncHandler implements SyncEntityHandler {
   JournalSyncHandler({
     required JournalRepositoryImpl repository,
-    required RemoteSyncApi remote,
+    required RemoteSyncApi Function() remoteProvider,
     this.conflictResolver = const ConflictResolver(),
   }) : _repository = repository,
-       _remote = remote;
+       _remoteProvider = remoteProvider;
 
   final JournalRepositoryImpl _repository;
-  final RemoteSyncApi _remote;
+  final RemoteSyncApi Function() _remoteProvider;
   final ConflictResolver conflictResolver;
+
+  RemoteSyncApi get _remote => _remoteProvider();
 
   @override
   String get entityType => JournalRepositoryImpl.entityType;
@@ -181,14 +185,16 @@ class JournalSyncHandler implements SyncEntityHandler {
 class CurrencyRateSyncHandler implements SyncEntityHandler {
   CurrencyRateSyncHandler({
     required CurrencyRateRepositoryImpl repository,
-    required RemoteSyncApi remote,
+    required RemoteSyncApi Function() remoteProvider,
     this.conflictResolver = const ConflictResolver(),
   }) : _repository = repository,
-       _remote = remote;
+       _remoteProvider = remoteProvider;
 
   final CurrencyRateRepositoryImpl _repository;
-  final RemoteSyncApi _remote;
+  final RemoteSyncApi Function() _remoteProvider;
   final ConflictResolver conflictResolver;
+
+  RemoteSyncApi get _remote => _remoteProvider();
 
   @override
   String get entityType => CurrencyRateRepositoryImpl.entityType;
@@ -266,14 +272,16 @@ class CurrencyRateSyncHandler implements SyncEntityHandler {
 class FiscalYearSyncHandler implements SyncEntityHandler {
   FiscalYearSyncHandler({
     required FiscalYearRepositoryImpl repository,
-    required RemoteSyncApi remote,
+    required RemoteSyncApi Function() remoteProvider,
     this.conflictResolver = const ConflictResolver(),
   }) : _repository = repository,
-       _remote = remote;
+       _remoteProvider = remoteProvider;
 
   final FiscalYearRepositoryImpl _repository;
-  final RemoteSyncApi _remote;
+  final RemoteSyncApi Function() _remoteProvider;
   final ConflictResolver conflictResolver;
+
+  RemoteSyncApi get _remote => _remoteProvider();
 
   @override
   String get entityType => FiscalYearRepositoryImpl.entityType;

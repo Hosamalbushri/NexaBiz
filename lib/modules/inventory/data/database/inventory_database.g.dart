@@ -97,6 +97,30 @@ class $ProductsTable extends Products
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _onHandQtyMeta = const VerificationMeta(
+    'onHandQty',
+  );
+  @override
+  late final GeneratedColumn<double> onHandQty = GeneratedColumn<double>(
+    'on_hand_qty',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _unitCostMeta = const VerificationMeta(
+    'unitCost',
+  );
+  @override
+  late final GeneratedColumn<double> unitCost = GeneratedColumn<double>(
+    'unit_cost',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -174,6 +198,8 @@ class $ProductsTable extends Products
     barcode,
     packSize,
     price,
+    onHandQty,
+    unitCost,
     createdAt,
     updatedAt,
     syncStatus,
@@ -241,6 +267,18 @@ class $ProductsTable extends Products
       );
     } else if (isInserting) {
       context.missing(_priceMeta);
+    }
+    if (data.containsKey('on_hand_qty')) {
+      context.handle(
+        _onHandQtyMeta,
+        onHandQty.isAcceptableOrUnknown(data['on_hand_qty']!, _onHandQtyMeta),
+      );
+    }
+    if (data.containsKey('unit_cost')) {
+      context.handle(
+        _unitCostMeta,
+        unitCost.isAcceptableOrUnknown(data['unit_cost']!, _unitCostMeta),
+      );
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -322,6 +360,14 @@ class $ProductsTable extends Products
         DriftSqlType.double,
         data['${effectivePrefix}price'],
       )!,
+      onHandQty: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}on_hand_qty'],
+      )!,
+      unitCost: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}unit_cost'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
@@ -365,6 +411,12 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
   final String? barcode;
   final int packSize;
   final double price;
+
+  /// Perpetual inventory: sellable quantity on hand (main-unit equivalents).
+  final double onHandQty;
+
+  /// Unit cost for COGS (company base currency per main unit).
+  final double unitCost;
   final int createdAt;
   final int updatedAt;
 
@@ -383,6 +435,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     this.barcode,
     required this.packSize,
     required this.price,
+    required this.onHandQty,
+    required this.unitCost,
     required this.createdAt,
     required this.updatedAt,
     required this.syncStatus,
@@ -402,6 +456,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     }
     map['pack_size'] = Variable<int>(packSize);
     map['price'] = Variable<double>(price);
+    map['on_hand_qty'] = Variable<double>(onHandQty);
+    map['unit_cost'] = Variable<double>(unitCost);
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
     map['sync_status'] = Variable<String>(syncStatus);
@@ -426,6 +482,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
           : Value(barcode),
       packSize: Value(packSize),
       price: Value(price),
+      onHandQty: Value(onHandQty),
+      unitCost: Value(unitCost),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       syncStatus: Value(syncStatus),
@@ -452,6 +510,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       barcode: serializer.fromJson<String?>(json['barcode']),
       packSize: serializer.fromJson<int>(json['packSize']),
       price: serializer.fromJson<double>(json['price']),
+      onHandQty: serializer.fromJson<double>(json['onHandQty']),
+      unitCost: serializer.fromJson<double>(json['unitCost']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
@@ -471,6 +531,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       'barcode': serializer.toJson<String?>(barcode),
       'packSize': serializer.toJson<int>(packSize),
       'price': serializer.toJson<double>(price),
+      'onHandQty': serializer.toJson<double>(onHandQty),
+      'unitCost': serializer.toJson<double>(unitCost),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'syncStatus': serializer.toJson<String>(syncStatus),
@@ -488,6 +550,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     Value<String?> barcode = const Value.absent(),
     int? packSize,
     double? price,
+    double? onHandQty,
+    double? unitCost,
     int? createdAt,
     int? updatedAt,
     String? syncStatus,
@@ -502,6 +566,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     barcode: barcode.present ? barcode.value : this.barcode,
     packSize: packSize ?? this.packSize,
     price: price ?? this.price,
+    onHandQty: onHandQty ?? this.onHandQty,
+    unitCost: unitCost ?? this.unitCost,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     syncStatus: syncStatus ?? this.syncStatus,
@@ -518,6 +584,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       barcode: data.barcode.present ? data.barcode.value : this.barcode,
       packSize: data.packSize.present ? data.packSize.value : this.packSize,
       price: data.price.present ? data.price.value : this.price,
+      onHandQty: data.onHandQty.present ? data.onHandQty.value : this.onHandQty,
+      unitCost: data.unitCost.present ? data.unitCost.value : this.unitCost,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       syncStatus: data.syncStatus.present
@@ -541,6 +609,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
           ..write('barcode: $barcode, ')
           ..write('packSize: $packSize, ')
           ..write('price: $price, ')
+          ..write('onHandQty: $onHandQty, ')
+          ..write('unitCost: $unitCost, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('syncStatus: $syncStatus, ')
@@ -560,6 +630,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     barcode,
     packSize,
     price,
+    onHandQty,
+    unitCost,
     createdAt,
     updatedAt,
     syncStatus,
@@ -578,6 +650,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
           other.barcode == this.barcode &&
           other.packSize == this.packSize &&
           other.price == this.price &&
+          other.onHandQty == this.onHandQty &&
+          other.unitCost == this.unitCost &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.syncStatus == this.syncStatus &&
@@ -594,6 +668,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
   final Value<String?> barcode;
   final Value<int> packSize;
   final Value<double> price;
+  final Value<double> onHandQty;
+  final Value<double> unitCost;
   final Value<int> createdAt;
   final Value<int> updatedAt;
   final Value<String> syncStatus;
@@ -608,6 +684,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     this.barcode = const Value.absent(),
     this.packSize = const Value.absent(),
     this.price = const Value.absent(),
+    this.onHandQty = const Value.absent(),
+    this.unitCost = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
@@ -623,6 +701,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     this.barcode = const Value.absent(),
     required int packSize,
     required double price,
+    this.onHandQty = const Value.absent(),
+    this.unitCost = const Value.absent(),
     required int createdAt,
     required int updatedAt,
     this.syncStatus = const Value.absent(),
@@ -644,6 +724,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     Expression<String>? barcode,
     Expression<int>? packSize,
     Expression<double>? price,
+    Expression<double>? onHandQty,
+    Expression<double>? unitCost,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<String>? syncStatus,
@@ -659,6 +741,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
       if (barcode != null) 'barcode': barcode,
       if (packSize != null) 'pack_size': packSize,
       if (price != null) 'price': price,
+      if (onHandQty != null) 'on_hand_qty': onHandQty,
+      if (unitCost != null) 'unit_cost': unitCost,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (syncStatus != null) 'sync_status': syncStatus,
@@ -676,6 +760,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     Value<String?>? barcode,
     Value<int>? packSize,
     Value<double>? price,
+    Value<double>? onHandQty,
+    Value<double>? unitCost,
     Value<int>? createdAt,
     Value<int>? updatedAt,
     Value<String>? syncStatus,
@@ -691,6 +777,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
       barcode: barcode ?? this.barcode,
       packSize: packSize ?? this.packSize,
       price: price ?? this.price,
+      onHandQty: onHandQty ?? this.onHandQty,
+      unitCost: unitCost ?? this.unitCost,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,
@@ -724,6 +812,12 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     if (price.present) {
       map['price'] = Variable<double>(price.value);
     }
+    if (onHandQty.present) {
+      map['on_hand_qty'] = Variable<double>(onHandQty.value);
+    }
+    if (unitCost.present) {
+      map['unit_cost'] = Variable<double>(unitCost.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
@@ -755,6 +849,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
           ..write('barcode: $barcode, ')
           ..write('packSize: $packSize, ')
           ..write('price: $price, ')
+          ..write('onHandQty: $onHandQty, ')
+          ..write('unitCost: $unitCost, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('syncStatus: $syncStatus, ')
@@ -786,6 +882,8 @@ typedef $$ProductsTableCreateCompanionBuilder =
       Value<String?> barcode,
       required int packSize,
       required double price,
+      Value<double> onHandQty,
+      Value<double> unitCost,
       required int createdAt,
       required int updatedAt,
       Value<String> syncStatus,
@@ -802,6 +900,8 @@ typedef $$ProductsTableUpdateCompanionBuilder =
       Value<String?> barcode,
       Value<int> packSize,
       Value<double> price,
+      Value<double> onHandQty,
+      Value<double> unitCost,
       Value<int> createdAt,
       Value<int> updatedAt,
       Value<String> syncStatus,
@@ -851,6 +951,16 @@ class $$ProductsTableFilterComposer
 
   ColumnFilters<double> get price => $composableBuilder(
     column: $table.price,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get onHandQty => $composableBuilder(
+    column: $table.onHandQty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get unitCost => $composableBuilder(
+    column: $table.unitCost,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -929,6 +1039,16 @@ class $$ProductsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get onHandQty => $composableBuilder(
+    column: $table.onHandQty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get unitCost => $composableBuilder(
+    column: $table.unitCost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -989,6 +1109,12 @@ class $$ProductsTableAnnotationComposer
 
   GeneratedColumn<double> get price =>
       $composableBuilder(column: $table.price, builder: (column) => column);
+
+  GeneratedColumn<double> get onHandQty =>
+      $composableBuilder(column: $table.onHandQty, builder: (column) => column);
+
+  GeneratedColumn<double> get unitCost =>
+      $composableBuilder(column: $table.unitCost, builder: (column) => column);
 
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -1051,6 +1177,8 @@ class $$ProductsTableTableManager
                 Value<String?> barcode = const Value.absent(),
                 Value<int> packSize = const Value.absent(),
                 Value<double> price = const Value.absent(),
+                Value<double> onHandQty = const Value.absent(),
+                Value<double> unitCost = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
@@ -1065,6 +1193,8 @@ class $$ProductsTableTableManager
                 barcode: barcode,
                 packSize: packSize,
                 price: price,
+                onHandQty: onHandQty,
+                unitCost: unitCost,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 syncStatus: syncStatus,
@@ -1081,6 +1211,8 @@ class $$ProductsTableTableManager
                 Value<String?> barcode = const Value.absent(),
                 required int packSize,
                 required double price,
+                Value<double> onHandQty = const Value.absent(),
+                Value<double> unitCost = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
                 Value<String> syncStatus = const Value.absent(),
@@ -1095,6 +1227,8 @@ class $$ProductsTableTableManager
                 barcode: barcode,
                 packSize: packSize,
                 price: price,
+                onHandQty: onHandQty,
+                unitCost: unitCost,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 syncStatus: syncStatus,

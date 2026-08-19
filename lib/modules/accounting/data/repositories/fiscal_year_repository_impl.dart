@@ -772,6 +772,10 @@ WHERE je.deleted_at IS NULL
         }
         return;
       }
+      // Stale remote: incoming version <= local version → skip (idempotent pull).
+      if (version <= localVersion) {
+        return;
+      }
     }
 
     final fxGainUuid = await _resolveFxAccountUuid(

@@ -44,6 +44,12 @@ abstract class ProductRepository {
     List<ProductDraft> drafts, {
     void Function(int processed, int total)? onProgress,
   });
+
+  /// Applies a signed delta to [uuid] on-hand qty (negative = issue).
+  Future<Product> adjustOnHandByUuid({
+    required String uuid,
+    required double delta,
+  });
 }
 
 class ProductUpsertResult {

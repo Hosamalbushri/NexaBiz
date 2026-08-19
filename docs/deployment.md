@@ -36,7 +36,7 @@ pytest -q
 | --- | --- |
 | Never commit | `.env`, `.env.production`, `*.jks`, `*.keystore`, `*.p12` |
 | Templates only | [`backend/.env.example`](../backend/.env.example), [`backend/.env.production.example`](../backend/.env.production.example) |
-| Production | `ALLOW_DEV_TOKEN=false`, unique `JWT_SECRET`, `CORS_ORIGINS` ≠ `*` |
+| Production | `ALLOW_DEV_TOKEN=false`, unique `JWT_SECRET`, `CORS_ORIGINS` ≠ `*`, `AUTH_RATE_LIMIT_PER_MINUTE` > 0 |
 | Seed passwords | Change `SEED_ADMIN_PASSWORD` before first shared deploy |
 
 `Settings.assert_safe_for_environment()` refuses unsafe production settings at API startup.
@@ -78,8 +78,22 @@ Always migrate **before** rolling new API replicas that depend on new columns.
 flutter build appbundle --release \
   --dart-define=SYNC_API_ENABLED=true \
   --dart-define=SYNC_API_BASE_URL=https://sync.example.com \
-  --dart-define=SYNC_API_TOKEN="$SYNC_API_TOKEN"
+  --dart-define=SYNC_API_TOKEN="$SYNC_API_TOKEN" \
+  --dart-define=SENTRY_ENABLED=true \
+  --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+  --dart-define=SENTRY_ENVIRONMENT=production
 ```
+
+Optional crash reporting (fail-closed unless both flags are set):
+
+| Dart define | Purpose |
+| --- | --- |
+| `SENTRY_ENABLED` | Must be `true` to activate Sentry |
+| `SENTRY_DSN` | Project DSN (CI secret — never commit) |
+| `SENTRY_ENVIRONMENT` | e.g. `production`, `staging` (defaults: release→production, debug→development) |
+
+Local errors are always written to `logs/app_errors.log` via `AppErrorLog`.
+Sentry receives the same events when enabled.
 
 Do **not** ship builds with:
 
@@ -99,3 +113,4 @@ Store signing keys outside git (Play App Signing or CI secrets).
 - [ ] Canary plan noted in the PR description  
 - [ ] Sync dart-defines are explicit HTTPS + unique token (or sync left disabled)  
 - [ ] Local admin password changed from the first-install default  
+- [ ] Sentry DSN supplied via CI secret when crash reporting is required

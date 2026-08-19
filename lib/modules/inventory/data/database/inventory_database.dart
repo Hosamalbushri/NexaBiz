@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:drift_flutter/drift_flutter.dart';
+import 'package:stock_count/core/database/encrypted_drift_connection.dart';
 
 import 'tables/products_table.dart';
 
@@ -8,14 +8,14 @@ part 'inventory_database.g.dart';
 
 @DriftDatabase(tables: [Products])
 class InventoryDatabase extends _$InventoryDatabase {
-  InventoryDatabase([QueryExecutor? executor])
-    : super(executor ?? _openConnection());
+  InventoryDatabase({String? name, QueryExecutor? executor})
+    : super(executor ?? _openConnection(name ?? 'inventory_products'));
 
   /// In-memory database for tests.
   InventoryDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -57,6 +57,14 @@ class InventoryDatabase extends _$InventoryDatabase {
       if (from < 3) {
         await _createSearchIndexes();
       }
+      if (from < 4) {
+        await customStatement(
+          'ALTER TABLE products ADD COLUMN on_hand_qty REAL NOT NULL DEFAULT 0',
+        );
+        await customStatement(
+          'ALTER TABLE products ADD COLUMN unit_cost REAL NOT NULL DEFAULT 0',
+        );
+      }
     },
   );
 
@@ -73,9 +81,9 @@ class InventoryDatabase extends _$InventoryDatabase {
     );
   }
 
-  static QueryExecutor _openConnection() {
+  static QueryExecutor _openConnection(String name) {
     // Avoid shareAcrossIsolates — it can leave the first watch hung before
     // any row (including an empty list) is emitted.
-    return driftDatabase(name: 'inventory_products');
+    return encryptedDriftDatabase(name: name);
   }
 }

@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/presentation/providers/dashboard_services_provider.dart';
 import '../../../../app/settings/settings_repository.dart';
+import '../../../../core/database/tenant_database_name.dart';
 import '../../../../core/sync/sync_providers.dart';
+import '../../../../core/tenancy/session_company.dart';
 import '../../data/database/inventory_database.dart';
 import '../../data/datasources/pdf_barcode_label_printer.dart';
 import '../../data/datasources/product_excel_import_datasource.dart';
@@ -16,13 +18,19 @@ import '../../domain/models/product_item_code_generator.dart';
 import '../../domain/repositories/barcode_label_printer.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../../domain/services/product_scan_resolver.dart';
+import '../../domain/services/product_stock_service.dart';
 import '../../domain/usecases/product_usecases.dart';
 import '../models/products_view_mode.dart';
 
 final inventoryDatabaseProvider = Provider<InventoryDatabase>((ref) {
   // Keep the DB alive for the process; autoDispose list streams must not
   // close it mid-open or the UI stays on AsyncLoading forever.
-  final db = InventoryDatabase();
+  final db = InventoryDatabase(
+    name: tenantScopedName(
+      'inventory_products',
+      ref.watch(sessionCompanyIdProvider),
+    ),
+  );
   ref.onDispose(db.close);
   ref.keepAlive();
   return db;
@@ -37,6 +45,10 @@ final productRepositoryImplProvider = Provider<ProductRepositoryImpl>((ref) {
 
 final productRepositoryProvider = Provider<ProductRepository>((ref) {
   return ref.watch(productRepositoryImplProvider);
+});
+
+final productStockServiceProvider = Provider<ProductStockService>((ref) {
+  return ProductStockService(ref.watch(productRepositoryProvider));
 });
 
 final watchProductsUseCaseProvider = Provider<WatchProducts>((ref) {

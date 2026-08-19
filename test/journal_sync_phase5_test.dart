@@ -183,13 +183,13 @@ void main() {
     final managerA = SyncManager(
       queue: queueA,
       connectivity: connectivity,
-      remote: remote,
+      remoteProvider: () => remote,
     );
     managerA.registerHandler(
-      AccountSyncHandler(repository: accountsA, remote: remote),
+      AccountSyncHandler(repository: accountsA, remoteProvider: () => remote),
     );
     managerA.registerHandler(
-      JournalSyncHandler(repository: journalsA, remote: remote),
+      JournalSyncHandler(repository: journalsA, remoteProvider: () => remote),
     );
     await managerA.start(enabled: true);
     final passA = await managerA.syncNow();
@@ -198,13 +198,13 @@ void main() {
     final managerB = SyncManager(
       queue: queueB,
       connectivity: connectivity,
-      remote: remote,
+      remoteProvider: () => remote,
     );
     managerB.registerHandler(
-      AccountSyncHandler(repository: accountsB, remote: remote),
+      AccountSyncHandler(repository: accountsB, remoteProvider: () => remote),
     );
     managerB.registerHandler(
-      JournalSyncHandler(repository: journalsB, remote: remote),
+      JournalSyncHandler(repository: journalsB, remoteProvider: () => remote),
     );
     await managerB.start(enabled: true);
     final passB = await managerB.syncNow();

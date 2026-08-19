@@ -857,6 +857,11 @@ class JournalRepositoryImpl implements JournalRepository {
       return;
     }
 
+    // Stale remote: incoming version <= local version → skip (idempotent pull).
+    if (existingByUuid != null && version <= existingByUuid.version) {
+      return;
+    }
+
     // Same source document, different journal UUID → adopt remote identity.
     if (deletedAtMs == null &&
         sourceType != null &&

@@ -9,7 +9,7 @@ void registerReceiptsPaymentsSyncHandlers(Ref ref) {
   manager.registerHandler(
     FinancialTransactionSyncHandler(
       repository: ref.read(financialTransactionRepositoryImplProvider),
-      remote: ref.read(remoteSyncApiProvider),
+      remoteProvider: () => ref.read(remoteSyncApiProvider),
     ),
   );
 }

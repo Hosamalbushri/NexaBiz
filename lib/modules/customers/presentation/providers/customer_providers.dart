@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/presentation/providers/dashboard_services_provider.dart';
 import '../../../../app/settings/settings_repository.dart';
+import '../../../../core/database/tenant_database_name.dart';
 import '../../../../core/sync/sync_providers.dart';
+import '../../../../core/tenancy/session_company.dart';
 import '../../data/database/customers_database.dart';
 import '../../data/repositories/customer_repository_impl.dart';
 import '../../domain/entities/customer.dart';
@@ -13,7 +15,12 @@ import '../../domain/usecases/customer_usecases.dart';
 import '../../domain/usecases/ensure_customer_account_links.dart';
 
 final customersDatabaseProvider = Provider<CustomersDatabase>((ref) {
-  final db = CustomersDatabase();
+  final db = CustomersDatabase(
+    name: tenantScopedName(
+      'customers_master',
+      ref.watch(sessionCompanyIdProvider),
+    ),
+  );
   ref.onDispose(db.close);
   ref.keepAlive();
   return db;
@@ -72,23 +79,24 @@ final upsertCustomersUseCaseProvider = Provider<UpsertCustomers>((ref) {
   return UpsertCustomers(ref.watch(customerRepositoryProvider));
 });
 
-final ensureCustomerAccountLinksProvider = Provider<EnsureCustomerAccountLinks>((
-  ref,
-) {
-  return EnsureCustomerAccountLinks(ref.watch(customerAccountLinkPortProvider));
-});
+final ensureCustomerAccountLinksProvider = Provider<EnsureCustomerAccountLinks>(
+  (ref) {
+    return EnsureCustomerAccountLinks(
+      ref.watch(customerAccountLinkPortProvider),
+    );
+  },
+);
 
 /// Creates CoA posting accounts for customers that have no [Customer.accountId].
-final linkMissingCustomerAccountsProvider = Provider<LinkMissingCustomerAccounts>((
-  ref,
-) {
-  return LinkMissingCustomerAccounts(
-    repository: ref.watch(customerRepositoryProvider),
-    ensureLinks: ref.watch(ensureCustomerAccountLinksProvider),
-    linkPort: ref.watch(customerAccountLinkPortProvider),
-    settings: ref.watch(settingsRepositoryProvider),
-  );
-});
+final linkMissingCustomerAccountsProvider =
+    Provider<LinkMissingCustomerAccounts>((ref) {
+      return LinkMissingCustomerAccounts(
+        repository: ref.watch(customerRepositoryProvider),
+        ensureLinks: ref.watch(ensureCustomerAccountLinksProvider),
+        linkPort: ref.watch(customerAccountLinkPortProvider),
+        settings: ref.watch(settingsRepositoryProvider),
+      );
+    });
 
 class LinkMissingCustomerAccounts {
   const LinkMissingCustomerAccounts({

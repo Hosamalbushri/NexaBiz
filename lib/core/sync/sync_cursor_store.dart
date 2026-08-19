@@ -7,9 +7,12 @@ import '../database/hive_boxes.dart';
 /// Survives process restarts so devices resume from the last acknowledged
 /// server cursor instead of re-pulling from zero.
 class SyncCursorStore {
-  SyncCursorStore({Box<int>? box}) : _boxOverride = box;
+  SyncCursorStore({Box<int>? box, String? boxName})
+    : _boxOverride = box,
+      _boxName = boxName ?? HiveBoxes.syncCursors;
 
   final Box<int>? _boxOverride;
+  final String _boxName;
   Box<int>? _box;
 
   Future<Box<int>> _ensureBox() async {
@@ -20,10 +23,10 @@ class SyncCursorStore {
     if (_box != null && _box!.isOpen) {
       return _box!;
     }
-    if (Hive.isBoxOpen(HiveBoxes.syncCursors)) {
-      _box = Hive.box<int>(HiveBoxes.syncCursors);
+    if (Hive.isBoxOpen(_boxName)) {
+      _box = Hive.box<int>(_boxName);
     } else {
-      _box = await Hive.openBox<int>(HiveBoxes.syncCursors);
+      _box = await Hive.openBox<int>(_boxName);
     }
     return _box!;
   }

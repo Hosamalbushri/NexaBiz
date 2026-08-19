@@ -160,7 +160,7 @@ void main() {
     manager = SyncManager(
       queue: queue,
       connectivity: connectivity,
-      remote: remote,
+      remoteProvider: () => remote,
       clock: () => now,
       batchChunkSize: 50,
     );
@@ -184,7 +184,7 @@ void main() {
     manager = SyncManager(
       queue: queue,
       connectivity: connectivity,
-      remote: remote,
+      remoteProvider: () => remote,
       clock: () => now,
       batchChunkSize: 100,
     );
@@ -231,7 +231,7 @@ void main() {
     manager = SyncManager(
       queue: queue,
       connectivity: connectivity,
-      remote: remote,
+      remoteProvider: () => remote,
       clock: () => now,
     );
     manager!.registerHandler(handler);

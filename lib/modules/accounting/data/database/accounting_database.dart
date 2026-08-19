@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:drift_flutter/drift_flutter.dart';
+import 'package:stock_count/core/database/encrypted_drift_connection.dart';
 
 import 'tables/accounting_periods_table.dart';
 import 'tables/accounts_table.dart';
@@ -28,8 +28,8 @@ part 'accounting_database.g.dart';
   ],
 )
 class AccountingDatabase extends _$AccountingDatabase {
-  AccountingDatabase([QueryExecutor? executor])
-    : super(executor ?? _openConnection());
+  AccountingDatabase({String? name, QueryExecutor? executor})
+    : super(executor ?? _openConnection(name ?? 'accounting_accounts'));
 
   /// In-memory database for tests.
   AccountingDatabase.memory() : super(NativeDatabase.memory());
@@ -200,10 +200,10 @@ class AccountingDatabase extends _$AccountingDatabase {
       final generated =
           '${id.toRadixString(16).padLeft(8, '0')}-0000-4000-8000-'
           '${id.toRadixString(16).padLeft(12, '0')}';
-      await customStatement(
-        'UPDATE currency_rates SET uuid = ? WHERE id = ?',
-        [generated, id],
-      );
+      await customStatement('UPDATE currency_rates SET uuid = ? WHERE id = ?', [
+        generated,
+        id,
+      ]);
     }
   }
 
@@ -324,7 +324,7 @@ class AccountingDatabase extends _$AccountingDatabase {
     );
   }
 
-  static QueryExecutor _openConnection() {
-    return driftDatabase(name: 'accounting_accounts');
+  static QueryExecutor _openConnection(String name) {
+    return encryptedDriftDatabase(name: name);
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -122,6 +123,16 @@ class AuthenticatedHttpClient {
     final future = () async {
       try {
         return await refresh();
+      } on NetworkFailure {
+        // Transient network failure during refresh — keep local session
+        // instead of forcing re-login. The next request will retry refresh.
+        return TokenRefreshOutcome.unavailable;
+      } on SocketException {
+        return TokenRefreshOutcome.unavailable;
+      } on TimeoutException {
+        return TokenRefreshOutcome.unavailable;
+      } on http.ClientException {
+        return TokenRefreshOutcome.unavailable;
       } catch (_) {
         return TokenRefreshOutcome.unauthorized;
       }
@@ -165,6 +176,12 @@ class AuthenticatedHttpClient {
           // AuthController already flagged; SyncEnabledController will opt out.
           return response;
       }
+    } on HandshakeException catch (e) {
+      throw NetworkFailure(_tlsMessage(e), e);
+    } on SocketException catch (e) {
+      throw NetworkFailure(e.message, e);
+    } on TimeoutException catch (e) {
+      throw NetworkFailure(e.message ?? 'Request timed out', e);
     } on http.ClientException catch (e) {
       throw NetworkFailure(e.message, e);
     }
@@ -182,9 +199,20 @@ class AuthenticatedHttpClient {
             body: body == null ? null : jsonEncode(body),
           )
           .timeout(_config.timeout);
+    } on HandshakeException catch (e) {
+      throw NetworkFailure(_tlsMessage(e), e);
+    } on SocketException catch (e) {
+      throw NetworkFailure(e.message, e);
+    } on TimeoutException catch (e) {
+      throw NetworkFailure(e.message ?? 'Request timed out', e);
     } on http.ClientException catch (e) {
       throw NetworkFailure(e.message, e);
     }
+  }
+
+  static String _tlsMessage(HandshakeException e) {
+    return 'TLS handshake failed. The device does not trust the '
+        'server certificate (${e.message}).';
   }
 
   AppFailure mapFailure(http.Response response) {

@@ -341,6 +341,11 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
       return;
     }
 
+    // Stale remote: incoming version <= local version → skip (idempotent pull).
+    if (existingByUuid != null && version <= existingByUuid.version) {
+      return;
+    }
+
     if (deleted) {
       await (_db.delete(
         _db.currencyRates,

@@ -230,6 +230,11 @@ class InventoryRepositoryImpl implements InventoryRepository {
       return;
     }
 
+    // Stale remote: incoming version <= local version → skip (idempotent pull).
+    if (existing != null && version <= existing.version) {
+      return;
+    }
+
     final item = InventoryItem(
       id: id,
       itemCode: itemCode,

@@ -11,7 +11,19 @@
 
 ## Flutter impact
 
-Local Drift tables do **not** yet carry `company_id`. Until per-tenant
-local DBs (or row filters) land, treat multi-company on one device as
-**switch + re-sync**, and avoid concurrent use of two companies' data
-on the same install without clearing/isolating storage.
+Local Drift tables still do **not** carry `company_id`. Isolation is by
+**SQLite file**: providers pass `tenantDbName(base, companyId: …)` so a
+non-bootstrap company opens `{base}_{hex}` instead of the historical file
+(`accounting_accounts`, `sales_master`, `inventory_products`,
+`customers_master`, `receipts_payments`). The default local company
+(`LocalAuthDefaults.companyId`) keeps those historical names so existing
+installs are not orphaned.
+
+Hive `sync_queue_v2`, `sync_cursors`, and `sync_metrics` use the same
+`tenantScopedName` rule so queued mutations and pull sequences stay on
+the company that created them. The bootstrap local company keeps the
+historical box names.
+
+Switching company closes the previous Drift connections and opens the
+matching files / Hive boxes. Treat a company switch as **new local
+books + re-sync**, not a row-level filter inside one database.

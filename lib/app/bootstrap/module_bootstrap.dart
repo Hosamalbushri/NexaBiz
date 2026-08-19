@@ -39,12 +39,13 @@ import '../reports/trial_balance_report_data_adapter.dart';
 import '../reports/journal_book_report_data_adapter.dart';
 import '../sales/accounting_sale_bridge_adapter.dart';
 import '../sales/accounting_sale_currency_adapter.dart';
+import '../sales/accounting_sale_cogs_adapter.dart';
 import '../sales/accounting_sale_ledger_adapter.dart';
 import '../sales/accounting_sale_treasury_adapter.dart';
 import '../sales/accounting_sale_voucher_book_adapter.dart';
 import '../sales/customers_sale_lookup_adapter.dart';
 import '../sales/inventory_sale_product_catalog_adapter.dart';
-import '../sales/soft_sale_inventory_effect_adapter.dart';
+import '../sales/perpetual_sale_inventory_effect_adapter.dart';
 import '../system_setup/accounting_system_setup_seed_adapter.dart';
 
 /// App composition root: registers enabled business modules.
@@ -109,9 +110,16 @@ List<Override> moduleRegistryOverrides() {
         scanResolver: ref.watch(productScanResolverProvider),
       );
     }),
-    saleInventoryEffectPortProvider.overrideWith(
-      (ref) => const SoftSaleInventoryEffectAdapter(),
-    ),
+    saleInventoryEffectPortProvider.overrideWith((ref) {
+      return PerpetualSaleInventoryEffectAdapter(
+        stock: ref.watch(productStockServiceProvider),
+        cogs: AccountingSaleCogsAdapter(
+          posting: ref.watch(journalPostingServiceProvider),
+          accounts: ref.watch(accountRepositoryProvider),
+          stock: ref.watch(productStockServiceProvider),
+        ),
+      );
+    }),
     saleAccountingBridgePortProvider.overrideWith((ref) {
       return AccountingSaleBridgeAdapter(
         integration: ref.watch(accountingIntegrationPortProvider),

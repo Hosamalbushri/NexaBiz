@@ -13,11 +13,10 @@ void registerCustomersSyncHandlers(
   Future<void> Function(Map<String, dynamic> payload)? ensureLinkedAccount,
 }) {
   final manager = ref.read(syncManagerProvider);
-  final remote = ref.read(remoteSyncApiProvider);
   manager.registerHandler(
     CustomerSyncHandler(
       repository: ref.read(customerRepositoryImplProvider),
-      remote: remote,
+      remoteProvider: () => ref.read(remoteSyncApiProvider),
       ensureLinkedAccount: ensureLinkedAccount,
     ),
   );

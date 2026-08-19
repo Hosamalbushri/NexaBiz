@@ -8,18 +8,20 @@ import '../repositories/customer_repository_impl.dart';
 class CustomerSyncHandler implements SyncEntityHandler {
   CustomerSyncHandler({
     required CustomerRepositoryImpl repository,
-    required RemoteSyncApi remote,
+    required RemoteSyncApi Function() remoteProvider,
     this.conflictResolver = const ConflictResolver(),
     Future<void> Function(Map<String, dynamic> payload)? ensureLinkedAccount,
   }) : _repository = repository,
-       _remote = remote,
+       _remoteProvider = remoteProvider,
        _ensureLinkedAccount = ensureLinkedAccount;
 
   final CustomerRepositoryImpl _repository;
-  final RemoteSyncApi _remote;
+  final RemoteSyncApi Function() _remoteProvider;
   final ConflictResolver conflictResolver;
   final Future<void> Function(Map<String, dynamic> payload)?
   _ensureLinkedAccount;
+
+  RemoteSyncApi get _remote => _remoteProvider();
 
   @override
   String get entityType => CustomerRepositoryImpl.entityType;

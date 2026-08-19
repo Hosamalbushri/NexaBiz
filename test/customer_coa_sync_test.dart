@@ -146,7 +146,7 @@ void main() {
     final customers = CustomerRepositoryImpl(customersDb, syncQueue: syncQueue);
     final handler = CustomerSyncHandler(
       repository: customers,
-      remote: InMemoryRemoteSyncApi(),
+      remoteProvider: () => InMemoryRemoteSyncApi(),
       ensureLinkedAccount: ensure.ensureFromCustomerPayload,
     );
 

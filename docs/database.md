@@ -3,7 +3,7 @@
 ## Technology
 
 - **Hive** + **hive_flutter** — platform settings, notifications, sync queue, stock-count items
-- **Drift** + **SQLite** (`sqlite3_flutter_libs`) — inventory products catalog; accounting Chart of Accounts; customers master
+- **Drift** + **SQLite** (SQLite3MultipleCiphers via pub hooks) — inventory products catalog; accounting Chart of Accounts; customers master
 - Remote API used only through sync (`RemoteSyncApi`); UI never calls HTTP directly
 
 See [ADR-004](adr/ADR-004-local-database.md), [ADR-005](adr/ADR-005-drift-products.md), [ADR-006](adr/ADR-006-offline-first-sync.md), [ADR-007](adr/ADR-007-accounting-chart-of-accounts.md), and [ADR-009](adr/ADR-009-customers-module.md).
@@ -31,6 +31,43 @@ Customers module (lazy on first access):
 Sales module (lazy on first access):
 
 1. `SalesDatabase` via Drift → SQLite file for sales / items / payments
+
+### Per-company Drift files
+
+Each of the five Drift databases is opened with a name from
+`tenantDbName` (`lib/core/database/tenant_database_name.dart`), keyed off
+the auth session `currentCompanyId`.
+
+| Base file | Module |
+| --- | --- |
+| `accounting_accounts` | Accounting |
+| `sales_master` | Sales |
+| `inventory_products` | Inventory catalog |
+| `customers_master` | Customers |
+| `receipts_payments` | Receipts & payments |
+
+The bootstrap local company keeps the base name. Any other company UUID
+opens `{base}_{hex}` (lowercase hex, dashes stripped). Company switch
+disposes the previous connection.
+
+### Drift encryption
+
+All five module databases open via `encryptedDriftDatabase`
+(`lib/core/database/encrypted_drift_connection.dart`):
+
+- Passphrase seed in `DriftEncryptionKeyStore` (secure storage)
+- `PRAGMA key` applied in `NativeDatabase.setup`
+- Legacy plaintext `$name.sqlite` → encrypted in place on first open
+
+Requires `hooks.user_defines.sqlite3.source: sqlite3mc` in `pubspec.yaml`.
+
+Hive sync storage follows the same naming:
+
+| Base box | Contents |
+| --- | --- |
+| `sync_queue_v2` | Pending mutations (AES) |
+| `sync_cursors` | Pull sequence per entity type |
+| `sync_metrics` | Recent sync-pass observability |
 
 ## Hive boxes
 
@@ -211,7 +248,7 @@ Customer and product FKs are opaque uuids — no cross-DB foreign keys. See ADR-
 
 Use `schemaVersion` and `MigrationStrategy` on `InventoryDatabase`. Document each bump here.
 
-Current products schema version: **2** (sync columns + uuid).
+Current products schema version: **4** (`on_hand_qty`, `unit_cost` for perpetual inventory / COGS).
 
 ## Transactions
 

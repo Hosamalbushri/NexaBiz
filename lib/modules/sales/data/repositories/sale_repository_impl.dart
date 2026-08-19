@@ -907,6 +907,23 @@ class SaleRepositoryImpl implements SaleRepository {
       final existing = await getByUuid(uuid);
       final now = DateTime.now().toUtc().millisecondsSinceEpoch;
       final deletedAt = payload['deletedAt'] as int?;
+      final remoteVersion = (payload['version'] as int?) ?? 1;
+
+      // Dirty local: pending/conflict/syncing → mark conflict if remote is newer.
+      if (existing != null &&
+          (existing.syncStatus.needsUpload ||
+              existing.syncStatus == SyncStatus.conflict ||
+              existing.syncStatus == SyncStatus.syncing)) {
+        if (remoteVersion > existing.version) {
+          await markConflict(uuid);
+        }
+        return;
+      }
+
+      // Stale remote: incoming version <= local → skip (idempotent pull).
+      if (existing != null && remoteVersion <= existing.version) {
+        return;
+      }
 
       if (existing == null) {
         await _db

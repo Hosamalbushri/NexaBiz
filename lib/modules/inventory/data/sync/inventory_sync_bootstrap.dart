@@ -8,17 +8,16 @@ import 'inventory_sync_handlers.dart';
 /// Registers Inventory sync adapters with the shared [SyncManager].
 void registerInventorySyncHandlers(Ref ref) {
   final manager = ref.read(syncManagerProvider);
-  final remote = ref.read(remoteSyncApiProvider);
   manager.registerHandler(
     ProductSyncHandler(
       repository: ref.read(productRepositoryImplProvider),
-      remote: remote,
+      remoteProvider: () => ref.read(remoteSyncApiProvider),
     ),
   );
   manager.registerHandler(
     InventoryItemSyncHandler(
       repository: ref.read(inventoryRepositoryImplProvider),
-      remote: remote,
+      remoteProvider: () => ref.read(remoteSyncApiProvider),
     ),
   );
 }

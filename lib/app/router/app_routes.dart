@@ -9,6 +9,9 @@ class AppRoutes {
   /// Local offline sign-in (required when no restored session).
   static const String login = '/login';
 
+  /// Forced local password change after signing in with the seed password.
+  static const String changePassword = '/change-password';
+
   /// First-launch welcome / product tour (before System Setup).
   static const String onboarding = '/onboarding';
 

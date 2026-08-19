@@ -25,7 +25,10 @@ class CrashReportingConfig {
       defaultValue: false,
     );
     const dsn = String.fromEnvironment('SENTRY_DSN', defaultValue: '');
-    const environment = String.fromEnvironment('SENTRY_ENVIRONMENT', defaultValue: '');
+    const environment = String.fromEnvironment(
+      'SENTRY_ENVIRONMENT',
+      defaultValue: '',
+    );
     return CrashReportingConfig.resolve(
       enabledFlag: enabledFlag,
       dsn: dsn,
@@ -65,7 +68,6 @@ class CrashReportingConfig {
     options.tracesSampleRate = tracesSampleRate;
     options.sendDefaultPii = false;
     options.attachScreenshot = false;
-    options.attachViewHierarchy = false;
     options.debug = kDebugMode;
   }
 }

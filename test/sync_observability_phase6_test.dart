@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 import 'package:stock_count/core/connectivity/connectivity_service.dart';
+import 'package:stock_count/core/errors/app_failure.dart';
 import 'package:stock_count/core/network/authenticated_http_client.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
 import 'package:stock_count/core/network/sync_api_config.dart';
@@ -20,6 +21,13 @@ import 'package:stock_count/core/sync/sync_os_wake_signal.dart';
 import 'package:stock_count/core/sync/sync_queue.dart';
 import 'package:stock_count/core/sync/sync_request_context.dart';
 import 'package:stock_count/core/database/hive_boxes.dart';
+
+class _HandshakeFailClient extends http.BaseClient {
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    throw HandshakeException('unable to get local issuer certificate');
+  }
+}
 
 class _MemoryTokenStore implements TokenStore {
   String? access = 'tok';
@@ -110,6 +118,28 @@ void main() {
     client.dispose();
   });
 
+  test('AuthenticatedHttpClient maps TLS handshake errors to NetworkFailure',
+      () async {
+    final client = AuthenticatedHttpClient(
+      config: const SyncApiConfig(
+        enabled: true,
+        baseUrl: 'https://example.test',
+        apiToken: 't',
+        companyId: '00000000-0000-4000-8000-000000000001',
+        userId: '00000000-0000-4000-8000-000000000002',
+        deviceId: '00000000-0000-4000-8000-0000000000aa',
+      ),
+      tokenStore: _MemoryTokenStore(),
+      client: _HandshakeFailClient(),
+    );
+
+    expect(
+      () => client.postPublic('/api/v1/auth/login', body: const {}),
+      throwsA(isA<NetworkFailure>()),
+    );
+    client.dispose();
+  });
+
   test('SyncManager records metrics with correlation and duration', () async {
     final syncBox = await Hive.openBox<SyncOperation>('sync_queue_p6');
     final metricsBox = await Hive.openBox('sync_metrics_p6');
@@ -126,7 +156,7 @@ void main() {
     final manager = SyncManager(
       queue: queue,
       connectivity: connectivity,
-      remote: InMemoryRemoteSyncApi(),
+      remoteProvider: () => InMemoryRemoteSyncApi(),
       metricsStore: metrics,
     );
     await manager.start(enabled: true);

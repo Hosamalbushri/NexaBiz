@@ -13,6 +13,7 @@ class AuthSessionSnapshot {
     this.currentCompanyId,
     this.deviceId,
     this.sessionId,
+    this.mustChangePassword = false,
   });
 
   final AuthUser user;
@@ -23,6 +24,9 @@ class AuthSessionSnapshot {
   final String? currentCompanyId;
   final String? deviceId;
   final String? sessionId;
+
+  /// Local seeded admin still using the bootstrap password.
+  final bool mustChangePassword;
 
   bool get hasCompany =>
       currentCompanyId != null && currentCompanyId!.isNotEmpty;
@@ -51,6 +55,7 @@ class AuthSessionSnapshot {
     bool clearCompany = false,
     String? deviceId,
     String? sessionId,
+    bool? mustChangePassword,
   }) {
     return AuthSessionSnapshot(
       user: user ?? this.user,
@@ -63,6 +68,7 @@ class AuthSessionSnapshot {
           : (currentCompanyId ?? this.currentCompanyId),
       deviceId: deviceId ?? this.deviceId,
       sessionId: sessionId ?? this.sessionId,
+      mustChangePassword: mustChangePassword ?? this.mustChangePassword,
     );
   }
 
@@ -75,6 +81,7 @@ class AuthSessionSnapshot {
     'currentCompanyId': currentCompanyId,
     'deviceId': deviceId,
     'sessionId': sessionId,
+    'mustChangePassword': mustChangePassword,
   };
 
   factory AuthSessionSnapshot.fromJson(Map<String, dynamic> json) {
@@ -104,6 +111,7 @@ class AuthSessionSnapshot {
       currentCompanyId: json['currentCompanyId'] as String?,
       deviceId: json['deviceId'] as String?,
       sessionId: json['sessionId'] as String?,
+      mustChangePassword: json['mustChangePassword'] == true,
     );
   }
 }

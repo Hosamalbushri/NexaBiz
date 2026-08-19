@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:drift_flutter/drift_flutter.dart';
+import 'package:stock_count/core/database/encrypted_drift_connection.dart';
 
 import 'tables/sale_items_table.dart';
 import 'tables/sale_payments_table.dart';
@@ -10,8 +10,8 @@ part 'sales_database.g.dart';
 
 @DriftDatabase(tables: [Sales, SaleItems, SalePayments])
 class SalesDatabase extends _$SalesDatabase {
-  SalesDatabase([QueryExecutor? executor])
-    : super(executor ?? _openConnection());
+  SalesDatabase({String? name, QueryExecutor? executor})
+    : super(executor ?? _openConnection(name ?? 'sales_master'));
 
   /// In-memory database for tests.
   SalesDatabase.memory() : super(NativeDatabase.memory());
@@ -100,7 +100,7 @@ class SalesDatabase extends _$SalesDatabase {
     );
   }
 
-  static QueryExecutor _openConnection() {
-    return driftDatabase(name: 'sales_master');
+  static QueryExecutor _openConnection(String name) {
+    return encryptedDriftDatabase(name: name);
   }
 }

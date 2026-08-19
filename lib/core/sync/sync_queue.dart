@@ -10,9 +10,17 @@ import 'sync_status.dart';
 
 /// Persistent synchronization queue (survives process restarts).
 class SyncQueue {
-  SyncQueue({Box<SyncOperation>? box}) : _boxOverride = box;
+  SyncQueue({
+    Box<SyncOperation>? box,
+    String? encryptedBoxName,
+    String? legacyPlainBoxName,
+  }) : _boxOverride = box,
+       _encryptedBoxName = encryptedBoxName ?? HiveBoxes.syncQueueEncrypted,
+       _legacyPlainBoxName = legacyPlainBoxName ?? HiveBoxes.syncQueue;
 
   final Box<SyncOperation>? _boxOverride;
+  final String _encryptedBoxName;
+  final String _legacyPlainBoxName;
   Box<SyncOperation>? _box;
   final _changes = StreamController<void>.broadcast();
 
@@ -33,12 +41,12 @@ class SyncQueue {
       return _box!;
     }
     await registerAdapter();
-    if (Hive.isBoxOpen(HiveBoxes.syncQueueEncrypted)) {
-      _box = Hive.box<SyncOperation>(HiveBoxes.syncQueueEncrypted);
+    if (Hive.isBoxOpen(_encryptedBoxName)) {
+      _box = Hive.box<SyncOperation>(_encryptedBoxName);
     } else {
       _box = await EncryptedHive.openMigrated<SyncOperation>(
-        encryptedBoxName: HiveBoxes.syncQueueEncrypted,
-        legacyPlainBoxName: HiveBoxes.syncQueue,
+        encryptedBoxName: _encryptedBoxName,
+        legacyPlainBoxName: _legacyPlainBoxName,
       );
     }
     return _box!;

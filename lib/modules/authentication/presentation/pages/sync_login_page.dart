@@ -147,11 +147,14 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
       var deviceId = config.deviceId.trim();
       if (!_uuidPattern.hasMatch(deviceId)) {
         deviceId = generateUuidV4();
-        ref.read(syncApiConfigProvider.notifier).state =
-            config.copyWith(deviceId: deviceId);
+        ref.read(syncApiConfigProvider.notifier).state = config.copyWith(
+          deviceId: deviceId,
+        );
       }
 
-      await ref.read(authStateProvider.notifier).loginForSync(
+      await ref
+          .read(authStateProvider.notifier)
+          .loginForSync(
             email: email,
             password: password,
             companyId: null,
@@ -161,7 +164,8 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
           );
 
       final auth = ref.read(authStateProvider);
-      final canSync = auth.session?.user.isSuperAdmin == true ||
+      final canSync =
+          auth.session?.user.isSuperAdmin == true ||
           auth.hasAnyPermission(const ['sync.execute', 'sync.view']);
       if (!canSync) {
         await ref.read(authStateProvider.notifier).logoutRemote();
@@ -219,9 +223,7 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final renewing = ref.watch(syncEnabledProvider);
-    final hint = renewing
-        ? l10n.syncSessionExpired
-        : l10n.syncAuthRequiredHint;
+    final hint = renewing ? l10n.syncSessionExpired : l10n.syncAuthRequiredHint;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
@@ -248,9 +250,7 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
                           tooltip: MaterialLocalizations.of(
                             context,
                           ).backButtonTooltip,
-                          onPressed: _loading
-                              ? null
-                              : () => context.pop(false),
+                          onPressed: _loading ? null : () => context.pop(false),
                           icon: const Icon(Icons.arrow_back_rounded),
                         ),
                         const Spacer(),
@@ -304,198 +304,191 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
                             AppSpacing.xl,
                           ),
                           child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                _BrandBlock(
-                                  appName: l10n.appTitle,
-                                  title: l10n.authLoginTitle,
-                                  subtitle: l10n.authLoginSubtitle,
-                                  hint: hint,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _BrandBlock(
+                                appName: l10n.appTitle,
+                                title: l10n.authLoginTitle,
+                                subtitle: l10n.authLoginSubtitle,
+                                hint: hint,
+                              ),
+                              const SizedBox(height: AppSpacing.xl),
+                              if (_biometricReady) ...[
+                                SizedBox(
+                                      height: 52,
+                                      child: FilledButton.tonalIcon(
+                                        onPressed: _loading
+                                            ? null
+                                            : _signInWithBiometrics,
+                                        icon: const Icon(
+                                          Icons.fingerprint_rounded,
+                                          size: 26,
+                                        ),
+                                        label: Text(l10n.authBiometricSignIn),
+                                        style: FilledButton.styleFrom(
+                                          textStyle: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                        ),
+                                      ),
+                                    )
+                                    .animate()
+                                    .fadeIn(duration: 320.ms)
+                                    .scale(
+                                      begin: const Offset(0.96, 0.96),
+                                      end: const Offset(1, 1),
+                                      duration: 320.ms,
+                                    ),
+                                const SizedBox(height: AppSpacing.md),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Divider(
+                                        color: scheme.outlineVariant.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: AppSpacing.sm,
+                                      ),
+                                      child: Text(
+                                        l10n.authPasswordLabel,
+                                        style: theme.textTheme.labelMedium
+                                            ?.copyWith(
+                                              color: scheme.onSurfaceVariant,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Divider(
+                                        color: scheme.outlineVariant.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: AppSpacing.xl),
-                                if (_biometricReady) ...[
-                                  SizedBox(
-                                    height: 52,
-                                    child: FilledButton.tonalIcon(
+                                const SizedBox(height: AppSpacing.md),
+                              ],
+                              _LoginField(
+                                    controller: _email,
+                                    focusNode: _emailFocus,
+                                    enabled: !_loading,
+                                    label: l10n.authEmailLabel,
+                                    icon: Icons.mail_outline_rounded,
+                                    keyboardType: TextInputType.emailAddress,
+                                    autofillHints: const [
+                                      AutofillHints.username,
+                                      AutofillHints.email,
+                                    ],
+                                    textInputAction: TextInputAction.next,
+                                    onSubmitted: (_) =>
+                                        _passwordFocus.requestFocus(),
+                                  )
+                                  .animate()
+                                  .fadeIn(delay: 120.ms, duration: 360.ms)
+                                  .moveY(
+                                    begin: 10,
+                                    end: 0,
+                                    delay: 120.ms,
+                                    duration: 360.ms,
+                                    curve: Curves.easeOutCubic,
+                                  ),
+                              const SizedBox(height: AppSpacing.md),
+                              _LoginField(
+                                    controller: _password,
+                                    focusNode: _passwordFocus,
+                                    enabled: !_loading,
+                                    label: l10n.authPasswordLabel,
+                                    icon: Icons.lock_outline_rounded,
+                                    obscureText: _obscure,
+                                    autofillHints: const [
+                                      AutofillHints.password,
+                                    ],
+                                    textInputAction: TextInputAction.done,
+                                    onSubmitted: (_) {
+                                      if (!_loading) _submit();
+                                    },
+                                    suffix: IconButton(
                                       onPressed: _loading
                                           ? null
-                                          : _signInWithBiometrics,
-                                      icon: const Icon(
-                                        Icons.fingerprint_rounded,
-                                        size: 26,
-                                      ),
-                                      label: Text(l10n.authBiometricSignIn),
-                                      style: FilledButton.styleFrom(
-                                        textStyle: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                        ),
+                                          : () => setState(
+                                              () => _obscure = !_obscure,
+                                            ),
+                                      icon: Icon(
+                                        _obscure
+                                            ? Icons.visibility_outlined
+                                            : Icons.visibility_off_outlined,
                                       ),
                                     ),
                                   )
-                                      .animate()
-                                      .fadeIn(duration: 320.ms)
-                                      .scale(
-                                        begin: const Offset(0.96, 0.96),
-                                        end: const Offset(1, 1),
-                                        duration: 320.ms,
-                                      ),
-                                  const SizedBox(height: AppSpacing.md),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Divider(
-                                          color: scheme.outlineVariant
-                                              .withValues(alpha: 0.5),
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: AppSpacing.sm,
-                                        ),
-                                        child: Text(
-                                          l10n.authPasswordLabel,
-                                          style: theme.textTheme.labelMedium
-                                              ?.copyWith(
-                                            color: scheme.onSurfaceVariant,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Divider(
-                                          color: scheme.outlineVariant
-                                              .withValues(alpha: 0.5),
-                                        ),
-                                      ),
-                                    ],
+                                  .animate()
+                                  .fadeIn(delay: 180.ms, duration: 360.ms)
+                                  .moveY(
+                                    begin: 10,
+                                    end: 0,
+                                    delay: 180.ms,
+                                    duration: 360.ms,
+                                    curve: Curves.easeOutCubic,
                                   ),
-                                  const SizedBox(height: AppSpacing.md),
-                                ],
-                                _LoginField(
-                                  controller: _email,
-                                  focusNode: _emailFocus,
-                                  enabled: !_loading,
-                                  label: l10n.authEmailLabel,
-                                  icon: Icons.mail_outline_rounded,
-                                  keyboardType: TextInputType.emailAddress,
-                                  autofillHints: const [
-                                    AutofillHints.username,
-                                    AutofillHints.email,
-                                  ],
-                                  textInputAction: TextInputAction.next,
-                                  onSubmitted: (_) =>
-                                      _passwordFocus.requestFocus(),
-                                )
-                                    .animate()
-                                    .fadeIn(
-                                      delay: 120.ms,
-                                      duration: 360.ms,
-                                    )
-                                    .moveY(
-                                      begin: 10,
-                                      end: 0,
-                                      delay: 120.ms,
-                                      duration: 360.ms,
-                                      curve: Curves.easeOutCubic,
-                                    ),
-                                const SizedBox(height: AppSpacing.md),
-                                _LoginField(
-                                  controller: _password,
-                                  focusNode: _passwordFocus,
-                                  enabled: !_loading,
-                                  label: l10n.authPasswordLabel,
-                                  icon: Icons.lock_outline_rounded,
-                                  obscureText: _obscure,
-                                  autofillHints: const [
-                                    AutofillHints.password,
-                                  ],
-                                  textInputAction: TextInputAction.done,
-                                  onSubmitted: (_) {
-                                    if (!_loading) _submit();
-                                  },
-                                  suffix: IconButton(
-                                    onPressed: _loading
-                                        ? null
-                                        : () => setState(
-                                              () => _obscure = !_obscure,
-                                            ),
-                                    icon: Icon(
-                                      _obscure
-                                          ? Icons.visibility_outlined
-                                          : Icons.visibility_off_outlined,
+                              if (_biometricAvailable) ...[
+                                const SizedBox(height: AppSpacing.sm),
+                                SwitchListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  secondary: Icon(
+                                    Icons.fingerprint_rounded,
+                                    color: scheme.primary,
+                                  ),
+                                  title: Text(
+                                    l10n.authBiometricSaveForNext,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                )
-                                    .animate()
-                                    .fadeIn(
-                                      delay: 180.ms,
-                                      duration: 360.ms,
-                                    )
-                                    .moveY(
-                                      begin: 10,
-                                      end: 0,
-                                      delay: 180.ms,
-                                      duration: 360.ms,
-                                      curve: Curves.easeOutCubic,
-                                    ),
-                                if (_biometricAvailable) ...[
-                                  const SizedBox(height: AppSpacing.sm),
-                                  SwitchListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    secondary: Icon(
-                                      Icons.fingerprint_rounded,
-                                      color: scheme.primary,
-                                    ),
-                                    title: Text(
-                                      l10n.authBiometricSaveForNext,
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    value: _saveForBiometric,
-                                    onChanged: _loading
-                                        ? null
-                                        : (v) => setState(
-                                              () => _saveForBiometric = v,
-                                            ),
-                                  ),
-                                ],
-                                if (_error != null) ...[
-                                  const SizedBox(height: AppSpacing.md),
-                                  _ErrorBanner(message: _error!),
-                                ],
-                                const SizedBox(height: AppSpacing.lg),
-                                SizedBox(
-                                  height: 52,
-                                  child: AppButton(
-                                    onPressed:
-                                        _loading ? null : () => _submit(),
-                                    label: _loading
-                                        ? l10n.authSigningIn
-                                        : l10n.authSignIn,
-                                    icon: _loading
-                                        ? null
-                                        : Icons.login_rounded,
-                                    isLoading: _loading,
-                                    expand: true,
-                                  ),
-                                )
-                                    .animate()
-                                    .fadeIn(
-                                      delay: 240.ms,
-                                      duration: 360.ms,
-                                    )
-                                    .moveY(
-                                      begin: 8,
-                                      end: 0,
-                                      delay: 240.ms,
-                                      duration: 360.ms,
-                                      curve: Curves.easeOutCubic,
-                                    ),
+                                  value: _saveForBiometric,
+                                  onChanged: _loading
+                                      ? null
+                                      : (v) => setState(
+                                          () => _saveForBiometric = v,
+                                        ),
+                                ),
                               ],
-                            ),
+                              if (_error != null) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                _ErrorBanner(message: _error!),
+                              ],
+                              const SizedBox(height: AppSpacing.lg),
+                              SizedBox(
+                                    height: 52,
+                                    child: AppButton(
+                                      onPressed: _loading
+                                          ? null
+                                          : () => _submit(),
+                                      label: _loading
+                                          ? l10n.authSigningIn
+                                          : l10n.authSignIn,
+                                      icon: _loading
+                                          ? null
+                                          : Icons.login_rounded,
+                                      isLoading: _loading,
+                                      expand: true,
+                                    ),
+                                  )
+                                  .animate()
+                                  .fadeIn(delay: 240.ms, duration: 360.ms)
+                                  .moveY(
+                                    begin: 8,
+                                    end: 0,
+                                    delay: 240.ms,
+                                    duration: 360.ms,
+                                    curve: Curves.easeOutCubic,
+                                  ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -578,9 +571,7 @@ class _GlowOrb extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [color, color.withValues(alpha: 0)],
-        ),
+        gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
       ),
     );
   }
@@ -660,38 +651,32 @@ class _BrandBlock extends StatelessWidget {
             ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-              title,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: scheme.primary,
-                letterSpacing: -0.2,
-              ),
-            )
-            .animate()
-            .fadeIn(delay: 100.ms, duration: 380.ms),
+          title,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: scheme.primary,
+            letterSpacing: -0.2,
+          ),
+        ).animate().fadeIn(delay: 100.ms, duration: 380.ms),
         const SizedBox(height: AppSpacing.sm),
         Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-                height: 1.4,
-              ),
-            )
-            .animate()
-            .fadeIn(delay: 140.ms, duration: 380.ms),
+          subtitle,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
+            height: 1.4,
+          ),
+        ).animate().fadeIn(delay: 140.ms, duration: 380.ms),
         const SizedBox(height: AppSpacing.md),
         Text(
-              hint,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
-                height: 1.35,
-              ),
-            )
-            .animate()
-            .fadeIn(delay: 160.ms, duration: 360.ms),
+          hint,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
+            height: 1.35,
+          ),
+        ).animate().fadeIn(delay: 160.ms, duration: 360.ms),
       ],
     );
   }
@@ -738,9 +723,9 @@ class _LoginField extends StatelessWidget {
       textInputAction: textInputAction,
       onSubmitted: onSubmitted,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0,
-          ),
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0,
+      ),
       decoration: InputDecoration(
         labelText: label,
         filled: true,
@@ -787,9 +772,7 @@ class _ErrorBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.errorContainer.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(
-          color: scheme.error.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: scheme.error.withValues(alpha: 0.25)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

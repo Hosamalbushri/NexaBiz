@@ -201,7 +201,7 @@ void main() {
     manager = SyncManager(
       queue: queue,
       connectivity: connectivity,
-      remote: remote,
+      remoteProvider: () => remote,
       clock: () => now,
     );
     manager!.registerHandler(handler);
@@ -243,7 +243,7 @@ void main() {
     manager = SyncManager(
       queue: queue,
       connectivity: connectivity,
-      remote: remote,
+      remoteProvider: () => remote,
       clock: () => now,
     );
     manager!.registerHandler(handler);

@@ -16,9 +16,9 @@ dependencies:
   go_router: ^16.0.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  drift: ^2.28.1
-  drift_flutter: ^0.2.4
-  sqlite3_flutter_libs: ^0.5.39
+  drift: ^2.34.2
+  drift_flutter: ^0.3.1
+  sqlite3: ^3.1.0
   path: ^1.9.1
   excel: ^4.0.6
   file_picker: ^10.3.10
@@ -45,14 +45,19 @@ dependencies:
   local_auth: ^3.0.2
   local_auth_android: ^2.0.9
   local_auth_darwin: ^2.0.3
+  sentry_flutter: ^9.10.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
-  drift_dev: ^2.28.1
+  drift_dev: ^2.34.2
   build_runner: ^2.4.15
-  sqlite3: ^2.9.4
+
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlite3mc
 
 flutter_launcher_icons:
   android: true
@@ -70,6 +75,7 @@ flutter:
   uses-material-design: true
   generate: true
   assets:
+    - assets/certs/ssl_com_tls_rsa_root_ca_2022.pem
     - assets/branding/nexabiz_app_icon.png
     - assets/animations/loading.json
     - assets/animations/barcode_scan.json

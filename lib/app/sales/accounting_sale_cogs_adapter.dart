@@ -8,6 +8,7 @@ import '../../modules/accounting/domain/services/journal_posting_service.dart';
 import '../../modules/inventory/domain/models/stock_quantity_line.dart';
 import '../../modules/inventory/domain/services/product_stock_service.dart';
 import '../../modules/sales/domain/entities/sale.dart';
+import '../../modules/sales/domain/entities/sale_status.dart';
 import 'perpetual_sale_inventory_effect_adapter.dart';
 
 /// App adapter: sale post → COGS journal (Dr 5100 / Cr inventory asset).
@@ -30,6 +31,7 @@ class AccountingSaleCogsAdapter implements SaleCogsEffectPort {
   static const cogsCode = '5100';
   static const cogsSystemKey = 'cost_of_goods_sold';
 
+  @override
   Future<void> syncSale(Sale sale) async {
     final lines = _stockLines(sale);
     if (lines.isEmpty) {
@@ -97,6 +99,7 @@ class AccountingSaleCogsAdapter implements SaleCogsEffectPort {
     );
   }
 
+  @override
   Future<void> voidSale(Sale sale) async {
     await _posting.voidBySource(
       sourceType: sourceType,

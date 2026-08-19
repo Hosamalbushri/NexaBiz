@@ -5245,7 +5245,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authLoginLocalHint =>
-      'Sign in with your local offline account. Change the default admin password after first login.';
+      'Sign in with your local offline account. You must change the default admin password before using the app.';
 
   @override
   String get authEmailLabel => 'Email';
@@ -5258,6 +5258,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authSigningIn => 'Signing in…';
+
+  @override
+  String get authChangePasswordTitle => 'Change password';
+
+  @override
+  String get authChangePasswordHint =>
+      'The default admin password cannot be used in production. Choose a new password of at least 8 characters.';
+
+  @override
+  String get authCurrentPasswordLabel => 'Current password';
+
+  @override
+  String get authNewPasswordLabel => 'New password';
+
+  @override
+  String get authConfirmPasswordLabel => 'Confirm new password';
+
+  @override
+  String get authChangePasswordAction => 'Save password';
+
+  @override
+  String get authChangingPassword => 'Saving…';
+
+  @override
+  String get authPasswordMismatch => 'Passwords do not match.';
+
+  @override
+  String get authPasswordWrongCurrent => 'Current password is incorrect.';
+
+  @override
+  String get authPasswordSameAsDefault =>
+      'Choose a password other than the default bootstrap password.';
 
   @override
   String get authBiometricSignIn => 'Sign in with fingerprint';

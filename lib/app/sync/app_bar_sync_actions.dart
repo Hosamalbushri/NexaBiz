@@ -78,7 +78,7 @@ class AppBarSyncActions extends ConsumerWidget {
                 : colorScheme.primary,
             onPressed: overview.isSyncing
                 ? null
-                : () => _onSyncTap(context, ref, overview.isOnline),
+                : () => _onSyncTap(context, ref),
           ),
         ],
       ],
@@ -88,7 +88,6 @@ class AppBarSyncActions extends ConsumerWidget {
   Future<void> _onSyncTap(
     BuildContext context,
     WidgetRef ref,
-    bool isOnline,
   ) async {
     final l10n = AppLocalizations.of(context);
     if (!ref.read(syncEnabledProvider)) {
@@ -109,15 +108,6 @@ class AppBarSyncActions extends ConsumerWidget {
       await context.push(AppRoutes.settingsDataSyncLogin);
       return;
     }
-    if (!isOnline) {
-      showAppSnackBar(
-        context,
-        message: l10n.syncOfflineMessage,
-        isSuccess: false,
-      );
-      return;
-    }
-
     // Background pass — UI stays interactive; indicator shows progress.
     await ref
         .read(syncBackgroundSchedulerProvider)

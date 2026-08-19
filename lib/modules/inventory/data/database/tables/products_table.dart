@@ -18,6 +18,12 @@ class Products extends Table {
 
   RealColumn get price => real()();
 
+  /// Perpetual inventory: sellable quantity on hand (main-unit equivalents).
+  RealColumn get onHandQty => real().withDefault(const Constant(0))();
+
+  /// Unit cost for COGS (company base currency per main unit).
+  RealColumn get unitCost => real().withDefault(const Constant(0))();
+
   IntColumn get createdAt => integer()();
 
   IntColumn get updatedAt => integer()();

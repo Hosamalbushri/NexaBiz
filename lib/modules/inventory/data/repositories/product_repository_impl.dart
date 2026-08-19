@@ -29,6 +29,8 @@ class ProductRepositoryImpl implements ProductRepository {
       barcode: row.barcode,
       packSize: row.packSize,
       price: row.price,
+      onHandQty: row.onHandQty,
+      unitCost: row.unitCost,
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         row.createdAt,
         isUtc: true,
@@ -126,6 +128,8 @@ class ProductRepositoryImpl implements ProductRepository {
           'barcode': product.barcode,
           'packSize': product.packSize,
           'price': product.price,
+          'onHandQty': product.onHandQty,
+          'unitCost': product.unitCost,
           'version': product.version,
           'updatedAt': product.updatedAt.toUtc().millisecondsSinceEpoch,
           'deletedAt': product.deletedAt?.toUtc().millisecondsSinceEpoch,
@@ -387,6 +391,7 @@ class ProductRepositoryImpl implements ProductRepository {
             barcode: Value(barcode),
             packSize: draft.packSize,
             price: draft.price,
+            unitCost: Value(draft.unitCost),
             createdAt: nowMs,
             updatedAt: nowMs,
             syncStatus: const Value('pending'),
@@ -423,6 +428,7 @@ class ProductRepositoryImpl implements ProductRepository {
         barcode: Value(barcode),
         packSize: Value(draft.packSize),
         price: Value(draft.price),
+        unitCost: Value(draft.unitCost),
         updatedAt: Value(now.millisecondsSinceEpoch),
         syncStatus: const Value('pending'),
         version: Value(nextVersion),
@@ -505,6 +511,11 @@ class ProductRepositoryImpl implements ProductRepository {
       return;
     }
 
+    // Stale remote: incoming version <= local version → skip (idempotent pull).
+    if (existing != null && version <= existing.version) {
+      return;
+    }
+
     if (existing == null) {
       if (deletedAtMs != null) {
         return;
@@ -519,6 +530,8 @@ class ProductRepositoryImpl implements ProductRepository {
               barcode: Value(payload['barcode']?.toString()),
               packSize: (payload['packSize'] as num?)?.toInt() ?? 1,
               price: (payload['price'] as num?)?.toDouble() ?? 0,
+              onHandQty: Value((payload['onHandQty'] as num?)?.toDouble() ?? 0),
+              unitCost: Value((payload['unitCost'] as num?)?.toDouble() ?? 0),
               createdAt: (payload['createdAt'] as num?)?.toInt() ?? updatedAt,
               updatedAt: updatedAt,
               syncStatus: const Value('synced'),
@@ -538,6 +551,12 @@ class ProductRepositoryImpl implements ProductRepository {
           (payload['packSize'] as num?)?.toInt() ?? existing.packSize,
         ),
         price: Value((payload['price'] as num?)?.toDouble() ?? existing.price),
+        onHandQty: Value(
+          (payload['onHandQty'] as num?)?.toDouble() ?? existing.onHandQty,
+        ),
+        unitCost: Value(
+          (payload['unitCost'] as num?)?.toDouble() ?? existing.unitCost,
+        ),
         updatedAt: Value(updatedAt),
         syncStatus: const Value('synced'),
         lastSyncedAt: Value(nowMs),
@@ -610,6 +629,7 @@ class ProductRepositoryImpl implements ProductRepository {
                     barcode: Value(barcode),
                     packSize: draft.packSize,
                     price: draft.price,
+                    unitCost: Value(draft.unitCost),
                     createdAt: nowMs,
                     updatedAt: nowMs,
                     syncStatus: const Value('pending'),
@@ -624,6 +644,7 @@ class ProductRepositoryImpl implements ProductRepository {
               barcode: barcode,
               packSize: draft.packSize,
               price: draft.price,
+              unitCost: draft.unitCost,
               createdAt: now,
               updatedAt: now,
               syncStatus: SyncStatus.pending,
@@ -651,6 +672,7 @@ class ProductRepositoryImpl implements ProductRepository {
                 barcode: Value(barcode),
                 packSize: Value(draft.packSize),
                 price: Value(draft.price),
+                unitCost: Value(draft.unitCost),
                 updatedAt: Value(nowMs),
                 syncStatus: const Value('pending'),
                 version: Value(nextVersion),
@@ -666,6 +688,7 @@ class ProductRepositoryImpl implements ProductRepository {
               clearBarcode: barcode == null,
               packSize: draft.packSize,
               price: draft.price,
+              unitCost: draft.unitCost,
               updatedAt: now,
               syncStatus: SyncStatus.pending,
               version: nextVersion,
@@ -694,5 +717,56 @@ class ProductRepositoryImpl implements ProductRepository {
     }
 
     return ProductUpsertResult(insertedCount: inserted, updatedCount: updated);
+  }
+
+  @override
+  Future<Product> adjustOnHandByUuid({
+    required String uuid,
+    required double delta,
+  }) async {
+    final id = uuid.trim();
+    if (id.isEmpty) {
+      throw const ProductException(ProductException.notFound);
+    }
+    if (delta == 0) {
+      final existing = await getByUuid(id);
+      if (existing == null) {
+        throw const ProductException(ProductException.notFound);
+      }
+      return existing;
+    }
+
+    return _db.transaction(() async {
+      final row =
+          await (_db.select(_db.products)
+                ..where((t) => t.uuid.equals(id) & _notDeleted(t)))
+              .getSingleOrNull();
+      if (row == null) {
+        throw const ProductException(ProductException.notFound);
+      }
+
+      final nextQty = row.onHandQty + delta;
+      if (nextQty < -1e-9) {
+        throw const ProductException(ProductException.insufficientStock);
+      }
+
+      final now = DateTime.now().toUtc();
+      final nextVersion = row.version + 1;
+      await (_db.update(_db.products)..where((t) => t.id.equals(row.id))).write(
+        ProductsCompanion(
+          onHandQty: Value(nextQty < 0 ? 0 : nextQty),
+          updatedAt: Value(now.millisecondsSinceEpoch),
+          syncStatus: const Value('pending'),
+          version: Value(nextVersion),
+        ),
+      );
+
+      final updated = await getById(row.id);
+      if (updated == null) {
+        throw const ProductException(ProductException.notFound);
+      }
+      await _enqueue(updated, SyncOperationType.update);
+      return updated;
+    });
   }
 }

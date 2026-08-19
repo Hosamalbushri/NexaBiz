@@ -37,6 +37,26 @@ and the **remote permission snapshot** stay in place so the user keeps the same
 UI access offline until they renew credentials. Explicitly disabling sync clears
 the remote session and restores the local full-admin snapshot.
 
+## Server IDOR / privilege-escalation guards
+
+Automated coverage lives in `backend/tests/test_auth_rbac.py`:
+
+| Scenario | Expected |
+|----------|----------|
+| Company admin `GET /users/{id}` for outsider | `404` (hide existence) |
+| Company admin `POST /companies/{other}/members` | `403` |
+| Company admin `GET /roles/{id}` for another tenant's custom role | `404` |
+| Company admin `PATCH /roles/{id}` cross-tenant | `403` or `404` |
+| Company admin creates role with `platform.*` codes | Platform codes stripped |
+| Company admin assigns `Super Admin` system role | `403` |
+| Company admin lists another company's members | `403` |
+| Sales user sync push without entity permission | `403 permission_denied` |
+| Forged `X-Company-Id` on sync pull | Ignored (session company wins) |
+
+Role/membership guards are implemented in `app/auth/admin_safety.py`
+(`require_viewable_role`, `require_manageable_role`,
+`require_assignable_role`, `filter_assignable_permission_codes`).
+
 ## Offline
 
 Flutter stores a permission snapshot for offline UI/mutation gating.

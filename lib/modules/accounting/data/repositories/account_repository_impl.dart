@@ -1000,6 +1000,11 @@ class AccountRepositoryImpl implements AccountRepository {
       return;
     }
 
+    // Stale remote: incoming version <= local version → skip (idempotent pull).
+    if (existingByUuid != null && version <= existingByUuid.version) {
+      return;
+    }
+
     final accountType =
         payload['accountType']?.toString() ?? AccountType.asset.storageValue;
     final normalBalance =

@@ -1,3 +1,5 @@
+import '../../../core/database/tenant_database_name.dart';
+
 /// Permission codes for local offline RBAC (aligned with backend catalog).
 ///
 /// Prefer service-level codes: `module.service.operation`
@@ -151,7 +153,7 @@ class LocalAuthDefaults {
   static const adminName = 'System Admin';
   static const adminUserId = '00000000-0000-4000-8000-0000000000a1';
 
-  static const companyId = '00000000-0000-4000-8000-000000000001';
+  static const companyId = kLegacyLocalCompanyId;
   static const companyName = 'Local Company';
   static const companyCode = 'LOCAL';
 

@@ -11,17 +11,20 @@ On app start:
 1. Seed local admin + company in Hive (if missing).
 2. Restore a **previously saved** local session, or show **Sign in**.
 3. There is **no silent auto-login** and credentials are **never prefilled**.
-4. After sign-in → System Setup (if incomplete) or Dashboard.
+4. After sign-in, if the local password is still the bootstrap default, the
+   app **blocks** until a new password is set (`/change-password`).
+5. Then System Setup (if incomplete) or Dashboard.
 
-First-install local credentials (change immediately after first login):
+First-install local credentials (must be changed before the app is usable):
 
 | Field | Value |
 |-------|--------|
 | Email | `admin@local` |
 | Password | `admin123` |
 
-These values exist only to bootstrap an empty local store. They must not appear
-in UI fields and must be changed before any shared or production use.
+These values exist only to bootstrap an empty local store. They are never
+prefilled in UI fields. Signing in with the default password forces a password
+change; the default value is rejected as the new password.
 
 ### Enabling synchronization
 

@@ -5,7 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-/// Append-only local error log (no third-party crash service).
+import 'crash_reporting.dart';
+
+/// Append-only local error log with optional Sentry forwarding.
 ///
 /// Writes under the app documents directory: `logs/app_errors.log`.
 /// Failures while logging are swallowed so crash handling never recurses.
@@ -44,6 +46,8 @@ class AppErrorLog {
     } catch (_) {
       // Never throw from the error logger.
     }
+
+    unawaited(CrashReporting.captureException(error, stack, source: source));
   }
 }
 

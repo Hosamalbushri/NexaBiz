@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/database/tenant_database_name.dart';
 import '../../../../core/sync/sync_providers.dart';
+import '../../../../core/tenancy/session_company.dart';
 import '../../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../data/database/accounting_database.dart';
 import '../../data/repositories/account_repository_impl.dart';
@@ -13,7 +15,12 @@ import '../../domain/services/account_validator.dart';
 import '../../domain/usecases/account_usecases.dart';
 
 final accountingDatabaseProvider = Provider<AccountingDatabase>((ref) {
-  final db = AccountingDatabase();
+  final db = AccountingDatabase(
+    name: tenantScopedName(
+      'accounting_accounts',
+      ref.watch(sessionCompanyIdProvider),
+    ),
+  );
   ref.onDispose(db.close);
   ref.keepAlive();
   return db;

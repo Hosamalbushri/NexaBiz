@@ -8,6 +8,7 @@ import '../../../../core/network/sync_api_config.dart';
 import '../../../../core/network/token_refresh_outcome.dart';
 import '../../../../core/permissions/permission_guard.dart';
 import '../../../../core/sync/sync_providers.dart';
+import '../../../../core/tenancy/session_company.dart';
 import '../../data/auth_repository_impl.dart';
 import '../../data/local_auth_repository.dart';
 import '../../data/local_auth_store.dart';
@@ -38,7 +39,9 @@ final syncLoginCredentialStoreProvider = Provider<SyncLoginCredentialStore>((
 
 /// Stable HTTP client — must NOT rebuild when [syncApiConfigProvider] changes,
 /// or login mid-flight disposes [AuthController].
-final authenticatedHttpClientProvider = Provider<AuthenticatedHttpClient>((ref) {
+final authenticatedHttpClientProvider = Provider<AuthenticatedHttpClient>((
+  ref,
+) {
   final storage = ref.watch(secureTokenStorageProvider);
   final hub = ref.watch(authCallbackHubProvider);
   final client = AuthenticatedHttpClient(
@@ -62,7 +65,16 @@ final authSyncHttpOverride = syncAuthenticatedHttpClientProvider.overrideWith(
   (ref) => ref.watch(authenticatedHttpClientProvider),
 );
 
-List<Override> authenticationOverrides() => [authSyncHttpOverride];
+final sessionCompanyIdOverride = sessionCompanyIdProvider.overrideWith((ref) {
+  return ref.watch(
+    authStateProvider.select((s) => s.session?.currentCompanyId),
+  );
+});
+
+List<Override> authenticationOverrides() => [
+  authSyncHttpOverride,
+  sessionCompanyIdOverride,
+];
 
 final localAuthStoreProvider = Provider<LocalAuthStore>((ref) {
   return LocalAuthStore();
@@ -101,18 +113,10 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return ref.watch(localAuthRepositoryProvider);
 });
 
-enum AuthStatus {
-  unknown,
-  unauthenticated,
-  needsCompany,
-  authenticated,
-}
+enum AuthStatus { unknown, unauthenticated, needsCompany, authenticated }
 
 /// Whether the current [AuthState] came from the remote JWT backend.
-enum AuthBackend {
-  local,
-  remote,
-}
+enum AuthBackend { local, remote }
 
 class AuthState {
   const AuthState({
@@ -131,6 +135,8 @@ class AuthState {
 
   bool get isAuthenticated =>
       status == AuthStatus.authenticated || status == AuthStatus.needsCompany;
+
+  bool get mustChangePassword => session?.mustChangePassword == true;
 
   bool get isRemoteSession => backend == AuthBackend.remote;
 
@@ -174,9 +180,9 @@ class AuthController extends StateNotifier<AuthState> {
   AuthController({
     required LocalAuthRepository local,
     required AuthRepositoryImpl remote,
-  })  : _local = local,
-        _remote = remote,
-        super(const AuthState.unknown());
+  }) : _local = local,
+       _remote = remote,
+       super(const AuthState.unknown());
 
   final LocalAuthRepository _local;
   final AuthRepositoryImpl _remote;
@@ -248,6 +254,23 @@ class AuthController extends StateNotifier<AuthState> {
       deviceName: deviceName,
       platform: platform,
       appVersion: appVersion,
+    );
+    _set(_stateFor(session, AuthBackend.local));
+  }
+
+  /// Local offline password change (seeded admin first-login gate).
+  Future<void> changeLocalPassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final userId = state.session?.user.id;
+    if (userId == null || userId.isEmpty) {
+      throw const AuthenticationFailure('No local session');
+    }
+    final session = await _local.changePassword(
+      userId: userId,
+      currentPassword: currentPassword,
+      newPassword: newPassword,
     );
     _set(_stateFor(session, AuthBackend.local));
   }
@@ -364,8 +387,8 @@ class AuthController extends StateNotifier<AuthState> {
             status: snapshot == null
                 ? AuthStatus.unauthenticated
                 : (snapshot.hasCompany
-                    ? AuthStatus.authenticated
-                    : AuthStatus.needsCompany),
+                      ? AuthStatus.authenticated
+                      : AuthStatus.needsCompany),
             session: snapshot,
             backend: AuthBackend.remote,
             errorMessage: 'sync_disable_approved',
@@ -438,8 +461,9 @@ class AuthController extends StateNotifier<AuthState> {
   }
 }
 
-final authStateProvider =
-    StateNotifierProvider<AuthController, AuthState>((ref) {
+final authStateProvider = StateNotifierProvider<AuthController, AuthState>((
+  ref,
+) {
   final hub = ref.read(authCallbackHubProvider);
   final controller = AuthController(
     local: ref.watch(localAuthRepositoryProvider),

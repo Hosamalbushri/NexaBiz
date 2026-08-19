@@ -1,23 +1,46 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// High-level connectivity for sync (online vs offline).
 enum ConnectivityStatus { offline, online }
 
-/// Reusable connectivity service — event-driven, no server polling.
+typedef InternetProbe = Future<bool> Function();
+
+/// DNS probe used when Android reports [ConnectivityResult.none] incorrectly
+/// (common when `getActiveNetwork()` is null but Wi‑Fi still works).
+Future<bool> dnsInternetProbe(String host) async {
+  final trimmed = host.trim();
+  if (trimmed.isEmpty) {
+    return false;
+  }
+  try {
+    final result = await InternetAddress.lookup(trimmed).timeout(
+      const Duration(seconds: 3),
+    );
+    return result.any((address) => address.rawAddress.isNotEmpty);
+  } catch (_) {
+    return false;
+  }
+}
+
+/// Reusable connectivity service — event-driven, with a fallback probe.
 class ConnectivityService {
   ConnectivityService({
     Connectivity? connectivity,
     Stream<List<ConnectivityResult>>? connectivityStream,
     List<ConnectivityResult>? initialResults,
+    InternetProbe? internetProbe,
   }) : _connectivity = connectivity ?? Connectivity(),
        _streamOverride = connectivityStream,
-       _initialOverride = initialResults;
+       _initialOverride = initialResults,
+       _internetProbe = internetProbe;
 
   final Connectivity _connectivity;
   final Stream<List<ConnectivityResult>>? _streamOverride;
   final List<ConnectivityResult>? _initialOverride;
+  final InternetProbe? _internetProbe;
 
   final _controller = StreamController<ConnectivityStatus>.broadcast();
   StreamSubscription<List<ConnectivityResult>>? _subscription;
@@ -30,6 +53,11 @@ class ConnectivityService {
 
   Stream<ConnectivityStatus> get onStatusChanged => _controller.stream;
 
+  bool get _canProbe =>
+      _internetProbe != null &&
+      _streamOverride == null &&
+      _initialOverride == null;
+
   Future<void> start() async {
     if (_started) {
       return;
@@ -37,11 +65,11 @@ class ConnectivityService {
     _started = true;
 
     final initial = _initialOverride ?? await _connectivity.checkConnectivity();
-    _emit(_map(initial));
+    await _applyResults(initial);
 
     final stream = _streamOverride ?? _connectivity.onConnectivityChanged;
     _subscription = stream.listen((results) {
-      _emit(_map(results));
+      unawaited(_applyResults(results));
     });
   }
 
@@ -50,25 +78,24 @@ class ConnectivityService {
     _emit(status);
   }
 
-  ConnectivityStatus _map(List<ConnectivityResult> results) {
-    if (results.isEmpty) {
-      return ConnectivityStatus.offline;
+  Future<void> _applyResults(List<ConnectivityResult> results) async {
+    var status = mapResults(results);
+    if (status == ConnectivityStatus.offline && _canProbe) {
+      if (await _internetProbe!()) {
+        status = ConnectivityStatus.online;
+      }
     }
-    final online = results.any(
-      (r) =>
-          r == ConnectivityResult.wifi ||
-          r == ConnectivityResult.mobile ||
-          r == ConnectivityResult.ethernet ||
-          r == ConnectivityResult.vpn ||
-          r == ConnectivityResult.other,
-    );
-    return online ? ConnectivityStatus.online : ConnectivityStatus.offline;
+    _emit(status);
+  }
+
+  /// Visible for tests. Any transport except a lone `none` counts as online.
+  static ConnectivityStatus mapResults(List<ConnectivityResult> results) {
+    return results.hasConnectivity
+        ? ConnectivityStatus.online
+        : ConnectivityStatus.offline;
   }
 
   void _emit(ConnectivityStatus status) {
-    if (_status == status && _controller.hasListener) {
-      // Still publish first value after start even if unchanged for new listeners.
-    }
     final changed = _status != status;
     _status = status;
     if (changed || !_controller.isClosed) {

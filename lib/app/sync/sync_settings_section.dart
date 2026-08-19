@@ -490,7 +490,7 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
             isLoading: overview.isSyncing,
             onPressed: overview.isSyncing
                 ? null
-                : () => _onCheckIncoming(context, ref, overview.isOnline),
+                : () => _onCheckIncoming(context, ref),
           ),
         ),
         Padding(
@@ -508,7 +508,7 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
             isLoading: overview.isSyncing,
             onPressed: overview.isSyncing
                 ? null
-                : () => _onSyncNow(context, ref, overview.isOnline),
+                : () => _onSyncNow(context, ref),
           ),
         ),
       ],
@@ -530,10 +530,8 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
   Future<void> _onSyncNow(
     BuildContext context,
     WidgetRef ref,
-    bool isOnline,
   ) async {
-    final l10n = AppLocalizations.of(context);
-    if (!await _ensureCanSync(context, ref, isOnline)) {
+    if (!await _ensureCanSync(context, ref)) {
       return;
     }
 
@@ -544,10 +542,9 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
   Future<void> _onCheckIncoming(
     BuildContext context,
     WidgetRef ref,
-    bool isOnline,
   ) async {
     final l10n = AppLocalizations.of(context);
-    if (!await _ensureCanSync(context, ref, isOnline)) {
+    if (!await _ensureCanSync(context, ref)) {
       return;
     }
 
@@ -599,7 +596,6 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
   Future<bool> _ensureCanSync(
     BuildContext context,
     WidgetRef ref,
-    bool isOnline,
   ) async {
     final l10n = AppLocalizations.of(context);
     if (!ref.read(syncEnabledProvider)) {
@@ -620,14 +616,8 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
       await context.push(AppRoutes.settingsDataSyncLogin);
       return false;
     }
-    if (!isOnline) {
-      showAppSnackBar(
-        context,
-        message: l10n.syncOfflineMessage,
-        isSuccess: false,
-      );
-      return false;
-    }
+    // Do not block on connectivity_plus — it frequently reports none while
+    // Wi‑Fi works. Let the request fail with a real network/TLS error instead.
     return true;
   }
 }

@@ -9,6 +9,8 @@ class Product {
     required this.name,
     required this.packSize,
     required this.price,
+    this.unitCost = 0,
+    this.onHandQty = 0,
     required this.createdAt,
     required this.updatedAt,
     this.barcode,
@@ -25,6 +27,8 @@ class Product {
   final String? barcode;
   final int packSize;
   final double price;
+  final double onHandQty;
+  final double unitCost;
   final DateTime createdAt;
   final DateTime updatedAt;
   final SyncStatus syncStatus;
@@ -43,6 +47,8 @@ class Product {
     bool clearBarcode = false,
     int? packSize,
     double? price,
+    double? onHandQty,
+    double? unitCost,
     DateTime? createdAt,
     DateTime? updatedAt,
     SyncStatus? syncStatus,
@@ -60,6 +66,8 @@ class Product {
       barcode: clearBarcode ? null : (barcode ?? this.barcode),
       packSize: packSize ?? this.packSize,
       price: price ?? this.price,
+      onHandQty: onHandQty ?? this.onHandQty,
+      unitCost: unitCost ?? this.unitCost,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,
@@ -79,6 +87,7 @@ class ProductDraft {
     required this.name,
     required this.packSize,
     required this.price,
+    this.unitCost = 0,
     this.barcode,
   });
 
@@ -87,4 +96,5 @@ class ProductDraft {
   final String? barcode;
   final int packSize;
   final double price;
+  final double unitCost;
 }

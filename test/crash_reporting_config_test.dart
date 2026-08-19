@@ -4,18 +4,12 @@ import 'package:stock_count/core/logging/crash_reporting_config.dart';
 void main() {
   group('CrashReportingConfig.resolve', () {
     test('defaults keep Sentry disabled without DSN', () {
-      final config = CrashReportingConfig.resolve(
-        enabledFlag: false,
-        dsn: '',
-      );
+      final config = CrashReportingConfig.resolve(enabledFlag: false, dsn: '');
       expect(config.isEnabled, isFalse);
     });
 
     test('rejects enabled flag when DSN is missing', () {
-      final config = CrashReportingConfig.resolve(
-        enabledFlag: true,
-        dsn: '',
-      );
+      final config = CrashReportingConfig.resolve(enabledFlag: true, dsn: '');
       expect(config.isEnabled, isFalse);
     });
 

@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/core/database/tenant_database_name.dart';
-import 'package:stock_count/modules/authentication/domain/local_permissions.dart';
 
 void main() {
   const base = 'accounting_accounts';
@@ -13,23 +12,31 @@ void main() {
       expect(tenantDbName(base, companyId: '  '), base);
     });
 
-    test('keeps historical name for the bootstrap local company', () {
-      expect(
-        tenantDbName(
-          base,
-          companyId: LocalAuthDefaults.companyId,
-          legacyCompanyId: LocalAuthDefaults.companyId,
-        ),
-        base,
-      );
-    });
+    test(
+      'tenantScopedName keeps historical names for the bootstrap company',
+      () {
+        expect(tenantScopedName(base, null), base);
+        expect(tenantScopedName(base, kLegacyLocalCompanyId), base);
+      },
+    );
+
+    test(
+      'tenantScopedName isolates a second company from the bootstrap files',
+      () {
+        expect(tenantScopedName(base, otherCompany), isNot(base));
+        expect(
+          tenantScopedName(base, otherCompany),
+          isNot(tenantScopedName(base, kLegacyLocalCompanyId)),
+        );
+      },
+    );
 
     test('suffixes a hex company id for other tenants', () {
       expect(
         tenantDbName(
           base,
           companyId: otherCompany,
-          legacyCompanyId: LocalAuthDefaults.companyId,
+          legacyCompanyId: kLegacyLocalCompanyId,
         ),
         '${base}_aaaaaaaaaaaa4aaa8aaaaaaaaaaaaaaa',
       );
@@ -40,7 +47,7 @@ void main() {
         tenantDbName(
           'sales_master',
           companyId: 'BBBBBBBB-BBBB-4BBB-8BBB-BBBBBBBBBBBB',
-          legacyCompanyId: LocalAuthDefaults.companyId,
+          legacyCompanyId: kLegacyLocalCompanyId,
         ),
         'sales_master_bbbbbbbbbbbb4bbb8bbbbbbbbbbbbbbb',
       );
@@ -51,7 +58,7 @@ void main() {
         tenantDbName(
           base,
           companyId: 'abc-12',
-          legacyCompanyId: LocalAuthDefaults.companyId,
+          legacyCompanyId: kLegacyLocalCompanyId,
         ),
         base,
       );

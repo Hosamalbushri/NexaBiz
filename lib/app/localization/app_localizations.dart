@@ -9539,7 +9539,7 @@ abstract class AppLocalizations {
   /// No description provided for @authLoginLocalHint.
   ///
   /// In en, this message translates to:
-  /// **'Sign in with your local offline account. Change the default admin password after first login.'**
+  /// **'Sign in with your local offline account. You must change the default admin password before using the app.'**
   String get authLoginLocalHint;
 
   /// No description provided for @authEmailLabel.
@@ -9565,6 +9565,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Signing in…'**
   String get authSigningIn;
+
+  /// No description provided for @authChangePasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get authChangePasswordTitle;
+
+  /// No description provided for @authChangePasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The default admin password cannot be used in production. Choose a new password of at least 8 characters.'**
+  String get authChangePasswordHint;
+
+  /// No description provided for @authCurrentPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get authCurrentPasswordLabel;
+
+  /// No description provided for @authNewPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get authNewPasswordLabel;
+
+  /// No description provided for @authConfirmPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new password'**
+  String get authConfirmPasswordLabel;
+
+  /// No description provided for @authChangePasswordAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Save password'**
+  String get authChangePasswordAction;
+
+  /// No description provided for @authChangingPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get authChangingPassword;
+
+  /// No description provided for @authPasswordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get authPasswordMismatch;
+
+  /// No description provided for @authPasswordWrongCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password is incorrect.'**
+  String get authPasswordWrongCurrent;
+
+  /// No description provided for @authPasswordSameAsDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a password other than the default bootstrap password.'**
+  String get authPasswordSameAsDefault;
 
   /// No description provided for @authBiometricSignIn.
   ///

@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/database/tenant_database_name.dart';
 import '../../../../core/sync/sync_providers.dart';
+import '../../../../core/tenancy/session_company.dart';
 import '../../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../data/database/sales_database.dart';
 import '../../data/datasources/sale_invoice_pdf_printer.dart';
@@ -22,7 +24,9 @@ import '../../domain/services/device_sale_number.dart';
 import '../../domain/usecases/sale_usecases.dart';
 
 final salesDatabaseProvider = Provider<SalesDatabase>((ref) {
-  final db = SalesDatabase();
+  final db = SalesDatabase(
+    name: tenantScopedName('sales_master', ref.watch(sessionCompanyIdProvider)),
+  );
   ref.onDispose(db.close);
   ref.keepAlive();
   return db;
@@ -97,9 +101,7 @@ final saleNumberAllocatorPortProvider = Provider<SaleNumberAllocatorPort>((
   ref,
 ) {
   final repo = ref.watch(saleRepositoryProvider);
-  final base = deviceSaleNumberBase(
-    ref.watch(syncApiConfigProvider).deviceId,
-  );
+  final base = deviceSaleNumberBase(ref.watch(syncApiConfigProvider).deviceId);
   return LocalSaleNumberAllocator(
     nextSequence: () => repo.nextLocalSequence(minExclusive: base),
   );

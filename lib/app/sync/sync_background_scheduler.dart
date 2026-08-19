@@ -170,14 +170,15 @@ class SyncBackgroundScheduler with WidgetsBindingObserver {
     SyncPassTrigger trigger = SyncPassTrigger.manual,
   }) async {
     if (!_canRun()) return;
-    if (!_connectivity.isOnline) return;
+    if (!_connectivity.isOnline && trigger != SyncPassTrigger.manual) {
+      return;
+    }
     await _syncManager.syncNow(notify: notify, trigger: trigger);
   }
 
   /// Download server→device changes only (no local upload).
   Future<SyncPassResult?> requestIncomingChanges({bool notify = true}) async {
     if (!_canRun()) return null;
-    if (!_connectivity.isOnline) return null;
     return _syncManager.syncNow(
       notify: notify,
       trigger: SyncPassTrigger.manual,

@@ -14,7 +14,6 @@ class CrashReporting {
 
   static bool get isEnabled => _config.isEnabled;
 
-  @visibleForTesting
   static void configure(CrashReportingConfig config) {
     _config = config;
   }

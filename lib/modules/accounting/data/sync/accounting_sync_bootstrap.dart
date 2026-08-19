@@ -9,29 +9,28 @@ import 'accounting_sync_handlers.dart';
 /// Registers Accounting sync adapters with the shared [SyncManager].
 void registerAccountingSyncHandlers(Ref ref) {
   final manager = ref.read(syncManagerProvider);
-  final remote = ref.read(remoteSyncApiProvider);
   manager.registerHandler(
     AccountSyncHandler(
       repository: ref.read(accountRepositoryImplProvider),
-      remote: remote,
+      remoteProvider: () => ref.read(remoteSyncApiProvider),
     ),
   );
   manager.registerHandler(
     JournalSyncHandler(
       repository: ref.read(journalRepositoryImplProvider),
-      remote: remote,
+      remoteProvider: () => ref.read(remoteSyncApiProvider),
     ),
   );
   manager.registerHandler(
     CurrencyRateSyncHandler(
       repository: ref.read(currencyRateRepositoryImplProvider),
-      remote: remote,
+      remoteProvider: () => ref.read(remoteSyncApiProvider),
     ),
   );
   manager.registerHandler(
     FiscalYearSyncHandler(
       repository: ref.read(fiscalYearRepositoryImplProvider),
-      remote: remote,
+      remoteProvider: () => ref.read(remoteSyncApiProvider),
     ),
   );
 }

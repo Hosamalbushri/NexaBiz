@@ -7,11 +7,10 @@ import 'sales_sync_handlers.dart';
 /// Registers Sales sync adapters with the shared [SyncManager].
 void registerSalesSyncHandlers(Ref ref) {
   final manager = ref.read(syncManagerProvider);
-  final remote = ref.read(remoteSyncApiProvider);
   manager.registerHandler(
     SaleSyncHandler(
       repository: ref.read(saleRepositoryImplProvider),
-      remote: remote,
+      remoteProvider: () => ref.read(remoteSyncApiProvider),
     ),
   );
 }

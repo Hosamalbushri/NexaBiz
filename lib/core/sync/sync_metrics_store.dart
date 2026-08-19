@@ -31,17 +31,17 @@ class SyncPassMetrics {
   final Map<String, int> downloadedByEntity;
 
   Map<String, dynamic> toMap() => {
-        'correlationId': correlationId,
-        'outcome': outcome.name,
-        'trigger': trigger.storageValue,
-        'uploaded': uploaded,
-        'downloaded': downloaded,
-        'failed': failed,
-        'conflicts': conflicts,
-        'durationMs': durationMs,
-        'finishedAt': finishedAt.toUtc().millisecondsSinceEpoch,
-        'downloadedByEntity': downloadedByEntity,
-      };
+    'correlationId': correlationId,
+    'outcome': outcome.name,
+    'trigger': trigger.storageValue,
+    'uploaded': uploaded,
+    'downloaded': downloaded,
+    'failed': failed,
+    'conflicts': conflicts,
+    'durationMs': durationMs,
+    'finishedAt': finishedAt.toUtc().millisecondsSinceEpoch,
+    'downloadedByEntity': downloadedByEntity,
+  };
 
   factory SyncPassMetrics.fromMap(Map<dynamic, dynamic> map) {
     final byEntityRaw = map['downloadedByEntity'];
@@ -97,14 +97,14 @@ class SyncPassMetrics {
 
 /// Durable ring buffer of recent sync pass metrics (Hive).
 class SyncMetricsStore {
-  SyncMetricsStore({
-    Box? box,
-    this.maxEntries = 40,
-  }) : _boxOverride = box;
+  SyncMetricsStore({Box? box, String? boxName, this.maxEntries = 40})
+    : _boxOverride = box,
+      _boxName = boxName ?? HiveBoxes.syncMetrics;
 
   static const historyKey = 'history';
 
   final Box? _boxOverride;
+  final String _boxName;
   final int maxEntries;
   Box? _box;
 
@@ -116,10 +116,10 @@ class SyncMetricsStore {
     if (_box != null && _box!.isOpen) {
       return _box!;
     }
-    if (Hive.isBoxOpen(HiveBoxes.syncMetrics)) {
-      _box = Hive.box(HiveBoxes.syncMetrics);
+    if (Hive.isBoxOpen(_boxName)) {
+      _box = Hive.box(_boxName);
     } else {
-      _box = await Hive.openBox(HiveBoxes.syncMetrics);
+      _box = await Hive.openBox(_boxName);
     }
     return _box!;
   }
