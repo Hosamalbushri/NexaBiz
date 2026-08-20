@@ -103,6 +103,7 @@ class _AppShellState extends ConsumerState<AppShell>
       return;
     }
     setState(() => _quickActionsOpen = true);
+    ref.read(quickActionsOpenProvider.notifier).state = true;
     _panelController.forward();
   }
 
@@ -111,6 +112,7 @@ class _AppShellState extends ConsumerState<AppShell>
       return;
     }
     setState(() => _quickActionsOpen = false);
+    ref.read(quickActionsOpenProvider.notifier).state = false;
     _panelController.reverse();
   }
 
@@ -233,14 +235,7 @@ class _AppShellState extends ConsumerState<AppShell>
         });
       }
 
-      return PopScope(
-        canPop: !_quickActionsOpen,
-        onPopInvokedWithResult: (didPop, _) {
-          if (!didPop) {
-            _closeQuickActions();
-          }
-        },
-        child: Scaffold(
+      return Scaffold(
           // Keep docked FAB + BottomAppBar fixed when the keyboard opens.
           resizeToAvoidBottomInset: false,
           // Required so the notched BottomAppBar reveals body through the cutout.
@@ -280,33 +275,17 @@ class _AppShellState extends ConsumerState<AppShell>
                   shape: keyboardOpen ? null : QuickActionsFab.barNotchShape,
                 )
               : null,
-        ),
-      );
-    }
-
-    if (AppBreakpoints.isTablet(width)) {
-      if (!showChrome) {
-        return PopScope(
-          canPop: !_quickActionsOpen,
-          onPopInvokedWithResult: (didPop, _) {
-            if (!didPop) {
-              _closeQuickActions();
-            }
-          },
-          child: Scaffold(
-            body: _buildQuickActionsLayer(navHeight: 0, child: widget.child),
-          ),
         );
       }
 
-      return PopScope(
-        canPop: !_quickActionsOpen,
-        onPopInvokedWithResult: (didPop, _) {
-          if (!didPop) {
-            _closeQuickActions();
-          }
-        },
-        child: Scaffold(
+    if (AppBreakpoints.isTablet(width)) {
+      if (!showChrome) {
+        return Scaffold(
+            body: _buildQuickActionsLayer(navHeight: 0, child: widget.child),
+        );
+      }
+
+      return Scaffold(
           body: Row(
             children: [
               NavigationRail(
@@ -341,32 +320,16 @@ class _AppShellState extends ConsumerState<AppShell>
               ),
             ],
           ),
-        ),
-      );
+        );
     }
 
     if (!showChrome) {
-      return PopScope(
-        canPop: !_quickActionsOpen,
-        onPopInvokedWithResult: (didPop, _) {
-          if (!didPop) {
-            _closeQuickActions();
-          }
-        },
-        child: Scaffold(
+      return Scaffold(
           body: _buildQuickActionsLayer(navHeight: 0, child: widget.child),
-        ),
       );
     }
 
-    return PopScope(
-      canPop: !_quickActionsOpen,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
-          _closeQuickActions();
-        }
-      },
-      child: Scaffold(
+    return Scaffold(
         body: Row(
           children: [
             SizedBox(
@@ -426,8 +389,7 @@ class _AppShellState extends ConsumerState<AppShell>
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 

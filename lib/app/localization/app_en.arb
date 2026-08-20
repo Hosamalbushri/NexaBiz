@@ -1724,6 +1724,9 @@
   "exitAppTitle": "Exit Application?",
   "exitAppMessage": "Are you sure you want to exit the application?",
   "exitAppConfirm": "Exit",
+  "unsavedChangesTitle": "Unsaved Changes",
+  "unsavedChangesMessage": "You have unsaved changes. Are you sure you want to leave?",
+  "leave": "Leave",
   "splashSubtitle": "Business Management Platform",
   "splashInitErrorTitle": "Unable to start application",
   "splashInitErrorMessage": "Something went wrong while initializing the application.",
@@ -2315,5 +2318,27 @@
   "adminPermOpDuplicate": "Duplicate",
   "adminPermOpInvoiceExport": "Print / share invoice",
   "adminPermOpPlatformCompanies": "Manage companies (platform)",
-  "adminPermOpPlatformUsers": "Manage users (platform)"
+  "adminPermOpPlatformUsers": "Manage users (platform)",
+
+  "setupChoiceTitle": "How would you like to set up?",
+  "setupChoiceSubtitle": "Choose how NexaBiz manages your business data",
+  "setupChoiceServerTitle": "Connect to Server",
+  "setupChoiceServerSubtitle": "Sync data across multiple devices with a central server",
+  "setupChoiceLocalTitle": "Use Locally",
+  "setupChoiceLocalSubtitle": "Run everything on this device, no internet required",
+
+  "serverSetupTitle": "Connect to Server",
+  "serverSetupSubtitle": "Enter your sync server address to get started",
+  "serverSetupUrlLabel": "Server Address",
+  "serverSetupUrlHint": "http://192.168.1.10:8000",
+  "serverSetupValidate": "Check Connection",
+  "serverSetupValidating": "Checking server connection...",
+  "serverSetupValidSuccess": "Server connected successfully",
+  "serverSetupValidFailed": "Could not connect to server",
+  "serverSetupContinueToSignIn": "Continue to Sign In",
+  "serverSetupBackToChoice": "Back to setup options",
+
+  "onboardingWelcomeTitle": "Welcome to NexaBiz",
+  "onboardingWelcomeSubtitle": "Your complete business management platform. Let's get you set up in just a few steps.",
+  "onboardingGetStarted": "Get Started"
 }

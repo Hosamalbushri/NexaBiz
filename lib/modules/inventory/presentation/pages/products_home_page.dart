@@ -47,33 +47,12 @@ class ProductsHomePage extends ConsumerWidget {
         ),
     ];
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) {
-          return;
-        }
-        final router = GoRouter.of(context);
-        if (router.canPop()) {
-          router.pop();
-        } else {
-          router.go(InventoryRoutes.root);
-        }
-      },
-      child: Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.productsHubTitle,
-          showBackButton: true,
-          onBack: () {
-            final router = GoRouter.of(context);
-            if (router.canPop()) {
-              router.pop();
-            } else {
-              router.go(InventoryRoutes.root);
-            }
-          },
-        ),
-        body: ListView(
+    return Scaffold(
+      appBar: CustomAppBar(
+        title: l10n.productsHubTitle,
+        showBackButton: true,
+      ),
+      body: ListView(
           padding: AppConstants.pageInsets(context),
           children: [
             Text(
@@ -120,7 +99,6 @@ class ProductsHomePage extends ConsumerWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

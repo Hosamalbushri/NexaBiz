@@ -243,343 +243,334 @@ class _SaleDetailsBody extends ConsumerWidget {
     final canDuplicate = auth.hasAnyPermission(SalesPermissions.duplicate);
     final canExport = auth.hasAnyPermission(SalesPermissions.export);
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
-          SalesRoutes.backToList(context);
-        }
-      },
-      child: Scaffold(
-        backgroundColor: scheme.surfaceContainerLowest,
-        appBar: CustomAppBar(
-          title: formatSaleNumberPrimary(sale.saleNumber),
-          showBackButton: true,
-          onBack: () => SalesRoutes.backToList(context),
-          actions: [
-            if (sale.saleStatus.isEditable && canUpdate)
-              CustomAppBarAction(
-                icon: Icons.edit_outlined,
-                tooltip: l10n.salesEditTitle,
-                onPressed: () => SalesRoutes.pushEdit(context, sale.id),
-              ),
-            if ((showPost && canPost) ||
-                canDuplicate ||
-                (sale.saleStatus.canCancel && canCancel))
-              PopupMenuButton<String>(
-              tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
-              position: PopupMenuPosition.under,
-              offset: const Offset(0, 8),
-              onSelected: (value) async {
-                switch (value) {
-                  case 'post':
-                    if (!postingEnabled) {
-                      showAppSnackBar(
-                        context,
-                        message: l10n.salesPostRequiresInventory,
-                        isSuccess: false,
-                      );
-                      return;
-                    }
-                    await _runAction(
+    return Scaffold(
+      backgroundColor: scheme.surfaceContainerLowest,
+      appBar: CustomAppBar(
+        title: formatSaleNumberPrimary(sale.saleNumber),
+        showBackButton: true,
+        actions: [
+          if (sale.saleStatus.isEditable && canUpdate)
+            CustomAppBarAction(
+              icon: Icons.edit_outlined,
+              tooltip: l10n.salesEditTitle,
+              onPressed: () => SalesRoutes.pushEdit(context, sale.id),
+            ),
+          if ((showPost && canPost) ||
+              canDuplicate ||
+              (sale.saleStatus.canCancel && canCancel))
+            PopupMenuButton<String>(
+            tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
+            position: PopupMenuPosition.under,
+            offset: const Offset(0, 8),
+            onSelected: (value) async {
+              switch (value) {
+                case 'post':
+                  if (!postingEnabled) {
+                    showAppSnackBar(
                       context,
-                      ref,
-                      loadingMessage: l10n.salesPosting,
-                      action: () async {
-                        await ref
-                            .read(confirmSaleUseCaseProvider)
-                            .call(sale.id);
-                      },
-                      successMessage: l10n.salesPosted,
+                      message: l10n.salesPostRequiresInventory,
+                      isSuccess: false,
                     );
-                  case 'duplicate':
-                    await _runAction(
-                      context,
-                      ref,
-                      loadingMessage: l10n.salesSaving,
-                      action: () async {
-                        final copy = await ref
-                            .read(duplicateSaleUseCaseProvider)
-                            .call(sale.id);
-                        if (context.mounted) {
-                          SalesRoutes.pushDetails(context, copy.id);
-                        }
-                      },
-                      successMessage: l10n.salesDuplicated,
-                    );
-                  case 'cancel':
-                    final ok = await showAppDialog(
-                      context: context,
-                      title: l10n.salesCancelTitle,
-                      message: l10n.salesCancelMessage(
-                        formatSaleNumberPrimary(sale.saleNumber),
-                      ),
-                      confirmLabel: l10n.salesCancelSale,
-                      cancelLabel: l10n.cancel,
-                      isDestructive: true,
-                    );
-                    if (!ok || !context.mounted) {
-                      return;
-                    }
-                    await _runAction(
-                      context,
-                      ref,
-                      loadingMessage: l10n.salesSaving,
-                      action: () async {
-                        await ref
-                            .read(cancelSaleUseCaseProvider)
-                            .call(sale.id);
-                      },
-                      successMessage: l10n.salesCancelled,
-                      afterSuccess: () {
-                        if (context.mounted) {
-                          SalesRoutes.backToList(context);
-                        }
-                      },
-                    );
-                }
-              },
-              itemBuilder: (context) => [
-                if (showPost && canPost)
-                  PopupMenuItem(
-                    value: 'post',
-                    child: Text(l10n.salesPostSale),
-                  ),
-                if (canDuplicate)
-                  PopupMenuItem(
-                    value: 'duplicate',
-                    child: Text(l10n.salesDuplicate),
-                  ),
-                if (sale.saleStatus.canCancel && canCancel)
-                  PopupMenuItem(
-                    value: 'cancel',
-                    child: Text(l10n.salesCancelSale),
-                  ),
-              ],
-              child: Material(
-                color: scheme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-                child: SizedBox(
-                  width: 42,
-                  height: 42,
-                  child: Icon(
-                    Icons.more_vert_rounded,
-                    size: 22,
-                    color: scheme.primary,
-                  ),
+                    return;
+                  }
+                  await _runAction(
+                    context,
+                    ref,
+                    loadingMessage: l10n.salesPosting,
+                    action: () async {
+                      await ref
+                          .read(confirmSaleUseCaseProvider)
+                          .call(sale.id);
+                    },
+                    successMessage: l10n.salesPosted,
+                  );
+                case 'duplicate':
+                  await _runAction(
+                    context,
+                    ref,
+                    loadingMessage: l10n.salesSaving,
+                    action: () async {
+                      final copy = await ref
+                          .read(duplicateSaleUseCaseProvider)
+                          .call(sale.id);
+                      if (context.mounted) {
+                        SalesRoutes.pushDetails(context, copy.id);
+                      }
+                    },
+                    successMessage: l10n.salesDuplicated,
+                  );
+                case 'cancel':
+                  final ok = await showAppDialog(
+                    context: context,
+                    title: l10n.salesCancelTitle,
+                    message: l10n.salesCancelMessage(
+                      formatSaleNumberPrimary(sale.saleNumber),
+                    ),
+                    confirmLabel: l10n.salesCancelSale,
+                    cancelLabel: l10n.cancel,
+                    isDestructive: true,
+                  );
+                  if (!ok || !context.mounted) {
+                    return;
+                  }
+                  await _runAction(
+                    context,
+                    ref,
+                    loadingMessage: l10n.salesSaving,
+                    action: () async {
+                      await ref
+                          .read(cancelSaleUseCaseProvider)
+                          .call(sale.id);
+                    },
+                    successMessage: l10n.salesCancelled,
+                    afterSuccess: () {
+                      if (context.mounted) {
+                        SalesRoutes.backToList(context);
+                      }
+                    },
+                  );
+              }
+            },
+            itemBuilder: (context) => [
+              if (showPost && canPost)
+                PopupMenuItem(
+                  value: 'post',
+                  child: Text(l10n.salesPostSale),
+                ),
+              if (canDuplicate)
+                PopupMenuItem(
+                  value: 'duplicate',
+                  child: Text(l10n.salesDuplicate),
+                ),
+              if (sale.saleStatus.canCancel && canCancel)
+                PopupMenuItem(
+                  value: 'cancel',
+                  child: Text(l10n.salesCancelSale),
+                ),
+            ],
+            child: Material(
+              color: scheme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                width: 42,
+                height: 42,
+                child: Icon(
+                  Icons.more_vert_rounded,
+                  size: 22,
+                  color: scheme.primary,
                 ),
               ),
             ),
-          ],
-        ),
-        bottomNavigationBar: (showPost && canPost)
-            ? Material(
-                color: scheme.surface,
-                elevation: 8,
-                shadowColor: scheme.shadow.withValues(alpha: 0.12),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      AppSpacing.sm,
-                      AppSpacing.md,
-                      AppSpacing.sm,
-                    ),
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        if (!postingEnabled) {
-                          showAppSnackBar(
-                            context,
-                            message: l10n.salesPostRequiresInventory,
-                            isSuccess: false,
-                          );
-                          return;
-                        }
-                        _runAction(
+          ),
+        ],
+      ),
+      bottomNavigationBar: (showPost && canPost)
+          ? Material(
+              color: scheme.surface,
+              elevation: 8,
+              shadowColor: scheme.shadow.withValues(alpha: 0.12),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                  ),
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      if (!postingEnabled) {
+                        showAppSnackBar(
                           context,
-                          ref,
-                          loadingMessage: l10n.salesPosting,
-                          action: () async {
-                            await ref
-                                .read(confirmSaleUseCaseProvider)
-                                .call(sale.id);
-                          },
-                          successMessage: l10n.salesPosted,
+                          message: l10n.salesPostRequiresInventory,
+                          isSuccess: false,
                         );
-                      },
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: Text(l10n.salesPostSale),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48),
-                      ),
+                        return;
+                      }
+                      _runAction(
+                        context,
+                        ref,
+                        loadingMessage: l10n.salesPosting,
+                        action: () async {
+                          await ref
+                              .read(confirmSaleUseCaseProvider)
+                              .call(sale.id);
+                        },
+                        successMessage: l10n.salesPosted,
+                      );
+                    },
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: Text(l10n.salesPostSale),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
                     ),
                   ),
                 ),
-              )
-            : null,
-        body: ListView(
-          padding: AppConstants.pageInsets(context),
-          children: [
-            _InvoiceHero(
-              saleNumber: sale.saleNumber,
-              currencyCode: sale.currencyCode,
-              total: sale.total,
-              saleStatus: sale.saleStatus,
-              saleStatusLabel: _saleStatusLabel(l10n, sale.saleStatus),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            if (canExport)
-              _InvoiceDocumentActions(
-                onPreview: () => _previewInvoice(context, ref, sale),
               ),
-            if (canExport) const SizedBox(height: AppSpacing.md),
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: _MetaTile(
-                      icon: Icons.calendar_month_rounded,
-                      label: l10n.salesDate,
-                      value: dateLabel,
-                      compact: true,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: _MetaTile(
-                      icon: sale.settlementType == SaleSettlementType.cash
-                          ? Icons.payments_rounded
-                          : Icons.account_balance_rounded,
-                      label: l10n.salesSettlementType,
-                      value: settlementLabel,
-                      emphasized: true,
-                      compact: true,
-                    ),
-                  ),
-                ],
-              ),
+            )
+          : null,
+      body: ListView(
+        padding: AppConstants.pageInsets(context),
+        children: [
+          _InvoiceHero(
+            saleNumber: sale.saleNumber,
+            currencyCode: sale.currencyCode,
+            total: sale.total,
+            saleStatus: sale.saleStatus,
+            saleStatusLabel: _saleStatusLabel(l10n, sale.saleStatus),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (canExport)
+            _InvoiceDocumentActions(
+              onPreview: () => _previewInvoice(context, ref, sale),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            _MetaTile(
-              icon: Icons.payment_rounded,
-              label: l10n.salesPaymentMethod,
-              value: _paymentMethodLabel(l10n, sale.paymentMethod),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _SurfaceCard(
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          scheme.primary.withValues(alpha: 0.18),
-                          scheme.primary.withValues(alpha: 0.06),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
-                    child: Icon(
-                      Icons.person_rounded,
-                      color: scheme.primary,
-                      size: 24,
-                    ),
+          if (canExport) const SizedBox(height: AppSpacing.md),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _MetaTile(
+                    icon: Icons.calendar_month_rounded,
+                    label: l10n.salesDate,
+                    value: dateLabel,
+                    compact: true,
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.salesCustomer,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          customerName,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            height: 1.25,
-                          ),
-                        ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _MetaTile(
+                    icon: sale.settlementType == SaleSettlementType.cash
+                        ? Icons.payments_rounded
+                        : Icons.account_balance_rounded,
+                    label: l10n.salesSettlementType,
+                    value: settlementLabel,
+                    emphasized: true,
+                    compact: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _MetaTile(
+            icon: Icons.payment_rounded,
+            label: l10n.salesPaymentMethod,
+            value: _paymentMethodLabel(l10n, sale.paymentMethod),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _SurfaceCard(
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        scheme.primary.withValues(alpha: 0.18),
+                        scheme.primary.withValues(alpha: 0.06),
                       ],
                     ),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Icon(
+                    Icons.person_rounded,
+                    color: scheme.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.salesCustomer,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        customerName,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          height: 1.25,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SaleProductsReadonlyTable(items: sale.items),
+          const SizedBox(height: AppSpacing.md),
+          SaleSummaryPanel(
+            currencyCode: sale.currencyCode,
+            summary: SaleSummary(
+              subtotal: sale.subtotal,
+              itemDiscountTotal: sale.itemDiscountTotal,
+              saleDiscount: sale.discountAmount,
+              tax: sale.taxAmount,
+              total: sale.total,
+              paidAmount: sale.paidAmount,
+              remainingAmount: sale.remainingAmount,
+              paymentStatus: sale.paymentStatus,
+            ),
+          ),
+          if (sale.notes != null && sale.notes!.trim().isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            _SurfaceCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.salesNotes,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    sale.notes!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      height: 1.45,
+                    ),
                   ),
                 ],
               ),
             ),
+          ],
+          if (sale.externalId != null ||
+              sale.externalDocumentNumber != null) ...[
             const SizedBox(height: AppSpacing.md),
-            SaleProductsReadonlyTable(items: sale.items),
-            const SizedBox(height: AppSpacing.md),
-            SaleSummaryPanel(
-              currencyCode: sale.currencyCode,
-              summary: SaleSummary(
-                subtotal: sale.subtotal,
-                itemDiscountTotal: sale.itemDiscountTotal,
-                saleDiscount: sale.discountAmount,
-                tax: sale.taxAmount,
-                total: sale.total,
-                paidAmount: sale.paidAmount,
-                remainingAmount: sale.remainingAmount,
-                paymentStatus: sale.paymentStatus,
+            _SurfaceCard(
+              child: Column(
+                children: [
+                  if (sale.externalId != null)
+                    _InfoRow(
+                      label: l10n.salesExternalId,
+                      value: sale.externalId!,
+                    ),
+                  if (sale.externalDocumentNumber != null)
+                    _InfoRow(
+                      label: l10n.salesExternalNumber,
+                      value: sale.externalDocumentNumber!,
+                    ),
+                ],
               ),
             ),
-            if (sale.notes != null && sale.notes!.trim().isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.md),
-              _SurfaceCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.salesNotes,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      sale.notes!,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        height: 1.45,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            if (sale.externalId != null ||
-                sale.externalDocumentNumber != null) ...[
-              const SizedBox(height: AppSpacing.md),
-              _SurfaceCard(
-                child: Column(
-                  children: [
-                    if (sale.externalId != null)
-                      _InfoRow(
-                        label: l10n.salesExternalId,
-                        value: sale.externalId!,
-                      ),
-                    if (sale.externalDocumentNumber != null)
-                      _InfoRow(
-                        label: l10n.salesExternalNumber,
-                        value: sale.externalDocumentNumber!,
-                      ),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: AppSpacing.xl),
           ],
-        ),
+          const SizedBox(height: AppSpacing.xl),
+        ],
       ),
     );
   }

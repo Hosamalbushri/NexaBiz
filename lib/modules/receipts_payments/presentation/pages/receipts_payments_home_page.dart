@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
-import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
@@ -22,28 +20,15 @@ class ReceiptsPaymentsHomePage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) {
-          return;
-        }
-        final router = GoRouter.of(context);
-        if (router.canPop()) {
-          router.pop();
-        } else {
-          router.go(AppRoutes.services);
-        }
-      },
-      child: Scaffold(
-        backgroundColor: theme.colorScheme.surfaceContainerLowest,
-        appBar: CustomAppBar(
-          title: l10n.moduleReceiptsPayments,
-          showBackButton: true,
-        ),
-        body: ListView(
-          padding: AppConstants.pageInsets(context),
-          children: [
+    return Scaffold(
+      backgroundColor: theme.colorScheme.surfaceContainerLowest,
+      appBar: CustomAppBar(
+        title: l10n.moduleReceiptsPayments,
+        showBackButton: true,
+      ),
+      body: ListView(
+        padding: AppConstants.pageInsets(context),
+        children: [
             Text(
               l10n.servicesTitle,
               style: theme.textTheme.titleMedium?.copyWith(
@@ -149,7 +134,6 @@ class ReceiptsPaymentsHomePage extends ConsumerWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

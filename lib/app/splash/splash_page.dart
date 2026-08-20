@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/di/app_providers.dart';
 import '../../core/widgets/app_error_state.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
@@ -15,8 +16,10 @@ import 'widgets/splash_brand.dart';
 
 /// Application splash: waits for [appInitializationProvider], then enters app.
 ///
-/// First launch: login (if needed) → onboarding → System Setup.
-/// After setup is complete: dashboard (when authenticated).
+/// Uses [startupStateProvider] to detect first-launch vs returning user and
+/// routes to the appropriate flow:
+/// - First launch: onboarding → setup choice → server/local setup
+/// - Returning user: dashboard (when setup is ready) or system setup
 class SplashPage extends ConsumerWidget {
   const SplashPage({super.key});
 
@@ -29,45 +32,18 @@ class SplashPage extends ConsumerWidget {
 
     ref.listen<AsyncValue<void>>(appInitializationProvider, (previous, next) {
       next.whenOrNull(
-        data: (_) {
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            if (!context.mounted) {
-              return;
-            }
-            final location = GoRouterState.of(context).uri.path;
-            if (location != AppRoutes.splash) {
-              return;
-            }
-            final auth = ref.read(authStateProvider);
-            if (!auth.isAuthenticated) {
-              context.go(AppRoutes.login);
-              return;
-            }
-            final ready = await ref
-                .read(systemInitializationCoordinatorProvider)
-                .isReady();
-            if (!context.mounted) {
-              return;
-            }
-            if (ready) {
-              context.go(AppRoutes.dashboard);
-              return;
-            }
-            final onboardingDone = await ref
-                .read(settingsRepositoryProvider)
-                .loadOnboardingCompleted();
-            if (!context.mounted) {
-              return;
-            }
-            context.go(
-              onboardingDone
-                  ? SystemSetupRoutes.root
-                  : AppRoutes.onboarding,
-            );
-          });
-        },
+        data: (_) => _navigateAfterInit(context, ref),
       );
     });
+
+    // Handle re-entry: if init already completed before this build (e.g. the
+    // router redirected back to splash after a first-launch guard), the
+    // provider is already in `data` and ref.listen won't fire for it.
+    if (init.hasValue) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _navigateAfterInit(context, ref);
+      });
+    }
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -120,5 +96,52 @@ class SplashPage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _navigateAfterInit(BuildContext context, WidgetRef ref) async {
+    if (!context.mounted) return;
+    final location = GoRouterState.of(context).uri.path;
+    if (location != AppRoutes.splash) return;
+
+    final startup = ref.read(startupStateProvider);
+    final auth = ref.read(authStateProvider);
+
+    // Unauthenticated: login for both first-launch and returning users.
+    if (!auth.isAuthenticated) {
+      context.go(AppRoutes.login);
+      return;
+    }
+
+    // Authenticated but must change seed password.
+    if (auth.mustChangePassword) {
+      context.go(AppRoutes.changePassword);
+      return;
+    }
+
+    final ready =
+        await ref.read(systemInitializationCoordinatorProvider).isReady();
+    if (!context.mounted) return;
+
+    if (startup.isFirstLaunch) {
+      if (ready) {
+        context.go(AppRoutes.dashboard);
+        return;
+      }
+      final onboardingDone = await ref
+          .read(settingsRepositoryProvider)
+          .loadOnboardingCompleted();
+      if (!context.mounted) return;
+      context.go(
+        onboardingDone ? AppRoutes.setupChoice : AppRoutes.onboarding,
+      );
+      return;
+    }
+
+    // Returning user: dashboard if ready, otherwise system setup.
+    if (ready) {
+      context.go(AppRoutes.dashboard);
+    } else {
+      context.go(SystemSetupRoutes.root);
+    }
   }
 }

@@ -103,12 +103,12 @@ class _SystemSetupWizardPageState extends ConsumerState<SystemSetupWizardPage> {
     final asyncProgress = ref.watch(systemSetupProgressProvider);
 
     return PopScope(
-      canPop: asyncProgress.valueOrNull?.isReady ?? false,
+      canPop: true,
       child: Scaffold(
         backgroundColor: theme.colorScheme.surfaceContainerLowest,
         appBar: CustomAppBar(
           title: l10n.moduleSystemSetup,
-          showBackButton: asyncProgress.valueOrNull?.isReady ?? false,
+          showBackButton: true,
         ),
         body: asyncProgress.when(
           loading: () => const Center(child: CircularProgressIndicator()),

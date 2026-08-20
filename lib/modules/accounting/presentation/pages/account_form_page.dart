@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
+import '../../../../app/exit/app_exit_scope.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -47,6 +48,14 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
   String? _parentId;
   Account? _existing;
 
+  String _initialCode = '';
+  String _initialName = '';
+  String _initialDescription = '';
+  bool _initialIsGroup = false;
+  bool _initialIsActive = true;
+  AccountType _initialAccountType = AccountType.asset;
+  String? _initialParentId;
+
   @override
   void initState() {
     super.initState();
@@ -66,6 +75,25 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
     super.dispose();
   }
 
+  bool _hasUnsavedChanges() {
+    if (!widget.isEditing) {
+      return _nameController.text.trim().isNotEmpty ||
+          _codeController.text.trim().isNotEmpty ||
+          _descriptionController.text.trim().isNotEmpty ||
+          _isGroup ||
+          !_isActive ||
+          _accountType != AccountType.asset ||
+          _parentId != null;
+    }
+    return _codeController.text != _initialCode ||
+        _nameController.text != _initialName ||
+        _descriptionController.text != _initialDescription ||
+        _isGroup != _initialIsGroup ||
+        _isActive != _initialIsActive ||
+        _accountType != _initialAccountType ||
+        _parentId != _initialParentId;
+  }
+
   void _hydrate(Account account) {
     if (_hydrated) {
       return;
@@ -79,6 +107,14 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
     _isActive = account.isActive;
     _parentId = account.parentId;
     _hydrated = true;
+
+    _initialCode = _codeController.text;
+    _initialName = _nameController.text;
+    _initialDescription = _descriptionController.text;
+    _initialIsGroup = _isGroup;
+    _initialIsActive = _isActive;
+    _initialAccountType = _accountType;
+    _initialParentId = _parentId;
   }
 
   Future<void> _applyParentSelection(String? parentUuid) async {
@@ -165,8 +201,10 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
 
     final systemLocked = _existing?.isSystemAccount ?? false;
 
-    return Scaffold(
-      appBar: CustomAppBar(
+    return UnsavedChangesScope(
+      hasUnsavedChanges: _hasUnsavedChanges,
+      child: Scaffold(
+        appBar: CustomAppBar(
         title: widget.isEditing
             ? l10n.accountingEditAccount
             : l10n.accountingAddAccount,
@@ -334,6 +372,7 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
           ],
         ),
       ),
+    ),
     );
   }
 

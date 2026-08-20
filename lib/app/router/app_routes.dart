@@ -15,6 +15,12 @@ class AppRoutes {
   /// First-launch welcome / product tour (before System Setup).
   static const String onboarding = '/onboarding';
 
+  /// Setup mode choice: server vs local (after onboarding, before setup).
+  static const String setupChoice = '/setup-choice';
+
+  /// Server address validation and initial connection (first-launch server flow).
+  static const String serverSetup = '/server-setup';
+
   /// Root alias — always redirected to [dashboard].
   static const String root = '/';
 

@@ -4381,6 +4381,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exitAppConfirm => 'Exit';
 
   @override
+  String get unsavedChangesTitle => 'Unsaved Changes';
+
+  @override
+  String get unsavedChangesMessage =>
+      'You have unsaved changes. Are you sure you want to leave?';
+
+  @override
+  String get leave => 'Leave';
+
+  @override
   String get splashSubtitle => 'Business Management Platform';
 
   @override
@@ -5840,4 +5850,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminPermOpPlatformUsers => 'Manage users (platform)';
+
+  @override
+  String get setupChoiceTitle => 'How would you like to set up?';
+
+  @override
+  String get setupChoiceSubtitle =>
+      'Choose how NexaBiz manages your business data';
+
+  @override
+  String get setupChoiceServerTitle => 'Connect to Server';
+
+  @override
+  String get setupChoiceServerSubtitle =>
+      'Sync data across multiple devices with a central server';
+
+  @override
+  String get setupChoiceLocalTitle => 'Use Locally';
+
+  @override
+  String get setupChoiceLocalSubtitle =>
+      'Run everything on this device, no internet required';
+
+  @override
+  String get serverSetupTitle => 'Connect to Server';
+
+  @override
+  String get serverSetupSubtitle =>
+      'Enter your sync server address to get started';
+
+  @override
+  String get serverSetupUrlLabel => 'Server Address';
+
+  @override
+  String get serverSetupUrlHint => 'http://192.168.1.10:8000';
+
+  @override
+  String get serverSetupValidate => 'Check Connection';
+
+  @override
+  String get serverSetupValidating => 'Checking server connection...';
+
+  @override
+  String get serverSetupValidSuccess => 'Server connected successfully';
+
+  @override
+  String get serverSetupValidFailed => 'Could not connect to server';
+
+  @override
+  String get serverSetupContinueToSignIn => 'Continue to Sign In';
+
+  @override
+  String get serverSetupBackToChoice => 'Back to setup options';
+
+  @override
+  String get onboardingWelcomeTitle => 'Welcome to NexaBiz';
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'Your complete business management platform. Let\'s get you set up in just a few steps.';
+
+  @override
+  String get onboardingGetStarted => 'Get Started';
 }

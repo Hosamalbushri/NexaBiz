@@ -56,14 +56,14 @@ List<Override> moduleRegistryOverrides() {
   return [
     moduleRegistryProvider.overrideWithValue(
       ModuleRegistry(const [
-        SystemSetupModule(),
-        InventoryModule(),
         AccountingModule(),
         CustomersModule(),
         SalesModule(),
         ReceiptsPaymentsModule(),
+        InventoryModule(),
         ReportsModule(),
         AdministrationModule(),
+        SystemSetupModule(),
       ]),
     ),
     systemSetupSeedPortProvider.overrideWith((ref) {

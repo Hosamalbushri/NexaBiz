@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../localization/app_localizations.dart';
 import '../../../modules/inventory/presentation/pages/inventory_routes.dart';
+import '../../../modules/sales/presentation/pages/sales_routes.dart';
+import '../../../modules/customers/presentation/pages/customers_routes.dart';
+import '../../../modules/receipts_payments/presentation/pages/receipts_payments_routes.dart';
 
 /// How a quick action is executed.
 enum QuickActionKind { route }
@@ -38,20 +41,44 @@ class QuickActionDefinition {
 List<QuickActionDefinition> quickActionCatalog() {
   return const [
     QuickActionDefinition(
-      id: 'create_product',
-      icon: Icons.add_box_outlined,
-      kind: QuickActionKind.route,
-      routePath: InventoryRoutes.productsNew,
-      titleBuilder: _createProductTitle,
-      subtitleBuilder: _createProductSubtitle,
-    ),
-    QuickActionDefinition(
       id: 'scan_barcode',
       icon: Icons.qr_code_scanner_outlined,
       kind: QuickActionKind.route,
       routePath: '/inventory/products/barcode?scan=1',
       titleBuilder: _scanBarcodeTitle,
       subtitleBuilder: _scanBarcodeSubtitle,
+    ),
+    QuickActionDefinition(
+      id: 'create_sale',
+      icon: Icons.receipt_long_outlined,
+      kind: QuickActionKind.route,
+      routePath: SalesRoutes.create,
+      titleBuilder: _createSaleTitle,
+      subtitleBuilder: _createSaleSubtitle,
+    ),
+    QuickActionDefinition(
+      id: 'create_customer',
+      icon: Icons.person_add_outlined,
+      kind: QuickActionKind.route,
+      routePath: CustomersRoutes.create,
+      titleBuilder: _createCustomerTitle,
+      subtitleBuilder: _createCustomerSubtitle,
+    ),
+    QuickActionDefinition(
+      id: 'create_receipt',
+      icon: Icons.payments_outlined,
+      kind: QuickActionKind.route,
+      routePath: ReceiptsPaymentsRoutes.createReceipt,
+      titleBuilder: _createReceiptTitle,
+      subtitleBuilder: _createReceiptSubtitle,
+    ),
+    QuickActionDefinition(
+      id: 'create_product',
+      icon: Icons.add_box_outlined,
+      kind: QuickActionKind.route,
+      routePath: InventoryRoutes.productsNew,
+      titleBuilder: _createProductTitle,
+      subtitleBuilder: _createProductSubtitle,
     ),
     QuickActionDefinition(
       id: 'products_list',
@@ -106,8 +133,11 @@ List<QuickActionDefinition> quickActionCatalog() {
 
 /// Default pinned shortcuts until the user customizes.
 List<String> defaultQuickActionIds() => const [
-  'create_product',
   'scan_barcode',
+  'create_sale',
+  'create_customer',
+  'create_receipt',
+  'create_product',
 ];
 
 QuickActionDefinition? findQuickActionById(String id) {
@@ -119,14 +149,28 @@ QuickActionDefinition? findQuickActionById(String id) {
   return null;
 }
 
+String _scanBarcodeTitle(AppLocalizations l10n) => l10n.quickActionsScanBarcode;
+String _scanBarcodeSubtitle(AppLocalizations l10n) =>
+    l10n.quickActionsScanBarcodeSubtitle;
+
+String _createSaleTitle(AppLocalizations l10n) => l10n.salesCreateTitle;
+String _createSaleSubtitle(AppLocalizations l10n) =>
+    l10n.salesCreateCardSubtitle;
+
+String _createCustomerTitle(AppLocalizations l10n) =>
+    l10n.customersCreateTitle;
+String _createCustomerSubtitle(AppLocalizations l10n) =>
+    l10n.customersCreateTitle;
+
+String _createReceiptTitle(AppLocalizations l10n) =>
+    l10n.rpServiceCreateReceipt;
+String _createReceiptSubtitle(AppLocalizations l10n) =>
+    l10n.rpCreateReceiptSubtitle;
+
 String _createProductTitle(AppLocalizations l10n) =>
     l10n.quickActionsCreateProduct;
 String _createProductSubtitle(AppLocalizations l10n) =>
     l10n.quickActionsCreateProductSubtitle;
-
-String _scanBarcodeTitle(AppLocalizations l10n) => l10n.quickActionsScanBarcode;
-String _scanBarcodeSubtitle(AppLocalizations l10n) =>
-    l10n.quickActionsScanBarcodeSubtitle;
 
 String _productsListTitle(AppLocalizations l10n) => l10n.productsListTitle;
 String _productsListSubtitle(AppLocalizations l10n) =>

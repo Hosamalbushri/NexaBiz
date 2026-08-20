@@ -135,6 +135,10 @@ class _FillWidthServiceGrid extends StatelessWidget {
         onAddPressed != null &&
         (maxSlots == null || visibleModules.length < maxSlots!);
 
+    // Dashboard tiles are taller than wide so service names fit.
+    final dashboard = !showSubtitle && maxSlots != null;
+    final tileAspectRatio = dashboard ? 0.95 : 1.0;
+
     final tiles = <Widget>[
       for (final module in visibleModules)
         ServiceCard(
@@ -168,12 +172,12 @@ class _FillWidthServiceGrid extends StatelessWidget {
                 Expanded(
                   child: j < rowTiles.length
                       ? AspectRatio(
-                          aspectRatio: 1,
+                          aspectRatio: tileAspectRatio,
                           child: rowTiles[j],
                         )
-                      : const AspectRatio(
-                          aspectRatio: 1,
-                          child: SizedBox.shrink(),
+                      : AspectRatio(
+                          aspectRatio: tileAspectRatio,
+                          child: const SizedBox.shrink(),
                         ),
                 ),
               ],

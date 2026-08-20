@@ -1724,6 +1724,9 @@
   "exitAppTitle": "هل تريد الخروج؟",
   "exitAppMessage": "هل أنت متأكد من أنك تريد الخروج من التطبيق؟",
   "exitAppConfirm": "خروج",
+  "unsavedChangesTitle": "تغييرات غير محفوظة",
+  "unsavedChangesMessage": "لديك تغييرات غير محفوظة. هل أنت متأكد أنك تريد المغادرة؟",
+  "leave": "مغادرة",
   "splashSubtitle": "منصة إدارة الأعمال",
   "splashInitErrorTitle": "تعذر تشغيل التطبيق",
   "splashInitErrorMessage": "حدث خطأ أثناء تهيئة التطبيق.",
@@ -2315,5 +2318,27 @@
   "adminPermOpDuplicate": "تكرار",
   "adminPermOpInvoiceExport": "طباعة / مشاركة الفاتورة",
   "adminPermOpPlatformCompanies": "إدارة الشركات (منصة)",
-  "adminPermOpPlatformUsers": "إدارة المستخدمين (منصة)"
+  "adminPermOpPlatformUsers": "إدارة المستخدمين (منصة)",
+
+  "setupChoiceTitle": "كيف تريد الإعداد؟",
+  "setupChoiceSubtitle": "اختر كيفية إدارة nexabiz لبيانات أعمالك",
+  "setupChoiceServerTitle": "الاتصال بالخادم",
+  "setupChoiceServerSubtitle": "مزامنة البيانات عبر أجهزة متعددة مع خادم مركزي",
+  "setupChoiceLocalTitle": "الاستخدام المحلي",
+  "setupChoiceLocalSubtitle": "تشغيل كل شيء على هذا الجهاز، لا يتطلب اتصال بالإنترنت",
+
+  "serverSetupTitle": "الاتصال بالخادم",
+  "serverSetupSubtitle": "أدخل عنوان خادم المزامنة للبدء",
+  "serverSetupUrlLabel": "عنوان الخادم",
+  "serverSetupUrlHint": "http://192.168.1.10:8000",
+  "serverSetupValidate": "فحص الاتصال",
+  "serverSetupValidating": "جاري فحص اتصال الخادم...",
+  "serverSetupValidSuccess": "تم الاتصال بالخادم بنجاح",
+  "serverSetupValidFailed": "تعذر الاتصال بالخادم",
+  "serverSetupContinueToSignIn": "المتابعة لتسجيل الدخول",
+  "serverSetupBackToChoice": "العودة لخيارات الإعداد",
+
+  "onboardingWelcomeTitle": "مرحباً بك في NexaBiz",
+  "onboardingWelcomeSubtitle": "منصتك المتكاملة لإدارة الأعمال. دعنا نقوم بإعدادك في بضع خطوات فقط.",
+  "onboardingGetStarted": "ابدأ الآن"
 }

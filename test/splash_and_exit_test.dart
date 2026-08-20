@@ -10,6 +10,7 @@ import 'package:stock_count/app/router/app_routes.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/app/splash/splash_page.dart';
 import 'package:stock_count/app/theme/app_theme.dart';
+import 'package:stock_count/core/di/app_providers.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_session.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
@@ -77,8 +78,15 @@ SetupProgress _freshProgress() {
 List<Override> setupOverrides(
   SetupProgress progress, {
   bool onboardingCompleted = false,
+  bool isFirstLaunch = true,
 }) {
   return [
+    startupStateProvider.overrideWithValue(
+      AppStartupState(
+        themeMode: ThemeMode.system,
+        isFirstLaunch: isFirstLaunch,
+      ),
+    ),
     settingsRepositoryProvider.overrideWithValue(
       _FakeSettingsRepository(onboardingCompleted: onboardingCompleted),
     ),
@@ -180,6 +188,11 @@ void main() {
               const Scaffold(body: Text('OnboardingShell')),
         ),
         GoRoute(
+          path: AppRoutes.setupChoice,
+          builder: (context, state) =>
+              const Scaffold(body: Text('SetupChoiceShell')),
+        ),
+        GoRoute(
           path: SystemSetupRoutes.root,
           builder: (context, state) =>
               const Scaffold(body: Text('SystemSetupShell')),
@@ -205,7 +218,7 @@ void main() {
       await tester.pumpWidget(
         wrapSplash(
           overrides: [
-            ...setupOverrides(_readyProgress()),
+            ...setupOverrides(_readyProgress(), isFirstLaunch: false),
             appInitializationProvider.overrideWith((ref) async {
               await Future<void>.delayed(const Duration(milliseconds: 300));
               await _seedAuthenticated(ref);
@@ -231,7 +244,7 @@ void main() {
       await tester.pumpWidget(
         wrapSplash(
           overrides: [
-            ...setupOverrides(_readyProgress()),
+            ...setupOverrides(_readyProgress(), isFirstLaunch: false),
             appInitializationProvider.overrideWith((ref) async {
               await _seedAuthenticated(ref);
             }),
@@ -264,7 +277,7 @@ void main() {
       expect(find.text('DashboardShell'), findsNothing);
     });
 
-    testWidgets('navigates to system setup when onboarding already done', (
+    testWidgets('navigates to setup choice when onboarding already done', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -280,7 +293,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('SystemSetupShell'), findsOneWidget);
+      expect(find.text('SetupChoiceShell'), findsOneWidget);
       expect(find.text('OnboardingShell'), findsNothing);
       expect(find.text('DashboardShell'), findsNothing);
     });
@@ -291,7 +304,7 @@ void main() {
       await tester.pumpWidget(
         wrapSplash(
           overrides: [
-            ...setupOverrides(_readyProgress()),
+            ...setupOverrides(_readyProgress(), isFirstLaunch: false),
             appInitializationProvider.overrideWith((ref) async {
               attempts += 1;
               if (attempts == 1) {

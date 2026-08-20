@@ -22,6 +22,7 @@ import '../providers/rp_providers.dart';
 import '../providers/transaction_composer_provider.dart';
 import '../providers/transaction_list_provider.dart';
 import '../widgets/rp_account_search_field.dart';
+import '../../../../app/exit/app_exit_scope.dart';
 import '../widgets/rp_entry_lines_table.dart';
 import '../widgets/rp_error_messages.dart';
 import 'receipts_payments_routes.dart';
@@ -51,6 +52,8 @@ class _FinancialTransactionFormPageState
   List<RpCurrencyRef> _currencies = const [];
 
   bool get _isEdit => widget.transactionId != null;
+
+  var _dirty = false;
 
   TransactionType get _resolvedType {
     if (_isEdit) {
@@ -155,6 +158,10 @@ class _FinancialTransactionFormPageState
         _loading = false;
         _loadError = null;
       });
+      // Mark clean after initial load.
+      if (mounted) {
+        setState(() => _dirty = false);
+      }
     } catch (e) {
       if (!mounted) {
         return;
@@ -186,6 +193,7 @@ class _FinancialTransactionFormPageState
     }
     final notifier = ref.read(transactionComposerProvider.notifier);
     notifier.setDate(picked);
+    setState(() => _dirty = true);
     if (!_resolvedType.isPayment || !mounted) {
       return;
     }
@@ -255,6 +263,7 @@ class _FinancialTransactionFormPageState
             code: selected.code,
             rateToBase: selected.rateToBase,
           );
+      setState(() => _dirty = true);
     }
   }
 
@@ -314,6 +323,18 @@ class _FinancialTransactionFormPageState
     }
   }
 
+  bool _hasUnsavedChanges() {
+    if (_loading || _saving) {
+      return false;
+    }
+    if (_isEdit) {
+      return _dirty;
+    }
+    // New transaction — dirty if composer has any meaningful content.
+    final state = ref.read(transactionComposerProvider);
+    return state.amount != 0 || state.lines.isNotEmpty || (state.description?.trim().isNotEmpty ?? false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -348,10 +369,12 @@ class _FinancialTransactionFormPageState
     final equivalentLabel =
         '${state.baseEquivalent.toStringAsFixed(2)} ${state.baseCurrencyCode}';
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(title: title, showBackButton: true),
-      body: ListView(
+    return UnsavedChangesScope(
+      hasUnsavedChanges: _hasUnsavedChanges,
+      child: Scaffold(
+        backgroundColor: theme.colorScheme.surfaceContainerLowest,
+        appBar: CustomAppBar(title: title, showBackButton: true),
+        body: ListView(
         padding: AppConstants.pageInsets(context),
         children: [
           _HeaderCard(
@@ -365,6 +388,7 @@ class _FinancialTransactionFormPageState
               ref
                   .read(transactionComposerProvider.notifier)
                   .setVoucherBook(book);
+              setState(() => _dirty = true);
             },
             cashAccount: state.cashAccount,
             onCashSelected: (account) {
@@ -375,6 +399,7 @@ class _FinancialTransactionFormPageState
             cashAmount: state.amount,
             onCashAmountChanged: (value) {
               ref.read(transactionComposerProvider.notifier).setAmount(value);
+              setState(() => _dirty = true);
             },
             currencyCode: state.currencyCode,
             onPickCurrency: _pickCurrency,
@@ -385,6 +410,7 @@ class _FinancialTransactionFormPageState
               ref
                   .read(transactionComposerProvider.notifier)
                   .setDescription(value);
+              setState(() => _dirty = true);
             },
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -399,16 +425,19 @@ class _FinancialTransactionFormPageState
               ref
                   .read(transactionComposerProvider.notifier)
                   .addEntryLineWithAccount(account);
+              setState(() => _dirty = true);
             },
             onAmountChanged: (index, amount) {
               ref
                   .read(transactionComposerProvider.notifier)
                   .setLineAmount(index, amount, manual: true);
+              setState(() => _dirty = true);
             },
             onCrossRateChanged: (index, rate) {
               ref
                   .read(transactionComposerProvider.notifier)
                   .setLineCrossRate(index, rate);
+              setState(() => _dirty = true);
             },
             onCurrencyChanged: (index, code, rate) {
               ref.read(transactionComposerProvider.notifier).setLineCurrency(
@@ -416,16 +445,19 @@ class _FinancialTransactionFormPageState
                     code: code,
                     rateToBase: rate,
                   );
+              setState(() => _dirty = true);
             },
             onLineDescriptionChanged: (index, value) {
               ref
                   .read(transactionComposerProvider.notifier)
                   .setLineDescription(index, value);
+              setState(() => _dirty = true);
             },
             onRemoveLine: (index) {
               ref
                   .read(transactionComposerProvider.notifier)
                   .removeEntryLine(index);
+              setState(() => _dirty = true);
             },
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -449,6 +481,7 @@ class _FinancialTransactionFormPageState
           const SizedBox(height: AppSpacing.xl),
         ],
       ),
+    ),
     );
   }
 }

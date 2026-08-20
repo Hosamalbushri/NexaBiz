@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
+import '../../app/router/app_routes.dart';
 import 'notification_badge.dart';
 
 /// Base title scale for [CustomAppBar].
@@ -459,18 +460,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// Pops when possible; otherwise navigates to the platform home route.
   ///
   /// Module roots are often opened with `context.go`, which leaves nothing to pop.
+  /// Uses [Navigator.maybePop] so [PopScope] interceptors (e.g.
+  /// [UnsavedChangesScope]) can present confirmation dialogs.
   static void _defaultBack(BuildContext context) {
     final router = GoRouter.maybeOf(context);
-    if (router != null) {
-      if (router.canPop()) {
-        router.pop();
-        return;
-      }
-      router.go('/');
+    if (router != null && router.canPop()) {
+      Navigator.of(context).maybePop();
       return;
     }
 
-    Navigator.of(context).maybePop();
+    router?.go(AppRoutes.dashboard);
   }
 
   List<Widget> _buildTrailing(

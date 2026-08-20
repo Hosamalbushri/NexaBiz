@@ -7988,6 +7988,24 @@ abstract class AppLocalizations {
   /// **'Exit'**
   String get exitAppConfirm;
 
+  /// No description provided for @unsavedChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved Changes'**
+  String get unsavedChangesTitle;
+
+  /// No description provided for @unsavedChangesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved changes. Are you sure you want to leave?'**
+  String get unsavedChangesMessage;
+
+  /// No description provided for @leave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get leave;
+
   /// No description provided for @splashSubtitle.
   ///
   /// In en, this message translates to:
@@ -10633,6 +10651,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage users (platform)'**
   String get adminPermOpPlatformUsers;
+
+  /// No description provided for @setupChoiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How would you like to set up?'**
+  String get setupChoiceTitle;
+
+  /// No description provided for @setupChoiceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how NexaBiz manages your business data'**
+  String get setupChoiceSubtitle;
+
+  /// No description provided for @setupChoiceServerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to Server'**
+  String get setupChoiceServerTitle;
+
+  /// No description provided for @setupChoiceServerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync data across multiple devices with a central server'**
+  String get setupChoiceServerSubtitle;
+
+  /// No description provided for @setupChoiceLocalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Locally'**
+  String get setupChoiceLocalTitle;
+
+  /// No description provided for @setupChoiceLocalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Run everything on this device, no internet required'**
+  String get setupChoiceLocalSubtitle;
+
+  /// No description provided for @serverSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to Server'**
+  String get serverSetupTitle;
+
+  /// No description provided for @serverSetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your sync server address to get started'**
+  String get serverSetupSubtitle;
+
+  /// No description provided for @serverSetupUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Server Address'**
+  String get serverSetupUrlLabel;
+
+  /// No description provided for @serverSetupUrlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'http://192.168.1.10:8000'**
+  String get serverSetupUrlHint;
+
+  /// No description provided for @serverSetupValidate.
+  ///
+  /// In en, this message translates to:
+  /// **'Check Connection'**
+  String get serverSetupValidate;
+
+  /// No description provided for @serverSetupValidating.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking server connection...'**
+  String get serverSetupValidating;
+
+  /// No description provided for @serverSetupValidSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Server connected successfully'**
+  String get serverSetupValidSuccess;
+
+  /// No description provided for @serverSetupValidFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect to server'**
+  String get serverSetupValidFailed;
+
+  /// No description provided for @serverSetupContinueToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to Sign In'**
+  String get serverSetupContinueToSignIn;
+
+  /// No description provided for @serverSetupBackToChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to setup options'**
+  String get serverSetupBackToChoice;
+
+  /// No description provided for @onboardingWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to NexaBiz'**
+  String get onboardingWelcomeTitle;
+
+  /// No description provided for @onboardingWelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your complete business management platform. Let\'s get you set up in just a few steps.'**
+  String get onboardingWelcomeSubtitle;
+
+  /// No description provided for @onboardingGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get onboardingGetStarted;
 }
 
 class _AppLocalizationsDelegate

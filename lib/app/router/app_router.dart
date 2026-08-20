@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/di/app_providers.dart';
 import '../../core/modules/module_providers.dart';
 import '../../modules/app_lock/domain/entities/app_lock_state.dart';
 import '../../modules/app_lock/presentation/pages/app_lock_page.dart';
@@ -15,6 +16,8 @@ import '../../modules/system_setup/presentation/pages/system_setup_wizard_page.d
 import '../exit/app_exit_scope.dart';
 import '../notifications/presentation/pages/notification_center_page.dart';
 import '../onboarding/onboarding_page.dart';
+import '../onboarding/setup_choice_page.dart';
+import '../onboarding/server_setup_page.dart';
 import '../presentation/pages/dashboard_page.dart';
 import '../presentation/pages/module_reports_page.dart';
 import '../presentation/pages/not_found_page.dart';
@@ -32,6 +35,8 @@ import 'app_routes.dart';
 bool _isAppLockExempt(String path) {
   return path == AppRoutes.splash ||
       path == AppRoutes.onboarding ||
+      path == AppRoutes.setupChoice ||
+      path == AppRoutes.serverSetup ||
       path == AppRoutes.login ||
       path == AppRoutes.changePassword ||
       path == SystemSetupRoutes.root ||
@@ -46,7 +51,9 @@ bool _isPermissionExempt(String path) {
       path.startsWith('${AppRoutes.reports}/') ||
       path == AppRoutes.settings ||
       path.startsWith('${AppRoutes.settings}/') ||
-      path == AppRoutes.notifications;
+      path == AppRoutes.notifications ||
+      path == AppRoutes.setupChoice ||
+      path == AppRoutes.serverSetup;
 }
 
 /// Composes splash, persistent [AppShell] chrome, shell branches, and modules.
@@ -88,6 +95,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         if (auth.mustChangePassword) {
           return AppRoutes.changePassword;
         }
+        // For first-launch users, splash handles routing (onboarding → setup).
+        final startup = ref.read(startupStateProvider);
+        if (startup.isFirstLaunch) {
+          return AppRoutes.splash;
+        }
         return AppRoutes.dashboard;
       }
 
@@ -102,6 +114,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           !auth.mustChangePassword &&
           path == AppRoutes.changePassword) {
         return AppRoutes.dashboard;
+      }
+
+      // Guard dashboard for first-launch users until setup is ready.
+      // Splash page handles the correct routing (onboarding → setup choice → setup).
+      // Users with an active remote session (completed server login) bypass this
+      // guard — setup is effectively complete once they authenticated remotely.
+      if (auth.isAuthenticated &&
+          !auth.mustChangePassword &&
+          path == AppRoutes.dashboard) {
+        final startup = ref.read(startupStateProvider);
+        if (startup.isFirstLaunch && !auth.isRemoteSession) {
+          return AppRoutes.splash;
+        }
       }
 
       final lock = ref.read(appLockControllerProvider);
@@ -158,6 +183,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.onboarding,
         name: 'onboarding',
         builder: (context, state) => const OnboardingPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.setupChoice,
+        name: 'setupChoice',
+        builder: (context, state) => const SetupChoicePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.serverSetup,
+        name: 'serverSetup',
+        builder: (context, state) => const ServerSetupPage(),
       ),
       GoRoute(
         path: AppLockRoutes.root,

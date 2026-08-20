@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
 import '../../../../app/localization/app_localizations.dart';
-import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_breakpoints.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_shadows.dart';
@@ -29,25 +28,12 @@ class InventoryHomePage extends ConsumerWidget {
     final servicesAsync = ref.watch(inventoryServicesProvider);
     final controller = ref.read(inventoryServicesProvider.notifier);
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) {
-          return;
-        }
-        final router = GoRouter.of(context);
-        if (router.canPop()) {
-          router.pop();
-        } else {
-          router.go(AppRoutes.services);
-        }
-      },
-      child: Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.moduleInventory,
-          showBackButton: true,
-        ),
-        body: servicesAsync.when(
+    return Scaffold(
+      appBar: CustomAppBar(
+        title: l10n.moduleInventory,
+        showBackButton: true,
+      ),
+      body: servicesAsync.when(
           loading: () => const AppLoading(),
           error: (error, _) => Center(
             child: Padding(
@@ -98,7 +84,6 @@ class InventoryHomePage extends ConsumerWidget {
             );
           },
         ),
-      ),
     );
   }
 

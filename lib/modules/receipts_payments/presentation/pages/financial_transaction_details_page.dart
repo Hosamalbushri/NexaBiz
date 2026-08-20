@@ -197,20 +197,12 @@ class _TransactionDetailsBody extends ConsumerWidget {
       TransactionType.currencyExchange => l10n.rpLineAmountDebit,
     };
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
-          _backToTypedList(context);
-        }
-      },
-      child: Scaffold(
-        backgroundColor: scheme.surfaceContainerLowest,
-        appBar: CustomAppBar(
-          title: formatSaleNumberPrimary(transaction.transactionNumber),
-          showBackButton: true,
-          onBack: () => _backToTypedList(context),
-          actions: [
+    return Scaffold(
+      backgroundColor: scheme.surfaceContainerLowest,
+      appBar: CustomAppBar(
+        title: formatSaleNumberPrimary(transaction.transactionNumber),
+        showBackButton: true,
+        actions: [
             if (transaction.documentStatus.isEditable &&
                 canUpdate &&
                 !transaction.isCancelled)
@@ -468,7 +460,6 @@ class _TransactionDetailsBody extends ConsumerWidget {
             const SizedBox(height: AppSpacing.xl),
           ],
         ),
-      ),
     );
   }
 }

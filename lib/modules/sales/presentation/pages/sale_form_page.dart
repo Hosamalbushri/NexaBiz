@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/constants/app_constants.dart';
+import '../../../../app/exit/app_exit_scope.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -52,6 +53,20 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
 
   bool get _isEdit => widget.saleId != null;
   bool get _canSelectVoucherBook => _voucherBooks.length > 1;
+  var _dirty = false;
+
+  bool _hasUnsavedChanges() {
+    if (_loading || _saving) {
+      return false;
+    }
+    if (_isEdit) {
+      return _dirty;
+    }
+    final state = ref.read(saleComposerProvider);
+    return state.items.isNotEmpty ||
+        (state.customer?.name.trim().isNotEmpty ?? false) ||
+        (state.walkInCustomerName?.trim().isNotEmpty ?? false);
+  }
 
   @override
   void initState() {
@@ -153,6 +168,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
         _loading = false;
         _loaded = true;
         _loadError = null;
+        _dirty = false;
       });
     } on _SaleLoadNotFound {
       if (!mounted) {
@@ -185,6 +201,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
     );
     if (picked != null) {
       ref.read(saleComposerProvider.notifier).setSaleDate(picked);
+      setState(() => _dirty = true);
     }
   }
 
@@ -197,6 +214,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
     }
     ref.read(saleComposerProvider.notifier).setCustomer(linked);
     _customerNameController.text = linked.name;
+    setState(() => _dirty = true);
     if (ref.read(saleComposerProvider).isCredit && !linked.hasAccount) {
       showAppSnackBar(
         context,
@@ -209,11 +227,13 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
   void _clearCustomerParty() {
     ref.read(saleComposerProvider.notifier).clearCustomerParty();
     _customerNameController.clear();
+    setState(() => _dirty = true);
   }
 
   void _onProductSelected(SaleProductRef product) {
     FocusManager.instance.primaryFocus?.unfocus();
     ref.read(saleComposerProvider.notifier).addProduct(product);
+    setState(() => _dirty = true);
   }
 
   Future<void> _scanProduct() async {
@@ -314,19 +334,13 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
   Widget _shell({required Widget body, List<Widget>? actions}) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) {
-          SalesRoutes.backToHome(context);
-        }
-      },
+    return UnsavedChangesScope(
+      hasUnsavedChanges: _hasUnsavedChanges,
       child: Scaffold(
         backgroundColor: theme.colorScheme.surfaceContainerLowest,
         appBar: CustomAppBar(
           title: _isEdit ? l10n.salesEditTitle : l10n.salesCreateTitle,
           showBackButton: true,
-          onBack: () => SalesRoutes.backToHome(context),
           actions: actions,
         ),
         body: body,
@@ -374,6 +388,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
       onWalkInCustomerNameChanged: composer.setWalkInCustomerName,
       onSettlementChanged: (type) {
         composer.setSettlementType(type);
+        setState(() => _dirty = true);
       },
       currencies: _currencies,
       canSelectVoucherBook: _canSelectVoucherBook,
@@ -382,6 +397,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
           final book = await showSaleVoucherBookSelector(context);
           if (book != null) {
             composer.setVoucherBook(book);
+            setState(() => _dirty = true);
           }
         } catch (e) {
           if (!mounted) {
@@ -399,6 +415,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
           final account = await showSaleCashAccountSelector(context);
           if (account != null) {
             composer.setCashAccount(account);
+            setState(() => _dirty = true);
           }
         } catch (e) {
           if (!mounted) {
@@ -413,24 +430,34 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
       },
       onCurrencyChanged: (code, rate) {
         composer.setCurrency(code: code, rateToBase: rate);
+        setState(() => _dirty = true);
       },
-      onDiscountChanged: (value) => composer.setDiscount(
-        type: state.discountType,
-        value: value,
-      ),
+      onDiscountChanged: (value) {
+        composer.setDiscount(
+          type: state.discountType,
+          value: value,
+        );
+        setState(() => _dirty = true);
+      },
     );
 
     final products = SaleProductsTable(
       items: state.items,
       onProductSelected: _onProductSelected,
       onScan: _scanProduct,
-      onQuantitiesChanged: (i, main, sub) => composer.setItemQuantities(
-        index: i,
-        mainQuantity: main,
-        subQuantity: sub,
-      ),
-      onUnitPriceChanged: (i, price) =>
-          composer.setItemUnitPrice(index: i, unitPrice: price),
+      onQuantitiesChanged: (i, main, sub) {
+        composer.setItemQuantities(
+          index: i,
+          mainQuantity: main,
+          subQuantity: sub,
+        );
+        setState(() => _dirty = true);
+      },
+      onUnitPriceChanged: (i, price) {
+        final accepted = composer.setItemUnitPrice(index: i, unitPrice: price);
+        setState(() => _dirty = true);
+        return accepted;
+      },
       minUnitPriceOf: composer.catalogMinUnitPrice,
       onUnitPriceBelowMin: () {
         showAppSnackBar(
@@ -439,7 +466,10 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
           isSuccess: false,
         );
       },
-      onRemove: composer.removeItemAt,
+      onRemove: (index) {
+        composer.removeItemAt(index);
+        setState(() => _dirty = true);
+      },
     );
 
     final body = ListView(

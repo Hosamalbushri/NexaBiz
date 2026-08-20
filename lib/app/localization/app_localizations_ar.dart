@@ -4332,6 +4332,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get exitAppConfirm => 'خروج';
 
   @override
+  String get unsavedChangesTitle => 'تغييرات غير محفوظة';
+
+  @override
+  String get unsavedChangesMessage =>
+      'لديك تغييرات غير محفوظة. هل أنت متأكد أنك تريد المغادرة؟';
+
+  @override
+  String get leave => 'مغادرة';
+
+  @override
   String get splashSubtitle => 'منصة إدارة الأعمال';
 
   @override
@@ -5770,4 +5780,64 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminPermOpPlatformUsers => 'إدارة المستخدمين (منصة)';
+
+  @override
+  String get setupChoiceTitle => 'كيف تريد الإعداد؟';
+
+  @override
+  String get setupChoiceSubtitle => 'اختر كيفية إدارة nexabiz لبيانات أعمالك';
+
+  @override
+  String get setupChoiceServerTitle => 'الاتصال بالخادم';
+
+  @override
+  String get setupChoiceServerSubtitle =>
+      'مزامنة البيانات عبر أجهزة متعددة مع خادم مركزي';
+
+  @override
+  String get setupChoiceLocalTitle => 'الاستخدام المحلي';
+
+  @override
+  String get setupChoiceLocalSubtitle =>
+      'تشغيل كل شيء على هذا الجهاز، لا يتطلب اتصال بالإنترنت';
+
+  @override
+  String get serverSetupTitle => 'الاتصال بالخادم';
+
+  @override
+  String get serverSetupSubtitle => 'أدخل عنوان خادم المزامنة للبدء';
+
+  @override
+  String get serverSetupUrlLabel => 'عنوان الخادم';
+
+  @override
+  String get serverSetupUrlHint => 'http://192.168.1.10:8000';
+
+  @override
+  String get serverSetupValidate => 'فحص الاتصال';
+
+  @override
+  String get serverSetupValidating => 'جاري فحص اتصال الخادم...';
+
+  @override
+  String get serverSetupValidSuccess => 'تم الاتصال بالخادم بنجاح';
+
+  @override
+  String get serverSetupValidFailed => 'تعذر الاتصال بالخادم';
+
+  @override
+  String get serverSetupContinueToSignIn => 'المتابعة لتسجيل الدخول';
+
+  @override
+  String get serverSetupBackToChoice => 'العودة لخيارات الإعداد';
+
+  @override
+  String get onboardingWelcomeTitle => 'مرحباً بك في NexaBiz';
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'منصتك المتكاملة لإدارة الأعمال. دعنا نقوم بإعدادك في بضع خطوات فقط.';
+
+  @override
+  String get onboardingGetStarted => 'ابدأ الآن';
 }

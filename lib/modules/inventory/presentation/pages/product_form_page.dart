@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
+import '../../../../app/exit/app_exit_scope.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/notifications/presentation/providers/notifications_provider.dart';
 import '../../../../app/theme/app_radius.dart';
@@ -53,6 +54,12 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   DateTime? _createdAt;
   DateTime? _updatedAt;
   String? _uuid;
+
+  String _initialCode = '';
+  String _initialName = '';
+  String _initialBarcode = '';
+  String _initialPackSize = '';
+  double _initialPrice = 0.0;
 
   bool get _exporting => _exportBusy != _CodeExportBusy.none;
 
@@ -101,6 +108,20 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     super.dispose();
   }
 
+  bool _hasUnsavedChanges() {
+    if (!widget.isEditing && !_hydrated) {
+      return _nameController.text.trim().isNotEmpty ||
+          _barcodeController.text.trim().isNotEmpty ||
+          _packSizeController.text.trim().isNotEmpty ||
+          _price != 0.0;
+    }
+    return _codeController.text != _initialCode ||
+        _nameController.text != _initialName ||
+        _barcodeController.text != _initialBarcode ||
+        _packSizeController.text != _initialPackSize ||
+        _price != _initialPrice;
+  }
+
   void _hydrate(Product product) {
     if (_hydrated) {
       return;
@@ -114,6 +135,12 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     _createdAt = product.createdAt;
     _updatedAt = product.updatedAt;
     _uuid = product.uuid;
+
+    _initialCode = _codeController.text;
+    _initialName = _nameController.text;
+    _initialBarcode = _barcodeController.text;
+    _initialPackSize = _packSizeController.text;
+    _initialPrice = _price;
   }
 
   Product? _productSnapshot() {
@@ -193,7 +220,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
       }
     }
 
-    return Scaffold(
+    return UnsavedChangesScope(
+      hasUnsavedChanges: _hasUnsavedChanges,
+      child: Scaffold(
       appBar: CustomAppBar(
         title: widget.isEditing ? l10n.productsEdit : l10n.productsAdd,
         showBackButton: true,
@@ -398,6 +427,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
           ],
         ),
       ),
+    ),
     );
   }
 

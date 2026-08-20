@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
+import '../../../../app/exit/app_exit_scope.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -44,6 +45,18 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
   var _isActive = true;
   var _dataSource = CustomerDataSource.local;
   LinkedAccountRef? _linkedAccount;
+
+  // Snapshot of initial values for dirty detection.
+  String _initialCode = '';
+  String _initialName = '';
+  String _initialPhone = '';
+  String _initialEmail = '';
+  String _initialAddress = '';
+  String _initialNotes = '';
+  String _initialAccount = '';
+  String _initialExternalId = '';
+  bool _initialIsActive = true;
+  CustomerDataSource _initialDataSource = CustomerDataSource.local;
 
   @override
   void initState() {
@@ -127,6 +140,17 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
     _isActive = customer.isActive;
     _dataSource = customer.dataSource;
 
+    // Save initial snapshot for dirty detection.
+    _initialCode = _codeController.text;
+    _initialName = _nameController.text;
+    _initialPhone = _phoneController.text;
+    _initialEmail = _emailController.text;
+    _initialAddress = _addressController.text;
+    _initialNotes = _notesController.text;
+    _initialExternalId = _externalIdController.text;
+    _initialIsActive = _isActive;
+    _initialDataSource = _dataSource;
+
     final accountId = customer.accountId;
     if (accountId != null) {
       final linked = await ref
@@ -139,9 +163,36 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
         _accountController.text = accountId;
       }
     }
+    _initialAccount = _accountController.text;
     if (mounted) {
       setState(() {});
     }
+  }
+
+  bool _hasUnsavedChanges() {
+    if (!widget.isEditing && !_hydrated) {
+      // New form — any non-empty field means dirty.
+      return _codeController.text.trim().isNotEmpty ||
+          _nameController.text.trim().isNotEmpty ||
+          _phoneController.text.trim().isNotEmpty ||
+          _emailController.text.trim().isNotEmpty ||
+          _addressController.text.trim().isNotEmpty ||
+          _notesController.text.trim().isNotEmpty ||
+          _externalIdController.text.trim().isNotEmpty ||
+          _accountController.text.trim().isNotEmpty ||
+          !_isActive ||
+          _dataSource != CustomerDataSource.local;
+    }
+    return _codeController.text != _initialCode ||
+        _nameController.text != _initialName ||
+        _phoneController.text != _initialPhone ||
+        _emailController.text != _initialEmail ||
+        _addressController.text != _initialAddress ||
+        _notesController.text != _initialNotes ||
+        _externalIdController.text != _initialExternalId ||
+        _accountController.text != _initialAccount ||
+        _isActive != _initialIsActive ||
+        _dataSource != _initialDataSource;
   }
 
   Future<void> _resolveAccountField() async {
@@ -367,17 +418,19 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
   }
 
   Widget _buildForm(BuildContext context, AppLocalizations l10n) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: widget.isEditing
-            ? l10n.customersEditTitle
-            : l10n.customersCreateTitle,
-        showBackButton: true,
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: AppConstants.pageInsets(context),
+    return UnsavedChangesScope(
+      hasUnsavedChanges: _hasUnsavedChanges,
+      child: Scaffold(
+        appBar: CustomAppBar(
+          title: widget.isEditing
+              ? l10n.customersEditTitle
+              : l10n.customersCreateTitle,
+          showBackButton: true,
+        ),
+        body: Form(
+          key: _formKey,
+          child: ListView(
+            padding: AppConstants.pageInsets(context),
           children: [
             TextFormField(
               controller: _codeController,
@@ -543,6 +596,7 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
           ],
         ),
       ),
+    ),
     );
   }
 }
