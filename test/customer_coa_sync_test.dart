@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
-import 'package:sqlite3/open.dart';
 
 import 'package:stock_count/app/customers/accounting_customer_account_link_adapter.dart';
 import 'package:stock_count/app/customers/customer_remote_account_ensure.dart';
@@ -24,9 +23,6 @@ import 'package:stock_count/modules/customers/data/sync/customers_sync_handlers.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  open.overrideFor(OperatingSystem.linux, () {
-    return DynamicLibrary.open('libsqlite3.so.0');
-  });
 
   late Directory tempDir;
   late AccountingDatabase accountingDb;

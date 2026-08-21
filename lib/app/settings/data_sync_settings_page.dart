@@ -8,6 +8,7 @@ import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../sync/sync_enabled_provider.dart';
 import '../sync/sync_settings_section.dart';
+import '../sync/widgets/sync_inspector_sheet.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import 'widgets/settings_chrome.dart';
@@ -31,6 +32,13 @@ class DataSyncSettingsPage extends ConsumerWidget {
         title: l10n.settingsDataSection,
         centerTitle: false,
         showBackButton: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.manage_search_outlined),
+            tooltip: 'Outbox Inspector',
+            onPressed: () => SyncInspectorSheet.show(context),
+          ),
+        ],
       ),
       body: ListView(
         padding: AppConstants.pageInsets(context).copyWith(

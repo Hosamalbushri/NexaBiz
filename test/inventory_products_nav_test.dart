@@ -142,6 +142,13 @@ class _FakeProductRepository implements ProductRepository {
   }) async {
     return const ProductUpsertResult(insertedCount: 0, updatedCount: 0);
   }
+
+  @override
+  Future<Product> adjustOnHandByUuid({
+    required String uuid,
+    required double delta,
+  }) =>
+      throw UnimplementedError();
 }
 
 class _FakeSettingsRepository extends SettingsRepository {

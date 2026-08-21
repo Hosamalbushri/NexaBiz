@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:excel/excel.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sqlite3/open.dart';
 
 import 'package:stock_count/modules/inventory/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/data/datasources/product_excel_import_datasource.dart';
@@ -27,9 +26,6 @@ void _ensureSqlite() {
   if (!Platform.isLinux) {
     return;
   }
-  open.overrideFor(OperatingSystem.linux, () {
-    return DynamicLibrary.open('libsqlite3.so.0');
-  });
 }
 
 void main() {

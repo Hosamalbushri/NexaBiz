@@ -1,3 +1,5 @@
+import '../../../../core/permissions/permission_guard.dart';
+import '../../permissions/inventory_permission_package.dart';
 import '../entities/product.dart';
 import '../models/catalog_search_field.dart';
 import '../repositories/product_repository.dart';
@@ -38,38 +40,64 @@ class GetProductByBarcode {
 }
 
 class CreateProduct {
-  const CreateProduct(this._repository);
+  const CreateProduct(
+    this._repository, {
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+  }) : _guard = permissionGuard;
 
   final ProductRepository _repository;
+  final PermissionGuard _guard;
 
-  Future<Product> call(ProductDraft draft) => _repository.insert(draft);
+  Future<Product> call(ProductDraft draft) async {
+    _guard.requireAny(InventoryPermissions.productsCreate);
+    return _repository.insert(draft);
+  }
 }
 
 class UpdateProduct {
-  const UpdateProduct(this._repository);
+  const UpdateProduct(
+    this._repository, {
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+  }) : _guard = permissionGuard;
 
   final ProductRepository _repository;
+  final PermissionGuard _guard;
 
-  Future<Product> call(int id, ProductDraft draft) =>
-      _repository.update(id, draft);
+  Future<Product> call(int id, ProductDraft draft) async {
+    _guard.requireAny(InventoryPermissions.productsUpdate);
+    return _repository.update(id, draft);
+  }
 }
 
 class DeleteProduct {
-  const DeleteProduct(this._repository);
+  const DeleteProduct(
+    this._repository, {
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+  }) : _guard = permissionGuard;
 
   final ProductRepository _repository;
+  final PermissionGuard _guard;
 
-  Future<void> call(int id) => _repository.delete(id);
+  Future<void> call(int id) async {
+    _guard.requireAny(InventoryPermissions.productsDelete);
+    return _repository.delete(id);
+  }
 }
 
 class UpsertProducts {
-  const UpsertProducts(this._repository);
+  const UpsertProducts(
+    this._repository, {
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+  }) : _guard = permissionGuard;
 
   final ProductRepository _repository;
+  final PermissionGuard _guard;
 
   Future<ProductUpsertResult> call(
     List<ProductDraft> drafts, {
     void Function(int processed, int total)? onProgress,
-  }) =>
-      _repository.upsertAll(drafts, onProgress: onProgress);
+  }) async {
+    _guard.requireAny(InventoryPermissions.productsImport);
+    return _repository.upsertAll(drafts, onProgress: onProgress);
+  }
 }

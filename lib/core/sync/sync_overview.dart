@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'sync_request_context.dart';
 
 /// Aggregate sync state for UI (settings + global indicator).
@@ -110,11 +112,13 @@ class SyncPassResult {
   bool get hasIncomingFromServer => downloaded > 0;
 }
 
-/// Exponential backoff for retries: 1s, 2s, 4s, 8s… capped.
-Duration syncBackoffForAttempt(int attemptCount) {
+/// Exponential backoff for retries: 1s, 2s, 4s, 8s… capped, with randomized jitter.
+Duration syncBackoffForAttempt(int attemptCount, {math.Random? random}) {
   final capped = attemptCount.clamp(0, 6);
-  final seconds = 1 << capped;
-  return Duration(seconds: seconds);
+  final baseSeconds = 1 << capped;
+  final rng = random ?? math.Random();
+  final jitterMs = rng.nextInt(500);
+  return Duration(seconds: baseSeconds) + Duration(milliseconds: jitterMs);
 }
 
 SyncPhase deriveSyncPhase({

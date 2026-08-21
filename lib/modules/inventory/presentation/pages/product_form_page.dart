@@ -15,6 +15,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/notifications/notification_type.dart';
 import '../../../../core/widgets/app_amount_field.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_responsive.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/product.dart';
@@ -232,94 +233,96 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
         child: ListView(
           padding: const EdgeInsets.all(AppConstants.pagePadding),
           children: [
-            TextFormField(
-              controller: _codeController,
-              readOnly: true,
-              enableInteractiveSelection: true,
-              decoration: InputDecoration(
-                labelText: l10n.codeLabel,
-                helperText: l10n.productsItemCodeAutoHint,
-                suffixIcon: _generatingCode
-                    ? const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                    : Icon(
-                        Icons.lock_outline,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.productsInvalidForm;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: l10n.itemName),
-              textInputAction: TextInputAction.next,
-              onChanged: widget.isEditing ? (_) => setState(() {}) : null,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.productsInvalidForm;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _packSizeController,
-              readOnly: widget.isEditing,
-              enableInteractiveSelection: true,
-              decoration: InputDecoration(
-                labelText: l10n.packSize,
-                hintText: widget.isEditing ? null : l10n.packSizeRequiredHint,
-                helperText: widget.isEditing
-                    ? l10n.productsFieldLockedHint
-                    : null,
-                suffixIcon: widget.isEditing
-                    ? Icon(
-                        Icons.lock_outline,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      )
-                    : null,
-              ),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              textInputAction: TextInputAction.next,
-              validator: (value) {
-                final pack = int.tryParse(value?.trim() ?? '');
-                if (pack == null || pack <= 0) {
-                  return l10n.invalidPackSize;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            AppAmountField(
-              value: _price,
-              onChanged: (value) {
-                setState(() {
-                  _price = value;
-                  _priceError = false;
-                });
-              },
-              decimalPlaces: 2,
-              emptyWhenZero: false,
-              trimTrailingZeros: true,
-              label: l10n.price,
-              hint: widget.isEditing
-                  ? l10n.productsFieldLockedHint
-                  : l10n.priceRequiredHint,
-              readOnly: widget.isEditing,
-              errorText: _priceError ? l10n.productsInvalidForm : null,
+            AppResponsiveForm(
+              maxColumns: 2,
+              children: [
+                TextFormField(
+                  controller: _codeController,
+                  readOnly: true,
+                  enableInteractiveSelection: true,
+                  decoration: InputDecoration(
+                    labelText: l10n.codeLabel,
+                    helperText: l10n.productsItemCodeAutoHint,
+                    suffixIcon: _generatingCode
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : Icon(
+                            Icons.lock_outline,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.productsInvalidForm;
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: l10n.itemName),
+                  textInputAction: TextInputAction.next,
+                  onChanged: widget.isEditing ? (_) => setState(() {}) : null,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.productsInvalidForm;
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _packSizeController,
+                  readOnly: widget.isEditing,
+                  enableInteractiveSelection: true,
+                  decoration: InputDecoration(
+                    labelText: l10n.packSize,
+                    hintText: widget.isEditing ? null : l10n.packSizeRequiredHint,
+                    helperText: widget.isEditing
+                        ? l10n.productsFieldLockedHint
+                        : null,
+                    suffixIcon: widget.isEditing
+                        ? Icon(
+                            Icons.lock_outline,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          )
+                        : null,
+                  ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  textInputAction: TextInputAction.next,
+                  validator: (value) {
+                    final pack = int.tryParse(value?.trim() ?? '');
+                    if (pack == null || pack <= 0) {
+                      return l10n.invalidPackSize;
+                    }
+                    return null;
+                  },
+                ),
+                AppAmountField(
+                  value: _price,
+                  onChanged: (value) {
+                    setState(() {
+                      _price = value;
+                      _priceError = false;
+                    });
+                  },
+                  decimalPlaces: 2,
+                  emptyWhenZero: false,
+                  trimTrailingZeros: true,
+                  label: l10n.price,
+                  hint: widget.isEditing
+                      ? l10n.productsFieldLockedHint
+                      : l10n.priceRequiredHint,
+                  readOnly: widget.isEditing,
+                  errorText: _priceError ? l10n.productsInvalidForm : null,
+                ),
+              ],
             ),
             if (widget.isEditing) ...[
               const SizedBox(height: AppSpacing.xl),

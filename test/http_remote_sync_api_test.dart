@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:stock_count/core/errors/app_failure.dart';
@@ -10,6 +12,20 @@ import 'package:stock_count/core/sync/sync_operation.dart';
 import 'package:stock_count/core/sync/sync_status.dart';
 
 void main() {
+  late Directory tempDir;
+
+  setUp(() async {
+    tempDir = await Directory.systemTemp.createTemp('http_sync_api_test_');
+    Hive.init(tempDir.path);
+  });
+
+  tearDown(() async {
+    await Hive.deleteFromDisk();
+    if (tempDir.existsSync()) {
+      await tempDir.delete(recursive: true);
+    }
+  });
+
   const config = SyncApiConfig(
     baseUrl: 'http://example.test',
     apiToken: 'test-token',

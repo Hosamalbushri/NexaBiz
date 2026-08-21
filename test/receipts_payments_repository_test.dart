@@ -2,7 +2,6 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sqlite3/open.dart';
 import 'package:stock_count/core/sync/sync_status.dart';
 import 'package:stock_count/modules/receipts_payments/data/database/receipts_payments_database.dart';
 import 'package:stock_count/modules/receipts_payments/data/repositories/financial_transaction_repository_impl.dart';
@@ -17,9 +16,6 @@ import 'package:stock_count/modules/receipts_payments/domain/services/rp_voucher
 import 'package:stock_count/modules/receipts_payments/domain/usecases/financial_transaction_usecases.dart';
 
 void _setupSqlite() {
-  open.overrideFor(OperatingSystem.linux, () {
-    return DynamicLibrary.open('libsqlite3.so.0');
-  });
 }
 
 class _FakeVoucherBooks implements RpVoucherBookPort {

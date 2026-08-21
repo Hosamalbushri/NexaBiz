@@ -285,6 +285,10 @@ class AccountingDatabase extends _$AccountingDatabase {
       'ON journal_entries (entry_date)',
     );
     await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_journal_entries_voucher '
+      'ON journal_entries (voucher_number)',
+    );
+    await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_journal_entries_source '
       'ON journal_entries (source_type, source_id)',
     );

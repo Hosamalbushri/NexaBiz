@@ -106,6 +106,16 @@ class SyncQueue {
     _changes.add(null);
   }
 
+  static int _entityTypePriority(String entityType) {
+    return switch (entityType) {
+      'company_profile' || 'fiscal_year' || 'currency_rate' => 1,
+      'account' || 'customer' || 'product' => 2,
+      'inventory_item' || 'sale' || 'receipt_payment' => 3,
+      'journal_entry' => 4,
+      _ => 5,
+    };
+  }
+
   Future<List<SyncOperation>> peekReady({DateTime? now}) async {
     final box = await _ensureBox();
     final stamp = (now ?? DateTime.now().toUtc());
@@ -121,8 +131,15 @@ class SyncQueue {
           }
           return true;
         })
-        .toList(growable: false);
-    ready.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        .toList(growable: true);
+    ready.sort((a, b) {
+      final prioA = _entityTypePriority(a.entityType);
+      final prioB = _entityTypePriority(b.entityType);
+      if (prioA != prioB) {
+        return prioA.compareTo(prioB);
+      }
+      return a.createdAt.compareTo(b.createdAt);
+    });
     return ready;
   }
 
@@ -246,7 +263,15 @@ class SyncQueue {
     return count;
   }
 
-  Future<void> dispose() async {
-    await _changes.close();
+  /// Returns all operations currently stored in outbox for inspection.
+  Future<List<SyncOperation>> peekAll() async {
+    final box = await _ensureBox();
+    final list = box.values.toList(growable: true);
+    list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return list;
+  }
+
+  void dispose() {
+    _changes.close();
   }
 }

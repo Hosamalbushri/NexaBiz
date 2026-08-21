@@ -6,7 +6,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
-import 'package:sqlite3/open.dart';
 import 'package:stock_count/core/connectivity/connectivity_service.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
 import 'package:stock_count/core/sync/sync_manager.dart';
@@ -27,9 +26,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
 
-  open.overrideFor(OperatingSystem.linux, () {
-    return DynamicLibrary.open('libsqlite3.so.0');
-  });
 
   late Directory tempDir;
   late Box<SyncOperation> syncBoxA;

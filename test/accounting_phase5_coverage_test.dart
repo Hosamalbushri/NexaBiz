@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
-import 'package:sqlite3/open.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/sales/accounting_sale_ledger_adapter.dart';
 import 'package:stock_count/core/sync/sync_operation.dart';
@@ -35,9 +34,6 @@ import 'package:stock_count/modules/sales/domain/entities/sale_status.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  open.overrideFor(OperatingSystem.linux, () {
-    return DynamicLibrary.open('libsqlite3.so.0');
-  });
 
   group('AsyncSearchToken', () {
     test('discards stale generations while keeping the latest', () {

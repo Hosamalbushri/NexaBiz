@@ -9,6 +9,7 @@ import '../../../../app/exit/app_exit_scope.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_responsive.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/customer.dart';
@@ -432,73 +433,75 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
           child: ListView(
             padding: AppConstants.pageInsets(context),
           children: [
-            TextFormField(
-              controller: _codeController,
-              textCapitalization: TextCapitalization.characters,
-              decoration: InputDecoration(
-                labelText: l10n.customersFieldCode,
-                helperText: l10n.customersFieldCodeHelper,
-                suffixIcon: widget.isEditing
-                    ? null
-                    : IconButton(
-                        tooltip: l10n.customersGenerateCode,
-                        onPressed: _generatingCode
-                            ? null
-                            : () async {
-                                setState(() => _generatingCode = true);
-                                try {
-                                  final code = await _generateCodeFromParent();
-                                  if (!mounted || code == null) {
-                                    return;
-                                  }
-                                  _codeController.text = code;
-                                } finally {
-                                  if (mounted) {
-                                    setState(() => _generatingCode = false);
-                                  }
-                                }
-                              },
-                        icon: _generatingCode
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.auto_awesome),
-                      ),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.customersErrorInvalidCode;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _nameController,
-              textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(labelText: l10n.customersFieldName),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.customersErrorInvalidName;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(labelText: l10n.customersFieldPhone),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(labelText: l10n.customersFieldEmail),
+            AppResponsiveForm(
+              maxColumns: 2,
+              children: [
+                TextFormField(
+                  controller: _codeController,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: InputDecoration(
+                    labelText: l10n.customersFieldCode,
+                    helperText: l10n.customersFieldCodeHelper,
+                    suffixIcon: widget.isEditing
+                        ? null
+                        : IconButton(
+                            tooltip: l10n.customersGenerateCode,
+                            onPressed: _generatingCode
+                                ? null
+                                : () async {
+                                    setState(() => _generatingCode = true);
+                                    try {
+                                      final code = await _generateCodeFromParent();
+                                      if (!mounted || code == null) {
+                                        return;
+                                      }
+                                      _codeController.text = code;
+                                    } finally {
+                                      if (mounted) {
+                                        setState(() => _generatingCode = false);
+                                      }
+                                    }
+                                  },
+                            icon: _generatingCode
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.auto_awesome),
+                          ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.customersErrorInvalidCode;
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _nameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: InputDecoration(labelText: l10n.customersFieldName),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.customersErrorInvalidName;
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(labelText: l10n.customersFieldPhone),
+                ),
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(labelText: l10n.customersFieldEmail),
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.md),
             TextFormField(

@@ -22,7 +22,6 @@ import '../../../../core/widgets/custom_app_bar.dart';
 import '../../domain/entities/system_setup_state.dart';
 import '../../domain/ports/system_setup_seed_exception.dart';
 import '../providers/system_setup_providers.dart';
-import '../widgets/system_settings_hub.dart';
 import '../widgets/system_setup_labels.dart';
 import '../widgets/system_setup_progress.dart';
 
@@ -614,29 +613,45 @@ class _SeedLocalStep extends ConsumerWidget {
           ],
           if (!done) ...[
             const SizedBox(height: AppSpacing.lg),
-            AppButton(
-              label: l10n.systemSetupSeedCreateLocalTitle,
-              icon: Icons.play_arrow_rounded,
-              isLoading: busy,
-              expand: true,
-              onPressed: busy
-                  ? null
-                  : () async {
-                      await onRun(
-                        () => ref
-                            .read(systemInitializationCoordinatorProvider)
-                            .runSeedLocal(),
-                        successMessage: l10n.systemSetupSeedDone,
-                      );
-                      if (context.mounted) {
-                        final ready = await ref
-                            .read(systemInitializationCoordinatorProvider)
-                            .isReady();
-                        if (ready && context.mounted) {
-                          context.go(AppRoutes.dashboard);
-                        }
-                      }
-                    },
+            _SeedChoiceTile(
+              icon: Icons.cloud_download_rounded,
+              title: l10n.systemSetupSeedSyncTitle,
+              subtitle: l10n.systemSetupSeedSyncSubtitle,
+              enabled: !busy && syncReady,
+              trailingLabel: syncReady ? null : l10n.systemSetupSeedSignInToSync,
+              onTap: () async {
+                await onRun(
+                  () => ref
+                      .read(systemInitializationCoordinatorProvider)
+                      .runSeedFromSync(),
+                  successMessage: l10n.systemSetupSeedDone,
+                );
+                if (context.mounted) {
+                  ref.invalidate(systemSetupProgressProvider);
+                  ref.invalidate(systemSetupReadyProvider);
+                  context.go(AppRoutes.dashboard);
+                }
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _SeedChoiceTile(
+              icon: Icons.build_circle_outlined,
+              title: l10n.systemSetupSeedCreateLocalTitle,
+              subtitle: l10n.systemSetupSeedCreateLocalSubtitle,
+              enabled: !busy,
+              onTap: () async {
+                await onRun(
+                  () => ref
+                      .read(systemInitializationCoordinatorProvider)
+                      .runSeedLocal(),
+                  successMessage: l10n.systemSetupSeedDone,
+                );
+                if (context.mounted) {
+                  ref.invalidate(systemSetupProgressProvider);
+                  ref.invalidate(systemSetupReadyProvider);
+                  context.go(AppRoutes.dashboard);
+                }
+              },
             ),
           ] else ...[
             const SizedBox(height: AppSpacing.md),

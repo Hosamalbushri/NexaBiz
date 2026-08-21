@@ -1,3 +1,5 @@
+import '../../../../core/permissions/permission_guard.dart';
+import '../../permissions/inventory_permission_package.dart';
 import '../entities/inventory_item.dart';
 import '../repositories/inventory_repository.dart';
 
@@ -26,29 +28,49 @@ class SearchInventoryItems {
 }
 
 class SaveInventoryCount {
-  const SaveInventoryCount(this._repository);
+  const SaveInventoryCount(
+    this._repository, {
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+  }) : _guard = permissionGuard;
 
   final InventoryRepository _repository;
+  final PermissionGuard _guard;
 
-  Future<void> call(InventoryItem item) => _repository.save(item);
+  Future<void> call(InventoryItem item) async {
+    _guard.requireAny(InventoryPermissions.stockAdjust);
+    return _repository.save(item);
+  }
 }
 
 class ReplaceInventoryItems {
-  const ReplaceInventoryItems(this._repository);
+  const ReplaceInventoryItems(
+    this._repository, {
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+  }) : _guard = permissionGuard;
 
   final InventoryRepository _repository;
+  final PermissionGuard _guard;
 
   Future<void> call(
     List<InventoryItem> items, {
     void Function(int processed, int total)? onProgress,
-  }) =>
-      _repository.replaceAll(items, onProgress: onProgress);
+  }) async {
+    _guard.requireAny(InventoryPermissions.stockImport);
+    return _repository.replaceAll(items, onProgress: onProgress);
+  }
 }
 
 class ClearInventoryItems {
-  const ClearInventoryItems(this._repository);
+  const ClearInventoryItems(
+    this._repository, {
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+  }) : _guard = permissionGuard;
 
   final InventoryRepository _repository;
+  final PermissionGuard _guard;
 
-  Future<void> call() => _repository.clear();
+  Future<void> call() async {
+    _guard.requireAny(InventoryPermissions.stockClear);
+    return _repository.clear();
+  }
 }

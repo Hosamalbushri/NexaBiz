@@ -2,7 +2,6 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sqlite3/open.dart';
 import 'package:stock_count/modules/receipts_payments/data/database/receipts_payments_database.dart';
 import 'package:stock_count/modules/receipts_payments/data/repositories/financial_transaction_repository_impl.dart';
 import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction.dart';
@@ -12,9 +11,6 @@ import 'package:stock_count/modules/receipts_payments/domain/entities/transactio
 import 'package:stock_count/modules/receipts_payments/domain/models/transaction_list_filter.dart';
 
 void _setupSqlite() {
-  open.overrideFor(OperatingSystem.linux, () {
-    return DynamicLibrary.open('libsqlite3.so.0');
-  });
 }
 
 /// Performance harness for Receipts & Payments list/dashboard queries.

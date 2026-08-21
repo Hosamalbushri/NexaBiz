@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
-import 'package:sqlite3/open.dart';
 import 'package:stock_count/app/reports/trial_balance_report_data_adapter.dart';
 import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/core/sync/sync_operation.dart';
@@ -20,9 +19,6 @@ import 'helpers/journal_posting_test_helper.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  open.overrideFor(OperatingSystem.linux, () {
-    return DynamicLibrary.open('libsqlite3.so.0');
-  });
 
   late AccountingDatabase db;
   late AccountRepositoryImpl accounts;

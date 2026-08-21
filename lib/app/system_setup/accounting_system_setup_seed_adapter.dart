@@ -39,31 +39,33 @@ class AccountingSystemSetupSeedAdapter implements SystemSetupSeedPort {
       throw const SystemSetupSeedException(SystemSetupSeedError.syncRequired);
     }
 
-    // Persist preference only — never block setup UI on network / DB seed.
     await _settings.saveChartBootstrapPreferRemote(true);
-    unawaited(_bootstrapRemoteInBackground());
-  }
+    await _voucherBooks.ensureDefaultSections();
 
-  Future<void> _bootstrapRemoteInBackground() async {
     try {
-      await _voucherBooks.ensureDefaultSections();
       final result = await _syncManager.syncNow(
         notify: true,
         upload: false,
         download: true,
         trigger: SyncPassTrigger.auto,
-      );
-      if (result.outcome == SyncPassOutcome.authRequired ||
-          result.outcome == SyncPassOutcome.skippedDisabled ||
-          result.outcome == SyncPassOutcome.skippedOffline) {
-        return;
+      ).timeout(const Duration(seconds: 15));
+
+      if (result.outcome == SyncPassOutcome.authRequired) {
+        throw const SystemSetupSeedException(SystemSetupSeedError.authRequired);
       }
-      final accounts = await _accounts.getAll(includeInactive: true);
-      if (accounts.isNotEmpty) {
-        await _settings.saveChartBootstrapPreferRemote(false);
+      if (result.outcome == SyncPassOutcome.skippedDisabled) {
+        throw const SystemSetupSeedException(SystemSetupSeedError.syncRequired);
       }
-    } catch (_) {
-      // Preference stays set; a later manual/auto sync can retry.
+    } catch (e) {
+      if (e is SystemSetupSeedException) rethrow;
+      // Timeout or network error — fallback to local seeding below.
     }
+
+    final accounts = await _accounts.getAll(includeInactive: true);
+    if (accounts.isEmpty) {
+      // Fallback: seed local default chart so the user is never blocked or stuck
+      await _accounts.ensureDefaultChartSeeded();
+    }
+    await _settings.saveChartBootstrapPreferRemote(false);
   }
 }

@@ -6,6 +6,7 @@ import '../network/remote_sync_api.dart';
 import '../utils/id_generator.dart';
 import 'conflict_resolver.dart';
 import 'sync_entity_handler.dart';
+import 'sync_error_code.dart';
 import 'sync_metrics_store.dart';
 import 'sync_operation.dart';
 import 'sync_overview.dart';

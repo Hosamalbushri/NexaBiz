@@ -1,7 +1,6 @@
 import 'dart:ffi';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sqlite3/open.dart';
 
 import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
 import 'package:stock_count/modules/accounting/data/repositories/voucher_book_repository_impl.dart';
@@ -13,9 +12,6 @@ import 'package:stock_count/modules/accounting/domain/services/default_voucher_b
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  open.overrideFor(OperatingSystem.linux, () {
-    return DynamicLibrary.open('libsqlite3.so.0');
-  });
 
   late AccountingDatabase db;
   late VoucherBookRepositoryImpl repo;

@@ -398,6 +398,10 @@ class SyncService implements SyncEngine
             'l' => $limit,
         ]);
 
+        if (SyncChange::query()->where('company_id', $companyId)->count() === 0) {
+            $this->backfillSyncChangesFromEntities($companyId);
+        }
+
         $query = SyncChange::query()->where('company_id', $companyId);
         if ($entityType) {
             $query->where('entity_type', $entityType);
@@ -461,6 +465,23 @@ class SyncService implements SyncEngine
         } catch (\Throwable) {
             return false;
         }
+    }
+
+    private function backfillSyncChangesFromEntities(string $companyId): void
+    {
+        $entities = SyncEntity::query()->where('company_id', $companyId)->get();
+        if ($entities->isEmpty()) {
+            return;
+        }
+
+        foreach ($entities as $entity) {
+            $this->recordChange($companyId, $entity, 'create');
+        }
+
+        Log::channel('sync')->info('Backfilled {count} sync_changes rows for company={c}', [
+            'count' => $entities->count(),
+            'c' => $companyId,
+        ]);
     }
 
     private function epochMs(CarbonImmutable $dt): int

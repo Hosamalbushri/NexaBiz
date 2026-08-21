@@ -103,6 +103,13 @@ class _FakeProductRepository implements ProductRepository {
     void Function(int processed, int total)? onProgress,
   }) =>
       throw UnimplementedError();
+
+  @override
+  Future<Product> adjustOnHandByUuid({
+    required String uuid,
+    required double delta,
+  }) =>
+      throw UnimplementedError();
 }
 
 void main() {

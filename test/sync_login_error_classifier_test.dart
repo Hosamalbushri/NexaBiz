@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -15,7 +16,7 @@ void main() {
     });
 
     test('detects network timeout separately', () {
-      const error = TimeoutException('timed out');
+      final error = TimeoutException('timed out');
       expect(SyncLoginErrorClassifier.isTlsCertificateFailure(error), isFalse);
       expect(
         SyncLoginErrorClassifier.uiMessageFor(error),
