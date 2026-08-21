@@ -13,6 +13,7 @@ import '../../modules/authentication/presentation/pages/sync_login_page.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
 import '../../modules/system_setup/presentation/pages/system_setup_wizard_page.dart';
+import '../../modules/system_setup/presentation/providers/system_setup_providers.dart';
 import '../exit/app_exit_scope.dart';
 import '../notifications/presentation/pages/notification_center_page.dart';
 import '../onboarding/onboarding_page.dart';
@@ -32,11 +33,17 @@ import '../splash/splash_page.dart';
 import 'app_navigator_keys.dart';
 import 'app_routes.dart';
 
+import '../onboarding/server_bootstrap_login_page.dart';
+import '../onboarding/server_bootstrap_progress_page.dart';
+import '../onboarding/server_setup_page.dart';
+
 bool _isAppLockExempt(String path) {
   return path == AppRoutes.splash ||
       path == AppRoutes.onboarding ||
       path == AppRoutes.setupChoice ||
       path == AppRoutes.serverSetup ||
+      path == AppRoutes.serverBootstrapLogin ||
+      path == AppRoutes.serverBootstrapProgress ||
       path == AppRoutes.login ||
       path == AppRoutes.changePassword ||
       path == SystemSetupRoutes.root ||
@@ -53,7 +60,9 @@ bool _isPermissionExempt(String path) {
       path.startsWith('${AppRoutes.settings}/') ||
       path == AppRoutes.notifications ||
       path == AppRoutes.setupChoice ||
-      path == AppRoutes.serverSetup;
+      path == AppRoutes.serverSetup ||
+      path == AppRoutes.serverBootstrapLogin ||
+      path == AppRoutes.serverBootstrapProgress;
 }
 
 /// Composes splash, persistent [AppShell] chrome, shell branches, and modules.
@@ -72,6 +81,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.listen(authStateProvider, (_, _) {
     refresh.value++;
   });
+  ref.listen(systemSetupReadyProvider, (_, _) {
+    refresh.value++;
+  });
 
   final router = GoRouter(
     navigatorKey: appRootNavigatorKey,
@@ -85,8 +97,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       final auth = ref.read(authStateProvider);
       final onLogin = path == AppRoutes.login;
+      final isFirstLaunchRoute = path == AppRoutes.onboarding ||
+          path == AppRoutes.setupChoice ||
+          path == AppRoutes.serverSetup ||
+          path == AppRoutes.serverBootstrapLogin ||
+          path == AppRoutes.serverBootstrapProgress;
+
       if (auth.status == AuthStatus.unauthenticated) {
-        if (path == AppRoutes.splash || onLogin) {
+        if (path == AppRoutes.splash || onLogin || isFirstLaunchRoute) {
           return null;
         }
         return AppRoutes.login;
@@ -95,12 +113,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         if (auth.mustChangePassword) {
           return AppRoutes.changePassword;
         }
-        // For first-launch users, splash handles routing (onboarding → setup).
-        final startup = ref.read(startupStateProvider);
-        if (startup.isFirstLaunch) {
-          return AppRoutes.splash;
+        final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
+        if (ready) {
+          return AppRoutes.dashboard;
         }
-        return AppRoutes.dashboard;
+        return SystemSetupRoutes.root;
       }
 
       if (auth.isAuthenticated &&
@@ -113,19 +130,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (auth.isAuthenticated &&
           !auth.mustChangePassword &&
           path == AppRoutes.changePassword) {
-        return AppRoutes.dashboard;
+        final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
+        if (ready) {
+          return AppRoutes.dashboard;
+        }
+        return SystemSetupRoutes.root;
       }
 
       // Guard dashboard for first-launch users until setup is ready.
-      // Splash page handles the correct routing (onboarding → setup choice → setup).
-      // Users with an active remote session (completed server login) bypass this
-      // guard — setup is effectively complete once they authenticated remotely.
+      // Users with an active remote session (completed server login) bypass this guard.
       if (auth.isAuthenticated &&
           !auth.mustChangePassword &&
           path == AppRoutes.dashboard) {
+        final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
         final startup = ref.read(startupStateProvider);
-        if (startup.isFirstLaunch && !auth.isRemoteSession) {
-          return AppRoutes.splash;
+        if (startup.isFirstLaunch && !auth.isRemoteSession && !ready) {
+          return SystemSetupRoutes.root;
+        }
+      }
+
+      // Guard initial setup wizard: restrict /system-setup to initial launch setup only.
+      if (path == SystemSetupRoutes.root) {
+        final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
+        if (ready) {
+          return AppRoutes.dashboard;
         }
       }
 
@@ -193,6 +221,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.serverSetup,
         name: 'serverSetup',
         builder: (context, state) => const ServerSetupPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.serverBootstrapLogin,
+        name: 'serverBootstrapLogin',
+        builder: (context, state) {
+          final baseUrl = state.extra is String ? state.extra as String : '';
+          return ServerBootstrapLoginPage(initialBaseUrl: baseUrl);
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.serverBootstrapProgress,
+        name: 'serverBootstrapProgress',
+        builder: (context, state) => const ServerBootstrapProgressPage(),
+      ),
+      GoRoute(
+        path: SystemSetupRoutes.root,
+        name: 'systemSetup',
+        builder: (context, state) => const SystemSetupWizardPage(),
       ),
       GoRoute(
         path: AppLockRoutes.root,
@@ -296,11 +342,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.notifications,
             name: 'notifications',
             builder: (context, state) => const NotificationCenterPage(),
-          ),
-          GoRoute(
-            path: SystemSetupRoutes.root,
-            name: 'systemSetup',
-            builder: (context, state) => const SystemSetupWizardPage(),
           ),
           ...registry.routes,
         ],

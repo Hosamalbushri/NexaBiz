@@ -1,5 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/sync/sync_operation.dart';
+import '../../../core/sync/sync_providers.dart';
+import '../../../core/sync/sync_queue.dart';
+import '../../../core/tenancy/session_company.dart';
 import '../../presentation/providers/dashboard_services_provider.dart';
 import '../settings_repository.dart';
 import 'company_logo_store.dart';
@@ -15,6 +19,8 @@ final companyProfileProvider =
         return CompanyProfileController(
           repository: ref.watch(settingsRepositoryProvider),
           logoStore: ref.watch(companyLogoStoreProvider),
+          syncQueue: ref.watch(syncQueueProvider),
+          companyId: ref.watch(sessionCompanyIdProvider) ?? '',
         );
       },
     );
@@ -29,14 +35,20 @@ class CompanyProfileController
   CompanyProfileController({
     required SettingsRepository repository,
     required CompanyLogoStore logoStore,
+    SyncQueue? syncQueue,
+    String companyId = '',
   }) : _repository = repository,
        _logoStore = logoStore,
+       _syncQueue = syncQueue,
+       _companyId = companyId,
        super(const AsyncValue.loading()) {
     _load();
   }
 
   final SettingsRepository _repository;
   final CompanyLogoStore _logoStore;
+  final SyncQueue? _syncQueue;
+  final String _companyId;
 
   Future<void> _load() async {
     state = const AsyncValue.loading();
@@ -78,6 +90,23 @@ class CompanyProfileController
       invoiceHeaderLeft: opt(profile.invoiceHeaderLeft),
     );
     await _repository.saveCompanyProfile(normalized);
+
+    final queue = _syncQueue;
+    if (queue != null) {
+      final entityId = _companyId.isNotEmpty
+          ? _companyId
+          : '00000000-0000-0000-0000-000000000000';
+      await queue.enqueue(
+        SyncOperation.create(
+          entityType: 'company_profile',
+          entityId: entityId,
+          type: SyncOperationType.create,
+          baseVersion: 0,
+          payload: normalized.toMap(),
+        ),
+      );
+    }
+
     state = AsyncValue.data(normalized);
   }
 
@@ -85,8 +114,7 @@ class CompanyProfileController
     final current = state.valueOrNull ?? const CompanyProfile();
     final storedPath = await _logoStore.saveFromPath(sourcePath);
     final updated = current.copyWith(logoPath: storedPath);
-    await _repository.saveCompanyProfile(updated);
-    state = AsyncValue.data(updated);
+    await save(updated);
     return updated;
   }
 
@@ -94,8 +122,8 @@ class CompanyProfileController
     final current = state.valueOrNull ?? const CompanyProfile();
     await _logoStore.clear();
     final updated = current.copyWith(clearLogoPath: true);
-    await _repository.saveCompanyProfile(updated);
-    state = AsyncValue.data(updated);
+    await save(updated);
     return updated;
   }
 }
+

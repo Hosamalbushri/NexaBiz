@@ -21,6 +21,12 @@ class AppRoutes {
   /// Server address validation and initial connection (first-launch server flow).
   static const String serverSetup = '/server-setup';
 
+  /// Dedicated server bootstrap login page for company initialization authorization.
+  static const String serverBootstrapLogin = '/server-bootstrap-login';
+
+  /// Server bootstrap progress interface (data download, atomic DB write, initial sync).
+  static const String serverBootstrapProgress = '/server-bootstrap-progress';
+
   /// Root alias — always redirected to [dashboard].
   static const String root = '/';
 

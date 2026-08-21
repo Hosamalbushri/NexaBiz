@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +9,7 @@ import '../../core/network/server_validator.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
+import '../bootstrap/app_initialization.dart';
 import '../localization/app_localizations.dart';
 import '../router/app_routes.dart';
 import '../sync/sync_enabled_provider.dart';
@@ -79,26 +82,9 @@ class _ServerSetupPageState extends ConsumerState<ServerSetupPage> {
   }
 
   Future<void> _continueToSignIn() async {
-    final l10n = AppLocalizations.of(context);
-    // Navigate to the sync login page. On success the sync login page
-    // enables sync and pops back.
-    await context.push<bool>(AppRoutes.settingsDataSyncLogin);
-    if (!mounted) return;
-
-    // Do not rely on the push pop-result: GoRouter may not propagate the
-    // value back through a ShellRoute boundary.  Check the actual auth
-    // state instead — if login succeeded the controller will be
-    // authenticated with a remote session.
-    final auth = ref.read(authStateProvider);
-    if (auth.isAuthenticated) {
-      showAppSnackBar(
-        context,
-        message: l10n.syncSessionAuthenticated,
-        isSuccess: true,
-      );
-      // Initial sync runs in the background via SyncManager.
-      context.go(AppRoutes.dashboard);
-    }
+    final baseUrl = _urlController.text.trim();
+    // Navigate to dedicated Server Bootstrap Login screen
+    context.go(AppRoutes.serverBootstrapLogin, extra: baseUrl);
   }
 
   @override

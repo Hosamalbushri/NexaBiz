@@ -9,6 +9,7 @@ import '../core/di/app_providers.dart';
 import '../core/notifications/notification_type.dart';
 import '../core/sync/sync_overview.dart';
 import '../core/sync/sync_providers.dart';
+import '../core/sync/sync_request_context.dart';
 import '../core/widgets/app_snackbar.dart';
 import '../core/widgets/loading_overlay.dart';
 import '../modules/app_lock/presentation/providers/app_lock_providers.dart';
@@ -49,6 +50,15 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
       },
       onResume: () {
         ref.read(appLockControllerProvider.notifier).onAppResumed();
+        final syncManager = ref.read(syncManagerProvider);
+        if (syncManager.isEnabled && !syncManager.overview.isSyncing) {
+          unawaited(
+            syncManager.syncNow(
+              trigger: SyncPassTrigger.auto,
+              notify: false,
+            ),
+          );
+        }
       },
     );
   }

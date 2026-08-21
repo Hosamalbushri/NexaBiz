@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../core/database/hive_boxes.dart';
 import '../../core/database/hive_initializer.dart';
 import '../../core/di/app_providers.dart';
+import '../../core/logging/app_error_log.dart';
 import '../../core/network/sync_api_config.dart';
 import '../../core/sync/sync_providers.dart';
 import '../../core/sync/sync_cursor_store.dart';
@@ -21,25 +22,31 @@ import '../../modules/sales/data/sync/sales_sync_bootstrap.dart';
 import '../customers/customer_remote_account_ensure.dart';
 import '../notifications/data/notification_hive.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
+import '../settings/company/company_profile_sync_bootstrap.dart';
 import '../settings/settings_repository.dart';
 import '../sync/sync_background_scheduler.dart';
 import '../sync/sync_enabled_provider.dart';
 
-/// Application-level bootstrap: core services + optional sync wiring.
-///
-/// Splash coordinates this flow; module-specific setup stays in each module.
+/// Application-level bootstrap divided into independent, resilient stages.
 class AppBootstrap {
   const AppBootstrap._();
 
-  /// Runs required platform initialization once per process (idempotent boxes).
-  static Future<void> initialize(Ref ref) async {
+  /// Stage B: Local Storage Initialization
+  static Future<void> bootstrapStorage() async {
     await HiveInitializer.initialize();
     await NotificationHive.openBox();
+  }
+
+  /// Stage C: Local Database & Sync Boxes Initialization
+  static Future<void> bootstrapDatabase() async {
     await openSyncQueueBox();
     await openSyncCursorBox();
     await openSyncMetricsBox();
     await openSyncOsWakeBox();
+  }
 
+  /// Stage D: Configuration Initialization
+  static Future<void> bootstrapConfig(Ref ref) async {
     final settingsRepository = SettingsRepository();
     final themeMode = await settingsRepository.loadThemeMode();
     final locale = await settingsRepository.loadLocale();
@@ -65,13 +72,30 @@ class AppBootstrap {
       apiToken: resolvedToken,
       enabled: syncEnabled && endpointUsable,
     );
+  }
 
+  /// Stage E: Local Auth Hydration (Non-blocking for remote network failures)
+  static Future<void> bootstrapAuth(Ref ref) async {
     await ref.read(localAuthStoreProvider).ensureSeeded();
-    await ref.read(authStateProvider.notifier).bootstrap(
-          preferRemote: syncEnabled,
-        );
-    await ref.read(appLockControllerProvider.notifier).hydrate();
+    final syncEnabled = await SettingsRepository().loadSyncEnabled();
+    try {
+      await ref.read(authStateProvider.notifier).bootstrap(
+            preferRemote: syncEnabled,
+          );
+    } catch (e, stack) {
+      AppErrorLog.record(e, stack, source: 'bootstrapAuth');
+      // Falling back to unauthenticated / local mode instead of throwing fatal init exception
+    }
+    try {
+      await ref.read(appLockControllerProvider.notifier).hydrate();
+    } catch (e, stack) {
+      AppErrorLog.record(e, stack, source: 'hydrateAppLock');
+    }
+  }
 
+  /// Stage F: Synchronization Wiring & Scheduler
+  static Future<void> bootstrapSync(Ref ref) async {
+    registerCompanyProfileSyncHandlers(ref);
     registerInventorySyncHandlers(ref);
     registerAccountingSyncHandlers(ref);
     final customerAccountEnsure = CustomerRemoteAccountEnsure(
@@ -85,16 +109,26 @@ class AppBootstrap {
     );
     registerSalesSyncHandlers(ref);
     registerReceiptsPaymentsSyncHandlers(ref);
-    // Hydrate sync preference (kept even if remote session needs renewal).
+
+    final syncEnabled = await SettingsRepository().loadSyncEnabled();
     await ref.read(syncEnabledProvider.notifier).hydrate(syncEnabled);
     final syncActuallyEnabled = ref.read(syncEnabledProvider) &&
         ref.read(authStateProvider).canUseRemoteSync;
     await ref.read(syncManagerProvider).start(enabled: syncActuallyEnabled);
     await ref.read(syncAutoPreferencesProvider.notifier).hydrate();
-    // Keep the provider alive and start background / auto passes.
     ref.read(syncBackgroundSchedulerProvider).start();
+  }
+
+  /// Master runner for backwards-compatibility callers.
+  static Future<void> initialize(Ref ref) async {
+    await bootstrapStorage();
+    await bootstrapDatabase();
+    await bootstrapConfig(ref);
+    await bootstrapAuth(ref);
+    await bootstrapSync(ref);
   }
 
   /// Whether the platform settings box is open (bootstrap completed storage step).
   static bool get isStorageReady => Hive.isBoxOpen(HiveBoxes.settings);
 }
+

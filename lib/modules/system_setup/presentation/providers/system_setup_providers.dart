@@ -26,12 +26,11 @@ final systemInitializationCoordinatorProvider =
       );
     });
 
-final systemSetupProgressProvider =
-    FutureProvider.autoDispose<SetupProgress>((ref) {
-      return ref.watch(systemInitializationCoordinatorProvider).loadProgress();
-    });
+final systemSetupProgressProvider = FutureProvider<SetupProgress>((ref) {
+  return ref.watch(systemInitializationCoordinatorProvider).loadProgress();
+});
 
-final systemSetupReadyProvider = FutureProvider.autoDispose<bool>((ref) async {
+final systemSetupReadyProvider = FutureProvider<bool>((ref) async {
   final progress = await ref.watch(systemSetupProgressProvider.future);
   return progress.isReady;
 });

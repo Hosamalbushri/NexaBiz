@@ -21,6 +21,7 @@ class SecureTokenStorage implements TokenStore {
   static const _accessKey = 'auth_access_token';
   static const _refreshKey = 'auth_refresh_token';
   static const _expiresAtKey = 'auth_access_expires_at';
+  static const _bootstrapKey = 'server_bootstrap_token';
 
   final FlutterSecureStorage _secure;
   bool? _secureAvailable;
@@ -107,18 +108,46 @@ class SecureTokenStorage implements TokenStore {
     return DateTime.tryParse(raw)?.toUtc();
   }
 
+  Future<void> saveBootstrapToken(String token) async {
+    if (await _canUseSecure()) {
+      await _secure.write(key: _bootstrapKey, value: token);
+      return;
+    }
+    final box = await _hiveBox();
+    await box.put(_bootstrapKey, token);
+  }
+
+  Future<String?> readBootstrapToken() async {
+    if (await _canUseSecure()) {
+      return _secure.read(key: _bootstrapKey);
+    }
+    return (await _hiveBox()).get(_bootstrapKey);
+  }
+
+  Future<void> clearBootstrapToken() async {
+    if (await _canUseSecure()) {
+      await _secure.delete(key: _bootstrapKey);
+    }
+    if (await _hiveFallbackExists()) {
+      final box = await _hiveBox();
+      await box.delete(_bootstrapKey);
+    }
+  }
+
   @override
   Future<void> clear() async {
     if (await _canUseSecure()) {
       await _secure.delete(key: _accessKey);
       await _secure.delete(key: _refreshKey);
       await _secure.delete(key: _expiresAtKey);
+      await _secure.delete(key: _bootstrapKey);
     }
     if (await _hiveFallbackExists()) {
       final box = await _hiveBox();
       await box.delete(_accessKey);
       await box.delete(_refreshKey);
       await box.delete(_expiresAtKey);
+      await box.delete(_bootstrapKey);
     }
   }
 }

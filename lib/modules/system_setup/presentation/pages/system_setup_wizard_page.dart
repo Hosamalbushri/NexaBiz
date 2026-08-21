@@ -119,9 +119,13 @@ class _SystemSetupWizardPageState extends ConsumerState<SystemSetupWizardPage> {
           ),
           data: (progress) {
             if (progress.isReady && !_reviewSetup) {
-              return SystemSettingsHub(
-                progress: progress,
-                onReviewSetup: () => setState(() => _reviewSetup = true),
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (context.mounted) {
+                  context.go(AppRoutes.dashboard);
+                }
+              });
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
               );
             }
             return _buildWizard(context, l10n, theme, progress);
@@ -582,62 +586,6 @@ class _SeedLocalStep extends ConsumerWidget {
   })
   onRun;
 
-  Future<void> _ensureSignedInForSync(BuildContext context, WidgetRef ref) async {
-    final session = ref.read(syncSessionStateProvider);
-    if (session.phase == SyncSessionPhase.enabledAuthenticated) {
-      return;
-    }
-    final signedIn = await context.push<bool>(AppRoutes.settingsDataSyncLogin);
-    if (signedIn != true) {
-      throw const SystemSetupSeedException(SystemSetupSeedError.authRequired);
-    }
-  }
-
-  /// Completes setup and enters the app without a blocking "preparing" wait.
-  /// Chart download continues in the background after navigation.
-  Future<void> _enterViaSync(BuildContext context, WidgetRef ref) async {
-    final l10n = AppLocalizations.of(context);
-    try {
-      await _ensureSignedInForSync(context, ref);
-      if (!context.mounted) {
-        return;
-      }
-      final coordinator = ref.read(systemInitializationCoordinatorProvider);
-      final progress = await coordinator.runSeedFromSync();
-      ref.invalidate(systemSetupProgressProvider);
-      ref.invalidate(systemSetupReadyProvider);
-      if (!context.mounted) {
-        return;
-      }
-      showAppSnackBar(
-        context,
-        message: l10n.systemSetupSeedSyncDone,
-        isSuccess: true,
-      );
-      final ready = progress.isReady || await coordinator.isReady();
-      if (ready && context.mounted) {
-        context.go(AppRoutes.dashboard);
-      }
-    } catch (error) {
-      ref.invalidate(systemSetupProgressProvider);
-      if (!context.mounted) {
-        return;
-      }
-      final message = switch (error) {
-        SystemSetupSeedException(:final code) => switch (code) {
-          SystemSetupSeedError.syncRequired =>
-            l10n.systemSetupSeedErrorSyncRequired,
-          SystemSetupSeedError.authRequired => l10n.systemSetupSeedErrorAuth,
-          SystemSetupSeedError.offline => l10n.systemSetupSeedErrorOffline,
-          SystemSetupSeedError.emptyRemote => l10n.systemSetupSeedErrorEmpty,
-          SystemSetupSeedError.pullFailed => l10n.systemSetupSeedErrorPull,
-        },
-        _ => l10n.systemSetupErrorGeneric,
-      };
-      showAppSnackBar(context, message: message, isSuccess: false);
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
@@ -665,29 +613,48 @@ class _SeedLocalStep extends ConsumerWidget {
             ),
           ],
           if (!done) ...[
-            const SizedBox(height: AppSpacing.md),
-            _SeedChoiceTile(
-              icon: Icons.phone_android_outlined,
-              title: l10n.systemSetupSeedCreateLocalTitle,
-              subtitle: l10n.systemSetupSeedCreateLocalSubtitle,
-              enabled: !busy,
-              onTap: () async {
-                await onRun(
-                  () => ref
-                      .read(systemInitializationCoordinatorProvider)
-                      .runSeedLocal(),
-                  successMessage: l10n.systemSetupSeedDone,
-                );
-              },
+            const SizedBox(height: AppSpacing.lg),
+            AppButton(
+              label: l10n.systemSetupSeedCreateLocalTitle,
+              icon: Icons.play_arrow_rounded,
+              isLoading: busy,
+              expand: true,
+              onPressed: busy
+                  ? null
+                  : () async {
+                      await onRun(
+                        () => ref
+                            .read(systemInitializationCoordinatorProvider)
+                            .runSeedLocal(),
+                        successMessage: l10n.systemSetupSeedDone,
+                      );
+                      if (context.mounted) {
+                        final ready = await ref
+                            .read(systemInitializationCoordinatorProvider)
+                            .isReady();
+                        if (ready && context.mounted) {
+                          context.go(AppRoutes.dashboard);
+                        }
+                      }
+                    },
             ),
-            const SizedBox(height: AppSpacing.sm),
-            _SeedChoiceTile(
-              icon: Icons.cloud_download_outlined,
-              title: l10n.systemSetupSeedSyncTitle,
-              subtitle: l10n.systemSetupSeedSyncSubtitle,
-              enabled: !busy,
-              trailingLabel: syncReady ? null : l10n.systemSetupSeedSignInToSync,
-              onTap: () => _enterViaSync(context, ref),
+          ] else ...[
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  l10n.systemSetupSeedDone,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ],
         ],

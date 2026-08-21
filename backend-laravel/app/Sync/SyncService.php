@@ -367,6 +367,14 @@ class SyncService
         $existing->save();
         $this->recordChange($companyId, $existing, $op['type']);
 
+        if ($op['entity_type'] === 'company_profile' && isset($op['payload']['name'])) {
+            $company = Company::query()->find($companyId);
+            if ($company !== null) {
+                $company->name = trim($op['payload']['name']);
+                $company->save();
+            }
+        }
+
         return $this->ackFromEntity($existing, $op['operation_id']);
     }
 

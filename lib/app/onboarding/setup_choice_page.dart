@@ -55,52 +55,59 @@ class _SetupChoicePageState extends ConsumerState<SetupChoicePage> {
               ),
             ),
             child: SafeArea(
-              child: Padding(
-                padding: AppConstants.pageInsets(context),
-                child: Column(
-                  children: [
-                    const Spacer(flex: 2),
-                    Icon(
-                      Icons.settings_input_component_outlined,
-                      size: 56,
-                      color: colorScheme.primary,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Text(
-                      l10n.setupChoiceTitle,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.4,
-                        height: 1.2,
+              child: CustomScrollView(
+                slivers: [
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Padding(
+                      padding: AppConstants.pageInsets(context),
+                      child: Column(
+                        children: [
+                          const Spacer(flex: 2),
+                          Icon(
+                            Icons.settings_input_component_outlined,
+                            size: 56,
+                            color: colorScheme.primary,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          Text(
+                            l10n.setupChoiceTitle,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.4,
+                              height: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            l10n.setupChoiceSubtitle,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.45,
+                            ),
+                          ),
+                          const Spacer(flex: 2),
+                          _SetupChoiceCard(
+                            icon: Icons.cloud_outlined,
+                            title: l10n.setupChoiceServerTitle,
+                            subtitle: l10n.setupChoiceServerSubtitle,
+                            onTap: () => context.go(AppRoutes.serverSetup),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          _SetupChoiceCard(
+                            icon: Icons.phone_android_outlined,
+                            title: l10n.setupChoiceLocalTitle,
+                            subtitle: l10n.setupChoiceLocalSubtitle,
+                            onTap: () => context.go(AppRoutes.login),
+                          ),
+                          const Spacer(flex: 2),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      l10n.setupChoiceSubtitle,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        height: 1.45,
-                      ),
-                    ),
-                    const Spacer(flex: 2),
-                    _SetupChoiceCard(
-                      icon: Icons.cloud_outlined,
-                      title: l10n.setupChoiceServerTitle,
-                      subtitle: l10n.setupChoiceServerSubtitle,
-                      onTap: () => context.go(AppRoutes.serverSetup),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _SetupChoiceCard(
-                      icon: Icons.phone_android_outlined,
-                      title: l10n.setupChoiceLocalTitle,
-                      subtitle: l10n.setupChoiceLocalSubtitle,
-                      onTap: () => context.go(SystemSetupRoutes.root),
-                    ),
-                    const Spacer(flex: 2),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

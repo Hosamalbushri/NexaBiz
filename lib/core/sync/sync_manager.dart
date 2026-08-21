@@ -53,6 +53,7 @@ class SyncManager {
   final _handlers = <String, SyncEntityHandler>{};
   final _overviewController = StreamController<SyncOverview>.broadcast();
   final _passController = StreamController<SyncPassResult>.broadcast();
+  final _engineStateController = StreamController<EngineSyncState>.broadcast();
 
   StreamSubscription<ConnectivityStatus>? _connectivitySub;
   StreamSubscription<void>? _queueSub;
@@ -61,6 +62,21 @@ class SyncManager {
   var _syncing = false;
   DateTime? _lastSyncedAt;
   SyncOverview _overview = SyncOverview.initial();
+  EngineSyncState _engineState = EngineSyncState.idle;
+
+  EngineSyncState get engineState => _engineState;
+
+  Stream<EngineSyncState> get engineStateStream async* {
+    yield _engineState;
+    yield* _engineStateController.stream;
+  }
+
+  void _setEngineState(EngineSyncState state) {
+    _engineState = state;
+    if (!_engineStateController.isClosed) {
+      _engineStateController.add(state);
+    }
+  }
 
   Stream<SyncOverview> get overviewStream async* {
     yield _overview;
@@ -84,6 +100,7 @@ class SyncManager {
   /// Enables or disables sync without restarting connectivity listeners.
   Future<void> setEnabled(bool enabled) async {
     _enabled = enabled;
+    _setEngineState(enabled ? EngineSyncState.idle : EngineSyncState.disabled);
     await _refreshOverview();
   }
 
@@ -660,5 +677,6 @@ class SyncManager {
     await _queueSub?.cancel();
     await _overviewController.close();
     await _passController.close();
+    await _engineStateController.close();
   }
 }

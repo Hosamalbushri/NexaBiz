@@ -277,6 +277,9 @@ final class PermissionsCatalog
             'financial_transaction|create' => self::RECEIPTS_CREATE,
             'financial_transaction|update' => self::RECEIPTS_UPDATE,
             'financial_transaction|delete' => self::RECEIPTS_CANCEL,
+            'company_profile|create' => self::COMPANIES_UPDATE,
+            'company_profile|update' => self::COMPANIES_UPDATE,
+            'company_profile|delete' => self::COMPANIES_UPDATE,
         ];
     }
 

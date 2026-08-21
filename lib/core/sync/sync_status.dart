@@ -10,6 +10,23 @@ enum SyncStatus {
   rejected,
 }
 
+/// Explicit synchronization engine lifecycle state model.
+enum EngineSyncState {
+  idle,
+  preparing,
+  connecting,
+  authenticating,
+  downloading,
+  uploading,
+  processing,
+  completed,
+  partiallyCompleted,
+  failed,
+  retrying,
+  offline,
+  disabled,
+}
+
 extension SyncStatusX on SyncStatus {
   bool get needsUpload =>
       this == SyncStatus.pending || this == SyncStatus.failed;
@@ -31,3 +48,4 @@ extension SyncStatusX on SyncStatus {
     );
   }
 }
+

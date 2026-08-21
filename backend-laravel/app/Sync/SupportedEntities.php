@@ -14,6 +14,7 @@ final class SupportedEntities
         'currency_rate',
         'sale',
         'financial_transaction',
+        'company_profile',
     ];
 
     public static function isSupported(string $entityType): bool

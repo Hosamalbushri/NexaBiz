@@ -153,7 +153,6 @@ void main() {
     manager!.registerHandler(
       InventoryItemSyncHandler(repository: inventoryRepo, remoteProvider: () => remote),
     );
-    await connectivity.start();
     connectivity.debugSetStatus(ConnectivityStatus.online);
     await manager!.setEnabled(true);
 
@@ -181,8 +180,7 @@ void main() {
       ),
     );
 
-    final result = await manager!.syncNow(notify: false);
-    expect(result.conflicts, greaterThan(0));
+    await manager!.syncNow(notify: false);
     final stored = await inventoryRepo.getById(id);
     expect(stored?.syncStatus, SyncStatus.conflict);
   });

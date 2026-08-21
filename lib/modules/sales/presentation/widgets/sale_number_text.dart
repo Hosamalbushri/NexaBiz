@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/localization/app_localizations.dart';
-import '../../../../app/theme/app_spacing.dart';
 import '../../domain/services/device_sale_number.dart';
 
 /// Renders a sale / invoice number for humans: short local sequence first,

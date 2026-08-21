@@ -9,6 +9,7 @@ import '../../modules/authentication/presentation/providers/auth_providers.dart'
 import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
 import '../../modules/system_setup/presentation/providers/system_setup_providers.dart';
 import '../bootstrap/app_initialization.dart';
+import '../bootstrap/app_initialization_state.dart';
 import '../localization/app_localizations.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
 import '../router/app_routes.dart';
@@ -26,20 +27,17 @@ class SplashPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final init = ref.watch(appInitializationProvider);
+    final initState = ref.watch(appInitializationControllerProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    ref.listen<AsyncValue<void>>(appInitializationProvider, (previous, next) {
-      next.whenOrNull(
-        data: (_) => _navigateAfterInit(context, ref),
-      );
+    ref.listen<InitializationState>(appInitializationControllerProvider, (previous, next) {
+      if (next.canOperate) {
+        _navigateAfterInit(context, ref);
+      }
     });
 
-    // Handle re-entry: if init already completed before this build (e.g. the
-    // router redirected back to splash after a first-launch guard), the
-    // provider is already in `data` and ref.listen won't fire for it.
-    if (init.hasValue) {
+    if (initState.canOperate) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _navigateAfterInit(context, ref);
       });
@@ -73,25 +71,23 @@ class SplashPage extends ConsumerWidget {
                 stops: const [0.0, 0.55, 1.0],
               ),
             ),
-            child: init.when(
-              loading: () => SplashBrandContent(
-                appName: l10n.appTitle,
-                subtitle: l10n.splashSubtitle,
-                loadingLabel: l10n.loading,
-              ),
-              error: (error, _) => SafeArea(
-                child: AppErrorState(
-                  title: l10n.splashInitErrorTitle,
-                  message: l10n.splashInitErrorMessage,
-                  onRetry: () => ref.invalidate(appInitializationProvider),
-                ),
-              ),
-              data: (_) => SplashBrandContent(
-                appName: l10n.appTitle,
-                subtitle: l10n.splashSubtitle,
-                loadingLabel: l10n.loading,
-              ),
-            ),
+            child: initState.isFailed
+                ? SafeArea(
+                    child: AppErrorState(
+                      title: l10n.splashInitErrorTitle,
+                      message: initState.error?.message ?? l10n.splashInitErrorMessage,
+                      onRetry: () => ref
+                          .read(appInitializationControllerProvider.notifier)
+                          .retry(),
+                    ),
+                  )
+                : SplashBrandContent(
+                    appName: l10n.appTitle,
+                    subtitle: l10n.splashSubtitle,
+                    loadingLabel: initState.stageDetails.isNotEmpty
+                        ? initState.stageDetails
+                        : l10n.loading,
+                  ),
           ),
         ),
       ),
@@ -106,7 +102,36 @@ class SplashPage extends ConsumerWidget {
     final startup = ref.read(startupStateProvider);
     final auth = ref.read(authStateProvider);
 
-    // Unauthenticated: login for both first-launch and returning users.
+    final onboardingDone = await ref
+        .read(settingsRepositoryProvider)
+        .loadOnboardingCompleted();
+    if (!context.mounted) return;
+
+    final ready =
+        await ref.read(systemInitializationCoordinatorProvider).isReady();
+    if (!context.mounted) return;
+
+    // Ready system setup takes priority over first-launch setup choices
+    if (ready) {
+      if (auth.mustChangePassword) {
+        context.go(AppRoutes.changePassword);
+      } else if (!auth.isAuthenticated) {
+        context.go(AppRoutes.login);
+      } else {
+        context.go(AppRoutes.dashboard);
+      }
+      return;
+    }
+
+    // First-launch or unconfigured setup flow: onboarding -> setupChoice
+    if (startup.isFirstLaunch || !onboardingDone) {
+      context.go(
+        onboardingDone ? AppRoutes.setupChoice : AppRoutes.onboarding,
+      );
+      return;
+    }
+
+    // Returning user: login if unauthenticated
     if (!auth.isAuthenticated) {
       context.go(AppRoutes.login);
       return;
@@ -118,30 +143,6 @@ class SplashPage extends ConsumerWidget {
       return;
     }
 
-    final ready =
-        await ref.read(systemInitializationCoordinatorProvider).isReady();
-    if (!context.mounted) return;
-
-    if (startup.isFirstLaunch) {
-      if (ready) {
-        context.go(AppRoutes.dashboard);
-        return;
-      }
-      final onboardingDone = await ref
-          .read(settingsRepositoryProvider)
-          .loadOnboardingCompleted();
-      if (!context.mounted) return;
-      context.go(
-        onboardingDone ? AppRoutes.setupChoice : AppRoutes.onboarding,
-      );
-      return;
-    }
-
-    // Returning user: dashboard if ready, otherwise system setup.
-    if (ready) {
-      context.go(AppRoutes.dashboard);
-    } else {
-      context.go(SystemSetupRoutes.root);
-    }
+    context.go(SystemSetupRoutes.root);
   }
 }
