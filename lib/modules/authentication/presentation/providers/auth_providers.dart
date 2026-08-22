@@ -196,36 +196,36 @@ class AuthController extends StateNotifier<AuthState> {
   @visibleForTesting
   void replaceStateForTest(AuthState next) => _set(next);
 
-  /// Offline-first bootstrap: restore an existing session only.
-  ///
-  /// Does **not** silently log in as the seeded admin. Missing session →
-  /// [AuthStatus.unauthenticated] so the UI can show [LoginPage].
+  /// Offline-first bootstrap: check stored credentials and enforce mandatory login gate on launch.
   Future<void> bootstrap({bool preferRemote = false}) async {
     try {
       if (preferRemote) {
         final remoteSession = await _remote.restoreSession();
         if (remoteSession != null) {
-          final live = await _remote.hasRefreshToken();
           final base = _stateFor(remoteSession, AuthBackend.remote);
           _set(
-            live
-                ? base
-                : AuthState(
-                    status: base.status,
-                    session: base.session,
-                    backend: AuthBackend.remote,
-                    errorMessage: 'session_expired',
-                  ),
+            AuthState(
+              status: AuthStatus.unauthenticated,
+              session: base.session,
+              backend: AuthBackend.remote,
+            ),
           );
           return;
         }
       }
       final session = await _local.restoreSession();
-      if (session == null) {
-        _set(const AuthState(status: AuthStatus.unauthenticated));
+      if (session != null) {
+        final base = _stateFor(session, AuthBackend.local);
+        _set(
+          AuthState(
+            status: AuthStatus.unauthenticated,
+            session: base.session,
+            backend: AuthBackend.local,
+          ),
+        );
         return;
       }
-      _set(_stateFor(session, AuthBackend.local));
+      _set(const AuthState(status: AuthStatus.unauthenticated));
     } catch (e) {
       _set(
         AuthState(

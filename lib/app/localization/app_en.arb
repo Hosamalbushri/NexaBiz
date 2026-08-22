@@ -2127,6 +2127,8 @@
   "authBiometricPrompt": "Authenticate to sign in to sync",
   "authBiometricSaveForNext": "Use fingerprint next time",
   "authBiometricUnavailable": "Fingerprint is not available on this device.",
+  "authBiometricRequiredFirst": "Please sign in with your email and password first to enable fingerprint.",
+  "authBiometricPromptReason": "Authenticate to sign in quickly using fingerprint",
   "authBiometricFailed": "Fingerprint authentication failed. Try again or use your password.",
   "authLoginFailed": "Invalid email or password.",
   "authNetworkError": "Cannot reach the server. Check Wi‑Fi and API address.",
@@ -2340,5 +2342,26 @@
 
   "onboardingWelcomeTitle": "Welcome to NexaBiz",
   "onboardingWelcomeSubtitle": "Your complete business management platform. Let's get you set up in just a few steps.",
-  "onboardingGetStarted": "Get Started"
+  "onboardingGetStarted": "Get Started",
+
+  "authServerUrlRequired": "Please enter server URL",
+  "authServerVerificationFailed": "Could not verify server (Status code: {statusCode})",
+  "@authServerVerificationFailed": {
+    "placeholders": {
+      "statusCode": {"type": "int"}
+    }
+  },
+  "authServerConnectionError": "Could not connect to server. Please check the URL and network connection.",
+  "authSyncModeLabel": "Sync Mode",
+  "authLocalModeLabel": "Offline Mode",
+  "authSwitchToLocalMode": "Switch to Offline Mode",
+  "authSwitchToSyncMode": "Switch to Server Sync Mode",
+  "authServerSetupTitle": "Server Setup",
+  "authServerSetupSubtitle": "Enter server URL and verify connection before signing in.",
+  "authServerUrlLabel": "Server Address",
+  "authServerVerifying": "Verifying server...",
+  "authServerVerifyAndNext": "Verify Server & Next",
+  "authChangeServer": "Change Server",
+  "authAppSubtitle": "Smart ERP & Accounting System",
+  "authSecurityFooter": "Encrypted & Secure Connection (Standard Compliant)"
 }

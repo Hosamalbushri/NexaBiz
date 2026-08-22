@@ -5252,6 +5252,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authBiometricUnavailable => 'البصمة غير متاحة على هذا الجهاز.';
 
   @override
+  String get authBiometricRequiredFirst =>
+      'يرجى تسجيل الدخول باسم المستخدم وكلمة المرور لتفعيل البصمة.';
+
+  @override
+  String get authBiometricPromptReason =>
+      'تأكيد الهوية لتسجيل الدخول السريع عبر البصمة';
+
+  @override
   String get authBiometricFailed =>
       'فشل التحقق بالبصمة. حاول مرة أخرى أو استخدم كلمة المرور.';
 
@@ -5840,4 +5848,54 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingGetStarted => 'ابدأ الآن';
+
+  @override
+  String get authServerUrlRequired => 'يرجى إدخال عنوان السيرفر';
+
+  @override
+  String authServerVerificationFailed(int statusCode) {
+    return 'تعذر التحقق من السيرفر (رمز الاستجابة: $statusCode)';
+  }
+
+  @override
+  String get authServerConnectionError =>
+      'تعذر الاتصال بالسيرفر. يرجى التأكد من صحة العنوان والاتصال بالشبكة.';
+
+  @override
+  String get authSyncModeLabel => 'وضع المزامنة';
+
+  @override
+  String get authLocalModeLabel => 'الوضع المحلي';
+
+  @override
+  String get authSwitchToLocalMode => 'التبديل إلى الوضع المحلي (Offline)';
+
+  @override
+  String get authSwitchToSyncMode => 'التبديل إلى وضع المزامنة (Server Sync)';
+
+  @override
+  String get authServerSetupTitle => 'إعداد عنوان السيرفر';
+
+  @override
+  String get authServerSetupSubtitle =>
+      'أدخل عنوان السيرفر واضغط للتحقق من الاتصال قبل الدخول.';
+
+  @override
+  String get authServerUrlLabel => 'عنوان السيرفر';
+
+  @override
+  String get authServerVerifying => 'جاري التحقق من السيرفر...';
+
+  @override
+  String get authServerVerifyAndNext => 'التحقق من السيرفر والتالي';
+
+  @override
+  String get authChangeServer => 'تغيير السيرفر';
+
+  @override
+  String get authAppSubtitle => 'نظام إدارة الأعمال والحسابات الذكي';
+
+  @override
+  String get authSecurityFooter =>
+      'اتصال مشفّر وآمن وفق أعلى المعايير القياسية';
 }

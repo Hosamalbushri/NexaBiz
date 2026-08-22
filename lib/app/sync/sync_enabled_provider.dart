@@ -18,8 +18,9 @@ import 'sync_session_state.dart';
 /// Session expiry does **not** clear this preference or the remote RBAC
 /// snapshot: the user keeps the same module access offline until they renew
 /// the session or explicitly disable sync (which restores local full-admin).
-final syncEnabledProvider =
-    StateNotifierProvider<SyncEnabledController, bool>((ref) {
+final syncEnabledProvider = StateNotifierProvider<SyncEnabledController, bool>((
+  ref,
+) {
   // Use read for SyncManager — watching it recreates this controller (state
   // resets to false) whenever the remote API identity changes.
   final controller = SyncEnabledController(
@@ -65,21 +66,15 @@ final syncSessionStateProvider = Provider<SyncSessionState>((ref) {
   }
 
   if (auth.needsSessionRenewal || !auth.canUseRemoteSync) {
-    return const SyncSessionState(
-      phase: SyncSessionPhase.sessionExpired,
-    );
+    return const SyncSessionState(phase: SyncSessionPhase.sessionExpired);
   }
 
   if (overview.phase == SyncPhase.failed ||
       overview.phase == SyncPhase.conflict) {
-    return const SyncSessionState(
-      phase: SyncSessionPhase.syncError,
-    );
+    return const SyncSessionState(phase: SyncSessionPhase.syncError);
   }
 
-  return const SyncSessionState(
-    phase: SyncSessionPhase.enabledAuthenticated,
-  );
+  return const SyncSessionState(phase: SyncSessionPhase.enabledAuthenticated);
 });
 
 class SyncEnabledController extends StateNotifier<bool> {
@@ -92,15 +87,15 @@ class SyncEnabledController extends StateNotifier<bool> {
     required Future<void> Function() returnToLocalMode,
     required Future<void> Function() enterOfflineExpiredSession,
     Future<void> Function()? clearSyncLoginCredentials,
-  })  : _repository = repository,
-        _syncManager = syncManager,
-        _readConfig = readConfig,
-        _writeConfig = writeConfig,
-        _readAuth = readAuth,
-        _returnToLocalMode = returnToLocalMode,
-        _enterOfflineExpiredSession = enterOfflineExpiredSession,
-        _clearSyncLoginCredentials = clearSyncLoginCredentials,
-        super(false);
+  }) : _repository = repository,
+       _syncManager = syncManager,
+       _readConfig = readConfig,
+       _writeConfig = writeConfig,
+       _readAuth = readAuth,
+       _returnToLocalMode = returnToLocalMode,
+       _enterOfflineExpiredSession = enterOfflineExpiredSession,
+       _clearSyncLoginCredentials = clearSyncLoginCredentials,
+       super(false);
 
   final SettingsRepository _repository;
   final SyncManager _syncManager;
@@ -136,9 +131,7 @@ class SyncEnabledController extends StateNotifier<bool> {
   }
 
   /// Called only after successful remote authentication.
-  Future<void> enableAfterAuthentication({
-    bool runInitialSync = false,
-  }) async {
+  Future<void> enableAfterAuthentication({bool runInitialSync = false}) async {
     await _repository.saveSyncEnabled(true);
     state = true;
     await _syncManager.setEnabled(true);
@@ -181,6 +174,14 @@ class SyncEnabledController extends StateNotifier<bool> {
   }
 
   /// Explicit opt-out: stop sync, clear remote session, restore local full-admin.
+  /// Disables sync flag without resetting local session or clearing saved credentials.
+  Future<void> disableForLocalLogin() async {
+    await _syncManager.setEnabled(false);
+    await _repository.saveSyncEnabled(false);
+    state = false;
+    _applyHttpEnabled(false);
+  }
+
   Future<void> disableSynchronization() async {
     await _syncManager.setEnabled(false);
     await _repository.saveSyncEnabled(false);
@@ -216,8 +217,6 @@ class SyncEnabledController extends StateNotifier<bool> {
 
   void _applyHttpEnabled(bool syncRuntimeEnabled) {
     final current = _readConfig();
-    _writeConfig(
-      current.copyWith(enabled: syncRuntimeEnabled),
-    );
+    _writeConfig(current.copyWith(enabled: syncRuntimeEnabled));
   }
 }

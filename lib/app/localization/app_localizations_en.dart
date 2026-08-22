@@ -5315,6 +5315,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Fingerprint is not available on this device.';
 
   @override
+  String get authBiometricRequiredFirst =>
+      'Please sign in with your email and password first to enable fingerprint.';
+
+  @override
+  String get authBiometricPromptReason =>
+      'Authenticate to sign in quickly using fingerprint';
+
+  @override
   String get authBiometricFailed =>
       'Fingerprint authentication failed. Try again or use your password.';
 
@@ -5912,4 +5920,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingGetStarted => 'Get Started';
+
+  @override
+  String get authServerUrlRequired => 'Please enter server URL';
+
+  @override
+  String authServerVerificationFailed(int statusCode) {
+    return 'Could not verify server (Status code: $statusCode)';
+  }
+
+  @override
+  String get authServerConnectionError =>
+      'Could not connect to server. Please check the URL and network connection.';
+
+  @override
+  String get authSyncModeLabel => 'Sync Mode';
+
+  @override
+  String get authLocalModeLabel => 'Offline Mode';
+
+  @override
+  String get authSwitchToLocalMode => 'Switch to Offline Mode';
+
+  @override
+  String get authSwitchToSyncMode => 'Switch to Server Sync Mode';
+
+  @override
+  String get authServerSetupTitle => 'Server Setup';
+
+  @override
+  String get authServerSetupSubtitle =>
+      'Enter server URL and verify connection before signing in.';
+
+  @override
+  String get authServerUrlLabel => 'Server Address';
+
+  @override
+  String get authServerVerifying => 'Verifying server...';
+
+  @override
+  String get authServerVerifyAndNext => 'Verify Server & Next';
+
+  @override
+  String get authChangeServer => 'Change Server';
+
+  @override
+  String get authAppSubtitle => 'Smart ERP & Accounting System';
+
+  @override
+  String get authSecurityFooter =>
+      'Encrypted & Secure Connection (Standard Compliant)';
 }

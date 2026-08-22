@@ -2127,6 +2127,8 @@
   "authBiometricPrompt": "صادِق للدخول إلى المزامنة",
   "authBiometricSaveForNext": "استخدم البصمة في المرة القادمة",
   "authBiometricUnavailable": "البصمة غير متاحة على هذا الجهاز.",
+  "authBiometricRequiredFirst": "يرجى تسجيل الدخول باسم المستخدم وكلمة المرور لتفعيل البصمة.",
+  "authBiometricPromptReason": "تأكيد الهوية لتسجيل الدخول السريع عبر البصمة",
   "authBiometricFailed": "فشل التحقق بالبصمة. حاول مرة أخرى أو استخدم كلمة المرور.",
   "authLoginFailed": "البريد أو كلمة المرور غير صحيحة.",
   "authNetworkError": "تعذّر الوصول للخادم. تحقق من الشبكة وعنوان الـ API.",
@@ -2340,5 +2342,26 @@
 
   "onboardingWelcomeTitle": "مرحباً بك في NexaBiz",
   "onboardingWelcomeSubtitle": "منصتك المتكاملة لإدارة الأعمال. دعنا نقوم بإعدادك في بضع خطوات فقط.",
-  "onboardingGetStarted": "ابدأ الآن"
+  "onboardingGetStarted": "ابدأ الآن",
+
+  "authServerUrlRequired": "يرجى إدخال عنوان السيرفر",
+  "authServerVerificationFailed": "تعذر التحقق من السيرفر (رمز الاستجابة: {statusCode})",
+  "@authServerVerificationFailed": {
+    "placeholders": {
+      "statusCode": {"type": "int"}
+    }
+  },
+  "authServerConnectionError": "تعذر الاتصال بالسيرفر. يرجى التأكد من صحة العنوان والاتصال بالشبكة.",
+  "authSyncModeLabel": "وضع المزامنة",
+  "authLocalModeLabel": "الوضع المحلي",
+  "authSwitchToLocalMode": "التبديل إلى الوضع المحلي (Offline)",
+  "authSwitchToSyncMode": "التبديل إلى وضع المزامنة (Server Sync)",
+  "authServerSetupTitle": "إعداد عنوان السيرفر",
+  "authServerSetupSubtitle": "أدخل عنوان السيرفر واضغط للتحقق من الاتصال قبل الدخول.",
+  "authServerUrlLabel": "عنوان السيرفر",
+  "authServerVerifying": "جاري التحقق من السيرفر...",
+  "authServerVerifyAndNext": "التحقق من السيرفر والتالي",
+  "authChangeServer": "تغيير السيرفر",
+  "authAppSubtitle": "نظام إدارة الأعمال والحسابات الذكي",
+  "authSecurityFooter": "اتصال مشفّر وآمن وفق أعلى المعايير القياسية"
 }

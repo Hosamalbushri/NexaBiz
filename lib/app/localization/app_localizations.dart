@@ -9668,6 +9668,18 @@ abstract class AppLocalizations {
   /// **'Fingerprint is not available on this device.'**
   String get authBiometricUnavailable;
 
+  /// No description provided for @authBiometricRequiredFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in with your email and password first to enable fingerprint.'**
+  String get authBiometricRequiredFirst;
+
+  /// No description provided for @authBiometricPromptReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to sign in quickly using fingerprint'**
+  String get authBiometricPromptReason;
+
   /// No description provided for @authBiometricFailed.
   ///
   /// In en, this message translates to:
@@ -10765,6 +10777,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Get Started'**
   String get onboardingGetStarted;
+
+  /// No description provided for @authServerUrlRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter server URL'**
+  String get authServerUrlRequired;
+
+  /// No description provided for @authServerVerificationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not verify server (Status code: {statusCode})'**
+  String authServerVerificationFailed(int statusCode);
+
+  /// No description provided for @authServerConnectionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect to server. Please check the URL and network connection.'**
+  String get authServerConnectionError;
+
+  /// No description provided for @authSyncModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Mode'**
+  String get authSyncModeLabel;
+
+  /// No description provided for @authLocalModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline Mode'**
+  String get authLocalModeLabel;
+
+  /// No description provided for @authSwitchToLocalMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Offline Mode'**
+  String get authSwitchToLocalMode;
+
+  /// No description provided for @authSwitchToSyncMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Server Sync Mode'**
+  String get authSwitchToSyncMode;
+
+  /// No description provided for @authServerSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Server Setup'**
+  String get authServerSetupTitle;
+
+  /// No description provided for @authServerSetupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter server URL and verify connection before signing in.'**
+  String get authServerSetupSubtitle;
+
+  /// No description provided for @authServerUrlLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Server Address'**
+  String get authServerUrlLabel;
+
+  /// No description provided for @authServerVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying server...'**
+  String get authServerVerifying;
+
+  /// No description provided for @authServerVerifyAndNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Server & Next'**
+  String get authServerVerifyAndNext;
+
+  /// No description provided for @authChangeServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Server'**
+  String get authChangeServer;
+
+  /// No description provided for @authAppSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart ERP & Accounting System'**
+  String get authAppSubtitle;
+
+  /// No description provided for @authSecurityFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted & Secure Connection (Standard Compliant)'**
+  String get authSecurityFooter;
 }
 
 class _AppLocalizationsDelegate

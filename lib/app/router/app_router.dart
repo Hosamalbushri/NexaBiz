@@ -37,14 +37,20 @@ import '../onboarding/server_bootstrap_login_page.dart';
 import '../onboarding/server_bootstrap_progress_page.dart';
 import '../onboarding/server_setup_page.dart';
 
-bool _isAppLockExempt(String path) {
+import '../sync/sync_enabled_provider.dart';
+
+bool _isPublicRoute(String path) {
   return path == AppRoutes.splash ||
+      path == AppRoutes.login ||
       path == AppRoutes.onboarding ||
       path == AppRoutes.setupChoice ||
       path == AppRoutes.serverSetup ||
       path == AppRoutes.serverBootstrapLogin ||
-      path == AppRoutes.serverBootstrapProgress ||
-      path == AppRoutes.login ||
+      path == AppRoutes.serverBootstrapProgress;
+}
+
+bool _isAppLockExempt(String path) {
+  return _isPublicRoute(path) ||
       path == AppRoutes.changePassword ||
       path == SystemSetupRoutes.root ||
       path == AppLockRoutes.root;
@@ -58,11 +64,7 @@ bool _isPermissionExempt(String path) {
       path.startsWith('${AppRoutes.reports}/') ||
       path == AppRoutes.settings ||
       path.startsWith('${AppRoutes.settings}/') ||
-      path == AppRoutes.notifications ||
-      path == AppRoutes.setupChoice ||
-      path == AppRoutes.serverSetup ||
-      path == AppRoutes.serverBootstrapLogin ||
-      path == AppRoutes.serverBootstrapProgress;
+      path == AppRoutes.notifications;
 }
 
 /// Composes splash, persistent [AppShell] chrome, shell branches, and modules.
@@ -81,6 +83,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.listen(authStateProvider, (_, _) {
     refresh.value++;
   });
+  ref.listen(syncEnabledProvider, (_, _) {
+    refresh.value++;
+  });
   ref.listen(systemSetupReadyProvider, (_, _) {
     refresh.value++;
   });
@@ -91,33 +96,42 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: refresh,
     redirect: (context, state) {
       final path = state.uri.path;
+      final auth = ref.read(authStateProvider);
+      final syncEnabled = ref.read(syncEnabledProvider);
+      final isPublic = _isPublicRoute(path);
+
+      // Root path '/' or empty path resolves to splash or login
       if (path == AppRoutes.root || path.isEmpty) {
-        return AppRoutes.dashboard;
+        if (auth.status == AuthStatus.unauthenticated) {
+          return AppRoutes.login;
+        }
+        return AppRoutes.splash;
       }
 
-      final auth = ref.read(authStateProvider);
-      final onLogin = path == AppRoutes.login;
-      final isFirstLaunchRoute = path == AppRoutes.onboarding ||
-          path == AppRoutes.setupChoice ||
-          path == AppRoutes.serverSetup ||
-          path == AppRoutes.serverBootstrapLogin ||
-          path == AppRoutes.serverBootstrapProgress;
+      // 1. Initializing / Unknown Auth Status Gate: protect non-public routes during startup
+      if (auth.status == AuthStatus.unknown) {
+        if (isPublic) return null;
+        return AppRoutes.splash;
+      }
 
-      if (auth.status == AuthStatus.unauthenticated) {
-        if (path == AppRoutes.splash || onLogin || isFirstLaunchRoute) {
-          return null;
-        }
+      // 2. Mandatory Authentication Gate: ALL non-public routes require active session
+      if (auth.status == AuthStatus.unauthenticated ||
+          (syncEnabled && auth.needsSessionRenewal)) {
+        if (isPublic) return null;
         return AppRoutes.login;
       }
-      if (auth.isAuthenticated && onLogin) {
+
+      // 3. Authenticated Users on Public Auth Pages: auto-forward to Dashboard/Setup
+      if (auth.isAuthenticated && (path == AppRoutes.login || path == AppRoutes.splash)) {
         if (auth.mustChangePassword) {
           return AppRoutes.changePassword;
         }
         final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
-        if (ready) {
-          return AppRoutes.dashboard;
+        final startup = ref.read(startupStateProvider);
+        if (startup.isFirstLaunch && !auth.isRemoteSession && !ready) {
+          return SystemSetupRoutes.root;
         }
-        return SystemSetupRoutes.root;
+        return AppRoutes.dashboard;
       }
 
       if (auth.isAuthenticated &&

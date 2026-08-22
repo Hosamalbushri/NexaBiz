@@ -1,45 +1,57 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// Opt-in sync login credentials unlocked by device biometrics.
+/// Opt-in credentials unlocked by device biometrics.
 ///
 /// Password is stored only in encrypted secure storage after the user enables
-/// fingerprint sign-in. Cleared when sync is disabled or credentials fail.
+/// fingerprint sign-in. Supports mode-specific keys (Local Mode vs Sync Mode).
 class SyncLoginCredentialStore {
   SyncLoginCredentialStore({FlutterSecureStorage? secureStorage})
-      : _secure = secureStorage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
-            );
+    : _secure =
+          secureStorage ??
+          const FlutterSecureStorage(
+            aOptions: AndroidOptions(encryptedSharedPreferences: true),
+          );
 
-  static const _emailKey = 'sync_login_email';
-  static const _passwordKey = 'sync_login_password';
-  static const _enabledKey = 'sync_login_biometric_enabled';
+  static const _syncEmailKey = 'sync_login_email';
+  static const _syncPasswordKey = 'sync_login_password';
+  static const _syncEnabledKey = 'sync_login_biometric_enabled';
+
+  static const _localEmailKey = 'local_login_email';
+  static const _localPasswordKey = 'local_login_password';
+  static const _localEnabledKey = 'local_login_biometric_enabled';
 
   final FlutterSecureStorage _secure;
 
-  Future<bool> isBiometricLoginEnabled() async {
+  String _emailKey(bool isSyncMode) =>
+      isSyncMode ? _syncEmailKey : _localEmailKey;
+  String _passwordKey(bool isSyncMode) =>
+      isSyncMode ? _syncPasswordKey : _localPasswordKey;
+  String _enabledKey(bool isSyncMode) =>
+      isSyncMode ? _syncEnabledKey : _localEnabledKey;
+
+  Future<bool> isBiometricLoginEnabled({bool isSyncMode = true}) async {
     try {
-      return await _secure.read(key: _enabledKey) == 'true';
+      return await _secure.read(key: _enabledKey(isSyncMode)) == 'true';
     } catch (e, st) {
       debugPrint('SyncLoginCredentialStore read enabled failed: $e\n$st');
       return false;
     }
   }
 
-  Future<bool> hasSavedCredentials() async {
-    if (!await isBiometricLoginEnabled()) return false;
-    final email = await readEmail();
-    final password = await readPassword();
+  Future<bool> hasSavedCredentials({bool isSyncMode = true}) async {
+    if (!await isBiometricLoginEnabled(isSyncMode: isSyncMode)) return false;
+    final email = await readEmail(isSyncMode: isSyncMode);
+    final password = await readPassword(isSyncMode: isSyncMode);
     return email != null &&
         email.isNotEmpty &&
         password != null &&
         password.isNotEmpty;
   }
 
-  Future<String?> readEmail() async {
+  Future<String?> readEmail({bool isSyncMode = true}) async {
     try {
-      final value = await _secure.read(key: _emailKey);
+      final value = await _secure.read(key: _emailKey(isSyncMode));
       final trimmed = value?.trim();
       if (trimmed == null || trimmed.isEmpty) return null;
       return trimmed;
@@ -49,9 +61,9 @@ class SyncLoginCredentialStore {
     }
   }
 
-  Future<String?> readPassword() async {
+  Future<String?> readPassword({bool isSyncMode = true}) async {
     try {
-      final value = await _secure.read(key: _passwordKey);
+      final value = await _secure.read(key: _passwordKey(isSyncMode));
       if (value == null || value.isEmpty) return null;
       return value;
     } catch (e, st) {
@@ -63,24 +75,30 @@ class SyncLoginCredentialStore {
   Future<void> saveCredentials({
     required String email,
     required String password,
+    bool isSyncMode = true,
   }) async {
     final trimmedEmail = email.trim();
     if (trimmedEmail.isEmpty || password.isEmpty) {
-      await clear();
+      await clear(isSyncMode: isSyncMode);
       return;
     }
-    await _secure.write(key: _emailKey, value: trimmedEmail);
-    await _secure.write(key: _passwordKey, value: password);
-    await _secure.write(key: _enabledKey, value: 'true');
+    await _secure.write(key: _emailKey(isSyncMode), value: trimmedEmail);
+    await _secure.write(key: _passwordKey(isSyncMode), value: password);
+    await _secure.write(key: _enabledKey(isSyncMode), value: 'true');
   }
 
-  Future<void> clear() async {
+  Future<void> clear({bool isSyncMode = true}) async {
     try {
-      await _secure.delete(key: _emailKey);
-      await _secure.delete(key: _passwordKey);
-      await _secure.delete(key: _enabledKey);
+      await _secure.delete(key: _emailKey(isSyncMode));
+      await _secure.delete(key: _passwordKey(isSyncMode));
+      await _secure.delete(key: _enabledKey(isSyncMode));
     } catch (e, st) {
       debugPrint('SyncLoginCredentialStore clear failed: $e\n$st');
     }
+  }
+
+  Future<void> clearAll() async {
+    await clear(isSyncMode: true);
+    await clear(isSyncMode: false);
   }
 }

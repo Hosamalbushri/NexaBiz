@@ -111,14 +111,14 @@ class SplashPage extends ConsumerWidget {
         await ref.read(systemInitializationCoordinatorProvider).isReady();
     if (!context.mounted) return;
 
-    // Ready system setup takes priority over first-launch setup choices
+    // Ready system setup: route based on authentication status
     if (ready) {
       if (auth.mustChangePassword) {
         context.go(AppRoutes.changePassword);
-      } else if (!auth.isAuthenticated) {
-        context.go(AppRoutes.login);
-      } else {
+      } else if (auth.isAuthenticated) {
         context.go(AppRoutes.dashboard);
+      } else {
+        context.go(AppRoutes.login);
       }
       return;
     }
@@ -131,18 +131,16 @@ class SplashPage extends ConsumerWidget {
       return;
     }
 
-    // Returning user: login if unauthenticated
-    if (!auth.isAuthenticated) {
-      context.go(AppRoutes.login);
+    // Returning user: dashboard if authenticated, login if unauthenticated
+    if (auth.isAuthenticated) {
+      if (auth.mustChangePassword) {
+        context.go(AppRoutes.changePassword);
+      } else {
+        context.go(AppRoutes.dashboard);
+      }
       return;
     }
 
-    // Authenticated but must change seed password.
-    if (auth.mustChangePassword) {
-      context.go(AppRoutes.changePassword);
-      return;
-    }
-
-    context.go(SystemSetupRoutes.root);
+    context.go(AppRoutes.login);
   }
 }
