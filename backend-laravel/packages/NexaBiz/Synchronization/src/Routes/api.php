@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use NexaBiz\Identity\Http\Middleware\AuthenticateApi;
+use NexaBiz\Initialization\Http\Controllers\BootstrapController;
 use NexaBiz\Synchronization\Http\Controllers\SyncController;
 
 Route::prefix('api/v1')->middleware(AuthenticateApi::class)->group(function (): void {

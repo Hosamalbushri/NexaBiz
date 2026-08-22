@@ -6,6 +6,8 @@ import '../../../modules/sales/presentation/pages/sales_routes.dart';
 import '../../../modules/customers/presentation/pages/customers_routes.dart';
 import '../../../modules/receipts_payments/presentation/pages/receipts_payments_routes.dart';
 
+import '../../../modules/authentication/presentation/providers/auth_providers.dart';
+
 /// How a quick action is executed.
 enum QuickActionKind { route }
 
@@ -22,6 +24,7 @@ class QuickActionDefinition {
     required this.titleBuilder,
     required this.subtitleBuilder,
     this.routePath,
+    this.requiredPermissions,
   });
 
   final String id;
@@ -33,8 +36,21 @@ class QuickActionDefinition {
   /// Used when [kind] is [QuickActionKind.route].
   final String? routePath;
 
+  /// System permission codes needed to use/see this quick action.
+  final List<String>? requiredPermissions;
+
   String title(AppLocalizations l10n) => titleBuilder(l10n);
   String subtitle(AppLocalizations l10n) => subtitleBuilder(l10n);
+
+  bool hasPermission(AuthState authState) {
+    if (requiredPermissions == null || requiredPermissions!.isEmpty) {
+      return true;
+    }
+    if (authState.session?.user.isSuperAdmin == true) {
+      return true;
+    }
+    return authState.hasAnyPermission(requiredPermissions!);
+  }
 }
 
 /// Full catalog of quick actions. Order here is the catalog display order.
@@ -47,6 +63,11 @@ List<QuickActionDefinition> quickActionCatalog() {
       routePath: '/inventory/products/barcode?scan=1',
       titleBuilder: _scanBarcodeTitle,
       subtitleBuilder: _scanBarcodeSubtitle,
+      requiredPermissions: [
+        'inventory.products.barcode',
+        'inventory.products.view',
+        'products.view',
+      ],
     ),
     QuickActionDefinition(
       id: 'create_sale',
@@ -55,6 +76,7 @@ List<QuickActionDefinition> quickActionCatalog() {
       routePath: SalesRoutes.create,
       titleBuilder: _createSaleTitle,
       subtitleBuilder: _createSaleSubtitle,
+      requiredPermissions: ['sales.documents.create', 'sales.create'],
     ),
     QuickActionDefinition(
       id: 'create_customer',
@@ -63,6 +85,7 @@ List<QuickActionDefinition> quickActionCatalog() {
       routePath: CustomersRoutes.create,
       titleBuilder: _createCustomerTitle,
       subtitleBuilder: _createCustomerSubtitle,
+      requiredPermissions: ['customers.master.create', 'customers.create'],
     ),
     QuickActionDefinition(
       id: 'create_receipt',
@@ -71,6 +94,16 @@ List<QuickActionDefinition> quickActionCatalog() {
       routePath: ReceiptsPaymentsRoutes.createReceipt,
       titleBuilder: _createReceiptTitle,
       subtitleBuilder: _createReceiptSubtitle,
+      requiredPermissions: ['receipts.create', 'receipts_payments.sync'],
+    ),
+    QuickActionDefinition(
+      id: 'create_payment',
+      icon: Icons.outbox_outlined,
+      kind: QuickActionKind.route,
+      routePath: ReceiptsPaymentsRoutes.createPayment,
+      titleBuilder: _createPaymentTitle,
+      subtitleBuilder: _createPaymentSubtitle,
+      requiredPermissions: ['payments.create', 'receipts_payments.sync'],
     ),
     QuickActionDefinition(
       id: 'create_product',
@@ -79,6 +112,7 @@ List<QuickActionDefinition> quickActionCatalog() {
       routePath: InventoryRoutes.productsNew,
       titleBuilder: _createProductTitle,
       subtitleBuilder: _createProductSubtitle,
+      requiredPermissions: ['inventory.products.create', 'products.create'],
     ),
     QuickActionDefinition(
       id: 'products_list',
@@ -87,6 +121,7 @@ List<QuickActionDefinition> quickActionCatalog() {
       routePath: InventoryRoutes.productsList,
       titleBuilder: _productsListTitle,
       subtitleBuilder: _productsListSubtitle,
+      requiredPermissions: ['inventory.products.view', 'products.view'],
     ),
     QuickActionDefinition(
       id: 'products_barcode',
@@ -95,6 +130,11 @@ List<QuickActionDefinition> quickActionCatalog() {
       routePath: InventoryRoutes.productsBarcode,
       titleBuilder: _productsBarcodeTitle,
       subtitleBuilder: _productsBarcodeSubtitle,
+      requiredPermissions: [
+        'inventory.products.barcode',
+        'inventory.products.view',
+        'products.view',
+      ],
     ),
     QuickActionDefinition(
       id: 'products_import',
@@ -103,6 +143,7 @@ List<QuickActionDefinition> quickActionCatalog() {
       routePath: InventoryRoutes.productsImport,
       titleBuilder: _productsImportTitle,
       subtitleBuilder: _productsImportSubtitle,
+      requiredPermissions: ['inventory.products.import', 'products.create'],
     ),
     QuickActionDefinition(
       id: 'stock_count',
@@ -111,6 +152,7 @@ List<QuickActionDefinition> quickActionCatalog() {
       routePath: InventoryRoutes.count,
       titleBuilder: _stockCountTitle,
       subtitleBuilder: _stockCountSubtitle,
+      requiredPermissions: ['inventory.stock_count.view', 'inventory.view'],
     ),
     QuickActionDefinition(
       id: 'stock_import',
@@ -119,6 +161,7 @@ List<QuickActionDefinition> quickActionCatalog() {
       routePath: InventoryRoutes.import,
       titleBuilder: _stockImportTitle,
       subtitleBuilder: _stockImportSubtitle,
+      requiredPermissions: ['inventory.stock_count.import', 'inventory.create'],
     ),
     QuickActionDefinition(
       id: 'stock_reports',
@@ -127,6 +170,7 @@ List<QuickActionDefinition> quickActionCatalog() {
       routePath: InventoryRoutes.reports,
       titleBuilder: _stockReportsTitle,
       subtitleBuilder: _stockReportsSubtitle,
+      requiredPermissions: ['inventory.stock_count.export', 'inventory.view'],
     ),
   ];
 }
@@ -166,6 +210,11 @@ String _createReceiptTitle(AppLocalizations l10n) =>
     l10n.rpServiceCreateReceipt;
 String _createReceiptSubtitle(AppLocalizations l10n) =>
     l10n.rpCreateReceiptSubtitle;
+
+String _createPaymentTitle(AppLocalizations l10n) =>
+    l10n.rpServiceCreatePayment;
+String _createPaymentSubtitle(AppLocalizations l10n) =>
+    l10n.rpCreatePaymentSubtitle;
 
 String _createProductTitle(AppLocalizations l10n) =>
     l10n.quickActionsCreateProduct;

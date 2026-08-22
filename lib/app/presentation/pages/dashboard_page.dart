@@ -101,14 +101,24 @@ class DashboardPage extends ConsumerWidget {
     }
 
     final registry = ref.read(moduleRegistryProvider);
+    final permissions = ref.read(currentPermissionsProvider);
+    final isSuperAdmin =
+        ref.read(authStateProvider).session?.user.isSuperAdmin == true;
+    final availableModules = [
+      for (final module in registry.enabledModules)
+        if (isSuperAdmin ||
+            module.requiredAnyPermissions.isEmpty ||
+            module.requiredAnyPermissions.any(permissions.contains))
+          module,
+    ];
     final current =
         ref.read(dashboardServicesProvider).valueOrNull ??
-        [for (final module in registry.enabledModules) module.id];
+        [for (final module in availableModules) module.id];
 
     final result = await showAppBottomSheet<List<String>>(
       context: context,
       child: DashboardCustomizeSheet(
-        availableModules: registry.enabledModules,
+        availableModules: availableModules,
         initiallySelectedIds: current,
       ),
     );

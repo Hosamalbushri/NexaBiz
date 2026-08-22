@@ -75,24 +75,68 @@ class AtomicBootstrapInstaller {
 
         // 3. Extract currency & company details from snapshot entities and persist profile.
         String currencyCode = 'YER';
-        if (entitiesByType.containsKey('currency_rate')) {
-          final rates = entitiesByType['currency_rate'] ?? [];
-          for (final rate in rates) {
-            final payload = (rate['payload'] as Map<String, dynamic>?) ?? rate;
-            final code = (payload['currencyCode'] as String?)?.toUpperCase();
-            if (code != null && code.isNotEmpty) {
-              currencyCode = code;
-              break;
+        String profileName = companyName;
+        String? legalName;
+        String? taxNumber;
+        String? commercialRegister;
+        String? phone;
+        String? email;
+        String? address;
+        String? city;
+        String? country;
+        String? website;
+        int fiscalYearStartMonth = 1;
+        String? invoiceHeaderRight;
+        String? invoiceHeaderLeft;
+
+        if (entitiesByType.containsKey('company_profile')) {
+          final profiles = entitiesByType['company_profile'] ?? [];
+          for (final profile in profiles) {
+            final payload = (profile['payload'] as Map<String, dynamic>?) ?? profile;
+            final name = (payload['name'] as String?)?.trim();
+            if (name != null && name.isNotEmpty) {
+              profileName = name;
             }
-          }
-        } else if (entitiesByType.containsKey('fiscal_year')) {
-          final years = entitiesByType['fiscal_year'] ?? [];
-          for (final year in years) {
-            final payload = (year['payload'] as Map<String, dynamic>?) ?? year;
-            final code = (payload['baseCurrencyCode'] as String?)?.toUpperCase();
+            final code = (payload['defaultCurrencyCode'] as String?)?.trim().toUpperCase();
             if (code != null && code.isNotEmpty) {
               currencyCode = code;
-              break;
+            }
+            legalName = payload['legalName'] as String?;
+            taxNumber = payload['taxNumber'] as String?;
+            commercialRegister = payload['commercialRegister'] as String?;
+            phone = payload['phone'] as String?;
+            email = payload['email'] as String?;
+            address = payload['address'] as String?;
+            city = payload['city'] as String?;
+            country = payload['country'] as String?;
+            website = payload['website'] as String?;
+            final month = payload['fiscalYearStartMonth'];
+            if (month is int) {
+              fiscalYearStartMonth = month;
+            }
+            invoiceHeaderRight = payload['invoiceHeaderRight'] as String?;
+            invoiceHeaderLeft = payload['invoiceHeaderLeft'] as String?;
+          }
+        } else {
+          if (entitiesByType.containsKey('currency_rate')) {
+            final rates = entitiesByType['currency_rate'] ?? [];
+            for (final rate in rates) {
+              final payload = (rate['payload'] as Map<String, dynamic>?) ?? rate;
+              final code = (payload['currencyCode'] as String?)?.toUpperCase();
+              if (code != null && code.isNotEmpty) {
+                currencyCode = code;
+                break;
+              }
+            }
+          } else if (entitiesByType.containsKey('fiscal_year')) {
+            final years = entitiesByType['fiscal_year'] ?? [];
+            for (final year in years) {
+              final payload = (year['payload'] as Map<String, dynamic>?) ?? year;
+              final code = (payload['baseCurrencyCode'] as String?)?.toUpperCase();
+              if (code != null && code.isNotEmpty) {
+                currencyCode = code;
+                break;
+              }
             }
           }
         }
@@ -101,8 +145,20 @@ class AtomicBootstrapInstaller {
         final existingProfile = await settingsRepo.loadCompanyProfile();
         await settingsRepo.saveCompanyProfile(
           existingProfile.copyWith(
-            name: companyName.isNotEmpty ? companyName : existingProfile.name,
+            name: profileName.isNotEmpty ? profileName : existingProfile.name,
+            legalName: legalName,
             defaultCurrencyCode: currencyCode,
+            taxNumber: taxNumber,
+            commercialRegister: commercialRegister,
+            phone: phone,
+            email: email,
+            address: address,
+            city: city,
+            country: country,
+            website: website,
+            fiscalYearStartMonth: fiscalYearStartMonth,
+            invoiceHeaderRight: invoiceHeaderRight,
+            invoiceHeaderLeft: invoiceHeaderLeft,
           ),
         );
         await settingsRepo.saveSystemBaseCurrencyLocked(true);

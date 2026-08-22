@@ -6,6 +6,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../localization/app_localizations.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
+import '../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../models/quick_action_definition.dart';
 import '../providers/quick_actions_provider.dart';
 import '../quick_action_runner.dart';
@@ -103,11 +104,15 @@ class QuickActionsSheetBody extends ConsumerWidget {
     final controller = ref.read(quickActionsProvider.notifier);
     final currentIds =
         ref.read(quickActionsProvider).valueOrNull ?? defaultQuickActionIds();
+    final authState = ref.read(authStateProvider);
+    final availableCatalog = quickActionCatalog()
+        .where((action) => action.hasPermission(authState))
+        .toList();
 
     final result = await showAppBottomSheet<List<String>>(
       context: context,
       child: QuickActionsCustomizeSheet(
-        availableActions: quickActionCatalog(),
+        availableActions: availableCatalog,
         initiallySelectedIds: currentIds,
       ),
     );
@@ -131,6 +136,7 @@ class QuickActionsSheetBody extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final asyncIds = ref.watch(quickActionsProvider);
+    final authState = ref.watch(authStateProvider);
     final runner = const QuickActionRunner();
 
     return asyncIds.when(
@@ -152,7 +158,9 @@ class QuickActionsSheetBody extends ConsumerWidget {
       data: (ids) {
         final actions = [
           for (final id in ids)
-            if (findQuickActionById(id) != null) findQuickActionById(id)!,
+            if (findQuickActionById(id) != null &&
+                findQuickActionById(id)!.hasPermission(authState))
+              findQuickActionById(id)!,
         ];
 
         return Column(

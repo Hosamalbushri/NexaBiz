@@ -11,6 +11,7 @@ import '../core/sync/sync_overview.dart';
 import '../core/sync/sync_providers.dart';
 import '../core/sync/sync_request_context.dart';
 import '../core/widgets/app_snackbar.dart';
+import '../core/widgets/app_update_gate.dart';
 import '../core/widgets/loading_overlay.dart';
 import '../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import 'localization/app_localizations.dart';
@@ -167,7 +168,11 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
       ],
       builder: (context, child) {
         return LoadingOverlayHost(
-          child: NotificationToastHost(child: child ?? const SizedBox.shrink()),
+          child: NotificationToastHost(
+            child: AppUpdateGate(
+              child: child ?? const SizedBox.shrink(),
+            ),
+          ),
         );
       },
     );
