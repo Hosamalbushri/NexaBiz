@@ -9,7 +9,6 @@ import '../../core/widgets/custom_app_bar.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../localization/app_localizations.dart';
 import '../router/app_routes.dart';
-import 'sync_background_scheduler.dart';
 import 'sync_enabled_provider.dart';
 import 'sync_session_state.dart';
 
@@ -108,9 +107,38 @@ class AppBarSyncActions extends ConsumerWidget {
       await context.push(AppRoutes.settingsDataSyncLogin);
       return;
     }
-    // Background pass — UI stays interactive; indicator shows progress.
-    await ref
-        .read(syncBackgroundSchedulerProvider)
-        .requestSync(notify: true);
+
+    // Ensure SyncManager engine is explicitly marked enabled
+    final manager = ref.read(syncManagerProvider);
+    if (!manager.isEnabled) {
+      await manager.setEnabled(true);
+    }
+
+    final result = await manager.syncNow(notify: true);
+    if (!context.mounted) return;
+
+    if (result.uploaded > 0 || result.downloaded > 0) {
+      showAppSnackBar(
+        context,
+        message: l10n.syncLastPassMetrics(
+          result.uploaded,
+          result.downloaded,
+          result.durationMs,
+        ),
+        isSuccess: true,
+      );
+    } else if (result.failed > 0 || result.conflicts > 0) {
+      showAppSnackBar(
+        context,
+        message: 'Sync finished with ${result.failed} failures.',
+        isSuccess: false,
+      );
+    } else {
+      showAppSnackBar(
+        context,
+        message: 'Synchronization up to date.',
+        isSuccess: true,
+      );
+    }
   }
 }

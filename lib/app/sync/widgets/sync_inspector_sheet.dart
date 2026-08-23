@@ -8,6 +8,7 @@ import '../../../core/sync/sync_providers.dart';
 import '../../../core/sync/sync_status.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/custom_app_bar.dart';
+import '../../localization/app_localizations.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 
@@ -83,6 +84,15 @@ class _SyncInspectorSheetState extends ConsumerState<SyncInspectorSheet>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final issuesCount = _allOperations.where((o) =>
+        o.status == SyncStatus.failed ||
+        o.status == SyncStatus.conflict ||
+        o.status == SyncStatus.rejected).length;
+    final pendingCount = _allOperations.where((o) =>
+        o.status == SyncStatus.pending ||
+        o.status == SyncStatus.syncing).length;
+
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
       minChildSize: 0.5,
@@ -92,13 +102,13 @@ class _SyncInspectorSheetState extends ConsumerState<SyncInspectorSheet>
         return Scaffold(
           backgroundColor: Colors.transparent,
           appBar: CustomAppBar(
-            title: 'Sync Outbox Inspector (${_allOperations.length})',
+            title: l10n.syncOutboxTitle(_allOperations.length),
             showBackButton: false,
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh_outlined),
                 onPressed: _loadOperations,
-                tooltip: 'Refresh Outbox',
+                tooltip: l10n.adminDevicesRefresh,
               ),
               IconButton(
                 icon: const Icon(Icons.close_rounded),
@@ -112,21 +122,15 @@ class _SyncInspectorSheetState extends ConsumerState<SyncInspectorSheet>
                 controller: _tabController,
                 onTap: (_) => setState(() {}),
                 tabs: [
-                  Tab(text: 'All (${_allOperations.length})'),
-                  Tab(
-                    text:
-                        'Issues (${_allOperations.where((o) => o.status == SyncStatus.failed || o.status == SyncStatus.conflict || o.status == SyncStatus.rejected).length})',
-                  ),
-                  Tab(
-                    text:
-                        'Pending (${_allOperations.where((o) => o.status == SyncStatus.pending || o.status == SyncStatus.syncing).length})',
-                  ),
+                  Tab(text: l10n.syncOutboxTabAll(_allOperations.length)),
+                  Tab(text: l10n.syncOutboxTabIssues(issuesCount)),
+                  Tab(text: l10n.syncOutboxTabPending(pendingCount)),
                 ],
               ),
               Expanded(
                 child: _loading
                     ? const Center(child: CircularProgressIndicator())
-                    : _buildList(scrollController),
+                    : _buildList(scrollController, l10n),
               ),
             ],
           ),
@@ -135,7 +139,7 @@ class _SyncInspectorSheetState extends ConsumerState<SyncInspectorSheet>
     );
   }
 
-  Widget _buildList(ScrollController scrollController) {
+  Widget _buildList(ScrollController scrollController, AppLocalizations l10n) {
     final items = _filterOperations(_tabController.index);
     if (items.isEmpty) {
       return Center(
@@ -149,7 +153,7 @@ class _SyncInspectorSheetState extends ConsumerState<SyncInspectorSheet>
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'No operations in outbox queue',
+              l10n.syncOutboxEmpty,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -163,7 +167,7 @@ class _SyncInspectorSheetState extends ConsumerState<SyncInspectorSheet>
       controller: scrollController,
       padding: const EdgeInsets.all(AppSpacing.md),
       itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
       itemBuilder: (context, index) {
         final op = items[index];
         return _OperationTile(
@@ -175,8 +179,9 @@ class _SyncInspectorSheetState extends ConsumerState<SyncInspectorSheet>
   }
 
   Future<void> _showDetailDialog(SyncOperation op) async {
+    final dialogContext = context;
     await showDialog<void>(
-      context: context,
+      context: dialogContext,
       builder: (context) => _OperationDetailDialog(
         operation: op,
         onRetry: () async {
@@ -185,15 +190,15 @@ class _SyncInspectorSheetState extends ConsumerState<SyncInspectorSheet>
             clearNextRetryAt: true,
           );
           await ref.read(syncQueueProvider).update(resetOp);
-          if (!mounted) return;
-          Navigator.of(context).pop();
+          if (!mounted || !dialogContext.mounted) return;
+          Navigator.of(dialogContext).pop();
           _loadOperations();
           ref.read(syncManagerProvider).syncNow();
         },
         onPurge: () async {
           await ref.read(syncQueueProvider).remove(op.id);
-          if (!mounted) return;
-          Navigator.of(context).pop();
+          if (!mounted || !dialogContext.mounted) return;
+          Navigator.of(dialogContext).pop();
           _loadOperations();
         },
       ),
@@ -306,12 +311,13 @@ class _OperationDetailDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final jsonPretty = const JsonEncoder.withIndent('  ').convert(operation.payload);
 
     return AlertDialog(
-      title: const Text('Operation Details'),
+      title: Text(l10n.syncOutboxDetailsTitle),
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,6 +330,14 @@ class _OperationDetailDialog extends StatelessWidget {
             _detailRow(context, 'Status', operation.status.name),
             _detailRow(context, 'Base Version', '${operation.baseVersion}'),
             _detailRow(context, 'Attempts', '${operation.attemptCount}'),
+            if (operation.nextRetryAt != null)
+              _detailRow(
+                context,
+                'Next Retry',
+                operation.nextRetryAt!.isAfter(DateTime.now())
+                    ? 'In ${operation.nextRetryAt!.difference(DateTime.now()).inSeconds}s'
+                    : 'Ready for retry',
+              ),
             if (operation.lastError != null)
               _detailRow(context, 'Last Error', operation.lastError!, isError: true),
             const SizedBox(height: AppSpacing.md),
@@ -352,12 +366,12 @@ class _OperationDetailDialog extends StatelessWidget {
       actions: [
         TextButton.icon(
           icon: const Icon(Icons.delete_outline_rounded),
-          label: const Text('Purge'),
+          label: Text(l10n.syncOutboxPurge),
           style: TextButton.styleFrom(foregroundColor: colorScheme.error),
           onPressed: onPurge,
         ),
         AppButton(
-          label: 'Retry Now',
+          label: l10n.syncOutboxRetryNow,
           icon: Icons.refresh_outlined,
           onPressed: onRetry,
         ),

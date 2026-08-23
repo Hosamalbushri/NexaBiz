@@ -2363,5 +2363,83 @@
   "authServerVerifyAndNext": "Verify Server & Next",
   "authChangeServer": "Change Server",
   "authAppSubtitle": "Smart ERP & Accounting System",
-  "authSecurityFooter": "Encrypted & Secure Connection (Standard Compliant)"
+  "authSecurityFooter": "Encrypted & Secure Connection (Standard Compliant)",
+  "syncSummaryTitle": "Outbox Breakdown",
+  "syncSummaryPending": "Pending Push",
+  "syncSummaryConflicts": "Conflicts",
+  "syncSummaryFailed": "Failed Attempts",
+  "syncDiagnosticsTitle": "Server Health & Connection",
+  "syncDiagnosticsServerConnected": "Connected",
+  "syncDiagnosticsServerDisconnected": "Disconnected",
+  "syncDiagnosticsResponse": "Status",
+  "syncDiagnosticsLatency": "Latency",
+  "syncInspectorTitle": "Outbox Inspector",
+  "syncInspectAction": "Inspect Outbox ({count})",
+  "@syncInspectAction": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "syncHistoryTitle": "Recent Pass History",
+  "syncHistoryEmpty": "No recent synchronization passes recorded.",
+  "syncHistoryPassItem": "Pass at {time}: ↑{uploaded} ↓{downloaded} ({ms}ms)",
+  "@syncHistoryPassItem": {
+    "placeholders": {
+      "time": { "type": "String" },
+      "uploaded": { "type": "int" },
+      "downloaded": { "type": "int" },
+      "ms": { "type": "int" }
+    }
+  },
+  "syncRetryFailedAction": "Retry Failed ({count})",
+  "@syncRetryFailedAction": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "syncOfflineHint": "You are currently offline. Local changes are stored safely and will sync automatically when connection returns.",
+  "syncOutboxInspectorTooltip": "Outbox Inspector",
+  "syncPassCompletedSuccess": "Synchronization completed: {uploaded} uploaded, {downloaded} downloaded.",
+  "@syncPassCompletedSuccess": {
+    "placeholders": {
+      "uploaded": { "type": "int" },
+      "downloaded": { "type": "int" }
+    }
+  },
+  "syncPassCompletedWarnings": "Sync completed with {failed} failures and {conflicts} conflicts.",
+  "@syncPassCompletedWarnings": {
+    "placeholders": {
+      "failed": { "type": "int" },
+      "conflicts": { "type": "int" }
+    }
+  },
+  "syncPassUpToDate": "Synchronization up to date.",
+  "syncOutboxTitle": "Sync Outbox Inspector ({count})",
+  "@syncOutboxTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "syncOutboxEmpty": "No operations in outbox queue",
+  "syncOutboxTabAll": "All ({count})",
+  "@syncOutboxTabAll": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "syncOutboxTabIssues": "Issues ({count})",
+  "@syncOutboxTabIssues": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "syncOutboxTabPending": "Pending ({count})",
+  "@syncOutboxTabPending": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "syncOutboxPurge": "Purge",
+  "syncOutboxRetryNow": "Retry Now",
+  "syncOutboxDetailsTitle": "Operation Details"
 }

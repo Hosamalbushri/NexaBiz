@@ -2363,5 +2363,83 @@
   "authServerVerifyAndNext": "التحقق من السيرفر والتالي",
   "authChangeServer": "تغيير السيرفر",
   "authAppSubtitle": "نظام إدارة الأعمال والحسابات الذكي",
-  "authSecurityFooter": "اتصال مشفّر وآمن وفق أعلى المعايير القياسية"
+  "authSecurityFooter": "اتصال مشفّر وآمن وفق أعلى المعايير القياسية",
+  "syncSummaryTitle": "تفاصيل صندوق الصادر",
+  "syncSummaryPending": "في انتظار الرفع",
+  "syncSummaryConflicts": "تعارضات التزامن",
+  "syncSummaryFailed": "محاولات فاشلة",
+  "syncDiagnosticsTitle": "صحة الخادم والاتصال",
+  "syncDiagnosticsServerConnected": "متصل",
+  "syncDiagnosticsServerDisconnected": "غير متصل",
+  "syncDiagnosticsResponse": "الحالة",
+  "syncDiagnosticsLatency": "الاستجابة",
+  "syncInspectorTitle": "مفتش صندوق الصادر",
+  "syncInspectAction": "استعراض صندوق الصادر ({count})",
+  "@syncInspectAction": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "syncHistoryTitle": "سجل المزامنة الأخير",
+  "syncHistoryEmpty": "لا توجد عمليات مزامنة سابقة مسجلة.",
+  "syncHistoryPassItem": "مزامنة {time}: ↑{uploaded} ↓{downloaded} ({ms}مللي ثانية)",
+  "@syncHistoryPassItem": {
+    "placeholders": {
+      "time": { "type": "String" },
+      "uploaded": { "type": "int" },
+      "downloaded": { "type": "int" },
+      "ms": { "type": "int" }
+    }
+  },
+  "syncRetryFailedAction": "إعادة محاولة الفاشلة ({count})",
+  "@syncRetryFailedAction": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "syncOfflineHint": "أنت حالياً غير متصل بالإنترنت. التغييرات المحلية محفوظة بأمان وستتم مزامنتها تلقائياً عند عودة الاتصال.",
+  "syncOutboxInspectorTooltip": "مفتش صندوق الصادر",
+  "syncPassCompletedSuccess": "اكتملت المزامنة: {uploaded} تم رفعه، {downloaded} تم تنزيله.",
+  "@syncPassCompletedSuccess": {
+    "placeholders": {
+      "uploaded": { "type": "int" },
+      "downloaded": { "type": "int" }
+    }
+  },
+  "syncPassCompletedWarnings": "اكتملت المزامنة مع {failed} عملية فاشلة و {conflicts} تعارض.",
+  "@syncPassCompletedWarnings": {
+    "placeholders": {
+      "failed": { "type": "int" },
+      "conflicts": { "type": "int" }
+    }
+  },
+  "syncPassUpToDate": "المزامنة محدّثة بالكامل.",
+  "syncOutboxTitle": "مفتش صندوق الصادر ({count})",
+  "@syncOutboxTitle": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "syncOutboxEmpty": "لا توجد عمليات في صندوق الصادر",
+  "syncOutboxTabAll": "الكل ({count})",
+  "@syncOutboxTabAll": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "syncOutboxTabIssues": "مشاكل ({count})",
+  "@syncOutboxTabIssues": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "syncOutboxTabPending": "معلّق ({count})",
+  "@syncOutboxTabPending": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "syncOutboxPurge": "مسح العملية",
+  "syncOutboxRetryNow": "إعادة المحاولة الآن",
+  "syncOutboxDetailsTitle": "تفاصيل العملية"
 }

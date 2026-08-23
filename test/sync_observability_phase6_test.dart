@@ -18,6 +18,7 @@ import 'package:stock_count/core/sync/sync_metrics_store.dart';
 import 'package:stock_count/core/sync/sync_operation.dart';
 import 'package:stock_count/core/sync/sync_operation_adapter.dart';
 import 'package:stock_count/core/sync/sync_os_wake_signal.dart';
+import 'package:stock_count/core/sync/sync_overview.dart';
 import 'package:stock_count/core/sync/sync_queue.dart';
 import 'package:stock_count/core/sync/sync_request_context.dart';
 import 'package:stock_count/core/database/hive_boxes.dart';
@@ -185,5 +186,31 @@ void main() {
     final wake = await SyncOsWakeSignal.consume();
     expect(wake, DateTime.utc(2026, 8, 16, 1));
     expect(await SyncOsWakeSignal.isPending(), isFalse);
+  });
+
+  test('SyncOverview exports sanitized diagnostic report without secrets', () {
+    final overview = SyncOverview.initial().copyWith(
+      pendingCount: 3,
+      failedCount: 1,
+      diagnostics: const SyncDiagnostics(
+        lastStatusCode: 429,
+        lastStatusMessage: 'Too Many Requests',
+        lastErrorCode: 'rate_limited',
+        lastErrorMessage: 'Rate limit exceeded. Try again in 5s.',
+      ),
+    );
+
+    final report = overview.toDiagnosticReport();
+
+    expect(report['sync_phase'], 'offline');
+    expect(report['pending_count'], 3);
+    expect(report['failed_count'], 1);
+    expect(report['diagnostics']['last_status_code'], 429);
+    expect(report['diagnostics']['last_error_code'], 'rate_limited');
+
+    // Ensure no sensitive credentials keys exist in output
+    expect(report.containsKey('password'), isFalse);
+    expect(report.containsKey('api_token'), isFalse);
+    expect(report.containsKey('secret'), isFalse);
   });
 }

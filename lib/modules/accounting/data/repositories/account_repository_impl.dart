@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../../../app/settings/settings_repository.dart';
 import '../../../../core/sync/sync_operation.dart';
 import '../../../../core/sync/sync_queue.dart';
 import '../../../../core/sync/sync_status.dart';
@@ -572,9 +573,20 @@ class AccountRepositoryImpl implements AccountRepository {
 
   @override
   Future<void> ensureDefaultChartSeeded() async {
+    final settingsRepo = SettingsRepository();
+    final isServerInit = await settingsRepo.isServerInitialized();
+    final deviceInitRecord = await settingsRepo.loadDeviceInitialization();
+    if (isServerInit || deviceInitRecord.mode == DeviceInitializationMode.server) {
+      // Server-initialized device: master Chart of Accounts is controlled by the server.
+      // Do NOT run local seed alignment or force-enqueue unpushed accounts!
+      return;
+    }
+
     final existing = await (_db.select(_db.accounts)..limit(1)).get();
     if (existing.isEmpty) {
-      if (await _shouldSuppressLocalChartSeed?.call() ?? false) {
+      final preferRemote = await settingsRepo.loadChartBootstrapPreferRemote();
+      final suppressFn = await _shouldSuppressLocalChartSeed?.call() ?? false;
+      if (preferRemote || suppressFn || deviceInitRecord.mode == DeviceInitializationMode.server) {
         // Joining device: wait for background pull — do not create a local CoA.
         return;
       }
@@ -584,9 +596,8 @@ class AccountRepositoryImpl implements AccountRepository {
       await _alignSystemAccountFlags();
       await _insertMissingSystemAccounts();
       await _alignSystemAccountParents();
+      await _enqueueUnpushedAccounts();
     }
-    // Legacy installs marked seeds as synced without pushing — queue them once.
-    await _enqueueUnpushedAccounts();
   }
 
   Future<void> _seedDefaultChart() async {

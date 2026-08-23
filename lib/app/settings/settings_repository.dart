@@ -45,6 +45,53 @@ class SettingsKeys {
   /// When true, do not locally seed CoA — awaiting remote pull (joining device).
   static const String chartBootstrapPreferRemote =
       'chart_bootstrap_prefer_remote';
+  /// Device initialization mode ('server' or 'local').
+  static const String deviceInitMode = 'device_init_mode';
+  /// Whether the device has completed primary initialization.
+  static const String deviceInitialized = 'device_initialized';
+  /// Company ID associated with server initialization.
+  static const String deviceInitCompanyId = 'device_init_company_id';
+  /// UTC timestamp of initialization completion.
+  static const String deviceInitAt = 'device_init_at';
+}
+
+/// Mode used to initialize the device database.
+enum DeviceInitializationMode {
+  local,
+  server,
+  none;
+
+  static DeviceInitializationMode fromString(String? value) {
+    switch (value) {
+      case 'server':
+        return DeviceInitializationMode.server;
+      case 'local':
+        return DeviceInitializationMode.local;
+      default:
+        return DeviceInitializationMode.none;
+    }
+  }
+}
+
+/// Durable record of device initialization status and source mode.
+class DeviceInitializationRecord {
+  const DeviceInitializationRecord({
+    required this.mode,
+    required this.initialized,
+    this.companyId,
+    this.initializedAt,
+  });
+
+  final DeviceInitializationMode mode;
+  final bool initialized;
+  final String? companyId;
+  final DateTime? initializedAt;
+
+  bool get isServerInitialized =>
+      initialized && mode == DeviceInitializationMode.server;
+
+  bool get isLocalInitialized =>
+      initialized && mode == DeviceInitializationMode.local;
 }
 
 /// Persists and loads platform settings from Hive.
@@ -455,6 +502,57 @@ class SettingsRepository {
     } else {
       await box.delete(SettingsKeys.chartBootstrapPreferRemote);
     }
+  }
+
+  /// Loads current device initialization record.
+  Future<DeviceInitializationRecord> loadDeviceInitialization() async {
+    final box = await _settingsBox;
+    final initialized = box.get(SettingsKeys.deviceInitialized) == true;
+    final modeStr = box.get(SettingsKeys.deviceInitMode) as String?;
+    final mode = DeviceInitializationMode.fromString(modeStr);
+    final companyId = box.get(SettingsKeys.deviceInitCompanyId) as String?;
+    final atMs = box.get(SettingsKeys.deviceInitAt) as int?;
+    final initializedAt = atMs != null
+        ? DateTime.fromMillisecondsSinceEpoch(atMs, isUtc: true)
+        : null;
+
+    return DeviceInitializationRecord(
+      mode: mode,
+      initialized: initialized,
+      companyId: companyId,
+      initializedAt: initializedAt,
+    );
+  }
+
+  /// Saves explicit device initialization state.
+  Future<void> saveDeviceInitialization({
+    required DeviceInitializationMode mode,
+    required bool initialized,
+    String? companyId,
+    DateTime? initializedAt,
+  }) async {
+    final box = await _settingsBox;
+    await box.put(SettingsKeys.deviceInitialized, initialized);
+    await box.put(SettingsKeys.deviceInitMode, mode.name);
+    if (companyId != null && companyId.isNotEmpty) {
+      await box.put(SettingsKeys.deviceInitCompanyId, companyId);
+    } else {
+      await box.delete(SettingsKeys.deviceInitCompanyId);
+    }
+    if (initializedAt != null) {
+      await box.put(
+        SettingsKeys.deviceInitAt,
+        initializedAt.toUtc().millisecondsSinceEpoch,
+      );
+    } else {
+      await box.delete(SettingsKeys.deviceInitAt);
+    }
+  }
+
+  /// Convenient helper to check if this device was initialized from a server.
+  Future<bool> isServerInitialized() async {
+    final record = await loadDeviceInitialization();
+    return record.isServerInitialized;
   }
 
   Future<void> resetSettings() async {

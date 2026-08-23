@@ -5,12 +5,14 @@ import '../errors/app_failure.dart';
 import '../network/remote_sync_api.dart';
 import '../utils/id_generator.dart';
 import 'conflict_resolver.dart';
+import 'sync_conflict_record.dart';
+import 'sync_conflict_store.dart';
 import 'sync_entity_handler.dart';
-import 'sync_error_code.dart';
 import 'sync_metrics_store.dart';
 import 'sync_operation.dart';
 import 'sync_overview.dart';
 import 'sync_queue.dart';
+import 'sync_queue_recovery_service.dart';
 import 'sync_request_context.dart';
 import 'sync_status.dart';
 
@@ -25,6 +27,7 @@ class SyncManager {
     ConflictResolver conflictResolver = const ConflictResolver(),
     RemoteSyncApi Function()? remoteProvider,
     SyncMetricsStore? metricsStore,
+    SyncConflictStore? conflictStore,
     void Function(SyncPassResult result)? onMeaningfulPass,
     DateTime Function()? clock,
     this.batchChunkSize = 50,
@@ -33,6 +36,7 @@ class SyncManager {
        _conflictResolver = conflictResolver,
        _remoteProvider = remoteProvider,
        _metricsStore = metricsStore,
+       _conflictStore = conflictStore,
        _onMeaningfulPass = onMeaningfulPass,
        _clock = clock ?? _defaultClock;
 
@@ -43,6 +47,7 @@ class SyncManager {
   final ConflictResolver _conflictResolver;
   final RemoteSyncApi Function()? _remoteProvider;
   final SyncMetricsStore? _metricsStore;
+  final SyncConflictStore? _conflictStore;
   final void Function(SyncPassResult result)? _onMeaningfulPass;
   final DateTime Function() _clock;
 
@@ -64,6 +69,8 @@ class SyncManager {
   DateTime? _lastSyncedAt;
   SyncOverview _overview = SyncOverview.initial();
   EngineSyncState _engineState = EngineSyncState.idle;
+  SyncProgress _currentProgress = const SyncProgress();
+  SyncDiagnostics _currentDiagnostics = const SyncDiagnostics();
 
   EngineSyncState get engineState => _engineState;
 
@@ -109,12 +116,14 @@ class SyncManager {
     if (_started) {
       _enabled = enabled;
       await _queue.reclaimInFlight(now: _clock());
+      await SyncQueueRecoveryService(queue: _queue).recoverOrphanedOperations(_handlers.values);
       await _refreshOverview();
       return;
     }
     _started = true;
     _enabled = enabled;
     await _queue.reclaimInFlight(now: _clock());
+    await SyncQueueRecoveryService(queue: _queue).recoverOrphanedOperations(_handlers.values);
     await _connectivity.start();
     await _refreshOverview();
 
@@ -145,6 +154,10 @@ class SyncManager {
 
     Future<SyncPassResult> annotate(SyncPassResult result) async {
       final finished = _clock();
+      final duration = finished.difference(started).inMilliseconds;
+      _currentDiagnostics = _currentDiagnostics.copyWith(
+        latencyMs: duration,
+      );
       final enriched = SyncPassResult(
         outcome: result.outcome,
         uploaded: result.uploaded,
@@ -153,7 +166,7 @@ class SyncManager {
         conflicts: result.conflicts,
         downloadedByEntity: result.downloadedByEntity,
         correlationId: correlationId,
-        durationMs: finished.difference(started).inMilliseconds,
+        durationMs: duration,
         trigger: trigger,
         shouldNotify: notify && result.isMeaningful,
       );
@@ -195,6 +208,17 @@ class SyncManager {
         }
 
         _syncing = true;
+        _setEngineState(EngineSyncState.preparing);
+        _currentProgress = const SyncProgress(
+          phaseName: 'Preparing operations',
+        );
+        _currentDiagnostics = _currentDiagnostics.copyWith(
+          lastRequestTime: started,
+          serverConnected: true,
+          lastStatusCode: 200,
+          lastStatusMessage: 'OK',
+          lastCorrelationId: correlationId,
+        );
         await _queue.reclaimInFlight(now: _clock());
         await _refreshOverview();
 
@@ -207,11 +231,31 @@ class SyncManager {
         try {
           if (download) {
             try {
+              _setEngineState(EngineSyncState.downloading);
+              _currentProgress = SyncProgress(
+                phaseName: 'Pulling server changes',
+                currentStep: 0,
+                totalSteps: _handlers.length,
+                downloadedCount: downloaded,
+              );
+              await _refreshOverview();
               final pull = await _pullAllHandlers();
               downloaded = pull.downloaded;
               failed = pull.failed;
               downloadedByEntity = pull.downloadedByEntity;
+              _currentProgress = SyncProgress(
+                phaseName: 'Pulled server changes',
+                currentStep: _handlers.length,
+                totalSteps: _handlers.length,
+                downloadedCount: downloaded,
+              );
+              await _refreshOverview();
             } on AuthenticationFailure {
+              _setEngineState(EngineSyncState.authenticating);
+              _currentDiagnostics = _currentDiagnostics.copyWith(
+                lastStatusCode: 401,
+                lastStatusMessage: 'Unauthorized',
+              );
               return annotate(
                 SyncPassResult(
                   outcome: SyncPassOutcome.authRequired,
@@ -224,11 +268,37 @@ class SyncManager {
           }
 
           if (upload) {
+            _setEngineState(EngineSyncState.uploading);
+            final readyOps = await _queue.peekReady(now: _clock());
+            _currentProgress = SyncProgress(
+              phaseName: 'Uploading local changes',
+              currentStep: 0,
+              totalSteps: readyOps.length,
+              uploadedCount: 0,
+              downloadedCount: downloaded,
+            );
+            await _refreshOverview();
+
             final uploadResult = await _uploadReady();
             uploaded = uploadResult.uploaded;
             failed += uploadResult.failed;
             conflicts += uploadResult.conflicts;
+
+            _currentProgress = SyncProgress(
+              phaseName: 'Upload finalized',
+              currentStep: uploaded,
+              totalSteps: readyOps.length,
+              uploadedCount: uploaded,
+              downloadedCount: downloaded,
+            );
+            await _refreshOverview();
+
             if (uploadResult.authRequired) {
+              _setEngineState(EngineSyncState.authenticating);
+              _currentDiagnostics = _currentDiagnostics.copyWith(
+                lastStatusCode: 401,
+                lastStatusMessage: 'Unauthorized',
+              );
               return annotate(
                 SyncPassResult(
                   outcome: SyncPassOutcome.authRequired,
@@ -251,6 +321,13 @@ class SyncManager {
             downloaded: downloaded,
             failed: failed,
             conflicts: conflicts,
+          );
+          _setEngineState(
+            outcome == SyncPassOutcome.completed
+                ? EngineSyncState.completed
+                : outcome == SyncPassOutcome.partialFailure
+                    ? EngineSyncState.partiallyCompleted
+                    : EngineSyncState.idle,
           );
           return annotate(
             SyncPassResult(
@@ -487,6 +564,20 @@ class SyncManager {
               lastError: message,
             ),
           );
+          if (_conflictStore != null) {
+            final conflictRec = SyncConflictRecord(
+              operationId: op.id,
+              entityType: op.entityType,
+              entityId: op.entityId,
+              baseVersion: op.baseVersion,
+              serverVersion: failure is SyncConflictFailure ? failure.serverVersion : op.baseVersion + 1,
+              localPayload: op.payload,
+              remotePayload: failure is SyncConflictFailure ? failure.serverRecord : null,
+              mergeStatus: 'requires_user_resolution',
+              createdAt: _clock(),
+            );
+            await _conflictStore!.save(conflictRec);
+          }
           await handler.markLocalConflict(
             entityId: op.entityId,
             message: message,
@@ -521,13 +612,13 @@ class SyncManager {
           );
         }
 
-        if (failure is AuthorizationFailure) {
+        if (failure is AuthorizationFailure || failure is ValidationFailure) {
           failed++;
           await _queue.update(
             op.copyWith(
               status: SyncStatus.rejected,
               updatedAt: _clock(),
-              lastError: failure.message,
+              lastError: failure?.message ?? 'Operation rejected',
               clearNextRetryAt: true,
             ),
           );
@@ -536,13 +627,16 @@ class SyncManager {
 
         failed++;
         final attempts = op.attemptCount + 1;
+        final nextRetry = failure is RateLimitFailure && failure.retryAfterSeconds != null
+            ? _clock().add(Duration(seconds: failure.retryAfterSeconds!))
+            : _clock().add(syncBackoffForAttempt(attempts));
         await _queue.update(
           op.copyWith(
             status: SyncStatus.failed,
             attemptCount: attempts,
             updatedAt: _clock(),
             lastError: failure?.message ?? 'Upload failed',
-            nextRetryAt: _clock().add(syncBackoffForAttempt(attempts)),
+            nextRetryAt: nextRetry,
           ),
         );
       }
@@ -646,31 +740,112 @@ class SyncManager {
   }
 
   Future<void> _refreshOverview() async {
-    final pending = await _queue.countByStatus(SyncStatus.pending);
-    final failed = await _queue.countByStatus(SyncStatus.failed);
-    final conflicts = await _queue.countByStatus(SyncStatus.conflict);
-    final syncingCount = await _queue.countByStatus(SyncStatus.syncing);
+    final allOps = await _queue.all();
+    final now = _clock();
+
+    var pendingCount = 0;
+    var failedCount = 0;
+    var conflictCount = 0;
+    var pendingRetryCount = 0;
+    var pendingBlockedCount = 0;
+    var pendingAuthCount = 0;
+
+    for (final op in allOps) {
+      switch (op.status) {
+        case SyncStatus.pending:
+        case SyncStatus.syncing:
+          pendingCount++;
+          break;
+        case SyncStatus.failed:
+          failedCount++;
+          if (op.nextRetryAt != null && op.nextRetryAt!.isAfter(now)) {
+            pendingRetryCount++;
+          } else {
+            pendingBlockedCount++;
+          }
+          break;
+        case SyncStatus.rejected:
+          pendingBlockedCount++;
+          break;
+        case SyncStatus.conflict:
+          conflictCount++;
+          pendingBlockedCount++;
+          break;
+        case SyncStatus.synced:
+          break;
+      }
+    }
 
     final phase = deriveSyncPhase(
       isOnline: _connectivity.isOnline,
       isSyncing: _syncing,
-      pendingCount: pending + syncingCount,
-      failedCount: failed,
-      conflictCount: conflicts,
+      pendingCount: pendingCount,
+      failedCount: failedCount,
+      conflictCount: conflictCount,
     );
 
     _overview = SyncOverview(
       phase: phase,
       isOnline: _connectivity.isOnline,
-      pendingCount: pending + syncingCount,
-      failedCount: failed,
-      conflictCount: conflicts,
+      pendingCount: pendingCount,
+      failedCount: failedCount,
+      conflictCount: conflictCount,
+      pendingRetryCount: pendingRetryCount,
+      pendingBlockedCount: pendingBlockedCount,
+      pendingAuthCount: pendingAuthCount,
       lastSyncedAt: _lastSyncedAt,
       isSyncing: _syncing,
+      progress: _currentProgress,
+      diagnostics: _currentDiagnostics,
     );
     if (!_overviewController.isClosed) {
       _overviewController.add(_overview);
     }
+  }
+
+  /// Resolves a recorded conflict by replacing it with a new operation.
+  Future<void> resolveConflict({
+    required String operationId,
+    required String resolutionStrategy,
+    Map<String, dynamic>? resolvedPayload,
+  }) async {
+    final conflictStore = _conflictStore;
+    final conflictRec = await conflictStore?.getByOperationId(operationId);
+    final allOps = await _queue.all();
+    final opIndex = allOps.indexWhere((o) => o.id == operationId);
+    if (opIndex == -1) {
+      return;
+    }
+    final op = allOps[opIndex];
+
+    final payloadToUse = resolvedPayload ??
+        (resolutionStrategy == 'server_selected'
+            ? (conflictRec?.remotePayload ?? op.payload)
+            : op.payload);
+
+    final serverVersion = conflictRec?.serverVersion ?? (op.baseVersion + 1);
+
+    final newOp = SyncOperation.create(
+      entityType: op.entityType,
+      entityId: op.entityId,
+      type: SyncOperationType.update,
+      payload: payloadToUse,
+      baseVersion: serverVersion,
+    );
+
+    await _queue.remove(operationId);
+    await _queue.enqueue(newOp);
+
+    if (conflictRec != null && conflictStore != null) {
+      await conflictStore.save(
+        conflictRec.copyWith(
+          mergeStatus: resolutionStrategy,
+          resolutionStrategy: resolutionStrategy,
+          resolvedOperationId: newOp.id,
+        ),
+      );
+    }
+    await _refreshOverview();
   }
 
   Future<void> dispose() async {

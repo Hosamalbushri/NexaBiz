@@ -56,22 +56,47 @@ final class ValidationFailure extends AppFailure {
   const ValidationFailure([super.message = 'Validation error', super.cause]);
 }
 
+final class RateLimitFailure extends AppFailure {
+  const RateLimitFailure([
+    super.message = 'Too many requests. Please try again later.',
+    super.cause,
+  ]) : retryAfterSeconds = null;
+
+  const RateLimitFailure.withRetryAfter({
+    String message = 'Too many requests. Please try again later.',
+    Object? cause,
+    this.retryAfterSeconds,
+  }) : super(message, cause);
+
+  final int? retryAfterSeconds;
+}
+
+
 final class SyncConflictFailure extends AppFailure {
   const SyncConflictFailure([
     super.message = 'Synchronization conflict',
     super.cause,
   ]) : entityType = null,
-       entityId = null;
+       entityId = null,
+       serverVersion = 0,
+       clientBaseVersion = 0,
+       serverRecord = null;
 
   const SyncConflictFailure.forEntity({
     String message = 'Synchronization conflict',
     Object? cause,
     this.entityType,
     this.entityId,
+    this.serverVersion = 0,
+    this.clientBaseVersion = 0,
+    this.serverRecord,
   }) : super(message, cause);
 
   final String? entityType;
   final String? entityId;
+  final int serverVersion;
+  final int clientBaseVersion;
+  final Map<String, dynamic>? serverRecord;
 }
 
 final class ServerFailure extends AppFailure {

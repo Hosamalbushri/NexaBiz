@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../core/errors/app_failure.dart';
 import '../../core/sync/sync_overview.dart';
 import '../../core/sync/sync_providers.dart';
+import '../../core/sync/sync_request_context.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../../modules/administration/presentation/providers/admin_providers.dart';
@@ -18,6 +19,7 @@ import 'sync_background_scheduler.dart';
 import 'sync_enabled_provider.dart';
 import 'sync_session_state.dart';
 import 'sync_status_indicator.dart';
+import 'widgets/sync_inspector_sheet.dart';
 
 /// Platform sync settings content (category chrome owned by Settings page).
 class SyncSettingsSection extends ConsumerStatefulWidget {
@@ -269,11 +271,12 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
             onPressed: _toggling
                 ? null
                 : () async {
-                    final ok = await context
+                    final currentContext = context;
+                    final ok = await currentContext
                         .push<bool>(AppRoutes.settingsDataSyncLogin);
-                    if (ok != true && mounted) {
+                    if (ok != true && mounted && currentContext.mounted) {
                       showAppSnackBar(
-                        context,
+                        currentContext,
                         message: l10n.syncSessionExpired,
                         isSuccess: false,
                       );
@@ -389,6 +392,9 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
               overview.isOnline
                   ? Icons.cloud_done_outlined
                   : Icons.cloud_off_outlined,
+              color: overview.isOnline
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.outline,
             ),
             title: Text(l10n.syncConnectionLabel),
             subtitle: Text(
@@ -400,82 +406,210 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
           ),
           const Divider(height: 1),
         ],
+
+        // Live Progress Card when syncing or performing operations
+        if (overview.isSyncing || overview.progress.totalSteps > 0) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .primaryContainer
+                    .withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.3),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          overview.progress.phaseName.isNotEmpty
+                              ? overview.progress.phaseName
+                              : l10n.syncStatusSyncing,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      if (overview.progress.totalSteps > 0)
+                        Text(
+                          '${overview.progress.currentStep} / ${overview.progress.totalSteps}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: overview.progress.totalSteps > 0
+                          ? overview.progress.fraction
+                          : null,
+                      minHeight: 6,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+        ],
+
         ListTile(
           contentPadding: widget.embedded ? EdgeInsets.zero : null,
           leading: const Icon(Icons.schedule_outlined),
           title: Text(l10n.syncLastSyncLabel),
           subtitle: Text(lastSyncText),
         ),
-        Builder(
-          builder: (context) {
-            final metricsAsync = ref.watch(latestSyncPassMetricsProvider);
-            final metrics = metricsAsync.asData?.value;
-            if (metrics == null || metrics.correlationId.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            return Column(
+
+        // Synchronization Summary Grid
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Divider(height: 1),
-                ListTile(
-                  contentPadding: widget.embedded ? EdgeInsets.zero : null,
-                  leading: const Icon(Icons.speed_outlined),
-                  title: Text(
-                    l10n.syncLastPassMetrics(
-                      metrics.uploaded,
-                      metrics.downloaded,
-                      metrics.durationMs,
-                    ),
-                  ),
-                  subtitle: Text(
-                    metrics.correlationId,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall,
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+                  child: Text(
+                    l10n.syncSummaryTitle,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  contentPadding: widget.embedded ? EdgeInsets.zero : null,
-                  leading: Icon(
-                    Icons.cloud_download_outlined,
-                    color: metrics.downloaded > 0
-                        ? Theme.of(context).colorScheme.primary
-                        : null,
-                  ),
-                  title: Text(l10n.syncIncomingFromServerTitle),
-                  subtitle: Text(
-                    metrics.downloaded > 0
-                        ? l10n.syncIncomingCount(metrics.downloaded)
-                        : l10n.syncIncomingNone,
-                  ),
-                  trailing: metrics.downloaded > 0
-                      ? _CountBadge(count: metrics.downloaded)
-                      : null,
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _SummaryChip(
+                      label: l10n.syncSummaryPending,
+                      count: overview.pendingCount,
+                      icon: Icons.pending_actions_outlined,
+                    ),
+                    _SummaryChip(
+                      label: l10n.syncSummaryConflicts,
+                      count: overview.conflictCount,
+                      icon: Icons.warning_amber_rounded,
+                      isError: overview.conflictCount > 0,
+                    ),
+                    _SummaryChip(
+                      label: l10n.syncSummaryFailed,
+                      count: overview.failedCount,
+                      icon: Icons.error_outline,
+                      isError: overview.failedCount > 0,
+                    ),
+                  ],
                 ),
               ],
-            );
-          },
-        ),
-        const Divider(height: 1),
-        ListTile(
-          contentPadding: widget.embedded ? EdgeInsets.zero : null,
-          leading: const Icon(Icons.pending_actions_outlined),
-          title: Text(l10n.syncPendingChangesLabel),
-          trailing: _CountBadge(count: overview.pendingCount),
-        ),
-        const Divider(height: 1),
-        ListTile(
-          contentPadding: widget.embedded ? EdgeInsets.zero : null,
-          leading: const Icon(Icons.error_outline),
-          title: Text(l10n.syncFailedChangesLabel),
-          trailing: _CountBadge(
-            count: overview.failedCount,
-            emphasize: overview.failedCount > 0,
+            ),
           ),
         ),
+        const Divider(height: 1),
+
+        // Diagnostics Card
+        ListTile(
+          contentPadding: widget.embedded ? EdgeInsets.zero : null,
+          leading: const Icon(Icons.monitor_heart_outlined),
+          title: Text(l10n.syncDiagnosticsTitle),
+          subtitle: Text(
+            '${overview.diagnostics.serverConnected ? l10n.syncDiagnosticsServerConnected : l10n.syncDiagnosticsServerDisconnected} • ${l10n.syncDiagnosticsResponse}: ${overview.diagnostics.lastStatusCode ?? 200} OK • ${l10n.syncDiagnosticsLatency}: ${overview.diagnostics.latencyMs ?? 0} ms',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.manage_search_outlined),
+            tooltip: l10n.syncOutboxInspectorTooltip,
+            onPressed: () => SyncInspectorSheet.show(context),
+          ),
+        ),
+
+        // Retry button if failures present
+        if (overview.failedCount > 0) ...[
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              widget.embedded ? 0 : AppSpacing.md,
+              AppSpacing.xs,
+              widget.embedded ? 0 : AppSpacing.md,
+              AppSpacing.xs,
+            ),
+            child: AppButton(
+              label: l10n.syncRetryFailedAction(overview.failedCount),
+              expand: true,
+              icon: Icons.refresh_outlined,
+              variant: AppButtonVariant.tonal,
+              isLoading: overview.isSyncing,
+              onPressed: overview.isSyncing
+                  ? null
+                  : () async {
+                      await ref.read(syncManagerProvider).retryFailed();
+                    },
+            ),
+          ),
+        ],
+
+        // Offline explanation hint if device offline
+        if (!overview.isOnline) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      l10n.syncOfflineHint,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+
         Padding(
           padding: EdgeInsets.only(
-            top: AppSpacing.md,
+            top: AppSpacing.sm,
             bottom: AppSpacing.sm,
             left: widget.embedded ? 0 : AppSpacing.md,
             right: widget.embedded ? 0 : AppSpacing.md,
@@ -500,13 +634,15 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
             right: widget.embedded ? 0 : AppSpacing.md,
           ),
           child: AppButton(
-            label: overview.isSyncing
-                ? l10n.syncStatusSyncing
-                : l10n.syncNowAction,
+            label: !overview.isOnline
+                ? l10n.syncStatusOffline
+                : (overview.isSyncing
+                    ? l10n.syncStatusSyncing
+                    : l10n.syncNowAction),
             expand: true,
             icon: Icons.sync,
             isLoading: overview.isSyncing,
-            onPressed: overview.isSyncing
+            onPressed: (overview.isSyncing || !overview.isOnline)
                 ? null
                 : () => _onSyncNow(context, ref),
           ),
@@ -531,12 +667,85 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
     BuildContext context,
     WidgetRef ref,
   ) async {
+    final l10n = AppLocalizations.of(context);
     if (!await _ensureCanSync(context, ref)) {
       return;
     }
 
-    // Background pass — keep the UI interactive.
-    await ref.read(syncBackgroundSchedulerProvider).requestSync(notify: true);
+    final result = await ref.read(syncManagerProvider).syncNow(
+          notify: true,
+          trigger: SyncPassTrigger.manual,
+          upload: true,
+          download: true,
+        );
+
+    if (!context.mounted) return;
+
+    if (result.outcome == SyncPassOutcome.authRequired) {
+      showAppSnackBar(
+        context,
+        message: l10n.syncSessionExpired,
+        isSuccess: false,
+      );
+      await context.push(AppRoutes.settingsDataSyncLogin);
+      return;
+    }
+
+    if (result.outcome == SyncPassOutcome.skippedOffline) {
+      showAppSnackBar(
+        context,
+        message: l10n.syncOfflineMessage,
+        isSuccess: false,
+      );
+      return;
+    }
+
+    if (result.outcome == SyncPassOutcome.skippedDisabled) {
+      showAppSnackBar(
+        context,
+        message: l10n.syncDisabledMessage,
+        isSuccess: false,
+      );
+      return;
+    }
+
+    if (result.uploaded > 0 || result.downloaded > 0) {
+      if (result.failed > 0 || result.conflicts > 0) {
+        showAppSnackBar(
+          context,
+          message: l10n.syncPassCompletedWarnings(
+            result.failed,
+            result.conflicts,
+          ),
+          isSuccess: false,
+        );
+      } else {
+        showAppSnackBar(
+          context,
+          message: l10n.syncLastPassMetrics(
+            result.uploaded,
+            result.downloaded,
+            result.durationMs,
+          ),
+          isSuccess: true,
+        );
+      }
+    } else if (result.failed > 0 || result.conflicts > 0) {
+      showAppSnackBar(
+        context,
+        message: l10n.syncPassCompletedWarnings(
+          result.failed,
+          result.conflicts,
+        ),
+        isSuccess: false,
+      );
+    } else {
+      showAppSnackBar(
+        context,
+        message: l10n.syncPassUpToDate,
+        isSuccess: true,
+      );
+    }
   }
 
   Future<void> _onCheckIncoming(
@@ -616,38 +825,64 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
       await context.push(AppRoutes.settingsDataSyncLogin);
       return false;
     }
-    // Do not block on connectivity_plus — it frequently reports none while
-    // Wi‑Fi works. Let the request fail with a real network/TLS error instead.
+
+    // Ensure SyncManager engine is explicitly marked enabled
+    final manager = ref.read(syncManagerProvider);
+    if (!manager.isEnabled) {
+      await manager.setEnabled(true);
+    }
+
     return true;
   }
 }
 
-class _CountBadge extends StatelessWidget {
-  const _CountBadge({required this.count, this.emphasize = false});
+class _SummaryChip extends StatelessWidget {
+  const _SummaryChip({
+    required this.label,
+    required this.count,
+    required this.icon,
+    this.isError = false,
+  });
 
+  final String label;
   final int count;
-  final bool emphasize;
+  final IconData icon;
+  final bool isError;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final color = emphasize ? colorScheme.error : colorScheme.primary;
+    final color = isError ? colorScheme.error : colorScheme.primary;
 
-    return DecoratedBox(
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        child: Text(
-          '$count',
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: color,
-            fontWeight: FontWeight.w700,
-          ),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: color.withValues(alpha: 0.2),
         ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(
+            '$label: ',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Text(
+            '$count',
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

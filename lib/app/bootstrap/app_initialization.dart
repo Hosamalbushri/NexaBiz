@@ -8,7 +8,6 @@ import '../../core/logging/app_error_log.dart';
 import '../../core/network/server_bootstrap_service.dart';
 import '../../core/sync/sync_providers.dart';
 import '../../core/sync/sync_request_context.dart';
-import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../settings/settings_repository.dart';
 import '../sync/sync_enabled_provider.dart';
 import 'app_bootstrap.dart';
@@ -143,6 +142,11 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
     try {
       final settings = SettingsRepository();
       await settings.saveOnboardingCompleted(true);
+      await settings.saveDeviceInitialization(
+        mode: DeviceInitializationMode.local,
+        initialized: true,
+        initializedAt: DateTime.now(),
+      );
 
       state = state.copyWith(
         status: InitializationStatus.ready,
@@ -311,6 +315,12 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
 
       final settings = SettingsRepository();
       await settings.saveOnboardingCompleted(true);
+      await settings.saveDeviceInitialization(
+        mode: DeviceInitializationMode.server,
+        initialized: true,
+        companyId: status.companyId,
+        initializedAt: DateTime.now(),
+      );
 
       state = state.copyWith(
         status: InitializationStatus.ready,

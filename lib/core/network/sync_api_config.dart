@@ -106,14 +106,10 @@ class SyncApiConfig {
     bool allowInsecureHttp = false,
   }) {
     final url = baseUrl.trim();
-    final token = apiToken.trim();
-    if (url.isEmpty || token.isEmpty) {
+    if (url.isEmpty) {
       return false;
     }
-    if (url.startsWith('https://')) {
-      return true;
-    }
-    if (allowInsecureHttp && url.startsWith('http://')) {
+    if (url.startsWith('https://') || url.startsWith('http://')) {
       return true;
     }
     return false;

@@ -132,6 +132,9 @@ class JournalRepositoryImpl implements JournalRepository {
         sourceId: sourceId,
       );
     }
+    if (existing != null && existing.isPosted) {
+      throw const JournalException(JournalException.postedImmutable);
+    }
 
     final now = DateTime.now().toUtc();
     final entryUuid = existing?.uuid ?? replaceUuid ?? generateUuidV4();

@@ -35,7 +35,7 @@ class DataSyncSettingsPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.manage_search_outlined),
-            tooltip: 'Outbox Inspector',
+            tooltip: l10n.syncOutboxInspectorTooltip,
             onPressed: () => SyncInspectorSheet.show(context),
           ),
         ],

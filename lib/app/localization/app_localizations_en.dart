@@ -5970,4 +5970,112 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authSecurityFooter =>
       'Encrypted & Secure Connection (Standard Compliant)';
+
+  @override
+  String get syncSummaryTitle => 'Outbox Breakdown';
+
+  @override
+  String get syncSummaryPending => 'Pending Push';
+
+  @override
+  String get syncSummaryConflicts => 'Conflicts';
+
+  @override
+  String get syncSummaryFailed => 'Failed Attempts';
+
+  @override
+  String get syncDiagnosticsTitle => 'Server Health & Connection';
+
+  @override
+  String get syncDiagnosticsServerConnected => 'Connected';
+
+  @override
+  String get syncDiagnosticsServerDisconnected => 'Disconnected';
+
+  @override
+  String get syncDiagnosticsResponse => 'Status';
+
+  @override
+  String get syncDiagnosticsLatency => 'Latency';
+
+  @override
+  String get syncInspectorTitle => 'Outbox Inspector';
+
+  @override
+  String syncInspectAction(int count) {
+    return 'Inspect Outbox ($count)';
+  }
+
+  @override
+  String get syncHistoryTitle => 'Recent Pass History';
+
+  @override
+  String get syncHistoryEmpty => 'No recent synchronization passes recorded.';
+
+  @override
+  String syncHistoryPassItem(
+    String time,
+    int uploaded,
+    int downloaded,
+    int ms,
+  ) {
+    return 'Pass at $time: ↑$uploaded ↓$downloaded (${ms}ms)';
+  }
+
+  @override
+  String syncRetryFailedAction(int count) {
+    return 'Retry Failed ($count)';
+  }
+
+  @override
+  String get syncOfflineHint =>
+      'You are currently offline. Local changes are stored safely and will sync automatically when connection returns.';
+
+  @override
+  String get syncOutboxInspectorTooltip => 'Outbox Inspector';
+
+  @override
+  String syncPassCompletedSuccess(int uploaded, int downloaded) {
+    return 'Synchronization completed: $uploaded uploaded, $downloaded downloaded.';
+  }
+
+  @override
+  String syncPassCompletedWarnings(int failed, int conflicts) {
+    return 'Sync completed with $failed failures and $conflicts conflicts.';
+  }
+
+  @override
+  String get syncPassUpToDate => 'Synchronization up to date.';
+
+  @override
+  String syncOutboxTitle(int count) {
+    return 'Sync Outbox Inspector ($count)';
+  }
+
+  @override
+  String get syncOutboxEmpty => 'No operations in outbox queue';
+
+  @override
+  String syncOutboxTabAll(int count) {
+    return 'All ($count)';
+  }
+
+  @override
+  String syncOutboxTabIssues(int count) {
+    return 'Issues ($count)';
+  }
+
+  @override
+  String syncOutboxTabPending(int count) {
+    return 'Pending ($count)';
+  }
+
+  @override
+  String get syncOutboxPurge => 'Purge';
+
+  @override
+  String get syncOutboxRetryNow => 'Retry Now';
+
+  @override
+  String get syncOutboxDetailsTitle => 'Operation Details';
 }

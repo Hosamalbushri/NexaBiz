@@ -5898,4 +5898,112 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get authSecurityFooter =>
       'اتصال مشفّر وآمن وفق أعلى المعايير القياسية';
+
+  @override
+  String get syncSummaryTitle => 'تفاصيل صندوق الصادر';
+
+  @override
+  String get syncSummaryPending => 'في انتظار الرفع';
+
+  @override
+  String get syncSummaryConflicts => 'تعارضات التزامن';
+
+  @override
+  String get syncSummaryFailed => 'محاولات فاشلة';
+
+  @override
+  String get syncDiagnosticsTitle => 'صحة الخادم والاتصال';
+
+  @override
+  String get syncDiagnosticsServerConnected => 'متصل';
+
+  @override
+  String get syncDiagnosticsServerDisconnected => 'غير متصل';
+
+  @override
+  String get syncDiagnosticsResponse => 'الحالة';
+
+  @override
+  String get syncDiagnosticsLatency => 'الاستجابة';
+
+  @override
+  String get syncInspectorTitle => 'مفتش صندوق الصادر';
+
+  @override
+  String syncInspectAction(int count) {
+    return 'استعراض صندوق الصادر ($count)';
+  }
+
+  @override
+  String get syncHistoryTitle => 'سجل المزامنة الأخير';
+
+  @override
+  String get syncHistoryEmpty => 'لا توجد عمليات مزامنة سابقة مسجلة.';
+
+  @override
+  String syncHistoryPassItem(
+    String time,
+    int uploaded,
+    int downloaded,
+    int ms,
+  ) {
+    return 'مزامنة $time: ↑$uploaded ↓$downloaded ($msمللي ثانية)';
+  }
+
+  @override
+  String syncRetryFailedAction(int count) {
+    return 'إعادة محاولة الفاشلة ($count)';
+  }
+
+  @override
+  String get syncOfflineHint =>
+      'أنت حالياً غير متصل بالإنترنت. التغييرات المحلية محفوظة بأمان وستتم مزامنتها تلقائياً عند عودة الاتصال.';
+
+  @override
+  String get syncOutboxInspectorTooltip => 'مفتش صندوق الصادر';
+
+  @override
+  String syncPassCompletedSuccess(int uploaded, int downloaded) {
+    return 'اكتملت المزامنة: $uploaded تم رفعه، $downloaded تم تنزيله.';
+  }
+
+  @override
+  String syncPassCompletedWarnings(int failed, int conflicts) {
+    return 'اكتملت المزامنة مع $failed عملية فاشلة و $conflicts تعارض.';
+  }
+
+  @override
+  String get syncPassUpToDate => 'المزامنة محدّثة بالكامل.';
+
+  @override
+  String syncOutboxTitle(int count) {
+    return 'مفتش صندوق الصادر ($count)';
+  }
+
+  @override
+  String get syncOutboxEmpty => 'لا توجد عمليات في صندوق الصادر';
+
+  @override
+  String syncOutboxTabAll(int count) {
+    return 'الكل ($count)';
+  }
+
+  @override
+  String syncOutboxTabIssues(int count) {
+    return 'مشاكل ($count)';
+  }
+
+  @override
+  String syncOutboxTabPending(int count) {
+    return 'معلّق ($count)';
+  }
+
+  @override
+  String get syncOutboxPurge => 'مسح العملية';
+
+  @override
+  String get syncOutboxRetryNow => 'إعادة المحاولة الآن';
+
+  @override
+  String get syncOutboxDetailsTitle => 'تفاصيل العملية';
 }

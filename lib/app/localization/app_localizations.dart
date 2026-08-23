@@ -10867,6 +10867,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Encrypted & Secure Connection (Standard Compliant)'**
   String get authSecurityFooter;
+
+  /// No description provided for @syncSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Outbox Breakdown'**
+  String get syncSummaryTitle;
+
+  /// No description provided for @syncSummaryPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending Push'**
+  String get syncSummaryPending;
+
+  /// No description provided for @syncSummaryConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflicts'**
+  String get syncSummaryConflicts;
+
+  /// No description provided for @syncSummaryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed Attempts'**
+  String get syncSummaryFailed;
+
+  /// No description provided for @syncDiagnosticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Server Health & Connection'**
+  String get syncDiagnosticsTitle;
+
+  /// No description provided for @syncDiagnosticsServerConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get syncDiagnosticsServerConnected;
+
+  /// No description provided for @syncDiagnosticsServerDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get syncDiagnosticsServerDisconnected;
+
+  /// No description provided for @syncDiagnosticsResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get syncDiagnosticsResponse;
+
+  /// No description provided for @syncDiagnosticsLatency.
+  ///
+  /// In en, this message translates to:
+  /// **'Latency'**
+  String get syncDiagnosticsLatency;
+
+  /// No description provided for @syncInspectorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Outbox Inspector'**
+  String get syncInspectorTitle;
+
+  /// No description provided for @syncInspectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Inspect Outbox ({count})'**
+  String syncInspectAction(int count);
+
+  /// No description provided for @syncHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Pass History'**
+  String get syncHistoryTitle;
+
+  /// No description provided for @syncHistoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent synchronization passes recorded.'**
+  String get syncHistoryEmpty;
+
+  /// No description provided for @syncHistoryPassItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Pass at {time}: ↑{uploaded} ↓{downloaded} ({ms}ms)'**
+  String syncHistoryPassItem(String time, int uploaded, int downloaded, int ms);
+
+  /// No description provided for @syncRetryFailedAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry Failed ({count})'**
+  String syncRetryFailedAction(int count);
+
+  /// No description provided for @syncOfflineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You are currently offline. Local changes are stored safely and will sync automatically when connection returns.'**
+  String get syncOfflineHint;
+
+  /// No description provided for @syncOutboxInspectorTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Outbox Inspector'**
+  String get syncOutboxInspectorTooltip;
+
+  /// No description provided for @syncPassCompletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization completed: {uploaded} uploaded, {downloaded} downloaded.'**
+  String syncPassCompletedSuccess(int uploaded, int downloaded);
+
+  /// No description provided for @syncPassCompletedWarnings.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync completed with {failed} failures and {conflicts} conflicts.'**
+  String syncPassCompletedWarnings(int failed, int conflicts);
+
+  /// No description provided for @syncPassUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization up to date.'**
+  String get syncPassUpToDate;
+
+  /// No description provided for @syncOutboxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Outbox Inspector ({count})'**
+  String syncOutboxTitle(int count);
+
+  /// No description provided for @syncOutboxEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No operations in outbox queue'**
+  String get syncOutboxEmpty;
+
+  /// No description provided for @syncOutboxTabAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All ({count})'**
+  String syncOutboxTabAll(int count);
+
+  /// No description provided for @syncOutboxTabIssues.
+  ///
+  /// In en, this message translates to:
+  /// **'Issues ({count})'**
+  String syncOutboxTabIssues(int count);
+
+  /// No description provided for @syncOutboxTabPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending ({count})'**
+  String syncOutboxTabPending(int count);
+
+  /// No description provided for @syncOutboxPurge.
+  ///
+  /// In en, this message translates to:
+  /// **'Purge'**
+  String get syncOutboxPurge;
+
+  /// No description provided for @syncOutboxRetryNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry Now'**
+  String get syncOutboxRetryNow;
+
+  /// No description provided for @syncOutboxDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation Details'**
+  String get syncOutboxDetailsTitle;
 }
 
 class _AppLocalizationsDelegate

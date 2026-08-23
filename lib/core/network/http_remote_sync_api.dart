@@ -196,6 +196,11 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
             message: err['message'] as String? ?? 'Synchronization conflict',
             entityType: details['entity_type'] as String?,
             entityId: details['entity_id'] as String? ?? operationId,
+            serverVersion: (details['server_version'] as num?)?.toInt() ?? 0,
+            clientBaseVersion: (details['client_base_version'] as num?)?.toInt() ?? 0,
+            serverRecord: details['server_record'] is Map
+                ? Map<String, dynamic>.from(details['server_record'] as Map)
+                : null,
           );
         } else {
           final err = item['error'] is Map
@@ -351,6 +356,14 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
     if (_authClient != null) {
       return _authClient.mapFailure(response);
     }
+    if (response.statusCode == 429) {
+      final retryHeader = response.headers['retry-after'];
+      final retryAfter = retryHeader != null ? int.tryParse(retryHeader) : null;
+      return RateLimitFailure.withRetryAfter(retryAfterSeconds: retryAfter);
+    }
+    if (response.statusCode == 422) {
+      return const ValidationFailure();
+    }
     try {
       final decoded = jsonDecode(response.body);
       if (decoded is Map && decoded['error'] is Map) {
@@ -381,6 +394,11 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
               message: message,
               entityType: details['entity_type'] as String?,
               entityId: details['entity_id'] as String?,
+              serverVersion: (details['server_version'] as num?)?.toInt() ?? 0,
+              clientBaseVersion: (details['client_base_version'] as num?)?.toInt() ?? 0,
+              serverRecord: details['server_record'] is Map
+                  ? Map<String, dynamic>.from(details['server_record'] as Map)
+                  : null,
             );
           case 'network_error':
             return NetworkFailure(message);
@@ -397,6 +415,14 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
     }
     if (response.statusCode == 403) {
       return const AuthorizationFailure();
+    }
+    if (response.statusCode == 422) {
+      return const ValidationFailure();
+    }
+    if (response.statusCode == 429) {
+      final retryHeader = response.headers['retry-after'];
+      final retryAfter = retryHeader != null ? int.tryParse(retryHeader) : null;
+      return RateLimitFailure.withRetryAfter(retryAfterSeconds: retryAfter);
     }
     return ServerFailure.withCode(
       message: 'HTTP ${response.statusCode}',
@@ -420,6 +446,11 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
           message: err['message'] as String? ?? 'Synchronization conflict',
           entityType: details['entity_type'] as String? ?? entityType,
           entityId: details['entity_id'] as String? ?? entityId,
+          serverVersion: (details['server_version'] as num?)?.toInt() ?? 0,
+          clientBaseVersion: (details['client_base_version'] as num?)?.toInt() ?? 0,
+          serverRecord: details['server_record'] is Map
+              ? Map<String, dynamic>.from(details['server_record'] as Map)
+              : null,
         );
       }
     } catch (_) {}

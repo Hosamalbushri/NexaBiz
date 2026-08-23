@@ -81,8 +81,7 @@ final remoteSyncApiProvider = Provider<RemoteSyncApi>((ref) {
   // so accept either a config token or an injected auth client as credential.
   final url = config.baseUrl.trim();
   final hasUrl = url.isNotEmpty &&
-      (url.startsWith('https://') ||
-          (config.allowInsecureHttp && url.startsWith('http://')));
+      (url.startsWith('https://') || url.startsWith('http://'));
   final hasAuth =
       config.apiToken.trim().isNotEmpty || authClient != null;
 
