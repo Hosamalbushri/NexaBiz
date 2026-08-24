@@ -359,6 +359,23 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final response = await _http.post(
+      '/api/v1/auth/change-password',
+      body: {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+      },
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _http.mapFailure(response);
+    }
+  }
+
   void dispose() {
     _sessionController.close();
   }

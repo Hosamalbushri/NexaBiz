@@ -9,6 +9,7 @@ import '../../../../app/presentation/providers/dashboard_services_provider.dart'
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/utils/password_validator.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../modules/system_setup/presentation/pages/system_setup_routes.dart';
 import '../../../../modules/system_setup/presentation/providers/system_setup_providers.dart';
@@ -56,32 +57,21 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   }
 
   bool _validateForm(AppLocalizations l10n) {
-    var valid = true;
-    String? cErr;
-    String? nErr;
-    String? confErr;
-
-    if (_current.text.isEmpty) {
-      cErr = l10n.authPasswordWrongCurrent;
-      valid = false;
-    }
-    if (_next.text.isEmpty || _next.text.length < 8) {
-      nErr = l10n.adminPasswordTooShort;
-      valid = false;
-    }
-    if (_confirm.text.isEmpty || _confirm.text != _next.text) {
-      confErr = l10n.authPasswordMismatch;
-      valid = false;
-    }
+    final result = PasswordValidator.validateChangeForm(
+      currentPassword: _current.text,
+      newPassword: _next.text,
+      confirmPassword: _confirm.text,
+      l10n: l10n,
+    );
 
     setState(() {
-      _currentError = cErr;
-      _nextError = nErr;
-      _confirmError = confErr;
-      _generalError = null;
+      _currentError = result.currentPasswordError;
+      _nextError = result.newPasswordError;
+      _confirmError = result.confirmPasswordError;
+      _generalError = result.generalError;
     });
 
-    return valid;
+    return result.isValid;
   }
 
   Future<void> _submit() async {
@@ -94,13 +84,23 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
     });
 
     try {
-      await ref
-          .read(authStateProvider.notifier)
-          .changeLocalPassword(
-            currentPassword: _current.text,
-            newPassword: _next.text,
-          );
+      await ref.read(authStateProvider.notifier).changePassword(
+        currentPassword: _current.text,
+        newPassword: _next.text,
+      );
       if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.authPasswordChangedSuccess),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
+      );
+
+      if (context.canPop()) {
+        context.pop();
+        return;
+      }
 
       final ready = await ref
           .read(systemInitializationCoordinatorProvider)
@@ -119,7 +119,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
         onboardingDone ? SystemSetupRoutes.root : AppRoutes.onboarding,
       );
     } on PasswordChangeException catch (e) {
-      final msg = _mapError(l10n, e.code);
+      final msg = PasswordValidator.mapExceptionCode(l10n, e.code);
       setState(() {
         if (e.code == PasswordChangeException.wrongCurrent) {
           _currentError = msg;
@@ -220,7 +220,44 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                                 title: l10n.authChangePasswordTitle,
                                 subtitle: l10n.authChangePasswordHint,
                               ),
-                              const SizedBox(height: AppSpacing.xl),
+                              const SizedBox(height: AppSpacing.md),
+
+                              // Local Account Notice
+                              Container(
+                                padding: const EdgeInsets.all(AppSpacing.md),
+                                decoration: BoxDecoration(
+                                  color: scheme.primary.withValues(alpha: 0.08),
+                                  borderRadius:
+                                      BorderRadius.circular(AppRadius.md),
+                                  border: Border.all(
+                                    color:
+                                        scheme.primary.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline_rounded,
+                                      color: scheme.primary,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Expanded(
+                                      child: Text(
+                                        l10n.authChangePasswordLocalAccountNotice,
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          color: scheme.onSurface,
+                                          fontWeight: FontWeight.w500,
+                                          height: 1.35,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ).animate().fadeIn(duration: 350.ms),
+
+                              const SizedBox(height: AppSpacing.lg),
 
                               // Current Password
                               _PasswordField(

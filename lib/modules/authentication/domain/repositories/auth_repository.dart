@@ -30,5 +30,10 @@ abstract class AuthRepository {
     String? appVersion,
   });
 
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
+
   Stream<AuthSessionSnapshot?> watchSession();
 }

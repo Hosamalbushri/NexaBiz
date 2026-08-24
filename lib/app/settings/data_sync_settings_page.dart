@@ -30,14 +30,15 @@ class DataSyncSettingsPage extends ConsumerWidget {
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
         title: l10n.settingsDataSection,
-        centerTitle: false,
+        centerTitle: true,
         showBackButton: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.manage_search_outlined),
-            tooltip: l10n.syncOutboxInspectorTooltip,
-            onPressed: () => SyncInspectorSheet.show(context),
-          ),
+          if (syncEnabled)
+            IconButton(
+              icon: const Icon(Icons.manage_search_outlined),
+              tooltip: l10n.syncOutboxInspectorTooltip,
+              onPressed: () => SyncInspectorSheet.show(context),
+            ),
         ],
       ),
       body: ListView(
@@ -54,9 +55,10 @@ class DataSyncSettingsPage extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          SettingsGroup(
-            children: [
-              if (syncEnabled)
+          if (syncEnabled)
+            SettingsGroup(
+              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+              children: [
                 SettingsTile(
                   icon: syncOverview.isOnline
                       ? Icons.wifi_rounded
@@ -70,17 +72,9 @@ class DataSyncSettingsPage extends ConsumerWidget {
                       : l10n.syncConnectionOffline,
                   trailing: _SyncPhaseChip(overview: syncOverview),
                 ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  0,
-                  AppSpacing.md,
-                  AppSpacing.md,
-                ),
-                child: SyncSettingsSection(embedded: true, compactHeader: true),
-              ),
-            ],
-          ),
+              ],
+            ),
+          const SyncSettingsSection(embedded: true, compactHeader: true),
         ],
       ),
     );

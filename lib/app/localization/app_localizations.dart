@@ -10868,6 +10868,72 @@ abstract class AppLocalizations {
   /// **'Encrypted & Secure Connection (Standard Compliant)'**
   String get authSecurityFooter;
 
+  /// No description provided for @authPasswordStrengthWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get authPasswordStrengthWeak;
+
+  /// No description provided for @authPasswordStrengthMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get authPasswordStrengthMedium;
+
+  /// No description provided for @authPasswordStrengthStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get authPasswordStrengthStrong;
+
+  /// No description provided for @authPasswordStrengthVeryStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Very Strong'**
+  String get authPasswordStrengthVeryStrong;
+
+  /// No description provided for @authPasswordChangedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Password updated successfully'**
+  String get authPasswordChangedSuccess;
+
+  /// No description provided for @authBiometricsSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric Sign-In'**
+  String get authBiometricsSettingsTitle;
+
+  /// No description provided for @authBiometricsSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use fingerprint or face ID to unlock your session quickly'**
+  String get authBiometricsSettingsSubtitle;
+
+  /// No description provided for @authBiometricsNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric authentication is not supported or set up on this device'**
+  String get authBiometricsNotAvailable;
+
+  /// No description provided for @authSecuritySectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication & Security'**
+  String get authSecuritySectionTitle;
+
+  /// No description provided for @authChangePasswordTileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Password'**
+  String get authChangePasswordTileTitle;
+
+  /// No description provided for @authChangePasswordTileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update local device account password'**
+  String get authChangePasswordTileSubtitle;
+
   /// No description provided for @syncSummaryTitle.
   ///
   /// In en, this message translates to:
@@ -10889,7 +10955,7 @@ abstract class AppLocalizations {
   /// No description provided for @syncSummaryFailed.
   ///
   /// In en, this message translates to:
-  /// **'Failed Attempts'**
+  /// **'Failed'**
   String get syncSummaryFailed;
 
   /// No description provided for @syncDiagnosticsTitle.
@@ -11035,6 +11101,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Operation Details'**
   String get syncOutboxDetailsTitle;
+
+  /// No description provided for @authChangePasswordLocalAccountNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: This password change applies to your local device authentication account.'**
+  String get authChangePasswordLocalAccountNotice;
+
+  /// No description provided for @syncServerTestingConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing server connection...'**
+  String get syncServerTestingConnection;
+
+  /// No description provided for @syncServerConnectionSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Server connection successful.'**
+  String get syncServerConnectionSuccess;
+
+  /// No description provided for @syncServerConnectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to reach server. Please check the URL and network connection.'**
+  String get syncServerConnectionFailed;
+
+  /// No description provided for @syncBiometricSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Server Biometric Login'**
+  String get syncBiometricSettingsTitle;
+
+  /// No description provided for @syncBiometricSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow signing into server account using fingerprint'**
+  String get syncBiometricSettingsSubtitle;
+
+  /// No description provided for @syncGoToLoginAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Proceed to Server Login'**
+  String get syncGoToLoginAction;
+
+  /// No description provided for @syncDisableConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Sync & Confirm Logout'**
+  String get syncDisableConfirmTitle;
+
+  /// No description provided for @syncDisableConfirmAdminContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabling sync will log you out from the server and return to the main login page. Do you agree?'**
+  String get syncDisableConfirmAdminContent;
+
+  /// No description provided for @syncDisableConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm & Disable Sync'**
+  String get syncDisableConfirmAction;
+
+  /// No description provided for @syncDisabledSuccessLogout.
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization disabled and logged out successfully.'**
+  String get syncDisabledSuccessLogout;
+
+  /// No description provided for @syncDisableRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Sync Disable'**
+  String get syncDisableRequestTitle;
+
+  /// No description provided for @syncDisableRequestContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabling synchronization requires System Administrator approval. Would you like to send a request to the Admin?'**
+  String get syncDisableRequestContent;
+
+  /// No description provided for @syncDisableSendRequestAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Request'**
+  String get syncDisableSendRequestAction;
+
+  /// No description provided for @syncDisableRequestSentSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync disable request sent to Administrator pending approval.'**
+  String get syncDisableRequestSentSuccess;
+
+  /// No description provided for @syncActiveServerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Sync Server'**
+  String get syncActiveServerLabel;
+
+  /// No description provided for @syncDisableAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Synchronization'**
+  String get syncDisableAction;
+
+  /// No description provided for @authBiometricPasswordDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Biometric Login'**
+  String get authBiometricPasswordDialogTitle;
+
+  /// No description provided for @authBiometricPasswordDialogContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter password to confirm and enable biometric login:'**
+  String get authBiometricPasswordDialogContent;
+
+  /// No description provided for @authBiometricPasswordDialogSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get authBiometricPasswordDialogSkip;
+
+  /// No description provided for @authBiometricPasswordDialogConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get authBiometricPasswordDialogConfirm;
+
+  /// No description provided for @authBiometricEnabledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric login enabled successfully'**
+  String get authBiometricEnabledSuccess;
+
+  /// No description provided for @authBiometricDisabledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric login disabled'**
+  String get authBiometricDisabledSuccess;
+
+  /// No description provided for @authBackToLoginFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Login Fields'**
+  String get authBackToLoginFields;
+
+  /// No description provided for @authUsernameOrEmailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter username or email'**
+  String get authUsernameOrEmailRequired;
+
+  /// No description provided for @authPasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter password'**
+  String get authPasswordRequired;
+
+  /// No description provided for @syncPreparingOperations.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing sync operations...'**
+  String get syncPreparingOperations;
+
+  /// No description provided for @syncSummaryDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get syncSummaryDownloaded;
+
+  /// No description provided for @syncSummaryUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded'**
+  String get syncSummaryUploaded;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
 }
 
 class _AppLocalizationsDelegate

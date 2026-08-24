@@ -41,6 +41,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   var _canCheckBiometrics = false;
   var _enableBiometrics = true;
   var _hasSavedCredentials = false;
+  var _biometricPrompted = false;
   final _localAuth = LocalAuthentication();
   bool? _useSyncModeOverride;
   String? _error;
@@ -92,13 +93,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               kDebugMode ||
               defaultTargetPlatform == TargetPlatform.linux;
           _hasSavedCredentials = hasSaved;
-          _enableBiometrics = hasSaved ? isBioEnabled : true;
+          _enableBiometrics = isBioEnabled;
           _email.text = savedEmail ?? '';
           _password.clear();
         });
+
+        if (_canCheckBiometrics && hasSaved && isBioEnabled && !_biometricPrompted) {
+          _biometricPrompted = true;
+          await _authenticateWithBiometrics();
+        }
       }
     } catch (e) {
-      debugPrint('Error checking biometrics: ');
+      debugPrint('Error checking biometrics: $e');
     }
   }
 
@@ -245,11 +251,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     var hasValidationErr = false;
     if (email.isEmpty) {
-      _emailError = 'يرجى إدخال اسم المستخدم أو البريد الإلكتروني';
+      _emailError = l10n.authUsernameOrEmailRequired;
       hasValidationErr = true;
     }
     if (password.isEmpty) {
-      _passwordError = 'يرجى إدخال كلمة المرور';
+      _passwordError = l10n.authPasswordRequired;
       hasValidationErr = true;
     }
     if (hasValidationErr) {
@@ -298,7 +304,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
 
       final credentialStore = ref.read(syncLoginCredentialStoreProvider);
-      if (_enableBiometrics) {
+      final isBioEnabled = await credentialStore.isBiometricLoginEnabled(
+        isSyncMode: isSyncEnabled,
+      );
+      if (isBioEnabled) {
         await credentialStore.saveCredentials(
           email: email,
           password: password,
@@ -829,8 +838,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                               Icons.arrow_back_rounded,
                                               size: 18,
                                             ),
-                                            label: const Text(
-                                              'الرجوع لحقول الدخول',
+                                            label: Text(
+                                              l10n.authBackToLoginFields,
                                             ),
                                             style: OutlinedButton.styleFrom(
                                               minimumSize: const Size(
@@ -1039,127 +1048,41 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                                   width: 1.5,
                                                 ),
                                               ),
-                                              suffixIcon: IconButton(
-                                                icon: Icon(
-                                                  _obscurePassword
-                                                      ? Icons
-                                                            .visibility_outlined
-                                                      : Icons
-                                                            .visibility_off_outlined,
-                                                  color: colorScheme
-                                                      .onSurfaceVariant,
-                                                ),
-                                                onPressed: () {
-                                                  setState(
-                                                    () => _obscurePassword =
-                                                        !_obscurePassword,
-                                                  );
-                                                },
+                                              suffixIcon: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (_canCheckBiometrics &&
+                                                      _enableBiometrics &&
+                                                      _hasSavedCredentials)
+                                                    IconButton(
+                                                      tooltip: l10n.authBiometricPromptReason,
+                                                      icon: Icon(
+                                                        Icons.fingerprint_rounded,
+                                                        color: colorScheme.primary,
+                                                        size: 24,
+                                                      ),
+                                                      onPressed:
+                                                          _authenticateWithBiometrics,
+                                                    ),
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      _obscurePassword
+                                                          ? Icons.visibility_outlined
+                                                          : Icons.visibility_off_outlined,
+                                                      color: colorScheme.onSurfaceVariant,
+                                                    ),
+                                                    onPressed: () {
+                                                      setState(
+                                                        () => _obscurePassword =
+                                                            !_obscurePassword,
+                                                      );
+                                                    },
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ),
                                           const SizedBox(height: AppSpacing.xs),
-
-                                          if (_canCheckBiometrics) ...[
-                                            const SizedBox(
-                                              height: AppSpacing.xs,
-                                            ),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    SizedBox(
-                                                      width: 24,
-                                                      height: 24,
-                                                      child: Checkbox(
-                                                        value:
-                                                            _enableBiometrics,
-                                                        onChanged: (val) {
-                                                          setState(() {
-                                                            _enableBiometrics =
-                                                                val ?? true;
-                                                          });
-                                                        },
-                                                        shape: RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                4,
-                                                              ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    GestureDetector(
-                                                      onTap: () {
-                                                        setState(() {
-                                                          _enableBiometrics =
-                                                              !_enableBiometrics;
-                                                        });
-                                                      },
-                                                      child: Text(
-                                                        'تفعيل الدخول بالبصمة',
-                                                        style: theme
-                                                            .textTheme
-                                                            .bodyMedium
-                                                            ?.copyWith(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                if (_hasSavedCredentials)
-                                                  InkWell(
-                                                    onTap:
-                                                        _authenticateWithBiometrics,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          12,
-                                                        ),
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal:
-                                                                AppSpacing.xs,
-                                                            vertical: 4,
-                                                          ),
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            Icons
-                                                                .fingerprint_rounded,
-                                                            color: colorScheme
-                                                                .primary,
-                                                            size: 22,
-                                                          ),
-                                                          const SizedBox(
-                                                            width: 4,
-                                                          ),
-                                                          Text(
-                                                            'الدخول بالبصمة',
-                                                            style: TextStyle(
-                                                              color: colorScheme
-                                                                  .primary,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              fontSize: 13,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                          ],
 
                                           if (_error != null) ...[
                                             const SizedBox(

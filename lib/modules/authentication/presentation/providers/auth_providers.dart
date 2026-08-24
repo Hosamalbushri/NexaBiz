@@ -113,7 +113,17 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return ref.watch(localAuthRepositoryProvider);
 });
 
-enum AuthStatus { unknown, unauthenticated, needsCompany, authenticated }
+enum AuthStatus {
+  unknown,
+  initializing,
+  unauthenticated,
+  authenticating,
+  authenticated,
+  biometricAuthenticating,
+  sessionExpired,
+  authenticationFailed,
+  needsCompany,
+}
 
 /// Whether the current [AuthState] came from the remote JWT backend.
 enum AuthBackend { local, remote }
@@ -136,12 +146,18 @@ class AuthState {
   bool get isAuthenticated =>
       status == AuthStatus.authenticated || status == AuthStatus.needsCompany;
 
+  bool get isAuthenticating =>
+      status == AuthStatus.authenticating ||
+      status == AuthStatus.biometricAuthenticating ||
+      status == AuthStatus.initializing;
+
   bool get mustChangePassword => session?.mustChangePassword == true;
 
   bool get isRemoteSession => backend == AuthBackend.remote;
 
   /// Refresh failed / tokens cleared — UI keeps [session] permissions offline.
-  bool get needsSessionRenewal => errorMessage == 'session_expired';
+  bool get needsSessionRenewal =>
+      status == AuthStatus.sessionExpired || errorMessage == 'session_expired';
 
   /// Live credentials available for SyncManager / online APIs.
   bool get canUseRemoteSync =>
@@ -256,6 +272,24 @@ class AuthController extends StateNotifier<AuthState> {
       appVersion: appVersion,
     );
     _set(_stateFor(session, AuthBackend.local));
+  }
+
+  /// Changes password for the active session (local or remote).
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    if (state.isRemoteSession) {
+      await _remote.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+    } else {
+      await changeLocalPassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+    }
   }
 
   /// Local offline password change (seeded admin first-login gate).

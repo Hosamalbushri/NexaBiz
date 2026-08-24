@@ -655,6 +655,52 @@ class SyncManager {
     var downloaded = 0;
     var failed = 0;
     final downloadedByEntity = <String, int>{};
+
+    final remote = _remote;
+    if (remote != null) {
+      try {
+        final changes = await remote.pull();
+        var appliedAll = true;
+        for (final change in changes) {
+          final handler = _handlers[change.entityType];
+          if (handler == null) {
+            continue;
+          }
+          try {
+            await handler.applyRemoteChange(change);
+            await _queue.removeCreatesForEntity(
+              entityType: handler.entityType,
+              entityId: change.entityId,
+            );
+            downloaded++;
+            downloadedByEntity[handler.entityType] =
+                (downloadedByEntity[handler.entityType] ?? 0) + 1;
+          } on AuthenticationFailure {
+            await remote.abandonPull('__global__');
+            rethrow;
+          } catch (_) {
+            failed++;
+            appliedAll = false;
+          }
+        }
+        if (appliedAll) {
+          await remote.acknowledgePull('__global__');
+        } else {
+          await remote.abandonPull('__global__');
+        }
+        return (
+          downloaded: downloaded,
+          failed: failed,
+          downloadedByEntity:
+              Map<String, int>.unmodifiable(downloadedByEntity),
+        );
+      } on AuthenticationFailure {
+        rethrow;
+      } catch (_) {
+        // Fall back to per-handler pull if unified pull fails.
+      }
+    }
+
     for (final handler in _handlers.values) {
       try {
         final changes = await handler.pull();

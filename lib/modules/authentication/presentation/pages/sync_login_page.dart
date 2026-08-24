@@ -41,7 +41,6 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
   var _obscure = true;
   var _biometricAvailable = false;
   var _biometricReady = false;
-  var _saveForBiometric = true;
   var _biometricPrompted = false;
   String? _error;
 
@@ -70,14 +69,14 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
     final biometrics = ref.read(appLockBiometricsProvider);
     final store = ref.read(syncLoginCredentialStoreProvider);
     final available = await biometrics.isAvailable();
-    final hasSaved = await store.hasSavedCredentials();
-    final savedEmail = await store.readEmail();
+    final isBioEnabled = await store.isBiometricLoginEnabled(isSyncMode: true);
+    final hasSaved = await store.hasSavedCredentials(isSyncMode: true);
+    final savedEmail = await store.readEmail(isSyncMode: true);
 
     if (!mounted) return;
     setState(() {
       _biometricAvailable = available;
-      _biometricReady = available && hasSaved;
-      _saveForBiometric = available;
+      _biometricReady = available && isBioEnabled && hasSaved;
       if (savedEmail != null && _email.text.trim().isEmpty) {
         _email.text = savedEmail;
       }
@@ -178,10 +177,16 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
       }
 
       final store = ref.read(syncLoginCredentialStoreProvider);
-      if (_saveForBiometric && _biometricAvailable) {
-        await store.saveCredentials(email: email, password: password);
+      final isBioEnabled =
+          await store.isBiometricLoginEnabled(isSyncMode: true);
+      if (isBioEnabled && _biometricAvailable) {
+        await store.saveCredentials(
+          email: email,
+          password: password,
+          isSyncMode: true,
+        );
       } else if (!fromBiometric) {
-        await store.clear();
+        await store.clear(isSyncMode: true);
       }
 
       _password.clear();
@@ -413,17 +418,32 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
                                     onSubmitted: (_) {
                                       if (!_loading) _submit();
                                     },
-                                    suffix: IconButton(
-                                      onPressed: _loading
-                                          ? null
-                                          : () => setState(
-                                              () => _obscure = !_obscure,
+                                    suffix: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (_biometricReady)
+                                          IconButton(
+                                            tooltip: l10n.authBiometricPromptReason,
+                                            onPressed: _loading ? null : _signInWithBiometrics,
+                                            icon: Icon(
+                                              Icons.fingerprint_rounded,
+                                              color: scheme.primary,
+                                              size: 24,
                                             ),
-                                      icon: Icon(
-                                        _obscure
-                                            ? Icons.visibility_outlined
-                                            : Icons.visibility_off_outlined,
-                                      ),
+                                          ),
+                                        IconButton(
+                                          onPressed: _loading
+                                              ? null
+                                              : () => setState(
+                                                  () => _obscure = !_obscure,
+                                                ),
+                                          icon: Icon(
+                                            _obscure
+                                                ? Icons.visibility_outlined
+                                                : Icons.visibility_off_outlined,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   )
                                   .animate()
@@ -435,29 +455,7 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
                                     duration: 360.ms,
                                     curve: Curves.easeOutCubic,
                                   ),
-                              if (_biometricAvailable) ...[
-                                const SizedBox(height: AppSpacing.sm),
-                                SwitchListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  secondary: Icon(
-                                    Icons.fingerprint_rounded,
-                                    color: scheme.primary,
-                                  ),
-                                  title: Text(
-                                    l10n.authBiometricSaveForNext,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  value: _saveForBiometric,
-                                  onChanged: _loading
-                                      ? null
-                                      : (v) => setState(
-                                          () => _saveForBiometric = v,
-                                        ),
-                                ),
-                              ],
-                              if (_error != null) ...[
+                               if (_error != null) ...[
                                 const SizedBox(height: AppSpacing.md),
                                 _ErrorBanner(message: _error!),
                               ],

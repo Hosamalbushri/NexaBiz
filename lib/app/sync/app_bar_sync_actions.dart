@@ -117,26 +117,77 @@ class AppBarSyncActions extends ConsumerWidget {
     final result = await manager.syncNow(notify: true);
     if (!context.mounted) return;
 
-    if (result.uploaded > 0 || result.downloaded > 0) {
+    if (result.outcome == SyncPassOutcome.authRequired) {
       showAppSnackBar(
         context,
-        message: l10n.syncLastPassMetrics(
-          result.uploaded,
-          result.downloaded,
-          result.durationMs,
-        ),
-        isSuccess: true,
+        message: l10n.syncSessionExpired,
+        isSuccess: false,
       );
-    } else if (result.failed > 0 || result.conflicts > 0) {
+      await context.push(AppRoutes.settingsDataSyncLogin);
+      return;
+    }
+
+    if (result.outcome == SyncPassOutcome.skippedOffline) {
       showAppSnackBar(
         context,
-        message: 'Sync finished with ${result.failed} failures.',
+        message: l10n.syncOfflineMessage,
+        isSuccess: false,
+      );
+      return;
+    }
+
+    if (result.outcome == SyncPassOutcome.skippedDisabled) {
+      showAppSnackBar(
+        context,
+        message: l10n.syncDisabledMessage,
+        isSuccess: false,
+      );
+      return;
+    }
+
+    if (result.outcome == SyncPassOutcome.failed) {
+      showAppSnackBar(
+        context,
+        message: l10n.syncServerConnectionFailed,
+        isSuccess: false,
+      );
+      return;
+    }
+
+    if (result.uploaded > 0 || result.downloaded > 0) {
+      if (result.failed > 0 || result.conflicts > 0) {
+        showAppSnackBar(
+          context,
+          message: l10n.syncPassCompletedWarnings(
+            result.failed,
+            result.conflicts,
+          ),
+          isSuccess: false,
+        );
+      } else {
+        showAppSnackBar(
+          context,
+          message: l10n.syncLastPassMetrics(
+            result.uploaded,
+            result.downloaded,
+            result.durationMs,
+          ),
+          isSuccess: true,
+        );
+      }
+    } else if (result.failed > 0 || result.conflicts > 0 || result.outcome == SyncPassOutcome.partialFailure) {
+      showAppSnackBar(
+        context,
+        message: l10n.syncPassCompletedWarnings(
+          result.failed,
+          result.conflicts,
+        ),
         isSuccess: false,
       );
     } else {
       showAppSnackBar(
         context,
-        message: 'Synchronization up to date.',
+        message: l10n.syncPassUpToDate,
         isSuccess: true,
       );
     }

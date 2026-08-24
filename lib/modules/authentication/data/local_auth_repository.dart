@@ -151,13 +151,18 @@ class LocalAuthRepository implements AuthRepository {
     // Local-only: device id already bound on the session snapshot.
   }
 
+  @override
   Future<AuthSessionSnapshot> changePassword({
-    required String userId,
     required String currentPassword,
     required String newPassword,
+    String? userId,
   }) async {
+    final uid = userId ?? _cached?.user.id ?? (await _store.loadSession())?.user.id;
+    if (uid == null || uid.isEmpty) {
+      throw const AuthenticationFailure('No active session');
+    }
     final snapshot = await _store.changePassword(
-      userId: userId,
+      userId: uid,
       currentPassword: currentPassword,
       newPassword: newPassword,
     );

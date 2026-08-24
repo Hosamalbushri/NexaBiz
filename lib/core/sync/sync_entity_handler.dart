@@ -25,6 +25,7 @@ class SyncRemoteChange {
     required this.updatedAt,
     required this.payload,
     this.deleted = false,
+    this.entityType = '',
   });
 
   final String entityId;
@@ -32,6 +33,7 @@ class SyncRemoteChange {
   final DateTime updatedAt;
   final Map<String, dynamic> payload;
   final bool deleted;
+  final String entityType;
 }
 
 /// Feature-specific adapter used by [SyncManager].

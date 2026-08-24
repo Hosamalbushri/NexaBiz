@@ -5900,6 +5900,42 @@ class AppLocalizationsAr extends AppLocalizations {
       'اتصال مشفّر وآمن وفق أعلى المعايير القياسية';
 
   @override
+  String get authPasswordStrengthWeak => 'ضعيفة';
+
+  @override
+  String get authPasswordStrengthMedium => 'متوسطة';
+
+  @override
+  String get authPasswordStrengthStrong => 'قوية';
+
+  @override
+  String get authPasswordStrengthVeryStrong => 'قوية جداً';
+
+  @override
+  String get authPasswordChangedSuccess => 'تم تحديث كلمة المرور بنجاح';
+
+  @override
+  String get authBiometricsSettingsTitle => 'الدخول بالبصمة';
+
+  @override
+  String get authBiometricsSettingsSubtitle =>
+      'استخدم بصمة الاصبع أو الوجه لفتح الجلسة بسرعة';
+
+  @override
+  String get authBiometricsNotAvailable =>
+      'المقاييس الحيوية غير مدعومة أو غير مفعلة على هذا الجهاز';
+
+  @override
+  String get authSecuritySectionTitle => 'المصادقة والأمان';
+
+  @override
+  String get authChangePasswordTileTitle => 'تغيير كلمة المرور';
+
+  @override
+  String get authChangePasswordTileSubtitle =>
+      'تعديل كلمة مرور الحساب المحلي للجهاز';
+
+  @override
   String get syncSummaryTitle => 'تفاصيل صندوق الصادر';
 
   @override
@@ -5909,7 +5945,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get syncSummaryConflicts => 'تعارضات التزامن';
 
   @override
-  String get syncSummaryFailed => 'محاولات فاشلة';
+  String get syncSummaryFailed => 'فشل';
 
   @override
   String get syncDiagnosticsTitle => 'صحة الخادم والاتصال';
@@ -6006,4 +6042,103 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get syncOutboxDetailsTitle => 'تفاصيل العملية';
+
+  @override
+  String get authChangePasswordLocalAccountNotice =>
+      'ملاحظة: تعديل كلمة المرور ينطبق على الحساب المحلي للجهاز.';
+
+  @override
+  String get syncServerTestingConnection => 'جاري فحص الاتصال بالسيرفر...';
+
+  @override
+  String get syncServerConnectionSuccess => 'تم الاتصال بالسيرفر بنجاح.';
+
+  @override
+  String get syncServerConnectionFailed =>
+      'تعذر الاتصال بالسيرفر. يرجى التحقق من الرابط والاتصال بالشبكة.';
+
+  @override
+  String get syncBiometricSettingsTitle => 'تسجيل الدخول بالبصمة للمزامنة';
+
+  @override
+  String get syncBiometricSettingsSubtitle =>
+      'السماح بالدخول لحساب السيرفر باستخدام البصمة';
+
+  @override
+  String get syncGoToLoginAction => 'الانتقال إلى تسجيل الدخول للخادم';
+
+  @override
+  String get syncDisableConfirmTitle => 'إغلاق المزامنة وتأكيد الخروج';
+
+  @override
+  String get syncDisableConfirmAdminContent =>
+      'سيتم إغلاق المزامنة وتسجيل الخروج من الخادم والعودة إلى صفحة تسجيل الدخول الرئيسية للتطبيق. هل أنت موافق؟';
+
+  @override
+  String get syncDisableConfirmAction => 'تأكيد وإيقاف المزامنة';
+
+  @override
+  String get syncDisabledSuccessLogout =>
+      'تم إيقاف المزامنة وتسجيل الخروج بنجاح';
+
+  @override
+  String get syncDisableRequestTitle => 'طلب إغلاق المزامنة';
+
+  @override
+  String get syncDisableRequestContent =>
+      'يتطلب إغلاق المزامنة موافقة مسؤول النظام (الإدمن). هل ترغب في إرسال طلب للإدمن لإيقاف المزامنة؟';
+
+  @override
+  String get syncDisableSendRequestAction => 'إرسال الطلب';
+
+  @override
+  String get syncDisableRequestSentSuccess =>
+      'تم إرسال طلب إيقاف المزامنة للإدمن بانتظار الموافقة';
+
+  @override
+  String get syncActiveServerLabel => 'خادم المزامنة النشط';
+
+  @override
+  String get syncDisableAction => 'إغلاق المزامنة';
+
+  @override
+  String get authBiometricPasswordDialogTitle => 'تفعيل الدخول بالبصمة';
+
+  @override
+  String get authBiometricPasswordDialogContent =>
+      'أدخل كلمة المرور لتأكيد وتفعيل الدخول السريع بالبصمة:';
+
+  @override
+  String get authBiometricPasswordDialogSkip => 'تخطي';
+
+  @override
+  String get authBiometricPasswordDialogConfirm => 'تأكيد';
+
+  @override
+  String get authBiometricEnabledSuccess => 'تم تفعيل الدخول بالبصمة بنجاح';
+
+  @override
+  String get authBiometricDisabledSuccess => 'تم إيقاف الدخول بالبصمة';
+
+  @override
+  String get authBackToLoginFields => 'الرجوع لحقول الدخول';
+
+  @override
+  String get authUsernameOrEmailRequired =>
+      'يرجى إدخال اسم المستخدم أو البريد الإلكتروني';
+
+  @override
+  String get authPasswordRequired => 'يرجى إدخال كلمة المرور';
+
+  @override
+  String get syncPreparingOperations => 'تجهيز عمليات المزامنة...';
+
+  @override
+  String get syncSummaryDownloaded => 'تم تنزيله';
+
+  @override
+  String get syncSummaryUploaded => 'تم رفعه';
+
+  @override
+  String get close => 'إغلاق';
 }

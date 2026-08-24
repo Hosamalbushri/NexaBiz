@@ -156,6 +156,8 @@ class SettingsExpandableSection extends StatefulWidget {
     this.initiallyExpanded = false,
     this.maintainState = true,
     this.dense = false,
+    this.iconColor,
+    this.trailing,
   });
 
   final IconData icon;
@@ -167,6 +169,9 @@ class SettingsExpandableSection extends StatefulWidget {
 
   /// Tighter padding for expanded children when true.
   final bool dense;
+
+  final Color? iconColor;
+  final Widget? trailing;
 
   /// Matches [SettingsTile] collapsed row height.
   static const double headerMinHeight = 72;
@@ -224,8 +229,10 @@ class _SettingsExpandableSectionState extends State<SettingsExpandableSection>
               onTap: _toggle,
               child: _SettingsHeaderRow(
                 icon: widget.icon,
+                iconColor: widget.iconColor,
                 title: widget.title,
                 subtitle: widget.subtitle,
+                trailing: widget.trailing,
                 showChevron: true,
                 chevronColor: colorScheme.onSurfaceVariant,
                 chevronTurns: Tween<double>(begin: 0, end: 0.25).animate(

@@ -5972,6 +5972,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'Encrypted & Secure Connection (Standard Compliant)';
 
   @override
+  String get authPasswordStrengthWeak => 'Weak';
+
+  @override
+  String get authPasswordStrengthMedium => 'Medium';
+
+  @override
+  String get authPasswordStrengthStrong => 'Strong';
+
+  @override
+  String get authPasswordStrengthVeryStrong => 'Very Strong';
+
+  @override
+  String get authPasswordChangedSuccess => 'Password updated successfully';
+
+  @override
+  String get authBiometricsSettingsTitle => 'Biometric Sign-In';
+
+  @override
+  String get authBiometricsSettingsSubtitle =>
+      'Use fingerprint or face ID to unlock your session quickly';
+
+  @override
+  String get authBiometricsNotAvailable =>
+      'Biometric authentication is not supported or set up on this device';
+
+  @override
+  String get authSecuritySectionTitle => 'Authentication & Security';
+
+  @override
+  String get authChangePasswordTileTitle => 'Change Password';
+
+  @override
+  String get authChangePasswordTileSubtitle =>
+      'Update local device account password';
+
+  @override
   String get syncSummaryTitle => 'Outbox Breakdown';
 
   @override
@@ -5981,7 +6017,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncSummaryConflicts => 'Conflicts';
 
   @override
-  String get syncSummaryFailed => 'Failed Attempts';
+  String get syncSummaryFailed => 'Failed';
 
   @override
   String get syncDiagnosticsTitle => 'Server Health & Connection';
@@ -6078,4 +6114,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncOutboxDetailsTitle => 'Operation Details';
+
+  @override
+  String get authChangePasswordLocalAccountNotice =>
+      'Note: This password change applies to your local device authentication account.';
+
+  @override
+  String get syncServerTestingConnection => 'Testing server connection...';
+
+  @override
+  String get syncServerConnectionSuccess => 'Server connection successful.';
+
+  @override
+  String get syncServerConnectionFailed =>
+      'Unable to reach server. Please check the URL and network connection.';
+
+  @override
+  String get syncBiometricSettingsTitle => 'Server Biometric Login';
+
+  @override
+  String get syncBiometricSettingsSubtitle =>
+      'Allow signing into server account using fingerprint';
+
+  @override
+  String get syncGoToLoginAction => 'Proceed to Server Login';
+
+  @override
+  String get syncDisableConfirmTitle => 'Disable Sync & Confirm Logout';
+
+  @override
+  String get syncDisableConfirmAdminContent =>
+      'Disabling sync will log you out from the server and return to the main login page. Do you agree?';
+
+  @override
+  String get syncDisableConfirmAction => 'Confirm & Disable Sync';
+
+  @override
+  String get syncDisabledSuccessLogout =>
+      'Synchronization disabled and logged out successfully.';
+
+  @override
+  String get syncDisableRequestTitle => 'Request Sync Disable';
+
+  @override
+  String get syncDisableRequestContent =>
+      'Disabling synchronization requires System Administrator approval. Would you like to send a request to the Admin?';
+
+  @override
+  String get syncDisableSendRequestAction => 'Send Request';
+
+  @override
+  String get syncDisableRequestSentSuccess =>
+      'Sync disable request sent to Administrator pending approval.';
+
+  @override
+  String get syncActiveServerLabel => 'Active Sync Server';
+
+  @override
+  String get syncDisableAction => 'Disable Synchronization';
+
+  @override
+  String get authBiometricPasswordDialogTitle => 'Enable Biometric Login';
+
+  @override
+  String get authBiometricPasswordDialogContent =>
+      'Enter password to confirm and enable biometric login:';
+
+  @override
+  String get authBiometricPasswordDialogSkip => 'Skip';
+
+  @override
+  String get authBiometricPasswordDialogConfirm => 'Confirm';
+
+  @override
+  String get authBiometricEnabledSuccess =>
+      'Biometric login enabled successfully';
+
+  @override
+  String get authBiometricDisabledSuccess => 'Biometric login disabled';
+
+  @override
+  String get authBackToLoginFields => 'Back to Login Fields';
+
+  @override
+  String get authUsernameOrEmailRequired => 'Please enter username or email';
+
+  @override
+  String get authPasswordRequired => 'Please enter password';
+
+  @override
+  String get syncPreparingOperations => 'Preparing sync operations...';
+
+  @override
+  String get syncSummaryDownloaded => 'Downloaded';
+
+  @override
+  String get syncSummaryUploaded => 'Uploaded';
+
+  @override
+  String get close => 'Close';
 }

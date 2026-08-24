@@ -87,6 +87,16 @@ class SyncLoginCredentialStore {
     await _secure.write(key: _enabledKey(isSyncMode), value: 'true');
   }
 
+  Future<void> setBiometricEnabled({
+    required bool enabled,
+    bool isSyncMode = true,
+  }) async {
+    await _secure.write(
+      key: _enabledKey(isSyncMode),
+      value: enabled ? 'true' : 'false',
+    );
+  }
+
   Future<void> clear({bool isSyncMode = true}) async {
     try {
       await _secure.delete(key: _emailKey(isSyncMode));

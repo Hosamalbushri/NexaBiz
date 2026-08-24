@@ -244,13 +244,17 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
 
   @override
   Future<List<SyncRemoteChange>> pull({
-    required String entityType,
+    String? entityType,
     DateTime? since,
   }) async {
     try {
-      final query = <String, String>{'entity_type': entityType};
+      final query = <String, String>{};
+      if (entityType != null && entityType.isNotEmpty) {
+        query['entity_type'] = entityType;
+      }
+      final cursorKey = entityType ?? '__global__';
       // Prefer durable sequence cursor; fall back to since only when unknown.
-      final stored = await _cursors.read(entityType);
+      final stored = await _cursors.read(cursorKey);
       if (stored != null) {
         query['cursor'] = '$stored';
       } else if (since != null) {
@@ -276,6 +280,7 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
             all.add(
               SyncRemoteChange(
                 entityId: item['entity_id'] as String? ?? '',
+                entityType: item['entity_type'] as String? ?? entityType ?? '',
                 version: (item['version'] as num?)?.toInt() ?? 0,
                 updatedAt:
                     _parseDate(item['updated_at']) ?? DateTime.now().toUtc(),
@@ -289,7 +294,7 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
         }
         final nextCursor = (map['next_cursor'] as num?)?.toInt();
         if (nextCursor != null) {
-          _stagedCursors[entityType] = nextCursor;
+          _stagedCursors[cursorKey] = nextCursor;
           query['cursor'] = '$nextCursor';
           query.remove('since');
         }

@@ -64,7 +64,7 @@ abstract class RemoteSyncApi {
   }
 
   Future<List<SyncRemoteChange>> pull({
-    required String entityType,
+    String? entityType,
     DateTime? since,
   });
 
@@ -209,28 +209,33 @@ class InMemoryRemoteSyncApi implements RemoteSyncApi {
 
   @override
   Future<List<SyncRemoteChange>> pull({
-    required String entityType,
+    String? entityType,
     DateTime? since,
   }) async {
     if (simulateOffline) {
       throw const NetworkFailure('Offline');
     }
-    final bucket = _bucket(entityType);
     final changes = <SyncRemoteChange>[];
-    for (final meta in bucket.values) {
-      if (since != null && !meta.updatedAt.isAfter(since)) {
-        continue;
+    final buckets = entityType != null && entityType.isNotEmpty
+        ? [_bucket(entityType)]
+        : _store.values.toList();
+    for (final bucket in buckets) {
+      for (final meta in bucket.values) {
+        if (since != null && !meta.updatedAt.isAfter(since)) {
+          continue;
+        }
+        final deleted = meta.payload?['deleted'] == true;
+        changes.add(
+          SyncRemoteChange(
+            entityId: meta.entityId,
+            version: meta.version,
+            updatedAt: meta.updatedAt,
+            payload: Map<String, dynamic>.from(meta.payload ?? const {}),
+            deleted: deleted,
+            entityType: entityType ?? '',
+          ),
+        );
       }
-      final deleted = meta.payload?['deleted'] == true;
-      changes.add(
-        SyncRemoteChange(
-          entityId: meta.entityId,
-          version: meta.version,
-          updatedAt: meta.updatedAt,
-          payload: Map<String, dynamic>.from(meta.payload ?? const {}),
-          deleted: deleted,
-        ),
-      );
     }
     return changes;
   }

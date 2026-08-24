@@ -141,16 +141,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return AppRoutes.changePassword;
       }
 
-      if (auth.isAuthenticated &&
-          !auth.mustChangePassword &&
-          path == AppRoutes.changePassword) {
-        final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
-        if (ready) {
-          return AppRoutes.dashboard;
-        }
-        return SystemSetupRoutes.root;
-      }
-
       // Guard dashboard for first-launch users until setup is ready.
       // Users with an active remote session (completed server login) bypass this guard.
       if (auth.isAuthenticated &&
