@@ -216,11 +216,18 @@ class InMemoryRemoteSyncApi implements RemoteSyncApi {
       throw const NetworkFailure('Offline');
     }
     final changes = <SyncRemoteChange>[];
-    final buckets = entityType != null && entityType.isNotEmpty
-        ? [_bucket(entityType)]
-        : _store.values.toList();
-    for (final bucket in buckets) {
-      for (final meta in bucket.values) {
+    final targetEntries = entityType != null && entityType.isNotEmpty
+        ? [
+            MapEntry(
+              entityType,
+              _store[entityType] ?? <String, RemoteEntityMeta>{},
+            ),
+          ]
+        : _store.entries.toList();
+
+    for (final entry in targetEntries) {
+      final typeName = entry.key;
+      for (final meta in entry.value.values) {
         if (since != null && !meta.updatedAt.isAfter(since)) {
           continue;
         }
@@ -232,7 +239,7 @@ class InMemoryRemoteSyncApi implements RemoteSyncApi {
             updatedAt: meta.updatedAt,
             payload: Map<String, dynamic>.from(meta.payload ?? const {}),
             deleted: deleted,
-            entityType: entityType ?? '',
+            entityType: typeName,
           ),
         );
       }

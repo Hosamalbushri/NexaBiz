@@ -4,15 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/app_button.dart';
-import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
+import '../../core/widgets/network_status_indicator.dart';
 import '../bootstrap/app_initialization.dart';
-import '../bootstrap/app_initialization_state.dart';
 import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../router/app_routes.dart';
 import '../theme/app_spacing.dart';
 
-/// Progress and recovery UI for server-based initialization setup.
+/// Dedicated initialization and completion screen for server-based device onboarding.
 class ServerBootstrapProgressPage extends ConsumerWidget {
   const ServerBootstrapProgressPage({super.key});
 
@@ -24,13 +23,6 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-
-    // React to completed ready state
-    ref.listen<InitializationState>(appInitializationControllerProvider, (_, next) {
-      if (next.isReady) {
-        context.go(AppRoutes.dashboard);
-      }
-    });
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -49,47 +41,157 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Header Icon
                   Icon(
                     state.isFailed
-                        ? Icons.error_outline
+                        ? Icons.error_outline_rounded
                         : state.isServerNoData
-                            ? Icons.info_outline
-                            : Icons.cloud_download_outlined,
-                    size: 64,
+                            ? Icons.info_outline_rounded
+                            : state.isBootstrapCompleted
+                                ? Icons.task_alt_rounded
+                                : Icons.cloud_download_rounded,
+                    size: 68,
                     color: state.isFailed
                         ? colorScheme.error
                         : state.isServerNoData
                             ? colorScheme.tertiary
-                            : colorScheme.primary,
+                            : state.isBootstrapCompleted
+                                ? Colors.green
+                                : colorScheme.primary,
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
+
+                  // Title
                   Text(
                     state.isFailed
                         ? 'Initialization Failed'
                         : state.isServerNoData
                             ? 'No Server Data Found'
-                            : 'Initializing Application',
+                            : state.isBootstrapCompleted
+                                ? 'Setup Complete'
+                                : 'Preparing Your Workspace',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w800,
-                      letterSpacing: -0.4,
+                      letterSpacing: -0.5,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
+
+                  // Subtitle
                   Text(
-                    state.stageDetails.isNotEmpty
-                        ? state.stageDetails
-                        : 'Setting up device configuration...',
+                    state.isBootstrapCompleted
+                        ? 'Your company data has been successfully downloaded and committed to this device.'
+                        : (state.stageDetails.isNotEmpty
+                            ? state.stageDetails
+                            : 'Downloading company data and setting up your workspace...'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
+                      height: 1.35,
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.lg),
 
-                  // Active progress bar
-                  if (!state.isFailed && !state.isServerNoData) ...[
+                  // STATE 1: COMPLETION SCREEN WITH CHECKMARKS
+                  if (state.isBootstrapCompleted) ...[
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainerLowest,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.green.withValues(alpha: 0.3),
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.04),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: const [
+                                  _CompletionCheckTile(
+                                    label: 'Company Profile & Settings',
+                                  ),
+                                  _CompletionCheckTile(
+                                    label: 'Products & Master Catalog',
+                                  ),
+                                  _CompletionCheckTile(
+                                    label: 'Customers & Debtors Records',
+                                  ),
+                                  _CompletionCheckTile(
+                                    label: 'Suppliers & Creditors Records',
+                                  ),
+                                  _CompletionCheckTile(
+                                    label: 'Accounting Ledger & Currencies',
+                                  ),
+                                  _CompletionCheckTile(
+                                    label: 'Inventory Balances & Sequence Cursor',
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            const Center(
+                              child: NetworkStatusIndicator(showLabel: true),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    AppButton(
+                      label: 'Continue to Dashboard',
+                      icon: Icons.arrow_forward_rounded,
+                      expand: true,
+                      variant: AppButtonVariant.filled,
+                      onPressed: () {
+                        coordinator.completeBootstrapAndProceedToDashboard();
+                        context.go(AppRoutes.dashboard);
+                      },
+                    ),
+                  ],
+
+                  // STATE 2: ACTIVE PROGRESS & DOWNLOAD STAGES
+                  if (!state.isFailed &&
+                      !state.isServerNoData &&
+                      !state.isBootstrapCompleted) ...[
+                    // Download progress stats (e.g. 80%, 1,250 / 1,560)
+                    if (state.isDownloading && state.totalToDownload > 0) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            state.currentEntityType.isNotEmpty
+                                ? state.currentEntityType.toUpperCase()
+                                : 'MASTER DATA',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                          Text(
+                            '${(state.progressPercentage * 100).toInt()}%  (${state.downloadedCount} / ${state.totalToDownload})',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                    ],
+
                     LinearProgressIndicator(
                       value: state.progressPercentage > 0
                           ? state.progressPercentage
@@ -98,6 +200,7 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     const SizedBox(height: AppSpacing.lg),
+
                     Expanded(
                       child: ListView(
                         children: [
@@ -144,7 +247,7 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                     ),
                   ],
 
-                  // Server has no initialization data
+                  // STATE 3: SERVER NO DATA
                   if (state.isServerNoData) ...[
                     const Spacer(),
                     Container(
@@ -192,7 +295,7 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                     ),
                   ],
 
-                  // Failure State with Recovery Options
+                  // STATE 4: FAILURE RECOVERY STATE
                   if (state.isFailed) ...[
                     const Spacer(),
                     Container(
@@ -204,17 +307,30 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                           color: colorScheme.error.withValues(alpha: 0.3),
                         ),
                       ),
-                      child: Text(
-                        state.error?.message ?? 'An unexpected error occurred during initialization.',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onErrorContainer,
-                        ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Unable to prepare your workspace',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.error,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            state.error?.message ??
+                                'We couldn\'t download your company data.',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const Spacer(),
                     AppButton(
-                      label: 'Retry Initialization',
+                      label: 'Retry Download',
                       icon: Icons.refresh,
                       expand: true,
                       onPressed: () => coordinator.retry(),
@@ -230,9 +346,10 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.sm),
                     TextButton(
                       onPressed: () {
-                        context.go(AppRoutes.login);
+                        coordinator.continueOffline();
+                        context.go(AppRoutes.dashboard);
                       },
-                      child: const Text('Use Local Offline Setup'),
+                      child: const Text('Continue Offline'),
                     ),
                   ],
                 ],
@@ -240,6 +357,39 @@ class ServerBootstrapProgressPage extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _CompletionCheckTile extends StatelessWidget {
+  const _CompletionCheckTile({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.check_circle_rounded,
+            color: Colors.green,
+            size: 22,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -264,7 +414,7 @@ class _ProgressStageTile extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     final leadingIcon = isCompleted
-        ? Icon(Icons.check_circle, color: colorScheme.primary)
+        ? const Icon(Icons.check_circle, color: Colors.green)
         : isActive
             ? SizedBox(
                 width: 20,

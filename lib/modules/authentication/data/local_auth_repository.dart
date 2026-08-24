@@ -6,6 +6,7 @@ import '../domain/entities/auth_session.dart';
 import '../domain/local_permissions.dart';
 import '../domain/repositories/auth_repository.dart';
 import 'local_auth_store.dart';
+import 'offline_authorization_store.dart';
 import 'secure_token_storage.dart';
 
 /// Fully offline authentication against the local Hive identity store.
@@ -13,15 +14,18 @@ class LocalAuthRepository implements AuthRepository {
   LocalAuthRepository({
     required LocalAuthStore store,
     required SecureTokenStorage tokenStorage,
+    OfflineAuthorizationStore? offlineAuthStore,
     required SyncApiConfig Function() readConfig,
     void Function(SyncApiConfig config)? onConfigChanged,
   }) : _store = store,
        _tokenStorage = tokenStorage,
+       _offlineAuthStore = offlineAuthStore ?? OfflineAuthorizationStore(),
        _readConfig = readConfig,
        _onConfigChanged = onConfigChanged;
 
   final LocalAuthStore _store;
   final SecureTokenStorage _tokenStorage;
+  final OfflineAuthorizationStore _offlineAuthStore;
   final SyncApiConfig Function() _readConfig;
   final void Function(SyncApiConfig config)? _onConfigChanged;
   final _sessionController = StreamController<AuthSessionSnapshot?>.broadcast();
@@ -54,14 +58,48 @@ class LocalAuthRepository implements AuthRepository {
     );
   }
 
+  Future<AuthSessionSnapshot> _applyOfflineAuthorization(
+    AuthSessionSnapshot snapshot,
+  ) async {
+    if (!snapshot.hasCompany) return snapshot;
+    final config = _readConfig();
+    if (config.baseUrl.isEmpty) {
+      return snapshot;
+    }
+
+    final restoredSnapshot = await _offlineAuthStore.loadSnapshot(
+      serverBaseUrl: config.baseUrl,
+      companyId: snapshot.currentCompanyId!,
+      userId: snapshot.user.id,
+    );
+
+    if (restoredSnapshot != null) {
+      return snapshot.copyWith(
+        roles: restoredSnapshot.roles,
+        permissions: restoredSnapshot.permissions,
+      );
+    }
+
+    if (snapshot.user.email == LocalAuthDefaults.adminEmail &&
+        config.baseUrl.isEmpty) {
+      return snapshot;
+    }
+
+    return snapshot.copyWith(
+      roles: const <String>[],
+      permissions: const <String>{},
+    );
+  }
+
   @override
   Future<AuthSessionSnapshot?> restoreSession() async {
     await _store.ensureSeeded();
-    final snapshot = await _store.loadSession();
-    if (snapshot == null) {
+    final loaded = await _store.loadSession();
+    if (loaded == null) {
       _emit(null);
       return null;
     }
+    final snapshot = await _applyOfflineAuthorization(loaded);
     _applyConfig(snapshot);
     _emit(snapshot);
     return snapshot;
@@ -77,15 +115,16 @@ class LocalAuthRepository implements AuthRepository {
     required String platform,
     String? appVersion,
   }) async {
-    final snapshot = await _store.login(
+    final loaded = await _store.login(
       email: email,
       password: password,
       deviceId: deviceId,
       companyId: companyId ?? LocalAuthDefaults.companyId,
     );
-    if (snapshot == null) {
+    if (loaded == null) {
       throw const AuthenticationFailure('Invalid email or password');
     }
+    final snapshot = await _applyOfflineAuthorization(loaded);
     // Local opaque session marker (not a remote JWT).
     await _tokenStorage.saveTokens(
       accessToken: 'local:${snapshot.sessionId}',

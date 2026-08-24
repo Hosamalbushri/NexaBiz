@@ -31,6 +31,7 @@ enum InitializationStatus {
   downloadingInitialization,
   initializingLocalDatabase,
   synchronizing,
+  bootstrapCompleted,
   ready,
   setupRequired,
   degraded,
@@ -93,6 +94,7 @@ class InitializationState {
   bool get isDownloading => status == InitializationStatus.downloadingInitialization;
   bool get isWritingDatabase => status == InitializationStatus.initializingLocalDatabase;
   bool get isSynchronizing => status == InitializationStatus.synchronizing;
+  bool get isBootstrapCompleted => status == InitializationStatus.bootstrapCompleted;
   bool get isReady => status == InitializationStatus.ready;
   bool get isSetupRequired => status == InitializationStatus.setupRequired;
   bool get isDegraded => status == InitializationStatus.degraded;

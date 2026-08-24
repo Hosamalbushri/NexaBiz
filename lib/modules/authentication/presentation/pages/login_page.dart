@@ -18,12 +18,15 @@ import '../../../../core/sync/sync_providers.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../modules/system_setup/presentation/providers/system_setup_providers.dart';
+import '../../domain/entities/authentication_mode.dart';
 import '../../domain/local_permissions.dart';
 import '../providers/auth_providers.dart';
 
 /// Premium, non-scrollable sign-in page supporting local and multi-step server sync modes.
 class LoginPage extends ConsumerStatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({super.key, this.mode});
+
+  final AuthenticationMode? mode;
 
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
@@ -56,6 +59,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   void initState() {
     super.initState();
+    if (widget.mode != null) {
+      _useSyncModeOverride = widget.mode!.isSync;
+    }
     _initBiometricsAndSavedCredentials();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final config = ref.read(syncApiConfigProvider);
@@ -69,21 +75,28 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     });
   }
 
-  bool get _isCurrentModeSync => _useSyncModeOverride ?? false;
+  AuthenticationMode get _authMode =>
+      (_useSyncModeOverride ?? (widget.mode?.isSync ?? false))
+          ? AuthenticationMode.sync
+          : AuthenticationMode.local;
+
+  bool get _isCurrentModeSync => _authMode.isSync;
 
   Future<void> _initBiometricsAndSavedCredentials([
     bool? overrideSyncMode,
   ]) async {
     try {
-      final isSyncMode = overrideSyncMode ?? _isCurrentModeSync;
+      final targetMode = (overrideSyncMode ?? _isCurrentModeSync)
+          ? AuthenticationMode.sync
+          : AuthenticationMode.local;
       final canCheck =
           await _localAuth.canCheckBiometrics ||
           await _localAuth.isDeviceSupported();
       final store = ref.read(syncLoginCredentialStoreProvider);
-      final hasSaved = await store.hasSavedCredentials(isSyncMode: isSyncMode);
-      final savedEmail = await store.readEmail(isSyncMode: isSyncMode);
+      final hasSaved = await store.hasSavedCredentials(mode: targetMode);
+      final savedEmail = await store.readEmail(mode: targetMode);
       final isBioEnabled = await store.isBiometricLoginEnabled(
-        isSyncMode: isSyncMode,
+        mode: targetMode,
       );
 
       if (mounted) {
@@ -111,10 +124,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _authenticateWithBiometrics() async {
     final l10n = AppLocalizations.of(context);
     try {
-      final isSyncMode = _isCurrentModeSync;
+      final currentMode = _authMode;
       final store = ref.read(syncLoginCredentialStoreProvider);
-      final email = await store.readEmail(isSyncMode: isSyncMode);
-      final password = await store.readPassword(isSyncMode: isSyncMode);
+      final email = await store.readEmail(mode: currentMode);
+      final password = await store.readPassword(mode: currentMode);
 
       if (email == null ||
           password == null ||
@@ -304,14 +317,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
 
       final credentialStore = ref.read(syncLoginCredentialStoreProvider);
+      final currentMode = _authMode;
       final isBioEnabled = await credentialStore.isBiometricLoginEnabled(
-        isSyncMode: isSyncEnabled,
+        mode: currentMode,
       );
       if (isBioEnabled) {
         await credentialStore.saveCredentials(
           email: email,
           password: password,
-          isSyncMode: isSyncEnabled,
+          mode: currentMode,
         );
         if (mounted) {
           setState(() {
@@ -319,7 +333,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           });
         }
       } else {
-        await credentialStore.clear(isSyncMode: isSyncEnabled);
+        await credentialStore.clear(mode: currentMode);
         if (mounted) {
           setState(() {
             _hasSavedCredentials = false;
@@ -567,6 +581,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                               const SizedBox(height: AppSpacing.lg),
 
+                              if (widget.mode == null) ...[
                               // Segmented Dual-Tab Mode Switcher
                               Container(
                                 padding: const EdgeInsets.all(4),
@@ -623,6 +638,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 duration: 400.ms,
                                 delay: 100.ms,
                               ),
+                              ],
 
                               const SizedBox(height: AppSpacing.md),
 

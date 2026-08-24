@@ -12,6 +12,8 @@ import '../localization/app_localizations.dart';
 import '../theme/app_spacing.dart';
 import 'widgets/settings_chrome.dart';
 
+import '../../modules/authentication/domain/entities/authentication_mode.dart';
+
 /// Dedicated security settings (Authentication, Change Password, Biometrics & App Lock PIN).
 class SecuritySettingsPage extends ConsumerStatefulWidget {
   const SecuritySettingsPage({super.key});
@@ -22,7 +24,8 @@ class SecuritySettingsPage extends ConsumerStatefulWidget {
 }
 
 class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
-  bool _biometricsEnabled = false;
+  bool _localBiometricsEnabled = false;
+  bool _syncBiometricsEnabled = false;
 
   @override
   void initState() {
@@ -37,16 +40,21 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
 
   Future<void> _loadBiometricStatus() async {
     final store = ref.read(syncLoginCredentialStoreProvider);
-    final authState = ref.read(authStateProvider);
-    final enabled = await store.isBiometricLoginEnabled(
-      isSyncMode: authState.isRemoteSession,
+    final localEnabled = await store.isBiometricLoginEnabled(
+      mode: AuthenticationMode.local,
+    );
+    final syncEnabled = await store.isBiometricLoginEnabled(
+      mode: AuthenticationMode.sync,
     );
     if (mounted) {
-      setState(() => _biometricsEnabled = enabled);
+      setState(() {
+        _localBiometricsEnabled = localEnabled;
+        _syncBiometricsEnabled = syncEnabled;
+      });
     }
   }
 
-  Future<void> _toggleBiometrics(bool value) async {
+  Future<void> _toggleBiometrics(bool value, AuthenticationMode mode) async {
     final store = ref.read(syncLoginCredentialStoreProvider);
     final authState = ref.read(authStateProvider);
     final biometrics = ref.read(appLockBiometricsProvider);
@@ -77,10 +85,9 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
         return;
       }
 
-      final isSyncMode = authState.isRemoteSession;
       await store.setBiometricEnabled(
         enabled: true,
-        isSyncMode: isSyncMode,
+        mode: mode,
       );
 
       final user = authState.session?.user;
@@ -203,9 +210,15 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
 
         // If skipped or cancelled: DO NOT enable biometrics
         if (pwdConfirmed == null || pwdConfirmed.isEmpty) {
-          await store.setBiometricEnabled(enabled: false, isSyncMode: isSyncMode);
+          await store.setBiometricEnabled(enabled: false, mode: mode);
           if (mounted) {
-            setState(() => _biometricsEnabled = false);
+            setState(() {
+              if (mode.isLocal) {
+                _localBiometricsEnabled = false;
+              } else {
+                _syncBiometricsEnabled = false;
+              }
+            });
           }
           return;
         }
@@ -214,20 +227,26 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
         await store.saveCredentials(
           email: userEmail,
           password: pwdConfirmed,
-          isSyncMode: isSyncMode,
+          mode: mode,
         );
       }
 
       await store.setBiometricEnabled(
         enabled: true,
-        isSyncMode: isSyncMode,
+        mode: mode,
       );
     } else {
-      await store.clear(isSyncMode: authState.isRemoteSession);
+      await store.clear(mode: mode);
     }
 
     if (mounted) {
-      setState(() => _biometricsEnabled = value);
+      setState(() {
+        if (mode.isLocal) {
+          _localBiometricsEnabled = value;
+        } else {
+          _syncBiometricsEnabled = value;
+        }
+      });
     }
   }
 
@@ -263,16 +282,26 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
                 showChevron: true,
                 onTap: () => context.push(AppRoutes.changePassword),
               ),
-              if (lock.biometricAvailable)
+              if (lock.biometricAvailable) ...[
                 SettingsTile(
                   icon: Icons.fingerprint_rounded,
-                  title: l10n.authBiometricsSettingsTitle,
+                  title: '${l10n.authLocalModeLabel} — ${l10n.authBiometricsSettingsTitle}',
                   subtitle: l10n.authBiometricsSettingsSubtitle,
                   trailing: Switch.adaptive(
-                    value: _biometricsEnabled,
-                    onChanged: _toggleBiometrics,
+                    value: _localBiometricsEnabled,
+                    onChanged: (val) => _toggleBiometrics(val, AuthenticationMode.local),
                   ),
                 ),
+                SettingsTile(
+                  icon: Icons.cloud_done_rounded,
+                  title: '${l10n.authSyncModeLabel} — ${l10n.authBiometricsSettingsTitle}',
+                  subtitle: l10n.authBiometricsSettingsSubtitle,
+                  trailing: Switch.adaptive(
+                    value: _syncBiometricsEnabled,
+                    onChanged: (val) => _toggleBiometrics(val, AuthenticationMode.sync),
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: AppSpacing.lg),

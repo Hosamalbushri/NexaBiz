@@ -14,12 +14,16 @@ import 'dart:io';
 import 'package:hive/hive.dart';
 import 'package:stock_count/core/sync/sync_operation_adapter.dart';
 
+import 'dart:typed_data';
+import 'package:stock_count/core/database/hive_encryption_key_store.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late Directory tempDir;
 
   setUp(() async {
+    HiveEncryptionKeyStore.debugFixedKey = Uint8List.fromList(List.generate(32, (i) => i));
     tempDir = await Directory.systemTemp.createTemp('conflict_test_');
     Hive.init(tempDir.path);
     if (!Hive.isAdapterRegistered(2)) {
@@ -28,6 +32,7 @@ void main() {
   });
 
   tearDown(() async {
+    HiveEncryptionKeyStore.debugFixedKey = null;
     await Hive.deleteFromDisk();
   });
 

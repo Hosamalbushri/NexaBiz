@@ -1,18 +1,15 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
-import '../../core/errors/app_failure.dart';
 import '../../core/sync/sync_overview.dart';
 import '../../core/sync/sync_providers.dart';
-import '../../core/sync/sync_request_context.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_snackbar.dart';
-import '../../modules/administration/presentation/providers/admin_providers.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
+import '../../modules/authentication/domain/entities/authentication_mode.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../localization/app_localizations.dart';
 import '../router/app_routes.dart';
@@ -67,9 +64,8 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
     final biometrics = ref.read(appLockBiometricsProvider);
     final available = await biometrics.isAvailable();
     final store = ref.read(syncLoginCredentialStoreProvider);
-    final authState = ref.read(authStateProvider);
     final enabled = await store.isBiometricLoginEnabled(
-      isSyncMode: authState.isRemoteSession,
+      mode: AuthenticationMode.sync,
     );
     if (mounted) {
       setState(() {
@@ -231,8 +227,7 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
 
         // If user cancelled / clicked skip / entered empty password: DO NOT ENABLE BIOMETRICS
         if (pwdConfirmed == null || pwdConfirmed.isEmpty) {
-          await store.setBiometricEnabled(enabled: false, isSyncMode: true);
-          await store.setBiometricEnabled(enabled: false, isSyncMode: false);
+          await store.setBiometricEnabled(enabled: false, mode: AuthenticationMode.sync);
           if (mounted) {
             setState(() => _biometricsEnabled = false);
           }
@@ -243,17 +238,11 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
         await store.saveCredentials(
           email: userEmail,
           password: pwdConfirmed,
-          isSyncMode: true,
-        );
-        await store.saveCredentials(
-          email: userEmail,
-          password: pwdConfirmed,
-          isSyncMode: false,
+          mode: AuthenticationMode.sync,
         );
       }
 
-      await store.setBiometricEnabled(enabled: true, isSyncMode: true);
-      await store.setBiometricEnabled(enabled: true, isSyncMode: false);
+      await store.setBiometricEnabled(enabled: true, mode: AuthenticationMode.sync);
 
       if (mounted) {
         setState(() => _biometricsEnabled = true);
@@ -264,8 +253,7 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
         );
       }
     } else {
-      await store.setBiometricEnabled(enabled: false, isSyncMode: true);
-      await store.setBiometricEnabled(enabled: false, isSyncMode: false);
+      await store.setBiometricEnabled(enabled: false, mode: AuthenticationMode.sync);
       if (mounted) {
         setState(() => _biometricsEnabled = false);
         showAppSnackBar(
@@ -515,6 +503,12 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
     final autoPrefs = ref.watch(syncAutoPreferencesProvider);
     final overviewAsync = ref.watch(syncOverviewProvider);
     final overview = overviewAsync.asData?.value ?? SyncOverview.initial();
+    final auth = ref.watch(authStateProvider);
+    final isServerAuthenticated = syncEnabled &&
+        auth.isAuthenticated &&
+        (session.phase == SyncSessionPhase.enabledAuthenticated ||
+            auth.isRemoteSession);
+
     _hydrateFromConfig();
 
     final lastSyncText = overview.lastSyncedAt == null
@@ -523,24 +517,22 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
             Localizations.localeOf(context).toString(),
           ).add_jm().format(overview.lastSyncedAt!.toLocal());
 
-    final config = ref.watch(syncApiConfigProvider);
-
     return Column(
       children: [
         // Accordion Card 1: Server Connection Settings
         _AccordionCard(
-          initiallyExpanded: !syncEnabled,
+          initiallyExpanded: !isServerAuthenticated,
           accentColor: colorScheme.primary,
           leadingIcon: Icons.dns_rounded,
           title: l10n.syncServerSectionTitle,
-          subtitle: syncEnabled
+          subtitle: isServerAuthenticated
               ? l10n.syncActiveServerLabel
               : l10n.syncServerUrlHint,
-          badgeColor: syncEnabled ? Colors.green : colorScheme.outline,
+          badgeColor: isServerAuthenticated ? Colors.green : colorScheme.outline,
           badgeText:
-              syncEnabled ? l10n.syncConnectionOnline : l10n.syncConnectionOffline,
+              isServerAuthenticated ? l10n.syncConnectionOnline : l10n.syncConnectionOffline,
           children: [
-            if (!syncEnabled) ...[
+            if (!isServerAuthenticated) ...[
               TextField(
                 controller: _urlController,
                 enabled: !_savingServer,
@@ -611,32 +603,33 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
           ],
         ),
 
-        const SizedBox(height: AppSpacing.sm),
-
-        // Accordion Card: Biometric Authentication (Separate Section)
-        if (syncEnabled && _biometricsAvailable) ...[
-          _AccordionCard(
-            initiallyExpanded: true,
-            accentColor: Colors.blueGrey,
-            leadingIcon: Icons.fingerprint_rounded,
-            title: l10n.syncBiometricSettingsTitle,
-            subtitle: _biometricsEnabled
-                ? l10n.authBiometricEnabledSuccess
-                : l10n.syncBiometricSettingsSubtitle,
-            children: [
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                secondary: const Icon(Icons.fingerprint_rounded),
-                title: Text(l10n.syncBiometricSettingsTitle),
-                subtitle: Text(l10n.syncBiometricSettingsSubtitle),
-                value: _biometricsEnabled,
-                onChanged: _toggleBiometrics,
-              ),
-            ],
-          ),
-
+        // Show Connection Health tabs, Sync Buttons, Auto-sync, and Biometrics ONLY after Server Login
+        if (isServerAuthenticated) ...[
           const SizedBox(height: AppSpacing.sm),
-        ],
+
+          // Accordion Card: Biometric Authentication (Separate Section)
+          if (_biometricsAvailable) ...[
+            _AccordionCard(
+              initiallyExpanded: true,
+              accentColor: Colors.blueGrey,
+              leadingIcon: Icons.fingerprint_rounded,
+              title: l10n.syncBiometricSettingsTitle,
+              subtitle: _biometricsEnabled
+                  ? l10n.authBiometricEnabledSuccess
+                  : l10n.syncBiometricSettingsSubtitle,
+              children: [
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: const Icon(Icons.fingerprint_rounded),
+                  title: Text(l10n.syncBiometricSettingsTitle),
+                  subtitle: Text(l10n.syncBiometricSettingsSubtitle),
+                  value: _biometricsEnabled,
+                  onChanged: _toggleBiometrics,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
 
         // Accordion Card 2: Auto Sync Configuration
         if (syncEnabled &&
@@ -852,6 +845,7 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
             ),
           ],
         ),
+        ],
       ],
     );
   }
@@ -864,6 +858,7 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
     if (!await _ensureCanSync(context, ref)) {
       return;
     }
+    if (!context.mounted) return;
 
     final result = await SyncProgressModal.show(
       context,
@@ -892,6 +887,7 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
     if (!await _ensureCanSync(context, ref)) {
       return;
     }
+    if (!context.mounted) return;
 
     final result = await SyncProgressModal.show(
       context,

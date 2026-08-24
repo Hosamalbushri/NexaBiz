@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
+import 'package:stock_count/core/database/hive_encryption_key_store.dart';
 
 import 'package:stock_count/core/connectivity/connectivity_service.dart';
 import 'package:stock_count/core/errors/app_failure.dart';
@@ -97,6 +99,8 @@ class _BatchHandler extends SyncEntityHandler {
   }
 }
 
+
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -109,6 +113,7 @@ void main() {
   SyncManager? manager;
 
   setUp(() async {
+    HiveEncryptionKeyStore.debugFixedKey = Uint8List.fromList(List.generate(32, (i) => i));
     tempDir = await Directory.systemTemp.createTemp('sync_batch_');
     Hive.init(tempDir.path);
     if (!Hive.isAdapterRegistered(2)) {
@@ -125,6 +130,7 @@ void main() {
   });
 
   tearDown(() async {
+    HiveEncryptionKeyStore.debugFixedKey = null;
     await manager?.dispose();
     manager = null;
     await connectivity.dispose();

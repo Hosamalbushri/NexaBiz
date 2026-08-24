@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -628,7 +627,7 @@ void main() {
       final movements = await journals.listMovementsForAccount(
         accountUuid: customerAccount,
       );
-      expect(movements.where((m) => m.entryUuid != null), hasLength(1));
+      expect(movements.where((m) => m.entryUuid.isNotEmpty), hasLength(1));
       expect(movements.single.debit, 120);
     });
 

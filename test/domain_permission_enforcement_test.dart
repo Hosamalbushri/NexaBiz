@@ -176,7 +176,6 @@ class _FakeCustomerRepository implements CustomerRepository {
   Future<Customer?> getById(int id) async => null;
   @override
   Future<Customer?> getByUuid(String uuid) async => null;
-  @override
   Future<PagedResult<Customer>> getPaged({
     required int page,
     required int pageSize,

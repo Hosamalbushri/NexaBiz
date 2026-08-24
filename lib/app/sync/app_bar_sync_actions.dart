@@ -6,6 +6,7 @@ import '../../core/sync/sync_overview.dart';
 import '../../core/sync/sync_providers.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/custom_app_bar.dart';
+import '../../core/widgets/network_status_indicator.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../localization/app_localizations.dart';
 import '../router/app_routes.dart';
@@ -46,25 +47,9 @@ class AppBarSyncActions extends ConsumerWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        CustomAppBarAction(
-          icon: needsReauth
-              ? Icons.lock_clock_outlined
-              : (online ? Icons.wifi_rounded : Icons.wifi_off_rounded),
-          tooltip: needsReauth
-              ? l10n.syncSessionExpired
-              : (online
-                  ? l10n.syncConnectionOnline
-                  : l10n.syncConnectionOffline),
-          size: size,
-          accentColor: needsReauth
-              ? colorScheme.error
-              : (online ? colorScheme.primary : colorScheme.outline),
-          onPressed: () => needsReauth
-              ? context.push(AppRoutes.settingsDataSyncLogin)
-              : context.go(AppRoutes.settings),
-        ),
+        const NetworkStatusIndicator(compact: true),
+        const SizedBox(width: 6),
         if (showSync) ...[
-          const SizedBox(width: 4),
           CustomAppBarAction(
             icon: Icons.sync_rounded,
             tooltip: overview.isSyncing

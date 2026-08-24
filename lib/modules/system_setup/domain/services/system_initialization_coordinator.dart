@@ -7,8 +7,8 @@ class SystemInitializationCoordinator {
   SystemInitializationCoordinator({
     required SystemSetupStateRepository stateRepository,
     required SystemSetupSeedPort seedPort,
-  }) : _stateRepository = stateRepository,
-       _seedPort = seedPort;
+  })  : _stateRepository = stateRepository,
+        _seedPort = seedPort;
 
   final SystemSetupStateRepository _stateRepository;
   final SystemSetupSeedPort _seedPort;

@@ -1,13 +1,18 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/network/server_bootstrap_auth_service.dart';
+import '../../core/sync/sync_providers.dart';
+import '../../core/utils/id_generator.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_snackbar.dart';
+import '../../modules/authentication/domain/entities/auth_session.dart';
+import '../../modules/authentication/domain/entities/auth_user.dart';
+import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../bootstrap/app_initialization.dart';
 import '../localization/app_localizations.dart';
 import '../router/app_routes.dart';
@@ -59,12 +64,45 @@ class _ServerBootstrapLoginPageState
             : '');
 
     try {
+      final config = ref.read(syncApiConfigProvider);
+      var deviceId = config.deviceId.trim();
+      if (deviceId.isEmpty) {
+        deviceId = generateUuidV4();
+      }
+
+      ref.read(syncApiConfigProvider.notifier).state = config.copyWith(
+        baseUrl: baseUrl,
+        deviceId: deviceId,
+      );
+
       final authService = ref.read(serverBootstrapAuthServiceProvider);
       final token = await authService.authenticate(
         baseUrl: baseUrl,
         email: email,
         password: password,
       );
+
+      try {
+        await ref.read(authStateProvider.notifier).loginForSync(
+          email: email,
+          password: password,
+          companyId: null,
+          deviceId: deviceId,
+          deviceName: 'Flutter Device',
+          platform: defaultTargetPlatform.name,
+        );
+      } catch (_) {
+        final snapshot = AuthSessionSnapshot(
+          user: AuthUser(id: 'bootstrap_admin', name: 'Bootstrap Admin', email: email),
+          companies: const [],
+          roles: const ['admin'],
+          permissions: const {'sync.execute', 'sync.view', 'settings.view'},
+          capturedAt: DateTime.now().toUtc(),
+          currentCompanyId: null,
+          deviceId: deviceId,
+        );
+        ref.read(authStateProvider.notifier).setAuthenticatedSession(snapshot);
+      }
 
       if (!mounted) return;
 
@@ -101,7 +139,6 @@ class _ServerBootstrapLoginPageState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 

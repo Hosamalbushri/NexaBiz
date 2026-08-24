@@ -105,6 +105,8 @@ class SyncManager {
     _handlers[handler.entityType] = handler;
   }
 
+  SyncEntityHandler? getHandler(String entityType) => _handlers[entityType];
+
   /// Enables or disables sync without restarting connectivity listeners.
   Future<void> setEnabled(bool enabled) async {
     _enabled = enabled;
@@ -660,40 +662,42 @@ class SyncManager {
     if (remote != null) {
       try {
         final changes = await remote.pull();
-        var appliedAll = true;
-        for (final change in changes) {
-          final handler = _handlers[change.entityType];
-          if (handler == null) {
-            continue;
+        if (changes.isNotEmpty) {
+          var appliedAll = true;
+          for (final change in changes) {
+            final handler = _handlers[change.entityType];
+            if (handler == null) {
+              continue;
+            }
+            try {
+              await handler.applyRemoteChange(change);
+              await _queue.removeCreatesForEntity(
+                entityType: handler.entityType,
+                entityId: change.entityId,
+              );
+              downloaded++;
+              downloadedByEntity[handler.entityType] =
+                  (downloadedByEntity[handler.entityType] ?? 0) + 1;
+            } on AuthenticationFailure {
+              await remote.abandonPull('__global__');
+              rethrow;
+            } catch (_) {
+              failed++;
+              appliedAll = false;
+            }
           }
-          try {
-            await handler.applyRemoteChange(change);
-            await _queue.removeCreatesForEntity(
-              entityType: handler.entityType,
-              entityId: change.entityId,
-            );
-            downloaded++;
-            downloadedByEntity[handler.entityType] =
-                (downloadedByEntity[handler.entityType] ?? 0) + 1;
-          } on AuthenticationFailure {
+          if (appliedAll) {
+            await remote.acknowledgePull('__global__');
+          } else {
             await remote.abandonPull('__global__');
-            rethrow;
-          } catch (_) {
-            failed++;
-            appliedAll = false;
           }
+          return (
+            downloaded: downloaded,
+            failed: failed,
+            downloadedByEntity:
+                Map<String, int>.unmodifiable(downloadedByEntity),
+          );
         }
-        if (appliedAll) {
-          await remote.acknowledgePull('__global__');
-        } else {
-          await remote.abandonPull('__global__');
-        }
-        return (
-          downloaded: downloaded,
-          failed: failed,
-          downloadedByEntity:
-              Map<String, int>.unmodifiable(downloadedByEntity),
-        );
       } on AuthenticationFailure {
         rethrow;
       } catch (_) {

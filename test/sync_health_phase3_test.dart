@@ -82,7 +82,7 @@ class _AuthFailingRemote extends InMemoryRemoteSyncApi {
 
   @override
   Future<List<SyncRemoteChange>> pull({
-    required String entityType,
+    String? entityType,
     DateTime? since,
   }) async {
     return const [];
@@ -100,7 +100,7 @@ class _ForbiddenRemote extends InMemoryRemoteSyncApi {
 
   @override
   Future<List<SyncRemoteChange>> pull({
-    required String entityType,
+    String? entityType,
     DateTime? since,
   }) async {
     return const [];

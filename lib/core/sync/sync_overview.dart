@@ -162,7 +162,12 @@ class SyncOverview {
   }
 
   /// Exports a sanitized diagnostic snapshot map without exposing tokens, passwords, or accounting payloads.
-  Map<String, dynamic> toDiagnosticReport() {
+  Map<String, dynamic> toDiagnosticReport({
+    String? authenticationMode,
+    bool? authorizationAvailable,
+    int? authorizationSnapshotAgeSeconds,
+    int? permissionCount,
+  }) {
     return {
       'sync_phase': phase.name,
       'is_online': isOnline,
@@ -174,6 +179,12 @@ class SyncOverview {
       'pending_blocked_count': pendingBlockedCount,
       'pending_auth_count': pendingAuthCount,
       'last_synced_at': lastSyncedAt?.toUtc().toIso8601String(),
+      'authorization_diagnostics': {
+        'authentication_mode': authenticationMode ?? (isOnline ? 'remote' : 'local'),
+        'authorization_available': authorizationAvailable ?? true,
+        'authorization_snapshot_age_seconds': authorizationSnapshotAgeSeconds,
+        'permission_count': permissionCount ?? 0,
+      },
       'diagnostics': {
         'last_status_code': diagnostics.lastStatusCode,
         'last_status_message': diagnostics.lastStatusMessage,

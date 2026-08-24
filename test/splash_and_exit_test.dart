@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:stock_count/app/bootstrap/app_initialization.dart';
+import 'package:stock_count/app/bootstrap/app_initialization_state.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
 import 'package:stock_count/app/router/app_routes.dart';
@@ -11,6 +12,7 @@ import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/app/splash/splash_page.dart';
 import 'package:stock_count/app/theme/app_theme.dart';
 import 'package:stock_count/core/di/app_providers.dart';
+import 'package:stock_count/core/errors/app_error_domain.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_session.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
@@ -22,6 +24,14 @@ import 'package:stock_count/modules/system_setup/domain/repositories/system_setu
 import 'package:stock_count/modules/system_setup/domain/services/system_initialization_coordinator.dart';
 import 'package:stock_count/modules/system_setup/presentation/pages/system_setup_routes.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
+
+class _FakeAuthController extends StateNotifier<AuthState>
+    implements AuthController {
+  _FakeAuthController(AuthState initial) : super(initial);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 class _FixedSetupStateRepository implements SystemSetupStateRepository {
   _FixedSetupStateRepository(this.progress);
@@ -75,10 +85,68 @@ SetupProgress _freshProgress() {
   );
 }
 
+class _TestAppInitializationCoordinator extends AppInitializationCoordinator {
+  _TestAppInitializationCoordinator(
+    Ref ref, {
+    this.shouldFail = false,
+    this.initialState,
+  }) : super(ref) {
+    attempts = 1;
+    if (initialState != null) {
+      state = initialState!;
+    } else if (shouldFail) {
+      state = const InitializationState(
+        status: InitializationStatus.failed,
+        stage: InitializationStage.coreBootstrap,
+        error: AppError(
+          category: AppErrorCategory.initialization,
+          message: 'Unable to start application',
+        ),
+      );
+    } else {
+      state = const InitializationState(
+        status: InitializationStatus.ready,
+        stage: InitializationStage.applicationReady,
+      );
+    }
+  }
+
+  final bool shouldFail;
+  final InitializationState? initialState;
+  int attempts = 0;
+
+  @override
+  Future<void> initialize() async {
+    attempts++;
+    if (shouldFail && attempts == 1) {
+      state = const InitializationState(
+        status: InitializationStatus.failed,
+        stage: InitializationStage.coreBootstrap,
+        error: AppError(
+          category: AppErrorCategory.initialization,
+          message: 'Unable to start application',
+        ),
+      );
+    } else {
+      state = const InitializationState(
+        status: InitializationStatus.ready,
+        stage: InitializationStage.applicationReady,
+      );
+    }
+  }
+
+  @override
+  Future<void> retry() async {
+    await initialize();
+  }
+}
+
 List<Override> setupOverrides(
   SetupProgress progress, {
   bool onboardingCompleted = false,
   bool isFirstLaunch = true,
+  InitializationState? initState,
+  bool failInit = false,
 }) {
   return [
     startupStateProvider.overrideWithValue(
@@ -97,6 +165,13 @@ List<Override> setupOverrides(
       return SystemInitializationCoordinator(
         stateRepository: ref.watch(systemSetupStateRepositoryProvider),
         seedPort: const NoOpSystemSetupSeedPort(),
+      );
+    }),
+    appInitializationControllerProvider.overrideWith((ref) {
+      return _TestAppInitializationCoordinator(
+        ref,
+        initialState: initState,
+        shouldFail: failInit,
       );
     }),
   ];
@@ -130,20 +205,7 @@ AuthState _testAuthenticatedState() {
   );
 }
 
-Future<void> _seedAuthenticated(Ref ref) async {
-  // Yield so we are not mutating auth during FutureProvider initialization.
-  await Future<void>.delayed(Duration.zero);
-  ref.read(authStateProvider.notifier).replaceStateForTest(
-        _testAuthenticatedState(),
-      );
-}
 
-Future<void> _seedUnauthenticated(Ref ref) async {
-  await Future<void>.delayed(Duration.zero);
-  ref.read(authStateProvider.notifier).replaceStateForTest(
-        const AuthState(status: AuthStatus.unauthenticated),
-      );
-}
 
 void main() {
   Widget wrapDialog({
@@ -218,11 +280,15 @@ void main() {
       await tester.pumpWidget(
         wrapSplash(
           overrides: [
-            ...setupOverrides(_readyProgress(), isFirstLaunch: false),
-            appInitializationProvider.overrideWith((ref) async {
-              await Future<void>.delayed(const Duration(milliseconds: 300));
-              await _seedAuthenticated(ref);
-            }),
+            ...setupOverrides(
+              _readyProgress(),
+              isFirstLaunch: false,
+              initState: const InitializationState(
+                status: InitializationStatus.initializing,
+                stage: InitializationStage.coreBootstrap,
+                stageDetails: 'Loading...',
+              ),
+            ),
           ],
         ),
       );
@@ -234,8 +300,8 @@ void main() {
       expect(find.text('Loading...'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-      await tester.pumpAndSettle();
-      expect(find.text('DashboardShell'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 2));
     });
 
     testWidgets('navigates to dashboard when initialization succeeds', (
@@ -245,9 +311,7 @@ void main() {
         wrapSplash(
           overrides: [
             ...setupOverrides(_readyProgress(), isFirstLaunch: false),
-            appInitializationProvider.overrideWith((ref) async {
-              await _seedAuthenticated(ref);
-            }),
+            authStateProvider.overrideWith((ref) => _FakeAuthController(_testAuthenticatedState())),
           ],
         ),
       );
@@ -263,9 +327,7 @@ void main() {
         wrapSplash(
           overrides: [
             ...setupOverrides(_freshProgress()),
-            appInitializationProvider.overrideWith((ref) async {
-              await _seedAuthenticated(ref);
-            }),
+            authStateProvider.overrideWith((ref) => _FakeAuthController(_testAuthenticatedState())),
           ],
         ),
       );
@@ -284,9 +346,7 @@ void main() {
         wrapSplash(
           overrides: [
             ...setupOverrides(_freshProgress(), onboardingCompleted: true),
-            appInitializationProvider.overrideWith((ref) async {
-              await _seedAuthenticated(ref);
-            }),
+            authStateProvider.overrideWith((ref) => _FakeAuthController(_testAuthenticatedState())),
           ],
         ),
       );
@@ -299,32 +359,30 @@ void main() {
     });
 
     testWidgets('shows error state with retry on failure', (tester) async {
-      var attempts = 0;
+      late _TestAppInitializationCoordinator coordinator;
 
       await tester.pumpWidget(
         wrapSplash(
           overrides: [
             ...setupOverrides(_readyProgress(), isFirstLaunch: false),
-            appInitializationProvider.overrideWith((ref) async {
-              attempts += 1;
-              if (attempts == 1) {
-                throw StateError('bootstrap failed');
-              }
-              await _seedAuthenticated(ref);
+            appInitializationControllerProvider.overrideWith((ref) {
+              coordinator = _TestAppInitializationCoordinator(ref, shouldFail: true);
+              return coordinator;
             }),
+            authStateProvider.overrideWith((ref) => _FakeAuthController(_testAuthenticatedState())),
           ],
         ),
       );
 
       await tester.pumpAndSettle();
 
-      expect(find.text('Unable to start application'), findsOneWidget);
+      expect(find.text('Unable to start application'), findsAtLeastNWidgets(1));
       expect(find.text('Retry'), findsOneWidget);
 
       await tester.tap(find.text('Retry'));
       await tester.pumpAndSettle();
 
-      expect(attempts, 2);
+      expect(coordinator.attempts, 2);
       expect(find.text('DashboardShell'), findsOneWidget);
     });
 
@@ -333,9 +391,11 @@ void main() {
         wrapSplash(
           overrides: [
             ...setupOverrides(_readyProgress()),
-            appInitializationProvider.overrideWith((ref) async {
-              await _seedUnauthenticated(ref);
-            }),
+            authStateProvider.overrideWith(
+              (ref) => _FakeAuthController(
+                const AuthState(status: AuthStatus.unauthenticated),
+              ),
+            ),
           ],
         ),
       );

@@ -6,6 +6,7 @@ import '../../core/database/atomic_bootstrap_installer.dart';
 import '../../core/errors/app_error_domain.dart';
 import '../../core/logging/app_error_log.dart';
 import '../../core/network/server_bootstrap_service.dart';
+import '../../core/sync/sync_entity_handler.dart';
 import '../../core/sync/sync_providers.dart';
 import '../../core/sync/sync_request_context.dart';
 import '../settings/settings_repository.dart';
@@ -287,6 +288,48 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
         stageDetails: 'Finalizing local database snapshot...',
       );
 
+      // Ensure all feature sync handlers are registered in SyncManager
+      await AppBootstrap.bootstrapSync(_ref);
+      final syncManager = _ref.read(syncManagerProvider);
+
+      for (final entry in entitiesByType.entries) {
+        final entityType = entry.key;
+        final items = entry.value;
+        final handler = syncManager.getHandler(entityType);
+
+        if (handler != null) {
+          for (final item in items) {
+            final payload = (item['payload'] as Map<String, dynamic>?) ?? item;
+            final entityId = (item['entity_id'] as String?) ??
+                (payload['id'] as String?) ??
+                (payload['uuid'] as String?) ??
+                (item['uuid'] as String?) ??
+                '';
+            if (entityId.isEmpty && entityType != 'company_profile') continue;
+            final version = (item['version'] as num?)?.toInt() ?? 1;
+            final updatedAtRaw = item['updated_at'] ?? item['updatedAt'];
+            final updatedAt = updatedAtRaw is String
+                ? (DateTime.tryParse(updatedAtRaw) ?? status.takenAt)
+                : (updatedAtRaw is int
+                    ? DateTime.fromMillisecondsSinceEpoch(updatedAtRaw)
+                    : status.takenAt);
+            final deleted = (item['deleted'] as bool?) ?? false;
+
+            final change = SyncRemoteChange(
+              entityType: entityType,
+              entityId: entityId,
+              version: version,
+              updatedAt: updatedAt,
+              deleted: deleted,
+              payload: payload,
+            );
+
+            await handler.applyRemoteChange(change);
+          }
+          await handler.confirmPull();
+        }
+      }
+
       await installer.installSnapshot(
         companyId: status.companyId,
         companyName: status.companyName,
@@ -304,7 +347,6 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
         stageDetails: 'Running initial synchronization...',
       );
 
-      final syncManager = _ref.read(syncManagerProvider);
       await syncManager.syncNow(trigger: SyncPassTrigger.manual);
 
       // Save sync & configuration credentials
@@ -323,7 +365,7 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
       );
 
       state = state.copyWith(
-        status: InitializationStatus.ready,
+        status: InitializationStatus.bootstrapCompleted,
         stage: InitializationStage.applicationReady,
         operatingMode: ApplicationOperatingMode.server,
         isFirstLaunch: false,
@@ -331,8 +373,6 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
         progressPercentage: 1.0,
         stageDetails: 'Server initialization completed successfully',
       );
-
-      unawaited(_startBackgroundServices());
     } catch (e, stack) {
       AppErrorLog.record(e, stack, source: 'runServerInitialization');
       final appError = classifyAppError(e, stackTrace: stack);
@@ -343,6 +383,20 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
         stageDetails: appError.message,
       );
     }
+  }
+
+  /// Finalizes initialization completion and transitions app state to [InitializationStatus.ready].
+  void completeBootstrapAndProceedToDashboard() {
+    state = state.copyWith(
+      status: InitializationStatus.ready,
+      stage: InitializationStage.applicationReady,
+      operatingMode: ApplicationOperatingMode.server,
+      isFirstLaunch: false,
+      completedAt: DateTime.now(),
+      progressPercentage: 1.0,
+      stageDetails: 'Ready',
+    );
+    unawaited(_startBackgroundServices());
   }
 
   /// Restores degraded state to operate offline.

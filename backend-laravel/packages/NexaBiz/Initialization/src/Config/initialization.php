@@ -11,6 +11,17 @@ return [
         'account',
         'fiscal_year',
         'currency_rate',
+        'product',
+        'inventory_item',
+        'inventory_movement',
+        'customer',
+        'supplier',
+        'sale',
+        'purchase',
+        'financial_transaction',
+        'journal_entry',
+        'fund_transfer',
+        'currency_conversion',
     ],
 
     // Maximum rows per bootstrap/data page.

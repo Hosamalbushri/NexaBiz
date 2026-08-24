@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../bootstrap/app_initialization.dart';
 import '../../core/di/app_providers.dart';
 import '../../core/modules/module_providers.dart';
 import '../../modules/app_lock/domain/entities/app_lock_state.dart';
@@ -35,7 +36,6 @@ import 'app_routes.dart';
 
 import '../onboarding/server_bootstrap_login_page.dart';
 import '../onboarding/server_bootstrap_progress_page.dart';
-import '../onboarding/server_setup_page.dart';
 
 import '../sync/sync_enabled_provider.dart';
 
@@ -60,8 +60,6 @@ bool _isPermissionExempt(String path) {
   return _isAppLockExempt(path) ||
       path == AppRoutes.dashboard ||
       path == AppRoutes.services ||
-      path == AppRoutes.reports ||
-      path.startsWith('${AppRoutes.reports}/') ||
       path == AppRoutes.settings ||
       path.startsWith('${AppRoutes.settings}/') ||
       path == AppRoutes.notifications;
@@ -89,6 +87,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.listen(systemSetupReadyProvider, (_, _) {
     refresh.value++;
   });
+  ref.listen(appInitializationControllerProvider, (_, _) {
+    refresh.value++;
+  });
 
   final router = GoRouter(
     navigatorKey: appRootNavigatorKey,
@@ -98,6 +99,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final path = state.uri.path;
       final auth = ref.read(authStateProvider);
       final syncEnabled = ref.read(syncEnabledProvider);
+      final initState = ref.read(appInitializationControllerProvider);
       final isPublic = _isPublicRoute(path);
 
       // Root path '/' or empty path resolves to splash or login
@@ -121,24 +123,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return AppRoutes.login;
       }
 
-      // 3. Authenticated Users on Public Auth Pages: auto-forward to Dashboard/Setup
-      if (auth.isAuthenticated && (path == AppRoutes.login || path == AppRoutes.splash)) {
-        if (auth.mustChangePassword) {
-          return AppRoutes.changePassword;
+      // 3. Mandatory Password Change Gate
+      if (auth.isAuthenticated && auth.mustChangePassword) {
+        if (path == AppRoutes.changePassword || path == AppRoutes.splash) {
+          return null;
         }
+        return AppRoutes.changePassword;
+      }
+
+      // 4. Authenticated Device Initialization & Server Bootstrap Progress Gate
+      final isServerInitializing = initState.isDownloading ||
+          initState.isWritingDatabase ||
+          initState.isSynchronizing ||
+          initState.isBootstrapCompleted ||
+          initState.isCheckingRemote;
+
+      if (auth.isAuthenticated && isServerInitializing) {
+        if (path == AppRoutes.serverBootstrapProgress) {
+          return null;
+        }
+        return AppRoutes.serverBootstrapProgress;
+      }
+
+      // 5. Authenticated Users on Public Auth Pages: auto-forward to Dashboard/Setup
+      if (auth.isAuthenticated &&
+          (path == AppRoutes.login ||
+              path == AppRoutes.splash ||
+              path == AppRoutes.serverBootstrapLogin)) {
         final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
         final startup = ref.read(startupStateProvider);
         if (startup.isFirstLaunch && !auth.isRemoteSession && !ready) {
           return SystemSetupRoutes.root;
         }
         return AppRoutes.dashboard;
-      }
-
-      if (auth.isAuthenticated &&
-          auth.mustChangePassword &&
-          path != AppRoutes.changePassword &&
-          path != AppRoutes.splash) {
-        return AppRoutes.changePassword;
       }
 
       // Guard dashboard for first-launch users until setup is ready.
@@ -184,10 +201,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (!_isPermissionExempt(path)) {
-        final required = registry.requiredPermissionsForPath(path);
+        var required = registry.requiredPermissionsForPath(path);
+        if ((required == null || required.isEmpty) &&
+            (path == AppRoutes.reports || path.startsWith('${AppRoutes.reports}/'))) {
+          required = ['reports.view'];
+        }
         if (required != null && required.isNotEmpty) {
           if (!auth.hasAnyPermission(required)) {
-            return AppRoutes.services;
+            return AppRoutes.dashboard;
           }
         }
       }

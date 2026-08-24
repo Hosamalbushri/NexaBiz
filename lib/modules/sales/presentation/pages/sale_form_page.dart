@@ -393,6 +393,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
       currencies: _currencies,
       canSelectVoucherBook: _canSelectVoucherBook,
       onPickBook: () async {
+        final l10n = AppLocalizations.of(context);
         try {
           final book = await showSaleVoucherBookSelector(context);
           if (book != null) {
@@ -411,6 +412,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
         }
       },
       onPickCash: () async {
+        final l10n = AppLocalizations.of(context);
         try {
           final account = await showSaleCashAccountSelector(context);
           if (account != null) {

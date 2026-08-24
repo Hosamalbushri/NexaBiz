@@ -163,9 +163,9 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
     SaleCurrencyConverter converter = const SaleCurrencyConverter(),
     double defaultTaxRate = 0,
     required String baseCurrencyCode,
-  }) : _calculator = calculator,
-       _catalog = catalog,
-       _converter = converter,
+  })  : _calculator = calculator,
+        _catalog = catalog,
+        _converter = converter,
        super(
          SaleComposerState(
            saleDate: DateTime(

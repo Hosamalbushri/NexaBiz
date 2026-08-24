@@ -9,17 +9,21 @@ import '../../../core/network/authenticated_http_client.dart';
 import '../../../core/network/sync_api_config.dart';
 import '../domain/entities/auth_session.dart';
 import '../domain/entities/auth_user.dart';
+import '../domain/entities/offline_authorization_snapshot.dart';
 import '../domain/repositories/auth_repository.dart';
+import 'offline_authorization_store.dart';
 import 'secure_token_storage.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
     required AuthenticatedHttpClient http,
     required SecureTokenStorage tokenStorage,
+    OfflineAuthorizationStore? offlineAuthStore,
     required SyncApiConfig Function() readConfig,
     void Function(SyncApiConfig config)? onConfigChanged,
   }) : _http = http,
        _tokenStorage = tokenStorage,
+       _offlineAuthStore = offlineAuthStore ?? OfflineAuthorizationStore(),
        _readConfig = readConfig,
        _onConfigChanged = onConfigChanged;
 
@@ -27,6 +31,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   final AuthenticatedHttpClient _http;
   final SecureTokenStorage _tokenStorage;
+  final OfflineAuthorizationStore _offlineAuthStore;
   final SyncApiConfig Function() _readConfig;
   final void Function(SyncApiConfig config)? _onConfigChanged;
   final _sessionController = StreamController<AuthSessionSnapshot?>.broadcast();
@@ -53,6 +58,20 @@ class AuthRepositoryImpl implements AuthRepository {
       await box.delete(_snapshotKey);
     } else {
       await box.put(_snapshotKey, jsonEncode(snapshot.toJson()));
+      if (snapshot.hasCompany) {
+        final config = _readConfig();
+        final permSnapshot = OfflineAuthorizationSnapshot(
+          userId: snapshot.user.id,
+          companyId: snapshot.currentCompanyId!,
+          email: snapshot.user.email,
+          roles: snapshot.roles,
+          permissions: snapshot.permissions,
+          snapshotCreatedAt: DateTime.now().toUtc(),
+          lastServerAuthenticatedAt: snapshot.capturedAt,
+          serverBaseUrl: config.baseUrl,
+        );
+        await _offlineAuthStore.saveSnapshot(permSnapshot);
+      }
     }
     if (!_sessionController.isClosed) {
       _sessionController.add(snapshot);

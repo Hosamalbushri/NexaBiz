@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/sync/sync_overview.dart';
 import '../../core/sync/sync_providers.dart';
 import '../../core/widgets/custom_app_bar.dart';
+import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../sync/sync_enabled_provider.dart';
+import '../sync/sync_session_state.dart';
 import '../sync/sync_settings_section.dart';
 import '../sync/widgets/sync_inspector_sheet.dart';
 import '../theme/app_radius.dart';
@@ -24,7 +26,13 @@ class DataSyncSettingsPage extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final syncOverview =
         ref.watch(syncOverviewProvider).asData?.value ?? SyncOverview.initial();
+    final auth = ref.watch(authStateProvider);
+    final syncSession = ref.watch(syncSessionStateProvider);
     final syncEnabled = ref.watch(syncEnabledProvider);
+    final isServerAuthenticated = syncEnabled &&
+        auth.isAuthenticated &&
+        (syncSession.phase == SyncSessionPhase.enabledAuthenticated ||
+            auth.isRemoteSession);
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
@@ -33,7 +41,7 @@ class DataSyncSettingsPage extends ConsumerWidget {
         centerTitle: true,
         showBackButton: true,
         actions: [
-          if (syncEnabled)
+          if (isServerAuthenticated)
             IconButton(
               icon: const Icon(Icons.manage_search_outlined),
               tooltip: l10n.syncOutboxInspectorTooltip,
@@ -55,7 +63,7 @@ class DataSyncSettingsPage extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          if (syncEnabled)
+          if (isServerAuthenticated)
             SettingsGroup(
               margin: const EdgeInsets.only(bottom: AppSpacing.sm),
               children: [

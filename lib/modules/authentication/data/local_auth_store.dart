@@ -232,15 +232,16 @@ class LocalAuthStore {
     }
 
     final stored = matched.permissionsByCompany[selectedId];
+    final isDefaultStandaloneAdmin = matched.email == LocalAuthDefaults.adminEmail;
     final permissions = Set<String>.from(
-      matched.isSuperAdmin
+      isDefaultStandaloneAdmin
           ? {...?stored, ...kAllLocalPermissions}
           : (stored ?? const <String>[]),
     );
     final roles = <String>[
       if (matched.rolesByCompany[selectedId] != null)
         matched.rolesByCompany[selectedId]!,
-      if (matched.isSuperAdmin &&
+      if (isDefaultStandaloneAdmin &&
           matched.rolesByCompany[selectedId] != LocalAuthDefaults.adminRole)
         LocalAuthDefaults.adminRole,
     ];
@@ -297,10 +298,9 @@ class LocalAuthStore {
       var snapshot = AuthSessionSnapshot.fromJson(
         Map<String, dynamic>.from(map),
       );
-      // Safety net: Super Admin sessions always include the current catalog
+      // Safety net: Standalone default admin sessions always include the current catalog
       // so new modules appear after app upgrades without wiping Hive.
-      if (snapshot.user.isSuperAdmin ||
-          snapshot.roles.contains(LocalAuthDefaults.adminRole)) {
+      if (snapshot.user.email == LocalAuthDefaults.adminEmail) {
         final merged = {...snapshot.permissions, ...kAllLocalPermissions};
         if (merged.length != snapshot.permissions.length ||
             !snapshot.permissions.containsAll(kAllLocalPermissions)) {
@@ -351,8 +351,9 @@ class LocalAuthStore {
     if (company == null) return null;
 
     final stored = user.permissionsByCompany[companyId];
+    final isDefaultStandaloneAdmin = user.email == LocalAuthDefaults.adminEmail;
     final permissions = Set<String>.from(
-      user.isSuperAdmin
+      isDefaultStandaloneAdmin
           ? {...?stored, ...kAllLocalPermissions}
           : (stored ?? const <String>[]),
     );

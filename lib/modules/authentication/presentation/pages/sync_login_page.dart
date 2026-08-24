@@ -16,6 +16,7 @@ import '../../../../core/sync/sync_providers.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../app_lock/presentation/providers/app_lock_providers.dart';
+import '../../domain/entities/authentication_mode.dart';
 import '../providers/auth_providers.dart';
 
 const _kLoginBrandIcon = 'assets/branding/nexabiz_app_icon.png';
@@ -69,9 +70,15 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
     final biometrics = ref.read(appLockBiometricsProvider);
     final store = ref.read(syncLoginCredentialStoreProvider);
     final available = await biometrics.isAvailable();
-    final isBioEnabled = await store.isBiometricLoginEnabled(isSyncMode: true);
-    final hasSaved = await store.hasSavedCredentials(isSyncMode: true);
-    final savedEmail = await store.readEmail(isSyncMode: true);
+    final isBioEnabled = await store.isBiometricLoginEnabled(
+      mode: AuthenticationMode.sync,
+    );
+    final hasSaved = await store.hasSavedCredentials(
+      mode: AuthenticationMode.sync,
+    );
+    final savedEmail = await store.readEmail(
+      mode: AuthenticationMode.sync,
+    );
 
     if (!mounted) return;
     setState(() {
@@ -107,8 +114,8 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
     }
 
     final store = ref.read(syncLoginCredentialStoreProvider);
-    final email = await store.readEmail();
-    final password = await store.readPassword();
+    final email = await store.readEmail(mode: AuthenticationMode.sync);
+    final password = await store.readPassword(mode: AuthenticationMode.sync);
     if (email == null || password == null) {
       if (!mounted) return;
       setState(() {
@@ -178,15 +185,15 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
 
       final store = ref.read(syncLoginCredentialStoreProvider);
       final isBioEnabled =
-          await store.isBiometricLoginEnabled(isSyncMode: true);
+          await store.isBiometricLoginEnabled(mode: AuthenticationMode.sync);
       if (isBioEnabled && _biometricAvailable) {
         await store.saveCredentials(
           email: email,
           password: password,
-          isSyncMode: true,
+          mode: AuthenticationMode.sync,
         );
       } else if (!fromBiometric) {
-        await store.clear(isSyncMode: true);
+        await store.clear(mode: AuthenticationMode.sync);
       }
 
       _password.clear();
@@ -199,7 +206,9 @@ class _SyncLoginPageState extends ConsumerState<SyncLoginPage> {
       context.pop(true);
     } on AuthenticationFailure {
       if (fromBiometric) {
-        await ref.read(syncLoginCredentialStoreProvider).clear();
+        await ref
+            .read(syncLoginCredentialStoreProvider)
+            .clear(mode: AuthenticationMode.sync);
         if (mounted) {
           setState(() {
             _biometricReady = false;

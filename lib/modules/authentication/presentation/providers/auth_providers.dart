@@ -12,9 +12,11 @@ import '../../../../core/tenancy/session_company.dart';
 import '../../data/auth_repository_impl.dart';
 import '../../data/local_auth_repository.dart';
 import '../../data/local_auth_store.dart';
+import '../../data/offline_authorization_store.dart';
 import '../../data/secure_token_storage.dart';
 import '../../data/sync_login_credential_store.dart';
 import '../../domain/entities/auth_session.dart';
+import '../../domain/entities/offline_authorization_snapshot.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 /// Mutable callbacks shared between HTTP client and auth without Riverpod cycles.
@@ -29,6 +31,10 @@ final authCallbackHubProvider = Provider<AuthCallbackHub>((ref) {
 
 final secureTokenStorageProvider = Provider<SecureTokenStorage>((ref) {
   return SecureTokenStorage();
+});
+
+final offlineAuthorizationStoreProvider = Provider<OfflineAuthorizationStore>((ref) {
+  return OfflineAuthorizationStore();
 });
 
 final syncLoginCredentialStoreProvider = Provider<SyncLoginCredentialStore>((
@@ -84,6 +90,7 @@ final localAuthRepositoryProvider = Provider<LocalAuthRepository>((ref) {
   return LocalAuthRepository(
     store: ref.watch(localAuthStoreProvider),
     tokenStorage: ref.watch(secureTokenStorageProvider),
+    offlineAuthStore: ref.watch(offlineAuthorizationStoreProvider),
     readConfig: () => ref.read(syncApiConfigProvider),
     onConfigChanged: (config) {
       ref.read(syncApiConfigProvider.notifier).state = config;
@@ -95,6 +102,7 @@ final remoteAuthRepositoryProvider = Provider<AuthRepositoryImpl>((ref) {
   final repo = AuthRepositoryImpl(
     http: ref.watch(authenticatedHttpClientProvider),
     tokenStorage: ref.watch(secureTokenStorageProvider),
+    offlineAuthStore: ref.watch(offlineAuthorizationStoreProvider),
     readConfig: () => ref.read(syncApiConfigProvider),
     onConfigChanged: (config) {
       ref.read(syncApiConfigProvider.notifier).state = config;
@@ -123,6 +131,7 @@ enum AuthStatus {
   sessionExpired,
   authenticationFailed,
   needsCompany,
+  offlineAuthorizationUnavailable,
 }
 
 /// Whether the current [AuthState] came from the remote JWT backend.
@@ -134,6 +143,9 @@ class AuthState {
     this.session,
     this.errorMessage,
     this.backend = AuthBackend.local,
+    this.isOfflineAuthorizationRestored = false,
+    this.isOfflineAuthorizationUnavailable = false,
+    this.offlineAuthorizationSnapshot,
   });
 
   const AuthState.unknown() : this(status: AuthStatus.unknown);
@@ -142,6 +154,9 @@ class AuthState {
   final AuthSessionSnapshot? session;
   final String? errorMessage;
   final AuthBackend backend;
+  final bool isOfflineAuthorizationRestored;
+  final bool isOfflineAuthorizationUnavailable;
+  final OfflineAuthorizationSnapshot? offlineAuthorizationSnapshot;
 
   bool get isAuthenticated =>
       status == AuthStatus.authenticated || status == AuthStatus.needsCompany;
@@ -331,6 +346,14 @@ class AuthController extends StateNotifier<AuthState> {
     );
     _set(_stateFor(session, AuthBackend.remote));
     return session;
+  }
+
+  /// Sets authenticated session explicitly (e.g., after server bootstrap login).
+  void setAuthenticatedSession(
+    AuthSessionSnapshot session, {
+    AuthBackend backend = AuthBackend.remote,
+  }) {
+    _set(_stateFor(session, backend));
   }
 
   Future<void> login({

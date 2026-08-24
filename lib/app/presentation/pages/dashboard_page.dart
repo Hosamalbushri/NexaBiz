@@ -56,9 +56,14 @@ class DashboardPage extends ConsumerWidget {
           ),
         ),
         data: (_) {
+          final auth = ref.watch(authStateProvider);
           final permissions = ref.watch(currentPermissionsProvider);
           final modules =
               controller.resolveModules(permissions: permissions);
+          final isOffline = !auth.isRemoteSession;
+          final isRestricted = auth.isOfflineAuthorizationUnavailable ||
+              (isOffline && permissions.isEmpty && !(auth.session?.user.isSuperAdmin ?? false));
+
           return Padding(
             padding: AppConstants.pageInsets(context),
             child: SingleChildScrollView(
@@ -67,6 +72,76 @@ class DashboardPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (isOffline) ...[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isRestricted
+                            ? Theme.of(context).colorScheme.errorContainer
+                            : Theme.of(context).colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isRestricted
+                              ? Theme.of(context).colorScheme.error
+                              : Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isRestricted
+                                ? Icons.security_update_warning_rounded
+                                : Icons.offline_pin_rounded,
+                            color: isRestricted
+                                ? Theme.of(context).colorScheme.error
+                                : Theme.of(context).colorScheme.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isRestricted
+                                      ? 'Offline Authorization Restricted'
+                                      : 'Offline Mode — Last Server Permissions Restored',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: isRestricted
+                                            ? Theme.of(context).colorScheme.onErrorContainer
+                                            : Theme.of(context).colorScheme.onSurface,
+                                      ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  isRestricted
+                                      ? 'Permissions unavailable for this offline account. Connect to the server to update permissions.'
+                                      : 'Permissions are enforced using your last server synchronization snapshot.',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        fontSize: 11,
+                                        color: isRestricted
+                                            ? Theme.of(context).colorScheme.onErrorContainer
+                                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   DashboardServicesPanel(
                     modules: modules,
                     customizeLabel: l10n.dashboardCustomizeServices,

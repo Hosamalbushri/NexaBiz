@@ -382,8 +382,8 @@ void main() {
         expect(res.outcome, equals(SyncPassOutcome.idle));
       }
 
-      // Single-Flight Invariant: Exactly ONE execution pass ran
-      expect(networkCalls, equals(0)); // Handlers pulled locally without pending network push items
+      // Single-Flight Invariant: Exactly ONE execution pass ran (1 unified pull call)
+      expect(networkCalls, equals(1));
 
       await manager.dispose();
       await connectivity.dispose();

@@ -125,7 +125,7 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     DropdownButtonFormField<SaleStatus?>(
-                      value: status,
+                      initialValue: status,
                       decoration: InputDecoration(labelText: l10n.salesStatus),
                       items: [
                         DropdownMenuItem(
@@ -143,7 +143,7 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     DropdownButtonFormField<PaymentMethod?>(
-                      value: method,
+                      initialValue: method,
                       decoration: InputDecoration(
                         labelText: l10n.salesPaymentMethod,
                       ),

@@ -7,9 +7,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/network/server_validator.dart';
 import '../../core/widgets/app_button.dart';
-import '../../core/widgets/app_snackbar.dart';
-import '../../modules/authentication/presentation/providers/auth_providers.dart';
-import '../bootstrap/app_initialization.dart';
 import '../localization/app_localizations.dart';
 import '../router/app_routes.dart';
 import '../sync/sync_enabled_provider.dart';
