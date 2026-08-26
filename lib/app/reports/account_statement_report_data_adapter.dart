@@ -1,12 +1,12 @@
 import '../../core/reporting/arabic_amount_words.dart';
-import '../../modules/accounting/domain/entities/account.dart';
-import '../../modules/accounting/domain/repositories/account_repository.dart';
-import '../../modules/accounting/domain/repositories/currency_rate_repository.dart';
-import '../../modules/accounting/domain/repositories/journal_repository.dart';
-import '../../modules/accounting/domain/services/account_labels.dart';
-import '../../modules/reports/domain/services/account_statement_report_data_port.dart';
-import '../../modules/sales/domain/entities/sale.dart';
-import '../../modules/sales/domain/services/sale_ledger_posting_port.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
+import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
+import 'package:stock_count/modules/accounting/journals/domain/repositories/journal_repository.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_labels.dart';
+import 'package:stock_count/modules/reports/shared/domain/services/account_statement_report_data_port.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_ledger_posting_port.dart';
 import '../settings/company/app_currency.dart';
 import '../settings/company/company_profile.dart';
 

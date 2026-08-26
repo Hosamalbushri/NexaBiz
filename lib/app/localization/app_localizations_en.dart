@@ -6335,4 +6335,40 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get setupSeedInitialDataSubtitle =>
       'Automatically seed default chart of accounts and initial settings.';
+
+  @override
+  String get moduleUnitsSettingsTitle => 'Unit Settings';
+
+  @override
+  String get moduleUnitsSettingsSubtitle =>
+      'Unit and service settings for system modules';
+
+  @override
+  String get selectModulePrompt =>
+      'Select a module to access its unit and service settings';
+
+  @override
+  String get stockCountSettingsTitle => 'Stock Count Settings';
+
+  @override
+  String get stockCountSettingsSubtitle =>
+      'Customize inventory count policies and approval workflows';
+
+  @override
+  String get productSettingsTitle => 'Product Settings';
+
+  @override
+  String get productSettingsSubtitle =>
+      'Customize categories, barcoding, pricing, and units';
+
+  @override
+  String get moduleUnitsReportsTitle => 'Module & Unit Reports';
+
+  @override
+  String get moduleUnitsReportsSubtitle =>
+      'View and generate unit and service reports organized by module';
+
+  @override
+  String get selectModuleReportsPrompt =>
+      'Select a module to view its available unit reports';
 }

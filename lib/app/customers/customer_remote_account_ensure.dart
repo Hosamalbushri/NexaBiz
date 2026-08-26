@@ -1,6 +1,6 @@
-import '../../modules/accounting/data/repositories/account_repository_impl.dart';
-import '../../modules/accounting/domain/entities/account_type.dart';
-import '../../modules/customers/domain/services/customer_account_link_port.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
+import 'package:stock_count/modules/customers/accounts/domain/services/customer_account_link_port.dart';
 import '../settings/settings_repository.dart';
 
 /// After a remote customer is applied, ensure its CoA posting account exists

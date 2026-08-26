@@ -4,36 +4,45 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
-import '../../core/modules/report_category_definition.dart';
+import '../../core/modules/module_registry.dart';
+import '../../core/modules/module_settings_definition.dart';
+import '../../core/modules/quick_action_definition.dart';
 import '../../core/modules/route_access_rule.dart';
+import 'accounting_module_quick_actions.dart';
+import 'accounting_module_settings.dart';
 import '../../core/permissions/permission_defs.dart';
 import 'permissions/accounting_permission_package.dart';
-import 'domain/entities/voucher_book_type.dart';
-import 'presentation/pages/account_details_page.dart';
-import 'presentation/pages/account_form_page.dart';
-import 'presentation/pages/accounts_opening_setup_page.dart';
-import 'presentation/pages/accounting_home_page.dart';
-import 'presentation/pages/accounting_reports_page.dart';
-import 'presentation/pages/accounting_routes.dart';
-import 'presentation/pages/chart_of_accounts_page.dart';
-import 'presentation/pages/currency_rates_page.dart';
-import 'presentation/pages/fiscal_year_create_page.dart';
-import 'presentation/pages/fiscal_year_details_page.dart';
-import 'presentation/pages/fiscal_years_page.dart';
-import 'presentation/pages/journal_entries_page.dart';
-import 'presentation/pages/journal_entry_details_page.dart';
-import 'presentation/pages/journal_entry_form_page.dart';
-import 'presentation/pages/voucher_book_form_page.dart';
-import 'presentation/pages/voucher_book_section_page.dart';
-import 'presentation/pages/voucher_books_page.dart';
-import 'presentation/providers/journal_providers.dart';
-import 'presentation/widgets/accounting_settings_panel.dart';
+import 'chart_of_accounts/presentation/pages/account_details_page.dart';
+import 'chart_of_accounts/presentation/pages/account_form_page.dart';
+import 'chart_of_accounts/presentation/pages/accounts_opening_setup_page.dart';
+import 'chart_of_accounts/presentation/pages/chart_of_accounts_page.dart';
+import 'fiscal_years/presentation/pages/fiscal_year_create_page.dart';
+import 'fiscal_years/presentation/pages/fiscal_year_details_page.dart';
+import 'fiscal_years/presentation/pages/fiscal_years_page.dart';
+import 'journals/presentation/pages/journal_entries_page.dart';
+import 'journals/presentation/pages/journal_entry_details_page.dart';
+import 'journals/presentation/pages/journal_entry_form_page.dart';
+import 'journals/presentation/providers/journal_providers.dart';
+import 'shared/presentation/widgets/accounting_settings_panel.dart';
+import 'shared/presentation/pages/accounting_home_page.dart';
+import 'shared/presentation/pages/accounting_reports_page.dart';
+import 'shared/presentation/pages/accounting_routes.dart';
+import 'shared/presentation/pages/currency_rates_page.dart';
+import 'voucher_books/domain/entities/voucher_book_type.dart';
+import 'voucher_books/presentation/pages/voucher_book_form_page.dart';
+import 'voucher_books/presentation/pages/voucher_book_section_page.dart';
+import 'voucher_books/presentation/pages/voucher_books_page.dart';
 
 /// Accounting business module — COA, journals, rates, voucher books.
 class AccountingModule extends AppModule {
   const AccountingModule();
 
   static const String moduleId = 'accounting';
+
+  /// Self-registers AccountingModule into the global ModuleRegistry via injection.
+  static void register() {
+    ModuleRegistry.register(const AccountingModule());
+  }
 
   @override
   String get id => moduleId;
@@ -48,7 +57,7 @@ class AccountingModule extends AppModule {
   String get rootRoute => AccountingRoutes.root;
 
   @override
-  int get sortOrder => 50;
+  int get sortOrder => 10;
 
   @override
   bool get isEnabled => true;
@@ -137,41 +146,12 @@ class AccountingModule extends AppModule {
   }
 
   @override
-  List<ReportCategoryDefinition> get reportCategories => [
-        ReportCategoryDefinition(
-          id: 'accounting_reports',
-          moduleId: moduleId,
-          icon: Icons.account_balance_outlined,
-          titleBuilder: (l10n) => l10n.platformReportsBusiness,
-          subtitleBuilder: (l10n) => l10n.platformReportsBusinessSubtitle,
-          reports: [
-            ReportItemDefinition(
-              id: 'reports_account_statement',
-              moduleId: moduleId,
-              icon: Icons.menu_book_outlined,
-              path: '/reports/account-statement',
-              titleBuilder: (l10n) => l10n.reportsAccountStatementTitle,
-              subtitleBuilder: (l10n) => l10n.reportsAccountStatementSubtitle,
-            ),
-            ReportItemDefinition(
-              id: 'reports_trial_balance',
-              moduleId: moduleId,
-              icon: Icons.balance_outlined,
-              path: '/reports/trial-balance',
-              titleBuilder: (l10n) => l10n.reportsTrialBalanceTitle,
-              subtitleBuilder: (l10n) => l10n.reportsTrialBalanceSubtitle,
-            ),
-            ReportItemDefinition(
-              id: 'reports_journal_book',
-              moduleId: moduleId,
-              icon: Icons.auto_stories_outlined,
-              path: '/reports/journal-book',
-              titleBuilder: (l10n) => l10n.reportsJournalBookTitle,
-              subtitleBuilder: (l10n) => l10n.reportsJournalBookSubtitle,
-            ),
-          ],
-        ),
-      ];
+  List<QuickActionDefinition> get quickActions =>
+      buildAccountingQuickActions(moduleId);
+
+  @override
+  List<ModuleSettingsCategoryDefinition> get settingsCategories =>
+      buildAccountingSettingsCategories(moduleId);
 
   @override
   List<RouteBase> get routes => [

@@ -1,7 +1,7 @@
-import '../../modules/accounting/domain/entities/account.dart';
-import '../../modules/accounting/domain/models/account_exception.dart';
-import '../../modules/accounting/domain/repositories/account_repository.dart';
-import '../../modules/customers/domain/services/customer_account_link_port.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/models/account_exception.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
+import 'package:stock_count/modules/customers/accounts/domain/services/customer_account_link_port.dart';
 
 /// App-layer bridge: Customers → Accounting accounts without module coupling.
 ///

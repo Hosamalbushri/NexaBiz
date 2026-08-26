@@ -4,24 +4,29 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/module_registry.dart';
+import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
-import '../../core/modules/report_category_definition.dart';
 import '../../core/modules/route_access_rule.dart';
+import 'inventory_module_quick_actions.dart';
+import 'inventory_module_settings.dart';
 import '../../core/permissions/permission_defs.dart';
 import '../../core/reporting/pdf_document_preview_page.dart';
 import 'permissions/inventory_permission_package.dart';
-import 'presentation/pages/inventory_count_page.dart';
-import 'presentation/pages/inventory_home_page.dart';
-import 'presentation/pages/inventory_import_page.dart';
-import 'presentation/pages/inventory_reports_page.dart';
-import 'presentation/pages/inventory_routes.dart';
-import 'presentation/pages/inventory_search_page.dart';
-import 'presentation/pages/product_form_page.dart';
-import 'presentation/pages/products_barcode_page.dart';
-import 'presentation/pages/products_home_page.dart';
-import 'presentation/pages/products_import_page.dart';
-import 'presentation/pages/products_list_page.dart';
-import 'presentation/pages/stock_count_home_page.dart';
+import 'products/presentation/pages/product_form_page.dart';
+import 'products/presentation/pages/products_barcode_page.dart';
+import 'products/presentation/pages/products_home_page.dart';
+import 'products/presentation/pages/products_import_page.dart';
+import 'products/presentation/pages/products_list_page.dart';
+import 'products/presentation/pages/products_settings_page.dart';
+import 'shared/presentation/pages/inventory_home_page.dart';
+import 'shared/presentation/pages/inventory_routes.dart';
+import 'stock_count/presentation/pages/inventory_count_page.dart';
+import 'stock_count/presentation/pages/inventory_import_page.dart';
+import 'stock_count/presentation/pages/inventory_reports_page.dart';
+import 'stock_count/presentation/pages/inventory_search_page.dart';
+import 'stock_count/presentation/pages/stock_count_home_page.dart';
+import 'stock_count/presentation/pages/stock_count_settings_page.dart';
 
 /// Inventory business module — self-contained routes and features.
 ///
@@ -30,6 +35,11 @@ class InventoryModule extends AppModule {
   const InventoryModule();
 
   static const String moduleId = 'inventory';
+
+  /// Self-registers InventoryModule into the global ModuleRegistry via injection.
+  static void register() {
+    ModuleRegistry.register(const InventoryModule());
+  }
 
   @override
   String get id => moduleId;
@@ -44,7 +54,7 @@ class InventoryModule extends AppModule {
   String get rootRoute => InventoryRoutes.root;
 
   @override
-  int get sortOrder => 30;
+  int get sortOrder => 50;
 
   @override
   bool get isEnabled => true;
@@ -120,117 +130,12 @@ class InventoryModule extends AppModule {
   }
 
   @override
-  List<QuickActionDefinition> get quickActions => [
-        QuickActionDefinition(
-          id: 'scan_barcode',
-          icon: Icons.qr_code_scanner_outlined,
-          kind: QuickActionKind.route,
-          routePath: '/inventory/products/barcode?scan=1',
-          titleBuilder: (l10n) => l10n.quickActionsScanBarcode,
-          subtitleBuilder: (l10n) => l10n.quickActionsScanBarcodeSubtitle,
-          requiredPermissions: const [
-            'inventory.products.barcode',
-            'inventory.products.view',
-            'products.view',
-          ],
-        ),
-        QuickActionDefinition(
-          id: 'create_product',
-          icon: Icons.add_box_outlined,
-          kind: QuickActionKind.route,
-          routePath: InventoryRoutes.productsNew,
-          titleBuilder: (l10n) => l10n.quickActionsCreateProduct,
-          subtitleBuilder: (l10n) => l10n.quickActionsCreateProductSubtitle,
-          requiredPermissions: const ['inventory.products.create', 'products.create'],
-        ),
-        QuickActionDefinition(
-          id: 'products_list',
-          icon: Icons.list_alt_outlined,
-          kind: QuickActionKind.route,
-          routePath: InventoryRoutes.productsList,
-          titleBuilder: (l10n) => l10n.productsListTitle,
-          subtitleBuilder: (l10n) => l10n.productsListSubtitle,
-          requiredPermissions: const ['inventory.products.view', 'products.view'],
-        ),
-        QuickActionDefinition(
-          id: 'products_barcode',
-          icon: Icons.qr_code_2_outlined,
-          kind: QuickActionKind.route,
-          routePath: InventoryRoutes.productsBarcode,
-          titleBuilder: (l10n) => l10n.productsBarcodeTitle,
-          subtitleBuilder: (l10n) => l10n.productsBarcodeSubtitle,
-          requiredPermissions: const [
-            'inventory.products.barcode',
-            'inventory.products.view',
-            'products.view',
-          ],
-        ),
-        QuickActionDefinition(
-          id: 'products_import',
-          icon: Icons.upload_file_outlined,
-          kind: QuickActionKind.route,
-          routePath: InventoryRoutes.productsImport,
-          titleBuilder: (l10n) => l10n.productsImportTitle,
-          subtitleBuilder: (l10n) => l10n.productsImportSubtitle,
-          requiredPermissions: const ['inventory.products.import', 'products.create'],
-        ),
-        QuickActionDefinition(
-          id: 'stock_count',
-          icon: Icons.fact_check_outlined,
-          kind: QuickActionKind.route,
-          routePath: InventoryRoutes.count,
-          titleBuilder: (l10n) => l10n.inventoryCountTitle,
-          subtitleBuilder: (l10n) => l10n.inventoryCountSubtitle,
-          requiredPermissions: const ['inventory.stock_count.view', 'inventory.view'],
-        ),
-        QuickActionDefinition(
-          id: 'stock_import',
-          icon: Icons.file_upload_outlined,
-          kind: QuickActionKind.route,
-          routePath: InventoryRoutes.import,
-          titleBuilder: (l10n) => l10n.importPageTitle,
-          subtitleBuilder: (l10n) => l10n.inventoryStockCountServiceDescription,
-          requiredPermissions: const ['inventory.stock_count.import', 'inventory.create'],
-        ),
-        QuickActionDefinition(
-          id: 'stock_reports',
-          icon: Icons.assessment_outlined,
-          kind: QuickActionKind.route,
-          routePath: InventoryRoutes.reports,
-          titleBuilder: (l10n) => l10n.reportsTitle,
-          subtitleBuilder: (l10n) => l10n.inventoryStockCountServiceDescription,
-          requiredPermissions: const ['inventory.stock_count.export', 'inventory.view'],
-        ),
-      ];
+  List<QuickActionDefinition> get quickActions =>
+      buildInventoryQuickActions(moduleId);
 
   @override
-  List<ReportCategoryDefinition> get reportCategories => [
-        ReportCategoryDefinition(
-          id: 'inventory_reports',
-          moduleId: moduleId,
-          icon: Icons.inventory_2_outlined,
-          titleBuilder: (l10n) => l10n.platformReportsInventory,
-          subtitleBuilder: (l10n) => l10n.platformReportsInventorySubtitle,
-          reports: [
-            ReportItemDefinition(
-              id: 'inventory_stock_count',
-              moduleId: moduleId,
-              icon: Icons.fact_check_outlined,
-              path: InventoryRoutes.reports,
-              titleBuilder: (l10n) => l10n.platformReportsStockCountTitle,
-              subtitleBuilder: (l10n) => l10n.platformReportsStockCountSubtitle,
-            ),
-            ReportItemDefinition(
-              id: 'inventory_products',
-              moduleId: moduleId,
-              icon: Icons.inventory_2_outlined,
-              path: null,
-              titleBuilder: (l10n) => l10n.platformReportsProductsTitle,
-              subtitleBuilder: (l10n) => l10n.platformReportsServiceComingSoon,
-            ),
-          ],
-        ),
-      ];
+  List<ModuleSettingsCategoryDefinition> get settingsCategories =>
+      buildInventorySettingsCategories(moduleId);
 
   @override
   List<Override> get providerOverrides => const [];
@@ -293,6 +198,11 @@ class InventoryModule extends AppModule {
               name: 'inventoryStockCountReportPreview',
               builder: (context, state) => const PdfDocumentPreviewPage(),
             ),
+            GoRoute(
+              path: 'settings',
+              name: 'inventoryStockCountSettings',
+              builder: (context, state) => const StockCountSettingsPage(),
+            ),
           ],
         ),
         GoRoute(
@@ -321,6 +231,11 @@ class InventoryModule extends AppModule {
               builder: (context, state) => ProductsBarcodePage(
                 autoScan: state.uri.queryParameters['scan'] == '1',
               ),
+            ),
+            GoRoute(
+              path: 'settings',
+              name: 'inventoryProductsSettings',
+              builder: (context, state) => const ProductsSettingsPage(),
             ),
             GoRoute(
               path: ':id/edit',

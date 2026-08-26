@@ -1,22 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/modules/accounting/presentation/providers/account_providers.dart';
-import 'package:stock_count/modules/accounting/presentation/providers/journal_providers.dart';
-import 'package:stock_count/modules/customers/presentation/providers/customer_providers.dart';
-import 'package:stock_count/modules/inventory/presentation/providers/product_providers.dart';
-import 'package:stock_count/modules/receipts_payments/presentation/providers/rp_providers.dart';
-import 'package:stock_count/modules/sales/presentation/providers/sale_providers.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
+import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
+import 'package:stock_count/modules/customers/directory/presentation/providers/customer_providers.dart';
+import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/presentation/providers/rp_providers.dart';
+import 'package:stock_count/modules/sales/invoices/presentation/providers/sale_providers.dart';
 
-import 'package:stock_count/modules/sales/domain/entities/discount_type.dart';
-import 'package:stock_count/modules/sales/domain/entities/payment_method.dart';
-import 'package:stock_count/modules/sales/domain/entities/payment_status.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_settlement_type.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_status.dart';
-import 'package:stock_count/modules/customers/domain/entities/customer_data_source.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/rp_payment_method.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_status.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_source.dart';
-import 'package:stock_count/modules/receipts_payments/domain/entities/transaction_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/discount_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/payment_method.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/payment_status.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
+import 'package:stock_count/modules/customers/directory/domain/entities/customer_data_source.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/rp_payment_method.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_status.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_source.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
 
 import 'package:stock_count/modules/sync/sync.dart';
 

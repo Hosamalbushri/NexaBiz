@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../permissions/permission_defs.dart';
+import 'module_settings_definition.dart';
 import 'quick_action_definition.dart';
 import 'report_category_definition.dart';
 import 'route_access_rule.dart';
@@ -84,6 +85,11 @@ abstract class AppModule {
   ///
   /// Keep empty when the module has no report categories.
   List<ReportCategoryDefinition> get reportCategories => const [];
+
+  /// Settings categories contributed by this module to the platform Settings page.
+  ///
+  /// Keep empty when the module has no settings categories.
+  List<ModuleSettingsCategoryDefinition> get settingsCategories => const [];
 
   /// Module-owned settings blocks for the platform Settings screen.
   ///

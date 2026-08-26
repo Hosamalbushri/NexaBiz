@@ -2528,5 +2528,15 @@
     }
   },
   "setupSeedInitialDataTitle": "Initialize default system data",
-  "setupSeedInitialDataSubtitle": "Automatically seed default chart of accounts and initial settings."
+  "setupSeedInitialDataSubtitle": "Automatically seed default chart of accounts and initial settings.",
+  "moduleUnitsSettingsTitle": "Unit Settings",
+  "moduleUnitsSettingsSubtitle": "Unit and service settings for system modules",
+  "selectModulePrompt": "Select a module to access its unit and service settings",
+  "stockCountSettingsTitle": "Stock Count Settings",
+  "stockCountSettingsSubtitle": "Customize inventory count policies and approval workflows",
+  "productSettingsTitle": "Product Settings",
+  "productSettingsSubtitle": "Customize categories, barcoding, pricing, and units",
+  "moduleUnitsReportsTitle": "Module & Unit Reports",
+  "moduleUnitsReportsSubtitle": "View and generate unit and service reports organized by module",
+  "selectModuleReportsPrompt": "Select a module to view its available unit reports"
 }

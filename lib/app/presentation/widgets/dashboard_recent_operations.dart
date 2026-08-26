@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../modules/sales/domain/entities/sale_settlement_type.dart';
-import '../../../modules/sales/presentation/pages/sales_routes.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
+import 'package:stock_count/modules/sales/shared/presentation/pages/sales_routes.dart';
 import '../../localization/app_localizations.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';

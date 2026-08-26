@@ -1,5 +1,5 @@
-import '../../modules/accounting/domain/repositories/currency_rate_repository.dart';
-import '../../modules/sales/domain/services/sale_currency_port.dart';
+import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_currency_port.dart';
 
 /// App adapter: Sales currencies → company base + Accounting rates.
 class AccountingSaleCurrencyAdapter implements SaleCurrencyPort {

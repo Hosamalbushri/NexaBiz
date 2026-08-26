@@ -2,8 +2,8 @@ import 'dart:async';
 
 import '../../app/settings/settings_repository.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import '../../modules/accounting/domain/repositories/account_repository.dart';
-import '../../modules/accounting/domain/repositories/voucher_book_repository.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/repositories/voucher_book_repository.dart';
 import '../../modules/system_setup/domain/ports/system_setup_seed_exception.dart';
 import '../../modules/system_setup/domain/ports/system_setup_seed_port.dart';
 

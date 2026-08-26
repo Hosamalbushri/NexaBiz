@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:hive/hive.dart';
 
 import '../../app/settings/settings_repository.dart';
-import '../../modules/inventory/data/inventory_hive.dart';
-import '../../modules/inventory/domain/entities/inventory_item.dart';
+import 'package:stock_count/modules/inventory/shared/data/inventory_hive.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/entities/inventory_item.dart';
 import '../errors/app_error_domain.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/modules/sync/sync.dart';

@@ -3,26 +3,34 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/module_registry.dart';
+import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
-import '../../core/modules/report_category_definition.dart';
 import '../../core/modules/route_access_rule.dart';
+import 'receipts_payments_module_quick_actions.dart';
+import 'receipts_payments_module_settings.dart';
 import '../../core/permissions/permission_defs.dart';
-import 'domain/entities/transaction_type.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
+import 'exchanges/presentation/pages/currency_exchange_form_page.dart';
 import 'permissions/receipts_payments_permission_package.dart';
-import 'presentation/pages/cash_box_transfer_form_page.dart';
-import 'presentation/pages/currency_exchange_form_page.dart';
-import 'presentation/pages/financial_transaction_details_page.dart';
-import 'presentation/pages/financial_transaction_form_page.dart';
-import 'presentation/pages/receipts_payments_home_page.dart';
-import 'presentation/pages/receipts_payments_list_page.dart';
-import 'presentation/pages/receipts_payments_routes.dart';
-import 'presentation/pages/rp_posting_service_page.dart';
-import 'presentation/pages/rp_service_menu_page.dart';
+import 'posting/presentation/pages/rp_posting_service_page.dart';
+import 'shared/presentation/pages/receipts_payments_home_page.dart';
+import 'shared/presentation/pages/receipts_payments_list_page.dart';
+import 'shared/presentation/pages/receipts_payments_routes.dart';
+import 'shared/presentation/pages/rp_service_menu_page.dart';
+import 'transactions/presentation/pages/financial_transaction_details_page.dart';
+import 'transactions/presentation/pages/financial_transaction_form_page.dart';
+import 'transfers/presentation/pages/cash_box_transfer_form_page.dart';
 
 class ReceiptsPaymentsModule extends AppModule {
   const ReceiptsPaymentsModule();
 
   static const String moduleId = 'receipts_payments';
+
+  /// Self-registers ReceiptsPaymentsModule into the global ModuleRegistry via injection.
+  static void register() {
+    ModuleRegistry.register(const ReceiptsPaymentsModule());
+  }
 
   @override
   String get id => moduleId;
@@ -103,71 +111,12 @@ class ReceiptsPaymentsModule extends AppModule {
   }
 
   @override
-  List<QuickActionDefinition> get quickActions => [
-        QuickActionDefinition(
-          id: 'create_receipt',
-          icon: Icons.payments_outlined,
-          kind: QuickActionKind.route,
-          routePath: ReceiptsPaymentsRoutes.createReceipt,
-          titleBuilder: (l10n) => l10n.rpServiceCreateReceipt,
-          subtitleBuilder: (l10n) => l10n.rpCreateReceiptSubtitle,
-          requiredPermissions: const ['receipts.create', 'receipts_payments.sync'],
-        ),
-        QuickActionDefinition(
-          id: 'create_payment',
-          icon: Icons.outbox_outlined,
-          kind: QuickActionKind.route,
-          routePath: ReceiptsPaymentsRoutes.createPayment,
-          titleBuilder: (l10n) => l10n.rpServiceCreatePayment,
-          subtitleBuilder: (l10n) => l10n.rpCreatePaymentSubtitle,
-          requiredPermissions: const ['payments.create', 'receipts_payments.sync'],
-        ),
-      ];
+  List<QuickActionDefinition> get quickActions =>
+      buildReceiptsPaymentsQuickActions(moduleId);
 
   @override
-  List<ReportCategoryDefinition> get reportCategories => [
-        ReportCategoryDefinition(
-          id: 'rp_reports',
-          moduleId: moduleId,
-          icon: Icons.account_balance_wallet_outlined,
-          titleBuilder: (l10n) => l10n.moduleReceiptsPayments,
-          subtitleBuilder: (l10n) => l10n.moduleReceiptsPaymentsDescription,
-          reports: [
-            ReportItemDefinition(
-              id: 'reports_rp_receipts',
-              moduleId: moduleId,
-              icon: Icons.payments_outlined,
-              path: '/reports/rp-receipts',
-              titleBuilder: (l10n) => l10n.rpServiceReceiptsTitle,
-              subtitleBuilder: (l10n) => l10n.rpServiceReceiptsSubtitle,
-            ),
-            ReportItemDefinition(
-              id: 'reports_rp_payments',
-              moduleId: moduleId,
-              icon: Icons.outbox_outlined,
-              path: '/reports/rp-payments',
-              titleBuilder: (l10n) => l10n.rpServicePaymentsTitle,
-              subtitleBuilder: (l10n) => l10n.rpServicePaymentsSubtitle,
-            ),
-            ReportItemDefinition(
-              id: 'reports_rp_transfers',
-              moduleId: moduleId,
-              icon: Icons.swap_horiz_outlined,
-              path: '/reports/rp-cash-movement',
-              titleBuilder: (l10n) => l10n.rpServiceTransfersTitle,
-              subtitleBuilder: (l10n) => l10n.rpServiceTransfersSubtitle,
-            ),
-            ReportItemDefinition(
-              id: 'reports_rp_exchanges',
-              moduleId: moduleId,
-              icon: Icons.currency_exchange_outlined,
-              path: '/reports/rp-daily-summary',
-              titleBuilder: (l10n) => l10n.rpServiceExchangesTitle,
-              subtitleBuilder: (l10n) => l10n.rpServiceExchangesSubtitle,
-            ),
-          ],
-        ),
-      ];
+  List<ModuleSettingsCategoryDefinition> get settingsCategories =>
+      buildReceiptsPaymentsSettingsCategories(moduleId);
 
   @override
   List<RouteBase> get routes => [

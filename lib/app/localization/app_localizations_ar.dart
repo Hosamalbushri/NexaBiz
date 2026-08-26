@@ -6265,4 +6265,40 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get setupSeedInitialDataSubtitle =>
       'إنشاء الدليل المحاسبي الافتراضي وإعدادات النظام الأولية تلقائياً.';
+
+  @override
+  String get moduleUnitsSettingsTitle => 'إعدادات الوحدات';
+
+  @override
+  String get moduleUnitsSettingsSubtitle =>
+      'إعدادات الوحدات والخدمات الفرعية لموديولات النظام';
+
+  @override
+  String get selectModulePrompt =>
+      'اختر الموديول للوصول إلى إعدادات وحداته وخدماته الفرعية';
+
+  @override
+  String get stockCountSettingsTitle => 'إعدادات الجرد';
+
+  @override
+  String get stockCountSettingsSubtitle =>
+      'تخصيص الخيارات والاعتمادات وسياسات تسوية الجرد';
+
+  @override
+  String get productSettingsTitle => 'إعدادات المنتجات';
+
+  @override
+  String get productSettingsSubtitle =>
+      'تخصيص الفئات والباركود وسياسات التسعير والوحدات';
+
+  @override
+  String get moduleUnitsReportsTitle => 'تقارير الوحدات والمودلات';
+
+  @override
+  String get moduleUnitsReportsSubtitle =>
+      'عرض واستخراج تقارير الخدمات والوحدات المنظمة حسب المودل';
+
+  @override
+  String get selectModuleReportsPrompt =>
+      'اختر المودل للاطلاع على التقارير المتاحة لوحداته';
 }

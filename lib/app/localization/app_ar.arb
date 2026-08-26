@@ -2528,5 +2528,15 @@
     }
   },
   "setupSeedInitialDataTitle": "تهيئة البيانات الأولية والافتراضية للنظام",
-  "setupSeedInitialDataSubtitle": "إنشاء الدليل المحاسبي الافتراضي وإعدادات النظام الأولية تلقائياً."
+  "setupSeedInitialDataSubtitle": "إنشاء الدليل المحاسبي الافتراضي وإعدادات النظام الأولية تلقائياً.",
+  "moduleUnitsSettingsTitle": "إعدادات الوحدات",
+  "moduleUnitsSettingsSubtitle": "إعدادات الوحدات والخدمات الفرعية لموديولات النظام",
+  "selectModulePrompt": "اختر الموديول للوصول إلى إعدادات وحداته وخدماته الفرعية",
+  "stockCountSettingsTitle": "إعدادات الجرد",
+  "stockCountSettingsSubtitle": "تخصيص الخيارات والاعتمادات وسياسات تسوية الجرد",
+  "productSettingsTitle": "إعدادات المنتجات",
+  "productSettingsSubtitle": "تخصيص الفئات والباركود وسياسات التسعير والوحدات",
+  "moduleUnitsReportsTitle": "تقارير الوحدات والمودلات",
+  "moduleUnitsReportsSubtitle": "عرض واستخراج تقارير الخدمات والوحدات المنظمة حسب المودل",
+  "selectModuleReportsPrompt": "اختر المودل للاطلاع على التقارير المتاحة لوحداته"
 }

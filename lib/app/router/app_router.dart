@@ -25,6 +25,8 @@ import '../onboarding/setup_choice_page.dart';
 import '../onboarding/server_setup_page.dart';
 import '../presentation/pages/dashboard_page.dart';
 import '../presentation/pages/module_reports_page.dart';
+import '../presentation/pages/module_unit_reports_page.dart';
+import '../presentation/pages/modules_reports_page.dart';
 import '../presentation/pages/not_found_page.dart';
 import '../presentation/pages/platform_reports_page.dart';
 import '../presentation/pages/service_launcher_page.dart';
@@ -326,12 +328,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     builder: (context, state) => const PlatformReportsPage(),
                     routes: [
                       GoRoute(
+                        path: 'modules',
+                        name: 'modulesReports',
+                        builder: (context, state) => const ModulesReportsPage(),
+                      ),
+                      GoRoute(
+                        path: 'modules/:moduleId',
+                        name: 'moduleUnitReports',
+                        builder: (context, state) {
+                          final moduleId =
+                              state.pathParameters['moduleId'] ?? '';
+                          return ModuleUnitReportsPage(moduleId: moduleId);
+                        },
+                      ),
+                      GoRoute(
                         path: ':moduleId',
                         name: 'moduleReports',
                         builder: (context, state) {
                           final moduleId =
                               state.pathParameters['moduleId'] ?? '';
-                          return ModuleReportsPage(moduleId: moduleId);
+                          return ModuleUnitReportsPage(moduleId: moduleId);
                         },
                       ),
                     ],

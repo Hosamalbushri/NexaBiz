@@ -29,12 +29,22 @@ Read this file before modifying the project. For full context see [`AI_CONTEXT.m
 - Do not create a second router inside a module.
 - Root exit confirmation belongs to the App shell — not inside business modules.
 
-## Module Rules
+## Module Rules & Standards
 
+- **Self-Registration Pattern**:
+  - Every module MUST inherit from `AppModule` (`lib/core/modules/app_module.dart`).
+  - Every module MUST provide a `static void register()` method using `ModuleRegistry.register(const MyModule());`.
+  - Modules MUST be registered in `lib/app/bootstrap/module_bootstrap.dart` via `MyModule.register()`.
+- **Centralized Reports Architecture**:
+  - Business modules MUST NOT override or declare `reportCategories`.
+  - `ReportsModule` (`lib/modules/reports/reports_module.dart`) is the **SINGLE SOURCE OF TRUTH** for ALL report definitions (`ReportCategoryDefinition` and `ReportItemDefinition`).
+  - `ReportsModule` dynamically includes report categories for business modules ONLY IF `ModuleRegistry.isModuleRegistered('module_id')` is true.
+  - If `ReportsModule` is absent or no business modules are registered, zero reports exist in the system.
+- **Module Settings Architecture**:
+  - Modules declare their settings categories via `settingsCategories` (`List<ModuleSettingsCategoryDefinition>`).
+  - Unit settings pages live inside their respective module directories and are exposed dynamically via `ModuleUnitSettingsPage`.
 - Business logic lives in the owning module only.
-- Register new modules in `lib/app/bootstrap/module_bootstrap.dart`.
 - Module routes live with the module (`*Routes` + `AppModule.routes`).
-- Module-specific settings live in the module and are exposed via `AppModule.buildSettingsSections` / `hasSettings` (platform Settings must not hard-import module settings widgets).
 - Implement `AppModule` (`lib/core/modules/app_module.dart`).
 
 ## UI Rules

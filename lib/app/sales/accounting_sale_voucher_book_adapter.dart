@@ -1,8 +1,8 @@
-import '../../modules/accounting/domain/entities/voucher_book_type.dart';
-import '../../modules/accounting/domain/repositories/voucher_book_repository.dart';
-import '../../modules/sales/data/sale_number_block_store.dart';
-import '../../modules/sales/domain/services/device_sale_number.dart';
-import '../../modules/sales/domain/services/sale_voucher_book_port.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book_type.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/repositories/voucher_book_repository.dart';
+import 'package:stock_count/modules/sales/invoices/data/repositories/sale_number_block_store.dart';
+import 'package:stock_count/modules/sales/invoices/domain/services/device_sale_number.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_voucher_book_port.dart';
 
 /// App adapter: Sales voucher books → Accounting [VoucherBookRepository].
 ///

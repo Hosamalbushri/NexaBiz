@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../modules/inventory/inventory_module.dart';
-import '../../../modules/inventory/presentation/pages/inventory_routes.dart';
-import '../../../modules/reports/presentation/pages/reports_routes.dart';
+import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
+import 'package:stock_count/modules/reports/shared/presentation/pages/reports_routes.dart';
 import '../../../modules/reports/reports_module.dart';
 import '../../localization/app_localizations.dart';
 import '../../router/app_routes.dart';

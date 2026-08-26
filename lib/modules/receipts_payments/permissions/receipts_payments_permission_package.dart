@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../core/permissions/permission_defs.dart';
 import '../../../shared/permissions/standard_permission_ops.dart';
-import '../domain/entities/transaction_type.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
 
-export '../domain/entities/transaction_type.dart' show TransactionType;
+export 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart' show TransactionType;
 
 abstract final class ReceiptsPaymentsPermissions {
   static const receiptsView = ['receipts.view'];

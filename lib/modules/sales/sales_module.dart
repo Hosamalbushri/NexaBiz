@@ -3,17 +3,20 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/module_registry.dart';
+import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
-import '../../core/modules/report_category_definition.dart';
 import '../../core/modules/route_access_rule.dart';
+import 'sales_module_quick_actions.dart';
+import 'sales_module_settings.dart';
 import '../../core/permissions/permission_defs.dart';
 import '../../core/reporting/pdf_document_preview_page.dart';
+import 'invoices/presentation/pages/sale_details_page.dart';
+import 'invoices/presentation/pages/sale_form_page.dart';
+import 'invoices/presentation/pages/sales_home_page.dart';
+import 'invoices/presentation/pages/sales_list_page.dart';
 import 'permissions/sales_permission_package.dart';
-import 'presentation/pages/sale_details_page.dart';
-import 'presentation/pages/sale_form_page.dart';
-import 'presentation/pages/sales_home_page.dart';
-import 'presentation/pages/sales_list_page.dart';
-import 'presentation/pages/sales_routes.dart';
+import 'shared/presentation/pages/sales_routes.dart';
 
 /// Sales business module — operational sales documents (offline-first).
 ///
@@ -22,6 +25,11 @@ class SalesModule extends AppModule {
   const SalesModule();
 
   static const String moduleId = 'sales';
+
+  /// Self-registers SalesModule into the global ModuleRegistry via injection.
+  static void register() {
+    ModuleRegistry.register(const SalesModule());
+  }
 
   @override
   String get id => moduleId;
@@ -36,7 +44,7 @@ class SalesModule extends AppModule {
   String get rootRoute => SalesRoutes.root;
 
   @override
-  int get sortOrder => 10;
+  int get sortOrder => 30;
 
   @override
   bool get isEnabled => true;
@@ -74,38 +82,12 @@ class SalesModule extends AppModule {
   }
 
   @override
-  List<QuickActionDefinition> get quickActions => [
-        QuickActionDefinition(
-          id: 'create_sale',
-          icon: Icons.receipt_long_outlined,
-          kind: QuickActionKind.route,
-          routePath: SalesRoutes.create,
-          titleBuilder: (l10n) => l10n.salesCreateTitle,
-          subtitleBuilder: (l10n) => l10n.salesCreateCardSubtitle,
-          requiredPermissions: const ['sales.documents.create', 'sales.create'],
-        ),
-      ];
+  List<QuickActionDefinition> get quickActions =>
+      buildSalesQuickActions(moduleId);
 
   @override
-  List<ReportCategoryDefinition> get reportCategories => [
-        ReportCategoryDefinition(
-          id: 'sales_reports',
-          moduleId: moduleId,
-          icon: Icons.point_of_sale_outlined,
-          titleBuilder: (l10n) => l10n.moduleSales,
-          subtitleBuilder: (l10n) => l10n.moduleSalesDescription,
-          reports: [
-            ReportItemDefinition(
-              id: 'reports_sales_period',
-              moduleId: moduleId,
-              icon: Icons.receipt_long_outlined,
-              path: '/reports/sales-period',
-              titleBuilder: (l10n) => l10n.reportsSalesPeriodTitle,
-              subtitleBuilder: (l10n) => l10n.reportsSalesPeriodSubtitle,
-            ),
-          ],
-        ),
-      ];
+  List<ModuleSettingsCategoryDefinition> get settingsCategories =>
+      buildSalesSettingsCategories(moduleId);
 
   @override
   List<RouteBase> get routes => [

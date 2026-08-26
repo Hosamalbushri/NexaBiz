@@ -11503,6 +11503,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Automatically seed default chart of accounts and initial settings.'**
   String get setupSeedInitialDataSubtitle;
+
+  /// No description provided for @moduleUnitsSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit Settings'**
+  String get moduleUnitsSettingsTitle;
+
+  /// No description provided for @moduleUnitsSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit and service settings for system modules'**
+  String get moduleUnitsSettingsSubtitle;
+
+  /// No description provided for @selectModulePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a module to access its unit and service settings'**
+  String get selectModulePrompt;
+
+  /// No description provided for @stockCountSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Count Settings'**
+  String get stockCountSettingsTitle;
+
+  /// No description provided for @stockCountSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize inventory count policies and approval workflows'**
+  String get stockCountSettingsSubtitle;
+
+  /// No description provided for @productSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Settings'**
+  String get productSettingsTitle;
+
+  /// No description provided for @productSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize categories, barcoding, pricing, and units'**
+  String get productSettingsSubtitle;
+
+  /// No description provided for @moduleUnitsReportsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Module & Unit Reports'**
+  String get moduleUnitsReportsTitle;
+
+  /// No description provided for @moduleUnitsReportsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View and generate unit and service reports organized by module'**
+  String get moduleUnitsReportsSubtitle;
+
+  /// No description provided for @selectModuleReportsPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a module to view its available unit reports'**
+  String get selectModuleReportsPrompt;
 }
 
 class _AppLocalizationsDelegate

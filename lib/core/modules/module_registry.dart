@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../permissions/permission_defs.dart';
 import 'app_module.dart';
+import 'module_settings_definition.dart';
 import 'quick_action_definition.dart';
 import 'report_category_definition.dart';
 import 'route_access_rule.dart';
@@ -135,6 +136,32 @@ class ModuleRegistry {
       for (final module in enabledModules) ...module.reportCategories,
     ];
   }
+
+  /// All settings categories contributed by enabled modules, sorted by [AppModule.sortOrder].
+  List<ModuleSettingsCategoryDefinition> get allSettingsCategories {
+    final list = <ModuleSettingsCategoryDefinition>[];
+    for (final module in enabledModules) {
+      list.addAll(module.settingsCategories);
+    }
+    list.sort((a, b) {
+      final moduleA = findById(a.moduleId);
+      final moduleB = findById(b.moduleId);
+      final sortA = moduleA?.sortOrder ?? a.sortOrder;
+      final sortB = moduleB?.sortOrder ?? b.sortOrder;
+      if (sortA != sortB) {
+        return sortA.compareTo(sortB);
+      }
+      return a.sortOrder.compareTo(b.sortOrder);
+    });
+    return List.unmodifiable(list);
+  }
+
+  /// Check if a module is registered by id in this registry instance.
+  bool isRegistered(String id) => findById(id) != null;
+
+  /// Check if a module is in the global self-registration catalog.
+  static bool isModuleRegistered(String id) =>
+      _catalog.any((m) => m.id == id);
 
   AppModule? findById(String id) {
     for (final module in _modules) {

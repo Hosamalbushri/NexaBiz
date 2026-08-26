@@ -1,9 +1,9 @@
-import '../../modules/accounting/domain/entities/external_accounting_reference.dart';
-import '../../modules/accounting/domain/services/accounting_integration_port.dart';
-import '../../modules/sales/domain/entities/payment_status.dart';
-import '../../modules/sales/domain/entities/sale.dart';
-import '../../modules/sales/domain/entities/sale_status.dart';
-import '../../modules/sales/domain/services/sale_accounting_bridge_port.dart';
+import 'package:stock_count/modules/accounting/shared/domain/entities/external_accounting_reference.dart';
+import 'package:stock_count/modules/accounting/shared/domain/services/accounting_integration_port.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/payment_status.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_accounting_bridge_port.dart';
 
 /// App adapter: optional ERP operational submit (local journals are always on).
 class AccountingSaleBridgeAdapter implements SaleAccountingBridgePort {

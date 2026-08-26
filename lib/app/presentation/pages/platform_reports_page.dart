@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/modules/app_module.dart';
 import '../../../core/modules/module_providers.dart';
-import '../../../core/modules/report_category_definition.dart';
-import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../constants/app_constants.dart';
@@ -12,14 +11,16 @@ import '../../localization/app_localizations.dart';
 import '../../notifications/presentation/providers/notifications_provider.dart';
 import '../../router/app_routes.dart';
 import '../../sync/app_bar_sync_actions.dart';
+import '../../theme/app_breakpoints.dart';
 import '../../theme/app_radius.dart';
+import '../../theme/app_shadows.dart';
 import '../../theme/app_spacing.dart';
+import 'module_unit_reports_page.dart';
 
-/// Dynamic platform reports hub — queries [ModuleRegistry.allReportCategories].
+/// Dynamic platform reports hub — renders module report cards directly.
 ///
-/// Each enabled module contributes its report categories and report items via
-/// [AppModule.reportCategories]. When no modules are registered, displays a
-/// rich, premium empty state.
+/// Requires [ReportsModule] to be registered and enabled. Displays report
+/// cards grouped by registered business modules.
 class PlatformReportsPage extends ConsumerWidget {
   const PlatformReportsPage({super.key});
 
@@ -31,9 +32,23 @@ class PlatformReportsPage extends ConsumerWidget {
     final unread = ref.watch(unreadNotificationsCountProvider);
 
     final registry = ref.watch(moduleRegistryProvider);
-    final categories = registry.allReportCategories;
+
+    // Reports are ONLY available if ReportsModule is registered & enabled
+    final isReportsModuleActive = registry.isRegistered('reports');
+    final reportsModule = registry.findById('reports');
+
+    // Extract unique module IDs configured within ReportsModule
+    final moduleIdsWithReports = (isReportsModuleActive && reportsModule != null)
+        ? reportsModule.reportCategories.map((c) => c.moduleId).toSet()
+        : <String>{};
+
+    final modulesWithReports = [
+      for (final m in registry.modules)
+        if (m.isEnabled && moduleIdsWithReports.contains(m.id)) m,
+    ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     return Scaffold(
+      backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
         title: l10n.platformReportsTitle,
         centerTitle: false,
@@ -42,179 +57,179 @@ class PlatformReportsPage extends ConsumerWidget {
         onNotifications: () => context.push(AppRoutes.notifications),
         actions: const [AppBarSyncActions()],
       ),
-      body: categories.isEmpty
-          ? AppEmptyState(
-              icon: Icons.assessment_outlined,
-              title: l10n.platformReportsTitle,
-              subtitle: l10n.platformReportsServiceComingSoon,
-            )
-          : DefaultTabController(
-              length: categories.length,
-              child: Column(
-                children: [
-                  Material(
-                    color: colorScheme.surface,
-                    elevation: 0,
-                    child: TabBar(
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.start,
-                      indicatorColor: colorScheme.primary,
-                      labelColor: colorScheme.primary,
-                      unselectedLabelColor: colorScheme.onSurfaceVariant,
-                      labelStyle: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      tabs: [
-                        for (final cat in categories)
-                          Tab(
-                            icon: Icon(cat.icon, size: 20),
-                            text: cat.title(l10n),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        for (final cat in categories)
-                          _ReportCategoryView(category: cat),
-                      ],
-                    ),
-                  ),
-                ],
+      body: (!isReportsModuleActive || modulesWithReports.isEmpty)
+          ? Center(
+              child: AppEmptyState(
+                icon: Icons.assessment_outlined,
+                title: l10n.platformReportsTitle,
+                subtitle: l10n.platformReportsServiceComingSoon,
               ),
-            ),
-    );
-  }
-}
-
-class _ReportCategoryView extends StatelessWidget {
-  const _ReportCategoryView({required this.category});
-
-  final ReportCategoryDefinition category;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final reports = category.reports;
-
-    if (reports.isEmpty) {
-      return AppEmptyState(
-        icon: category.icon,
-        title: category.title(l10n),
-        subtitle: category.subtitle(l10n),
-      );
-    }
-
-    return ListView(
-      padding: AppConstants.pageInsets(context),
-      children: [
-        Text(
-          category.subtitle(l10n),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        for (var i = 0; i < reports.length; i++) ...[
-          if (i > 0) const SizedBox(height: AppSpacing.sm),
-          _ReportItemTile(item: reports[i]),
-        ],
-      ],
-    );
-  }
-}
-
-class _ReportItemTile extends StatelessWidget {
-  const _ReportItemTile({required this.item});
-
-  final ReportItemDefinition item;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return AppCard(
-      onTap: item.isAvailable
-          ? () => context.push(item.path!)
-          : () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(l10n.platformReportsServiceComingSoon),
-                  behavior: SnackBarBehavior.floating,
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            },
-      child: Row(
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-            ),
-            child: SizedBox(
-              width: 48,
-              height: 48,
-              child: Icon(item.icon, color: colorScheme.primary, size: 24),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            )
+          : ListView(
+              padding: AppConstants.pageInsets(context),
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.title(l10n),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: Text(
+                    l10n.selectModuleReportsPrompt,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
-                    if (!item.isAvailable)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
+                  ),
+                ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = AppBreakpoints.isTablet(constraints.maxWidth) ||
+                        AppBreakpoints.isDesktop(constraints.maxWidth);
+
+                    if (isWide) {
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: AppSpacing.md,
+                          mainAxisSpacing: AppSpacing.md,
+                          childAspectRatio: 2.6,
                         ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(AppRadius.xs),
-                        ),
-                        child: Text(
-                          l10n.platformReportsServiceComingSoon,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        itemCount: modulesWithReports.length,
+                        itemBuilder: (context, index) {
+                          return _ModuleReportCard(module: modulesWithReports[index]);
+                        },
+                      );
+                    }
+
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: modulesWithReports.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+                      itemBuilder: (context, index) {
+                        return _ModuleReportCard(module: modulesWithReports[index]);
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+class _ModuleReportCard extends ConsumerWidget {
+  const _ModuleReportCard({required this.module});
+
+  final AppModule module;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final title = module.label(context);
+
+    final reportsModule = ref.watch(moduleRegistryProvider).findById('reports');
+    final moduleCategories = reportsModule?.reportCategories
+            .where((c) => c.moduleId == module.id)
+            .toList() ??
+        const [];
+
+    final totalReports = moduleCategories.fold<int>(
+      0,
+      (sum, cat) => sum + cat.reports.length,
+    );
+
+    final subtitle = module.description(context) ??
+        (l10n.localeName == 'ar'
+            ? '$totalReports تقارير متاحة'
+            : '$totalReports reports available');
+
+    return Material(
+      color: colorScheme.surface,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => ModuleUnitReportsPage(moduleId: module.id),
+            ),
+          );
+        },
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.55),
+            ),
+            boxShadow: AppShadows.card(theme.brightness),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colorScheme.primaryContainer.withValues(alpha: 0.7),
+                  ),
+                  child: Icon(
+                    module.icon,
+                    color: colorScheme.primary,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  item.subtitle(l10n),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: Text(
+                    '$totalReports',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: colorScheme.onSurfaceVariant,
+                  size: 20,
                 ),
               ],
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Icon(
-            Icons.chevron_right_rounded,
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ],
+        ),
       ),
     );
   }

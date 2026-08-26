@@ -4,20 +4,24 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/module_registry.dart';
+import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
 import '../../core/modules/route_access_rule.dart';
+import 'customers_module_quick_actions.dart';
+import 'customers_module_settings.dart';
 import '../../core/permissions/permission_defs.dart';
+import 'accounts/presentation/pages/customers_accounts_page.dart';
+import 'directory/presentation/pages/customer_details_page.dart';
+import 'directory/presentation/pages/customer_form_page.dart';
+import 'directory/presentation/pages/customers_home_page.dart';
+import 'directory/presentation/pages/customers_import_page.dart';
+import 'directory/presentation/pages/customers_list_page.dart';
+import 'directory/presentation/providers/customer_providers.dart';
 import 'permissions/customers_permission_package.dart';
-import 'presentation/pages/customer_details_page.dart';
-import 'presentation/pages/customer_form_page.dart';
-import 'presentation/pages/customers_accounts_page.dart';
-import 'presentation/pages/customers_home_page.dart';
-import 'presentation/pages/customers_import_page.dart';
-import 'presentation/pages/customers_list_page.dart';
-import 'presentation/pages/customers_routes.dart';
-import 'presentation/pages/customers_settings_page.dart';
-import 'presentation/providers/customer_providers.dart';
-import 'presentation/widgets/customers_settings_panel.dart';
+import 'shared/presentation/pages/customers_routes.dart';
+import 'shared/presentation/pages/customers_settings_page.dart';
+import 'shared/presentation/widgets/customers_settings_panel.dart';
 
 /// Customers business module — master data for business partners.
 ///
@@ -27,6 +31,11 @@ class CustomersModule extends AppModule {
   const CustomersModule();
 
   static const String moduleId = 'customers';
+
+  /// Self-registers CustomersModule into the global ModuleRegistry via injection.
+  static void register() {
+    ModuleRegistry.register(const CustomersModule());
+  }
 
   @override
   String get id => moduleId;
@@ -91,17 +100,12 @@ class CustomersModule extends AppModule {
   }
 
   @override
-  List<QuickActionDefinition> get quickActions => [
-        QuickActionDefinition(
-          id: 'create_customer',
-          icon: Icons.person_add_outlined,
-          kind: QuickActionKind.route,
-          routePath: CustomersRoutes.create,
-          titleBuilder: (l10n) => l10n.customersCreateTitle,
-          subtitleBuilder: (l10n) => l10n.customersCreateTitle,
-          requiredPermissions: const ['customers.master.create', 'customers.create'],
-        ),
-      ];
+  List<QuickActionDefinition> get quickActions =>
+      buildCustomersQuickActions(moduleId);
+
+  @override
+  List<ModuleSettingsCategoryDefinition> get settingsCategories =>
+      buildCustomersSettingsCategories(moduleId);
 
   @override
   List<Override> get providerOverrides => const [];

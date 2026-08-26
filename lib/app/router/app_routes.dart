@@ -48,8 +48,9 @@ class AppRoutes {
   static const String administrationPermissions = '/administration/permissions';
   static const String administrationDevices = '/administration/devices';
 
-  /// Reports hub for a specific module (e.g. `/reports/inventory`).
-  static String moduleReports(String moduleId) => '$reports/$moduleId';
+  /// Reports hub for a specific module (e.g. `/reports/modules/inventory`).
+  static const String reportsModules = '$reports/modules';
+  static String moduleReports(String moduleId) => '$reportsModules/$moduleId';
 
   /// Legacy alias used by older call sites; prefer [dashboard].
   static const String home = dashboard;

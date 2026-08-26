@@ -1,8 +1,8 @@
-import '../../modules/inventory/domain/entities/product.dart';
-import '../../modules/inventory/domain/repositories/product_repository.dart';
-import '../../modules/inventory/domain/services/product_scan_resolver.dart';
-import '../../modules/sales/domain/sale_autocomplete_defaults.dart';
-import '../../modules/sales/domain/services/sale_product_catalog_port.dart';
+import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
+import 'package:stock_count/modules/inventory/products/domain/repositories/product_repository.dart';
+import 'package:stock_count/modules/inventory/products/domain/services/product_scan_resolver.dart';
+import 'package:stock_count/modules/sales/invoices/domain/services/sale_autocomplete_defaults.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_product_catalog_port.dart';
 
 /// App adapter: Sales product catalog → Inventory products + scan resolver.
 class InventorySaleProductCatalogAdapter implements SaleProductCatalogPort {

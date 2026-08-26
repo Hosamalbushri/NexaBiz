@@ -1,5 +1,5 @@
-import '../../modules/accounting/domain/repositories/journal_repository.dart';
-import '../../modules/reports/domain/services/journal_book_report_data_port.dart';
+import 'package:stock_count/modules/accounting/journals/domain/repositories/journal_repository.dart';
+import 'package:stock_count/modules/reports/shared/domain/services/journal_book_report_data_port.dart';
 import '../settings/company/company_profile.dart';
 
 /// App adapter: journal book ← Accounting journal lines.

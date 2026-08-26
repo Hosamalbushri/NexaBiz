@@ -3,18 +3,19 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/module_registry.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
+import 'financial_reports/presentation/pages/account_statement_report_page.dart';
+import 'financial_reports/presentation/pages/journal_book_report_page.dart';
+import 'financial_reports/presentation/pages/trial_balance_report_page.dart';
+import 'operational_reports/presentation/pages/rp_transaction_report_page.dart';
+import 'operational_reports/presentation/pages/sales_period_report_page.dart';
 import 'permissions/reports_permission_package.dart';
-import 'presentation/pages/account_statement_report_page.dart';
-import 'presentation/pages/report_pdf_preview_page.dart';
-import 'presentation/pages/reports_home_page.dart';
-import 'presentation/pages/reports_routes.dart';
-import 'presentation/pages/rp_transaction_report_page.dart';
-import 'presentation/pages/sales_period_report_page.dart';
-import 'presentation/pages/trial_balance_report_page.dart';
-import 'presentation/pages/journal_book_report_page.dart';
-import 'domain/services/rp_report_data_port.dart';
+import 'shared/domain/services/rp_report_data_port.dart';
+import 'shared/presentation/pages/report_pdf_preview_page.dart';
+import 'shared/presentation/pages/reports_home_page.dart';
+import 'shared/presentation/pages/reports_routes.dart';
 
 import '../../core/modules/report_category_definition.dart';
 
@@ -25,6 +26,11 @@ class ReportsModule extends AppModule {
   const ReportsModule();
 
   static const String moduleId = 'reports';
+
+  /// Self-registers ReportsModule into the global ModuleRegistry via injection.
+  static void register() {
+    ModuleRegistry.register(const ReportsModule());
+  }
 
   @override
   String get id => moduleId;
@@ -76,25 +82,22 @@ class ReportsModule extends AppModule {
   }
 
   @override
-  List<ReportCategoryDefinition> get reportCategories => [
+  List<ReportCategoryDefinition> get reportCategories {
+    final categories = <ReportCategoryDefinition>[];
+
+    // 1. Accounting Reports
+    if (ModuleRegistry.isModuleRegistered('accounting')) {
+      categories.add(
         ReportCategoryDefinition(
-          id: 'platform_reports_catalog',
-          moduleId: moduleId,
-          icon: Icons.assessment_outlined,
-          titleBuilder: (l10n) => l10n.platformReportsBusiness,
-          subtitleBuilder: (l10n) => l10n.platformReportsBusinessSubtitle,
+          id: 'accounting_reports',
+          moduleId: 'accounting',
+          icon: Icons.account_balance_outlined,
+          titleBuilder: (l10n) => l10n.moduleAccounting,
+          subtitleBuilder: (l10n) => l10n.moduleAccountingDescription,
           reports: [
             ReportItemDefinition(
-              id: 'reports_sales_period',
-              moduleId: moduleId,
-              icon: Icons.receipt_long_outlined,
-              path: ReportsRoutes.salesPeriod,
-              titleBuilder: (l10n) => l10n.reportsSalesPeriodTitle,
-              subtitleBuilder: (l10n) => l10n.reportsSalesPeriodSubtitle,
-            ),
-            ReportItemDefinition(
               id: 'reports_account_statement',
-              moduleId: moduleId,
+              moduleId: 'accounting',
               icon: Icons.menu_book_outlined,
               path: ReportsRoutes.accountStatement,
               titleBuilder: (l10n) => l10n.reportsAccountStatementTitle,
@@ -102,7 +105,7 @@ class ReportsModule extends AppModule {
             ),
             ReportItemDefinition(
               id: 'reports_trial_balance',
-              moduleId: moduleId,
+              moduleId: 'accounting',
               icon: Icons.balance_outlined,
               path: ReportsRoutes.trialBalance,
               titleBuilder: (l10n) => l10n.reportsTrialBalanceTitle,
@@ -110,7 +113,7 @@ class ReportsModule extends AppModule {
             ),
             ReportItemDefinition(
               id: 'reports_journal_book',
-              moduleId: moduleId,
+              moduleId: 'accounting',
               icon: Icons.auto_stories_outlined,
               path: ReportsRoutes.journalBook,
               titleBuilder: (l10n) => l10n.reportsJournalBookTitle,
@@ -118,7 +121,139 @@ class ReportsModule extends AppModule {
             ),
           ],
         ),
-      ];
+      );
+    }
+
+    // 2. Sales Reports
+    if (ModuleRegistry.isModuleRegistered('sales')) {
+      categories.add(
+        ReportCategoryDefinition(
+          id: 'sales_reports',
+          moduleId: 'sales',
+          icon: Icons.point_of_sale_outlined,
+          titleBuilder: (l10n) => l10n.moduleSales,
+          subtitleBuilder: (l10n) => l10n.moduleSalesDescription,
+          reports: [
+            ReportItemDefinition(
+              id: 'reports_sales_period',
+              moduleId: 'sales',
+              icon: Icons.receipt_long_outlined,
+              path: ReportsRoutes.salesPeriod,
+              titleBuilder: (l10n) => l10n.reportsSalesPeriodTitle,
+              subtitleBuilder: (l10n) => l10n.reportsSalesPeriodSubtitle,
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 3. Receipts & Payments Reports
+    if (ModuleRegistry.isModuleRegistered('receipts_payments')) {
+      categories.add(
+        ReportCategoryDefinition(
+          id: 'rp_reports',
+          moduleId: 'receipts_payments',
+          icon: Icons.account_balance_wallet_outlined,
+          titleBuilder: (l10n) => l10n.moduleReceiptsPayments,
+          subtitleBuilder: (l10n) => l10n.moduleReceiptsPaymentsDescription,
+          reports: [
+            ReportItemDefinition(
+              id: 'reports_rp_receipts',
+              moduleId: 'receipts_payments',
+              icon: Icons.payments_outlined,
+              path: ReportsRoutes.rpReceipts,
+              titleBuilder: (l10n) => l10n.rpServiceReceiptsTitle,
+              subtitleBuilder: (l10n) => l10n.rpServiceReceiptsSubtitle,
+            ),
+            ReportItemDefinition(
+              id: 'reports_rp_payments',
+              moduleId: 'receipts_payments',
+              icon: Icons.outbox_outlined,
+              path: ReportsRoutes.rpPayments,
+              titleBuilder: (l10n) => l10n.rpServicePaymentsTitle,
+              subtitleBuilder: (l10n) => l10n.rpServicePaymentsSubtitle,
+            ),
+            ReportItemDefinition(
+              id: 'reports_rp_transfers',
+              moduleId: 'receipts_payments',
+              icon: Icons.swap_horiz_outlined,
+              path: ReportsRoutes.rpCashMovement,
+              titleBuilder: (l10n) => l10n.rpServiceTransfersTitle,
+              subtitleBuilder: (l10n) => l10n.rpServiceTransfersSubtitle,
+            ),
+            ReportItemDefinition(
+              id: 'reports_rp_exchanges',
+              moduleId: 'receipts_payments',
+              icon: Icons.currency_exchange_outlined,
+              path: ReportsRoutes.rpDailySummary,
+              titleBuilder: (l10n) => l10n.rpServiceExchangesTitle,
+              subtitleBuilder: (l10n) => l10n.rpServiceExchangesSubtitle,
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 4. Inventory Reports
+    if (ModuleRegistry.isModuleRegistered('inventory')) {
+      categories.add(
+        ReportCategoryDefinition(
+          id: 'inventory_reports',
+          moduleId: 'inventory',
+          icon: Icons.inventory_2_outlined,
+          titleBuilder: (l10n) => l10n.moduleInventory,
+          subtitleBuilder: (l10n) => l10n.moduleInventoryDescription,
+          reports: [
+            ReportItemDefinition(
+              id: 'reports_stock_balance',
+              moduleId: 'inventory',
+              icon: Icons.assessment_outlined,
+              path: '/inventory/reports',
+              titleBuilder: (l10n) => l10n.moduleInventory,
+              subtitleBuilder: (l10n) => l10n.moduleInventoryDescription,
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 5. Customers Reports
+    if (ModuleRegistry.isModuleRegistered('customers')) {
+      categories.add(
+        ReportCategoryDefinition(
+          id: 'customers_reports',
+          moduleId: 'customers',
+          icon: Icons.people_outline,
+          titleBuilder: (l10n) => l10n.moduleCustomers,
+          subtitleBuilder: (l10n) => l10n.moduleCustomersDescription,
+          reports: [
+            ReportItemDefinition(
+              id: 'reports_customers_list',
+              moduleId: 'customers',
+              icon: Icons.group_outlined,
+              path: '/customers',
+              titleBuilder: (l10n) => l10n.moduleCustomers,
+              subtitleBuilder: (l10n) => l10n.moduleCustomersDescription,
+            ),
+          ],
+        ),
+      );
+    }
+
+    categories.sort((a, b) {
+      final moduleA = ModuleRegistry.registeredModules.firstWhere(
+        (m) => m.id == a.moduleId,
+        orElse: () => const ReportsModule(),
+      );
+      final moduleB = ModuleRegistry.registeredModules.firstWhere(
+        (m) => m.id == b.moduleId,
+        orElse: () => const ReportsModule(),
+      );
+      return moduleA.sortOrder.compareTo(moduleB.sortOrder);
+    });
+
+    return categories;
+  }
 
   @override
   List<RouteBase> get routes => [

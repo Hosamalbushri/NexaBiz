@@ -1,8 +1,8 @@
-import '../../modules/receipts_payments/domain/entities/transaction_status.dart';
-import '../../modules/receipts_payments/domain/entities/transaction_type.dart';
-import '../../modules/receipts_payments/domain/models/transaction_list_filter.dart';
-import '../../modules/receipts_payments/domain/repositories/financial_transaction_repository.dart';
-import '../../modules/reports/domain/services/rp_report_data_port.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_status.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/models/transaction_list_filter.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/repositories/financial_transaction_repository.dart';
+import 'package:stock_count/modules/reports/shared/domain/services/rp_report_data_port.dart';
 
 class RpReportDataAdapter implements RpReportDataPort {
   const RpReportDataAdapter(this._repository);

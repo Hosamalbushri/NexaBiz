@@ -1,14 +1,14 @@
-import '../../modules/accounting/domain/entities/account.dart';
-import '../../modules/accounting/domain/entities/journal_entry.dart';
-import '../../modules/accounting/domain/models/journal_exception.dart';
-import '../../modules/accounting/domain/repositories/account_repository.dart';
-import '../../modules/accounting/domain/services/account_labels.dart';
-import '../../modules/accounting/domain/services/journal_money.dart';
-import '../../modules/accounting/domain/services/journal_posting_service.dart';
-import '../../modules/inventory/domain/models/stock_quantity_line.dart';
-import '../../modules/inventory/domain/services/product_stock_service.dart';
-import '../../modules/sales/domain/entities/sale.dart';
-import '../../modules/sales/domain/entities/sale_status.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
+import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
+import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_labels.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_money.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/models/stock_quantity_line.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/services/product_stock_service.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
 import 'perpetual_sale_inventory_effect_adapter.dart';
 
 /// App adapter: sale post → COGS journal (Dr 5100 / Cr inventory asset).

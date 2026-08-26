@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/module_registry.dart';
 import '../../core/permissions/permission_defs.dart';
 import 'permissions/platform_permission_package.dart';
 import 'presentation/pages/system_setup_routes.dart';
@@ -17,6 +18,11 @@ class SystemSetupModule extends AppModule {
   const SystemSetupModule();
 
   static const String moduleId = 'system_setup';
+
+  /// Self-registers SystemSetupModule into the global ModuleRegistry via injection.
+  static void register() {
+    ModuleRegistry.register(const SystemSetupModule());
+  }
 
   @override
   String get id => moduleId;

@@ -5,22 +5,22 @@ import '../../core/modules/module_registry.dart';
 import '../../modules/sync/sync.dart';
 import '../../modules/accounting/accounting_module.dart';
 import '../../modules/administration/administration_module.dart';
-import '../../modules/accounting/data/repositories/account_repository_impl.dart';
-import '../../modules/accounting/presentation/providers/account_providers.dart';
-import '../../modules/accounting/presentation/providers/accounting_mode_providers.dart';
-import '../../modules/accounting/presentation/providers/currency_rate_providers.dart';
-import '../../modules/accounting/presentation/providers/journal_providers.dart';
-import '../../modules/accounting/presentation/providers/voucher_book_providers.dart';
+import '../../modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
+import '../../modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
+import '../../modules/accounting/shared/presentation/providers/accounting_mode_providers.dart';
+import '../../modules/accounting/shared/presentation/providers/currency_rate_providers.dart';
+import '../../modules/accounting/journals/presentation/providers/journal_providers.dart';
+import '../../modules/accounting/voucher_books/presentation/providers/voucher_book_providers.dart';
 import '../../modules/customers/customers_module.dart';
-import '../../modules/customers/presentation/providers/customer_providers.dart';
+import '../../modules/customers/directory/presentation/providers/customer_providers.dart';
 import '../../modules/inventory/inventory_module.dart';
-import '../../modules/inventory/presentation/pages/product_barcode_scanner_page.dart';
-import '../../modules/inventory/presentation/providers/product_providers.dart';
-import '../../modules/reports/presentation/providers/reports_providers.dart';
+import '../../modules/inventory/products/presentation/pages/product_barcode_scanner_page.dart';
+import '../../modules/inventory/products/presentation/providers/product_providers.dart';
+import '../../modules/reports/shared/presentation/providers/reports_providers.dart';
 import '../../modules/reports/reports_module.dart';
-import '../../modules/sales/presentation/providers/sale_barcode_capture_provider.dart';
-import '../../modules/sales/presentation/providers/sale_providers.dart';
-import '../../modules/receipts_payments/presentation/providers/rp_providers.dart';
+import '../../modules/sales/invoices/presentation/providers/sale_barcode_capture_provider.dart';
+import '../../modules/sales/invoices/presentation/providers/sale_providers.dart';
+import '../../modules/receipts_payments/transactions/presentation/providers/rp_providers.dart';
 import '../../modules/receipts_payments/receipts_payments_module.dart';
 import '../../modules/sales/sales_module.dart';
 import '../../modules/system_setup/system_setup_module.dart';
@@ -52,17 +52,15 @@ import '../sync/app_sync_adapters.dart';
 
 /// Self-register modules into [ModuleRegistry] catalog.
 void registerCoreModules() {
-  ModuleRegistry.registerAll(const [
-    // AccountingModule(),
-    // CustomersModule(),
-    // SalesModule(),
-    // ReceiptsPaymentsModule(),
-    // InventoryModule(),
-    // ReportsModule(),
-    // AdministrationModule(),
-    // SystemSetupModule(),
-    SyncModule(),
-  ]);
+  AccountingModule.register();
+  AdministrationModule.register();
+  CustomersModule.register();
+  InventoryModule.register();
+  ReceiptsPaymentsModule.register();
+  ReportsModule.register();
+  SalesModule.register();
+  SyncModule.register();
+  SystemSetupModule.register();
 }
 
 /// App composition root: registers enabled business modules.

@@ -1,5 +1,5 @@
-import '../../modules/accounting/domain/repositories/currency_rate_repository.dart';
-import '../../modules/receipts_payments/domain/services/rp_currency_port.dart';
+import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
+import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_currency_port.dart';
 
 /// App adapter: R&P currencies → company base + Accounting rates.
 class AccountingRpCurrencyAdapter implements RpCurrencyPort {

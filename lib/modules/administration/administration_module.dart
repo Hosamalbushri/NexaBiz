@@ -4,20 +4,27 @@ import 'package:go_router/go_router.dart';
 import '../../app/localization/app_localizations.dart';
 import '../../app/router/app_routes.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/module_registry.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
+import 'devices/presentation/pages/admin_devices_page.dart';
+import 'permissions_cat/presentation/pages/admin_permissions_catalog_page.dart';
 import 'permissions/administration_permission_package.dart';
-import 'presentation/pages/administration_home_page.dart';
-import 'presentation/pages/admin_devices_page.dart';
-import 'presentation/pages/admin_permissions_catalog_page.dart';
-import 'presentation/pages/admin_roles_page.dart';
-import 'presentation/pages/admin_users_page.dart';
+import 'roles/presentation/pages/admin_role_editor_page.dart';
+import 'roles/presentation/pages/admin_roles_page.dart';
+import 'shared/presentation/pages/administration_home_page.dart';
+import 'users/presentation/pages/admin_users_page.dart';
 
 /// Administration module — users / roles inside the same Flutter app.
 class AdministrationModule extends AppModule {
   const AdministrationModule();
 
   static const String moduleId = 'administration';
+
+  /// Self-registers AdministrationModule into the global ModuleRegistry via injection.
+  static void register() {
+    ModuleRegistry.register(const AdministrationModule());
+  }
 
   static const usersView = [
     'users.view',

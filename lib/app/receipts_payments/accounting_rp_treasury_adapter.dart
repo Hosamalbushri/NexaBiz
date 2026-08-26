@@ -1,8 +1,8 @@
-import '../../modules/accounting/domain/entities/account.dart';
-import '../../modules/accounting/domain/repositories/account_repository.dart';
-import '../../modules/accounting/domain/services/account_labels.dart';
-import '../../modules/accounting/domain/services/cash_box_accounts.dart';
-import '../../modules/receipts_payments/domain/services/rp_treasury_account_port.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_labels.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/cash_box_accounts.dart';
+import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_treasury_account_port.dart';
 import '../localization/app_localizations.dart';
 import '../localization/app_localizations_ar.dart';
 import '../localization/app_localizations_en.dart';

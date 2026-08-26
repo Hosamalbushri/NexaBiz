@@ -1,8 +1,8 @@
-import '../../modules/customers/domain/entities/customer.dart';
-import '../../modules/customers/domain/repositories/customer_repository.dart';
-import '../../modules/customers/domain/services/customer_account_link_port.dart';
-import '../../modules/customers/domain/usecases/ensure_customer_account_links.dart';
-import '../../modules/receipts_payments/domain/services/rp_customer_lookup_port.dart';
+import 'package:stock_count/modules/customers/directory/domain/entities/customer.dart';
+import 'package:stock_count/modules/customers/directory/domain/repositories/customer_repository.dart';
+import 'package:stock_count/modules/customers/accounts/domain/services/customer_account_link_port.dart';
+import 'package:stock_count/modules/customers/accounts/domain/usecases/ensure_customer_account_links.dart';
+import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_customer_lookup_port.dart';
 import '../settings/settings_repository.dart';
 
 /// App adapter: R&P customer lookup → Customers repository.

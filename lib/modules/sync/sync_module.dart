@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:stock_count/app/sync/sync_settings_section.dart';
-import 'package:stock_count/core/modules/app_module.dart';
+import '../../app/sync/sync_settings_section.dart';
+import '../../core/modules/app_module.dart';
+import '../../core/modules/module_registry.dart';
+import '../../core/modules/module_settings_definition.dart';
+import 'sync_module_settings.dart';
 
 /// Sync module — encapsulates offline-first synchronization infrastructure.
 class SyncModule extends AppModule {
   const SyncModule();
 
   static const String moduleId = 'sync';
+
+  /// Self-registers SyncModule into the global ModuleRegistry via injection.
+  static void register() {
+    ModuleRegistry.register(const SyncModule());
+  }
 
   @override
   String get id => moduleId;
@@ -36,6 +44,10 @@ class SyncModule extends AppModule {
 
   @override
   bool get hasSettings => true;
+
+  @override
+  List<ModuleSettingsCategoryDefinition> get settingsCategories =>
+      buildSyncSettingsCategories(moduleId);
 
   @override
   List<Widget> buildSettingsSections(BuildContext context) => [

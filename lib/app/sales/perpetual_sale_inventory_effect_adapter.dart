@@ -1,9 +1,9 @@
-import '../../modules/inventory/domain/models/product_exception.dart';
-import '../../modules/inventory/domain/models/stock_quantity_line.dart';
-import '../../modules/inventory/domain/services/product_stock_service.dart';
-import '../../modules/sales/domain/entities/sale.dart';
-import '../../modules/sales/domain/models/sale_exception.dart';
-import '../../modules/sales/domain/services/sale_inventory_effect_port.dart';
+import 'package:stock_count/modules/inventory/products/domain/models/product_exception.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/models/stock_quantity_line.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/services/product_stock_service.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
+import 'package:stock_count/modules/sales/invoices/domain/models/sale_exception.dart';
+import 'package:stock_count/modules/sales/shared/domain/services/sale_inventory_effect_port.dart';
 
 /// COGS side-effect for posted sales (App-layer journal adapter).
 abstract class SaleCogsEffectPort {

@@ -1,15 +1,15 @@
 import '../../core/utils/id_generator.dart';
-import '../../modules/accounting/domain/entities/journal_entry.dart';
-import '../../modules/accounting/domain/repositories/account_repository.dart';
-import '../../modules/accounting/domain/repositories/fiscal_year_repository.dart';
-import '../../modules/accounting/domain/services/account_labels.dart';
-import '../../modules/accounting/domain/services/journal_money.dart';
-import '../../modules/accounting/domain/services/journal_posting_service.dart';
-import '../../modules/receipts_payments/domain/entities/financial_transaction.dart';
-import '../../modules/receipts_payments/domain/entities/financial_transaction_line.dart';
-import '../../modules/receipts_payments/domain/entities/transaction_status.dart';
-import '../../modules/receipts_payments/domain/entities/transaction_type.dart';
-import '../../modules/receipts_payments/domain/services/rp_ledger_posting_port.dart';
+import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/repositories/fiscal_year_repository.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_labels.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_money.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/financial_transaction_line.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_status.dart';
+import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
+import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_ledger_posting_port.dart';
 
 /// App adapter: receipt/payment/transfer/exchange → local journal.
 class AccountingRpLedgerAdapter implements RpLedgerPostingPort {

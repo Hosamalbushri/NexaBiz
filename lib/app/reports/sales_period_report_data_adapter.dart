@@ -1,9 +1,9 @@
-import '../../modules/reports/domain/services/sales_period_report_data_port.dart';
-import '../../modules/sales/domain/entities/sale_list_item.dart';
-import '../../modules/sales/domain/entities/sale_settlement_type.dart';
-import '../../modules/sales/domain/entities/sale_status.dart';
-import '../../modules/sales/domain/models/sale_list_filter.dart';
-import '../../modules/sales/domain/repositories/sale_repository.dart';
+import 'package:stock_count/modules/reports/shared/domain/services/sales_period_report_data_port.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_list_item.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
+import 'package:stock_count/modules/sales/invoices/domain/models/sale_list_filter.dart';
+import 'package:stock_count/modules/sales/invoices/domain/repositories/sale_repository.dart';
 
 /// App adapter: Reports sales-period data ← Sales repository.
 class SalesPeriodReportDataAdapter implements SalesPeriodReportDataPort {
