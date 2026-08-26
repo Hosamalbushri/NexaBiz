@@ -94,5 +94,8 @@ class Sales extends Table {
 
   IntColumn get version => integer().withDefault(const Constant(1))();
 
+  /// Company / Tenant owner ID for local multi-tenant data isolation.
+  TextColumn get companyId => text().nullable()();
+
   IntColumn get deletedAt => integer().nullable()();
 }

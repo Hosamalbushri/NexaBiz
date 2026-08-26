@@ -9,6 +9,7 @@ import '../sync/sync_operation.dart';
 import 'authenticated_http_client.dart';
 import 'remote_sync_api.dart';
 import 'sync_api_config.dart';
+import '../time/domain/trusted_clock.dart';
 
 /// HTTP implementation of [RemoteSyncApi] for the experimental FastAPI backend.
 ///
@@ -20,11 +21,15 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
     AuthenticatedHttpClient? authenticatedClient,
     http.Client? client,
     SyncCursorStore? cursorStore,
+    TrustedClock? clock,
   }) : _config = config,
        _authClient = authenticatedClient,
        _client = client ?? http.Client(),
        _ownsClient = authenticatedClient == null && client == null,
-       _cursors = cursorStore ?? SyncCursorStore();
+       _cursors = cursorStore ?? SyncCursorStore(),
+       _clock = clock;
+
+  final TrustedClock? _clock;
 
   final SyncApiConfig _config;
   final AuthenticatedHttpClient? _authClient;
@@ -109,6 +114,8 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
           'type': operation.type.name,
           'payload': operation.payload,
           'base_version': operation.baseVersion,
+          'company_id': operation.companyId,
+          'device_id': operation.deviceId,
         },
       };
 
@@ -120,6 +127,7 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
       _ensureSuccess(response);
 
       final map = jsonDecode(response.body) as Map<String, dynamic>;
+      _calibrate(map);
       return SyncUploadAck(
         entityId: map['entity_id'] as String? ?? operation.entityId,
         remoteVersion: (map['remote_version'] as num?)?.toInt() ?? 0,
@@ -155,12 +163,15 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
               'type': op.type.name,
               'payload': op.payload,
               'base_version': op.baseVersion,
+              'company_id': op.companyId,
+              'device_id': op.deviceId,
             },
         ],
       };
       final response = await _post('/api/v1/sync/push/batch', body);
       _ensureSuccess(response);
       final map = jsonDecode(response.body) as Map<String, dynamic>;
+      _calibrate(map);
       final rawResults = map['results'];
       if (rawResults is! List) {
         throw const ServerFailure('Invalid batch push response');
@@ -270,6 +281,7 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
         final response = await _get('/api/v1/sync/pull', query);
         _ensureSuccess(response);
         final map = jsonDecode(response.body) as Map<String, dynamic>;
+        _calibrate(map);
         final changes = map['changes'];
         if (changes is List) {
           for (final raw in changes) {
@@ -473,5 +485,18 @@ class HttpRemoteSyncApi implements RemoteSyncApi {
       return DateTime.tryParse(value)?.toUtc();
     }
     return null;
+  }
+
+  void _calibrate(Map<String, dynamic> map) {
+    final serverTimeStr = map['server_time'] as String?;
+    if (serverTimeStr != null) {
+      final serverTime = DateTime.tryParse(serverTimeStr)?.toUtc();
+      if (serverTime != null) {
+        _clock?.setCheckpoint(
+          serverTime: serverTime,
+          localWallClock: DateTime.now().toUtc(),
+        );
+      }
+    }
   }
 }

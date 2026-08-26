@@ -76,7 +76,7 @@ void main() {
         steps: steps,
       );
       expect(progress.requiredDone, 2);
-      expect(progress.percentComplete, 50);
+      expect(progress.percentComplete, 40);
       expect(progress.isReady, isFalse);
       expect(progress.allRequiredComplete, isFalse);
     });
@@ -132,6 +132,7 @@ void main() {
       await coordinator.markStepCompleted(SetupStepId.locale);
       await coordinator.markStepCompleted(SetupStepId.primaryCurrency);
       await coordinator.markStepCompleted(SetupStepId.companyProfile);
+      await coordinator.markStepCompleted(SetupStepId.localAccount);
       expect(await coordinator.isReady(), isFalse);
 
       await coordinator.runSeedLocal();
@@ -143,6 +144,7 @@ void main() {
       await coordinator.markStepCompleted(SetupStepId.locale);
       await coordinator.markStepCompleted(SetupStepId.primaryCurrency);
       await coordinator.markStepCompleted(SetupStepId.companyProfile);
+      await coordinator.markStepCompleted(SetupStepId.localAccount);
 
       await coordinator.runSeedFromSync();
       expect(seedPort.syncCalls, 1);
@@ -168,14 +170,14 @@ void main() {
       await expectLater(coordinator.runSeedLocal(), throwsStateError);
       var progress = await coordinator.loadProgress();
       expect(
-        progress.stateFor(SetupStepId.seedLocal).status,
+        progress.stateFor(SetupStepId.seedData).status,
         SetupStepStatus.failed,
       );
 
       seedPort.fail = false;
       progress = await coordinator.runSeedLocal();
       expect(
-        progress.stateFor(SetupStepId.seedLocal).status,
+        progress.stateFor(SetupStepId.seedData).status,
         SetupStepStatus.completed,
       );
       expect(seedPort.localCalls, 2);

@@ -22,6 +22,7 @@ import '../../domain/repositories/sale_repository.dart';
 import '../../domain/services/sale_calculation_service.dart';
 import '../../domain/services/sale_quantity_math.dart';
 import '../../domain/services/device_sale_number.dart';
+import '../../../authentication/data/local_auth_store.dart';
 import '../../domain/services/sale_validator.dart';
 import '../database/sales_database.dart';
 
@@ -31,18 +32,28 @@ class SaleRepositoryImpl implements SaleRepository {
     SyncQueue? syncQueue,
     SaleValidator validator = const SaleValidator(),
     SaleCalculationService calculator = const SaleCalculationService(),
+    String Function()? readCompanyId,
   }) : _syncQueue = syncQueue,
        _validator = validator,
-       _calculator = calculator;
+       _calculator = calculator,
+       _readCompanyId = readCompanyId;
 
   final SalesDatabase _db;
   final SyncQueue? _syncQueue;
   final SaleValidator _validator;
   final SaleCalculationService _calculator;
+  final String Function()? _readCompanyId;
 
   static const entityType = 'sale';
 
-  Expression<bool> _notDeleted($SalesTable t) => t.deletedAt.isNull();
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+
+  Expression<bool> _tenantScoped($SalesTable t) =>
+      t.companyId.equals(_currentCompanyId);
+
+  Expression<bool> _scoped($SalesTable t) =>
+      t.deletedAt.isNull() & _tenantScoped(t);
 
   DateTime _fromEpoch(int ms) =>
       DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
@@ -185,7 +196,7 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   Expression<bool> _matchesFilter($SalesTable t, SaleListFilter filter) {
-    var expr = _notDeleted(t);
+    var expr = _scoped(t);
     if (filter.saleStatus != null) {
       final status = filter.saleStatus!;
       if (status == SaleStatus.unposted) {
@@ -302,12 +313,12 @@ class SaleRepositoryImpl implements SaleRepository {
         entityId: sale.uuid,
         type: type,
         baseVersion: sale.version,
-        payload: _toPayload(sale),
+        payload: _salePayload(sale),
       ),
     );
   }
 
-  Map<String, dynamic> _toPayload(Sale sale) {
+  Map<String, dynamic> _salePayload(Sale sale) {
     return {
       'uuid': sale.uuid,
       'saleNumber': sale.saleNumber,
@@ -336,17 +347,18 @@ class SaleRepositoryImpl implements SaleRepository {
       'paymentMethod': sale.paymentMethod.storageValue,
       'saleStatus': sale.saleStatus.storageValue,
       'notes': sale.notes,
-      'submittedAt': _toEpoch(sale.submittedAt),
-      'confirmedAt': _toEpoch(sale.confirmedAt),
-      'completedAt': _toEpoch(sale.completedAt),
-      'cancelledAt': _toEpoch(sale.cancelledAt),
+      'createdAt': sale.createdAt.toUtc().millisecondsSinceEpoch,
+      'updatedAt': sale.updatedAt.toUtc().millisecondsSinceEpoch,
+      'submittedAt': sale.submittedAt?.toUtc().millisecondsSinceEpoch,
+      'confirmedAt': sale.confirmedAt?.toUtc().millisecondsSinceEpoch,
+      'completedAt': sale.completedAt?.toUtc().millisecondsSinceEpoch,
+      'cancelledAt': sale.cancelledAt?.toUtc().millisecondsSinceEpoch,
       'externalId': sale.externalId,
       'externalDocumentNumber': sale.externalDocumentNumber,
       'externalStatus': sale.externalStatus,
       'dataSource': sale.dataSource.storageValue,
       'version': sale.version,
-      'updatedAt': sale.updatedAt.toUtc().millisecondsSinceEpoch,
-      'deletedAt': _toEpoch(sale.deletedAt),
+      'deletedAt': sale.deletedAt?.toUtc().millisecondsSinceEpoch,
       'items': [
         for (final item in sale.items)
           {
@@ -377,6 +389,7 @@ class SaleRepositoryImpl implements SaleRepository {
             'amount': payment.amount,
             'method': payment.method.storageValue,
             'paidAt': payment.paidAt.toUtc().millisecondsSinceEpoch,
+            'createdAt': payment.createdAt.toUtc().millisecondsSinceEpoch,
             'notes': payment.notes,
             'externalId': payment.externalId,
           },
@@ -471,7 +484,7 @@ class SaleRepositoryImpl implements SaleRepository {
   Future<List<Sale>> getAll() async {
     final rows =
         await (_db.select(_db.sales)
-              ..where(_notDeleted)
+              ..where(_scoped)
               ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
             .get();
     return _mapSales(rows);
@@ -480,7 +493,7 @@ class SaleRepositoryImpl implements SaleRepository {
   @override
   Stream<List<Sale>> watchAll() async* {
     final query = _db.select(_db.sales)
-      ..where(_notDeleted)
+      ..where(_scoped)
       ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]);
     await for (final rows in query.watch()) {
       yield await _mapSales(rows);
@@ -491,7 +504,7 @@ class SaleRepositoryImpl implements SaleRepository {
   Future<Sale?> getById(int id) async {
     final row = await (_db.select(
       _db.sales,
-    )..where((t) => t.id.equals(id) & _notDeleted(t))).getSingleOrNull();
+    )..where((t) => t.id.equals(id) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _mapSale(row);
   }
 
@@ -499,7 +512,7 @@ class SaleRepositoryImpl implements SaleRepository {
   Future<Sale?> getByUuid(String uuid) async {
     final row = await (_db.select(
       _db.sales,
-    )..where((t) => t.uuid.equals(uuid))).getSingleOrNull();
+    )..where((t) => t.uuid.equals(uuid) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _mapSale(row);
   }
 
@@ -511,7 +524,7 @@ class SaleRepositoryImpl implements SaleRepository {
     }
     final row =
         await (_db.select(_db.sales)
-              ..where((t) => t.saleNumber.equals(code) & _notDeleted(t)))
+              ..where((t) => t.saleNumber.equals(code) & _scoped(t)))
             .getSingleOrNull();
     return row == null ? null : _mapSale(row);
   }
@@ -578,7 +591,7 @@ class SaleRepositoryImpl implements SaleRepository {
     final safeLimit = limit <= 0 ? 8 : limit;
     final rows =
         await (_db.select(_db.sales)
-              ..where(_notDeleted)
+              ..where(_scoped)
               ..orderBy([(t) => OrderingTerm.desc(t.updatedAt)])
               ..limit(safeLimit))
             .get();
@@ -587,13 +600,14 @@ class SaleRepositoryImpl implements SaleRepository {
 
   @override
   Stream<void> watchListChanges() {
-    return (_db.select(_db.sales)..where(_notDeleted)).watch().map((_) {});
+    return (_db.select(_db.sales)..where(_scoped)).watch().map((_) {});
   }
 
   @override
   Future<int> nextLocalSequence({int? minExclusive}) async {
     final rows = await (_db.selectOnly(_db.sales)
-          ..addColumns([_db.sales.saleNumber]))
+          ..addColumns([_db.sales.saleNumber])
+          ..where(_scoped(_db.sales)))
         .get();
     var maxSeq = minExclusive ?? 0;
     for (final row in rows) {
@@ -669,6 +683,7 @@ class SaleRepositoryImpl implements SaleRepository {
               externalStatus: Value(draft.externalStatus),
               dataSource: Value(draft.dataSource.storageValue),
               syncStatus: const Value('pending'),
+              companyId: Value(_currentCompanyId),
             ),
           );
       await _replaceChildren(
@@ -711,7 +726,7 @@ class SaleRepositoryImpl implements SaleRepository {
 
     final now = DateTime.now().toUtc();
     await _db.transaction(() async {
-      await (_db.update(_db.sales)..where((t) => t.id.equals(id))).write(
+      await (_db.update(_db.sales)..where((t) => t.id.equals(id) & _scoped(t))).write(
         SalesCompanion(
           saleDate: Value(BusinessDate.utcDayMs(draft.saleDate)),
           settlementType: Value(draft.settlementType.storageValue),
@@ -744,6 +759,7 @@ class SaleRepositoryImpl implements SaleRepository {
           dataSource: Value(draft.dataSource.storageValue),
           syncStatus: const Value('pending'),
           version: Value(existing.version + 1),
+          companyId: Value(_currentCompanyId),
         ),
       );
       await _replaceChildren(
@@ -847,7 +863,7 @@ class SaleRepositoryImpl implements SaleRepository {
         _db.sales.paidAmount.sum(),
         _db.sales.remainingAmount.sum(),
       ])
-      ..where(_notDeleted(_db.sales) & _db.sales.customerId.equals(customerId));
+      ..where(_scoped(_db.sales) & _db.sales.customerId.equals(customerId));
     final row = await query.getSingle();
     return CustomerSaleTotals(
       totalSales: row.read(_db.sales.total.sum()) ?? 0,
@@ -867,7 +883,7 @@ class SaleRepositoryImpl implements SaleRepository {
         await (_db.select(_db.sales)
               ..where(
                 (t) =>
-                    _notDeleted(t) &
+                    _scoped(t) &
                     (t.customerAccountId.equals(id) |
                         t.cashAccountId.equals(id)),
               )
@@ -882,7 +898,7 @@ class SaleRepositoryImpl implements SaleRepository {
     DateTime? syncedAt,
   }) async {
     final at = syncedAt ?? DateTime.now().toUtc();
-    await (_db.update(_db.sales)..where((t) => t.uuid.equals(uuid))).write(
+    await (_db.update(_db.sales)..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
       SalesCompanion(
         syncStatus: const Value('synced'),
         lastSyncedAt: Value(at.millisecondsSinceEpoch),
@@ -892,7 +908,7 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   Future<void> markConflict(String uuid) async {
-    await (_db.update(_db.sales)..where((t) => t.uuid.equals(uuid))).write(
+    await (_db.update(_db.sales)..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
       const SalesCompanion(syncStatus: Value('conflict')),
     );
   }
@@ -1004,10 +1020,11 @@ class SaleRepositoryImpl implements SaleRepository {
                 lastSyncedAt: Value(now),
                 version: Value((payload['version'] as int?) ?? 1),
                 deletedAt: Value(deletedAt),
+                companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
               ),
             );
       } else {
-        await (_db.update(_db.sales)..where((t) => t.uuid.equals(uuid))).write(
+        await (_db.update(_db.sales)..where((t) => t.uuid.equals(uuid) & _scoped(t))).write(
           SalesCompanion(
             saleNumber: Value(
               (payload['saleNumber'] as String?) ?? existing.saleNumber,
@@ -1082,6 +1099,7 @@ class SaleRepositoryImpl implements SaleRepository {
             lastSyncedAt: Value(now),
             version: Value((payload['version'] as int?) ?? existing.version),
             deletedAt: Value(deletedAt),
+            companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
           ),
         );
         await (_db.delete(

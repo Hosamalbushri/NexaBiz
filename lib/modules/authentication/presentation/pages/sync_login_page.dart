@@ -666,16 +666,7 @@ class _BrandBlock extends StatelessWidget {
             letterSpacing: -0.2,
           ),
         ).animate().fadeIn(delay: 100.ms, duration: 380.ms),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          subtitle,
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: scheme.onSurfaceVariant,
-            height: 1.4,
-          ),
-        ).animate().fadeIn(delay: 140.ms, duration: 380.ms),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           hint,
           textAlign: TextAlign.center,
@@ -683,7 +674,7 @@ class _BrandBlock extends StatelessWidget {
             color: scheme.onSurfaceVariant.withValues(alpha: 0.9),
             height: 1.35,
           ),
-        ).animate().fadeIn(delay: 160.ms, duration: 360.ms),
+        ).animate().fadeIn(delay: 140.ms, duration: 380.ms),
       ],
     );
   }

@@ -15,6 +15,9 @@ import 'sync_queue.dart';
 import 'sync_queue_recovery_service.dart';
 import 'sync_request_context.dart';
 import 'sync_status.dart';
+import 'sync_error_classifier.dart';
+import '../time/domain/services/clock_integrity_service.dart';
+import '../logging/security_logger.dart';
 
 /// Coordinates upload / download across registered [SyncEntityHandler]s.
 ///
@@ -30,6 +33,18 @@ class SyncManager {
     SyncConflictStore? conflictStore,
     void Function(SyncPassResult result)? onMeaningfulPass,
     DateTime Function()? clock,
+    /// Returns true when the company entitlement grants sync capability.
+    bool Function()? hasSyncCapability,
+    /// Returns true when the current user holds the required sync permission.
+    ///
+    /// G5 fix: SyncManager must check BOTH permission AND entitlement.
+    /// Unknown authorization state (null callback) is treated as denied.
+    bool Function()? hasSyncPermission,
+    String Function()? readCompanyId,
+    ClockIntegrityState Function()? readClockState,
+    bool Function()? isTimeTrusted,
+    bool Function()? requiresReverification,
+    bool Function()? isOfflineGraceActive,
     this.batchChunkSize = 50,
   }) : _queue = queue,
        _connectivity = connectivity,
@@ -38,7 +53,14 @@ class SyncManager {
        _metricsStore = metricsStore,
        _conflictStore = conflictStore,
        _onMeaningfulPass = onMeaningfulPass,
-       _clock = clock ?? _defaultClock;
+       _clock = clock ?? _defaultClock,
+       _hasSyncCapability = hasSyncCapability,
+       _hasSyncPermission = hasSyncPermission,
+       _readCompanyId = readCompanyId,
+       _readClockState = readClockState,
+       _isTimeTrusted = isTimeTrusted,
+       _requiresReverification = requiresReverification,
+       _isOfflineGraceActive = isOfflineGraceActive;
 
   static DateTime _defaultClock() => DateTime.now().toUtc();
 
@@ -50,6 +72,13 @@ class SyncManager {
   final SyncConflictStore? _conflictStore;
   final void Function(SyncPassResult result)? _onMeaningfulPass;
   final DateTime Function() _clock;
+  final bool Function()? _hasSyncCapability;
+  final bool Function()? _hasSyncPermission;
+  final String Function()? _readCompanyId;
+  final ClockIntegrityState Function()? _readClockState;
+  final bool Function()? _isTimeTrusted;
+  final bool Function()? _requiresReverification;
+  final bool Function()? _isOfflineGraceActive;
 
   RemoteSyncApi? get _remote => _remoteProvider?.call();
 
@@ -141,6 +170,8 @@ class SyncManager {
     await _refreshOverview();
   }
 
+  Future<SyncPassResult>? _ongoingSync;
+
   /// Manual or automatic synchronization pass.
   ///
   /// Set [upload] / [download] to run only one direction. The sync page uses
@@ -150,6 +181,43 @@ class SyncManager {
     SyncPassTrigger trigger = SyncPassTrigger.manual,
     bool upload = true,
     bool download = true,
+  }) {
+    if (_ongoingSync != null) {
+      return _ongoingSync!;
+    }
+    final future = _syncNowInternal(
+      notify: notify,
+      trigger: trigger,
+      upload: upload,
+      download: download,
+    );
+    _ongoingSync = future;
+    return future;
+  }
+
+  Future<SyncPassResult> _syncNowInternal({
+    required bool notify,
+    required SyncPassTrigger trigger,
+    required bool upload,
+    required bool download,
+  }) async {
+    try {
+      return await _performSyncPass(
+        notify: notify,
+        trigger: trigger,
+        upload: upload,
+        download: download,
+      );
+    } finally {
+      _ongoingSync = null;
+    }
+  }
+
+  Future<SyncPassResult> _performSyncPass({
+    required bool notify,
+    required SyncPassTrigger trigger,
+    required bool upload,
+    required bool download,
   }) async {
     final correlationId = generateUuidV4();
     final started = _clock();
@@ -188,7 +256,44 @@ class SyncManager {
       correlationId: correlationId,
       trigger: trigger,
       body: () async {
-        if (!_enabled) {
+        if (_readClockState != null && _readClockState!() == ClockIntegrityState.tampered) {
+          SecurityLogger.logEvent('clock_integrity_tampered', metadata: {'company_id': _readCompanyId?.call()});
+          await _refreshOverview();
+          return annotate(
+            const SyncPassResult(outcome: SyncPassOutcome.clockTampered),
+          );
+        }
+        if (_isTimeTrusted != null && !_isTimeTrusted!()) {
+          SecurityLogger.logEvent('temporal_authorization_denied', metadata: {'company_id': _readCompanyId?.call()});
+          await _refreshOverview();
+          return annotate(
+            const SyncPassResult(outcome: SyncPassOutcome.temporalAuthorizationFailed),
+          );
+        }
+        if (_requiresReverification != null && _requiresReverification!()) {
+          SecurityLogger.logEvent('temporal_reverification_required', metadata: {'company_id': _readCompanyId?.call()});
+          await _refreshOverview();
+          return annotate(
+            const SyncPassResult(outcome: SyncPassOutcome.reverificationRequired),
+          );
+        }
+        if (_isOfflineGraceActive != null && !_isOfflineGraceActive!()) {
+          SecurityLogger.logEvent('offline_grace_expired', metadata: {'company_id': _readCompanyId?.call()});
+          await _refreshOverview();
+          return annotate(
+            const SyncPassResult(outcome: SyncPassOutcome.temporalAuthorizationFailed),
+          );
+        }
+
+        if (!_enabled || (_hasSyncCapability != null && !_hasSyncCapability!())) {
+          await _refreshOverview();
+          return annotate(
+            const SyncPassResult(outcome: SyncPassOutcome.skippedDisabled),
+          );
+        }
+        // G5 fix: require BOTH sync permission AND sync entitlement.
+        // Unknown permission state (null callback) fails closed.
+        if (_hasSyncPermission != null && !_hasSyncPermission!()) {
           await _refreshOverview();
           return annotate(
             const SyncPassResult(outcome: SyncPassOutcome.skippedDisabled),
@@ -365,6 +470,23 @@ class SyncManager {
     final handlersByOp = <String, SyncEntityHandler>{};
 
     for (final op in ready) {
+      // Validate tenant boundary: operation companyId must match current active companyId
+      final activeCompanyId = _readCompanyId?.call();
+      if (activeCompanyId != null && op.companyId != null && op.companyId != activeCompanyId) {
+        failed++;
+        await _queue.quarantine(
+          op.id,
+          error: 'Quarantined: Cross-tenant operation upload blocked. '
+              'Operation company ID "${op.companyId}" does not match active company ID "$activeCompanyId".',
+        );
+        SecurityLogger.logEvent('sync.tenant_mismatch', metadata: {
+          'operation_id': op.id,
+          'operation_company_id': op.companyId,
+          'active_company_id': activeCompanyId,
+        });
+        continue;
+      }
+
       final handler = _handlers[op.entityType];
       if (handler == null) {
         continue;
@@ -395,14 +517,7 @@ class SyncManager {
           );
         } on AuthorizationFailure catch (e) {
           failed++;
-          await _queue.update(
-            op.copyWith(
-              status: SyncStatus.rejected,
-              updatedAt: _clock(),
-              lastError: e.message,
-              clearNextRetryAt: true,
-            ),
-          );
+          await _queue.quarantine(op.id, error: e.message);
           continue;
         } catch (e) {
           failed++;
@@ -614,30 +729,39 @@ class SyncManager {
           );
         }
 
-        if (failure is AuthorizationFailure || failure is ValidationFailure) {
+        final err = failure ?? const UnknownFailure();
+        final classification = SyncErrorClassifier.classify(err);
+        final attempts = op.attemptCount + 1;
+
+        if (classification.securityEvent != null) {
+          SecurityLogger.logEvent(classification.securityEvent!, metadata: {
+            'operation_id': op.id,
+            'company_id': op.companyId,
+            'error': err.message,
+          });
+        }
+
+        if (classification.quarantine || attempts >= 5) {
           failed++;
-          await _queue.update(
-            op.copyWith(
-              status: SyncStatus.rejected,
-              updatedAt: _clock(),
-              lastError: failure?.message ?? 'Operation rejected',
-              clearNextRetryAt: true,
-            ),
+          await _queue.quarantine(
+            op.id,
+            error: attempts >= 5
+                ? 'Quarantined: Exceeded max retry attempts (5). Last error: ${err.message}'
+                : err.message,
           );
           continue;
         }
 
         failed++;
-        final attempts = op.attemptCount + 1;
-        final nextRetry = failure is RateLimitFailure && failure.retryAfterSeconds != null
-            ? _clock().add(Duration(seconds: failure.retryAfterSeconds!))
+        final nextRetry = err is RateLimitFailure && err.retryAfterSeconds != null
+            ? _clock().add(Duration(seconds: err.retryAfterSeconds!))
             : _clock().add(syncBackoffForAttempt(attempts));
         await _queue.update(
           op.copyWith(
             status: SyncStatus.failed,
             attemptCount: attempts,
             updatedAt: _clock(),
-            lastError: failure?.message ?? 'Upload failed',
+            lastError: err.message,
             nextRetryAt: nextRetry,
           ),
         );
@@ -822,6 +946,9 @@ class SyncManager {
           pendingBlockedCount++;
           break;
         case SyncStatus.synced:
+          break;
+        case SyncStatus.quarantined:
+          pendingBlockedCount++;
           break;
       }
     }

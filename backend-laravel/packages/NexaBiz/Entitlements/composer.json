@@ -1,0 +1,10 @@
+{
+    "name": "nexabiz/entitlements",
+    "description": "Plans, subscriptions, packages, features, capabilities, limits, and usage metering for NexaBiz.",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "NexaBiz\\Entitlements\\": "src/"
+        }
+    }
+}

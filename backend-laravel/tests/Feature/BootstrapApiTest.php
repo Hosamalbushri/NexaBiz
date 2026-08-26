@@ -195,7 +195,7 @@ class BootstrapApiTest extends TestCase
         $token = $this->login();
 
         $response = $this->getJson(
-            '/api/v1/bootstrap/data?entity_type=sale&taken_at=2026-01-01T00:00:00Z',
+            '/api/v1/bootstrap/data?entity_type=invalid_type_xyz&taken_at=2026-01-01T00:00:00Z',
             ['Authorization' => 'Bearer '.$token],
         );
 

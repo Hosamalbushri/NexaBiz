@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import '../../../core/auth/domain/services/offline_login_policy.dart';
+import '../../../core/entitlements/data/entitlement_repository.dart';
+import '../../../core/entitlements/domain/entities/entitlement.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/network/sync_api_config.dart';
 import '../domain/entities/auth_session.dart';
@@ -15,17 +18,20 @@ class LocalAuthRepository implements AuthRepository {
     required LocalAuthStore store,
     required SecureTokenStorage tokenStorage,
     OfflineAuthorizationStore? offlineAuthStore,
+    EntitlementRepository? entitlementRepository,
     required SyncApiConfig Function() readConfig,
     void Function(SyncApiConfig config)? onConfigChanged,
   }) : _store = store,
        _tokenStorage = tokenStorage,
        _offlineAuthStore = offlineAuthStore ?? OfflineAuthorizationStore(),
+       _entitlementRepository = entitlementRepository ?? EntitlementRepositoryImpl(),
        _readConfig = readConfig,
        _onConfigChanged = onConfigChanged;
 
   final LocalAuthStore _store;
   final SecureTokenStorage _tokenStorage;
   final OfflineAuthorizationStore _offlineAuthStore;
+  final EntitlementRepository _entitlementRepository;
   final SyncApiConfig Function() _readConfig;
   final void Function(SyncApiConfig config)? _onConfigChanged;
   final _sessionController = StreamController<AuthSessionSnapshot?>.broadcast();
@@ -67,24 +73,44 @@ class LocalAuthRepository implements AuthRepository {
       return snapshot;
     }
 
+    final companyId = snapshot.currentCompanyId!;
+    final cachedEntitlement = await _entitlementRepository.getCachedEntitlement(companyId);
+    final entitlement = cachedEntitlement ?? Entitlement.freeLocal(companyId);
+
     final restoredSnapshot = await _offlineAuthStore.loadSnapshot(
       serverBaseUrl: config.baseUrl,
-      companyId: snapshot.currentCompanyId!,
+      companyId: companyId,
       userId: snapshot.user.id,
     );
 
-    if (restoredSnapshot != null) {
+    final policy = OfflineLoginPolicy(
+      expectedServerUrl: config.baseUrl,
+      currentDeviceId: config.deviceId,
+    );
+
+    final result = policy.evaluate(
+      snapshot: restoredSnapshot,
+      requestedUserId: snapshot.user.id,
+      requestedCompanyId: companyId,
+      userStatus: snapshot.user.status,
+      userCompanyIds: snapshot.companies.map((c) => c.id).toList(),
+      companyEntitlement: entitlement,
+    );
+
+    if (result.isAllowed && restoredSnapshot != null) {
       return snapshot.copyWith(
         roles: restoredSnapshot.roles,
         permissions: restoredSnapshot.permissions,
       );
     }
 
+    // Standalone local default admin has no server snapshot — allow full access.
     if (snapshot.user.email == LocalAuthDefaults.adminEmail &&
         config.baseUrl.isEmpty) {
       return snapshot;
     }
 
+    // Fail closed for any failed policy checks
     return snapshot.copyWith(
       roles: const <String>[],
       permissions: const <String>{},
@@ -94,7 +120,15 @@ class LocalAuthRepository implements AuthRepository {
   @override
   Future<AuthSessionSnapshot?> restoreSession() async {
     await _store.ensureSeeded();
-    final loaded = await _store.loadSession();
+    var loaded = await _store.loadSession();
+    if (loaded == null) {
+      loaded = await _store.login(
+        email: LocalAuthDefaults.adminEmail,
+        password: LocalAuthDefaults.adminPassword,
+        deviceId: 'local-device',
+        companyId: LocalAuthDefaults.companyId,
+      );
+    }
     if (loaded == null) {
       _emit(null);
       return null;
@@ -175,8 +209,18 @@ class LocalAuthRepository implements AuthRepository {
 
   @override
   Future<void> logout({bool clearLocalBusinessData = false}) async {
+    // G4 fix: delete all offline authorization snapshots for this user on logout.
+    // This prevents stale authorization state from being reused by a subsequent user.
+    final userId = _cached?.user.id;
     await _tokenStorage.clear();
     await _store.saveSession(null);
+    if (userId != null && userId.isNotEmpty) {
+      try {
+        await _offlineAuthStore.deleteAllSnapshotsForUser(userId);
+      } catch (_) {
+        // Best-effort — session is already cleared above.
+      }
+    }
     _emit(null);
   }
 

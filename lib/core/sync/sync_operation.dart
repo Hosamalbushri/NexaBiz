@@ -19,6 +19,11 @@ class SyncOperation {
     this.lastError,
     this.nextRetryAt,
     this.baseVersion = 0,
+    this.companyId,
+    this.deviceId,
+    this.firstFailureAt,
+    this.lastFailureAt,
+    this.quarantinedAt,
   });
 
   factory SyncOperation.create({
@@ -28,6 +33,8 @@ class SyncOperation {
     required Map<String, dynamic> payload,
     int baseVersion = 0,
     DateTime? now,
+    String? companyId,
+    String? deviceId,
   }) {
     final stamp = (now ?? DateTime.now().toUtc());
     // Creates are "ensure exists" — never based on a prior server version.
@@ -44,6 +51,8 @@ class SyncOperation {
       createdAt: stamp,
       updatedAt: stamp,
       baseVersion: resolvedBase,
+      companyId: companyId,
+      deviceId: deviceId,
     );
   }
 
@@ -58,6 +67,11 @@ class SyncOperation {
   final int attemptCount;
   final String? lastError;
   final DateTime? nextRetryAt;
+  final String? companyId;
+  final String? deviceId;
+  final DateTime? firstFailureAt;
+  final DateTime? lastFailureAt;
+  final DateTime? quarantinedAt;
 
   /// Version this mutation was based on (conflict base for update/delete).
   /// Always `0` for [SyncOperationType.create] (ensure-exists, not a rebase).
@@ -75,6 +89,12 @@ class SyncOperation {
     DateTime? nextRetryAt,
     bool clearNextRetryAt = false,
     int? baseVersion,
+    String? companyId,
+    String? deviceId,
+    DateTime? firstFailureAt,
+    DateTime? lastFailureAt,
+    DateTime? quarantinedAt,
+    bool clearQuarantine = false,
   }) {
     return SyncOperation(
       id: id,
@@ -89,6 +109,11 @@ class SyncOperation {
       lastError: clearLastError ? null : (lastError ?? this.lastError),
       nextRetryAt: clearNextRetryAt ? null : (nextRetryAt ?? this.nextRetryAt),
       baseVersion: baseVersion ?? this.baseVersion,
+      companyId: companyId ?? this.companyId,
+      deviceId: deviceId ?? this.deviceId,
+      firstFailureAt: firstFailureAt ?? this.firstFailureAt,
+      lastFailureAt: lastFailureAt ?? this.lastFailureAt,
+      quarantinedAt: clearQuarantine ? null : (quarantinedAt ?? this.quarantinedAt),
     );
   }
 }

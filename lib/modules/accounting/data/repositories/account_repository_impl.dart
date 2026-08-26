@@ -14,6 +14,8 @@ import '../../domain/services/account_validator.dart';
 import '../../domain/services/default_chart_of_accounts.dart';
 import '../database/accounting_database.dart';
 
+import '../../../authentication/data/local_auth_store.dart';
+
 class AccountRepositoryImpl implements AccountRepository {
   AccountRepositoryImpl(
     this._db, {
@@ -21,18 +23,30 @@ class AccountRepositoryImpl implements AccountRepository {
     AccountValidator validator = const AccountValidator(),
     Future<void> Function(String oldUuid, String newUuid)? onUuidRemapped,
     Future<bool> Function()? shouldSuppressLocalChartSeed,
+    String Function()? readCompanyId,
   }) : _syncQueue = syncQueue,
        _validator = validator,
        _onUuidRemapped = onUuidRemapped,
-       _shouldSuppressLocalChartSeed = shouldSuppressLocalChartSeed;
+       _shouldSuppressLocalChartSeed = shouldSuppressLocalChartSeed,
+       _readCompanyId = readCompanyId;
 
   final AccountingDatabase _db;
   final SyncQueue? _syncQueue;
   final AccountValidator _validator;
   final Future<void> Function(String oldUuid, String newUuid)? _onUuidRemapped;
   final Future<bool> Function()? _shouldSuppressLocalChartSeed;
+  final String Function()? _readCompanyId;
 
   static const entityType = 'account';
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+
+  Expression<bool> _tenantScoped($AccountsTable t) =>
+      t.companyId.equals(_currentCompanyId);
+
+  Expression<bool> _scoped($AccountsTable t) =>
+      t.deletedAt.isNull() & _tenantScoped(t);
 
   Account _map(AccountRow row) {
     return Account(
@@ -67,13 +81,11 @@ class AccountRepositoryImpl implements AccountRepository {
     );
   }
 
-  Expression<bool> _notDeleted($AccountsTable t) => t.deletedAt.isNull();
-
   Expression<bool> _activeFilter($AccountsTable t, bool includeInactive) {
     if (includeInactive) {
-      return _notDeleted(t);
+      return _scoped(t);
     }
-    return _notDeleted(t) & t.isActive.equals(true);
+    return _scoped(t) & t.isActive.equals(true);
   }
 
   String _normalizeCode(String value) => value.trim();
@@ -90,7 +102,7 @@ class AccountRepositoryImpl implements AccountRepository {
 
   Future<void> _assertUniqueCode(String accountCode, {int? excludingId}) async {
     final query = _db.select(_db.accounts)
-      ..where((t) => t.accountCode.equals(accountCode) & _notDeleted(t));
+      ..where((t) => t.accountCode.equals(accountCode) & _scoped(t));
     if (excludingId != null) {
       query.where((t) => t.id.isNotValue(excludingId));
     }
@@ -295,7 +307,7 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<Account?> getById(int id) async {
     final row = await (_db.select(
       _db.accounts,
-    )..where((t) => t.id.equals(id) & _notDeleted(t))).getSingleOrNull();
+    )..where((t) => t.id.equals(id) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -303,7 +315,7 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<Account?> getByUuid(String uuid) async {
     final row = await (_db.select(
       _db.accounts,
-    )..where((t) => t.uuid.equals(uuid))).getSingleOrNull();
+    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -318,7 +330,7 @@ class AccountRepositoryImpl implements AccountRepository {
     }
     final rows = await (_db.select(
       _db.accounts,
-    )..where((t) => t.uuid.isIn(ids))).get();
+    )..where((t) => t.uuid.isIn(ids) & _scoped(t))).get();
     return rows.map(_map).toList(growable: false);
   }
 
@@ -330,7 +342,7 @@ class AccountRepositoryImpl implements AccountRepository {
     }
     final row =
         await (_db.select(_db.accounts)
-              ..where((t) => t.accountCode.equals(code) & _notDeleted(t)))
+              ..where((t) => t.accountCode.equals(code) & _scoped(t)))
             .getSingleOrNull();
     return row == null ? null : _map(row);
   }
@@ -363,7 +375,7 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<List<Account>> getChildren(String parentUuid) async {
     final rows =
         await (_db.select(_db.accounts)
-              ..where((t) => t.parentId.equals(parentUuid) & _notDeleted(t))
+              ..where((t) => t.parentId.equals(parentUuid) & _scoped(t))
               ..orderBy([(t) => OrderingTerm.asc(t.accountCode)]))
             .get();
     return rows.map(_map).toList(growable: false);
@@ -373,7 +385,7 @@ class AccountRepositoryImpl implements AccountRepository {
   Future<bool> hasChildren(String uuid) async {
     final row =
         await (_db.select(_db.accounts)
-              ..where((t) => t.parentId.equals(uuid) & _notDeleted(t))
+              ..where((t) => t.parentId.equals(uuid) & _scoped(t))
               ..limit(1))
             .getSingleOrNull();
     return row != null;
@@ -439,6 +451,7 @@ class AccountRepositoryImpl implements AccountRepository {
             updatedAt: nowMs,
             syncStatus: const Value('pending'),
             version: const Value(1),
+            companyId: Value(_currentCompanyId),
           ),
         );
 
@@ -486,7 +499,7 @@ class AccountRepositoryImpl implements AccountRepository {
     final now = DateTime.now().toUtc();
     final nextVersion = existing.version + 1;
 
-    await (_db.update(_db.accounts)..where((t) => t.id.equals(id))).write(
+    await (_db.update(_db.accounts)..where((t) => t.id.equals(id) & _scoped(t))).write(
       AccountsCompanion(
         parentId: Value(draft.parentId),
         accountCode: Value(code),
@@ -500,6 +513,7 @@ class AccountRepositoryImpl implements AccountRepository {
         updatedAt: Value(now.millisecondsSinceEpoch),
         syncStatus: const Value('pending'),
         version: Value(nextVersion),
+        companyId: Value(_currentCompanyId),
       ),
     );
 
@@ -582,7 +596,7 @@ class AccountRepositoryImpl implements AccountRepository {
       return;
     }
 
-    final existing = await (_db.select(_db.accounts)..limit(1)).get();
+    final existing = await (_db.select(_db.accounts)..where(_scoped)..limit(1)).get();
     if (existing.isEmpty) {
       final preferRemote = await settingsRepo.loadChartBootstrapPreferRemote();
       final suppressFn = await _shouldSuppressLocalChartSeed?.call() ?? false;
@@ -637,6 +651,7 @@ class AccountRepositoryImpl implements AccountRepository {
                 updatedAt: nowMs,
                 syncStatus: const Value('pending'),
                 version: const Value(1),
+                companyId: Value(_currentCompanyId),
               ),
             );
         keyToUuid[seed.systemKey] = uuid;
@@ -903,6 +918,7 @@ class AccountRepositoryImpl implements AccountRepository {
                 updatedAt: nowMs,
                 syncStatus: const Value('pending'),
                 version: const Value(1),
+                companyId: Value(_currentCompanyId),
               ),
             );
         keyToUuid[seed.systemKey] = uuid;

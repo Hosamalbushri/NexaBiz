@@ -39,5 +39,7 @@ class JournalEntries extends Table {
 
   IntColumn get version => integer().withDefault(const Constant(1))();
 
+  TextColumn get companyId => text().nullable()();
+
   IntColumn get deletedAt => integer().nullable()();
 }

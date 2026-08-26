@@ -4,12 +4,15 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../core/database/hive_boxes.dart';
 import '../../core/database/hive_initializer.dart';
 import '../../core/di/app_providers.dart';
+import '../../core/entitlements/domain/entities/entitlement.dart';
+import '../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../../core/logging/app_error_log.dart';
 import '../../core/network/sync_api_config.dart';
 import '../../core/sync/sync_providers.dart';
 import '../../core/sync/sync_cursor_store.dart';
 import '../../core/sync/sync_metrics_store.dart';
 import '../../core/sync/sync_os_wake_signal.dart';
+import '../../core/tenancy/tenant_context.dart';
 import '../../modules/accounting/data/sync/accounting_sync_bootstrap.dart';
 import '../../modules/accounting/presentation/providers/account_providers.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
@@ -94,7 +97,7 @@ class AppBootstrap {
   }
 
   /// Stage F: Synchronization Wiring & Scheduler
-  static Future<void> bootstrapSync(Ref ref) async {
+  static Future<void> bootstrapSync(dynamic ref) async {
     registerCompanyProfileSyncHandlers(ref);
     registerInventorySyncHandlers(ref);
     registerAccountingSyncHandlers(ref);
@@ -110,13 +113,36 @@ class AppBootstrap {
     registerSalesSyncHandlers(ref);
     registerReceiptsPaymentsSyncHandlers(ref);
 
+    final currentCompanyId = ref.read(currentCompanyIdProvider);
+    final cloudState = await SettingsRepository().loadCompanyCloudState(currentCompanyId);
+
     final syncEnabled = await SettingsRepository().loadSyncEnabled();
     await ref.read(syncEnabledProvider.notifier).hydrate(syncEnabled);
+    final entitlementService = ref.read(entitlementServiceProvider);
+    final hasSyncCapability = entitlementService.hasCapability(EntitlementCapability.sync);
+    final authState = ref.read(authStateProvider);
     final syncActuallyEnabled = ref.read(syncEnabledProvider) &&
-        ref.read(authStateProvider).canUseRemoteSync;
-    await ref.read(syncManagerProvider).start(enabled: syncActuallyEnabled);
-    await ref.read(syncAutoPreferencesProvider.notifier).hydrate();
-    ref.read(syncBackgroundSchedulerProvider).start();
+        authState.canUseRemoteSync &&
+        hasSyncCapability &&
+        cloudState.isCloudReady;
+
+    if (!syncActuallyEnabled) {
+      await ref.read(syncManagerProvider).start(enabled: false);
+      ref.read(syncBackgroundSchedulerProvider).stop();
+    } else {
+      await ref.read(syncManagerProvider).start(enabled: true);
+      await ref.read(syncAutoPreferencesProvider.notifier).hydrate();
+      ref.read(syncBackgroundSchedulerProvider).start();
+    }
+  }
+
+  /// Explicitly stops synchronization (e.g. during logout or switching to a Free company).
+  static Future<void> stopSync(dynamic ref) async {
+    try {
+      final syncManager = ref.read(syncManagerProvider);
+      await syncManager.start(enabled: false);
+      ref.read(syncBackgroundSchedulerProvider).stop();
+    } catch (_) {}
   }
 
   /// Master runner for backwards-compatibility callers.

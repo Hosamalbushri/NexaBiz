@@ -15,7 +15,7 @@ class InventoryDatabase extends _$InventoryDatabase {
   InventoryDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -63,6 +63,12 @@ class InventoryDatabase extends _$InventoryDatabase {
         );
         await customStatement(
           'ALTER TABLE products ADD COLUMN unit_cost REAL NOT NULL DEFAULT 0',
+        );
+      }
+      if (from < 5) {
+        await m.addColumn(products, products.companyId);
+        await customStatement(
+          "UPDATE products SET company_id = 'local-company' WHERE company_id IS NULL",
         );
       }
     },

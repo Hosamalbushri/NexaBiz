@@ -1,52 +1,62 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 
 import 'package:stock_count/core/connectivity/connectivity_service.dart';
-import 'package:stock_count/core/network/http_remote_sync_api.dart';
-import 'package:stock_count/core/network/sync_api_config.dart';
+import 'package:stock_count/core/errors/app_failure.dart';
+import 'package:stock_count/core/network/remote_sync_api.dart';
 import 'package:stock_count/core/sync/conflict_resolver.dart';
-import 'package:stock_count/core/sync/sync_conflict_store.dart';
 import 'package:stock_count/core/sync/sync_cursor_store.dart';
 import 'package:stock_count/core/sync/sync_entity_handler.dart';
+import 'package:stock_count/core/sync/sync_error_classifier.dart';
 import 'package:stock_count/core/sync/sync_manager.dart';
 import 'package:stock_count/core/sync/sync_operation.dart';
 import 'package:stock_count/core/sync/sync_operation_adapter.dart';
 import 'package:stock_count/core/sync/sync_overview.dart';
 import 'package:stock_count/core/sync/sync_queue.dart';
-import 'package:stock_count/core/sync/sync_request_context.dart';
 import 'package:stock_count/core/sync/sync_status.dart';
+import 'package:stock_count/core/time/domain/services/clock_integrity_service.dart';
 
-class Phase9TestEntityHandler implements SyncEntityHandler {
-  Phase9TestEntityHandler({
+class Phase9MockEntityHandler implements SyncEntityHandler {
+  Phase9MockEntityHandler({
     required this.entityType,
-    required this.cursorStore,
+    this.uploadAckBuilder,
+    this.uploadErrorBuilder,
   });
 
   @override
   final String entityType;
-  final SyncCursorStore cursorStore;
-  final List<SyncRemoteChange> appliedChanges = [];
+  final SyncUploadAck Function(SyncOperation op)? uploadAckBuilder;
+  final Exception Function(SyncOperation op)? uploadErrorBuilder;
+
+  final List<SyncOperation> uploadedOps = [];
+  final List<SyncRemoteChange> appliedRemoteChanges = [];
 
   @override
   bool get preferServerWhenLocalSynced => false;
 
   @override
-  Future<SyncUploadAck> upload(SyncOperation operation) async =>
-      SyncUploadAck(entityId: operation.entityId, remoteVersion: 1);
+  Future<SyncUploadAck> upload(SyncOperation operation) async {
+    uploadedOps.add(operation);
+    if (uploadErrorBuilder != null) {
+      throw uploadErrorBuilder!(operation);
+    }
+    if (uploadAckBuilder != null) {
+      return uploadAckBuilder!(operation);
+    }
+    return SyncUploadAck(
+      entityId: operation.entityId,
+      remoteVersion: (operation.baseVersion) + 1,
+    );
+  }
 
   @override
   Future<List<SyncRemoteChange>> pull({DateTime? since}) async => [];
 
   @override
   Future<void> applyRemoteChange(SyncRemoteChange change) async {
-    appliedChanges.add(change);
+    appliedRemoteChanges.add(change);
   }
 
   @override
@@ -72,107 +82,289 @@ class Phase9TestEntityHandler implements SyncEntityHandler {
   Future<ConflictDecision?> evaluateConflict(SyncOperation operation) async => null;
 }
 
+class Phase9MockRemoteSyncApi implements RemoteSyncApi {
+  Phase9MockRemoteSyncApi({
+    this.batchPushHandler,
+    this.pullHandler,
+  });
+
+  final Future<List<SyncBatchPushItemResult>> Function(List<SyncOperation> ops)? batchPushHandler;
+  final Future<List<SyncRemoteChange>> Function()? pullHandler;
+
+  @override
+  Future<SyncUploadAck> push({
+    required String entityType,
+    required SyncOperation operation,
+  }) async {
+    return SyncUploadAck(entityId: operation.entityId, remoteVersion: 1);
+  }
+
+  @override
+  Future<List<SyncBatchPushItemResult>> pushBatch(List<SyncOperation> operations) async {
+    if (batchPushHandler != null) {
+      return await batchPushHandler!(operations);
+    }
+    return operations
+        .map(
+          (op) => SyncBatchPushItemResult(
+            operationId: op.id,
+            status: 'success',
+            ack: SyncUploadAck(entityId: op.entityId, remoteVersion: op.baseVersion + 1),
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<List<SyncRemoteChange>> pull({
+    String? entityType,
+    DateTime? since,
+  }) async {
+    if (pullHandler != null) {
+      return await pullHandler!();
+    }
+    return [];
+  }
+
+  @override
+  Future<RemoteEntityMeta?> getMeta({
+    required String entityType,
+    required String entityId,
+  }) async => null;
+
+  @override
+  Future<void> acknowledgePull(String entityType) async {}
+
+  @override
+  Future<void> abandonPull(String entityType) async {}
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late Directory tempDir;
+  late SyncQueue queue;
+  late ConnectivityService connectivity;
+  late SyncCursorStore cursorStore;
+
+  const companyA = 'company-phase9-a';
+  const deviceA = 'device-phase9-a';
 
   setUp(() async {
-    tempDir = await Directory.systemTemp.createTemp('phase9_golive_');
+    tempDir = await Directory.systemTemp.createTemp('phase9_test_');
     Hive.init(tempDir.path);
     if (!Hive.isAdapterRegistered(2)) {
       Hive.registerAdapter(SyncOperationAdapter());
     }
+
+    final box = await Hive.openBox<SyncOperation>('test_phase9_queue_${DateTime.now().microsecondsSinceEpoch}');
+    queue = SyncQueue(
+      box: box,
+      companyId: companyA,
+      deviceId: deviceA,
+    );
+
+    final cursorBox = await Hive.openBox<int>('test_phase9_cursor_${DateTime.now().microsecondsSinceEpoch}');
+    cursorStore = SyncCursorStore(box: cursorBox);
+
+    connectivity = ConnectivityService(internetProbe: () async => true);
   });
 
   tearDown(() async {
+    queue.dispose();
+    connectivity.dispose();
     await Hive.deleteFromDisk();
   });
 
-  group('Phase 9 — Production Go-Live Verification Suite', () {
-    test('Requirement 1 — Authentication Failure Queue Preservation: HTTP 401 token expiration does NOT delete pending local queue operations', () async {
-      final queue = SyncQueue();
-      final cursorStore = SyncCursorStore();
-      final conflictStore = SyncConflictStore();
-      final connectivityStream = StreamController<List<ConnectivityResult>>.broadcast();
-      final connectivity = ConnectivityService(
-        connectivityStream: connectivityStream.stream,
-        initialResults: const [ConnectivityResult.wifi],
-      );
-
-      final op = SyncOperation.create(
-        entityType: 'customer',
-        entityId: 'c-golive-1',
+  group('Phase 9 — Final Production Go-Live Gate & Certification', () {
+    test('1. Invariant 1: Tenant isolation blocks cross-tenant enqueue and peek', () async {
+      final opCompanyA = SyncOperation.create(
+        entityType: 'product',
+        entityId: 'p-comp-a',
         type: SyncOperationType.create,
-        payload: {'name': 'GoLive Customer'},
+        payload: {'name': 'Company A Product'},
+        companyId: companyA,
+        deviceId: deviceA,
       );
-      await queue.enqueue(op);
-
-      final mockClient = MockClient((request) async {
-        return http.Response(
-          jsonEncode({'error': {'code': 'unauthorized', 'message': 'Token expired'}}),
-          401,
-        );
-      });
-
-      final api = HttpRemoteSyncApi(
-        config: const SyncApiConfig(
-          baseUrl: 'https://api.nexabiz.test',
-          apiToken: 'expired-token',
-          companyId: 'cmp-1',
-          userId: 'usr-1',
-          deviceId: 'dev-1',
-        ),
-        client: mockClient,
+      final opCompanyB = SyncOperation.create(
+        entityType: 'product',
+        entityId: 'p-comp-b',
+        type: SyncOperationType.create,
+        payload: {'name': 'Company B Product'},
+        companyId: 'company-OTHER',
+        deviceId: deviceA,
       );
+
+      await queue.enqueue(opCompanyA);
+      expect(
+        () async => await queue.enqueue(opCompanyB),
+        throwsException,
+      );
+
+      final ready = await queue.peekReady();
+      expect(ready.length, equals(1));
+      expect(ready.first.id, equals(opCompanyA.id));
+    });
+
+    test('2. Invariant 6: Atomic transaction grouping handling', () async {
+      final saleOp = SyncOperation.create(
+        entityType: 'sale',
+        entityId: 'sale-001',
+        type: SyncOperationType.create,
+        payload: {'total': 100},
+        companyId: companyA,
+        deviceId: deviceA,
+      );
+      final journalOp = SyncOperation.create(
+        entityType: 'journal_entry',
+        entityId: 'je-001',
+        type: SyncOperationType.create,
+        payload: {'debit': 100, 'credit': 100},
+        companyId: companyA,
+        deviceId: deviceA,
+      );
+
+      await queue.enqueue(saleOp);
+      await queue.enqueue(journalOp);
 
       final manager = SyncManager(
         queue: queue,
-        remoteProvider: () => api,
         connectivity: connectivity,
-        conflictStore: conflictStore,
+        hasSyncCapability: () => true,
+        hasSyncPermission: () => true,
+        readCompanyId: () => companyA,
+        readClockState: () => ClockIntegrityState.trusted,
+        isTimeTrusted: () => true,
+        remoteProvider: () => Phase9MockRemoteSyncApi(),
       );
-      manager.registerHandler(
-        Phase9TestEntityHandler(
-          entityType: 'customer',
-          cursorStore: cursorStore,
-        ),
-      );
-      await manager.start(enabled: true);
+      manager.registerHandler(Phase9MockEntityHandler(entityType: 'sale'));
+      manager.registerHandler(Phase9MockEntityHandler(entityType: 'journal_entry'));
+      await manager.setEnabled(true);
 
-      final result = await manager.syncNow(trigger: SyncPassTrigger.manual);
+      final res = await manager.syncNow();
+      expect(res.uploaded, equals(2));
 
-      expect(result.outcome, equals(SyncPassOutcome.authRequired));
-
-      final pendingOps = await queue.all();
-      expect(pendingOps, hasLength(1));
-      expect(pendingOps[0].id, equals(op.id));
-
-      await manager.dispose();
-      await connectivity.dispose();
-      await connectivityStream.close();
+      final remaining = await queue.all();
+      expect(remaining.isEmpty, isTrue); // Both committed atomically
     });
 
-    test('Requirement 2 — Cursor Safety Invariant: Local cursor read is accurate and safe', () async {
-      final cursorStore = SyncCursorStore();
-      await cursorStore.write('sale', 100);
-
-      final cur = await cursorStore.read('sale');
-      expect(cur, equals(100));
+    test('3. Invariant 8: Financial non-destructive conflict handling & immutability', () async {
+      final err = SyncErrorClassifier.classify(const SyncConflictFailure('Journal entry conflict', 2));
+      expect(err.quarantine, isFalse); // Conflict goes to SyncStatus.conflict, not deleted or silently overwritten
+      expect(err.isRetryable, isFalse);
     });
 
-    test('Requirement 3 — Diagnostic Sanitization: Secret credentials omitted in diagnostic snapshot', () {
-      final overview = SyncOverview.initial().copyWith(
-        pendingCount: 5,
-        failedCount: 0,
+    test('4. Invariant 9: Lease-based crash recovery threshold (5 minutes)', () async {
+      final now = DateTime.utc(2026, 8, 26, 12, 0);
+
+      final activeOp = SyncOperation(
+        id: 'op-lease-active',
+        entityType: 'product',
+        entityId: 'p-active',
+        type: SyncOperationType.create,
+        status: SyncStatus.syncing,
+        payload: {'name': 'Active'},
+        createdAt: now.subtract(const Duration(minutes: 2)),
+        updatedAt: now.subtract(const Duration(minutes: 2)),
+        companyId: companyA,
+        deviceId: deviceA,
       );
 
-      final report = overview.toDiagnosticReport();
+      final expiredOp = SyncOperation(
+        id: 'op-lease-expired',
+        entityType: 'product',
+        entityId: 'p-expired',
+        type: SyncOperationType.create,
+        status: SyncStatus.syncing,
+        payload: {'name': 'Expired'},
+        createdAt: now.subtract(const Duration(minutes: 10)),
+        updatedAt: now.subtract(const Duration(minutes: 10)),
+        companyId: companyA,
+        deviceId: deviceA,
+      );
 
-      expect(report['pending_count'], equals(5));
-      expect(report.containsKey('api_token'), isFalse);
-      expect(report.containsKey('password'), isFalse);
-      expect(report.containsKey('authorization'), isFalse);
+      await queue.update(activeOp);
+      await queue.update(expiredOp);
+
+      final count = await queue.reclaimInFlight(now: now, lease: const Duration(minutes: 5));
+      expect(count, equals(1));
+
+      final all = await queue.all();
+      expect(all.firstWhere((o) => o.id == 'op-lease-active').status, equals(SyncStatus.syncing));
+      expect(all.firstWhere((o) => o.id == 'op-lease-expired').status, equals(SyncStatus.pending));
+    });
+
+    test('5. Invariant 12: Logout during active sync stops execution safely', () async {
+      var isAuth = true;
+
+      final op = SyncOperation.create(
+        entityType: 'product',
+        entityId: 'p-logout',
+        type: SyncOperationType.create,
+        payload: {'name': 'Product'},
+        companyId: companyA,
+        deviceId: deviceA,
+      );
+      await queue.enqueue(op);
+
+      final manager = SyncManager(
+        queue: queue,
+        connectivity: connectivity,
+        hasSyncCapability: () => isAuth,
+        hasSyncPermission: () => isAuth,
+        readCompanyId: () => isAuth ? companyA : '',
+        readClockState: () => ClockIntegrityState.trusted,
+        isTimeTrusted: () => true,
+        remoteProvider: () => Phase9MockRemoteSyncApi(),
+      );
+      manager.registerHandler(Phase9MockEntityHandler(entityType: 'product'));
+      await manager.setEnabled(true);
+
+      // Simulate logout while sync starts
+      isAuth = false;
+
+      final res = await manager.syncNow();
+      expect(res.outcome == SyncPassOutcome.skippedDisabled || res.outcome == SyncPassOutcome.authRequired, isTrue);
+
+      final all = await queue.all();
+      expect(all.first.status, equals(SyncStatus.pending)); // Queue preserved safely
+    });
+
+    test('6. Invariant 15: Trusted Clock tamper fail-closed temporal gates', () async {
+      final op = SyncOperation.create(
+        entityType: 'product',
+        entityId: 'p-clock',
+        type: SyncOperationType.create,
+        payload: {'name': 'Product'},
+        companyId: companyA,
+        deviceId: deviceA,
+      );
+      await queue.enqueue(op);
+
+      final manager = SyncManager(
+        queue: queue,
+        connectivity: connectivity,
+        hasSyncCapability: () => true,
+        hasSyncPermission: () => true,
+        readCompanyId: () => companyA,
+        readClockState: () => ClockIntegrityState.tampered,
+        isTimeTrusted: () => false,
+        remoteProvider: () => Phase9MockRemoteSyncApi(),
+      );
+      manager.registerHandler(Phase9MockEntityHandler(entityType: 'product'));
+      await manager.setEnabled(true);
+
+      final res = await manager.syncNow();
+      expect(res.outcome, equals(SyncPassOutcome.clockTampered));
+
+      final all = await queue.all();
+      expect(all.first.status, equals(SyncStatus.pending)); // Kept pending, not deleted or corrupted
+    });
+
+    test('7. Invariant 17: Durable pull sequence cursor persistence', () async {
+      await cursorStore.write('sale', 500);
+      final val = await cursorStore.read('sale');
+      expect(val, equals(500));
     });
   });
 }

@@ -22,9 +22,11 @@ import '../sync/sync_enabled_provider.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
+import '../../modules/authentication/presentation/widgets/company_selection_sheet.dart';
 import 'company/company_profile.dart';
 import 'company/company_profile_providers.dart';
 import 'settings_repository.dart';
+import 'subscription_packages_page.dart';
 import 'widgets/settings_chrome.dart';
 
 final packageInfoProvider = FutureProvider<PackageInfo>((ref) {
@@ -179,6 +181,20 @@ class PlatformSettingsPage extends ConsumerWidget {
           SettingsGroup(
             children: [
               SettingsTile(
+                icon: Icons.business_outlined,
+                title: l10n.authSelectCompanyTitle,
+                subtitle: companyAsync.asData?.value?.name ?? '',
+                showChevron: true,
+                onTap: () => CompanySelectionSheet.show(context),
+              ),
+              SettingsTile(
+                icon: Icons.star_outline,
+                title: l10n.subscriptionAndPackagesTitle,
+                subtitle: l10n.subscriptionAndPackagesSubtitle,
+                showChevron: true,
+                onTap: () => context.push(AppRoutes.settingsSubscription),
+              ),
+              SettingsTile(
                 icon: Icons.shield_outlined,
                 title: l10n.appLockSettingsTitle,
                 subtitle: ref.watch(appLockControllerProvider).enabled
@@ -199,7 +215,7 @@ class PlatformSettingsPage extends ConsumerWidget {
                     ? (syncOverview.isOnline
                           ? l10n.syncConnectionOnline
                           : l10n.syncConnectionOffline)
-                    : l10n.settingsDataSectionSubtitle,
+                    : l10n.subscriptionAndPackagesSubtitle,
                 showChevron: true,
                 onTap: () => context.push(AppRoutes.settingsDataSync),
               ),

@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/di/app_providers.dart';
+import '../core/entitlements/domain/entities/entitlement.dart';
+import '../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../core/notifications/notification_type.dart';
 import '../core/sync/sync_overview.dart';
 import '../core/sync/sync_providers.dart';
@@ -14,6 +16,7 @@ import '../core/widgets/app_snackbar.dart';
 import '../core/widgets/app_update_gate.dart';
 import '../core/widgets/loading_overlay.dart';
 import '../modules/app_lock/presentation/providers/app_lock_providers.dart';
+import '../modules/authentication/presentation/providers/auth_providers.dart';
 import 'localization/app_localizations.dart';
 import 'notifications/presentation/providers/notifications_provider.dart';
 import 'notifications/presentation/widgets/notification_toast_host.dart';
@@ -38,10 +41,13 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
   void initState() {
     super.initState();
     registerAppSnackBarHandler(_bridgeSnackBar);
-    _syncPassSub = ref
-        .read(syncManagerProvider)
-        .meaningfulPasses
-        .listen(_onMeaningfulSyncPass);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _syncPassSub = ref
+          .read(syncManagerProvider)
+          .meaningfulPasses
+          .listen(_onMeaningfulSyncPass);
+    });
     _lifecycleListener = AppLifecycleListener(
       onPause: () {
         ref.read(appLockControllerProvider.notifier).onAppPaused();
@@ -51,14 +57,18 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
       },
       onResume: () {
         ref.read(appLockControllerProvider.notifier).onAppResumed();
-        final syncManager = ref.read(syncManagerProvider);
-        if (syncManager.isEnabled && !syncManager.overview.isSyncing) {
-          unawaited(
-            syncManager.syncNow(
-              trigger: SyncPassTrigger.auto,
-              notify: false,
-            ),
-          );
+        final entitlement = ref.read(entitlementServiceProvider);
+        final auth = ref.read(authStateProvider);
+        if (entitlement.hasCapability(EntitlementCapability.sync) && auth.canUseRemoteSync) {
+          final syncManager = ref.read(syncManagerProvider);
+          if (syncManager.isEnabled && !syncManager.overview.isSyncing) {
+            unawaited(
+              syncManager.syncNow(
+                trigger: SyncPassTrigger.auto,
+                notify: false,
+              ),
+            );
+          }
         }
       },
     );
@@ -73,6 +83,10 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
 
   void _onMeaningfulSyncPass(SyncPassResult result) {
     if (!result.shouldNotify) {
+      return;
+    }
+    final entitlement = ref.read(entitlementServiceProvider);
+    if (!entitlement.hasCapability(EntitlementCapability.sync)) {
       return;
     }
     final locale =
@@ -121,6 +135,16 @@ class _BusinessPlatformAppState extends ConsumerState<BusinessPlatformApp> {
       case SyncPassOutcome.skippedOffline:
       case SyncPassOutcome.skippedDisabled:
         break;
+      case SyncPassOutcome.temporalAuthorizationFailed:
+      case SyncPassOutcome.clockTampered:
+      case SyncPassOutcome.reverificationRequired:
+        unawaited(
+          notifications.showWarning(
+            title: 'Synchronization Paused',
+            message: 'Temporal authorization check failed. Verify device clock.',
+            category: NotificationCategory.sync,
+          ),
+        );
     }
   }
 

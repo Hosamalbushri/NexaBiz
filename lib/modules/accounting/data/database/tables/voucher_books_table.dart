@@ -38,4 +38,6 @@ class VoucherBooks extends Table {
   IntColumn get createdAt => integer()();
 
   IntColumn get updatedAt => integer()();
+
+  TextColumn get companyId => text().nullable()();
 }

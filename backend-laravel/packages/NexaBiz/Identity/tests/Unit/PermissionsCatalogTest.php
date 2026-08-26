@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit;
+namespace NexaBiz\Identity\Tests\Unit;
 
 use NexaBiz\Identity\Support\PermissionsCatalog;
 use Tests\TestCase;

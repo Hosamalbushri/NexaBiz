@@ -38,13 +38,18 @@ class SyncOperationAdapter extends TypeAdapter<SyncOperation> {
       lastError: fields[9] as String?,
       nextRetryAt: _asDateTime(fields[10]),
       baseVersion: _asInt(fields[11]) ?? 0,
+      companyId: fields[12] as String?,
+      deviceId: fields[13] as String?,
+      firstFailureAt: _asDateTime(fields[14]),
+      lastFailureAt: _asDateTime(fields[15]),
+      quarantinedAt: _asDateTime(fields[16]),
     );
   }
 
   @override
   void write(BinaryWriter writer, SyncOperation obj) {
     writer
-      ..writeByte(12)
+      ..writeByte(17)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -68,7 +73,17 @@ class SyncOperationAdapter extends TypeAdapter<SyncOperation> {
       ..writeByte(10)
       ..write(obj.nextRetryAt?.toUtc().millisecondsSinceEpoch)
       ..writeByte(11)
-      ..write(obj.baseVersion);
+      ..write(obj.baseVersion)
+      ..writeByte(12)
+      ..write(obj.companyId)
+      ..writeByte(13)
+      ..write(obj.deviceId)
+      ..writeByte(14)
+      ..write(obj.firstFailureAt?.toUtc().millisecondsSinceEpoch)
+      ..writeByte(15)
+      ..write(obj.lastFailureAt?.toUtc().millisecondsSinceEpoch)
+      ..writeByte(16)
+      ..write(obj.quarantinedAt?.toUtc().millisecondsSinceEpoch);
   }
 
   int? _asInt(dynamic value) {

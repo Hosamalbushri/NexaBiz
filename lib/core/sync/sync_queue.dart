@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../auth/domain/services/local_access_policy.dart';
 import '../database/encrypted_hive_box.dart';
 import '../database/hive_boxes.dart';
 import 'sync_operation.dart';
@@ -12,6 +13,8 @@ import 'sync_status.dart';
 class SyncQueue {
   SyncQueue({
     Box<SyncOperation>? box,
+    this.companyId,
+    this.deviceId,
     String? encryptedBoxName,
     String? legacyPlainBoxName,
   }) : _boxOverride = box,
@@ -19,6 +22,8 @@ class SyncQueue {
        _legacyPlainBoxName = legacyPlainBoxName ?? HiveBoxes.syncQueue;
 
   final Box<SyncOperation>? _boxOverride;
+  final String? companyId;
+  final String? deviceId;
   final String _encryptedBoxName;
   final String _legacyPlainBoxName;
   Box<SyncOperation>? _box;
@@ -54,14 +59,28 @@ class SyncQueue {
 
   Future<void> enqueue(SyncOperation operation) async {
     final box = await _ensureBox();
+
+    // Verify tenant boundary
+    if (companyId != null && operation.companyId != null && operation.companyId != companyId) {
+      throw SecurityException(
+        'Cross-tenant enqueue blocked: Operation belongs to company "${operation.companyId}" '
+        'but the active queue is scoped to company "$companyId".'
+      );
+    }
+
+    final enriched = operation.copyWith(
+      companyId: operation.companyId ?? companyId,
+      deviceId: operation.deviceId ?? deviceId,
+    );
+
     // Coalesce: replace older pending/failed/conflict ops for the same entity.
     final existingKeys = <dynamic>[];
     var hadCreate = false;
-    var earliestCreatedAt = operation.createdAt;
+    var earliestCreatedAt = enriched.createdAt;
     for (final entry in box.toMap().entries) {
       final op = entry.value;
-      if (op.entityType == operation.entityType &&
-          op.entityId == operation.entityId &&
+      if (op.entityType == enriched.entityType &&
+          op.entityId == enriched.entityId &&
           (op.status == SyncStatus.pending ||
               op.status == SyncStatus.failed ||
               op.status == SyncStatus.conflict)) {
@@ -76,7 +95,7 @@ class SyncQueue {
     }
 
     // Never-uploaded create + local delete → drop queue entry (nothing to push).
-    if (hadCreate && operation.type == SyncOperationType.delete) {
+    if (hadCreate && enriched.type == SyncOperationType.delete) {
       for (final key in existingKeys) {
         await box.delete(key);
       }
@@ -90,11 +109,11 @@ class SyncQueue {
 
     // create then update before remote ack → keep create with latest payload.
     final effectiveType =
-        hadCreate && operation.type == SyncOperationType.update
+        hadCreate && enriched.type == SyncOperationType.update
         ? SyncOperationType.create
-        : operation.type;
+        : enriched.type;
 
-    final coalesced = operation.copyWith(
+    final coalesced = enriched.copyWith(
       type: effectiveType,
       createdAt: earliestCreatedAt,
       attemptCount: 0,
@@ -121,6 +140,10 @@ class SyncQueue {
     final stamp = (now ?? DateTime.now().toUtc());
     final ready = box.values
         .where((op) {
+          // Reject operations belonging to a different tenant (defense-in-depth)
+          if (companyId != null && op.companyId != companyId) {
+            return false;
+          }
           if (op.status != SyncStatus.pending &&
               op.status != SyncStatus.failed) {
             return false;
@@ -237,7 +260,7 @@ class SyncQueue {
   /// Reset crash-interrupted uploads (`syncing`) back to `pending`.
   ///
   /// Call on app start and before each sync pass so peekReady can see them.
-  Future<int> reclaimInFlight({DateTime? now}) async {
+  Future<int> reclaimInFlight({DateTime? now, Duration lease = const Duration(minutes: 5)}) async {
     final box = await _ensureBox();
     final stamp = now ?? DateTime.now().toUtc();
     var count = 0;
@@ -246,21 +269,68 @@ class SyncQueue {
       if (op.status != SyncStatus.syncing) {
         continue;
       }
-      await box.put(
-        entry.key,
-        op.copyWith(
-          status: SyncStatus.pending,
-          updatedAt: stamp,
-          clearNextRetryAt: true,
-          lastError: op.lastError ?? 'Interrupted sync recovered',
-        ),
-      );
-      count++;
+      final age = stamp.difference(op.updatedAt);
+      if (age >= lease) {
+        await box.put(
+          entry.key,
+          op.copyWith(
+            status: SyncStatus.pending,
+            updatedAt: stamp,
+            clearNextRetryAt: true,
+            lastError: op.lastError ?? 'Interrupted sync recovered',
+          ),
+        );
+        count++;
+      }
     }
     if (count > 0) {
       _changes.add(null);
     }
     return count;
+  }
+
+  Future<void> resetQuarantine(String id) async {
+    final box = await _ensureBox();
+    final ops = box.values.where((op) => op.id == id);
+    if (ops.isNotEmpty) {
+      final op = ops.first;
+      if (op.status == SyncStatus.quarantined) {
+        await box.put(
+          id,
+          op.copyWith(
+            status: SyncStatus.pending,
+            attemptCount: 0,
+            clearLastError: true,
+            clearNextRetryAt: true,
+            clearQuarantine: true,
+            updatedAt: DateTime.now().toUtc(),
+          ),
+        );
+        _changes.add(null);
+      }
+    }
+  }
+
+  Future<void> quarantine(String id, {required String error}) async {
+    final box = await _ensureBox();
+    final ops = box.values.where((op) => op.id == id);
+    if (ops.isNotEmpty) {
+      final op = ops.first;
+      final now = DateTime.now().toUtc();
+      await box.put(
+        id,
+        op.copyWith(
+          status: SyncStatus.quarantined,
+          lastError: error,
+          quarantinedAt: now,
+          firstFailureAt: op.firstFailureAt ?? now,
+          lastFailureAt: now,
+          clearNextRetryAt: true,
+          updatedAt: now,
+        ),
+      );
+      _changes.add(null);
+    }
   }
 
   /// Returns all operations currently stored in outbox for inspection.

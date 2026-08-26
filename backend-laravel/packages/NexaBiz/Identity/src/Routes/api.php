@@ -12,6 +12,7 @@ Route::prefix('api/v1')->group(function (): void {
     Route::get('/health', [NexaBiz\Identity\Http\Controllers\HealthController::class, 'check']);
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::post('/auth/refresh', [AuthController::class, 'refresh']);
+    Route::post('/companies/link-existing', [CompanyController::class, 'linkExisting']);
 
     Route::middleware(AuthenticateApi::class)->group(function (): void {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -34,6 +35,8 @@ Route::prefix('api/v1')->group(function (): void {
 
         Route::get('/companies', [CompanyController::class, 'index']);
         Route::post('/companies', [CompanyController::class, 'store']);
+        Route::post('/companies/provision', [CompanyController::class, 'provision']);
+        Route::get('/companies/{identifier}/provisioning-status', [CompanyController::class, 'provisioningStatus']);
         Route::patch('/companies/{companyId}', [CompanyController::class, 'update']);
         Route::get('/companies/{companyId}/members', [CompanyController::class, 'members']);
         Route::post('/companies/{companyId}/members', [CompanyController::class, 'addMember']);

@@ -5,6 +5,8 @@ import '../connectivity/connectivity_service.dart';
 import '../database/encrypted_hive_box.dart';
 import '../database/hive_boxes.dart';
 import '../database/tenant_database_name.dart';
+import '../entitlements/domain/entities/entitlement.dart';
+import '../entitlements/presentation/providers/entitlement_providers.dart';
 import '../network/http_client_providers.dart';
 import '../network/http_remote_sync_api.dart';
 import '../network/remote_sync_api.dart';
@@ -17,6 +19,11 @@ import 'sync_operation.dart';
 import 'sync_os_background_bridge.dart';
 import 'sync_overview.dart';
 import 'sync_queue.dart';
+// G5 fix: import auth state to check user permission for sync.
+import '../../modules/authentication/presentation/providers/auth_providers.dart';
+import '../auth/presentation/providers/auth_context_providers.dart';
+import '../time/domain/services/clock_integrity_service.dart';
+import '../time/domain/trusted_clock.dart';
 
 final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
   final service = ConnectivityService(
@@ -32,7 +39,10 @@ final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
 
 final syncQueueProvider = Provider<SyncQueue>((ref) {
   final companyId = ref.watch(sessionCompanyIdProvider);
+  final config = ref.watch(syncApiConfigProvider);
   final queue = SyncQueue(
+    companyId: companyId,
+    deviceId: config.deviceId,
     encryptedBoxName: tenantScopedName(HiveBoxes.syncQueueEncrypted, companyId),
     legacyPlainBoxName: tenantScopedName(HiveBoxes.syncQueue, companyId),
   );
@@ -93,6 +103,7 @@ final remoteSyncApiProvider = Provider<RemoteSyncApi>((ref) {
     config: config,
     authenticatedClient: authClient,
     cursorStore: ref.watch(syncCursorStoreProvider),
+    clock: ref.watch(trustedClockProvider),
   );
   ref.onDispose(api.dispose);
   return api;
@@ -104,6 +115,35 @@ final syncManagerProvider = Provider<SyncManager>((ref) {
     connectivity: ref.watch(connectivityServiceProvider),
     remoteProvider: () => ref.read(remoteSyncApiProvider),
     metricsStore: ref.watch(syncMetricsStoreProvider),
+    hasSyncCapability: () {
+      final service = ref.read(entitlementServiceProvider);
+      return service.hasCapability(EntitlementCapability.sync);
+    },
+    // G5 fix: also require sync.execute permission on the user's session.
+    // Fail closed: if authState has no session, sync is denied.
+    hasSyncPermission: () {
+      final authState = ref.read(authStateProvider);
+      final session = authState.session;
+      if (session == null) return false;
+      return session.hasAnyPermission(const ['sync.execute', 'sync.view']);
+    },
+    readCompanyId: () => ref.read(sessionCompanyIdProvider) ?? '',
+    readClockState: () {
+      final service = ref.read(clockIntegrityServiceProvider);
+      return service.checkIntegrity();
+    },
+    isTimeTrusted: () {
+      final context = ref.read(authorizationContextProvider);
+      return context.isTimeTrusted;
+    },
+    requiresReverification: () {
+      final context = ref.read(authorizationContextProvider);
+      return context.requiresReverification;
+    },
+    isOfflineGraceActive: () {
+      final context = ref.read(authorizationContextProvider);
+      return context.isOfflineGraceActive;
+    },
   );
   ref.onDispose(manager.dispose);
   return manager;

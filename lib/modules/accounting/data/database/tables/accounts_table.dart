@@ -44,6 +44,9 @@ class Accounts extends Table {
 
   IntColumn get version => integer().withDefault(const Constant(1))();
 
+  /// Company / Tenant owner ID for local multi-tenant data isolation.
+  TextColumn get companyId => text().nullable()();
+
   /// Soft-delete tombstone (UTC epoch ms). Null = not deleted.
   IntColumn get deletedAt => integer().nullable()();
 }

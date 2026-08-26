@@ -15,6 +15,8 @@ import '../../domain/services/journal_base_amount_resolver.dart';
 import '../../domain/services/journal_money.dart';
 import '../database/accounting_database.dart';
 
+import '../../../authentication/data/local_auth_store.dart';
+
 /// Source type used by reversing journals (`sourceId` = original entry UUID).
 const kJournalReverseSourceType = 'journal_reverse';
 
@@ -25,20 +27,32 @@ class JournalRepositoryImpl implements JournalRepository {
     required AccountingPeriodValidator periodValidator,
     CurrencyRateRepository? rates,
     SyncQueue? syncQueue,
+    String Function()? readCompanyId,
   }) : _accounts = accounts,
        _periodValidator = periodValidator,
        _rates = rates,
-       _syncQueue = syncQueue;
+       _syncQueue = syncQueue,
+       _readCompanyId = readCompanyId;
 
   final AccountingDatabase _db;
   final AccountRepository _accounts;
   final AccountingPeriodValidator _periodValidator;
   final CurrencyRateRepository? _rates;
   final SyncQueue? _syncQueue;
+  final String Function()? _readCompanyId;
 
   static const entityType = 'journal_entry';
   static const sourceSale = 'sale';
   static const reverseSourceType = kJournalReverseSourceType;
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+
+  Expression<bool> _tenantScoped($JournalEntriesTable t) =>
+      t.companyId.equals(_currentCompanyId);
+
+  Expression<bool> _scoped($JournalEntriesTable t) =>
+      t.deletedAt.isNull() & _tenantScoped(t);
 
   @override
   Future<JournalEntry> post(JournalEntryDraft draft) async {
@@ -165,6 +179,7 @@ class JournalRepositoryImpl implements JournalRepository {
                 updatedAt: Value(now.millisecondsSinceEpoch),
                 syncStatus: const Value('pending'),
                 version: Value(nextVersion),
+                companyId: Value(_currentCompanyId),
               ),
             );
         await (_db.delete(_db.journalLines)
@@ -188,6 +203,7 @@ class JournalRepositoryImpl implements JournalRepository {
                 updatedAt: now.millisecondsSinceEpoch,
                 syncStatus: const Value('pending'),
                 version: Value(nextVersion),
+                companyId: Value(_currentCompanyId),
               ),
             );
       }
@@ -241,7 +257,7 @@ class JournalRepositoryImpl implements JournalRepository {
     }
     final row =
         await (_db.select(_db.journalEntries)..where(
-              (t) => t.uuid.equals(trimmed) & t.deletedAt.isNull(),
+              (t) => t.uuid.equals(trimmed) & _scoped(t),
             ))
             .getSingleOrNull();
     if (row == null) {
@@ -263,7 +279,7 @@ class JournalRepositoryImpl implements JournalRepository {
               (t) =>
                   t.sourceType.equals(sourceType.trim()) &
                   t.sourceId.equals(sourceId.trim()) &
-                  t.deletedAt.isNull(),
+                  _scoped(t),
             ))
             .get();
     for (final row in rows) {
@@ -284,7 +300,7 @@ class JournalRepositoryImpl implements JournalRepository {
               (t) =>
                   t.sourceType.equals(reverseSourceType) &
                   t.sourceId.equals(entryUuid) &
-                  t.deletedAt.isNull(),
+                  _scoped(t),
             ))
             .get();
     return rows.isNotEmpty;
@@ -341,7 +357,7 @@ class JournalRepositoryImpl implements JournalRepository {
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
     final nextVersion = version + 1;
     await (_db.update(_db.journalEntries)..where(
-          (t) => t.uuid.equals(uuid) & t.deletedAt.isNull(),
+          (t) => t.uuid.equals(uuid) & _scoped(t),
         ))
         .write(
           JournalEntriesCompanion(
@@ -349,6 +365,7 @@ class JournalRepositoryImpl implements JournalRepository {
             updatedAt: Value(now),
             syncStatus: const Value('pending'),
             version: Value(nextVersion),
+            companyId: Value(_currentCompanyId),
           ),
         );
     final tombstone = await _getByUuidIncludingDeleted(uuid);
@@ -370,7 +387,9 @@ class JournalRepositoryImpl implements JournalRepository {
     final toMs = toDate == null ? null : BusinessDate.utcDayMs(toDate);
     final normalizedQuery = query?.trim().toLowerCase() ?? '';
 
-    final variables = <Variable<Object>>[];
+    final variables = <Variable<Object>>[
+      Variable.withString(_currentCompanyId),
+    ];
     final sql = StringBuffer(
       'SELECT je.id AS id, '
       'je.uuid AS uuid, '
@@ -386,7 +405,7 @@ class JournalRepositoryImpl implements JournalRepository {
       'COALESCE(SUM(jl.credit), 0.0) AS total_credit '
       'FROM journal_entries je '
       'LEFT JOIN journal_lines jl ON jl.entry_uuid = je.uuid '
-      'WHERE je.deleted_at IS NULL ',
+      'WHERE je.deleted_at IS NULL AND je.company_id = ? ',
     );
 
     if (fromMs != null) {
@@ -979,11 +998,12 @@ class JournalRepositoryImpl implements JournalRepository {
                 lastSyncedAt: Value(nowMs),
                 version: Value(version),
                 deletedAt: Value(deletedAtMs),
+                companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
               ),
             );
       } else {
         await (_db.update(_db.journalEntries)
-              ..where((t) => t.uuid.equals(uuid)))
+              ..where((t) => t.uuid.equals(uuid) & _scoped(t)))
             .write(
               JournalEntriesCompanion(
                 entryDate: Value(entryDate),
@@ -1010,6 +1030,7 @@ class JournalRepositoryImpl implements JournalRepository {
                 lastSyncedAt: Value(nowMs),
                 version: Value(version),
                 deletedAt: Value(deletedAtMs),
+                companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
               ),
             );
         await (_db.delete(_db.journalLines)

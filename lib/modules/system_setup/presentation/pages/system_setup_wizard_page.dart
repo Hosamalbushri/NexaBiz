@@ -12,6 +12,7 @@ import '../../../../app/settings/company/company_profile.dart';
 import '../../../../app/settings/company/company_profile_providers.dart';
 import '../../../../app/sync/sync_enabled_provider.dart';
 import '../../../../app/sync/sync_session_state.dart';
+import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/di/app_providers.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -19,6 +20,7 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/custom_app_bar.dart';
+import '../../../authentication/data/local_auth_store.dart';
 import '../../domain/entities/system_setup_state.dart';
 import '../../domain/ports/system_setup_seed_exception.dart';
 import '../providers/system_setup_providers.dart';
@@ -141,70 +143,189 @@ class _SystemSetupWizardPageState extends ConsumerState<SystemSetupWizardPage> {
     SetupProgress progress,
   ) {
     final selected = _selected ?? progress.currentStep ?? SetupStepId.locale;
-    return ListView(
-      padding: AppConstants.pageInsets(context),
-      children: [
-        if (progress.isReady) ...[
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: TextButton.icon(
-              onPressed: () => setState(() => _reviewSetup = false),
-              icon: const Icon(Icons.arrow_back),
-              label: Text(l10n.moduleSystemSetup),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-        ],
-        Text(
-          l10n.systemSetupSubtitle,
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        SystemSetupProgressHeader(progress: progress),
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          l10n.systemSetupRequiredSection,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        AppCard(
-          child: Column(
-            children: [
-              for (final id in SetupStepId.requiredIds)
-                SystemSetupStepTile(
-                  step: progress.stateFor(id),
-                  selected: selected == id,
-                  onTap: () => setState(() => _selected = id),
+    final requiredIds = SetupStepId.requiredIds;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 850;
+
+        Widget buildHeaderHero() => Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(AppRadius.lg),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.auto_awesome,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.systemSetupWizardHeaderTitle,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.systemSetupWizardHeaderSubtitle,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+
+        Widget buildStepList() => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.systemSetupRequiredSection,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
                 ),
+                const SizedBox(height: AppSpacing.sm),
+                AppCard(
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < requiredIds.length; i++)
+                        SystemSetupStepTile(
+                          step: progress.stateFor(requiredIds[i]),
+                          selected: selected == requiredIds[i],
+                          isLast: i == requiredIds.length - 1,
+                          onTap: () => setState(() => _selected = requiredIds[i]),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+
+        Widget buildActiveStepContent() => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: Text(
+                    setupStepTitle(l10n, selected),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  setupStepHint(l10n, selected),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _StepBody(
+                  stepId: selected,
+                  progress: progress,
+                  busy: _busy,
+                  onRun: _run,
+                ),
+              ],
+            );
+
+        if (isWide) {
+          return SingleChildScrollView(
+            padding: AppConstants.pageInsets(context),
+            child: Column(
+              children: [
+                if (progress.isReady) ...[
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextButton.icon(
+                      onPressed: () => setState(() => _reviewSetup = false),
+                      icon: const Icon(Icons.arrow_back),
+                      label: Text(l10n.moduleSystemSetup),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+                buildHeaderHero(),
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 4,
+                      child: Column(
+                        children: [
+                          SystemSetupProgressHeader(progress: progress),
+                          const SizedBox(height: AppSpacing.lg),
+                          buildStepList(),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xl),
+                    Expanded(
+                      flex: 6,
+                      child: buildActiveStepContent(),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView(
+          padding: AppConstants.pageInsets(context),
+          children: [
+            if (progress.isReady) ...[
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  onPressed: () => setState(() => _reviewSetup = false),
+                  icon: const Icon(Icons.arrow_back),
+                  label: Text(l10n.moduleSystemSetup),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
             ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          setupStepTitle(l10n, selected),
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          setupStepHint(l10n, selected),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _StepBody(
-          stepId: selected,
-          progress: progress,
-          busy: _busy,
-          onRun: _run,
-        ),
-      ],
+            buildHeaderHero(),
+            const SizedBox(height: AppSpacing.md),
+            SystemSetupProgressHeader(progress: progress),
+            const SizedBox(height: AppSpacing.lg),
+            buildStepList(),
+            const SizedBox(height: AppSpacing.lg),
+            buildActiveStepContent(),
+          ],
+        );
+      },
     );
   }
 }
@@ -240,9 +361,12 @@ class _StepBody extends ConsumerWidget {
         busy: busy,
         onRun: onRun,
       ),
-      SetupStepId.seedLocal => _SeedLocalStep(
+      SetupStepId.localAccount => _LocalAccountStep(
         busy: busy,
-        state: state,
+        onRun: onRun,
+      ),
+      SetupStepId.seedData => _SeedDataStep(
+        busy: busy,
         onRun: onRun,
       ),
     };
@@ -570,184 +694,396 @@ class _LocaleStep extends ConsumerWidget {
   }
 }
 
-class _SeedLocalStep extends ConsumerWidget {
-  const _SeedLocalStep({
+class _LocalAccountStep extends ConsumerStatefulWidget {
+  const _LocalAccountStep({
     required this.busy,
-    required this.state,
     required this.onRun,
   });
 
   final bool busy;
-  final SetupStepState state;
   final Future<void> Function(
     Future<SetupProgress> Function() action, {
     String? successMessage,
-  })
-  onRun;
+  }) onRun;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_LocalAccountStep> createState() => _LocalAccountStepState();
+}
+
+class _LocalAccountStepState extends ConsumerState<_LocalAccountStep> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController(text: 'admin@nexabiz.local');
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  var _obscurePassword = true;
+  var _obscureConfirmPassword = true;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final done = state.status == SetupStepStatus.completed;
-    final syncReady = ref.watch(syncSessionStateProvider).phase ==
-        SyncSessionPhase.enabledAuthenticated;
 
     return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            done
-                ? l10n.systemSetupSeedDone
-                : (busy
-                      ? l10n.systemSetupSeedRunning
-                      : l10n.systemSetupStepSeedHint),
-          ),
-          if (state.errorMessage != null) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              state.errorMessage!,
-              style: TextStyle(color: theme.colorScheme.error),
-            ),
-          ],
-          if (!done) ...[
-            const SizedBox(height: AppSpacing.lg),
-            _SeedChoiceTile(
-              icon: Icons.cloud_download_rounded,
-              title: l10n.systemSetupSeedSyncTitle,
-              subtitle: l10n.systemSetupSeedSyncSubtitle,
-              enabled: !busy && syncReady,
-              trailingLabel: syncReady ? null : l10n.systemSetupSeedSignInToSync,
-              onTap: () async {
-                await onRun(
-                  () => ref
-                      .read(systemInitializationCoordinatorProvider)
-                      .runSeedFromSync(),
-                  successMessage: l10n.systemSetupSeedDone,
-                );
-                if (context.mounted) {
-                  ref.invalidate(systemSetupProgressProvider);
-                  ref.invalidate(systemSetupReadyProvider);
-                  context.go(AppRoutes.dashboard);
-                }
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _SeedChoiceTile(
-              icon: Icons.build_circle_outlined,
-              title: l10n.systemSetupSeedCreateLocalTitle,
-              subtitle: l10n.systemSetupSeedCreateLocalSubtitle,
-              enabled: !busy,
-              onTap: () async {
-                await onRun(
-                  () => ref
-                      .read(systemInitializationCoordinatorProvider)
-                      .runSeedLocal(),
-                  successMessage: l10n.systemSetupSeedDone,
-                );
-                if (context.mounted) {
-                  ref.invalidate(systemSetupProgressProvider);
-                  ref.invalidate(systemSetupReadyProvider);
-                  context.go(AppRoutes.dashboard);
-                }
-              },
-            ),
-          ] else ...[
-            const SizedBox(height: AppSpacing.md),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             Row(
               children: [
-                Icon(
-                  Icons.check_circle,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  l10n.systemSetupSeedDone,
-                  style: theme.textTheme.titleMedium?.copyWith(
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.admin_panel_settings_outlined,
                     color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm + 2),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.systemSetupLocalAccountTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        l10n.systemSetupLocalAccountSubtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: AppSpacing.lg),
+            TextFormField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                labelText: l10n.systemSetupAdminEmail,
+                prefixIcon: const Icon(Icons.email_outlined),
+                border: const OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return l10n.setupLocalEmailRequired;
+                }
+                if (!value.contains('@')) {
+                  return l10n.setupLocalEmailRequired;
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextFormField(
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              decoration: InputDecoration(
+                labelText: l10n.systemSetupPassword,
+                prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  ),
+                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                ),
+                border: const OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return l10n.systemSetupPassword;
+                }
+                if (value.trim().length < 6) {
+                  return l10n.setupLocalPasswordHelper;
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextFormField(
+              controller: _confirmPasswordController,
+              obscureText: _obscureConfirmPassword,
+              decoration: InputDecoration(
+                labelText: l10n.systemSetupConfirmPassword,
+                prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  ),
+                  onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                ),
+                border: const OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value != _passwordController.text) {
+                  return l10n.systemSetupPasswordsDoNotMatch;
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            AppButton(
+              label: l10n.systemSetupContinue,
+              isLoading: widget.busy,
+              expand: true,
+              icon: Icons.arrow_forward_rounded,
+              onPressed: widget.busy
+                  ? null
+                  : () async {
+                      if (!(_formKey.currentState?.validate() ?? false)) {
+                        return;
+                      }
+                      await widget.onRun(() async {
+                        final coordinator = ref.read(
+                          systemInitializationCoordinatorProvider,
+                        );
+                        await LocalAuthStore().updateLocalAdminCredentials(
+                          newEmail: _emailController.text.trim(),
+                          newPassword: _passwordController.text.trim(),
+                        );
+                        return coordinator.runLocalAccountStep(
+                          email: _emailController.text.trim(),
+                          password: _passwordController.text.trim(),
+                        );
+                      });
+                      if (context.mounted) {
+                        ref.invalidate(systemSetupProgressProvider);
+                      }
+                    },
+            ),
           ],
-        ],
+        ),
       ),
     );
   }
 }
 
-class _SeedChoiceTile extends StatelessWidget {
-  const _SeedChoiceTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.enabled,
-    required this.onTap,
-    this.trailingLabel,
+class _SeedDataStep extends ConsumerStatefulWidget {
+  const _SeedDataStep({
+    required this.busy,
+    required this.onRun,
   });
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool enabled;
-  final VoidCallback onTap;
-  final String? trailingLabel;
+  final bool busy;
+  final Future<void> Function(
+    Future<SetupProgress> Function() action, {
+    String? successMessage,
+  }) onRun;
+
+  @override
+  ConsumerState<_SeedDataStep> createState() => _SeedDataStepState();
+}
+
+class _SeedDataStepState extends ConsumerState<_SeedDataStep> {
+  bool _seedOption = true;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    return Material(
-      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: enabled ? onTap : null,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
             children: [
-              Icon(icon, color: theme.colorScheme.primary),
-              const SizedBox(width: AppSpacing.md),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.dataset_outlined,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm + 2),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+                      l10n.setupSeedInitialDataTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
                     Text(
-                      subtitle,
+                      l10n.setupSeedInitialDataSubtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    if (trailingLabel != null) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        trailingLabel!,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
             ],
           ),
-        ),
+          const SizedBox(height: AppSpacing.lg),
+          Material(
+            color: _seedOption
+                ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                : theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              onTap: () => setState(() => _seedOption = true),
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(
+                    color: _seedOption
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+                    width: _seedOption ? 1.8 : 1.0,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Radio<bool>(
+                      value: true,
+                      groupValue: _seedOption,
+                      onChanged: (val) {
+                        if (val != null) setState(() => _seedOption = val);
+                      },
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isArabic
+                                ? 'تهيـئة البيانات الافتراضية للنظام'
+                                : 'Seed Default System Data',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            isArabic
+                                ? 'إنشاء الدليل المحاسبي القياسي وأنواع الفواتير والسندات الافتراضية'
+                                : 'Build standard chart of accounts and default voucher types.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Material(
+            color: !_seedOption
+                ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                : theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              onTap: () => setState(() => _seedOption = false),
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(
+                    color: !_seedOption
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+                    width: !_seedOption ? 1.8 : 1.0,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Radio<bool>(
+                      value: false,
+                      groupValue: _seedOption,
+                      onChanged: (val) {
+                        if (val != null) setState(() => _seedOption = val);
+                      },
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isArabic
+                                ? 'البدء بنظام فارغ بدون بيانات افتراضية'
+                                : 'Start Clean (Empty System)',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            isArabic
+                                ? 'بدء العمل بنظام فارغ وتكوين الحسابات والدليل يدوياً حسب الحاجة'
+                                : 'Start with a clean database and build custom accounts manually.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          AppButton(
+            label: l10n.systemSetupCompleteAndLaunch,
+            isLoading: widget.busy,
+            expand: true,
+            icon: Icons.check_circle_outline,
+            onPressed: widget.busy
+                ? null
+                : () async {
+                    await widget.onRun(() async {
+                      final coordinator = ref.read(
+                        systemInitializationCoordinatorProvider,
+                      );
+                      return coordinator.runSeedDataStep(
+                        seedDefaults: _seedOption,
+                      );
+                    }, successMessage: l10n.systemSetupSuccess);
+                    if (context.mounted) {
+                      ref.invalidate(systemSetupProgressProvider);
+                      ref.invalidate(systemSetupReadyProvider);
+                      context.go(AppRoutes.dashboard);
+                    }
+                  },
+          ),
+        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../../authentication/data/local_auth_store.dart';
 import '../../../../core/sync/sync_operation.dart';
 import '../../../../core/sync/sync_queue.dart';
 import '../../../../core/sync/sync_status.dart';
@@ -12,13 +13,27 @@ import '../../domain/repositories/product_repository.dart';
 import '../database/inventory_database.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
-  ProductRepositoryImpl(this._db, {SyncQueue? syncQueue})
-    : _syncQueue = syncQueue;
+  ProductRepositoryImpl(
+    this._db, {
+    SyncQueue? syncQueue,
+    String Function()? readCompanyId,
+  }) : _syncQueue = syncQueue,
+       _readCompanyId = readCompanyId;
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
+  final String Function()? _readCompanyId;
 
   static const entityType = 'product';
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+
+  Expression<bool> _tenantScoped($ProductsTable t) =>
+      t.companyId.equals(_currentCompanyId);
+
+  Expression<bool> _scoped($ProductsTable t) =>
+      t.deletedAt.isNull() & _tenantScoped(t);
 
   Product _map(ProductRow row) {
     return Product(
@@ -87,7 +102,7 @@ class ProductRepositoryImpl implements ProductRepository {
     int? excludingId,
   }) async {
     final codeQuery = _db.select(_db.products)
-      ..where((t) => t.itemCode.equals(itemCode) & _notDeleted(t));
+      ..where((t) => t.itemCode.equals(itemCode) & _scoped(t));
     if (excludingId != null) {
       codeQuery.where((t) => t.id.isNotValue(excludingId));
     }
@@ -100,7 +115,7 @@ class ProductRepositoryImpl implements ProductRepository {
       return;
     }
     final barcodeQuery = _db.select(_db.products)
-      ..where((t) => t.barcode.equals(barcode) & _notDeleted(t));
+      ..where((t) => t.barcode.equals(barcode) & _scoped(t));
     if (excludingId != null) {
       barcodeQuery.where((t) => t.id.isNotValue(excludingId));
     }
@@ -142,7 +157,7 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<List<Product>> getAll() async {
     final rows =
         await (_db.select(_db.products)
-              ..where(_notDeleted)
+              ..where(_scoped)
               ..orderBy([(t) => OrderingTerm.asc(t.itemCode)]))
             .get();
     return rows.map(_map).toList(growable: false);
@@ -151,7 +166,7 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Stream<List<Product>> watchAll() {
     final query = _db.select(_db.products)
-      ..where(_notDeleted)
+      ..where(_scoped)
       ..orderBy([(t) => OrderingTerm.asc(t.itemCode)]);
     return query.watch().map((rows) => rows.map(_map).toList(growable: false));
   }
@@ -160,7 +175,7 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<Product?> getById(int id) async {
     final row = await (_db.select(
       _db.products,
-    )..where((t) => t.id.equals(id) & _notDeleted(t))).getSingleOrNull();
+    )..where((t) => t.id.equals(id) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -168,7 +183,7 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<Product?> getByUuid(String uuid) async {
     final row = await (_db.select(
       _db.products,
-    )..where((t) => t.uuid.equals(uuid) & _notDeleted(t))).getSingleOrNull();
+    )..where((t) => t.uuid.equals(uuid) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -180,7 +195,7 @@ class ProductRepositoryImpl implements ProductRepository {
     }
     final row =
         await (_db.select(_db.products)
-              ..where((t) => t.itemCode.equals(code) & _notDeleted(t)))
+              ..where((t) => t.itemCode.equals(code) & _scoped(t)))
             .getSingleOrNull();
     return row == null ? null : _map(row);
   }
@@ -193,7 +208,7 @@ class ProductRepositoryImpl implements ProductRepository {
     }
     final row =
         await (_db.select(_db.products)
-              ..where((t) => t.barcode.equals(normalized) & _notDeleted(t)))
+              ..where((t) => t.barcode.equals(normalized) & _scoped(t)))
             .getSingleOrNull();
     return row == null ? null : _map(row);
   }
@@ -303,7 +318,7 @@ class ProductRepositoryImpl implements ProductRepository {
     int? limit,
   }) async {
     final normalized = query.trim().toLowerCase();
-    final select = _db.select(_db.products)..where(_notDeleted);
+    final select = _db.select(_db.products)..where(_scoped);
     if (normalized.isNotEmpty) {
       select.where((t) => _matchesQuery(t, normalized, searchField));
       select.orderBy([
@@ -333,7 +348,7 @@ class ProductRepositoryImpl implements ProductRepository {
 
     final countQuery = _db.selectOnly(_db.products)
       ..addColumns([_db.products.id.count()])
-      ..where(_notDeleted(_db.products));
+      ..where(_scoped(_db.products));
     if (normalized.isNotEmpty) {
       countQuery.where(_matchesQuery(_db.products, normalized, searchField));
     }
@@ -351,7 +366,7 @@ class ProductRepositoryImpl implements ProductRepository {
     }
 
     final select = _db.select(_db.products)
-      ..where(_notDeleted)
+      ..where(_scoped)
       ..orderBy([
         if (normalized.isNotEmpty)
           (t) => OrderingTerm.asc(_relevance(t, normalized, searchField)),
@@ -396,6 +411,7 @@ class ProductRepositoryImpl implements ProductRepository {
             updatedAt: nowMs,
             syncStatus: const Value('pending'),
             version: const Value(1),
+            companyId: Value(_currentCompanyId),
           ),
         );
     final created = await getById(id);
@@ -421,7 +437,7 @@ class ProductRepositoryImpl implements ProductRepository {
 
     final now = DateTime.now().toUtc();
     final nextVersion = existing.version + 1;
-    await (_db.update(_db.products)..where((t) => t.id.equals(id))).write(
+    await (_db.update(_db.products)..where((t) => t.id.equals(id) & _scoped(t))).write(
       ProductsCompanion(
         itemCode: Value(code),
         name: Value(name),
@@ -432,6 +448,7 @@ class ProductRepositoryImpl implements ProductRepository {
         updatedAt: Value(now.millisecondsSinceEpoch),
         syncStatus: const Value('pending'),
         version: Value(nextVersion),
+        companyId: Value(_currentCompanyId),
       ),
     );
 
@@ -451,7 +468,7 @@ class ProductRepositoryImpl implements ProductRepository {
     }
     final now = DateTime.now().toUtc();
     final nextVersion = existing.version + 1;
-    await (_db.update(_db.products)..where((t) => t.id.equals(id))).write(
+    await (_db.update(_db.products)..where((t) => t.id.equals(id) & _scoped(t))).write(
       ProductsCompanion(
         deletedAt: Value(now.millisecondsSinceEpoch),
         updatedAt: Value(now.millisecondsSinceEpoch),
@@ -475,7 +492,7 @@ class ProductRepositoryImpl implements ProductRepository {
     DateTime? syncedAt,
   }) async {
     final stamp = (syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch;
-    await (_db.update(_db.products)..where((t) => t.uuid.equals(uuid))).write(
+    await (_db.update(_db.products)..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
       ProductsCompanion(
         syncStatus: const Value('synced'),
         lastSyncedAt: Value(stamp),
@@ -485,7 +502,7 @@ class ProductRepositoryImpl implements ProductRepository {
   }
 
   Future<void> markConflict(String uuid) async {
-    await (_db.update(_db.products)..where((t) => t.uuid.equals(uuid))).write(
+    await (_db.update(_db.products)..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
       const ProductsCompanion(syncStatus: Value('conflict')),
     );
   }
@@ -537,12 +554,13 @@ class ProductRepositoryImpl implements ProductRepository {
               syncStatus: const Value('synced'),
               lastSyncedAt: Value(nowMs),
               version: Value(version),
+              companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
             ),
           );
       return;
     }
 
-    await (_db.update(_db.products)..where((t) => t.uuid.equals(uuid))).write(
+    await (_db.update(_db.products)..where((t) => t.uuid.equals(uuid) & _scoped(t))).write(
       ProductsCompanion(
         itemCode: Value(payload['itemCode']?.toString() ?? existing.itemCode),
         name: Value(payload['name']?.toString() ?? existing.name),
@@ -582,7 +600,7 @@ class ProductRepositoryImpl implements ProductRepository {
     final touched = <Product>[];
 
     final existingRows =
-        await (_db.select(_db.products)..where(_notDeleted)).get();
+        await (_db.select(_db.products)..where(_scoped)).get();
     final byCode = <String, Product>{};
     final byBarcode = <String, Product>{};
     for (final row in existingRows) {
@@ -634,6 +652,7 @@ class ProductRepositoryImpl implements ProductRepository {
                     updatedAt: nowMs,
                     syncStatus: const Value('pending'),
                     version: const Value(1),
+                    companyId: Value(_currentCompanyId),
                   ),
                 );
             final created = Product(

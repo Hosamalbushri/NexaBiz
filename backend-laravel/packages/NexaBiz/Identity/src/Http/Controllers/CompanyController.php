@@ -16,6 +16,7 @@ use NexaBiz\Identity\Models\Company;
 use NexaBiz\Identity\Models\CompanyUser;
 use NexaBiz\Identity\Models\Role;
 use NexaBiz\Identity\Models\User;
+use NexaBiz\Identity\Services\CompanyProvisioningService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,7 @@ class CompanyController extends Controller
         private readonly AdminSafety $safety,
         private readonly Authorization $authorization,
         private readonly AuditWriter $audit,
+        private readonly CompanyProvisioningService $provisioningService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -272,6 +274,99 @@ class CompanyController extends Controller
         });
 
         return response()->json(['data' => ['ok' => true]]);
+    }
+
+    public function provision(Request $request): JsonResponse
+    {
+        $auth = $this->context($request);
+        $data = $request->validate([
+            'local_company_id' => 'required|string',
+            'name' => 'required|string|min:1|max:200',
+            'code' => 'nullable|string|max:64',
+        ]);
+
+        $idempotencyKey = $request->header('Idempotency-Key') ?? $request->input('idempotency_key');
+
+        $provisioning = $this->provisioningService->provisionCompany(
+            userId: $auth->userId(),
+            localCompanyId: $data['local_company_id'],
+            companyName: $data['name'],
+            companyCode: $data['code'] ?? null,
+            idempotencyKey: $idempotencyKey,
+        );
+
+        return response()->json([
+            'data' => [
+                'provisioning_id' => (string) $provisioning->id,
+                'local_company_id' => $provisioning->local_company_id,
+                'server_company_id' => (string) $provisioning->server_company_id,
+                'user_id' => (string) $provisioning->user_id,
+                'status' => $provisioning->status,
+                'cloud_admin_linked' => true,
+                'created_at' => $provisioning->created_at?->toIso8601String(),
+            ],
+        ]);
+    }
+
+    public function provisioningStatus(Request $request, string $identifier): JsonResponse
+    {
+        $auth = $this->context($request);
+        $provisioning = $this->provisioningService->getProvisioningStatus($auth->userId(), $identifier);
+
+        if ($provisioning === null) {
+            throw new NotFoundException("Provisioning status not found for '{$identifier}'.");
+        }
+
+        return response()->json([
+            'data' => [
+                'provisioning_id' => (string) $provisioning->id,
+                'local_company_id' => $provisioning->local_company_id,
+                'server_company_id' => (string) $provisioning->server_company_id,
+                'user_id' => (string) $provisioning->user_id,
+                'status' => $provisioning->status,
+                'error_message' => $provisioning->error_message,
+                'created_at' => $provisioning->created_at?->toIso8601String(),
+            ],
+        ]);
+    }
+
+    public function linkExisting(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'local_company_id' => 'required|string',
+            'email' => 'required|email',
+            'password' => 'required|string',
+            'company_code' => 'nullable|string',
+        ]);
+
+        $idempotencyKey = $request->header('Idempotency-Key') ?? $request->input('idempotency_key');
+
+        $result = $this->provisioningService->linkExistingCompany(
+            localCompanyId: $data['local_company_id'],
+            email: $data['email'],
+            password: $data['password'],
+            companyCode: $data['company_code'] ?? null,
+            idempotencyKey: $idempotencyKey,
+        );
+
+        /** @var \NexaBiz\Identity\Models\CompanyProvisioning $provisioning */
+        $provisioning = $result['provisioning'];
+        /** @var \NexaBiz\Identity\Models\Company $serverCompany */
+        $serverCompany = $result['server_company'];
+
+        return response()->json([
+            'data' => [
+                'provisioning_id' => (string) $provisioning->id,
+                'local_company_id' => $provisioning->local_company_id,
+                'server_company_id' => (string) $serverCompany->id,
+                'server_company_name' => $serverCompany->name,
+                'server_company_code' => $serverCompany->code,
+                'user_id' => (string) $provisioning->user_id,
+                'status' => $provisioning->status,
+                'token' => $result['token'],
+                'created_at' => $provisioning->created_at?->toIso8601String(),
+            ],
+        ]);
     }
 
     private function context(Request $request): AuthContext

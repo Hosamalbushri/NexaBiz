@@ -27,7 +27,8 @@
             "NexaBiz\\Audit\\": "packages/NexaBiz/Audit/src/",
             "NexaBiz\\Identity\\": "packages/NexaBiz/Identity/src/",
             "NexaBiz\\Initialization\\": "packages/NexaBiz/Initialization/src/",
-            "NexaBiz\\Synchronization\\": "packages/NexaBiz/Synchronization/src/"
+            "NexaBiz\\Synchronization\\": "packages/NexaBiz/Synchronization/src/",
+            "NexaBiz\\Entitlements\\": "packages/NexaBiz/Entitlements/src/"
         }
     },
     "autoload-dev": {

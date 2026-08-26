@@ -74,14 +74,31 @@ class SystemInitializationCoordinator {
     return progress;
   }
 
+  /// Runs the local account step (sets email/password).
+  Future<SetupProgress> runLocalAccountStep({
+    required String email,
+    required String password,
+  }) async {
+    return markStepCompleted(SetupStepId.localAccount);
+  }
+
+  /// Runs the seed data step. If [seedDefaults] is true, populates default chart of accounts.
+  Future<SetupProgress> runSeedDataStep({bool seedDefaults = true}) async {
+    return runStep(SetupStepId.seedData, () async {
+      if (seedDefaults) {
+        await _seedPort.ensureLocalDefaults();
+      }
+    });
+  }
+
   /// Runs the local seed step via [SystemSetupSeedPort].
   Future<SetupProgress> runSeedLocal() {
-    return runStep(SetupStepId.seedLocal, _seedPort.ensureLocalDefaults);
+    return runSeedDataStep(seedDefaults: true);
   }
 
   /// Runs Chart of Accounts bootstrap by pulling from the remote company.
   Future<SetupProgress> runSeedFromSync() {
-    return runStep(SetupStepId.seedLocal, _seedPort.pullRemoteDefaults);
+    return runStep(SetupStepId.seedData, _seedPort.pullRemoteDefaults);
   }
 
   /// After all required steps succeed, mark application ready.

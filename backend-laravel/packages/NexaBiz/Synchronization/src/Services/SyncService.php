@@ -207,6 +207,7 @@ class SyncService implements SyncEngine
         string $status,
         array $result,
     ): void {
+        $requestHash = hash('sha256', json_encode($op['payload'] ?? []));
         SyncOperation::query()->create([
             'company_id' => $companyId,
             'operation_id' => $op['operation_id'],
@@ -217,6 +218,7 @@ class SyncService implements SyncEngine
             'result' => $result,
             'user_id' => $userId,
             'device_id' => $deviceId,
+            'request_hash' => $requestHash,
             'processed_at' => CarbonImmutable::now('UTC'),
         ]);
     }
@@ -240,6 +242,16 @@ class SyncService implements SyncEngine
 
         $prior = $this->getPriorOperation($companyId, $op['operation_id']);
         if ($prior !== null) {
+            $requestHash = hash('sha256', json_encode($op['payload'] ?? []));
+            if ($prior->request_hash !== null && $prior->request_hash !== $requestHash) {
+                Log::channel('sync')->warning('PUSH idempotency conflict: payload hash mismatch operation_id={id}', [
+                    'id' => $op['operation_id'],
+                    'stored_hash' => $prior->request_hash,
+                    'incoming_hash' => $requestHash,
+                ]);
+                throw new ValidationAppException('Idempotency conflict: operation ID has already been used with a different payload.');
+            }
+
             Log::channel('sync')->info('PUSH duplicate operation_id={id} entity_type={type} status={status}', [
                 'id' => $op['operation_id'],
                 'type' => $op['entity_type'],

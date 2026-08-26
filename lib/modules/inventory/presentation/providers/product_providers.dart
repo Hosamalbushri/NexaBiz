@@ -5,6 +5,7 @@ import '../../../../app/settings/settings_repository.dart';
 import '../../../../core/database/tenant_database_name.dart';
 import '../../../../core/sync/sync_providers.dart';
 import '../../../../core/tenancy/session_company.dart';
+import '../../../../core/tenancy/tenant_context.dart';
 import '../../data/database/inventory_database.dart';
 import '../../data/datasources/pdf_barcode_label_printer.dart';
 import '../../data/datasources/product_excel_import_datasource.dart';
@@ -40,6 +41,7 @@ final productRepositoryImplProvider = Provider<ProductRepositoryImpl>((ref) {
   return ProductRepositoryImpl(
     ref.watch(inventoryDatabaseProvider),
     syncQueue: ref.watch(syncQueueProvider),
+    readCompanyId: () => ref.read(currentCompanyIdProvider),
   );
 });
 

@@ -5,6 +5,7 @@ import '../../../../app/settings/settings_repository.dart';
 import '../../../../core/database/tenant_database_name.dart';
 import '../../../../core/sync/sync_providers.dart';
 import '../../../../core/tenancy/session_company.dart';
+import '../../../../core/tenancy/tenant_context.dart';
 import '../../data/database/customers_database.dart';
 import '../../data/repositories/customer_repository_impl.dart';
 import '../../domain/entities/customer.dart';
@@ -30,6 +31,7 @@ final customerRepositoryImplProvider = Provider<CustomerRepositoryImpl>((ref) {
   return CustomerRepositoryImpl(
     ref.watch(customersDatabaseProvider),
     syncQueue: ref.watch(syncQueueProvider),
+    readCompanyId: () => ref.read(currentCompanyIdProvider),
   );
 });
 

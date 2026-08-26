@@ -15,7 +15,7 @@ class ReceiptsPaymentsDatabase extends _$ReceiptsPaymentsDatabase {
   ReceiptsPaymentsDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -61,6 +61,15 @@ class ReceiptsPaymentsDatabase extends _$ReceiptsPaymentsDatabase {
           'CREATE UNIQUE INDEX IF NOT EXISTS idx_ft_book_number_active '
           'ON financial_transactions (voucher_book_id, transaction_number) '
           'WHERE deleted_at IS NULL AND voucher_book_id IS NOT NULL',
+        );
+      }
+      if (from < 5) {
+        await m.addColumn(
+          financialTransactions,
+          financialTransactions.companyId,
+        );
+        await customStatement(
+          "UPDATE financial_transactions SET company_id = 'local-company' WHERE company_id IS NULL",
         );
       }
     },

@@ -333,17 +333,26 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout({bool clearLocalBusinessData = false}) async {
+    // Capture user ID before clearing the session.
+    final userId = _cached?.user.id;
     try {
       await _http.post('/api/v1/auth/logout');
     } catch (_) {
       // Best-effort server revoke.
     }
     await clearLocalSession();
-    // Intentionally do NOT wipe Drift/Hive business data by default.
-    // Company/user switch isolation is a follow-up hardening item.
-    if (clearLocalBusinessData) {
-      // Reserved for future per-tenant DB wipe policy.
+    // G4 fix: delete offline authorization snapshots so the next user cannot
+    // inherit stale authorization state.
+    if (userId != null && userId.isNotEmpty) {
+      try {
+        await _offlineAuthStore.deleteAllSnapshotsForUser(userId);
+      } catch (_) {
+        // Best-effort — session already cleared above.
+      }
     }
+    // G11: entitlement cache is invalidated automatically when authStateProvider
+    // emits unauthenticated, which cascades to currentCompanyIdProvider →
+    // currentEntitlementProvider via Riverpod dependency graph.
   }
 
   /// Drop tokens / snapshot without calling the server.

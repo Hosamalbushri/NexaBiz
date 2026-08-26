@@ -35,7 +35,7 @@ class AccountingDatabase extends _$AccountingDatabase {
   AccountingDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -169,16 +169,27 @@ class AccountingDatabase extends _$AccountingDatabase {
           'CREATE UNIQUE INDEX IF NOT EXISTS idx_currency_rates_uuid '
           'ON currency_rates (uuid)',
         );
+      }
+      if (from < 13) {
+        await m.addColumn(accounts, accounts.companyId);
+        await m.addColumn(journalEntries, journalEntries.companyId);
+        await m.addColumn(voucherBooks, voucherBooks.companyId);
+        await m.addColumn(fiscalYears, fiscalYears.companyId);
+        await m.addColumn(currencyRates, currencyRates.companyId);
         await customStatement(
-          'CREATE INDEX IF NOT EXISTS idx_currency_rates_sync '
-          'ON currency_rates (sync_status)',
+          "UPDATE accounts SET company_id = 'local-company' WHERE company_id IS NULL",
         );
-        await m.addColumn(fiscalYears, fiscalYears.syncStatus);
-        await m.addColumn(fiscalYears, fiscalYears.lastSyncedAt);
-        await m.addColumn(fiscalYears, fiscalYears.version);
         await customStatement(
-          'CREATE INDEX IF NOT EXISTS idx_fiscal_years_sync '
-          'ON fiscal_years (sync_status)',
+          "UPDATE journal_entries SET company_id = 'local-company' WHERE company_id IS NULL",
+        );
+        await customStatement(
+          "UPDATE voucher_books SET company_id = 'local-company' WHERE company_id IS NULL",
+        );
+        await customStatement(
+          "UPDATE fiscal_years SET company_id = 'local-company' WHERE company_id IS NULL",
+        );
+        await customStatement(
+          "UPDATE currency_rates SET company_id = 'local-company' WHERE company_id IS NULL",
         );
       }
     },

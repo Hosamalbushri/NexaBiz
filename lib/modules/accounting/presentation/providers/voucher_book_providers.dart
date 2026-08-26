@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/tenancy/tenant_context.dart';
 import '../../data/repositories/voucher_book_repository_impl.dart';
 import '../../domain/entities/voucher_book.dart';
 import '../../domain/repositories/voucher_book_repository.dart';
@@ -14,6 +15,7 @@ final voucherBookRepositoryProvider = Provider<VoucherBookRepository>((ref) {
   return VoucherBookRepositoryImpl(
     ref.watch(accountingDatabaseProvider),
     validator: ref.watch(voucherBookValidatorProvider),
+    readCompanyId: () => ref.read(currentCompanyIdProvider),
   );
 });
 

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../../../authentication/data/local_auth_store.dart';
 import '../../../../core/sync/sync_operation.dart';
 import '../../../../core/sync/sync_queue.dart';
 import '../../../../core/sync/sync_status.dart';
@@ -17,14 +18,26 @@ class CustomerRepositoryImpl implements CustomerRepository {
     this._db, {
     SyncQueue? syncQueue,
     CustomerValidator validator = const CustomerValidator(),
+    String Function()? readCompanyId,
   }) : _syncQueue = syncQueue,
-       _validator = validator;
+       _validator = validator,
+       _readCompanyId = readCompanyId;
 
   final CustomersDatabase _db;
   final SyncQueue? _syncQueue;
   final CustomerValidator _validator;
+  final String Function()? _readCompanyId;
 
   static const entityType = 'customer';
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+
+  Expression<bool> _tenantScoped($CustomersTable t) =>
+      t.companyId.equals(_currentCompanyId);
+
+  Expression<bool> _scoped($CustomersTable t) =>
+      t.deletedAt.isNull() & _tenantScoped(t);
 
   Customer _map(CustomerRow row) {
     return Customer(
@@ -78,7 +91,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
     int? excludingId,
   }) async {
     final query = _db.select(_db.customers)
-      ..where((t) => t.customerCode.equals(customerCode) & _notDeleted(t));
+      ..where((t) => t.customerCode.equals(customerCode) & _scoped(t));
     if (excludingId != null) {
       query.where((t) => t.id.isNotValue(excludingId));
     }
@@ -96,7 +109,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
       return;
     }
     final query = _db.select(_db.customers)
-      ..where((t) => t.externalId.equals(externalId) & _notDeleted(t));
+      ..where((t) => t.externalId.equals(externalId) & _scoped(t));
     if (excludingId != null) {
       query.where((t) => t.id.isNotValue(excludingId));
     }
@@ -140,7 +153,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
   @override
   Future<List<Customer>> getAll({bool includeInactive = false}) async {
     final query = _db.select(_db.customers)
-      ..where(_notDeleted)
+      ..where(_scoped)
       ..orderBy([(t) => OrderingTerm.asc(t.customerCode)]);
     if (!includeInactive) {
       query.where((t) => t.isActive.equals(true));
@@ -152,7 +165,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
   @override
   Stream<List<Customer>> watchAll({bool includeInactive = false}) {
     final query = _db.select(_db.customers)
-      ..where(_notDeleted)
+      ..where(_scoped)
       ..orderBy([(t) => OrderingTerm.asc(t.customerCode)]);
     if (!includeInactive) {
       query.where((t) => t.isActive.equals(true));
@@ -164,7 +177,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
   Future<Customer?> getById(int id) async {
     final row = await (_db.select(
       _db.customers,
-    )..where((t) => t.id.equals(id) & _notDeleted(t))).getSingleOrNull();
+    )..where((t) => t.id.equals(id) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -172,7 +185,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
   Future<Customer?> getByUuid(String uuid) async {
     final row = await (_db.select(
       _db.customers,
-    )..where((t) => t.uuid.equals(uuid))).getSingleOrNull();
+    )..where((t) => t.uuid.equals(uuid) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -184,7 +197,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
     }
     final row =
         await (_db.select(_db.customers)
-              ..where((t) => t.customerCode.equals(code) & _notDeleted(t)))
+              ..where((t) => t.customerCode.equals(code) & _scoped(t)))
             .getSingleOrNull();
     return row == null ? null : _map(row);
   }
@@ -197,7 +210,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
     }
     final row =
         await (_db.select(_db.customers)
-              ..where((t) => t.externalId.equals(id) & _notDeleted(t)))
+              ..where((t) => t.externalId.equals(id) & _scoped(t)))
             .getSingleOrNull();
     return row == null ? null : _map(row);
   }
@@ -252,7 +265,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
     int? limit,
   }) async {
     final normalized = query.trim().toLowerCase();
-    final select = _db.select(_db.customers)..where(_notDeleted);
+    final select = _db.select(_db.customers)..where(_scoped);
     if (!includeInactive) {
       select.where((t) => t.isActive.equals(true));
     }
@@ -318,6 +331,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
             updatedAt: nowMs,
             syncStatus: const Value('pending'),
             version: const Value(1),
+            companyId: Value(_currentCompanyId),
           ),
         );
     final created = await getById(id);
@@ -348,7 +362,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
     final now = DateTime.now().toUtc();
     final nextVersion = existing.version + 1;
-    await (_db.update(_db.customers)..where((t) => t.id.equals(id))).write(
+    await (_db.update(_db.customers)..where((t) => t.id.equals(id) & _scoped(t))).write(
       CustomersCompanion(
         customerCode: Value(normalized.customerCode),
         name: Value(normalized.name),
@@ -363,6 +377,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
         updatedAt: Value(now.millisecondsSinceEpoch),
         syncStatus: const Value('pending'),
         version: Value(nextVersion),
+        companyId: Value(_currentCompanyId),
       ),
     );
 
@@ -382,7 +397,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
     }
     final now = DateTime.now().toUtc();
     final nextVersion = existing.version + 1;
-    await (_db.update(_db.customers)..where((t) => t.id.equals(id))).write(
+    await (_db.update(_db.customers)..where((t) => t.id.equals(id) & _scoped(t))).write(
       CustomersCompanion(
         deletedAt: Value(now.millisecondsSinceEpoch),
         updatedAt: Value(now.millisecondsSinceEpoch),
@@ -439,7 +454,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
     // One preload instead of N+1 lookups per row.
     final existingRows =
-        await (_db.select(_db.customers)..where(_notDeleted)).get();
+        await (_db.select(_db.customers)..where(_scoped)).get();
     final byCode = <String, Customer>{};
     final byExternalId = <String, Customer>{};
     for (final row in existingRows) {
@@ -504,6 +519,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
                     updatedAt: nowMs,
                     syncStatus: const Value('pending'),
                     version: const Value(1),
+                    companyId: Value(_currentCompanyId),
                   ),
                 );
             final created = Customer(
@@ -631,7 +647,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
     DateTime? syncedAt,
   }) async {
     final stamp = (syncedAt ?? DateTime.now().toUtc()).millisecondsSinceEpoch;
-    await (_db.update(_db.customers)..where((t) => t.uuid.equals(uuid))).write(
+    await (_db.update(_db.customers)..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
       CustomersCompanion(
         syncStatus: const Value('synced'),
         lastSyncedAt: Value(stamp),
@@ -641,7 +657,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   Future<void> markConflict(String uuid) async {
-    await (_db.update(_db.customers)..where((t) => t.uuid.equals(uuid))).write(
+    await (_db.update(_db.customers)..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
       const CustomersCompanion(syncStatus: Value('conflict')),
     );
   }
@@ -655,8 +671,11 @@ class CustomerRepositoryImpl implements CustomerRepository {
       return;
     }
     await (_db.update(_db.customers)
-          ..where((t) => t.accountId.equals(fromUuid)))
-        .write(CustomersCompanion(accountId: Value(toUuid)));
+          ..where((t) => t.accountId.equals(fromUuid) & _tenantScoped(t)))
+        .write(CustomersCompanion(
+          accountId: Value(toUuid),
+          updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
+        ));
   }
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
@@ -722,6 +741,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
                 lastSyncedAt: Value(nowMs),
                 version: Value(version),
                 deletedAt: const Value(null),
+                companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
               ),
             );
         await _syncQueue?.removeForEntity(
@@ -760,6 +780,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
               syncStatus: const Value('synced'),
               lastSyncedAt: Value(nowMs),
               version: Value(version),
+              companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
             ),
           );
       return;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit;
+namespace NexaBiz\Core\Tests\Unit;
 
 use NexaBiz\Core\Support\SlidingWindowLimiter;
 use Tests\TestCase;

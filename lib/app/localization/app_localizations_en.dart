@@ -6213,4 +6213,126 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get close => 'Close';
+
+  @override
+  String get subscriptionAndPackagesTitle => 'Subscription & Packages';
+
+  @override
+  String get subscriptionAndPackagesSubtitle =>
+      'Commercial Plans & Cloud Packages';
+
+  @override
+  String get manageSubscriptionButton => 'Manage Subscription & Packages';
+
+  @override
+  String get activePackagesHeader => 'ACTIVE PACKAGES & CAPABILITIES';
+
+  @override
+  String get resourceUsageHeader => 'RESOURCE USAGE & METERS';
+
+  @override
+  String get cloudSyncCapabilityTitle => 'Cloud Data Synchronization';
+
+  @override
+  String get multiDeviceCapabilityTitle => 'Multi-Device Access';
+
+  @override
+  String get multiBranchCapabilityTitle => 'Multi-Branch Management';
+
+  @override
+  String get capabilityLockedLabel => 'Locked';
+
+  @override
+  String get registeredDevicesLabel => 'Registered Devices';
+
+  @override
+  String get teamUsersLabel => 'Team Users';
+
+  @override
+  String get packageStoreSheetTitle => 'Package Store & Upgrade';
+
+  @override
+  String get selectCommercialPlanSection => 'SELECT COMMERCIAL PLAN';
+
+  @override
+  String get availableAddonPackagesSection => 'AVAILABLE ADD-ON PACKAGES';
+
+  @override
+  String get activateSubscriptionButton =>
+      'Activate Subscription & Update Entitlement';
+
+  @override
+  String get subscriptionActivatedSuccess =>
+      'Subscription activated and entitlement updated successfully!';
+
+  @override
+  String get setupLocalAccountSection => 'Local Account Credentials';
+
+  @override
+  String get setupLocalAccountSubtitle =>
+      'Set the email and password used to log in to the local account.';
+
+  @override
+  String get setupLocalEmail => 'Local Email';
+
+  @override
+  String get setupLocalEmailRequired => 'Email is required';
+
+  @override
+  String get setupLocalPassword => 'New Password (Optional)';
+
+  @override
+  String get setupLocalPasswordHelper =>
+      'Enter a new password (min 6 chars) to update.';
+
+  @override
+  String get systemSetupWizardHeaderTitle => 'System Setup Wizard';
+
+  @override
+  String get systemSetupWizardHeaderSubtitle =>
+      'Configure language, currency, company profile, and local admin account.';
+
+  @override
+  String get systemSetupStepLocalAccount => 'Local Admin Account';
+
+  @override
+  String get systemSetupStepLocalAccountHint =>
+      'Set the email and password for local admin access.';
+
+  @override
+  String get systemSetupLocalAccountTitle => 'Local Admin Account Setup';
+
+  @override
+  String get systemSetupLocalAccountSubtitle =>
+      'Set the email and password for local admin access.';
+
+  @override
+  String get systemSetupAdminEmail => 'Admin Email';
+
+  @override
+  String get systemSetupPassword => 'Password';
+
+  @override
+  String get systemSetupConfirmPassword => 'Confirm Password';
+
+  @override
+  String get systemSetupPasswordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get systemSetupCompleteAndLaunch => 'Complete Setup & Launch';
+
+  @override
+  String get systemSetupSuccess => 'System setup complete!';
+
+  @override
+  String systemSetupStepsCompletedCount(int done, int total) {
+    return 'Completed $done of $total steps';
+  }
+
+  @override
+  String get setupSeedInitialDataTitle => 'Initialize default system data';
+
+  @override
+  String get setupSeedInitialDataSubtitle =>
+      'Automatically seed default chart of accounts and initial settings.';
 }

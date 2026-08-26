@@ -4,11 +4,14 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../constants/app_constants.dart';
 import '../../core/database/hive_boxes.dart';
 import '../../core/utils/id_generator.dart';
+import 'company/company_cloud_state.dart';
 import 'company/company_profile.dart';
 
 /// Keys used in the settings Hive box.
 class SettingsKeys {
   const SettingsKeys._();
+
+  static const String companyCloudStatePrefix = 'company_cloud_state_';
 
   static const String themeMode = 'theme_mode';
   static const String locale = 'locale';
@@ -553,6 +556,25 @@ class SettingsRepository {
   Future<bool> isServerInitialized() async {
     final record = await loadDeviceInitialization();
     return record.isServerInitialized;
+  }
+
+  /// Loads persisted [CompanyCloudState] for the given [localCompanyId].
+  Future<CompanyCloudState> loadCompanyCloudState(String localCompanyId) async {
+    final box = await _settingsBox;
+    final raw = box.get('${SettingsKeys.companyCloudStatePrefix}$localCompanyId');
+    if (raw is Map) {
+      return CompanyCloudState.fromMap(raw, localCompanyId);
+    }
+    return CompanyCloudState.localDefault(localCompanyId);
+  }
+
+  /// Saves [CompanyCloudState] for the given company.
+  Future<void> saveCompanyCloudState(CompanyCloudState state) async {
+    final box = await _settingsBox;
+    await box.put(
+      '${SettingsKeys.companyCloudStatePrefix}${state.localCompanyId}',
+      state.toMap(),
+    );
   }
 
   Future<void> resetSettings() async {

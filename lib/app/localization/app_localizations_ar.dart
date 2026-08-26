@@ -6141,4 +6141,128 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get close => 'إغلاق';
+
+  @override
+  String get subscriptionAndPackagesTitle => 'الاشتراكات والباقات';
+
+  @override
+  String get subscriptionAndPackagesSubtitle =>
+      'الخطط التجارية والباقات السحابية';
+
+  @override
+  String get manageSubscriptionButton => 'إدارة الاشتراك والباقات';
+
+  @override
+  String get activePackagesHeader => 'الباقات والإمكانيات النشطة';
+
+  @override
+  String get resourceUsageHeader => 'استهلاك الموارد والحدود';
+
+  @override
+  String get cloudSyncCapabilityTitle => 'المزامنة السحابية للبيانات';
+
+  @override
+  String get multiDeviceCapabilityTitle => 'الربط بالأجهزة المتعددة';
+
+  @override
+  String get multiBranchCapabilityTitle => 'إدارة الفروع المتعددة';
+
+  @override
+  String get capabilityLockedLabel => 'غير مفعلة';
+
+  @override
+  String get registeredDevicesLabel => 'الأجهزة المسجلة';
+
+  @override
+  String get teamUsersLabel => 'مستخدمي الفريق';
+
+  @override
+  String get packageStoreSheetTitle => 'متجر الباقات والترقية';
+
+  @override
+  String get selectCommercialPlanSection => 'اختر الخطة التجارية';
+
+  @override
+  String get availableAddonPackagesSection => 'الباقات الإضافية المتاحة';
+
+  @override
+  String get activateSubscriptionButton => 'تفعيل الاشتراك وتحديث الصلاحيات';
+
+  @override
+  String get subscriptionActivatedSuccess =>
+      'تم تفعيل الاشتراك وتحديث الصلاحيات بنجاح!';
+
+  @override
+  String get setupLocalAccountSection =>
+      'بيانات الحساب المحلي (البريد وكلمة السر)';
+
+  @override
+  String get setupLocalAccountSubtitle =>
+      'حدد البريد الإلكتروني وكلمة المرور لتسجيل الدخول إلى الحساب المحلي.';
+
+  @override
+  String get setupLocalEmail => 'البريد الإلكتروني المحلي';
+
+  @override
+  String get setupLocalEmailRequired => 'البريد الإلكتروني مطلوب';
+
+  @override
+  String get setupLocalPassword => 'كلمة المرور الجديدة (اختياري)';
+
+  @override
+  String get setupLocalPasswordHelper =>
+      'أدخل كلمة مرور جديدة بحجم 6 خانات على الأقل للتغيير.';
+
+  @override
+  String get systemSetupWizardHeaderTitle => 'معالج تهيئة النظام';
+
+  @override
+  String get systemSetupWizardHeaderSubtitle =>
+      'قم بإعداد خيارات اللغة، العملة، بيانات المنشأة، وحساب المسؤول المحلي.';
+
+  @override
+  String get systemSetupStepLocalAccount => 'الحساب المحلي';
+
+  @override
+  String get systemSetupStepLocalAccountHint =>
+      'إعداد البريد الإلكتروني وكلمة المرور للحساب المحلي.';
+
+  @override
+  String get systemSetupLocalAccountTitle => 'إعداد الحساب المحلي';
+
+  @override
+  String get systemSetupLocalAccountSubtitle =>
+      'حدد البريد الإلكتروني وكلمة المرور الخاصة بمسؤول النظام المحلي.';
+
+  @override
+  String get systemSetupAdminEmail => 'البريد الإلكتروني للمسؤول';
+
+  @override
+  String get systemSetupPassword => 'كلمة المرور';
+
+  @override
+  String get systemSetupConfirmPassword => 'تأكيد كلمة المرور';
+
+  @override
+  String get systemSetupPasswordsDoNotMatch => 'كلمات المرور غير متطابقة';
+
+  @override
+  String get systemSetupCompleteAndLaunch => 'إكمال التهيئة وبدء الاستخدام';
+
+  @override
+  String get systemSetupSuccess =>
+      'تم إكمال تهيئة النظام وتحديث بيانات الحساب بنجاح!';
+
+  @override
+  String systemSetupStepsCompletedCount(int done, int total) {
+    return 'تم إكمال $done من أصل $total خطوات';
+  }
+
+  @override
+  String get setupSeedInitialDataTitle =>
+      'تهيئة البيانات الأولية والافتراضية للنظام';
+
+  @override
+  String get setupSeedInitialDataSubtitle =>
+      'إنشاء الدليل المحاسبي الافتراضي وإعدادات النظام الأولية تلقائياً.';
 }

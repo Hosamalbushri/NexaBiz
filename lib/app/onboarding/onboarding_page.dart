@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
 import '../localization/app_localizations.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
 import '../router/app_routes.dart';
@@ -13,7 +14,7 @@ import '../theme/app_spacing.dart';
 /// First-launch welcome screen shown after splash, before setup choice.
 ///
 /// Replaces the old 3-slide product tour with a clean, focused welcome
-/// that leads directly to the setup choice page.
+/// that leads directly to the system setup page.
 class OnboardingPage extends ConsumerStatefulWidget {
   const OnboardingPage({super.key});
 
@@ -27,7 +28,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   Future<void> _finish() async {
     await ref.read(settingsRepositoryProvider).saveOnboardingCompleted(true);
     if (!mounted) return;
-    context.go(AppRoutes.setupChoice);
+    context.go(SystemSetupRoutes.root);
   }
 
   @override

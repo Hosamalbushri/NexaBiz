@@ -57,9 +57,11 @@ return new class extends Migration
             $table->json('result');
             $table->uuid('user_id')->nullable();
             $table->uuid('device_id')->nullable();
-            $table->timestampTz('processed_at')->useCurrent();
+            $table->string('request_hash', 64)->nullable();
+            $table->timestampTz('processed_at')->nullable();
             $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
             $table->unique(['company_id', 'operation_id'], 'uq_sync_operations_company_op');
+            $table->index(['company_id', 'device_id', 'processed_at'], 'ix_sync_operations_comp_dev_time');
         });
     }
 

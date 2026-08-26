@@ -9,14 +9,29 @@ import '../../domain/entities/currency_rate.dart';
 import '../../domain/repositories/currency_rate_repository.dart';
 import '../database/accounting_database.dart';
 
+import '../../../authentication/data/local_auth_store.dart';
+
 class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
-  CurrencyRateRepositoryImpl(this._db, {SyncQueue? syncQueue})
-    : _syncQueue = syncQueue;
+  CurrencyRateRepositoryImpl(
+    this._db, {
+    SyncQueue? syncQueue,
+    String Function()? readCompanyId,
+  }) : _syncQueue = syncQueue,
+       _readCompanyId = readCompanyId;
 
   final AccountingDatabase _db;
   final SyncQueue? _syncQueue;
+  final String Function()? _readCompanyId;
 
   static const entityType = 'currency_rate';
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+
+  Expression<bool> _tenantScoped($CurrencyRatesTable t) =>
+      t.companyId.equals(_currentCompanyId);
+
+  Expression<bool> _scoped($CurrencyRatesTable t) => _tenantScoped(t);
 
   CurrencyRate _map(CurrencyRateRow row) {
     return CurrencyRate(
@@ -42,13 +57,14 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
   Future<List<CurrencyRate>> getAll() async {
     final rows = await (_db.select(
       _db.currencyRates,
-    )..orderBy([(t) => OrderingTerm.asc(t.currencyCode)])).get();
+    )..where(_scoped)..orderBy([(t) => OrderingTerm.asc(t.currencyCode)])).get();
     return rows.map(_map).toList(growable: false);
   }
 
   @override
   Stream<List<CurrencyRate>> watchAll() {
     final query = _db.select(_db.currencyRates)
+      ..where(_scoped)
       ..orderBy([(t) => OrderingTerm.asc(t.currencyCode)]);
     return query.watch().map((rows) => rows.map(_map).toList(growable: false));
   }
@@ -61,7 +77,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
     }
     final row = await (_db.select(
       _db.currencyRates,
-    )..where((t) => t.currencyCode.equals(code))).getSingleOrNull();
+    )..where((t) => t.currencyCode.equals(code) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -72,7 +88,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
     }
     final row = await (_db.select(
       _db.currencyRates,
-    )..where((t) => t.uuid.equals(trimmed))).getSingleOrNull();
+    )..where((t) => t.uuid.equals(trimmed) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -236,6 +252,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
               notes: Value(notes == null || notes.isEmpty ? null : notes),
               syncStatus: const Value('pending'),
               version: const Value(1),
+              companyId: Value(_currentCompanyId),
             ),
           );
       await _upsertHistory(
@@ -246,7 +263,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
       );
       final created = await (_db.select(
         _db.currencyRates,
-      )..where((t) => t.id.equals(id))).getSingle();
+      )..where((t) => t.id.equals(id) & _scoped(t))).getSingle();
       final mapped = _map(created);
       await _enqueue(mapped, SyncOperationType.create);
       return mapped;
@@ -255,13 +272,14 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
     final nextVersion = existing.version + 1;
     await (_db.update(
       _db.currencyRates,
-    )..where((t) => t.id.equals(existing.id))).write(
+    )..where((t) => t.id.equals(existing.id) & _scoped(t))).write(
       CurrencyRatesCompanion(
         rateToBase: Value(draft.rateToBase),
         updatedAt: Value(nowMs),
         notes: Value(notes == null || notes.isEmpty ? null : notes),
         syncStatus: const Value('pending'),
         version: Value(nextVersion),
+        companyId: Value(_currentCompanyId),
       ),
     );
     await _upsertHistory(
@@ -284,7 +302,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
     }
     await (_db.delete(
       _db.currencyRates,
-    )..where((t) => t.currencyCode.equals(code))).go();
+    )..where((t) => t.currencyCode.equals(code) & _scoped(t))).go();
     await (_db.delete(
       _db.currencyRateHistory,
     )..where((t) => t.currencyCode.equals(code))).go();
@@ -378,6 +396,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
                 syncStatus: const Value('synced'),
                 lastSyncedAt: Value(nowMs),
                 version: Value(version),
+                companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
               ),
             );
         await _applyHistoryPayload(code, payload['history']);
@@ -406,13 +425,14 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
               syncStatus: const Value('synced'),
               lastSyncedAt: Value(nowMs),
               version: Value(version),
+              companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
             ),
           );
       await _applyHistoryPayload(code, payload['history']);
       return;
     }
 
-    await (_db.update(_db.currencyRates)..where((t) => t.uuid.equals(uuid)))
+    await (_db.update(_db.currencyRates)..where((t) => t.uuid.equals(uuid) & _scoped(t)))
         .write(
           CurrencyRatesCompanion(
             currencyCode: Value(code),
@@ -424,6 +444,7 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
             syncStatus: const Value('synced'),
             lastSyncedAt: Value(nowMs),
             version: Value(version),
+            companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
           ),
         );
     await _applyHistoryPayload(code, payload['history']);

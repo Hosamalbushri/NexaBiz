@@ -51,4 +51,6 @@ class FiscalYears extends Table {
   IntColumn get lastSyncedAt => integer().nullable()();
 
   IntColumn get version => integer().withDefault(const Constant(1))();
+
+  TextColumn get companyId => text().nullable()();
 }

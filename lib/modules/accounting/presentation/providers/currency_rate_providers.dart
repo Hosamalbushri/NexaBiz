@@ -4,6 +4,7 @@ import '../../../../app/settings/company/app_currency.dart';
 import '../../../../app/settings/company/company_profile.dart';
 import '../../../../app/settings/company/company_profile_providers.dart';
 import '../../../../core/sync/sync_providers.dart';
+import '../../../../core/tenancy/tenant_context.dart';
 import '../../data/repositories/currency_rate_repository_impl.dart';
 import '../../domain/entities/currency_rate.dart';
 import '../../domain/repositories/currency_rate_repository.dart';
@@ -14,6 +15,7 @@ final currencyRateRepositoryImplProvider =
   return CurrencyRateRepositoryImpl(
     ref.watch(accountingDatabaseProvider),
     syncQueue: ref.watch(syncQueueProvider),
+    readCompanyId: () => ref.read(currentCompanyIdProvider),
   );
 });
 

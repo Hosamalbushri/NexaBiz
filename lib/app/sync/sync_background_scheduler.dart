@@ -8,6 +8,8 @@ import '../../core/sync/sync_manager.dart';
 import '../../core/sync/sync_os_background_bridge.dart';
 import '../../core/sync/sync_os_wake_signal.dart';
 import '../../core/sync/sync_overview.dart';
+import '../../core/entitlements/domain/entities/entitlement.dart';
+import '../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../../core/sync/sync_providers.dart';
 import '../../core/sync/sync_queue.dart';
 import '../../core/sync/sync_request_context.dart';
@@ -78,7 +80,10 @@ final syncBackgroundSchedulerProvider = Provider<SyncBackgroundScheduler>((ref) 
     readPrefs: () => ref.read(syncAutoPreferencesProvider),
     canRun: () {
       if (!ref.read(syncEnabledProvider)) return false;
-      return ref.read(authStateProvider).canUseRemoteSync;
+      final entitlementService = ref.read(entitlementServiceProvider);
+      final hasCapability =
+          entitlementService.hasCapability(EntitlementCapability.sync);
+      return ref.read(authStateProvider).canUseRemoteSync && hasCapability;
     },
   );
   ref.listen<SyncAutoPreferences>(syncAutoPreferencesProvider, (_, __) {
@@ -88,6 +93,9 @@ final syncBackgroundSchedulerProvider = Provider<SyncBackgroundScheduler>((ref) 
     scheduler.reconfigure();
   });
   ref.listen<AuthState>(authStateProvider, (_, __) {
+    scheduler.reconfigure();
+  });
+  ref.listen(currentEntitlementProvider, (_, __) {
     scheduler.reconfigure();
   });
   ref.onDispose(scheduler.dispose);

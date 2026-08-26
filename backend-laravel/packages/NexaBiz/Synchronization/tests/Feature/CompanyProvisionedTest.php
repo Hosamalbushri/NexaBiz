@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace NexaBiz\Synchronization\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use NexaBiz\Identity\Database\Seeders\IdentitySeeder;

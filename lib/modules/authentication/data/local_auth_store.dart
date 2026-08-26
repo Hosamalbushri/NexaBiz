@@ -11,6 +11,8 @@ import '../domain/entities/auth_user.dart';
 import '../domain/local_permissions.dart';
 import '../domain/models/password_change_exception.dart';
 
+export '../domain/local_permissions.dart';
+
 /// Offline identity store (Hive). No network required.
 class LocalAuthStore {
   LocalAuthStore();
@@ -41,7 +43,7 @@ class LocalAuthStore {
     if (box.get(_seededKey) == true) {
       final users = _readUsers(box);
       final adminExists =
-          users.any((u) => u.email == LocalAuthDefaults.adminEmail);
+          users.any((u) => u.isSuperAdmin || u.id == LocalAuthDefaults.adminUserId);
       if (adminExists) {
         await _syncSuperAdminPermissions(box, users);
         await _flagDefaultPasswordUsers(box);
@@ -58,7 +60,7 @@ class LocalAuthStore {
       passwordHash: _hashPassword(LocalAuthDefaults.adminPassword, salt),
       status: 'active',
       isSuperAdmin: true,
-      mustChangePassword: true,
+      mustChangePassword: false,
       companyIds: const [LocalAuthDefaults.companyId],
       rolesByCompany: const {
         LocalAuthDefaults.companyId: LocalAuthDefaults.adminRole,
@@ -246,8 +248,7 @@ class LocalAuthStore {
         LocalAuthDefaults.adminRole,
     ];
 
-    var mustChange = matched.mustChangePassword ||
-        _usesDefaultPassword(matched);
+    var mustChange = matched.mustChangePassword;
     if (mustChange && !matched.mustChangePassword) {
       await _writeUsers(box, [
         for (final u in users)
@@ -463,20 +464,36 @@ class LocalAuthStore {
   }
 
   Future<void> _flagDefaultPasswordUsers(Box<dynamic> box) async {
+    // Disabled: Password change screen is no longer forced on default accounts
+  }
+
+  /// Updates local admin account credentials during setup
+  Future<void> updateLocalAdminCredentials({
+    required String newEmail,
+    required String newPassword,
+  }) async {
+    await ensureSeeded();
+    final box = await _box();
     final users = _readUsers(box);
-    var changed = false;
-    final next = <_LocalUserRecord>[];
+    if (users.isEmpty) return;
+
+    final updatedUsers = <_LocalUserRecord>[];
     for (final u in users) {
-      if (!u.mustChangePassword && _usesDefaultPassword(u)) {
-        changed = true;
-        next.add(u.copyWith(mustChangePassword: true));
+      if (u.isSuperAdmin || u.id == LocalAuthDefaults.adminUserId) {
+        final salt = generateUuidV4();
+        updatedUsers.add(
+          u.copyWith(
+            email: newEmail.trim().toLowerCase(),
+            passwordSalt: salt,
+            passwordHash: _hashPassword(newPassword.trim(), salt),
+            mustChangePassword: false,
+          ),
+        );
       } else {
-        next.add(u);
+        updatedUsers.add(u);
       }
     }
-    if (changed) {
-      await _writeUsers(box, next);
-    }
+    await _writeUsers(box, updatedUsers);
   }
 
   bool _usesDefaultPassword(_LocalUserRecord user) {
@@ -531,6 +548,7 @@ class _LocalUserRecord {
   final Map<String, List<String>> permissionsByCompany;
 
   _LocalUserRecord copyWith({
+    String? email,
     String? passwordSalt,
     String? passwordHash,
     bool? mustChangePassword,
@@ -538,7 +556,7 @@ class _LocalUserRecord {
     return _LocalUserRecord(
       id: id,
       name: name,
-      email: email,
+      email: email ?? this.email,
       passwordSalt: passwordSalt ?? this.passwordSalt,
       passwordHash: passwordHash ?? this.passwordHash,
       status: status,

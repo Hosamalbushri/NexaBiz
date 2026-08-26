@@ -44,13 +44,15 @@ enum SetupStepId {
   locale,
   primaryCurrency,
   companyProfile,
-  seedLocal;
+  localAccount,
+  seedData;
 
   static const requiredIds = <SetupStepId>[
     SetupStepId.locale,
     SetupStepId.primaryCurrency,
     SetupStepId.companyProfile,
-    SetupStepId.seedLocal,
+    SetupStepId.localAccount,
+    SetupStepId.seedData,
   ];
 
   static const allIds = requiredIds;
@@ -59,7 +61,7 @@ enum SetupStepId {
 
   static SetupStepId? tryParse(String raw) {
     for (final id in SetupStepId.values) {
-      if (id.storageKey == raw || id.name == raw) {
+      if (id.storageKey == raw || id.name == raw || (raw == 'seedLocal' && id == seedData)) {
         return id;
       }
     }

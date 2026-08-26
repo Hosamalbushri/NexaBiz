@@ -15,7 +15,7 @@ class CustomersDatabase extends _$CustomersDatabase {
   CustomersDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -26,6 +26,12 @@ class CustomersDatabase extends _$CustomersDatabase {
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
         await _createIndexes();
+      }
+      if (from < 3) {
+        await m.addColumn(customers, customers.companyId);
+        await customStatement(
+          "UPDATE customers SET company_id = 'local-company' WHERE company_id IS NULL",
+        );
       }
     },
   );

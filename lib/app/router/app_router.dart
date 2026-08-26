@@ -2,7 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../bootstrap/app_initialization.dart';
+import '../bootstrap/app_initialization_state.dart';
 import '../../core/di/app_providers.dart';
+import '../../core/entitlements/domain/entities/entitlement.dart';
+import '../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../../core/modules/module_providers.dart';
 import '../../modules/app_lock/domain/entities/app_lock_state.dart';
 import '../../modules/app_lock/presentation/pages/app_lock_page.dart';
@@ -29,6 +32,7 @@ import '../settings/data_sync_settings_page.dart';
 import '../settings/platform_settings_page.dart';
 import '../settings/security_settings_page.dart';
 import '../settings/setup_settings_page.dart';
+import '../settings/subscription_packages_page.dart';
 import '../shell/app_shell.dart';
 import '../splash/splash_page.dart';
 import 'app_navigator_keys.dart';
@@ -42,6 +46,7 @@ import '../sync/sync_enabled_provider.dart';
 bool _isPublicRoute(String path) {
   return path == AppRoutes.splash ||
       path == AppRoutes.login ||
+      path == SystemSetupRoutes.root ||
       path == AppRoutes.onboarding ||
       path == AppRoutes.setupChoice ||
       path == AppRoutes.serverSetup ||
@@ -90,6 +95,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.listen(appInitializationControllerProvider, (_, _) {
     refresh.value++;
   });
+  ref.listen(currentEntitlementProvider, (_, _) {
+    refresh.value++;
+  });
 
   final router = GoRouter(
     navigatorKey: appRootNavigatorKey,
@@ -102,10 +110,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final initState = ref.read(appInitializationControllerProvider);
       final isPublic = _isPublicRoute(path);
 
-      // Root path '/' or empty path resolves to splash or login
+      // Root path '/' or empty path resolves to login or setup
       if (path == AppRoutes.root || path.isEmpty) {
         if (auth.status == AuthStatus.unauthenticated) {
-          return AppRoutes.login;
+          final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
+          return ready ? AppRoutes.login : SystemSetupRoutes.root;
         }
         return AppRoutes.splash;
       }
@@ -117,65 +126,58 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       // 2. Mandatory Authentication Gate: ALL non-public routes require active session
-      if (auth.status == AuthStatus.unauthenticated ||
-          (syncEnabled && auth.needsSessionRenewal)) {
+      if (auth.status == AuthStatus.unauthenticated) {
         if (isPublic) return null;
-        return AppRoutes.login;
+        final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
+        return ready ? AppRoutes.login : SystemSetupRoutes.root;
       }
 
-      // 3. Mandatory Password Change Gate
-      if (auth.isAuthenticated && auth.mustChangePassword) {
-        if (path == AppRoutes.changePassword || path == AppRoutes.splash) {
-          return null;
-        }
-        return AppRoutes.changePassword;
-      }
+      // 3. Mandatory Password Change Gate: Bypassed per product rules
+      // (User sets local email & password in setup settings)
 
       // 4. Authenticated Device Initialization & Server Bootstrap Progress Gate
-      final isServerInitializing = initState.isDownloading ||
-          initState.isWritingDatabase ||
-          initState.isSynchronizing ||
-          initState.isBootstrapCompleted ||
-          initState.isCheckingRemote;
+      final isServerInitializing = initState.operatingMode == ApplicationOperatingMode.server &&
+          (initState.isDownloading ||
+              initState.isWritingDatabase ||
+              initState.isSynchronizing ||
+              initState.isBootstrapCompleted ||
+              initState.isCheckingRemote);
 
-      if (auth.isAuthenticated && isServerInitializing) {
+      if (auth.isAuthenticated && isServerInitializing && !initState.isReady) {
         if (path == AppRoutes.serverBootstrapProgress) {
           return null;
         }
         return AppRoutes.serverBootstrapProgress;
       }
 
-      // 5. Authenticated Users on Public Auth Pages: auto-forward to Dashboard/Setup
+      // Forward obsolete setup choice & onboarding routes directly to Login or Dashboard
+      if (path == AppRoutes.onboarding ||
+          path == AppRoutes.setupChoice ||
+          path == AppRoutes.serverSetup ||
+          path == AppRoutes.serverBootstrapLogin ||
+          path == AppRoutes.serverBootstrapProgress) {
+        if (auth.isAuthenticated) {
+          return AppRoutes.dashboard;
+        } else {
+          return AppRoutes.login;
+        }
+      }
+
+      // 5. Mandatory System Setup Readiness Gate:
+      // Setup MUST be completed before accessing dashboard or protected pages.
+      final isSetupReady = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
+      if (!isSetupReady && !auth.isRemoteSession) {
+        if (path != SystemSetupRoutes.root && path != AppRoutes.splash) {
+          return SystemSetupRoutes.root;
+        }
+      }
+
+      // 6. Authenticated Users on Public Auth Pages: auto-forward to Dashboard
       if (auth.isAuthenticated &&
           (path == AppRoutes.login ||
               path == AppRoutes.splash ||
               path == AppRoutes.serverBootstrapLogin)) {
-        final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
-        final startup = ref.read(startupStateProvider);
-        if (startup.isFirstLaunch && !auth.isRemoteSession && !ready) {
-          return SystemSetupRoutes.root;
-        }
-        return AppRoutes.dashboard;
-      }
-
-      // Guard dashboard for first-launch users until setup is ready.
-      // Users with an active remote session (completed server login) bypass this guard.
-      if (auth.isAuthenticated &&
-          !auth.mustChangePassword &&
-          path == AppRoutes.dashboard) {
-        final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
-        final startup = ref.read(startupStateProvider);
-        if (startup.isFirstLaunch && !auth.isRemoteSession && !ready) {
-          return SystemSetupRoutes.root;
-        }
-      }
-
-      // Guard initial setup wizard: restrict /system-setup to initial launch setup only.
-      if (path == SystemSetupRoutes.root) {
-        final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
-        if (ready) {
-          return AppRoutes.dashboard;
-        }
+        return isSetupReady ? AppRoutes.dashboard : SystemSetupRoutes.root;
       }
 
       final lock = ref.read(appLockControllerProvider);
@@ -210,6 +212,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           if (!auth.hasAnyPermission(required)) {
             return AppRoutes.dashboard;
           }
+        }
+      }
+
+      // Capability & Entitlement Gate: Protect sync routes from Free / unentitled access
+      if (path == AppRoutes.settingsDataSync ||
+          path.startsWith('${AppRoutes.settingsDataSync}/')) {
+        final entitlementAsync = ref.read(currentEntitlementProvider);
+        final entitlementService = ref.read(entitlementServiceProvider);
+        final currentEntitlement =
+            entitlementAsync.valueOrNull ?? entitlementService.currentEntitlement;
+        if (!currentEntitlement.hasCapability(EntitlementCapability.sync)) {
+          return AppRoutes.settingsSubscription;
         }
       }
 
@@ -342,6 +356,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         name: 'settingsSecurity',
                         builder: (context, state) =>
                             const SecuritySettingsPage(),
+                      ),
+                      GoRoute(
+                        path: 'subscription',
+                        name: 'settingsSubscription',
+                        builder: (context, state) =>
+                            const SubscriptionPackagesPage(),
                       ),
                       GoRoute(
                         path: 'data-sync',

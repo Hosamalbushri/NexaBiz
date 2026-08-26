@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/database/tenant_database_name.dart';
 import '../../../../core/sync/sync_providers.dart';
 import '../../../../core/tenancy/session_company.dart';
+import '../../../../core/tenancy/tenant_context.dart';
 import '../../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../data/database/sales_database.dart';
 import '../../data/datasources/sale_invoice_pdf_printer.dart';
@@ -36,6 +37,7 @@ final saleRepositoryImplProvider = Provider<SaleRepositoryImpl>((ref) {
   return SaleRepositoryImpl(
     ref.watch(salesDatabaseProvider),
     syncQueue: ref.watch(syncQueueProvider),
+    readCompanyId: () => ref.read(currentCompanyIdProvider),
   );
 });
 

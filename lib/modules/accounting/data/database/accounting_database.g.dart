@@ -229,6 +229,17 @@ class $AccountsTable extends Accounts
     requiredDuringInsert: false,
     defaultValue: const Constant(1),
   );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _deletedAtMeta = const VerificationMeta(
     'deletedAt',
   );
@@ -259,6 +270,7 @@ class $AccountsTable extends Accounts
     syncStatus,
     lastSyncedAt,
     version,
+    companyId,
     deletedAt,
   ];
   @override
@@ -404,6 +416,12 @@ class $AccountsTable extends Accounts
         version.isAcceptableOrUnknown(data['version']!, _versionMeta),
       );
     }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    }
     if (data.containsKey('deleted_at')) {
       context.handle(
         _deletedAtMeta,
@@ -487,6 +505,10 @@ class $AccountsTable extends Accounts
         DriftSqlType.int,
         data['${effectivePrefix}version'],
       )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      ),
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
@@ -529,6 +551,9 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
   final int? lastSyncedAt;
   final int version;
 
+  /// Company / Tenant owner ID for local multi-tenant data isolation.
+  final String? companyId;
+
   /// Soft-delete tombstone (UTC epoch ms). Null = not deleted.
   final int? deletedAt;
   const AccountRow({
@@ -549,6 +574,7 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     required this.syncStatus,
     this.lastSyncedAt,
     required this.version,
+    this.companyId,
     this.deletedAt,
   });
   @override
@@ -577,6 +603,9 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       map['last_synced_at'] = Variable<int>(lastSyncedAt);
     }
     map['version'] = Variable<int>(version);
+    if (!nullToAbsent || companyId != null) {
+      map['company_id'] = Variable<String>(companyId);
+    }
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
     }
@@ -608,6 +637,9 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
           ? const Value.absent()
           : Value(lastSyncedAt),
       version: Value(version),
+      companyId: companyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(companyId),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
@@ -637,6 +669,7 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
       lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
       version: serializer.fromJson<int>(json['version']),
+      companyId: serializer.fromJson<String?>(json['companyId']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
     );
   }
@@ -661,6 +694,7 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       'syncStatus': serializer.toJson<String>(syncStatus),
       'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
       'version': serializer.toJson<int>(version),
+      'companyId': serializer.toJson<String?>(companyId),
       'deletedAt': serializer.toJson<int?>(deletedAt),
     };
   }
@@ -683,6 +717,7 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     String? syncStatus,
     Value<int?> lastSyncedAt = const Value.absent(),
     int? version,
+    Value<String?> companyId = const Value.absent(),
     Value<int?> deletedAt = const Value.absent(),
   }) => AccountRow(
     id: id ?? this.id,
@@ -702,6 +737,7 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     syncStatus: syncStatus ?? this.syncStatus,
     lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
     version: version ?? this.version,
+    companyId: companyId.present ? companyId.value : this.companyId,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   AccountRow copyWithCompanion(AccountsCompanion data) {
@@ -737,6 +773,7 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
           ? data.lastSyncedAt.value
           : this.lastSyncedAt,
       version: data.version.present ? data.version.value : this.version,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
@@ -761,6 +798,7 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
           ..write('syncStatus: $syncStatus, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
           ..write('version: $version, ')
+          ..write('companyId: $companyId, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -785,6 +823,7 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     syncStatus,
     lastSyncedAt,
     version,
+    companyId,
     deletedAt,
   );
   @override
@@ -808,6 +847,7 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
           other.syncStatus == this.syncStatus &&
           other.lastSyncedAt == this.lastSyncedAt &&
           other.version == this.version &&
+          other.companyId == this.companyId &&
           other.deletedAt == this.deletedAt);
 }
 
@@ -829,6 +869,7 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
   final Value<String> syncStatus;
   final Value<int?> lastSyncedAt;
   final Value<int> version;
+  final Value<String?> companyId;
   final Value<int?> deletedAt;
   const AccountsCompanion({
     this.id = const Value.absent(),
@@ -848,6 +889,7 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
     this.syncStatus = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
+    this.companyId = const Value.absent(),
     this.deletedAt = const Value.absent(),
   });
   AccountsCompanion.insert({
@@ -868,6 +910,7 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
     this.syncStatus = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
+    this.companyId = const Value.absent(),
     this.deletedAt = const Value.absent(),
   }) : uuid = Value(uuid),
        accountCode = Value(accountCode),
@@ -894,6 +937,7 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
     Expression<String>? syncStatus,
     Expression<int>? lastSyncedAt,
     Expression<int>? version,
+    Expression<String>? companyId,
     Expression<int>? deletedAt,
   }) {
     return RawValuesInsertable({
@@ -914,6 +958,7 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
       if (syncStatus != null) 'sync_status': syncStatus,
       if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
       if (version != null) 'version': version,
+      if (companyId != null) 'company_id': companyId,
       if (deletedAt != null) 'deleted_at': deletedAt,
     });
   }
@@ -936,6 +981,7 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
     Value<String>? syncStatus,
     Value<int?>? lastSyncedAt,
     Value<int>? version,
+    Value<String?>? companyId,
     Value<int?>? deletedAt,
   }) {
     return AccountsCompanion(
@@ -956,6 +1002,7 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
       syncStatus: syncStatus ?? this.syncStatus,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
       version: version ?? this.version,
+      companyId: companyId ?? this.companyId,
       deletedAt: deletedAt ?? this.deletedAt,
     );
   }
@@ -1014,6 +1061,9 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
     if (deletedAt.present) {
       map['deleted_at'] = Variable<int>(deletedAt.value);
     }
@@ -1040,6 +1090,7 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
           ..write('syncStatus: $syncStatus, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
           ..write('version: $version, ')
+          ..write('companyId: $companyId, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -1165,6 +1216,17 @@ class $CurrencyRatesTable extends CurrencyRates
     requiredDuringInsert: false,
     defaultValue: const Constant(1),
   );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1176,6 +1238,7 @@ class $CurrencyRatesTable extends CurrencyRates
     syncStatus,
     lastSyncedAt,
     version,
+    companyId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1257,6 +1320,12 @@ class $CurrencyRatesTable extends CurrencyRates
         version.isAcceptableOrUnknown(data['version']!, _versionMeta),
       );
     }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    }
     return context;
   }
 
@@ -1302,6 +1371,10 @@ class $CurrencyRatesTable extends CurrencyRates
         DriftSqlType.int,
         data['${effectivePrefix}version'],
       )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      ),
     );
   }
 
@@ -1328,6 +1401,7 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
   final String syncStatus;
   final int? lastSyncedAt;
   final int version;
+  final String? companyId;
   const CurrencyRateRow({
     required this.id,
     required this.uuid,
@@ -1338,6 +1412,7 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
     required this.syncStatus,
     this.lastSyncedAt,
     required this.version,
+    this.companyId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1355,6 +1430,9 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
       map['last_synced_at'] = Variable<int>(lastSyncedAt);
     }
     map['version'] = Variable<int>(version);
+    if (!nullToAbsent || companyId != null) {
+      map['company_id'] = Variable<String>(companyId);
+    }
     return map;
   }
 
@@ -1373,6 +1451,9 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
           ? const Value.absent()
           : Value(lastSyncedAt),
       version: Value(version),
+      companyId: companyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(companyId),
     );
   }
 
@@ -1391,6 +1472,7 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
       lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
       version: serializer.fromJson<int>(json['version']),
+      companyId: serializer.fromJson<String?>(json['companyId']),
     );
   }
   @override
@@ -1406,6 +1488,7 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
       'syncStatus': serializer.toJson<String>(syncStatus),
       'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
       'version': serializer.toJson<int>(version),
+      'companyId': serializer.toJson<String?>(companyId),
     };
   }
 
@@ -1419,6 +1502,7 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
     String? syncStatus,
     Value<int?> lastSyncedAt = const Value.absent(),
     int? version,
+    Value<String?> companyId = const Value.absent(),
   }) => CurrencyRateRow(
     id: id ?? this.id,
     uuid: uuid ?? this.uuid,
@@ -1429,6 +1513,7 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
     syncStatus: syncStatus ?? this.syncStatus,
     lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
     version: version ?? this.version,
+    companyId: companyId.present ? companyId.value : this.companyId,
   );
   CurrencyRateRow copyWithCompanion(CurrencyRatesCompanion data) {
     return CurrencyRateRow(
@@ -1449,6 +1534,7 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
           ? data.lastSyncedAt.value
           : this.lastSyncedAt,
       version: data.version.present ? data.version.value : this.version,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
     );
   }
 
@@ -1463,7 +1549,8 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
           ..write('notes: $notes, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
-          ..write('version: $version')
+          ..write('version: $version, ')
+          ..write('companyId: $companyId')
           ..write(')'))
         .toString();
   }
@@ -1479,6 +1566,7 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
     syncStatus,
     lastSyncedAt,
     version,
+    companyId,
   );
   @override
   bool operator ==(Object other) =>
@@ -1492,7 +1580,8 @@ class CurrencyRateRow extends DataClass implements Insertable<CurrencyRateRow> {
           other.notes == this.notes &&
           other.syncStatus == this.syncStatus &&
           other.lastSyncedAt == this.lastSyncedAt &&
-          other.version == this.version);
+          other.version == this.version &&
+          other.companyId == this.companyId);
 }
 
 class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
@@ -1505,6 +1594,7 @@ class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
   final Value<String> syncStatus;
   final Value<int?> lastSyncedAt;
   final Value<int> version;
+  final Value<String?> companyId;
   const CurrencyRatesCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
@@ -1515,6 +1605,7 @@ class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
     this.syncStatus = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
+    this.companyId = const Value.absent(),
   });
   CurrencyRatesCompanion.insert({
     this.id = const Value.absent(),
@@ -1526,6 +1617,7 @@ class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
     this.syncStatus = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
+    this.companyId = const Value.absent(),
   }) : uuid = Value(uuid),
        currencyCode = Value(currencyCode),
        rateToBase = Value(rateToBase),
@@ -1540,6 +1632,7 @@ class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
     Expression<String>? syncStatus,
     Expression<int>? lastSyncedAt,
     Expression<int>? version,
+    Expression<String>? companyId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1551,6 +1644,7 @@ class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
       if (syncStatus != null) 'sync_status': syncStatus,
       if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
       if (version != null) 'version': version,
+      if (companyId != null) 'company_id': companyId,
     });
   }
 
@@ -1564,6 +1658,7 @@ class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
     Value<String>? syncStatus,
     Value<int?>? lastSyncedAt,
     Value<int>? version,
+    Value<String?>? companyId,
   }) {
     return CurrencyRatesCompanion(
       id: id ?? this.id,
@@ -1575,6 +1670,7 @@ class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
       syncStatus: syncStatus ?? this.syncStatus,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
       version: version ?? this.version,
+      companyId: companyId ?? this.companyId,
     );
   }
 
@@ -1608,6 +1704,9 @@ class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
     return map;
   }
 
@@ -1622,7 +1721,8 @@ class CurrencyRatesCompanion extends UpdateCompanion<CurrencyRateRow> {
           ..write('notes: $notes, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
-          ..write('version: $version')
+          ..write('version: $version, ')
+          ..write('companyId: $companyId')
           ..write(')'))
         .toString();
   }
@@ -2220,6 +2320,17 @@ class $VoucherBooksTable extends VoucherBooks
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2235,6 +2346,7 @@ class $VoucherBooksTable extends VoucherBooks
     notes,
     createdAt,
     updatedAt,
+    companyId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2333,6 +2445,12 @@ class $VoucherBooksTable extends VoucherBooks
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    }
     return context;
   }
 
@@ -2394,6 +2512,10 @@ class $VoucherBooksTable extends VoucherBooks
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
       )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      ),
     );
   }
 
@@ -2429,6 +2551,7 @@ class VoucherBookRow extends DataClass implements Insertable<VoucherBookRow> {
   final String? notes;
   final int createdAt;
   final int updatedAt;
+  final String? companyId;
   const VoucherBookRow({
     required this.id,
     required this.uuid,
@@ -2443,6 +2566,7 @@ class VoucherBookRow extends DataClass implements Insertable<VoucherBookRow> {
     this.notes,
     required this.createdAt,
     required this.updatedAt,
+    this.companyId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2464,6 +2588,9 @@ class VoucherBookRow extends DataClass implements Insertable<VoucherBookRow> {
     }
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
+    if (!nullToAbsent || companyId != null) {
+      map['company_id'] = Variable<String>(companyId);
+    }
     return map;
   }
 
@@ -2486,6 +2613,9 @@ class VoucherBookRow extends DataClass implements Insertable<VoucherBookRow> {
           : Value(notes),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      companyId: companyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(companyId),
     );
   }
 
@@ -2508,6 +2638,7 @@ class VoucherBookRow extends DataClass implements Insertable<VoucherBookRow> {
       notes: serializer.fromJson<String?>(json['notes']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      companyId: serializer.fromJson<String?>(json['companyId']),
     );
   }
   @override
@@ -2527,6 +2658,7 @@ class VoucherBookRow extends DataClass implements Insertable<VoucherBookRow> {
       'notes': serializer.toJson<String?>(notes),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
+      'companyId': serializer.toJson<String?>(companyId),
     };
   }
 
@@ -2544,6 +2676,7 @@ class VoucherBookRow extends DataClass implements Insertable<VoucherBookRow> {
     Value<String?> notes = const Value.absent(),
     int? createdAt,
     int? updatedAt,
+    Value<String?> companyId = const Value.absent(),
   }) => VoucherBookRow(
     id: id ?? this.id,
     uuid: uuid ?? this.uuid,
@@ -2558,6 +2691,7 @@ class VoucherBookRow extends DataClass implements Insertable<VoucherBookRow> {
     notes: notes.present ? notes.value : this.notes,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    companyId: companyId.present ? companyId.value : this.companyId,
   );
   VoucherBookRow copyWithCompanion(VoucherBooksCompanion data) {
     return VoucherBookRow(
@@ -2576,6 +2710,7 @@ class VoucherBookRow extends DataClass implements Insertable<VoucherBookRow> {
       notes: data.notes.present ? data.notes.value : this.notes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
     );
   }
 
@@ -2594,7 +2729,8 @@ class VoucherBookRow extends DataClass implements Insertable<VoucherBookRow> {
           ..write('isActive: $isActive, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('companyId: $companyId')
           ..write(')'))
         .toString();
   }
@@ -2614,6 +2750,7 @@ class VoucherBookRow extends DataClass implements Insertable<VoucherBookRow> {
     notes,
     createdAt,
     updatedAt,
+    companyId,
   );
   @override
   bool operator ==(Object other) =>
@@ -2631,7 +2768,8 @@ class VoucherBookRow extends DataClass implements Insertable<VoucherBookRow> {
           other.isActive == this.isActive &&
           other.notes == this.notes &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.companyId == this.companyId);
 }
 
 class VoucherBooksCompanion extends UpdateCompanion<VoucherBookRow> {
@@ -2648,6 +2786,7 @@ class VoucherBooksCompanion extends UpdateCompanion<VoucherBookRow> {
   final Value<String?> notes;
   final Value<int> createdAt;
   final Value<int> updatedAt;
+  final Value<String?> companyId;
   const VoucherBooksCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
@@ -2662,6 +2801,7 @@ class VoucherBooksCompanion extends UpdateCompanion<VoucherBookRow> {
     this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.companyId = const Value.absent(),
   });
   VoucherBooksCompanion.insert({
     this.id = const Value.absent(),
@@ -2677,6 +2817,7 @@ class VoucherBooksCompanion extends UpdateCompanion<VoucherBookRow> {
     this.notes = const Value.absent(),
     required int createdAt,
     required int updatedAt,
+    this.companyId = const Value.absent(),
   }) : uuid = Value(uuid),
        name = Value(name),
        bookType = Value(bookType),
@@ -2696,6 +2837,7 @@ class VoucherBooksCompanion extends UpdateCompanion<VoucherBookRow> {
     Expression<String>? notes,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
+    Expression<String>? companyId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2711,6 +2853,7 @@ class VoucherBooksCompanion extends UpdateCompanion<VoucherBookRow> {
       if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (companyId != null) 'company_id': companyId,
     });
   }
 
@@ -2728,6 +2871,7 @@ class VoucherBooksCompanion extends UpdateCompanion<VoucherBookRow> {
     Value<String?>? notes,
     Value<int>? createdAt,
     Value<int>? updatedAt,
+    Value<String?>? companyId,
   }) {
     return VoucherBooksCompanion(
       id: id ?? this.id,
@@ -2743,6 +2887,7 @@ class VoucherBooksCompanion extends UpdateCompanion<VoucherBookRow> {
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      companyId: companyId ?? this.companyId,
     );
   }
 
@@ -2788,6 +2933,9 @@ class VoucherBooksCompanion extends UpdateCompanion<VoucherBookRow> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
     return map;
   }
 
@@ -2806,7 +2954,8 @@ class VoucherBooksCompanion extends UpdateCompanion<VoucherBookRow> {
           ..write('isActive: $isActive, ')
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('companyId: $companyId')
           ..write(')'))
         .toString();
   }
@@ -3006,6 +3155,17 @@ class $JournalEntriesTable extends JournalEntries
     requiredDuringInsert: false,
     defaultValue: const Constant(1),
   );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _deletedAtMeta = const VerificationMeta(
     'deletedAt',
   );
@@ -3034,6 +3194,7 @@ class $JournalEntriesTable extends JournalEntries
     syncStatus,
     lastSyncedAt,
     version,
+    companyId,
     deletedAt,
   ];
   @override
@@ -3164,6 +3325,12 @@ class $JournalEntriesTable extends JournalEntries
         version.isAcceptableOrUnknown(data['version']!, _versionMeta),
       );
     }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    }
     if (data.containsKey('deleted_at')) {
       context.handle(
         _deletedAtMeta,
@@ -3239,6 +3406,10 @@ class $JournalEntriesTable extends JournalEntries
         DriftSqlType.int,
         data['${effectivePrefix}version'],
       )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      ),
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
@@ -3278,6 +3449,7 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
   final String syncStatus;
   final int? lastSyncedAt;
   final int version;
+  final String? companyId;
   final int? deletedAt;
   const JournalEntryRow({
     required this.id,
@@ -3295,6 +3467,7 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
     required this.syncStatus,
     this.lastSyncedAt,
     required this.version,
+    this.companyId,
     this.deletedAt,
   });
   @override
@@ -3323,6 +3496,9 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
       map['last_synced_at'] = Variable<int>(lastSyncedAt);
     }
     map['version'] = Variable<int>(version);
+    if (!nullToAbsent || companyId != null) {
+      map['company_id'] = Variable<String>(companyId);
+    }
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
     }
@@ -3354,6 +3530,9 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
           ? const Value.absent()
           : Value(lastSyncedAt),
       version: Value(version),
+      companyId: companyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(companyId),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
@@ -3381,6 +3560,7 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
       lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
       version: serializer.fromJson<int>(json['version']),
+      companyId: serializer.fromJson<String?>(json['companyId']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
     );
   }
@@ -3403,6 +3583,7 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
       'syncStatus': serializer.toJson<String>(syncStatus),
       'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
       'version': serializer.toJson<int>(version),
+      'companyId': serializer.toJson<String?>(companyId),
       'deletedAt': serializer.toJson<int?>(deletedAt),
     };
   }
@@ -3423,6 +3604,7 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
     String? syncStatus,
     Value<int?> lastSyncedAt = const Value.absent(),
     int? version,
+    Value<String?> companyId = const Value.absent(),
     Value<int?> deletedAt = const Value.absent(),
   }) => JournalEntryRow(
     id: id ?? this.id,
@@ -3440,6 +3622,7 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
     syncStatus: syncStatus ?? this.syncStatus,
     lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
     version: version ?? this.version,
+    companyId: companyId.present ? companyId.value : this.companyId,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   JournalEntryRow copyWithCompanion(JournalEntriesCompanion data) {
@@ -3473,6 +3656,7 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
           ? data.lastSyncedAt.value
           : this.lastSyncedAt,
       version: data.version.present ? data.version.value : this.version,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
@@ -3495,6 +3679,7 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
           ..write('syncStatus: $syncStatus, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
           ..write('version: $version, ')
+          ..write('companyId: $companyId, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -3517,6 +3702,7 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
     syncStatus,
     lastSyncedAt,
     version,
+    companyId,
     deletedAt,
   );
   @override
@@ -3538,6 +3724,7 @@ class JournalEntryRow extends DataClass implements Insertable<JournalEntryRow> {
           other.syncStatus == this.syncStatus &&
           other.lastSyncedAt == this.lastSyncedAt &&
           other.version == this.version &&
+          other.companyId == this.companyId &&
           other.deletedAt == this.deletedAt);
 }
 
@@ -3557,6 +3744,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
   final Value<String> syncStatus;
   final Value<int?> lastSyncedAt;
   final Value<int> version;
+  final Value<String?> companyId;
   final Value<int?> deletedAt;
   const JournalEntriesCompanion({
     this.id = const Value.absent(),
@@ -3574,6 +3762,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
     this.syncStatus = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
+    this.companyId = const Value.absent(),
     this.deletedAt = const Value.absent(),
   });
   JournalEntriesCompanion.insert({
@@ -3592,6 +3781,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
     this.syncStatus = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
+    this.companyId = const Value.absent(),
     this.deletedAt = const Value.absent(),
   }) : uuid = Value(uuid),
        entryDate = Value(entryDate),
@@ -3616,6 +3806,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
     Expression<String>? syncStatus,
     Expression<int>? lastSyncedAt,
     Expression<int>? version,
+    Expression<String>? companyId,
     Expression<int>? deletedAt,
   }) {
     return RawValuesInsertable({
@@ -3634,6 +3825,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
       if (syncStatus != null) 'sync_status': syncStatus,
       if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
       if (version != null) 'version': version,
+      if (companyId != null) 'company_id': companyId,
       if (deletedAt != null) 'deleted_at': deletedAt,
     });
   }
@@ -3654,6 +3846,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
     Value<String>? syncStatus,
     Value<int?>? lastSyncedAt,
     Value<int>? version,
+    Value<String?>? companyId,
     Value<int?>? deletedAt,
   }) {
     return JournalEntriesCompanion(
@@ -3672,6 +3865,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
       syncStatus: syncStatus ?? this.syncStatus,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
       version: version ?? this.version,
+      companyId: companyId ?? this.companyId,
       deletedAt: deletedAt ?? this.deletedAt,
     );
   }
@@ -3724,6 +3918,9 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
     if (deletedAt.present) {
       map['deleted_at'] = Variable<int>(deletedAt.value);
     }
@@ -3748,6 +3945,7 @@ class JournalEntriesCompanion extends UpdateCompanion<JournalEntryRow> {
           ..write('syncStatus: $syncStatus, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
           ..write('version: $version, ')
+          ..write('companyId: $companyId, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -4749,6 +4947,17 @@ class $FiscalYearsTable extends FiscalYears
     requiredDuringInsert: false,
     defaultValue: const Constant(1),
   );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4772,6 +4981,7 @@ class $FiscalYearsTable extends FiscalYears
     syncStatus,
     lastSyncedAt,
     version,
+    companyId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4949,6 +5159,12 @@ class $FiscalYearsTable extends FiscalYears
         version.isAcceptableOrUnknown(data['version']!, _versionMeta),
       );
     }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    }
     return context;
   }
 
@@ -5042,6 +5258,10 @@ class $FiscalYearsTable extends FiscalYears
         DriftSqlType.int,
         data['${effectivePrefix}version'],
       )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      ),
     );
   }
 
@@ -5081,6 +5301,7 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
   final String syncStatus;
   final int? lastSyncedAt;
   final int version;
+  final String? companyId;
   const FiscalYearRow({
     required this.id,
     required this.uuid,
@@ -5103,6 +5324,7 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
     required this.syncStatus,
     this.lastSyncedAt,
     required this.version,
+    this.companyId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5140,6 +5362,9 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
       map['last_synced_at'] = Variable<int>(lastSyncedAt);
     }
     map['version'] = Variable<int>(version);
+    if (!nullToAbsent || companyId != null) {
+      map['company_id'] = Variable<String>(companyId);
+    }
     return map;
   }
 
@@ -5178,6 +5403,9 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
           ? const Value.absent()
           : Value(lastSyncedAt),
       version: Value(version),
+      companyId: companyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(companyId),
     );
   }
 
@@ -5214,6 +5442,7 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
       lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
       version: serializer.fromJson<int>(json['version']),
+      companyId: serializer.fromJson<String?>(json['companyId']),
     );
   }
   @override
@@ -5241,6 +5470,7 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
       'syncStatus': serializer.toJson<String>(syncStatus),
       'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
       'version': serializer.toJson<int>(version),
+      'companyId': serializer.toJson<String?>(companyId),
     };
   }
 
@@ -5266,6 +5496,7 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
     String? syncStatus,
     Value<int?> lastSyncedAt = const Value.absent(),
     int? version,
+    Value<String?> companyId = const Value.absent(),
   }) => FiscalYearRow(
     id: id ?? this.id,
     uuid: uuid ?? this.uuid,
@@ -5292,6 +5523,7 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
     syncStatus: syncStatus ?? this.syncStatus,
     lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
     version: version ?? this.version,
+    companyId: companyId.present ? companyId.value : this.companyId,
   );
   FiscalYearRow copyWithCompanion(FiscalYearsCompanion data) {
     return FiscalYearRow(
@@ -5332,6 +5564,7 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
           ? data.lastSyncedAt.value
           : this.lastSyncedAt,
       version: data.version.present ? data.version.value : this.version,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
     );
   }
 
@@ -5358,7 +5591,8 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
           ..write('closedBy: $closedBy, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
-          ..write('version: $version')
+          ..write('version: $version, ')
+          ..write('companyId: $companyId')
           ..write(')'))
         .toString();
   }
@@ -5386,6 +5620,7 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
     syncStatus,
     lastSyncedAt,
     version,
+    companyId,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -5411,7 +5646,8 @@ class FiscalYearRow extends DataClass implements Insertable<FiscalYearRow> {
           other.closedBy == this.closedBy &&
           other.syncStatus == this.syncStatus &&
           other.lastSyncedAt == this.lastSyncedAt &&
-          other.version == this.version);
+          other.version == this.version &&
+          other.companyId == this.companyId);
 }
 
 class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
@@ -5436,6 +5672,7 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
   final Value<String> syncStatus;
   final Value<int?> lastSyncedAt;
   final Value<int> version;
+  final Value<String?> companyId;
   const FiscalYearsCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
@@ -5458,6 +5695,7 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
     this.syncStatus = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
+    this.companyId = const Value.absent(),
   });
   FiscalYearsCompanion.insert({
     this.id = const Value.absent(),
@@ -5481,6 +5719,7 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
     this.syncStatus = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
+    this.companyId = const Value.absent(),
   }) : uuid = Value(uuid),
        code = Value(code),
        name = Value(name),
@@ -5513,6 +5752,7 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
     Expression<String>? syncStatus,
     Expression<int>? lastSyncedAt,
     Expression<int>? version,
+    Expression<String>? companyId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -5537,6 +5777,7 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
       if (syncStatus != null) 'sync_status': syncStatus,
       if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
       if (version != null) 'version': version,
+      if (companyId != null) 'company_id': companyId,
     });
   }
 
@@ -5562,6 +5803,7 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
     Value<String>? syncStatus,
     Value<int?>? lastSyncedAt,
     Value<int>? version,
+    Value<String?>? companyId,
   }) {
     return FiscalYearsCompanion(
       id: id ?? this.id,
@@ -5585,6 +5827,7 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
       syncStatus: syncStatus ?? this.syncStatus,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
       version: version ?? this.version,
+      companyId: companyId ?? this.companyId,
     );
   }
 
@@ -5656,6 +5899,9 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
     if (version.present) {
       map['version'] = Variable<int>(version.value);
     }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
     return map;
   }
 
@@ -5682,7 +5928,8 @@ class FiscalYearsCompanion extends UpdateCompanion<FiscalYearRow> {
           ..write('closedBy: $closedBy, ')
           ..write('syncStatus: $syncStatus, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
-          ..write('version: $version')
+          ..write('version: $version, ')
+          ..write('companyId: $companyId')
           ..write(')'))
         .toString();
   }
@@ -7524,6 +7771,7 @@ typedef $$AccountsTableCreateCompanionBuilder =
       Value<String> syncStatus,
       Value<int?> lastSyncedAt,
       Value<int> version,
+      Value<String?> companyId,
       Value<int?> deletedAt,
     });
 typedef $$AccountsTableUpdateCompanionBuilder =
@@ -7545,6 +7793,7 @@ typedef $$AccountsTableUpdateCompanionBuilder =
       Value<String> syncStatus,
       Value<int?> lastSyncedAt,
       Value<int> version,
+      Value<String?> companyId,
       Value<int?> deletedAt,
     });
 
@@ -7639,6 +7888,11 @@ class $$AccountsTableFilterComposer
 
   ColumnFilters<int> get version => $composableBuilder(
     column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7742,6 +7996,11 @@ class $$AccountsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get deletedAt => $composableBuilder(
     column: $table.deletedAt,
     builder: (column) => ColumnOrderings(column),
@@ -7822,6 +8081,9 @@ class $$AccountsTableAnnotationComposer
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
 
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
   GeneratedColumn<int> get deletedAt =>
       $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
@@ -7874,6 +8136,7 @@ class $$AccountsTableTableManager
                 Value<String> syncStatus = const Value.absent(),
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
               }) => AccountsCompanion(
                 id: id,
@@ -7893,6 +8156,7 @@ class $$AccountsTableTableManager
                 syncStatus: syncStatus,
                 lastSyncedAt: lastSyncedAt,
                 version: version,
+                companyId: companyId,
                 deletedAt: deletedAt,
               ),
           createCompanionCallback:
@@ -7914,6 +8178,7 @@ class $$AccountsTableTableManager
                 Value<String> syncStatus = const Value.absent(),
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
               }) => AccountsCompanion.insert(
                 id: id,
@@ -7933,6 +8198,7 @@ class $$AccountsTableTableManager
                 syncStatus: syncStatus,
                 lastSyncedAt: lastSyncedAt,
                 version: version,
+                companyId: companyId,
                 deletedAt: deletedAt,
               ),
           withReferenceMapper: (p0) => p0
@@ -7971,6 +8237,7 @@ typedef $$CurrencyRatesTableCreateCompanionBuilder =
       Value<String> syncStatus,
       Value<int?> lastSyncedAt,
       Value<int> version,
+      Value<String?> companyId,
     });
 typedef $$CurrencyRatesTableUpdateCompanionBuilder =
     CurrencyRatesCompanion Function({
@@ -7983,6 +8250,7 @@ typedef $$CurrencyRatesTableUpdateCompanionBuilder =
       Value<String> syncStatus,
       Value<int?> lastSyncedAt,
       Value<int> version,
+      Value<String?> companyId,
     });
 
 class $$CurrencyRatesTableFilterComposer
@@ -8036,6 +8304,11 @@ class $$CurrencyRatesTableFilterComposer
 
   ColumnFilters<int> get version => $composableBuilder(
     column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -8093,6 +8366,11 @@ class $$CurrencyRatesTableOrderingComposer
     column: $table.version,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CurrencyRatesTableAnnotationComposer
@@ -8138,6 +8416,9 @@ class $$CurrencyRatesTableAnnotationComposer
 
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
 }
 
 class $$CurrencyRatesTableTableManager
@@ -8186,6 +8467,7 @@ class $$CurrencyRatesTableTableManager
                 Value<String> syncStatus = const Value.absent(),
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
               }) => CurrencyRatesCompanion(
                 id: id,
                 uuid: uuid,
@@ -8196,6 +8478,7 @@ class $$CurrencyRatesTableTableManager
                 syncStatus: syncStatus,
                 lastSyncedAt: lastSyncedAt,
                 version: version,
+                companyId: companyId,
               ),
           createCompanionCallback:
               ({
@@ -8208,6 +8491,7 @@ class $$CurrencyRatesTableTableManager
                 Value<String> syncStatus = const Value.absent(),
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
               }) => CurrencyRatesCompanion.insert(
                 id: id,
                 uuid: uuid,
@@ -8218,6 +8502,7 @@ class $$CurrencyRatesTableTableManager
                 syncStatus: syncStatus,
                 lastSyncedAt: lastSyncedAt,
                 version: version,
+                companyId: companyId,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -8496,6 +8781,7 @@ typedef $$VoucherBooksTableCreateCompanionBuilder =
       Value<String?> notes,
       required int createdAt,
       required int updatedAt,
+      Value<String?> companyId,
     });
 typedef $$VoucherBooksTableUpdateCompanionBuilder =
     VoucherBooksCompanion Function({
@@ -8512,6 +8798,7 @@ typedef $$VoucherBooksTableUpdateCompanionBuilder =
       Value<String?> notes,
       Value<int> createdAt,
       Value<int> updatedAt,
+      Value<String?> companyId,
     });
 
 class $$VoucherBooksTableFilterComposer
@@ -8585,6 +8872,11 @@ class $$VoucherBooksTableFilterComposer
 
   ColumnFilters<int> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -8662,6 +8954,11 @@ class $$VoucherBooksTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VoucherBooksTableAnnotationComposer
@@ -8713,6 +9010,9 @@ class $$VoucherBooksTableAnnotationComposer
 
   GeneratedColumn<int> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
 }
 
 class $$VoucherBooksTableTableManager
@@ -8765,6 +9065,7 @@ class $$VoucherBooksTableTableManager
                 Value<String?> notes = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
               }) => VoucherBooksCompanion(
                 id: id,
                 uuid: uuid,
@@ -8779,6 +9080,7 @@ class $$VoucherBooksTableTableManager
                 notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                companyId: companyId,
               ),
           createCompanionCallback:
               ({
@@ -8795,6 +9097,7 @@ class $$VoucherBooksTableTableManager
                 Value<String?> notes = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
+                Value<String?> companyId = const Value.absent(),
               }) => VoucherBooksCompanion.insert(
                 id: id,
                 uuid: uuid,
@@ -8809,6 +9112,7 @@ class $$VoucherBooksTableTableManager
                 notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                companyId: companyId,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -8856,6 +9160,7 @@ typedef $$JournalEntriesTableCreateCompanionBuilder =
       Value<String> syncStatus,
       Value<int?> lastSyncedAt,
       Value<int> version,
+      Value<String?> companyId,
       Value<int?> deletedAt,
     });
 typedef $$JournalEntriesTableUpdateCompanionBuilder =
@@ -8875,6 +9180,7 @@ typedef $$JournalEntriesTableUpdateCompanionBuilder =
       Value<String> syncStatus,
       Value<int?> lastSyncedAt,
       Value<int> version,
+      Value<String?> companyId,
       Value<int?> deletedAt,
     });
 
@@ -8959,6 +9265,11 @@ class $$JournalEntriesTableFilterComposer
 
   ColumnFilters<int> get version => $composableBuilder(
     column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9052,6 +9363,11 @@ class $$JournalEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get deletedAt => $composableBuilder(
     column: $table.deletedAt,
     builder: (column) => ColumnOrderings(column),
@@ -9126,6 +9442,9 @@ class $$JournalEntriesTableAnnotationComposer
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
 
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
   GeneratedColumn<int> get deletedAt =>
       $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
@@ -9182,6 +9501,7 @@ class $$JournalEntriesTableTableManager
                 Value<String> syncStatus = const Value.absent(),
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
               }) => JournalEntriesCompanion(
                 id: id,
@@ -9199,6 +9519,7 @@ class $$JournalEntriesTableTableManager
                 syncStatus: syncStatus,
                 lastSyncedAt: lastSyncedAt,
                 version: version,
+                companyId: companyId,
                 deletedAt: deletedAt,
               ),
           createCompanionCallback:
@@ -9218,6 +9539,7 @@ class $$JournalEntriesTableTableManager
                 Value<String> syncStatus = const Value.absent(),
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
               }) => JournalEntriesCompanion.insert(
                 id: id,
@@ -9235,6 +9557,7 @@ class $$JournalEntriesTableTableManager
                 syncStatus: syncStatus,
                 lastSyncedAt: lastSyncedAt,
                 version: version,
+                companyId: companyId,
                 deletedAt: deletedAt,
               ),
           withReferenceMapper: (p0) => p0
@@ -9636,6 +9959,7 @@ typedef $$FiscalYearsTableCreateCompanionBuilder =
       Value<String> syncStatus,
       Value<int?> lastSyncedAt,
       Value<int> version,
+      Value<String?> companyId,
     });
 typedef $$FiscalYearsTableUpdateCompanionBuilder =
     FiscalYearsCompanion Function({
@@ -9660,6 +9984,7 @@ typedef $$FiscalYearsTableUpdateCompanionBuilder =
       Value<String> syncStatus,
       Value<int?> lastSyncedAt,
       Value<int> version,
+      Value<String?> companyId,
     });
 
 class $$FiscalYearsTableFilterComposer
@@ -9773,6 +10098,11 @@ class $$FiscalYearsTableFilterComposer
 
   ColumnFilters<int> get version => $composableBuilder(
     column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -9890,6 +10220,11 @@ class $$FiscalYearsTableOrderingComposer
     column: $table.version,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$FiscalYearsTableAnnotationComposer
@@ -9979,6 +10314,9 @@ class $$FiscalYearsTableAnnotationComposer
 
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
 }
 
 class $$FiscalYearsTableTableManager
@@ -10039,6 +10377,7 @@ class $$FiscalYearsTableTableManager
                 Value<String> syncStatus = const Value.absent(),
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
               }) => FiscalYearsCompanion(
                 id: id,
                 uuid: uuid,
@@ -10061,6 +10400,7 @@ class $$FiscalYearsTableTableManager
                 syncStatus: syncStatus,
                 lastSyncedAt: lastSyncedAt,
                 version: version,
+                companyId: companyId,
               ),
           createCompanionCallback:
               ({
@@ -10085,6 +10425,7 @@ class $$FiscalYearsTableTableManager
                 Value<String> syncStatus = const Value.absent(),
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
               }) => FiscalYearsCompanion.insert(
                 id: id,
                 uuid: uuid,
@@ -10107,6 +10448,7 @@ class $$FiscalYearsTableTableManager
                 syncStatus: syncStatus,
                 lastSyncedAt: lastSyncedAt,
                 version: version,
+                companyId: companyId,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

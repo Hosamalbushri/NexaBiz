@@ -17,7 +17,7 @@ class SalesDatabase extends _$SalesDatabase {
   SalesDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -53,6 +53,12 @@ class SalesDatabase extends _$SalesDatabase {
       }
       if (from < 4) {
         await _createIndexes();
+      }
+      if (from < 5) {
+        await m.addColumn(sales, sales.companyId);
+        await customStatement(
+          "UPDATE sales SET company_id = 'local-company' WHERE company_id IS NULL",
+        );
       }
     },
   );

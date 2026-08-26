@@ -6,7 +6,8 @@ String setupStepTitle(AppLocalizations l10n, SetupStepId id) {
     SetupStepId.locale => l10n.systemSetupStepLocale,
     SetupStepId.primaryCurrency => l10n.systemSetupStepPrimaryCurrency,
     SetupStepId.companyProfile => l10n.systemSetupStepCompany,
-    SetupStepId.seedLocal => l10n.systemSetupStepSeed,
+    SetupStepId.localAccount => l10n.systemSetupStepLocalAccount,
+    SetupStepId.seedData => l10n.setupSeedInitialDataTitle,
   };
 }
 
@@ -15,7 +16,8 @@ String setupStepHint(AppLocalizations l10n, SetupStepId id) {
     SetupStepId.locale => l10n.systemSetupStepLocaleHint,
     SetupStepId.primaryCurrency => l10n.systemSetupStepPrimaryCurrencyHint,
     SetupStepId.companyProfile => l10n.systemSetupStepCompanyHint,
-    SetupStepId.seedLocal => l10n.systemSetupStepSeedHint,
+    SetupStepId.localAccount => l10n.systemSetupStepLocalAccountHint,
+    SetupStepId.seedData => l10n.setupSeedInitialDataSubtitle,
   };
 }
 

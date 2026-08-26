@@ -13,6 +13,7 @@ import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
+import '../../modules/authentication/data/local_auth_store.dart';
 import 'company/app_currency.dart';
 import 'company/company_profile.dart';
 import 'company/company_profile_providers.dart';
@@ -39,11 +40,14 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
   final _websiteController = TextEditingController();
   final _invoiceHeaderRightController = TextEditingController();
   final _invoiceHeaderLeftController = TextEditingController();
+  final _adminEmailController = TextEditingController(text: 'admin@nexabiz.local');
+  final _adminPasswordController = TextEditingController();
 
   var _hydrated = false;
   var _saving = false;
   var _logoBusy = false;
   var _currencyLocked = false;
+  var _obscureAdminPassword = true;
   String _currencyCode = AppCurrencies.sar.code;
   int _fiscalMonth = 1;
   String? _logoPath;
@@ -62,6 +66,8 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
     _websiteController.dispose();
     _invoiceHeaderRightController.dispose();
     _invoiceHeaderLeftController.dispose();
+    _adminEmailController.dispose();
+    _adminPasswordController.dispose();
     super.dispose();
   }
 
@@ -162,6 +168,17 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
         invoiceHeaderLeft: _invoiceHeaderLeftController.text.trim(),
       );
       await ref.read(companyProfileProvider.notifier).save(profile);
+
+      // Save local admin account email & password if provided
+      final newAdminEmail = _adminEmailController.text.trim();
+      final newAdminPassword = _adminPasswordController.text.trim();
+      if (newAdminEmail.isNotEmpty && newAdminPassword.length >= 6) {
+        await LocalAuthStore().updateLocalAdminCredentials(
+          newEmail: newAdminEmail,
+          newPassword: newAdminPassword,
+        );
+      }
+
       if (!mounted) {
         return;
       }
@@ -290,6 +307,64 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
                         decoration: InputDecoration(
                           labelText: l10n.setupLegalName,
                           helperText: l10n.setupLegalNameHelper,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.setupLocalAccountSection,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        l10n.setupLocalAccountSubtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _adminEmailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          labelText: l10n.setupLocalEmail,
+                          prefixIcon: const Icon(Icons.email_outlined),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return l10n.setupLocalEmailRequired;
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _adminPasswordController,
+                        obscureText: _obscureAdminPassword,
+                        decoration: InputDecoration(
+                          labelText: l10n.setupLocalPassword,
+                          helperText: l10n.setupLocalPasswordHelper,
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureAdminPassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureAdminPassword = !_obscureAdminPassword;
+                              });
+                            },
+                          ),
                         ),
                       ),
                     ],

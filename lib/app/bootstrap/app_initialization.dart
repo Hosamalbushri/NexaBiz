@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/database/atomic_bootstrap_installer.dart';
+import '../../core/entitlements/domain/entities/entitlement.dart';
+import '../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../../core/errors/app_error_domain.dart';
 import '../../core/logging/app_error_log.dart';
 import '../../core/network/server_bootstrap_service.dart';
@@ -78,6 +80,13 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
       );
       await AppBootstrap.bootstrapConfig(_ref);
 
+      // 4. Auth & Identity Hydration
+      state = state.copyWith(
+        stage: InitializationStage.authenticating,
+        stageDetails: 'Hydrating authentication state',
+      );
+      await AppBootstrap.bootstrapAuth(_ref);
+
       final settings = SettingsRepository();
       final isConfigured = await settings.appearsPreviouslyConfigured();
       final isFirstLaunch = !isConfigured;
@@ -90,13 +99,7 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
       timeoutTimer.cancel();
 
       if (isFirstLaunch) {
-        state = state.copyWith(
-          status: InitializationStatus.selectingMode,
-          stage: InitializationStage.selectingMode,
-          isFirstLaunch: true,
-          completedAt: DateTime.now(),
-          stageDetails: 'Please choose setup mode',
-        );
+        await completeLocalSetup();
       } else {
         state = state.copyWith(
           status: InitializationStatus.ready,
@@ -338,7 +341,7 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
         entitiesByType: entitiesByType,
       );
 
-      // Step 6: Initial Sync Pass
+      // Step 6: Initial Sync Pass (Non-blocking background pass)
       state = state.copyWith(
         status: InitializationStatus.synchronizing,
         stage: InitializationStage.synchronization,
@@ -347,7 +350,10 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
         stageDetails: 'Running initial synchronization...',
       );
 
-      await syncManager.syncNow(trigger: SyncPassTrigger.manual);
+      final entitlementService = _ref.read(entitlementServiceProvider);
+      if (entitlementService.hasCapability(EntitlementCapability.sync)) {
+        unawaited(syncManager.syncNow(trigger: SyncPassTrigger.manual));
+      }
 
       // Save sync & configuration credentials
       await _ref.read(syncEnabledProvider.notifier).saveServer(

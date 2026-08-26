@@ -15,6 +15,9 @@ import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import 'widgets/settings_chrome.dart';
 
+import '../../core/entitlements/domain/entities/entitlement.dart';
+import '../../core/entitlements/presentation/widgets/capability_gate.dart';
+
 /// Dedicated data & sync settings page.
 class DataSyncSettingsPage extends ConsumerWidget {
   const DataSyncSettingsPage({super.key});
@@ -63,26 +66,34 @@ class DataSyncSettingsPage extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          if (isServerAuthenticated)
-            SettingsGroup(
-              margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+          CapabilityGate(
+            capability: EntitlementCapability.sync,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SettingsTile(
-                  icon: syncOverview.isOnline
-                      ? Icons.wifi_rounded
-                      : Icons.wifi_off_rounded,
-                  iconColor: syncOverview.isOnline
-                      ? colorScheme.primary
-                      : colorScheme.outline,
-                  title: l10n.syncConnectionLabel,
-                  subtitle: syncOverview.isOnline
-                      ? l10n.syncConnectionOnline
-                      : l10n.syncConnectionOffline,
-                  trailing: _SyncPhaseChip(overview: syncOverview),
-                ),
+                if (isServerAuthenticated)
+                  SettingsGroup(
+                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    children: [
+                      SettingsTile(
+                        icon: syncOverview.isOnline
+                            ? Icons.wifi_rounded
+                            : Icons.wifi_off_rounded,
+                        iconColor: syncOverview.isOnline
+                            ? colorScheme.primary
+                            : colorScheme.outline,
+                        title: l10n.syncConnectionLabel,
+                        subtitle: syncOverview.isOnline
+                            ? l10n.syncConnectionOnline
+                            : l10n.syncConnectionOffline,
+                        trailing: _SyncPhaseChip(overview: syncOverview),
+                      ),
+                    ],
+                  ),
+                const SyncSettingsSection(embedded: true, compactHeader: true),
               ],
             ),
-          const SyncSettingsSection(embedded: true, compactHeader: true),
+          ),
         ],
       ),
     );

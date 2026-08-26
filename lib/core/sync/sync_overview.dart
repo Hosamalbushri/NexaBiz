@@ -209,6 +209,11 @@ enum SyncPassOutcome {
 
   /// Session expired / tokens invalid — pause retries until re-auth.
   authRequired,
+
+  /// Time-sensitive authorization failures
+  temporalAuthorizationFailed,
+  clockTampered,
+  reverificationRequired,
 }
 
 class SyncPassResult {
@@ -259,7 +264,10 @@ class SyncPassResult {
 /// Exponential backoff for retries: 1s, 2s, 4s, 8s… capped, with randomized jitter.
 Duration syncBackoffForAttempt(int attemptCount, {math.Random? random}) {
   final capped = attemptCount.clamp(0, 6);
-  final baseSeconds = 1 << capped;
+  var baseSeconds = 1 << capped;
+  if (baseSeconds > 60) {
+    baseSeconds = 60;
+  }
   final rng = random ?? math.Random();
   final jitterMs = rng.nextInt(500);
   return Duration(seconds: baseSeconds) + Duration(milliseconds: jitterMs);

@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/localization/app_localizations.dart';
+import '../../../../app/presentation/providers/dashboard_services_provider.dart';
+import '../../../../app/settings/company/company_profile_providers.dart';
+import '../../../../core/auth/presentation/providers/auth_context_providers.dart';
+import '../../../../core/entitlements/presentation/providers/entitlement_providers.dart';
+import '../../../../core/sync/sync_providers.dart';
 import '../providers/auth_providers.dart';
 
 class CompanySelectionPage extends ConsumerWidget {
@@ -29,7 +34,13 @@ class CompanySelectionPage extends ConsumerWidget {
               await ref
                   .read(authStateProvider.notifier)
                   .switchCompany(company.id);
-              // GoRouter.redirect navigates after auth state updates.
+
+              ref.invalidate(currentEntitlementProvider);
+              ref.invalidate(currentPermissionsProvider);
+              ref.invalidate(authorizationContextProvider);
+              ref.invalidate(companyProfileProvider);
+              ref.invalidate(dashboardServicesProvider);
+              ref.invalidate(syncOverviewProvider);
             },
           );
         },

@@ -38,6 +38,7 @@ class AppRoutes {
   static const String settingsSecurity = '/settings/security';
   static const String settingsDataSync = '/settings/data-sync';
   static const String settingsDataSyncLogin = '/settings/data-sync/login';
+  static const String settingsSubscription = '/settings/subscription';
   static const String notifications = '/notifications';
 
   /// Administration hub (permission-gated; same Flutter app).

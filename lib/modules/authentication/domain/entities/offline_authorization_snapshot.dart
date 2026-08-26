@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 /// Security Invariants:
 /// - Password hashes, access tokens, and biometric templates MUST NOT be stored.
 /// - Snapshots are strictly bound to (userId, companyId, serverBaseUrl).
+/// - [deviceId] binds this snapshot to a specific device when present.
+///   Legacy snapshots without deviceId are treated as unbound (no restriction).
 @immutable
 class OfflineAuthorizationSnapshot {
   const OfflineAuthorizationSnapshot({
@@ -18,6 +20,7 @@ class OfflineAuthorizationSnapshot {
     required this.serverBaseUrl,
     this.authorizationVersion = 1,
     this.snapshotVersion = 1,
+    this.deviceId,
   });
 
   final String userId;
@@ -31,6 +34,27 @@ class OfflineAuthorizationSnapshot {
   final int authorizationVersion;
   final int snapshotVersion;
 
+  /// Optional device identifier for device-bound offline authorization.
+  ///
+  /// When non-null, offline login MUST reject requests from a different device.
+  /// When null (legacy snapshots), no device restriction is applied.
+  final String? deviceId;
+
+  /// Returns true when the offline authorization snapshot has exceeded its
+  /// valid window since the last server authentication.
+  ///
+  /// Uses the same [graceDuration] policy as [EntitlementServiceImpl]
+  /// (default 14 days) so there is a single source of truth for the grace period.
+  bool isExpired({Duration graceDuration = const Duration(days: 14)}) {
+    final deadline = lastServerAuthenticatedAt.add(graceDuration);
+    return DateTime.now().toUtc().isAfter(deadline);
+  }
+
+  /// Returns the UTC timestamp at which this snapshot expires.
+  DateTime expiresAt({Duration graceDuration = const Duration(days: 14)}) {
+    return lastServerAuthenticatedAt.add(graceDuration);
+  }
+
   /// Verifies if this snapshot matches the active user, company, and server context.
   bool matchesContext({
     required String userId,
@@ -40,6 +64,19 @@ class OfflineAuthorizationSnapshot {
     return this.userId == userId &&
         this.companyId == companyId &&
         _normalizeUrl(this.serverBaseUrl) == _normalizeUrl(serverBaseUrl);
+  }
+
+  /// Verifies device binding when [deviceId] is present in this snapshot.
+  ///
+  /// Returns true when:
+  /// - This snapshot has no [deviceId] (legacy / unbound).
+  /// - The provided [currentDeviceId] matches this snapshot's [deviceId].
+  bool matchesDevice(String? currentDeviceId) {
+    if (deviceId == null || deviceId!.isEmpty) {
+      // No device binding recorded — allow (backward compat).
+      return true;
+    }
+    return deviceId == currentDeviceId;
   }
 
   static String _normalizeUrl(String url) {
@@ -61,6 +98,7 @@ class OfflineAuthorizationSnapshot {
         'serverBaseUrl': serverBaseUrl,
         'authorizationVersion': authorizationVersion,
         'snapshotVersion': snapshotVersion,
+        if (deviceId != null) 'deviceId': deviceId,
       };
 
   factory OfflineAuthorizationSnapshot.fromJson(Map<String, dynamic> json) {
@@ -93,6 +131,8 @@ class OfflineAuthorizationSnapshot {
       serverBaseUrl: json['serverBaseUrl'] as String? ?? '',
       authorizationVersion: json['authorizationVersion'] as int? ?? 1,
       snapshotVersion: json['snapshotVersion'] as int? ?? 1,
+      // deviceId defaults to null — legacy snapshots are unbound (backward compat).
+      deviceId: json['deviceId'] as String?,
     );
   }
 
@@ -107,6 +147,7 @@ class OfflineAuthorizationSnapshot {
     String? serverBaseUrl,
     int? authorizationVersion,
     int? snapshotVersion,
+    Object? deviceId = _sentinel,
   }) {
     return OfflineAuthorizationSnapshot(
       userId: userId ?? this.userId,
@@ -120,6 +161,11 @@ class OfflineAuthorizationSnapshot {
       serverBaseUrl: serverBaseUrl ?? this.serverBaseUrl,
       authorizationVersion: authorizationVersion ?? this.authorizationVersion,
       snapshotVersion: snapshotVersion ?? this.snapshotVersion,
+      deviceId: identical(deviceId, _sentinel)
+          ? this.deviceId
+          : deviceId as String?,
     );
   }
+
+  static const Object _sentinel = Object();
 }

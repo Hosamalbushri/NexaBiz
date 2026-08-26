@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/presentation/providers/dashboard_services_provider.dart';
 import '../../../../app/settings/company/company_profile_providers.dart';
 import '../../../../core/sync/sync_providers.dart';
+import '../../../../core/tenancy/tenant_context.dart';
 import '../../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../data/repositories/fiscal_year_repository_impl.dart';
 import '../../data/repositories/journal_repository_impl.dart';
@@ -28,6 +29,7 @@ final journalRepositoryImplProvider = Provider<JournalRepositoryImpl>((ref) {
     periodValidator: ref.watch(accountingPeriodValidatorProvider),
     rates: ref.watch(currencyRateRepositoryProvider),
     syncQueue: ref.watch(syncQueueProvider),
+    readCompanyId: () => ref.read(currentCompanyIdProvider),
   );
 });
 
@@ -57,6 +59,7 @@ final fiscalYearRepositoryImplProvider =
   return FiscalYearRepositoryImpl(
     ref.watch(accountingDatabaseProvider),
     syncQueue: ref.watch(syncQueueProvider),
+    readCompanyId: () => ref.read(currentCompanyIdProvider),
   );
 });
 

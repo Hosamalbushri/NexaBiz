@@ -11281,6 +11281,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
+
+  /// No description provided for @subscriptionAndPackagesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription & Packages'**
+  String get subscriptionAndPackagesTitle;
+
+  /// No description provided for @subscriptionAndPackagesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Commercial Plans & Cloud Packages'**
+  String get subscriptionAndPackagesSubtitle;
+
+  /// No description provided for @manageSubscriptionButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Subscription & Packages'**
+  String get manageSubscriptionButton;
+
+  /// No description provided for @activePackagesHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE PACKAGES & CAPABILITIES'**
+  String get activePackagesHeader;
+
+  /// No description provided for @resourceUsageHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'RESOURCE USAGE & METERS'**
+  String get resourceUsageHeader;
+
+  /// No description provided for @cloudSyncCapabilityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Data Synchronization'**
+  String get cloudSyncCapabilityTitle;
+
+  /// No description provided for @multiDeviceCapabilityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-Device Access'**
+  String get multiDeviceCapabilityTitle;
+
+  /// No description provided for @multiBranchCapabilityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Multi-Branch Management'**
+  String get multiBranchCapabilityTitle;
+
+  /// No description provided for @capabilityLockedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get capabilityLockedLabel;
+
+  /// No description provided for @registeredDevicesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered Devices'**
+  String get registeredDevicesLabel;
+
+  /// No description provided for @teamUsersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Team Users'**
+  String get teamUsersLabel;
+
+  /// No description provided for @packageStoreSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Package Store & Upgrade'**
+  String get packageStoreSheetTitle;
+
+  /// No description provided for @selectCommercialPlanSection.
+  ///
+  /// In en, this message translates to:
+  /// **'SELECT COMMERCIAL PLAN'**
+  String get selectCommercialPlanSection;
+
+  /// No description provided for @availableAddonPackagesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'AVAILABLE ADD-ON PACKAGES'**
+  String get availableAddonPackagesSection;
+
+  /// No description provided for @activateSubscriptionButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate Subscription & Update Entitlement'**
+  String get activateSubscriptionButton;
+
+  /// No description provided for @subscriptionActivatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription activated and entitlement updated successfully!'**
+  String get subscriptionActivatedSuccess;
+
+  /// No description provided for @setupLocalAccountSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Account Credentials'**
+  String get setupLocalAccountSection;
+
+  /// No description provided for @setupLocalAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the email and password used to log in to the local account.'**
+  String get setupLocalAccountSubtitle;
+
+  /// No description provided for @setupLocalEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Email'**
+  String get setupLocalEmail;
+
+  /// No description provided for @setupLocalEmailRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Email is required'**
+  String get setupLocalEmailRequired;
+
+  /// No description provided for @setupLocalPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password (Optional)'**
+  String get setupLocalPassword;
+
+  /// No description provided for @setupLocalPasswordHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a new password (min 6 chars) to update.'**
+  String get setupLocalPasswordHelper;
+
+  /// No description provided for @systemSetupWizardHeaderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'System Setup Wizard'**
+  String get systemSetupWizardHeaderTitle;
+
+  /// No description provided for @systemSetupWizardHeaderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure language, currency, company profile, and local admin account.'**
+  String get systemSetupWizardHeaderSubtitle;
+
+  /// No description provided for @systemSetupStepLocalAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Admin Account'**
+  String get systemSetupStepLocalAccount;
+
+  /// No description provided for @systemSetupStepLocalAccountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the email and password for local admin access.'**
+  String get systemSetupStepLocalAccountHint;
+
+  /// No description provided for @systemSetupLocalAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Admin Account Setup'**
+  String get systemSetupLocalAccountTitle;
+
+  /// No description provided for @systemSetupLocalAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the email and password for local admin access.'**
+  String get systemSetupLocalAccountSubtitle;
+
+  /// No description provided for @systemSetupAdminEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin Email'**
+  String get systemSetupAdminEmail;
+
+  /// No description provided for @systemSetupPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get systemSetupPassword;
+
+  /// No description provided for @systemSetupConfirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get systemSetupConfirmPassword;
+
+  /// No description provided for @systemSetupPasswordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get systemSetupPasswordsDoNotMatch;
+
+  /// No description provided for @systemSetupCompleteAndLaunch.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Setup & Launch'**
+  String get systemSetupCompleteAndLaunch;
+
+  /// No description provided for @systemSetupSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'System setup complete!'**
+  String get systemSetupSuccess;
+
+  /// No description provided for @systemSetupStepsCompletedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed {done} of {total} steps'**
+  String systemSetupStepsCompletedCount(int done, int total);
+
+  /// No description provided for @setupSeedInitialDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Initialize default system data'**
+  String get setupSeedInitialDataTitle;
+
+  /// No description provided for @setupSeedInitialDataSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically seed default chart of accounts and initial settings.'**
+  String get setupSeedInitialDataSubtitle;
 }
 
 class _AppLocalizationsDelegate

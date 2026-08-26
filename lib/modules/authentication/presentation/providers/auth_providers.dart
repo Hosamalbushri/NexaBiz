@@ -9,6 +9,7 @@ import '../../../../core/network/token_refresh_outcome.dart';
 import '../../../../core/permissions/permission_guard.dart';
 import '../../../../core/sync/sync_providers.dart';
 import '../../../../core/tenancy/session_company.dart';
+import '../../../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../../data/auth_repository_impl.dart';
 import '../../data/local_auth_repository.dart';
 import '../../data/local_auth_store.dart';
@@ -91,6 +92,7 @@ final localAuthRepositoryProvider = Provider<LocalAuthRepository>((ref) {
     store: ref.watch(localAuthStoreProvider),
     tokenStorage: ref.watch(secureTokenStorageProvider),
     offlineAuthStore: ref.watch(offlineAuthorizationStoreProvider),
+    entitlementRepository: ref.watch(entitlementRepositoryProvider),
     readConfig: () => ref.read(syncApiConfigProvider),
     onConfigChanged: (config) {
       ref.read(syncApiConfigProvider.notifier).state = config;
@@ -227,35 +229,9 @@ class AuthController extends StateNotifier<AuthState> {
   @visibleForTesting
   void replaceStateForTest(AuthState next) => _set(next);
 
-  /// Offline-first bootstrap: check stored credentials and enforce mandatory login gate on launch.
+  /// Mandatory authentication on application startup: require sign in on launch.
   Future<void> bootstrap({bool preferRemote = false}) async {
     try {
-      if (preferRemote) {
-        final remoteSession = await _remote.restoreSession();
-        if (remoteSession != null) {
-          final base = _stateFor(remoteSession, AuthBackend.remote);
-          _set(
-            AuthState(
-              status: AuthStatus.unauthenticated,
-              session: base.session,
-              backend: AuthBackend.remote,
-            ),
-          );
-          return;
-        }
-      }
-      final session = await _local.restoreSession();
-      if (session != null) {
-        final base = _stateFor(session, AuthBackend.local);
-        _set(
-          AuthState(
-            status: AuthStatus.unauthenticated,
-            session: base.session,
-            backend: AuthBackend.local,
-          ),
-        );
-        return;
-      }
       _set(const AuthState(status: AuthStatus.unauthenticated));
     } catch (e) {
       _set(

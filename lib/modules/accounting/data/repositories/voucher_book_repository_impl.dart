@@ -9,12 +9,27 @@ import '../../domain/services/default_voucher_books.dart';
 import '../../domain/services/voucher_book_validator.dart';
 import '../database/accounting_database.dart';
 
+import '../../../authentication/data/local_auth_store.dart';
+
 class VoucherBookRepositoryImpl implements VoucherBookRepository {
-  VoucherBookRepositoryImpl(this._db, {VoucherBookValidator? validator})
-    : _validator = validator ?? const VoucherBookValidator();
+  VoucherBookRepositoryImpl(
+    this._db, {
+    VoucherBookValidator? validator,
+    String Function()? readCompanyId,
+  }) : _validator = validator ?? const VoucherBookValidator(),
+       _readCompanyId = readCompanyId;
 
   final AccountingDatabase _db;
   final VoucherBookValidator _validator;
+  final String Function()? _readCompanyId;
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+
+  Expression<bool> _tenantScoped($VoucherBooksTable t) =>
+      t.companyId.equals(_currentCompanyId);
+
+  Expression<bool> _scoped($VoucherBooksTable t) => _tenantScoped(t);
 
   static const Map<VoucherBookType, String> _defaultSectionNamesEn = {
     VoucherBookType.sales: 'Sales',
@@ -107,10 +122,12 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   @override
   Future<List<VoucherBook>> getAll() async {
     final rows =
-        await (_db.select(_db.voucherBooks)..orderBy([
-              (t) => OrderingTerm.asc(t.bookType),
-              (t) => OrderingTerm.asc(t.name),
-            ]))
+        await (_db.select(_db.voucherBooks)
+              ..where(_scoped)
+              ..orderBy([
+                (t) => OrderingTerm.asc(t.bookType),
+                (t) => OrderingTerm.asc(t.name),
+              ]))
             .get();
     return rows.map(_map).toList(growable: false);
   }
@@ -118,6 +135,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   @override
   Stream<List<VoucherBook>> watchAll() {
     final query = _db.select(_db.voucherBooks)
+      ..where(_scoped)
       ..orderBy([
         (t) => OrderingTerm.asc(t.bookType),
         (t) => OrderingTerm.asc(t.name),
@@ -129,7 +147,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   Future<VoucherBook?> getById(int id) async {
     final row = await (_db.select(
       _db.voucherBooks,
-    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    )..where((t) => t.id.equals(id) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -141,7 +159,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
     }
     final row = await (_db.select(
       _db.voucherBooks,
-    )..where((t) => t.uuid.equals(trimmed))).getSingleOrNull();
+    )..where((t) => t.uuid.equals(trimmed) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _map(row);
   }
 
@@ -149,7 +167,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   Future<List<VoucherBook>> getByType(VoucherBookType type) async {
     final rows =
         await (_db.select(_db.voucherBooks)
-              ..where((t) => t.bookType.equals(type.storageValue))
+              ..where((t) => t.bookType.equals(type.storageValue) & _scoped(t))
               ..orderBy([(t) => OrderingTerm.asc(t.name)]))
             .get();
     return rows.map(_map).toList(growable: false);
@@ -159,7 +177,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
   Future<List<VoucherBook>> getChildren(String parentUuid) async {
     final rows =
         await (_db.select(_db.voucherBooks)
-              ..where((t) => t.parentId.equals(parentUuid))
+              ..where((t) => t.parentId.equals(parentUuid) & _scoped(t))
               ..orderBy([
                 (t) => OrderingTerm.asc(t.bookType),
                 (t) => OrderingTerm.asc(t.name),
@@ -199,6 +217,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
               isActive: const Value(true),
               createdAt: nowMs,
               updatedAt: nowMs,
+              companyId: Value(_currentCompanyId),
             ),
           );
       groupsByType[section] = VoucherBook(
@@ -315,6 +334,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
               notes: Value(seed.nameEn),
               createdAt: nowMs,
               updatedAt: nowMs,
+              companyId: Value(_currentCompanyId),
             ),
           );
       (leavesBySectionAndType[sectionUuid] ??= {}).add(seed.bookType);
@@ -369,6 +389,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
             notes: Value(notes == null || notes.isEmpty ? null : notes),
             createdAt: nowMs,
             updatedAt: nowMs,
+            companyId: Value(_currentCompanyId),
           ),
         );
     final created = await getById(id);
@@ -388,7 +409,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
     await _assertParentValid(draft);
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
     final notes = draft.notes?.trim();
-    await (_db.update(_db.voucherBooks)..where((t) => t.id.equals(id))).write(
+    await (_db.update(_db.voucherBooks)..where((t) => t.id.equals(id) & _scoped(t))).write(
       VoucherBooksCompanion(
         parentId: Value(draft.isGroup ? null : draft.parentId?.trim()),
         name: Value(draft.name.trim()),
@@ -400,6 +421,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
         isActive: Value(draft.isActive),
         notes: Value(notes == null || notes.isEmpty ? null : notes),
         updatedAt: Value(nowMs),
+        companyId: Value(_currentCompanyId),
       ),
     );
     final updated = await getById(id);
@@ -420,7 +442,7 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
         );
       }
     }
-    await (_db.delete(_db.voucherBooks)..where((t) => t.id.equals(id))).go();
+    await (_db.delete(_db.voucherBooks)..where((t) => t.id.equals(id) & _scoped(t))).go();
   }
 
   @override

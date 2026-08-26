@@ -111,36 +111,19 @@ class SplashPage extends ConsumerWidget {
         await ref.read(systemInitializationCoordinatorProvider).isReady();
     if (!context.mounted) return;
 
-    // Ready system setup: route based on authentication status
-    if (ready) {
-      if (auth.mustChangePassword) {
-        context.go(AppRoutes.changePassword);
-      } else if (auth.isAuthenticated) {
-        context.go(AppRoutes.dashboard);
+    if (!ready) {
+      if (!onboardingDone) {
+        context.go(AppRoutes.onboarding);
       } else {
-        context.go(AppRoutes.login);
+        context.go(SystemSetupRoutes.root);
       }
       return;
     }
 
-    // First-launch or unconfigured setup flow: onboarding -> setupChoice
-    if (startup.isFirstLaunch || !onboardingDone) {
-      context.go(
-        onboardingDone ? AppRoutes.setupChoice : AppRoutes.onboarding,
-      );
-      return;
-    }
-
-    // Returning user: dashboard if authenticated, login if unauthenticated
     if (auth.isAuthenticated) {
-      if (auth.mustChangePassword) {
-        context.go(AppRoutes.changePassword);
-      } else {
-        context.go(AppRoutes.dashboard);
-      }
-      return;
+      context.go(AppRoutes.dashboard);
+    } else {
+      context.go(AppRoutes.login);
     }
-
-    context.go(AppRoutes.login);
   }
 }

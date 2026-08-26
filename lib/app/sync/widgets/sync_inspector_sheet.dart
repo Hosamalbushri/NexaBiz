@@ -227,6 +227,7 @@ class _OperationTile extends StatelessWidget {
       SyncStatus.failed => ('Failed', colorScheme.error),
       SyncStatus.conflict => ('Conflict', colorScheme.error),
       SyncStatus.rejected => ('Rejected', colorScheme.error),
+      SyncStatus.quarantined => ('Quarantined', colorScheme.error),
     };
 
     return Card(

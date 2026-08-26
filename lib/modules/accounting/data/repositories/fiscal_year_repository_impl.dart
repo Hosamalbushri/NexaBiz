@@ -11,16 +11,29 @@ import '../../domain/models/fiscal_year_exception.dart';
 import '../../domain/repositories/fiscal_year_repository.dart';
 import '../database/accounting_database.dart';
 
+import '../../../authentication/data/local_auth_store.dart';
+
 class FiscalYearRepositoryImpl implements FiscalYearRepository {
   FiscalYearRepositoryImpl(
     this._db, {
     SyncQueue? syncQueue,
-  }) : _syncQueue = syncQueue;
+    String Function()? readCompanyId,
+  }) : _syncQueue = syncQueue,
+       _readCompanyId = readCompanyId;
 
   final AccountingDatabase _db;
   final SyncQueue? _syncQueue;
+  final String Function()? _readCompanyId;
 
   static const entityType = 'fiscal_year';
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+
+  Expression<bool> _tenantScoped($FiscalYearsTable t) =>
+      t.companyId.equals(_currentCompanyId);
+
+  Expression<bool> _scoped($FiscalYearsTable t) => _tenantScoped(t);
 
   DateTime _dayFromMs(int ms) =>
       DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
@@ -252,6 +265,7 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
   @override
   Stream<List<FiscalYear>> watchAll() {
     final query = _db.select(_db.fiscalYears)
+      ..where(_scoped)
       ..orderBy([(t) => OrderingTerm.desc(t.startDate)]);
     return query.watch().map((rows) => rows.map(_mapYear).toList(growable: false));
   }
@@ -259,6 +273,7 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
   @override
   Future<List<FiscalYear>> listAll() async {
     final rows = await (_db.select(_db.fiscalYears)
+          ..where(_scoped)
           ..orderBy([(t) => OrderingTerm.desc(t.startDate)]))
         .get();
     return rows.map(_mapYear).toList(growable: false);
@@ -266,7 +281,7 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
 
   @override
   Future<bool> hasAnyFiscalYear() async {
-    final row = await (_db.select(_db.fiscalYears)..limit(1)).getSingleOrNull();
+    final row = await (_db.select(_db.fiscalYears)..where(_scoped)..limit(1)).getSingleOrNull();
     return row != null;
   }
 
@@ -274,7 +289,7 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
   Future<FiscalYear?> getByUuid(String uuid) async {
     final row = await (_db.select(
       _db.fiscalYears,
-    )..where((t) => t.uuid.equals(uuid))).getSingleOrNull();
+    )..where((t) => t.uuid.equals(uuid) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _mapYear(row);
   }
 
@@ -285,7 +300,7 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
     }
     final row = await (_db.select(
       _db.fiscalYears,
-    )..where((t) => t.code.equals(trimmed))).getSingleOrNull();
+    )..where((t) => t.code.equals(trimmed) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _mapYear(row);
   }
 
@@ -488,6 +503,7 @@ WHERE je.deleted_at IS NULL
               createdBy: Value(draft.createdBy),
               syncStatus: const Value('pending'),
               version: const Value(1),
+              companyId: Value(_currentCompanyId),
             ),
           );
 
@@ -905,10 +921,11 @@ WHERE je.deleted_at IS NULL
                 syncStatus: const Value('synced'),
                 lastSyncedAt: Value(nowMs),
                 version: Value(version),
+                companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
               ),
             );
       } else {
-        await (_db.update(_db.fiscalYears)..where((t) => t.uuid.equals(uuid)))
+        await (_db.update(_db.fiscalYears)..where((t) => t.uuid.equals(uuid) & _scoped(t)))
             .write(
               FiscalYearsCompanion(
                 code: Value(code),
@@ -929,6 +946,7 @@ WHERE je.deleted_at IS NULL
                 syncStatus: const Value('synced'),
                 lastSyncedAt: Value(nowMs),
                 version: Value(version),
+                companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
               ),
             );
       }

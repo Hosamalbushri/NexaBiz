@@ -20,6 +20,7 @@ class SyncOperation extends Model
         'result',
         'user_id',
         'device_id',
+        'request_hash',
         'processed_at',
     ];
 

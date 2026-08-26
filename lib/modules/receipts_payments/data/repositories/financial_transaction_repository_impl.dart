@@ -19,20 +19,31 @@ import '../../domain/models/transaction_paged_result.dart';
 import '../../domain/repositories/financial_transaction_repository.dart';
 import '../database/receipts_payments_database.dart';
 
+import '../../../authentication/data/local_auth_store.dart';
+
 class FinancialTransactionRepositoryImpl
     implements FinancialTransactionRepository {
   FinancialTransactionRepositoryImpl(
     this._db, {
     SyncQueue? syncQueue,
-  }) : _syncQueue = syncQueue;
+    String Function()? readCompanyId,
+  }) : _syncQueue = syncQueue,
+       _readCompanyId = readCompanyId;
 
   final ReceiptsPaymentsDatabase _db;
   final SyncQueue? _syncQueue;
+  final String Function()? _readCompanyId;
 
   static const entityType = 'financial_transaction';
 
-  Expression<bool> _notDeleted($FinancialTransactionsTable t) =>
-      t.deletedAt.isNull();
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+
+  Expression<bool> _tenantScoped($FinancialTransactionsTable t) =>
+      t.companyId.equals(_currentCompanyId);
+
+  Expression<bool> _scoped($FinancialTransactionsTable t) =>
+      t.deletedAt.isNull() & _tenantScoped(t);
 
   Expression<bool> _notCancelled($FinancialTransactionsTable t) =>
       t.cancelledAt.isNull();
@@ -46,7 +57,7 @@ class FinancialTransactionRepositoryImpl
     $FinancialTransactionsTable t,
     TransactionListFilter filter,
   ) {
-    var expr = _notDeleted(t) & _notCancelled(t);
+    var expr = _scoped(t) & _notCancelled(t);
     if (filter.transactionType != null) {
       expr = expr &
           t.transactionType.equals(filter.transactionType!.storageValue);
@@ -264,7 +275,7 @@ class FinancialTransactionRepositoryImpl
   @override
   Future<FinancialTransaction?> getById(int id) async {
     final row = await (_db.select(_db.financialTransactions)
-          ..where((t) => t.id.equals(id) & _notDeleted(t)))
+          ..where((t) => t.id.equals(id) & _scoped(t)))
         .getSingleOrNull();
     return row == null ? null : _mapRow(row);
   }
@@ -272,7 +283,7 @@ class FinancialTransactionRepositoryImpl
   @override
   Future<FinancialTransaction?> getByUuid(String uuid) async {
     final row = await (_db.select(_db.financialTransactions)
-          ..where((t) => t.uuid.equals(uuid) & _notDeleted(t)))
+          ..where((t) => t.uuid.equals(uuid) & _scoped(t)))
         .getSingleOrNull();
     return row == null ? null : _mapRow(row);
   }
@@ -320,6 +331,7 @@ class FinancialTransactionRepositoryImpl
             externalId: Value(draft.externalId),
             syncStatus: const Value('pending'),
             linesJson: Value(FinancialTransactionLinesCodec.encode(draft.lines)),
+            companyId: Value(_currentCompanyId),
           ),
         );
     final created = await getById(id);
@@ -344,7 +356,7 @@ class FinancialTransactionRepositoryImpl
       );
     }
     final now = DateTime.now().toUtc();
-    await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id)))
+    await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id) & _scoped(t)))
         .write(
       FinancialTransactionsCompanion(
         source: Value(draft.source.storageValue),
@@ -377,6 +389,7 @@ class FinancialTransactionRepositoryImpl
         syncStatus: const Value('pending'),
         version: Value(existing.version + 1),
         linesJson: Value(FinancialTransactionLinesCodec.encode(draft.lines)),
+        companyId: Value(_currentCompanyId),
       ),
     );
     final updated = await getById(id);
@@ -398,13 +411,14 @@ class FinancialTransactionRepositoryImpl
       );
     }
     final now = DateTime.now().toUtc();
-    await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id)))
+    await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id) & _scoped(t)))
         .write(
       FinancialTransactionsCompanion(
         documentStatus: Value(TransactionStatus.posted.storageValue),
         updatedAt: Value(now.millisecondsSinceEpoch),
         syncStatus: const Value('pending'),
         version: Value(existing.version + 1),
+        companyId: Value(_currentCompanyId),
       ),
     );
     final posted = await getById(id);
@@ -426,13 +440,14 @@ class FinancialTransactionRepositoryImpl
       );
     }
     final now = DateTime.now().toUtc();
-    await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id)))
+    await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id) & _scoped(t)))
         .write(
       FinancialTransactionsCompanion(
         documentStatus: Value(TransactionStatus.unposted.storageValue),
         updatedAt: Value(now.millisecondsSinceEpoch),
         syncStatus: const Value('pending'),
         version: Value(existing.version + 1),
+        companyId: Value(_currentCompanyId),
       ),
     );
     final unposted = await getById(id);
@@ -454,13 +469,14 @@ class FinancialTransactionRepositoryImpl
       );
     }
     final now = DateTime.now().toUtc();
-    await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id)))
+    await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id) & _scoped(t)))
         .write(
       FinancialTransactionsCompanion(
         cancelledAt: Value(now.millisecondsSinceEpoch),
         updatedAt: Value(now.millisecondsSinceEpoch),
         syncStatus: const Value('pending'),
         version: Value(existing.version + 1),
+        companyId: Value(_currentCompanyId),
       ),
     );
     final cancelled = await getById(id);
@@ -478,13 +494,14 @@ class FinancialTransactionRepositoryImpl
     final existing = await getById(id);
     if (existing == null) return;
     final now = DateTime.now().toUtc();
-    await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id)))
+    await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id) & _scoped(t)))
         .write(
       FinancialTransactionsCompanion(
         deletedAt: Value(now.millisecondsSinceEpoch),
         updatedAt: Value(now.millisecondsSinceEpoch),
         syncStatus: const Value('pending'),
         version: Value(existing.version + 1),
+        companyId: Value(_currentCompanyId),
       ),
     );
     final deleted = await getByUuid(existing.uuid);
@@ -673,7 +690,7 @@ class FinancialTransactionRepositoryImpl
 
   @override
   Stream<void> watchListChanges() {
-    return (_db.select(_db.financialTransactions)..where(_notDeleted))
+    return (_db.select(_db.financialTransactions)..where(_scoped))
         .watch()
         .map((_) {});
   }
@@ -685,7 +702,7 @@ class FinancialTransactionRepositoryImpl
   }) async {
     final at = syncedAt ?? DateTime.now().toUtc();
     await (_db.update(_db.financialTransactions)
-          ..where((t) => t.uuid.equals(uuid)))
+          ..where((t) => t.uuid.equals(uuid) & _tenantScoped(t)))
         .write(
       FinancialTransactionsCompanion(
         syncStatus: const Value('synced'),
@@ -697,7 +714,7 @@ class FinancialTransactionRepositoryImpl
 
   Future<void> markConflict(String uuid) async {
     await (_db.update(_db.financialTransactions)
-          ..where((t) => t.uuid.equals(uuid)))
+          ..where((t) => t.uuid.equals(uuid) & _tenantScoped(t)))
         .write(
       const FinancialTransactionsCompanion(syncStatus: Value('conflict')),
     );
@@ -792,12 +809,13 @@ class FinancialTransactionRepositoryImpl
       linesJson: Value(
         FinancialTransactionLinesCodec.encode(_linesFromPayload(payload)),
       ),
+      companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
     );
     if (existing == null) {
       await _db.into(_db.financialTransactions).insert(companion);
     } else {
       await (_db.update(_db.financialTransactions)
-            ..where((t) => t.uuid.equals(uuid)))
+            ..where((t) => t.uuid.equals(uuid) & _scoped(t)))
           .write(companion);
     }
   }
