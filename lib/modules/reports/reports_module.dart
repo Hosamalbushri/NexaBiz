@@ -6,6 +6,7 @@ import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
+import '../../app/presentation/pages/platform_reports_page.dart';
 import 'financial_reports/presentation/pages/account_statement_report_page.dart';
 import 'financial_reports/presentation/pages/journal_book_report_page.dart';
 import 'financial_reports/presentation/pages/trial_balance_report_page.dart';
@@ -260,7 +261,7 @@ class ReportsModule extends AppModule {
     GoRoute(
       path: ReportsRoutes.root,
       name: 'moduleReportsHome',
-      builder: (context, state) => const ReportsHomePage(),
+      builder: (context, state) => const PlatformReportsPage(),
       routes: [
         GoRoute(
           path: 'sales-period',
