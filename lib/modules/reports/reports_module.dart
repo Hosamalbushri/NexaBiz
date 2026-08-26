@@ -16,6 +16,8 @@ import 'presentation/pages/trial_balance_report_page.dart';
 import 'presentation/pages/journal_book_report_page.dart';
 import 'domain/services/rp_report_data_port.dart';
 
+import '../../core/modules/report_category_definition.dart';
+
 /// Platform reports module — generic PDF catalog, preview, print/share.
 ///
 /// Data for concrete reports arrives via App-wired ports (modules ↛ modules).
@@ -35,6 +37,9 @@ class ReportsModule extends AppModule {
 
   @override
   String get rootRoute => ReportsRoutes.root;
+
+  @override
+  int get sortOrder => 60;
 
   @override
   bool get isEnabled => true;
@@ -69,6 +74,51 @@ class ReportsModule extends AppModule {
   String? description(BuildContext context) {
     return AppLocalizations.of(context).moduleReportsDescription;
   }
+
+  @override
+  List<ReportCategoryDefinition> get reportCategories => [
+        ReportCategoryDefinition(
+          id: 'platform_reports_catalog',
+          moduleId: moduleId,
+          icon: Icons.assessment_outlined,
+          titleBuilder: (l10n) => l10n.platformReportsBusiness,
+          subtitleBuilder: (l10n) => l10n.platformReportsBusinessSubtitle,
+          reports: [
+            ReportItemDefinition(
+              id: 'reports_sales_period',
+              moduleId: moduleId,
+              icon: Icons.receipt_long_outlined,
+              path: ReportsRoutes.salesPeriod,
+              titleBuilder: (l10n) => l10n.reportsSalesPeriodTitle,
+              subtitleBuilder: (l10n) => l10n.reportsSalesPeriodSubtitle,
+            ),
+            ReportItemDefinition(
+              id: 'reports_account_statement',
+              moduleId: moduleId,
+              icon: Icons.menu_book_outlined,
+              path: ReportsRoutes.accountStatement,
+              titleBuilder: (l10n) => l10n.reportsAccountStatementTitle,
+              subtitleBuilder: (l10n) => l10n.reportsAccountStatementSubtitle,
+            ),
+            ReportItemDefinition(
+              id: 'reports_trial_balance',
+              moduleId: moduleId,
+              icon: Icons.balance_outlined,
+              path: ReportsRoutes.trialBalance,
+              titleBuilder: (l10n) => l10n.reportsTrialBalanceTitle,
+              subtitleBuilder: (l10n) => l10n.reportsTrialBalanceSubtitle,
+            ),
+            ReportItemDefinition(
+              id: 'reports_journal_book',
+              moduleId: moduleId,
+              icon: Icons.auto_stories_outlined,
+              path: ReportsRoutes.journalBook,
+              titleBuilder: (l10n) => l10n.reportsJournalBookTitle,
+              subtitleBuilder: (l10n) => l10n.reportsJournalBookSubtitle,
+            ),
+          ],
+        ),
+      ];
 
   @override
   List<RouteBase> get routes => [

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:hive_flutter/hive_flutter.dart';
 
-import 'sync_conflict_record.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_conflict_record.dart';
 
 /// Durable store for active and resolved synchronization conflicts.
 class SyncConflictStore {

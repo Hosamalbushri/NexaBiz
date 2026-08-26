@@ -7,7 +7,7 @@ import '../../../../core/network/http_client_providers.dart';
 import '../../../../core/network/sync_api_config.dart';
 import '../../../../core/network/token_refresh_outcome.dart';
 import '../../../../core/permissions/permission_guard.dart';
-import '../../../../core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../../../core/tenancy/session_company.dart';
 import '../../../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../../data/auth_repository_impl.dart';

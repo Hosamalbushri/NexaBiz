@@ -1,4 +1,4 @@
-import '../../../../core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import 'account_type.dart';
 import 'normal_balance.dart';
 

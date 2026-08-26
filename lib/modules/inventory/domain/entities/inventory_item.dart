@@ -1,5 +1,5 @@
 import 'item_status.dart';
-import '../../../../core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../../../core/utils/id_generator.dart';
 
 /// Domain entity representing a single inventory stock item.

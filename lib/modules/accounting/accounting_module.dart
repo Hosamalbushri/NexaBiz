@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/report_category_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
 import 'permissions/accounting_permission_package.dart';
@@ -45,6 +46,9 @@ class AccountingModule extends AppModule {
 
   @override
   String get rootRoute => AccountingRoutes.root;
+
+  @override
+  int get sortOrder => 50;
 
   @override
   bool get isEnabled => true;
@@ -131,6 +135,43 @@ class AccountingModule extends AppModule {
   void onSettingsReset(WidgetRef ref) {
     ref.invalidate(accountingFiscalClosedThroughProvider);
   }
+
+  @override
+  List<ReportCategoryDefinition> get reportCategories => [
+        ReportCategoryDefinition(
+          id: 'accounting_reports',
+          moduleId: moduleId,
+          icon: Icons.account_balance_outlined,
+          titleBuilder: (l10n) => l10n.platformReportsBusiness,
+          subtitleBuilder: (l10n) => l10n.platformReportsBusinessSubtitle,
+          reports: [
+            ReportItemDefinition(
+              id: 'reports_account_statement',
+              moduleId: moduleId,
+              icon: Icons.menu_book_outlined,
+              path: '/reports/account-statement',
+              titleBuilder: (l10n) => l10n.reportsAccountStatementTitle,
+              subtitleBuilder: (l10n) => l10n.reportsAccountStatementSubtitle,
+            ),
+            ReportItemDefinition(
+              id: 'reports_trial_balance',
+              moduleId: moduleId,
+              icon: Icons.balance_outlined,
+              path: '/reports/trial-balance',
+              titleBuilder: (l10n) => l10n.reportsTrialBalanceTitle,
+              subtitleBuilder: (l10n) => l10n.reportsTrialBalanceSubtitle,
+            ),
+            ReportItemDefinition(
+              id: 'reports_journal_book',
+              moduleId: moduleId,
+              icon: Icons.auto_stories_outlined,
+              path: '/reports/journal-book',
+              titleBuilder: (l10n) => l10n.reportsJournalBookTitle,
+              subtitleBuilder: (l10n) => l10n.reportsJournalBookSubtitle,
+            ),
+          ],
+        ),
+      ];
 
   @override
   List<RouteBase> get routes => [

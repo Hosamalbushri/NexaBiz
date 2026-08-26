@@ -3,10 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 
-import 'package:stock_count/core/sync/sync_operation.dart';
-import 'package:stock_count/core/sync/sync_operation_adapter.dart';
-import 'package:stock_count/core/sync/sync_queue.dart';
-import 'package:stock_count/core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/modules/customers/data/database/customers_database.dart';
 import 'package:stock_count/modules/customers/data/repositories/customer_repository_impl.dart';
 import 'package:stock_count/modules/customers/domain/entities/customer.dart';

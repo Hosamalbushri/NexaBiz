@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/sync/sync_overview.dart';
-import '../../../core/sync/sync_providers.dart';
-import '../../../core/sync/sync_request_context.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../localization/app_localizations.dart';
 import '../../theme/app_spacing.dart';

@@ -8,8 +8,7 @@ import 'package:http/testing.dart';
 import 'package:stock_count/core/errors/app_failure.dart';
 import 'package:stock_count/core/network/http_remote_sync_api.dart';
 import 'package:stock_count/core/network/sync_api_config.dart';
-import 'package:stock_count/core/sync/sync_operation.dart';
-import 'package:stock_count/core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 
 void main() {
   late Directory tempDir;

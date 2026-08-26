@@ -1,6 +1,5 @@
 import '../errors/app_failure.dart';
-import '../sync/sync_entity_handler.dart';
-import '../sync/sync_operation.dart';
+import '../../modules/sync/sync.dart';
 
 /// Per-operation outcome from [RemoteSyncApi.pushBatch].
 class SyncBatchPushItemResult {

@@ -1,6 +1,6 @@
-import '../errors/app_failure.dart';
+import 'package:stock_count/core/errors/app_failure.dart';
 import 'conflict_resolver.dart';
-import 'sync_operation.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_operation.dart';
 
 /// Result of a successful upload acknowledged by the remote.
 class SyncUploadAck {

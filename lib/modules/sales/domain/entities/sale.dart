@@ -1,4 +1,4 @@
-import '../../../../core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import 'discount_type.dart';
 import 'payment_method.dart';
 import 'payment_status.dart';

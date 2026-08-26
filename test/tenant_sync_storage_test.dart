@@ -4,10 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/core/database/hive_encryption_key_store.dart';
-import 'package:stock_count/core/sync/sync_cursor_store.dart';
-import 'package:stock_count/core/sync/sync_operation.dart';
-import 'package:stock_count/core/sync/sync_operation_adapter.dart';
-import 'package:stock_count/core/sync/sync_queue.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 
 void main() {
   late Directory tempDir;

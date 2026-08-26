@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/modules/module_providers.dart';
+import '../../../core/modules/report_category_definition.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../constants/app_constants.dart';
 import '../../localization/app_localizations.dart';
@@ -11,9 +14,12 @@ import '../../router/app_routes.dart';
 import '../../sync/app_bar_sync_actions.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
-import '../models/report_entry_definition.dart';
 
-/// Platform reports hub — modules that expose reports (e.g. Inventory).
+/// Dynamic platform reports hub — queries [ModuleRegistry.allReportCategories].
+///
+/// Each enabled module contributes its report categories and report items via
+/// [AppModule.reportCategories]. When no modules are registered, displays a
+/// rich, premium empty state.
 class PlatformReportsPage extends ConsumerWidget {
   const PlatformReportsPage({super.key});
 
@@ -23,7 +29,9 @@ class PlatformReportsPage extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final unread = ref.watch(unreadNotificationsCountProvider);
-    final modules = platformReportModules();
+
+    final registry = ref.watch(moduleRegistryProvider);
+    final categories = registry.allReportCategories;
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -34,30 +42,96 @@ class PlatformReportsPage extends ConsumerWidget {
         onNotifications: () => context.push(AppRoutes.notifications),
         actions: const [AppBarSyncActions()],
       ),
-      body: ListView(
-        padding: AppConstants.pageInsets(context),
-        children: [
-          Text(
-            l10n.platformReportsSubtitle,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+      body: categories.isEmpty
+          ? AppEmptyState(
+              icon: Icons.assessment_outlined,
+              title: l10n.platformReportsTitle,
+              subtitle: l10n.platformReportsServiceComingSoon,
+            )
+          : DefaultTabController(
+              length: categories.length,
+              child: Column(
+                children: [
+                  Material(
+                    color: colorScheme.surface,
+                    elevation: 0,
+                    child: TabBar(
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      indicatorColor: colorScheme.primary,
+                      labelColor: colorScheme.primary,
+                      unselectedLabelColor: colorScheme.onSurfaceVariant,
+                      labelStyle: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      tabs: [
+                        for (final cat in categories)
+                          Tab(
+                            icon: Icon(cat.icon, size: 20),
+                            text: cat.title(l10n),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        for (final cat in categories)
+                          _ReportCategoryView(category: cat),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          for (var i = 0; i < modules.length; i++) ...[
-            if (i > 0) const SizedBox(height: AppSpacing.sm),
-            _ModuleReportsHubTile(module: modules[i]),
-          ],
-        ],
-      ),
     );
   }
 }
 
-class _ModuleReportsHubTile extends StatelessWidget {
-  const _ModuleReportsHubTile({required this.module});
+class _ReportCategoryView extends StatelessWidget {
+  const _ReportCategoryView({required this.category});
 
-  final ReportModuleDefinition module;
+  final ReportCategoryDefinition category;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final reports = category.reports;
+
+    if (reports.isEmpty) {
+      return AppEmptyState(
+        icon: category.icon,
+        title: category.title(l10n),
+        subtitle: category.subtitle(l10n),
+      );
+    }
+
+    return ListView(
+      padding: AppConstants.pageInsets(context),
+      children: [
+        Text(
+          category.subtitle(l10n),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        for (var i = 0; i < reports.length; i++) ...[
+          if (i > 0) const SizedBox(height: AppSpacing.sm),
+          _ReportItemTile(item: reports[i]),
+        ],
+      ],
+    );
+  }
+}
+
+class _ReportItemTile extends StatelessWidget {
+  const _ReportItemTile({required this.item});
+
+  final ReportItemDefinition item;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +140,17 @@ class _ModuleReportsHubTile extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return AppCard(
-      onTap: () => context.go(module.hubPath),
+      onTap: item.isAvailable
+          ? () => context.push(item.path!)
+          : () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.platformReportsServiceComingSoon),
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
       child: Row(
         children: [
           DecoratedBox(
@@ -77,7 +161,7 @@ class _ModuleReportsHubTile extends StatelessWidget {
             child: SizedBox(
               width: 48,
               height: 48,
-              child: Icon(module.icon, color: colorScheme.primary, size: 24),
+              child: Icon(item.icon, color: colorScheme.primary, size: 24),
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -85,15 +169,39 @@ class _ModuleReportsHubTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  module.title(l10n),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.title(l10n),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    if (!item.isAvailable)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(AppRadius.xs),
+                        ),
+                        child: Text(
+                          l10n.platformReportsServiceComingSoon,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  module.subtitle(l10n),
+                  item.subtitle(l10n),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -101,6 +209,7 @@ class _ModuleReportsHubTile extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: AppSpacing.sm),
           Icon(
             Icons.chevron_right_rounded,
             color: colorScheme.onSurfaceVariant,

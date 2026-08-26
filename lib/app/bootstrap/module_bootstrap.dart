@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/modules/module_providers.dart';
 import '../../core/modules/module_registry.dart';
-import '../../core/sync/sync_providers.dart';
+import '../../modules/sync/sync.dart';
 import '../../modules/accounting/accounting_module.dart';
 import '../../modules/administration/administration_module.dart';
 import '../../modules/accounting/data/repositories/account_repository_impl.dart';
@@ -25,6 +25,7 @@ import '../../modules/receipts_payments/receipts_payments_module.dart';
 import '../../modules/sales/sales_module.dart';
 import '../../modules/system_setup/system_setup_module.dart';
 import '../../modules/system_setup/presentation/providers/system_setup_providers.dart';
+import '../../modules/sync/sync_module.dart';
 import '../customers/accounting_customer_account_link_adapter.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
 import '../receipts_payments/accounting_rp_currency_adapter.dart';
@@ -47,24 +48,33 @@ import '../sales/customers_sale_lookup_adapter.dart';
 import '../sales/inventory_sale_product_catalog_adapter.dart';
 import '../sales/perpetual_sale_inventory_effect_adapter.dart';
 import '../system_setup/accounting_system_setup_seed_adapter.dart';
+import '../sync/app_sync_adapters.dart';
+
+/// Self-register modules into [ModuleRegistry] catalog.
+void registerCoreModules() {
+  ModuleRegistry.registerAll(const [
+    // AccountingModule(),
+    // CustomersModule(),
+    // SalesModule(),
+    // ReceiptsPaymentsModule(),
+    // InventoryModule(),
+    // ReportsModule(),
+    // AdministrationModule(),
+    // SystemSetupModule(),
+    SyncModule(),
+  ]);
+}
 
 /// App composition root: registers enabled business modules.
 ///
-/// Add/remove modules here — launcher routes, settings, and Administration
-/// permission packages (Package → Service → Operation) update automatically.
+/// Add/remove modules via [ModuleRegistry.register] — launcher routes, settings,
+/// and Administration permission packages update automatically.
 List<Override> moduleRegistryOverrides() {
+  registerCoreModules();
+
   return [
     moduleRegistryProvider.overrideWithValue(
-      ModuleRegistry(const [
-        AccountingModule(),
-        CustomersModule(),
-        SalesModule(),
-        ReceiptsPaymentsModule(),
-        InventoryModule(),
-        ReportsModule(),
-        AdministrationModule(),
-        SystemSetupModule(),
-      ]),
+      ModuleRegistry(), // Dynamic self-registration catalog sorted by AppModule.sortOrder
     ),
     systemSetupSeedPortProvider.overrideWith((ref) {
       return AccountingSystemSetupSeedAdapter(
@@ -228,5 +238,20 @@ List<Override> moduleRegistryOverrides() {
         ref.watch(financialTransactionRepositoryProvider),
       );
     }),
+    localDatasetRecordCountersProvider.overrideWith((ref) => [
+      AccountingRecordCounter(ref),
+      InventoryRecordCounter(ref),
+      CustomerRecordCounter(ref),
+      SaleRecordCounter(ref),
+      RpRecordCounter(ref),
+    ]),
+    initialCloudEntityScannersProvider.overrideWith((ref) => [
+      AccountInitialCloudScanner(),
+      CustomerInitialCloudScanner(),
+      ProductInitialCloudScanner(),
+      SaleInitialCloudScanner(),
+      FinancialTransactionInitialCloudScanner(),
+      JournalEntryInitialCloudScanner(),
+    ]),
   ];
 }

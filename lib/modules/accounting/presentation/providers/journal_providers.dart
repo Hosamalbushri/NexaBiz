@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/presentation/providers/dashboard_services_provider.dart';
 import '../../../../app/settings/company/company_profile_providers.dart';
-import '../../../../core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../../../core/tenancy/tenant_context.dart';
 import '../../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../data/repositories/fiscal_year_repository_impl.dart';

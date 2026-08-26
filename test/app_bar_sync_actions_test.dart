@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/sync/app_bar_sync_actions.dart';
-import 'package:stock_count/core/sync/sync_overview.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 
 void main() {
   group('AppBarSyncActions.hasActiveSync', () {

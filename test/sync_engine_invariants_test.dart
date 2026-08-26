@@ -1,8 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/core/sync/dataset_sync_state.dart';
-import 'package:stock_count/core/sync/sync_operation.dart';
-import 'package:stock_count/core/sync/sync_request_context.dart';
-import 'package:stock_count/core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 
 void main() {
   group('Synchronization Engine Invariants (1-20)', () {

@@ -6,8 +6,8 @@ import '../../app/settings/settings_repository.dart';
 import '../../modules/inventory/data/inventory_hive.dart';
 import '../../modules/inventory/domain/entities/inventory_item.dart';
 import '../errors/app_error_domain.dart';
-import '../sync/sync_cursor_store.dart';
-import '../sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 
 /// Installs server-provided bootstrap snapshot into the local database atomically.
 ///

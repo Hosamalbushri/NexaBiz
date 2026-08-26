@@ -1,9 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/network/sync_api_config.dart';
-import '../../core/sync/sync_manager.dart';
-import '../../core/sync/sync_overview.dart';
-import '../../core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
 import '../settings/settings_repository.dart';

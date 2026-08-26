@@ -13,14 +13,7 @@ import 'package:stock_count/core/network/authenticated_http_client.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
 import 'package:stock_count/core/network/sync_api_config.dart';
 import 'package:stock_count/core/network/token_store.dart';
-import 'package:stock_count/core/sync/sync_manager.dart';
-import 'package:stock_count/core/sync/sync_metrics_store.dart';
-import 'package:stock_count/core/sync/sync_operation.dart';
-import 'package:stock_count/core/sync/sync_operation_adapter.dart';
-import 'package:stock_count/core/sync/sync_os_wake_signal.dart';
-import 'package:stock_count/core/sync/sync_overview.dart';
-import 'package:stock_count/core/sync/sync_queue.dart';
-import 'package:stock_count/core/sync/sync_request_context.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/database/hive_boxes.dart';
 
 class _HandshakeFailClient extends http.BaseClient {

@@ -1,5 +1,5 @@
-import '../errors/app_failure.dart';
-import 'sync_status.dart';
+import 'package:stock_count/core/errors/app_failure.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_status.dart';
 
 enum SyncErrorCategory {
   network,

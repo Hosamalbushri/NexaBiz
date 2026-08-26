@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../permissions/permission_defs.dart';
+import 'quick_action_definition.dart';
+import 'report_category_definition.dart';
 import 'route_access_rule.dart';
 
 /// Base contract every business module must extend.
@@ -24,6 +26,11 @@ abstract class AppModule {
 
   /// Root path contributed by this module (e.g. `/inventory`).
   String get rootRoute;
+
+  /// Priority order used for sorting modules across launcher grids, tabs, and actions.
+  ///
+  /// Lower numbers appear first. Defaults to 100.
+  int get sortOrder => 100;
 
   /// Whether the module is available in the launcher.
   bool get isEnabled => true;
@@ -68,6 +75,16 @@ abstract class AppModule {
   /// Optional Riverpod overrides contributed at module bootstrap.
   List<Override> get providerOverrides => const [];
 
+  /// Quick actions contributed by this module to the shell add sheet.
+  ///
+  /// Keep empty when the module has no quick actions.
+  List<QuickActionDefinition> get quickActions => const [];
+
+  /// Report categories contributed by this module to the platform Reports page.
+  ///
+  /// Keep empty when the module has no report categories.
+  List<ReportCategoryDefinition> get reportCategories => const [];
+
   /// Module-owned settings blocks for the platform Settings screen.
   ///
   /// Keep empty when the module has no settings. The App page never imports
@@ -80,3 +97,4 @@ abstract class AppModule {
   /// Invalidate module settings state after a platform settings reset.
   void onSettingsReset(WidgetRef ref) {}
 }
+

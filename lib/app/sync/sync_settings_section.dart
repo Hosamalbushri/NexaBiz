@@ -4,8 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
-import '../../core/sync/sync_overview.dart';
-import '../../core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../core/widgets/app_button.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';

@@ -4,15 +4,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/connectivity/connectivity_service.dart';
-import '../../core/sync/sync_manager.dart';
-import '../../core/sync/sync_os_background_bridge.dart';
-import '../../core/sync/sync_os_wake_signal.dart';
-import '../../core/sync/sync_overview.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../core/entitlements/domain/entities/entitlement.dart';
 import '../../core/entitlements/presentation/providers/entitlement_providers.dart';
-import '../../core/sync/sync_providers.dart';
-import '../../core/sync/sync_queue.dart';
-import '../../core/sync/sync_request_context.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
 import '../settings/settings_repository.dart';

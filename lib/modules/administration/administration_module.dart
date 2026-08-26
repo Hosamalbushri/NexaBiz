@@ -45,6 +45,9 @@ class AdministrationModule extends AppModule {
   String get rootRoute => AppRoutes.administration;
 
   @override
+  int get sortOrder => 70;
+
+  @override
   bool get isEnabled => true;
 
   @override

@@ -7,8 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../core/di/app_providers.dart';
 import '../../core/modules/module_providers.dart';
-import '../../core/sync/sync_overview.dart';
-import '../../core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/custom_app_bar.dart';

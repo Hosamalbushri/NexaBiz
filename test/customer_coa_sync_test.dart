@@ -8,10 +8,7 @@ import 'package:stock_count/app/customers/accounting_customer_account_link_adapt
 import 'package:stock_count/app/customers/customer_remote_account_ensure.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
-import 'package:stock_count/core/sync/sync_entity_handler.dart';
-import 'package:stock_count/core/sync/sync_operation.dart';
-import 'package:stock_count/core/sync/sync_operation_adapter.dart';
-import 'package:stock_count/core/sync/sync_queue.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
 import 'package:stock_count/modules/accounting/data/repositories/account_repository_impl.dart';
 import 'package:stock_count/modules/accounting/domain/models/account_tree_node.dart';

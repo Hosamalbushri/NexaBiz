@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/tenant_database_name.dart';
-import '../../../../core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../../../core/tenancy/session_company.dart';
 import '../../../../core/tenancy/tenant_context.dart';
 import '../../../../modules/authentication/presentation/providers/auth_providers.dart';

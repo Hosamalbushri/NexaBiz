@@ -10,7 +10,7 @@ import '../../sync/app_bar_sync_actions.dart';
 import '../../sync/sync_enabled_provider.dart';
 import '../../../core/modules/module_providers.dart';
 import '../../../core/widgets/custom_app_bar.dart';
-import '../../../modules/authentication/presentation/providers/auth_providers.dart';
+import '../../../core/auth/presentation/providers/auth_state_core.dart';
 import '../../../shared/widgets/service_launcher.dart';
 
 /// Services branch: launches business modules via the module registry.

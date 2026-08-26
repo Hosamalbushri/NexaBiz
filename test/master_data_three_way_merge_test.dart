@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/core/sync/conflict_strategy.dart';
-import 'package:stock_count/core/sync/three_way_merger.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 
 void main() {
   group('ThreeWayMerger Master Data Tests', () {

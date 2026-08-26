@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import '../../../../core/sync/sync_operation.dart';
-import '../../../../core/sync/sync_queue.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../repositories/inventory_repository_impl.dart';
 
 /// Represents an append-only inventory movement event.

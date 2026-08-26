@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 
 /// Network connectivity and server sync connection status.
 enum NetworkStatus {

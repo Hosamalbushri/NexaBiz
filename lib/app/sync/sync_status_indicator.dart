@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../localization/app_localizations.dart';
-import '../../core/sync/sync_overview.dart';
-import '../../core/sync/sync_providers.dart';
-import '../../core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 
 /// Compact sync phase chip for settings / dense layouts.
 ///

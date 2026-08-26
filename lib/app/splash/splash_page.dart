@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/di/app_providers.dart';
 import '../../core/widgets/app_error_state.dart';
-import '../../modules/authentication/presentation/providers/auth_providers.dart';
+import '../../core/auth/presentation/providers/auth_state_core.dart';
 import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
 import '../../modules/system_setup/presentation/providers/system_setup_providers.dart';
 import '../bootstrap/app_initialization.dart';

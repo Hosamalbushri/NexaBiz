@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/settings/company/app_currency.dart';
 import '../../../../app/settings/company/company_profile.dart';
 import '../../../../app/settings/company/company_profile_providers.dart';
-import '../../../../core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../../../core/tenancy/tenant_context.dart';
 import '../../data/repositories/currency_rate_repository_impl.dart';
 import '../../domain/entities/currency_rate.dart';

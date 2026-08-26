@@ -31,6 +31,9 @@ class SystemSetupModule extends AppModule {
   String get rootRoute => SystemSetupRoutes.root;
 
   @override
+  int get sortOrder => 80;
+
+  @override
   bool get isEnabled => true;
 
   @override

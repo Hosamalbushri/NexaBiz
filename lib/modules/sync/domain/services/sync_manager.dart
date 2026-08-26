@@ -1,23 +1,23 @@
 import 'dart:async';
 
-import '../connectivity/connectivity_service.dart';
-import '../errors/app_failure.dart';
-import '../network/remote_sync_api.dart';
-import '../utils/id_generator.dart';
+import 'package:stock_count/core/connectivity/connectivity_service.dart';
+import 'package:stock_count/core/errors/app_failure.dart';
+import 'package:stock_count/core/network/remote_sync_api.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 import 'conflict_resolver.dart';
-import 'sync_conflict_record.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_conflict_record.dart';
 import 'sync_conflict_store.dart';
 import 'sync_entity_handler.dart';
-import 'sync_metrics_store.dart';
-import 'sync_operation.dart';
-import 'sync_overview.dart';
+import 'package:stock_count/modules/sync/data/stores/sync_metrics_store.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_operation.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_overview.dart';
 import 'sync_queue.dart';
 import 'sync_queue_recovery_service.dart';
 import 'sync_request_context.dart';
-import 'sync_status.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_status.dart';
 import 'sync_error_classifier.dart';
-import '../time/domain/services/clock_integrity_service.dart';
-import '../logging/security_logger.dart';
+import 'package:stock_count/core/time/domain/services/clock_integrity_service.dart';
+import 'package:stock_count/core/logging/security_logger.dart';
 
 /// Coordinates upload / download across registered [SyncEntityHandler]s.
 ///

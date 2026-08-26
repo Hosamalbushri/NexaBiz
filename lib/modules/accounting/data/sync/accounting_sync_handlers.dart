@@ -1,7 +1,5 @@
 import '../../../../core/network/remote_sync_api.dart';
-import '../../../../core/sync/conflict_resolver.dart';
-import '../../../../core/sync/sync_entity_handler.dart';
-import '../../../../core/sync/sync_operation.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../repositories/account_repository_impl.dart';
 import '../repositories/currency_rate_repository_impl.dart';
 import '../repositories/fiscal_year_repository_impl.dart';

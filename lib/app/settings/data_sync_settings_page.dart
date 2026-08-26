@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/sync/sync_overview.dart';
-import '../../core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../constants/app_constants.dart';

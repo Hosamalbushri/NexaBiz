@@ -1,4 +1,4 @@
-import '../utils/id_generator.dart';
+import 'package:stock_count/core/utils/id_generator.dart';
 import 'sync_status.dart';
 
 /// Kind of mutation represented by a queue entry.

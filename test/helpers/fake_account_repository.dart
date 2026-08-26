@@ -1,4 +1,4 @@
-import 'package:stock_count/core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/domain/entities/account_type.dart';

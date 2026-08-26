@@ -1,9 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../../app/settings/settings_repository.dart';
-import '../../../../core/sync/sync_operation.dart';
-import '../../../../core/sync/sync_queue.dart';
-import '../../../../core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../domain/entities/account.dart';
 import '../../domain/entities/account_type.dart';

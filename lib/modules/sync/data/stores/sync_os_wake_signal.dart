@@ -1,6 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
-import '../database/hive_boxes.dart';
+import 'package:stock_count/core/database/hive_boxes.dart';
 
 /// Cross-isolate wake signal: WorkManager (or other OS jobs) stamps a request
 /// that the foreground [SyncBackgroundScheduler] drains into `syncNow`.

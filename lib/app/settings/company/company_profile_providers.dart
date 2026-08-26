@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/sync/sync_operation.dart';
-import '../../../core/sync/sync_providers.dart';
-import '../../../core/sync/sync_queue.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../../core/tenancy/session_company.dart';
 import '../../presentation/providers/dashboard_services_provider.dart';
 import '../settings_repository.dart';

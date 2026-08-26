@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/modules/module_providers.dart';
+import '../../../core/modules/module_registry.dart';
 import '../../settings/settings_repository.dart';
 import '../models/quick_action_definition.dart';
 import 'dashboard_services_provider.dart';
@@ -13,17 +15,22 @@ final quickActionsProvider =
     ) {
       return QuickActionsController(
         repository: ref.watch(settingsRepositoryProvider),
+        registry: ref.watch(moduleRegistryProvider),
       );
     });
 
 class QuickActionsController extends StateNotifier<AsyncValue<List<String>>> {
-  QuickActionsController({required SettingsRepository repository})
-    : _repository = repository,
-      super(const AsyncValue.loading()) {
+  QuickActionsController({
+    required SettingsRepository repository,
+    required ModuleRegistry registry,
+  })  : _repository = repository,
+        _registry = registry,
+        super(const AsyncValue.loading()) {
     _load();
   }
 
   final SettingsRepository _repository;
+  final ModuleRegistry _registry;
 
   Future<void> _load() async {
     state = const AsyncValue.loading();
@@ -34,7 +41,7 @@ class QuickActionsController extends StateNotifier<AsyncValue<List<String>>> {
   }
 
   List<String> _sanitize(List<String> ids) {
-    final known = {for (final action in quickActionCatalog()) action.id};
+    final known = {for (final action in _registry.allQuickActions) action.id};
     final seen = <String>{};
     final result = <String>[];
     for (final id in ids) {
@@ -52,7 +59,7 @@ class QuickActionsController extends StateNotifier<AsyncValue<List<String>>> {
     final ids = state.valueOrNull ?? defaultQuickActionIds();
     final actions = <QuickActionDefinition>[];
     for (final id in ids) {
-      final action = findQuickActionById(id);
+      final action = _registry.findQuickActionById(id);
       if (action != null) {
         actions.add(action);
       }

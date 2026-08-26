@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/quick_action_definition.dart';
+import '../../core/modules/report_category_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
 import '../../core/reporting/pdf_document_preview_page.dart';
@@ -32,6 +34,9 @@ class SalesModule extends AppModule {
 
   @override
   String get rootRoute => SalesRoutes.root;
+
+  @override
+  int get sortOrder => 10;
 
   @override
   bool get isEnabled => true;
@@ -67,6 +72,40 @@ class SalesModule extends AppModule {
   String? description(BuildContext context) {
     return AppLocalizations.of(context).moduleSalesDescription;
   }
+
+  @override
+  List<QuickActionDefinition> get quickActions => [
+        QuickActionDefinition(
+          id: 'create_sale',
+          icon: Icons.receipt_long_outlined,
+          kind: QuickActionKind.route,
+          routePath: SalesRoutes.create,
+          titleBuilder: (l10n) => l10n.salesCreateTitle,
+          subtitleBuilder: (l10n) => l10n.salesCreateCardSubtitle,
+          requiredPermissions: const ['sales.documents.create', 'sales.create'],
+        ),
+      ];
+
+  @override
+  List<ReportCategoryDefinition> get reportCategories => [
+        ReportCategoryDefinition(
+          id: 'sales_reports',
+          moduleId: moduleId,
+          icon: Icons.point_of_sale_outlined,
+          titleBuilder: (l10n) => l10n.moduleSales,
+          subtitleBuilder: (l10n) => l10n.moduleSalesDescription,
+          reports: [
+            ReportItemDefinition(
+              id: 'reports_sales_period',
+              moduleId: moduleId,
+              icon: Icons.receipt_long_outlined,
+              path: '/reports/sales-period',
+              titleBuilder: (l10n) => l10n.reportsSalesPeriodTitle,
+              subtitleBuilder: (l10n) => l10n.reportsSalesPeriodSubtitle,
+            ),
+          ],
+        ),
+      ];
 
   @override
   List<RouteBase> get routes => [

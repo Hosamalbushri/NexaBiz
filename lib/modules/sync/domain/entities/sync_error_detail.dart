@@ -1,73 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import '../errors/app_failure.dart';
+import 'package:stock_count/core/errors/app_failure.dart';
 
-/// Standardized error codes for synchronization failures.
-enum SyncErrorCode {
-  networkUnavailable,
-  serverUnavailable,
-  timeout,
-  authenticationRequired,
-  authenticationExpired,
-  forbidden,
-  validationError,
-  conflict,
-  serverError,
-  databaseError,
-  serializationError,
-  unknownError;
-
-  /// Whether operations with this error code can be retried automatically.
-  bool get isRetryable {
-    switch (this) {
-      case SyncErrorCode.networkUnavailable:
-      case SyncErrorCode.serverUnavailable:
-      case SyncErrorCode.timeout:
-      case SyncErrorCode.serverError:
-        return true;
-      case SyncErrorCode.authenticationRequired:
-      case SyncErrorCode.authenticationExpired:
-      case SyncErrorCode.forbidden:
-      case SyncErrorCode.validationError:
-      case SyncErrorCode.conflict:
-      case SyncErrorCode.databaseError:
-      case SyncErrorCode.serializationError:
-      case SyncErrorCode.unknownError:
-        return false;
-    }
-  }
-
-  /// User-friendly fallback message string key identifier.
-  String get messageKey {
-    switch (this) {
-      case SyncErrorCode.networkUnavailable:
-        return 'syncErrorNetworkUnavailable';
-      case SyncErrorCode.serverUnavailable:
-        return 'syncErrorServerUnavailable';
-      case SyncErrorCode.timeout:
-        return 'syncErrorTimeout';
-      case SyncErrorCode.authenticationRequired:
-        return 'syncErrorAuthenticationRequired';
-      case SyncErrorCode.authenticationExpired:
-        return 'syncErrorAuthenticationExpired';
-      case SyncErrorCode.forbidden:
-        return 'syncErrorForbidden';
-      case SyncErrorCode.validationError:
-        return 'syncErrorValidationError';
-      case SyncErrorCode.conflict:
-        return 'syncErrorConflict';
-      case SyncErrorCode.serverError:
-        return 'syncErrorServerError';
-      case SyncErrorCode.databaseError:
-        return 'syncErrorDatabaseError';
-      case SyncErrorCode.serializationError:
-        return 'syncErrorSerializationError';
-      case SyncErrorCode.unknownError:
-        return 'syncErrorUnknownError';
-    }
-  }
-}
+import 'sync_error_code.dart';
 
 /// Rich, observable error details for individual sync operations or passes.
 class SyncErrorDetail {
@@ -105,7 +41,7 @@ class SyncErrorDetail {
 
     if (error is AuthenticationFailure) {
       return SyncErrorDetail(
-        code: SyncErrorCode.authenticationExpired,
+        code: SyncErrorCode.authenticationFailed,
         userMessage: 'Session expired. Please sign in again.',
         technicalMessage: error.message,
         httpStatusCode: httpStatusCode ?? 401,
@@ -117,7 +53,7 @@ class SyncErrorDetail {
 
     if (error is AuthorizationFailure) {
       return SyncErrorDetail(
-        code: SyncErrorCode.forbidden,
+        code: SyncErrorCode.authorizationFailed,
         userMessage: 'Access denied for this operation.',
         technicalMessage: error.message,
         httpStatusCode: httpStatusCode ?? 403,
@@ -129,7 +65,7 @@ class SyncErrorDetail {
 
     if (error is ValidationFailure) {
       return SyncErrorDetail(
-        code: SyncErrorCode.validationError,
+        code: SyncErrorCode.validationFailed,
         userMessage: error.message,
         technicalMessage: error.message,
         httpStatusCode: httpStatusCode ?? 422,
@@ -152,7 +88,7 @@ class SyncErrorDetail {
 
     if (error is TimeoutException) {
       return SyncErrorDetail(
-        code: SyncErrorCode.timeout,
+        code: SyncErrorCode.serverUnreachable,
         userMessage: 'Server request timed out.',
         technicalMessage: error.message,
         entityType: entityType,
@@ -163,7 +99,7 @@ class SyncErrorDetail {
 
     if (error is FormatException) {
       return SyncErrorDetail(
-        code: SyncErrorCode.serializationError,
+        code: SyncErrorCode.unknown,
         userMessage: 'Invalid server data format.',
         technicalMessage: error.message,
         entityType: entityType,
@@ -198,13 +134,13 @@ class SyncErrorDetail {
   }
 
   static SyncErrorCode _mapStatusCodeToCode(int? statusCode) {
-    if (statusCode == null) return SyncErrorCode.unknownError;
-    if (statusCode == 401) return SyncErrorCode.authenticationExpired;
-    if (statusCode == 403) return SyncErrorCode.forbidden;
+    if (statusCode == null) return SyncErrorCode.unknown;
+    if (statusCode == 401) return SyncErrorCode.authenticationFailed;
+    if (statusCode == 403) return SyncErrorCode.authorizationFailed;
     if (statusCode == 404) return SyncErrorCode.serverError;
-    if (statusCode == 409) return SyncErrorCode.conflict;
-    if (statusCode == 422 || statusCode == 400) return SyncErrorCode.validationError;
-    if (statusCode >= 500) return SyncErrorCode.serverUnavailable;
-    return SyncErrorCode.unknownError;
+    if (statusCode == 409) return SyncErrorCode.conflictDetected;
+    if (statusCode == 422 || statusCode == 400) return SyncErrorCode.validationFailed;
+    if (statusCode >= 500) return SyncErrorCode.serverUnreachable;
+    return SyncErrorCode.unknown;
   }
 }

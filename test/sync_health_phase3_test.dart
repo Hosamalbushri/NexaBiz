@@ -6,15 +6,7 @@ import 'package:hive/hive.dart';
 import 'package:stock_count/core/connectivity/connectivity_service.dart';
 import 'package:stock_count/core/errors/app_failure.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
-import 'package:stock_count/core/sync/conflict_resolver.dart';
-import 'package:stock_count/core/sync/sync_cursor_store.dart';
-import 'package:stock_count/core/sync/sync_entity_handler.dart';
-import 'package:stock_count/core/sync/sync_manager.dart';
-import 'package:stock_count/core/sync/sync_operation.dart';
-import 'package:stock_count/core/sync/sync_operation_adapter.dart';
-import 'package:stock_count/core/sync/sync_overview.dart';
-import 'package:stock_count/core/sync/sync_queue.dart';
-import 'package:stock_count/core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:async';
 

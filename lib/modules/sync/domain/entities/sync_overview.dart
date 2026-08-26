@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'sync_error_detail.dart';
-import 'sync_request_context.dart';
+import 'package:stock_count/modules/sync/domain/services/sync_request_context.dart';
 
 /// Aggregate sync state for UI (settings + global indicator).
 enum SyncPhase { offline, idleSynced, syncing, pending, failed, conflict }

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/modules/module_providers.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../localization/app_localizations.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
-import '../../../modules/authentication/presentation/providers/auth_providers.dart';
+import '../../../core/auth/presentation/providers/auth_state_core.dart';
 import '../models/quick_action_definition.dart';
 import '../providers/quick_actions_provider.dart';
 import '../quick_action_runner.dart';
@@ -105,7 +106,8 @@ class QuickActionsSheetBody extends ConsumerWidget {
     final currentIds =
         ref.read(quickActionsProvider).valueOrNull ?? defaultQuickActionIds();
     final authState = ref.read(authStateProvider);
-    final availableCatalog = quickActionCatalog()
+    final registry = ref.read(moduleRegistryProvider);
+    final availableCatalog = registry.allQuickActions
         .where((action) => action.hasPermission(authState))
         .toList();
 
@@ -137,6 +139,7 @@ class QuickActionsSheetBody extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final asyncIds = ref.watch(quickActionsProvider);
     final authState = ref.watch(authStateProvider);
+    final registry = ref.watch(moduleRegistryProvider);
     final runner = const QuickActionRunner();
 
     return asyncIds.when(
@@ -158,9 +161,9 @@ class QuickActionsSheetBody extends ConsumerWidget {
       data: (ids) {
         final actions = [
           for (final id in ids)
-            if (findQuickActionById(id) != null &&
-                findQuickActionById(id)!.hasPermission(authState))
-              findQuickActionById(id)!,
+            if (registry.findQuickActionById(id) != null &&
+                registry.findQuickActionById(id)!.hasPermission(authState))
+              registry.findQuickActionById(id)!,
         ];
 
         return Column(

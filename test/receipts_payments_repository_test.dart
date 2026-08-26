@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/modules/receipts_payments/data/database/receipts_payments_database.dart';
 import 'package:stock_count/modules/receipts_payments/data/repositories/financial_transaction_repository_impl.dart';
 import 'package:stock_count/modules/receipts_payments/domain/entities/financial_transaction.dart';

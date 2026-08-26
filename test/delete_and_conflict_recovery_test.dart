@@ -3,16 +3,10 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/core/connectivity/connectivity_service.dart';
-import 'package:stock_count/core/sync/sync_conflict_record.dart';
-import 'package:stock_count/core/sync/sync_conflict_store.dart';
-import 'package:stock_count/core/sync/sync_manager.dart';
-import 'package:stock_count/core/sync/sync_operation.dart';
-import 'package:stock_count/core/sync/sync_queue.dart';
-import 'package:stock_count/core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 
 import 'dart:io';
 import 'package:hive/hive.dart';
-import 'package:stock_count/core/sync/sync_operation_adapter.dart';
 
 import 'dart:typed_data';
 import 'package:stock_count/core/database/hive_encryption_key_store.dart';

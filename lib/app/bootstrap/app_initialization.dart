@@ -8,9 +8,7 @@ import '../../core/entitlements/presentation/providers/entitlement_providers.dar
 import '../../core/errors/app_error_domain.dart';
 import '../../core/logging/app_error_log.dart';
 import '../../core/network/server_bootstrap_service.dart';
-import '../../core/sync/sync_entity_handler.dart';
-import '../../core/sync/sync_providers.dart';
-import '../../core/sync/sync_request_context.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../settings/settings_repository.dart';
 import '../sync/sync_enabled_provider.dart';
 import 'app_bootstrap.dart';

@@ -7,7 +7,7 @@ import '../../core/entitlements/domain/entities/entitlement.dart';
 import '../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../../core/entitlements/presentation/providers/subscription_providers.dart';
 import '../../core/network/sync_api_config.dart';
-import '../../core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../localization/app_localizations.dart';
 import '../theme/app_spacing.dart';

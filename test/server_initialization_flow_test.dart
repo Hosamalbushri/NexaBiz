@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/bootstrap/app_initialization_state.dart';
-import 'package:stock_count/core/sync/conflict_resolver.dart';
-import 'package:stock_count/core/sync/sync_entity_handler.dart';
-import 'package:stock_count/core/sync/sync_operation.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_session.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';

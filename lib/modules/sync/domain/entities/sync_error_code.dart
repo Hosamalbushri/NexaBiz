@@ -1,4 +1,4 @@
-import '../errors/app_failure.dart';
+import 'package:stock_count/core/errors/app_failure.dart';
 
 /// Centralized classification of synchronization errors.
 enum SyncErrorCode {

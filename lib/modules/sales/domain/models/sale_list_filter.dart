@@ -2,7 +2,7 @@ import '../entities/payment_method.dart';
 import '../entities/payment_status.dart';
 import '../entities/sale_data_source.dart';
 import '../entities/sale_status.dart';
-import '../../../../core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 
 /// Filter criteria for the sales list (offline query).
 class SaleListFilter {

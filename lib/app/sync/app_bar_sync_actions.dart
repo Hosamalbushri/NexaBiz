@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/sync/sync_overview.dart';
-import '../../core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/network_status_indicator.dart';

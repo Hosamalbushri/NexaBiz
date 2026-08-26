@@ -3,9 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../errors/app_failure.dart';
-import '../sync/sync_cursor_store.dart';
-import '../sync/sync_entity_handler.dart';
-import '../sync/sync_operation.dart';
+import '../../modules/sync/sync.dart';
 import 'authenticated_http_client.dart';
 import 'remote_sync_api.dart';
 import 'sync_api_config.dart';

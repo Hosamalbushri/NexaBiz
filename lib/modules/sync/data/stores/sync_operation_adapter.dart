@@ -1,7 +1,7 @@
 import 'package:hive/hive.dart';
 
-import 'sync_operation.dart';
-import 'sync_status.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_operation.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_status.dart';
 
 /// Hive type adapter for [SyncOperation] (typeId: 2).
 class SyncOperationAdapter extends TypeAdapter<SyncOperation> {

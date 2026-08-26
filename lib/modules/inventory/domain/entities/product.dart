@@ -1,4 +1,4 @@
-import '../../../../core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 
 /// Master product in the inventory catalog (Drift-backed).
 class Product {

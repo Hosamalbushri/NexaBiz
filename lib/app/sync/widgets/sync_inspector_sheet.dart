@@ -3,9 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/sync/sync_operation.dart';
-import '../../../core/sync/sync_providers.dart';
-import '../../../core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../localization/app_localizations.dart';

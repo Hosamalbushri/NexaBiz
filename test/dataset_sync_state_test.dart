@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/core/sync/dataset_sync_state.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 
 void main() {
   group('DatasetSyncStateResolver Unit Tests', () {

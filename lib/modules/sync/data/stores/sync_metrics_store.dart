@@ -1,8 +1,8 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
-import '../database/hive_boxes.dart';
-import 'sync_overview.dart';
-import 'sync_request_context.dart';
+import 'package:stock_count/core/database/hive_boxes.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_overview.dart';
+import 'package:stock_count/modules/sync/domain/services/sync_request_context.dart';
 
 /// One recorded sync pass for observability (Phase 6).
 class SyncPassMetrics {

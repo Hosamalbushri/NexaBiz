@@ -1,29 +1,27 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-import '../connectivity/connectivity_service.dart';
-import '../database/encrypted_hive_box.dart';
-import '../database/hive_boxes.dart';
-import '../database/tenant_database_name.dart';
-import '../entitlements/domain/entities/entitlement.dart';
-import '../entitlements/presentation/providers/entitlement_providers.dart';
-import '../network/http_client_providers.dart';
-import '../network/http_remote_sync_api.dart';
-import '../network/remote_sync_api.dart';
-import '../network/sync_api_config.dart';
-import '../tenancy/session_company.dart';
-import 'sync_cursor_store.dart';
-import 'sync_manager.dart';
-import 'sync_metrics_store.dart';
-import 'sync_operation.dart';
-import 'sync_os_background_bridge.dart';
-import 'sync_overview.dart';
-import 'sync_queue.dart';
-// G5 fix: import auth state to check user permission for sync.
-import '../../modules/authentication/presentation/providers/auth_providers.dart';
-import '../auth/presentation/providers/auth_context_providers.dart';
-import '../time/domain/services/clock_integrity_service.dart';
-import '../time/domain/trusted_clock.dart';
+import 'package:stock_count/core/connectivity/connectivity_service.dart';
+import 'package:stock_count/core/database/encrypted_hive_box.dart';
+import 'package:stock_count/core/database/hive_boxes.dart';
+import 'package:stock_count/core/database/tenant_database_name.dart';
+import 'package:stock_count/core/entitlements/domain/entities/entitlement.dart';
+import 'package:stock_count/core/entitlements/presentation/providers/entitlement_providers.dart';
+import 'package:stock_count/core/network/http_client_providers.dart';
+import 'package:stock_count/core/network/http_remote_sync_api.dart';
+import 'package:stock_count/core/network/remote_sync_api.dart';
+import 'package:stock_count/core/network/sync_api_config.dart';
+import 'package:stock_count/core/tenancy/session_company.dart';
+import 'package:stock_count/modules/sync/data/stores/sync_cursor_store.dart';
+import 'package:stock_count/modules/sync/domain/services/sync_manager.dart';
+import 'package:stock_count/modules/sync/data/stores/sync_metrics_store.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_operation.dart';
+import 'package:stock_count/modules/sync/data/stores/sync_os_background_bridge.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_overview.dart';
+import 'package:stock_count/modules/sync/domain/services/sync_queue.dart';
+import 'package:stock_count/core/auth/presentation/providers/auth_context_providers.dart';
+import 'package:stock_count/core/time/domain/services/clock_integrity_service.dart';
+import 'package:stock_count/core/time/domain/trusted_clock.dart';
 
 final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
   final service = ConnectivityService(
@@ -122,10 +120,10 @@ final syncManagerProvider = Provider<SyncManager>((ref) {
     // G5 fix: also require sync.execute permission on the user's session.
     // Fail closed: if authState has no session, sync is denied.
     hasSyncPermission: () {
-      final authState = ref.read(authStateProvider);
-      final session = authState.session;
-      if (session == null) return false;
-      return session.hasAnyPermission(const ['sync.execute', 'sync.view']);
+      final context = ref.read(authorizationContextProvider);
+      if (context.userId.isEmpty) return false;
+      return context.permissions.contains('sync.execute') ||
+          context.permissions.contains('sync.view');
     },
     readCompanyId: () => ref.read(sessionCompanyIdProvider) ?? '',
     readClockState: () {

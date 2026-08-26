@@ -7,9 +7,7 @@ import 'package:stock_count/core/auth/domain/services/offline_login_policy.dart'
 import 'package:stock_count/core/entitlements/domain/entities/entitlement.dart';
 import 'package:stock_count/core/time/domain/trusted_clock.dart';
 import 'package:stock_count/core/time/domain/services/clock_integrity_service.dart';
-import 'package:stock_count/core/sync/sync_manager.dart';
-import 'package:stock_count/core/sync/sync_queue.dart';
-import 'package:stock_count/core/sync/sync_overview.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/connectivity/connectivity_service.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
 import 'package:stock_count/modules/authentication/domain/entities/authentication_mode.dart';

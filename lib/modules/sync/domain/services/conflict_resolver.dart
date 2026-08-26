@@ -1,6 +1,6 @@
 import 'conflict_strategy.dart';
-import 'sync_operation.dart';
-import 'sync_status.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_operation.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_status.dart';
 import 'three_way_merger.dart';
 
 /// Outcome of conflict evaluation for a single sync operation.

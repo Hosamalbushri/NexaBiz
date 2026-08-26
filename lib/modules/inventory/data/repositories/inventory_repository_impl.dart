@@ -1,8 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
-import '../../../../core/sync/sync_operation.dart';
-import '../../../../core/sync/sync_queue.dart';
-import '../../../../core/sync/sync_status.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/entities/item_status.dart';
 import '../../domain/entities/report_summary.dart';

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/modules/quick_action_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
 import 'permissions/customers_permission_package.dart';
@@ -38,6 +39,9 @@ class CustomersModule extends AppModule {
 
   @override
   String get rootRoute => CustomersRoutes.root;
+
+  @override
+  int get sortOrder => 20;
 
   @override
   bool get isEnabled => true;
@@ -85,6 +89,19 @@ class CustomersModule extends AppModule {
   String? description(BuildContext context) {
     return AppLocalizations.of(context).moduleCustomersDescription;
   }
+
+  @override
+  List<QuickActionDefinition> get quickActions => [
+        QuickActionDefinition(
+          id: 'create_customer',
+          icon: Icons.person_add_outlined,
+          kind: QuickActionKind.route,
+          routePath: CustomersRoutes.create,
+          titleBuilder: (l10n) => l10n.customersCreateTitle,
+          subtitleBuilder: (l10n) => l10n.customersCreateTitle,
+          requiredPermissions: const ['customers.master.create', 'customers.create'],
+        ),
+      ];
 
   @override
   List<Override> get providerOverrides => const [];

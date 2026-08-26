@@ -12,7 +12,7 @@ import '../../../../app/sync/sync_enabled_provider.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/errors/app_failure.dart';
-import '../../../../core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../app_lock/presentation/providers/app_lock_providers.dart';

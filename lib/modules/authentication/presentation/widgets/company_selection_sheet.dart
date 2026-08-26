@@ -9,7 +9,7 @@ import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/auth/presentation/providers/auth_context_providers.dart';
 import '../../../../core/entitlements/presentation/providers/entitlement_providers.dart';
-import '../../../../core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../providers/auth_providers.dart';
 
 /// Interactive modal sheet to switch active company context.

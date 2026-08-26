@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:hive_flutter/hive_flutter.dart';
 
-import '../auth/domain/services/local_access_policy.dart';
-import '../database/encrypted_hive_box.dart';
-import '../database/hive_boxes.dart';
-import 'sync_operation.dart';
-import 'sync_operation_adapter.dart';
-import 'sync_status.dart';
+import 'package:stock_count/core/auth/domain/services/local_access_policy.dart';
+import 'package:stock_count/core/database/encrypted_hive_box.dart';
+import 'package:stock_count/core/database/hive_boxes.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_operation.dart';
+import 'package:stock_count/modules/sync/data/stores/sync_operation_adapter.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_status.dart';
 
 /// Persistent synchronization queue (survives process restarts).
 class SyncQueue {

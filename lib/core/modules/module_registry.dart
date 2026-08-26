@@ -2,25 +2,64 @@ import 'package:go_router/go_router.dart';
 
 import '../permissions/permission_defs.dart';
 import 'app_module.dart';
+import 'quick_action_definition.dart';
+import 'report_category_definition.dart';
 import 'route_access_rule.dart';
 
 /// Holds the ordered list of registered [AppModule] instances.
 ///
-/// Constructed by the App composition root so Core never imports modules.
+/// Supports self-registration via [register] / [registeredModules] or explicit injection.
 class ModuleRegistry {
-  ModuleRegistry(List<AppModule> modules)
-    : _modules = List<AppModule>.unmodifiable(modules);
+  ModuleRegistry([List<AppModule>? modules])
+      : _modules = List<AppModule>.unmodifiable(
+          List<AppModule>.from(modules ?? registeredModules)
+            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
+        );
+
+  static final List<AppModule> _catalog = [];
+
+  /// Dynamically register a module into the global catalog (Self-Registration pattern).
+  static void register(AppModule module) {
+    final index = _catalog.indexWhere((m) => m.id == module.id);
+    if (index >= 0) {
+      _catalog[index] = module;
+    } else {
+      _catalog.add(module);
+    }
+  }
+
+  /// Dynamically register multiple modules at once.
+  static void registerAll(List<AppModule> modules) {
+    for (final m in modules) {
+      register(m);
+    }
+  }
+
+  /// Clear the self-registration catalog (useful for testing or profile switches).
+  static void clearCatalog() {
+    _catalog.clear();
+  }
+
+  /// Returns all self-registered modules sorted by [AppModule.sortOrder].
+  static List<AppModule> get registeredModules {
+    final list = List<AppModule>.from(_catalog);
+    list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return List.unmodifiable(list);
+  }
 
   final List<AppModule> _modules;
 
   /// All registered modules (including disabled).
   List<AppModule> get modules => _modules;
 
-  /// Modules shown on the Service Launcher / Dashboard grids.
-  List<AppModule> get enabledModules => [
-    for (final module in _modules)
-      if (module.isEnabled && module.showInLauncher) module,
-  ];
+  /// Modules shown on the Service Launcher / Dashboard grids, sorted by [AppModule.sortOrder].
+  List<AppModule> get enabledModules {
+    final list = [
+      for (final module in _modules)
+        if (module.isEnabled && module.showInLauncher) module,
+    ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return List.unmodifiable(list);
+  }
 
   /// Launcher modules filtered by the caller's permission snapshot (any-of).
   List<AppModule> modulesVisibleTo(Set<String> permissions) {
@@ -70,6 +109,30 @@ class ModuleRegistry {
     return [
       for (final module in _modules)
         if (module.isEnabled) ...module.routes,
+    ];
+  }
+
+  /// All quick actions contributed by enabled modules.
+  List<QuickActionDefinition> get allQuickActions {
+    return [
+      for (final module in enabledModules) ...module.quickActions,
+    ];
+  }
+
+  /// Find a quick action definition across all registered modules by id.
+  QuickActionDefinition? findQuickActionById(String id) {
+    for (final action in allQuickActions) {
+      if (action.id == id) {
+        return action;
+      }
+    }
+    return null;
+  }
+
+  /// All report categories contributed by enabled modules.
+  List<ReportCategoryDefinition> get allReportCategories {
+    return [
+      for (final module in enabledModules) ...module.reportCategories,
     ];
   }
 

@@ -5,7 +5,7 @@ import 'package:stock_count/app/router/app_routes.dart';
 import 'package:stock_count/core/build/build_edition.dart';
 import 'package:stock_count/core/entitlements/domain/entities/entitlement.dart';
 import 'package:stock_count/core/entitlements/presentation/providers/entitlement_providers.dart';
-import 'package:stock_count/core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_session.dart';
 import 'package:stock_count/modules/authentication/domain/entities/auth_user.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';

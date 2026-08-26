@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import '../errors/app_failure.dart';
-import '../sync/sync_request_context.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import 'sync_api_config.dart';
 import 'token_refresh_outcome.dart';
 import 'token_store.dart';

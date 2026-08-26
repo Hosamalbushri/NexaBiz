@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import 'sync_entity_handler.dart';
-import 'sync_operation.dart';
+import 'package:stock_count/modules/sync/domain/entities/sync_operation.dart';
 import 'sync_queue.dart';
 
 /// Optional contract implemented by handlers capable of scanning local storage

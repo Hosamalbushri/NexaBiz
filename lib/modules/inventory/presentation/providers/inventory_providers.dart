@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/sync/sync_providers.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../data/datasources/excel_export_datasource.dart';
 import '../../data/datasources/excel_import_datasource.dart';
 import '../../data/datasources/pdf_export_datasource.dart';

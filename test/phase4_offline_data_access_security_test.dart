@@ -10,11 +10,7 @@ import 'package:stock_count/core/auth/domain/services/offline_login_policy.dart'
 import 'package:stock_count/core/auth/presentation/providers/auth_context_providers.dart';
 import 'package:stock_count/core/entitlements/domain/entities/entitlement.dart';
 import 'package:stock_count/core/connectivity/connectivity_service.dart';
-import 'package:stock_count/core/sync/sync_manager.dart';
-import 'package:stock_count/core/sync/sync_operation.dart';
-import 'package:stock_count/core/sync/sync_queue.dart';
-import 'package:stock_count/core/sync/sync_status.dart';
-import 'package:stock_count/core/sync/sync_overview.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/modules/authentication/domain/entities/authentication_mode.dart';
 import 'package:stock_count/modules/authentication/domain/entities/offline_authorization_snapshot.dart';
