@@ -92,8 +92,8 @@ class ReportsModule extends AppModule {
           id: 'accounting_reports',
           moduleId: 'accounting',
           icon: Icons.account_balance_outlined,
-          titleBuilder: (l10n) => l10n.moduleAccounting,
-          subtitleBuilder: (l10n) => l10n.moduleAccountingDescription,
+          titleBuilder: (l10n) => l10n.reportsAccountingCategoryTitle,
+          subtitleBuilder: (l10n) => l10n.reportsAccountingCategorySubtitle,
           reports: [
             ReportItemDefinition(
               id: 'reports_account_statement',
@@ -131,8 +131,8 @@ class ReportsModule extends AppModule {
           id: 'sales_reports',
           moduleId: 'sales',
           icon: Icons.point_of_sale_outlined,
-          titleBuilder: (l10n) => l10n.moduleSales,
-          subtitleBuilder: (l10n) => l10n.moduleSalesDescription,
+          titleBuilder: (l10n) => l10n.reportsSalesCategoryTitle,
+          subtitleBuilder: (l10n) => l10n.reportsSalesCategorySubtitle,
           reports: [
             ReportItemDefinition(
               id: 'reports_sales_period',
@@ -154,8 +154,8 @@ class ReportsModule extends AppModule {
           id: 'rp_reports',
           moduleId: 'receipts_payments',
           icon: Icons.account_balance_wallet_outlined,
-          titleBuilder: (l10n) => l10n.moduleReceiptsPayments,
-          subtitleBuilder: (l10n) => l10n.moduleReceiptsPaymentsDescription,
+          titleBuilder: (l10n) => l10n.reportsRpCategoryTitle,
+          subtitleBuilder: (l10n) => l10n.reportsRpCategorySubtitle,
           reports: [
             ReportItemDefinition(
               id: 'reports_rp_receipts',
@@ -201,16 +201,16 @@ class ReportsModule extends AppModule {
           id: 'inventory_reports',
           moduleId: 'inventory',
           icon: Icons.inventory_2_outlined,
-          titleBuilder: (l10n) => l10n.moduleInventory,
-          subtitleBuilder: (l10n) => l10n.moduleInventoryDescription,
+          titleBuilder: (l10n) => l10n.reportsInventoryCategoryTitle,
+          subtitleBuilder: (l10n) => l10n.reportsInventoryCategorySubtitle,
           reports: [
             ReportItemDefinition(
               id: 'reports_stock_balance',
               moduleId: 'inventory',
               icon: Icons.assessment_outlined,
               path: '/inventory/reports',
-              titleBuilder: (l10n) => l10n.moduleInventory,
-              subtitleBuilder: (l10n) => l10n.moduleInventoryDescription,
+              titleBuilder: (l10n) => l10n.reportsStockBalanceTitle,
+              subtitleBuilder: (l10n) => l10n.reportsStockBalanceSubtitle,
             ),
           ],
         ),
@@ -224,16 +224,16 @@ class ReportsModule extends AppModule {
           id: 'customers_reports',
           moduleId: 'customers',
           icon: Icons.people_outline,
-          titleBuilder: (l10n) => l10n.moduleCustomers,
-          subtitleBuilder: (l10n) => l10n.moduleCustomersDescription,
+          titleBuilder: (l10n) => l10n.reportsCustomersCategoryTitle,
+          subtitleBuilder: (l10n) => l10n.reportsCustomersCategorySubtitle,
           reports: [
             ReportItemDefinition(
               id: 'reports_customers_list',
               moduleId: 'customers',
               icon: Icons.group_outlined,
               path: '/customers',
-              titleBuilder: (l10n) => l10n.moduleCustomers,
-              subtitleBuilder: (l10n) => l10n.moduleCustomersDescription,
+              titleBuilder: (l10n) => l10n.reportsCustomersListTitle,
+              subtitleBuilder: (l10n) => l10n.reportsCustomersListSubtitle,
             ),
           ],
         ),

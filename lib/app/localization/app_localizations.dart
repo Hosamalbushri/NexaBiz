@@ -1634,6 +1634,90 @@ abstract class AppLocalizations {
   /// **'Count'**
   String get reportsRpCount;
 
+  /// No description provided for @reportsAccountingCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounting & Financial Reports'**
+  String get reportsAccountingCategoryTitle;
+
+  /// No description provided for @reportsAccountingCategorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account statements, trial balance, and journal book.'**
+  String get reportsAccountingCategorySubtitle;
+
+  /// No description provided for @reportsSalesCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales Reports'**
+  String get reportsSalesCategoryTitle;
+
+  /// No description provided for @reportsSalesCategorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales figures and invoice summaries by period.'**
+  String get reportsSalesCategorySubtitle;
+
+  /// No description provided for @reportsRpCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts & Payments Reports'**
+  String get reportsRpCategoryTitle;
+
+  /// No description provided for @reportsRpCategorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher summaries, cash, and bank movements.'**
+  String get reportsRpCategorySubtitle;
+
+  /// No description provided for @reportsInventoryCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory & Stock Reports'**
+  String get reportsInventoryCategoryTitle;
+
+  /// No description provided for @reportsInventoryCategorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock levels, item balances, and store counts.'**
+  String get reportsInventoryCategorySubtitle;
+
+  /// No description provided for @reportsCustomersCategoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer Reports'**
+  String get reportsCustomersCategoryTitle;
+
+  /// No description provided for @reportsCustomersCategorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer directory, account details, and balances.'**
+  String get reportsCustomersCategorySubtitle;
+
+  /// No description provided for @reportsStockBalanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Balance Report'**
+  String get reportsStockBalanceTitle;
+
+  /// No description provided for @reportsStockBalanceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View product stock levels, items, and inventory counts.'**
+  String get reportsStockBalanceSubtitle;
+
+  /// No description provided for @reportsCustomersListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers Directory Report'**
+  String get reportsCustomersListTitle;
+
+  /// No description provided for @reportsCustomersListSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View customer directory list and detailed balances.'**
+  String get reportsCustomersListSubtitle;
+
   /// No description provided for @reportsSalesPeriodTitle.
   ///
   /// In en, this message translates to:

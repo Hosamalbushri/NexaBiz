@@ -851,6 +851,55 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reportsRpCount => 'العدد';
 
   @override
+  String get reportsAccountingCategoryTitle => 'تقارير الحسابات والمالية';
+
+  @override
+  String get reportsAccountingCategorySubtitle =>
+      'كشوفات الحسابات وميزان المراجعة ودفتر اليومية.';
+
+  @override
+  String get reportsSalesCategoryTitle => 'تقارير المبيعات';
+
+  @override
+  String get reportsSalesCategorySubtitle =>
+      'تقارير وإحصائيات المبيعات والفواتير حسب الفترة.';
+
+  @override
+  String get reportsRpCategoryTitle => 'تقارير المقبوضات والمدفوعات';
+
+  @override
+  String get reportsRpCategorySubtitle =>
+      'إجماليات السندات وحركة الصناديق والبنوك.';
+
+  @override
+  String get reportsInventoryCategoryTitle => 'تقارير المخزون والجرد';
+
+  @override
+  String get reportsInventoryCategorySubtitle =>
+      'أرصدة الأصناف وكميات المستودعات.';
+
+  @override
+  String get reportsCustomersCategoryTitle => 'تقارير العملاء';
+
+  @override
+  String get reportsCustomersCategorySubtitle =>
+      'دليل العملاء وحساباتهم وأرصدتهم.';
+
+  @override
+  String get reportsStockBalanceTitle => 'تقرير أرصدة المخزون';
+
+  @override
+  String get reportsStockBalanceSubtitle =>
+      'عرض كميات وأصناف المنتجات والجرد الحالي.';
+
+  @override
+  String get reportsCustomersListTitle => 'تقرير دليل العملاء';
+
+  @override
+  String get reportsCustomersListSubtitle =>
+      'عرض قائمة ودليل العملاء وأرصدتهم التفصيلية.';
+
+  @override
   String get reportsSalesPeriodTitle => 'المبيعات حسب الفترة';
 
   @override

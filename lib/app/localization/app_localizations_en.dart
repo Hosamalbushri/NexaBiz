@@ -864,6 +864,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportsRpCount => 'Count';
 
   @override
+  String get reportsAccountingCategoryTitle => 'Accounting & Financial Reports';
+
+  @override
+  String get reportsAccountingCategorySubtitle =>
+      'Account statements, trial balance, and journal book.';
+
+  @override
+  String get reportsSalesCategoryTitle => 'Sales Reports';
+
+  @override
+  String get reportsSalesCategorySubtitle =>
+      'Sales figures and invoice summaries by period.';
+
+  @override
+  String get reportsRpCategoryTitle => 'Receipts & Payments Reports';
+
+  @override
+  String get reportsRpCategorySubtitle =>
+      'Voucher summaries, cash, and bank movements.';
+
+  @override
+  String get reportsInventoryCategoryTitle => 'Inventory & Stock Reports';
+
+  @override
+  String get reportsInventoryCategorySubtitle =>
+      'Stock levels, item balances, and store counts.';
+
+  @override
+  String get reportsCustomersCategoryTitle => 'Customer Reports';
+
+  @override
+  String get reportsCustomersCategorySubtitle =>
+      'Customer directory, account details, and balances.';
+
+  @override
+  String get reportsStockBalanceTitle => 'Stock Balance Report';
+
+  @override
+  String get reportsStockBalanceSubtitle =>
+      'View product stock levels, items, and inventory counts.';
+
+  @override
+  String get reportsCustomersListTitle => 'Customers Directory Report';
+
+  @override
+  String get reportsCustomersListSubtitle =>
+      'View customer directory list and detailed balances.';
+
+  @override
   String get reportsSalesPeriodTitle => 'Sales by period';
 
   @override
