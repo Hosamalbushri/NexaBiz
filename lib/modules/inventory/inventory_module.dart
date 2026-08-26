@@ -41,6 +41,11 @@ class InventoryModule extends AppModule {
     ModuleRegistry.register(const InventoryModule());
   }
 
+  /// Self-unregisters InventoryModule from the global ModuleRegistry.
+  static void unregister() {
+    ModuleRegistry.unregister(moduleId);
+  }
+
   @override
   String get id => moduleId;
 

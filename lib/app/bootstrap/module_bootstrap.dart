@@ -3,29 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/modules/module_providers.dart';
 import '../../core/modules/module_registry.dart';
 import '../../modules/sync/sync.dart';
-import '../../modules/accounting/accounting_module.dart';
-import '../../modules/administration/administration_module.dart';
 import '../../modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
 import '../../modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import '../../modules/accounting/shared/presentation/providers/accounting_mode_providers.dart';
 import '../../modules/accounting/shared/presentation/providers/currency_rate_providers.dart';
 import '../../modules/accounting/journals/presentation/providers/journal_providers.dart';
 import '../../modules/accounting/voucher_books/presentation/providers/voucher_book_providers.dart';
-import '../../modules/customers/customers_module.dart';
 import '../../modules/customers/directory/presentation/providers/customer_providers.dart';
-import '../../modules/inventory/inventory_module.dart';
 import '../../modules/inventory/products/presentation/pages/product_barcode_scanner_page.dart';
 import '../../modules/inventory/products/presentation/providers/product_providers.dart';
 import '../../modules/reports/shared/presentation/providers/reports_providers.dart';
-import '../../modules/reports/reports_module.dart';
 import '../../modules/sales/invoices/presentation/providers/sale_barcode_capture_provider.dart';
 import '../../modules/sales/invoices/presentation/providers/sale_providers.dart';
 import '../../modules/receipts_payments/transactions/presentation/providers/rp_providers.dart';
-import '../../modules/receipts_payments/receipts_payments_module.dart';
-import '../../modules/sales/sales_module.dart';
-import '../../modules/system_setup/system_setup_module.dart';
 import '../../modules/system_setup/presentation/providers/system_setup_providers.dart';
-import '../../modules/sync/sync_module.dart';
 import '../customers/accounting_customer_account_link_adapter.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
 import '../receipts_payments/accounting_rp_currency_adapter.dart';
@@ -49,32 +40,18 @@ import '../sales/inventory_sale_product_catalog_adapter.dart';
 import '../sales/perpetual_sale_inventory_effect_adapter.dart';
 import '../system_setup/accounting_system_setup_seed_adapter.dart';
 import '../sync/app_sync_adapters.dart';
+import 'module_bootstrap_manifest.dart';
 
-/// Self-register modules into [ModuleRegistry] catalog.
-void registerCoreModules() {
-  ModuleRegistry.clearCatalog();
-  // Module registration paused:
-  // AccountingModule.register();
-  // AdministrationModule.register();
-  // CustomersModule.register();
-  // InventoryModule.register();
-  // ReceiptsPaymentsModule.register();
-  // ReportsModule.register();
-  // SalesModule.register();
-  // SyncModule.register();
-  // SystemSetupModule.register();
-}
-
-/// App composition root: registers enabled business modules.
+/// App composition root: reads self-registered business modules from [ModuleRegistry].
 ///
-/// Add/remove modules via [ModuleRegistry.register] — launcher routes, settings,
-/// and Administration permission packages update automatically.
+/// Modules self-register into [ModuleRegistry] via their own `register()` static methods.
+/// `module_bootstrap.dart` does not hardcode any module definitions or registration calls.
 List<Override> moduleRegistryOverrides() {
-  registerCoreModules();
+  initializeModuleCatalog();
 
   return [
     moduleRegistryProvider.overrideWithValue(
-      ModuleRegistry(), // Dynamic self-registration catalog sorted by AppModule.sortOrder
+      ModuleRegistry(), // Reads dynamic self-registration catalog sorted by AppModule.sortOrder
     ),
     systemSetupSeedPortProvider.overrideWith((ref) {
       return AccountingSystemSetupSeedAdapter(

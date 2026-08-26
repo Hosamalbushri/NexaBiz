@@ -31,10 +31,12 @@ Read this file before modifying the project. For full context see [`AI_CONTEXT.m
 
 ## Module Rules & Standards
 
-- **Self-Registration Pattern**:
+- **Self-Registration & Self-Unregistration Pattern**:
   - Every module MUST inherit from `AppModule` (`lib/core/modules/app_module.dart`).
   - Every module MUST provide a `static void register()` method using `ModuleRegistry.register(const MyModule());`.
-  - Modules MUST be registered in `lib/app/bootstrap/module_bootstrap.dart` via `MyModule.register()`.
+  - Every module MUST provide a `static void unregister()` method using `ModuleRegistry.unregister(moduleId);`.
+  - `lib/app/bootstrap/module_bootstrap.dart` is **STRICTLY READ-ONLY**: it MUST NOT contain any hardcoded module imports, module definitions, or direct registration calls.
+  - Module self-registration catalog is initialized via `initializeModuleCatalog()` in `lib/app/bootstrap/module_bootstrap_manifest.dart`.
 - **Centralized Reports Architecture**:
   - Business modules MUST NOT override or declare `reportCategories`.
   - `ReportsModule` (`lib/modules/reports/reports_module.dart`) is the **SINGLE SOURCE OF TRUTH** for ALL report definitions (`ReportCategoryDefinition` and `ReportItemDefinition`).

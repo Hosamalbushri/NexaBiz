@@ -32,6 +32,11 @@ class ReportsModule extends AppModule {
     ModuleRegistry.register(const ReportsModule());
   }
 
+  /// Self-unregisters ReportsModule from the global ModuleRegistry.
+  static void unregister() {
+    ModuleRegistry.unregister(moduleId);
+  }
+
   @override
   String get id => moduleId;
 

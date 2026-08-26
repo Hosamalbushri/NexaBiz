@@ -4,13 +4,13 @@
 
 ---
 
-## 1. نمط التسجيل الذاتي للموديولات (Module Self-Registration Pattern)
+## 1. نمط التسجيل والإلغاء الذاتي للموديولات (Module Self-Registration & Self-Unregistration Pattern)
 
-كل موديول جديد يجب أن يتبع نمط التسجيل الذاتي عبر الخطوات التالية:
+كل موديول جديد يجب أن يتبع نمط التسجيل الذاتي والإلغاء الذاتي عبر الخطوات التالية:
 
 ### الخطوات:
 1. **إنشاء كلاس الموديول**: يرث من `AppModule` (`lib/core/modules/app_module.dart`).
-2. **إضافة دالة التسجيل الذاتي**:
+2. **إضافة دوال التسجيل والإلغاء الذاتي**:
    ```dart
    class MyNewModule extends AppModule {
      const MyNewModule();
@@ -20,6 +20,11 @@
      /// Self-registers into ModuleRegistry via static injection
      static void register() {
        ModuleRegistry.register(const MyNewModule());
+     }
+
+     /// Self-unregisters from ModuleRegistry
+     static void unregister() {
+       ModuleRegistry.unregister(moduleId);
      }
 
      @override
@@ -35,8 +40,9 @@
      int get sortOrder => 60; // الترتيب في العرض
    }
    ```
-3. **التسجيل في `module_bootstrap.dart`**:
-   افتح `lib/app/bootstrap/module_bootstrap.dart` وأضف استدعاء التسجيل:
+3. **التسجيل في المانفيست `module_bootstrap_manifest.dart`**:
+   ملف `lib/app/bootstrap/module_bootstrap.dart` هو **ملف للقراءة فقط ولا يحتوي على أي تعريفات للموديولات**.
+   لإدراج الموديول الجديد في التسجيل الذاتي عند بدء التطبيق، افتح `lib/app/bootstrap/module_bootstrap_manifest.dart` وأضف:
    ```dart
    MyNewModule.register();
    ```

@@ -36,6 +36,16 @@ class ModuleRegistry {
     }
   }
 
+  /// Dynamically unregister/disable a module by id from the global catalog (Self-Unregistration).
+  static void unregister(String id) {
+    _catalog.removeWhere((m) => m.id == id);
+  }
+
+  /// Dynamically unregister a module instance from the global catalog.
+  static void unregisterModule(AppModule module) {
+    unregister(module.id);
+  }
+
   /// Clear the self-registration catalog (useful for testing or profile switches).
   static void clearCatalog() {
     _catalog.clear();

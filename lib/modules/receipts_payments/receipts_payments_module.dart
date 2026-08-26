@@ -32,6 +32,11 @@ class ReceiptsPaymentsModule extends AppModule {
     ModuleRegistry.register(const ReceiptsPaymentsModule());
   }
 
+  /// Self-unregisters ReceiptsPaymentsModule from the global ModuleRegistry.
+  static void unregister() {
+    ModuleRegistry.unregister(moduleId);
+  }
+
   @override
   String get id => moduleId;
 

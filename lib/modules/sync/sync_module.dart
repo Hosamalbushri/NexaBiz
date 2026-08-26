@@ -18,6 +18,11 @@ class SyncModule extends AppModule {
     ModuleRegistry.register(const SyncModule());
   }
 
+  /// Self-unregisters SyncModule from the global ModuleRegistry.
+  static void unregister() {
+    ModuleRegistry.unregister(moduleId);
+  }
+
   @override
   String get id => moduleId;
 

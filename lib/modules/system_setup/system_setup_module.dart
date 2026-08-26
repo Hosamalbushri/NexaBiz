@@ -24,6 +24,11 @@ class SystemSetupModule extends AppModule {
     ModuleRegistry.register(const SystemSetupModule());
   }
 
+  /// Self-unregisters SystemSetupModule from the global ModuleRegistry.
+  static void unregister() {
+    ModuleRegistry.unregister(moduleId);
+  }
+
   @override
   String get id => moduleId;
 

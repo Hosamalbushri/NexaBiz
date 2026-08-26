@@ -26,6 +26,11 @@ class AdministrationModule extends AppModule {
     ModuleRegistry.register(const AdministrationModule());
   }
 
+  /// Self-unregisters AdministrationModule from the global ModuleRegistry.
+  static void unregister() {
+    ModuleRegistry.unregister(moduleId);
+  }
+
   static const usersView = [
     'users.view',
     'users.manage',

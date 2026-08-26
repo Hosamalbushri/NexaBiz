@@ -37,6 +37,11 @@ class CustomersModule extends AppModule {
     ModuleRegistry.register(const CustomersModule());
   }
 
+  /// Self-unregisters CustomersModule from the global ModuleRegistry.
+  static void unregister() {
+    ModuleRegistry.unregister(moduleId);
+  }
+
   @override
   String get id => moduleId;
 

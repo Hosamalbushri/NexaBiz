@@ -44,6 +44,11 @@ class AccountingModule extends AppModule {
     ModuleRegistry.register(const AccountingModule());
   }
 
+  /// Self-unregisters AccountingModule from the global ModuleRegistry.
+  static void unregister() {
+    ModuleRegistry.unregister(moduleId);
+  }
+
   @override
   String get id => moduleId;
 
