@@ -52,15 +52,17 @@ import '../sync/app_sync_adapters.dart';
 
 /// Self-register modules into [ModuleRegistry] catalog.
 void registerCoreModules() {
-  AccountingModule.register();
-  AdministrationModule.register();
-  CustomersModule.register();
-  InventoryModule.register();
-  ReceiptsPaymentsModule.register();
-  ReportsModule.register();
-  SalesModule.register();
-  SyncModule.register();
-  SystemSetupModule.register();
+  ModuleRegistry.clearCatalog();
+  // Module registration paused:
+  // AccountingModule.register();
+  // AdministrationModule.register();
+  // CustomersModule.register();
+  // InventoryModule.register();
+  // ReceiptsPaymentsModule.register();
+  // ReportsModule.register();
+  // SalesModule.register();
+  // SyncModule.register();
+  // SystemSetupModule.register();
 }
 
 /// App composition root: registers enabled business modules.
