@@ -12,12 +12,12 @@ import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import '../../domain/entities/voucher_book.dart';
-import '../../domain/entities/voucher_book_type.dart';
-import '../../domain/models/voucher_book_exception.dart';
-import '../providers/voucher_book_providers.dart';
-import '../widgets/voucher_book_labels.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/accounting_routes.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book_type.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/models/voucher_book_exception.dart';
+import 'package:stock_count/modules/accounting/voucher_books/presentation/providers/voucher_book_providers.dart';
+import 'package:stock_count/modules/accounting/voucher_books/presentation/widgets/voucher_book_labels.dart';
 
 /// Section hub: either a single book list, or a list of kinds to open.
 class VoucherBookSectionPage extends ConsumerWidget {
@@ -339,12 +339,34 @@ class _BooksList extends ConsumerWidget {
     final theme = Theme.of(context);
 
     if (books.isEmpty) {
-      return AppEmptyState(
-        title: l10n.accountingVoucherBooksTypeEmptyTitle(
-          voucherBookTypeLabel(l10n, bookType),
-        ),
-        subtitle: l10n.accountingVoucherBooksTypeEmptyMessage,
-        icon: voucherBookTypeIcon(bookType),
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AppEmptyState(
+            title: l10n.accountingVoucherBooksTypeEmptyTitle(
+              voucherBookTypeLabel(l10n, bookType),
+            ),
+            subtitle: l10n.accountingVoucherBooksTypeEmptyMessage,
+            icon: voucherBookTypeIcon(bookType),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ElevatedButton.icon(
+            onPressed: () async {
+              final repo = ref.read(voucherBookRepositoryProvider);
+              await repo.seedDefaultBooks();
+              ref.invalidate(voucherBookSectionsProvider);
+              if (context.mounted) {
+                showAppSnackBar(
+                  context,
+                  message: l10n.accountingVoucherBooksSeedSuccess,
+                  isSuccess: true,
+                );
+              }
+            },
+            icon: const Icon(Icons.menu_book_outlined),
+            label: Text(l10n.accountingGenerateDefaultVoucherBooks),
+          ),
+        ],
       );
     }
 

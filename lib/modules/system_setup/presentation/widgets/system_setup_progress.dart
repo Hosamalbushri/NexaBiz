@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/widgets/app_card.dart';
 import '../../domain/entities/system_setup_state.dart';
 import 'system_setup_labels.dart';
 
@@ -141,7 +140,7 @@ class SystemSetupStepTile extends StatelessWidget {
       SetupStepId.primaryCurrency => '2',
       SetupStepId.companyProfile => '3',
       SetupStepId.localAccount => '4',
-      SetupStepId.seedData => '5',
+      SetupStepId.seedData => '4',
     };
 
     final stepIcon = switch (step.id) {

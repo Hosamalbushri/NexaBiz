@@ -1,5 +1,5 @@
-import '../entities/voucher_book.dart';
-import '../entities/voucher_book_type.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book_type.dart';
 
 /// Persistence for voucher numbering books (section groups + children).
 abstract class VoucherBookRepository {
@@ -17,6 +17,9 @@ abstract class VoucherBookRepository {
 
   /// Ensures default section folders exist and orphans are attached.
   Future<void> ensureDefaultSections();
+
+  /// Manually seeds default leaf voucher books on demand.
+  Future<void> seedDefaultBooks();
 
   /// Section groups with their child books (after [ensureDefaultSections]).
   Future<List<VoucherBookSectionNode>> getSectionTree();

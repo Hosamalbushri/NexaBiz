@@ -1073,6 +1073,19 @@
   "accountingCollapseAll": "Collapse all",
   "accountingShowInactive": "Show inactive",
   "accountingHideInactive": "Hide inactive",
+  "accountingGenerateDefaultVoucherBooks": "Generate default voucher books",
+  "accountingVoucherBooksSeedSuccess": "Default voucher books generated successfully",
+  "accountingVoucherBooksSettingsSubtitle": "Settings and management for default voucher books",
+  "accountingDefaultVoucherBooksTitle": "Default Voucher Books",
+  "accountingVoucherBooksCurrentlyEmpty": "No voucher books currently exist",
+  "accountingVoucherBooksCreatedCount": "Voucher books created ({count} total books)",
+  "@accountingVoucherBooksCreatedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "accountingGenerateVoucherBooksAction": "Generate books",
+  "accountingRealignVoucherBooksAction": "Re-align books",
   "accountingFieldName": "Account name",
   "accountingFieldCode": "Account code",
   "accountingFieldCodeHelper": "When a parent is selected, the next code after the highest sibling is generated (e.g. 1213 → 1214).",

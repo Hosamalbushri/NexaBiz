@@ -25,7 +25,7 @@ class AppNavigationThemes {
       height: 72,
       elevation: 0,
       backgroundColor: scheme.surface,
-      indicatorColor: scheme.primary.withValues(alpha: 0.12),
+      indicatorColor: Colors.transparent,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
         return AppTypography.textTheme(Brightness.light).labelSmall?.copyWith(
@@ -50,7 +50,7 @@ class AppNavigationThemes {
   static NavigationRailThemeData navigationRail(ColorScheme scheme) {
     return NavigationRailThemeData(
       backgroundColor: scheme.surface,
-      indicatorColor: scheme.primary.withValues(alpha: 0.12),
+      indicatorColor: Colors.transparent,
       selectedIconTheme: IconThemeData(color: scheme.primary),
       unselectedIconTheme: IconThemeData(
         color: scheme.onSurface.withValues(alpha: 0.62),

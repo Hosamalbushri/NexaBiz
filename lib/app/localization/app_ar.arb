@@ -1073,6 +1073,19 @@
   "accountingCollapseAll": "طي الكل",
   "accountingShowInactive": "إظهار غير النشطة",
   "accountingHideInactive": "إخفاء غير النشطة",
+  "accountingGenerateDefaultVoucherBooks": "توليد الدفاتر الافتراضية",
+  "accountingVoucherBooksSeedSuccess": "تم توليد الدفاتر الافتراضية بنجاح",
+  "accountingVoucherBooksSettingsSubtitle": "إعدادات وإدارة دفاتر الفواتير والسندات الافتراضية",
+  "accountingDefaultVoucherBooksTitle": "دفاتر الفواتير والسندات الافتراضية",
+  "accountingVoucherBooksCurrentlyEmpty": "لا توجد دفاتر حالياً",
+  "accountingVoucherBooksCreatedCount": "تم إنشاء دفاتر السندات (إجمالي {count} دفتر)",
+  "@accountingVoucherBooksCreatedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "accountingGenerateVoucherBooksAction": "توليد الدفاتر",
+  "accountingRealignVoucherBooksAction": "إعادة محاذاة الدفاتر",
   "accountingFieldName": "اسم الحساب",
   "accountingFieldCode": "رمز الحساب",
   "accountingFieldCodeHelper": "عند اختيار حساب أب يُولَّد الرقم التالي تلقائياً بعد أعلى رقم موجود (مثال: 1213 ← 1214).",

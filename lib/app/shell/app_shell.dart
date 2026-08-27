@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/custom_bottom_nav.dart';
+import '../exit/app_exit_scope.dart';
 import '../localization/app_localizations.dart';
 import '../navigation/app_navigation_items.dart';
 import '../presentation/pages/quick_actions_sheet.dart';
@@ -56,6 +57,11 @@ class _AppShellState extends ConsumerState<AppShell>
       curve: _panelCurve,
       reverseCurve: Curves.easeInCubic,
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(shellHistoryProvider.notifier).pushLocation(widget.location);
+      }
+    });
   }
 
   @override
@@ -67,8 +73,17 @@ class _AppShellState extends ConsumerState<AppShell>
   @override
   void didUpdateWidget(covariant AppShell oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.location != widget.location && _quickActionsOpen) {
-      _closeQuickActions();
+    if (oldWidget.location != widget.location) {
+      if (_quickActionsOpen) {
+        _closeQuickActions();
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref
+              .read(shellHistoryProvider.notifier)
+              .pushLocation(widget.location);
+        }
+      });
     }
   }
 

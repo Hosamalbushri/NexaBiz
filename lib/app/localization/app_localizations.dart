@@ -4922,6 +4922,54 @@ abstract class AppLocalizations {
   /// **'Hide inactive'**
   String get accountingHideInactive;
 
+  /// No description provided for @accountingGenerateDefaultVoucherBooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate default voucher books'**
+  String get accountingGenerateDefaultVoucherBooks;
+
+  /// No description provided for @accountingVoucherBooksSeedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Default voucher books generated successfully'**
+  String get accountingVoucherBooksSeedSuccess;
+
+  /// No description provided for @accountingVoucherBooksSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings and management for default voucher books'**
+  String get accountingVoucherBooksSettingsSubtitle;
+
+  /// No description provided for @accountingDefaultVoucherBooksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Voucher Books'**
+  String get accountingDefaultVoucherBooksTitle;
+
+  /// No description provided for @accountingVoucherBooksCurrentlyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No voucher books currently exist'**
+  String get accountingVoucherBooksCurrentlyEmpty;
+
+  /// No description provided for @accountingVoucherBooksCreatedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher books created ({count} total books)'**
+  String accountingVoucherBooksCreatedCount(int count);
+
+  /// No description provided for @accountingGenerateVoucherBooksAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate books'**
+  String get accountingGenerateVoucherBooksAction;
+
+  /// No description provided for @accountingRealignVoucherBooksAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-align books'**
+  String get accountingRealignVoucherBooksAction;
+
   /// No description provided for @accountingFieldName.
   ///
   /// In en, this message translates to:

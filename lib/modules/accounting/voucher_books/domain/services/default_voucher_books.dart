@@ -1,4 +1,4 @@
-import '../entities/voucher_book_type.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book_type.dart';
 
 /// Default leaf voucher book to seed under a section.
 class DefaultVoucherBookSeed {

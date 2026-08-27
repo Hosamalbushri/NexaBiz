@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import '../../domain/entities/voucher_book_type.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book_type.dart';
 
 String voucherBookTypeLabel(AppLocalizations l10n, VoucherBookType type) {
   return switch (type) {

@@ -379,20 +379,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         builder: (context, state) =>
                             const SubscriptionPackagesPage(),
                       ),
-                      GoRoute(
-                        path: 'data-sync',
-                        name: 'settingsDataSync',
-                        builder: (context, state) =>
-                            const DataSyncSettingsPage(),
-                        routes: [
-                          GoRoute(
-                            path: 'login',
-                            name: 'settingsDataSyncLogin',
-                            builder: (context, state) =>
-                                const SyncLoginPage(),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                 ],

@@ -52,7 +52,6 @@ enum SetupStepId {
     SetupStepId.primaryCurrency,
     SetupStepId.companyProfile,
     SetupStepId.localAccount,
-    SetupStepId.seedData,
   ];
 
   static const allIds = requiredIds;

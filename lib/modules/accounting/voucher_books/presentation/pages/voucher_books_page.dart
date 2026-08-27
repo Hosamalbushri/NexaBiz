@@ -9,10 +9,10 @@ import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import '../../domain/entities/voucher_book_type.dart';
-import '../providers/voucher_book_providers.dart';
-import '../widgets/voucher_book_labels.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/accounting_routes.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book_type.dart';
+import 'package:stock_count/modules/accounting/voucher_books/presentation/providers/voucher_book_providers.dart';
+import 'package:stock_count/modules/accounting/voucher_books/presentation/widgets/voucher_book_labels.dart';
 
 /// Top-level list of voucher book sections (Sales, Receipts, …).
 class VoucherBooksPage extends ConsumerWidget {

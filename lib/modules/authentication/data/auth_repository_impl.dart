@@ -58,20 +58,6 @@ class AuthRepositoryImpl implements AuthRepository {
       await box.delete(_snapshotKey);
     } else {
       await box.put(_snapshotKey, jsonEncode(snapshot.toJson()));
-      if (snapshot.hasCompany) {
-        final config = _readConfig();
-        final permSnapshot = OfflineAuthorizationSnapshot(
-          userId: snapshot.user.id,
-          companyId: snapshot.currentCompanyId!,
-          email: snapshot.user.email,
-          roles: snapshot.roles,
-          permissions: snapshot.permissions,
-          snapshotCreatedAt: DateTime.now().toUtc(),
-          lastServerAuthenticatedAt: snapshot.capturedAt,
-          serverBaseUrl: config.baseUrl,
-        );
-        await _offlineAuthStore.saveSnapshot(permSnapshot);
-      }
     }
     if (!_sessionController.isClosed) {
       _sessionController.add(snapshot);

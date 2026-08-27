@@ -2663,6 +2663,36 @@ class AppLocalizationsAr extends AppLocalizations {
   String get accountingHideInactive => 'إخفاء غير النشطة';
 
   @override
+  String get accountingGenerateDefaultVoucherBooks =>
+      'توليد الدفاتر الافتراضية';
+
+  @override
+  String get accountingVoucherBooksSeedSuccess =>
+      'تم توليد الدفاتر الافتراضية بنجاح';
+
+  @override
+  String get accountingVoucherBooksSettingsSubtitle =>
+      'إعدادات وإدارة دفاتر الفواتير والسندات الافتراضية';
+
+  @override
+  String get accountingDefaultVoucherBooksTitle =>
+      'دفاتر الفواتير والسندات الافتراضية';
+
+  @override
+  String get accountingVoucherBooksCurrentlyEmpty => 'لا توجد دفاتر حالياً';
+
+  @override
+  String accountingVoucherBooksCreatedCount(int count) {
+    return 'تم إنشاء دفاتر السندات (إجمالي $count دفتر)';
+  }
+
+  @override
+  String get accountingGenerateVoucherBooksAction => 'توليد الدفاتر';
+
+  @override
+  String get accountingRealignVoucherBooksAction => 'إعادة محاذاة الدفاتر';
+
+  @override
   String get accountingFieldName => 'اسم الحساب';
 
   @override

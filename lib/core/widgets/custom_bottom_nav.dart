@@ -380,11 +380,8 @@ class _NavItem extends StatelessWidget {
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-            decoration: BoxDecoration(
-              color: selected
-                  ? colorScheme.primary.withValues(alpha: 0.10)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
+            decoration: const BoxDecoration(
+              color: Colors.transparent,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

@@ -22,22 +22,17 @@ class ServiceLauncherPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final registry = ref.watch(moduleRegistryProvider);
     final permissions = ref.watch(currentPermissionsProvider);
-    final syncOn = ref.watch(syncEnabledProvider);
-    final remote = ref.watch(authStateProvider).isRemoteSession;
     final unread = ref.watch(unreadNotificationsCountProvider);
-    final modules = [
-      for (final module in registry.modulesVisibleTo(permissions))
-        if (module.id != 'administration' || (syncOn && remote)) module,
-    ];
+    final modules = registry.modulesVisibleTo(permissions);
 
     return Scaffold(
       appBar: CustomAppBar(
         title: l10n.navigationServices,
-        centerTitle: false,
+        centerTitle: true,
+        leading: const AppBarSyncActions(),
         showNotifications: true,
         notificationCount: unread,
         onNotifications: () => context.push(AppRoutes.notifications),
-        actions: const [AppBarSyncActions()],
       ),
       body: SingleChildScrollView(
         padding: AppConstants.pageInsets(context),

@@ -1,13 +1,13 @@
 import 'package:drift/drift.dart';
 
 import 'package:stock_count/core/utils/id_generator.dart';
-import '../../domain/entities/voucher_book.dart';
-import '../../domain/entities/voucher_book_type.dart';
-import '../../domain/models/voucher_book_exception.dart';
-import '../../domain/repositories/voucher_book_repository.dart';
-import '../../domain/services/default_voucher_books.dart';
-import '../../domain/services/voucher_book_validator.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/entities/voucher_book_type.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/models/voucher_book_exception.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/repositories/voucher_book_repository.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/services/default_voucher_books.dart';
+import 'package:stock_count/modules/accounting/voucher_books/domain/services/voucher_book_validator.dart';
 
 import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 
@@ -294,6 +294,49 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
           updatedAt: Value(nowMs),
         ),
       );
+    }
+  }
+
+  @override
+  Future<void> seedDefaultBooks() async {
+    await ensureDefaultSections();
+    final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final refreshed = await getAll();
+    final groupUuidBySection = <VoucherBookType, String>{
+      for (final g in refreshed.where((b) => b.isGroup && b.parentId == null))
+        g.bookType: g.uuid,
+    };
+
+    final leavesBySectionAndType = <String, Set<VoucherBookType>>{};
+    for (final book in refreshed) {
+      if (book.isGroup) continue;
+      final parent = book.parentId;
+      if (parent == null || parent.isEmpty) continue;
+      (leavesBySectionAndType[parent] ??= {}).add(book.bookType);
+    }
+
+    for (final seed in DefaultVoucherBooks.seeds) {
+      final sectionUuid = groupUuidBySection[seed.bookType.section];
+      if (sectionUuid == null) continue;
+      final existingKinds = leavesBySectionAndType[sectionUuid] ?? const {};
+      if (existingKinds.contains(seed.bookType)) continue;
+      await _db.into(_db.voucherBooks).insert(
+        VoucherBooksCompanion.insert(
+          uuid: generateUuidV4(),
+          parentId: Value(sectionUuid),
+          name: seed.nameAr,
+          bookType: seed.bookType.storageValue,
+          isGroup: const Value(false),
+          nextNumber: Value(seed.currentNumber),
+          endNumber: Value(seed.endNumber),
+          isActive: const Value(true),
+          notes: Value(seed.nameEn),
+          createdAt: nowMs,
+          updatedAt: nowMs,
+          companyId: Value(_currentCompanyId),
+        ),
+      );
+      (leavesBySectionAndType[sectionUuid] ??= {}).add(seed.bookType);
     }
   }
 

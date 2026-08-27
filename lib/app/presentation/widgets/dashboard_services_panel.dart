@@ -92,8 +92,11 @@ class _PromoStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bg = isDark ? const Color(0xFF1C1C1E) : const Color(0xFF243044);
-    final on = Colors.white;
+    final colorScheme = theme.colorScheme;
+    final bg = isDark
+        ? colorScheme.surfaceContainerHigh
+        : colorScheme.surfaceContainerHighest;
+    final on = colorScheme.onSurface;
 
     return Container(
       padding: const EdgeInsets.symmetric(

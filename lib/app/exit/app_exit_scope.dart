@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/app_dialog.dart';
 import '../localization/app_localizations.dart';
+import '../navigation/app_navigation_items.dart';
 import '../presentation/providers/quick_actions_panel_provider.dart';
 import '../router/app_navigator_keys.dart';
 import '../router/app_routes.dart';
@@ -94,13 +95,44 @@ bool _tryPopNavigators(BuildContext context) {
   return false;
 }
 
+/// Tracks visited shell tab locations to allow navigating back through tab history.
+class ShellHistoryNotifier extends Notifier<List<String>> {
+  @override
+  List<String> build() => [AppRoutes.dashboard];
+
+  void pushLocation(String path) {
+    if (!isPrimaryShellLocation(path)) {
+      return;
+    }
+    if (state.isNotEmpty && state.last == path) {
+      return;
+    }
+    final filtered = state.where((p) => p != path).toList();
+    state = [...filtered, path];
+  }
+
+  String? popLocation() {
+    if (state.length <= 1) {
+      return null;
+    }
+    final nextState = List<String>.from(state)..removeLast();
+    state = nextState;
+    return state.last;
+  }
+}
+
+final shellHistoryProvider =
+    NotifierProvider<ShellHistoryNotifier, List<String>>(
+  ShellHistoryNotifier.new,
+);
+
 /// Handles a system-back attempt at the application shell root.
 ///
 /// Walks the navigator stack hierarchy (branches → shell → root → GoRouter)
 /// and pops the deepest possible navigator.  If nothing can pop:
+/// - pops the previous top-level shell tab from history stack if available.
 /// - on the Dashboard, shows the exit-confirmation dialog.
-/// - on any other top-level tab / module root, navigates back to Dashboard.
-Future<void> handleRootSystemBack(BuildContext context) async {
+Future<void> handleRootSystemBack(BuildContext context, WidgetRef ref) async {
   if (_tryPopNavigators(context)) {
     return;
   }
@@ -160,7 +192,7 @@ class _AppExitPopScopeState extends ConsumerState<AppExitPopScope> {
 
     _handling = true;
     try {
-      await handleRootSystemBack(context);
+      await handleRootSystemBack(context, ref);
     } finally {
       if (mounted) {
         _handling = false;

@@ -2,18 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
+import '../../app/router/app_routes.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/permissions/permission_defs.dart';
 import 'permissions/platform_permission_package.dart';
-import 'presentation/pages/system_setup_routes.dart';
 
 /// System settings / initialization module.
 ///
-/// Shown on the services launcher; first-launch also enters via splash gate.
-/// The wizard route is registered on the App shell navigator (same level as
-/// other modules). Launchers use [GoRouter.go] so the route replaces the
-/// shell branch instead of stacking over [StatefulShellRoute].
+/// Shown on the services launcher; opens platform settings.
 class SystemSetupModule extends AppModule {
   const SystemSetupModule();
 
@@ -39,7 +36,7 @@ class SystemSetupModule extends AppModule {
   IconData get icon => Icons.settings_suggest_outlined;
 
   @override
-  String get rootRoute => SystemSetupRoutes.root;
+  String get rootRoute => AppRoutes.settings;
 
   @override
   int get sortOrder => 80;
@@ -48,7 +45,7 @@ class SystemSetupModule extends AppModule {
   bool get isEnabled => true;
 
   @override
-  bool get showInLauncher => true;
+  bool get showInLauncher => false;
 
   @override
   PermissionPackageDef? get permissionPackage => platformPermissionPackage();

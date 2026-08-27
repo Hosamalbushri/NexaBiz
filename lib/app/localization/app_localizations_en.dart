@@ -2693,6 +2693,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountingHideInactive => 'Hide inactive';
 
   @override
+  String get accountingGenerateDefaultVoucherBooks =>
+      'Generate default voucher books';
+
+  @override
+  String get accountingVoucherBooksSeedSuccess =>
+      'Default voucher books generated successfully';
+
+  @override
+  String get accountingVoucherBooksSettingsSubtitle =>
+      'Settings and management for default voucher books';
+
+  @override
+  String get accountingDefaultVoucherBooksTitle => 'Default Voucher Books';
+
+  @override
+  String get accountingVoucherBooksCurrentlyEmpty =>
+      'No voucher books currently exist';
+
+  @override
+  String accountingVoucherBooksCreatedCount(int count) {
+    return 'Voucher books created ($count total books)';
+  }
+
+  @override
+  String get accountingGenerateVoucherBooksAction => 'Generate books';
+
+  @override
+  String get accountingRealignVoucherBooksAction => 'Re-align books';
+
+  @override
   String get accountingFieldName => 'Account name';
 
   @override

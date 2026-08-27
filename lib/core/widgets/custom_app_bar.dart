@@ -194,6 +194,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.onProfileTap,
     this.automaticSystemOverlay = true,
     this.animateContent = true,
+    this.leading,
     /// When set, overrides [CustomAppBarStyle.centerTitle].
     ///
     /// Use `false` on primary shell tabs so the title sits on the start edge
@@ -204,6 +205,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     /// Defaults to [CustomAppBarTitleSize.auto] which shrinks long titles.
     this.titleSize,
   });
+
+  /// Optional custom leading widget.
+  final Widget? leading;
 
   /// Primary title text.
   final String title;
@@ -424,6 +428,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     Color foreground,
     CustomAppBarStyle resolvedStyle,
   ) {
+    if (leading != null) {
+      return leading;
+    }
+
     if (searching) {
       return _CustomAppBarIconButton(
         icon: Icons.arrow_back_rounded,

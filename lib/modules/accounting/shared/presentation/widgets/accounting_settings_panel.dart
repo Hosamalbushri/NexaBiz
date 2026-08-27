@@ -8,6 +8,7 @@ import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
+import 'package:stock_count/modules/accounting/voucher_books/presentation/providers/voucher_book_providers.dart';
 
 /// Accounting module settings bundle (embedded in the Settings module hub).
 class AccountingSettingsPanel extends ConsumerWidget {
@@ -59,6 +60,54 @@ class AccountingSettingsPanel extends ConsumerWidget {
                     isEmpty
                         ? l10n.accountingGenerateChartAction
                         : l10n.accountingRealignChartAction,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        SettingsSubSection(
+          title: l10n.accountingDefaultVoucherBooksTitle,
+          subtitle: l10n.accountingVoucherBooksSettingsSubtitle,
+          child: Consumer(
+            builder: (context, ref, _) {
+              final sectionsAsync = ref.watch(voucherBookSectionsProvider);
+              final sections = sectionsAsync.valueOrNull ?? const [];
+              final totalLeafBooks = sections.fold<int>(
+                0,
+                (acc, section) => acc + section.children.length,
+              );
+              final isEmpty = totalLeafBooks == 0;
+
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.accountingDefaultVoucherBooksTitle),
+                subtitle: Text(
+                  isEmpty
+                      ? l10n.accountingVoucherBooksCurrentlyEmpty
+                      : l10n.accountingVoucherBooksCreatedCount(totalLeafBooks),
+                ),
+                trailing: ElevatedButton.icon(
+                  onPressed: sectionsAsync.isLoading
+                      ? null
+                      : () async {
+                          final repo = ref.read(voucherBookRepositoryProvider);
+                          await repo.seedDefaultBooks();
+                          ref.invalidate(voucherBookSectionsProvider);
+                          if (context.mounted) {
+                            showAppSnackBar(
+                              context,
+                              message: l10n.accountingVoucherBooksSeedSuccess,
+                              isSuccess: true,
+                            );
+                          }
+                        },
+                  icon: const Icon(Icons.menu_book_outlined),
+                  label: Text(
+                    isEmpty
+                        ? l10n.accountingGenerateVoucherBooksAction
+                        : l10n.accountingRealignVoucherBooksAction,
                   ),
                 ),
               );

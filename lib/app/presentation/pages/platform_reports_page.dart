@@ -48,14 +48,13 @@ class PlatformReportsPage extends ConsumerWidget {
     ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
         title: l10n.platformReportsTitle,
-        centerTitle: false,
+        centerTitle: true,
+        leading: const AppBarSyncActions(),
         showNotifications: true,
         notificationCount: unread,
         onNotifications: () => context.push(AppRoutes.notifications),
-        actions: const [AppBarSyncActions()],
       ),
       body: (!isReportsModuleActive || modulesWithReports.isEmpty)
           ? Center(

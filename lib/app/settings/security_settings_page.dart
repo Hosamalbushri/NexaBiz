@@ -25,7 +25,6 @@ class SecuritySettingsPage extends ConsumerStatefulWidget {
 
 class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
   bool _localBiometricsEnabled = false;
-  bool _syncBiometricsEnabled = false;
 
   @override
   void initState() {
@@ -43,13 +42,11 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
     final localEnabled = await store.isBiometricLoginEnabled(
       mode: AuthenticationMode.local,
     );
-    final syncEnabled = await store.isBiometricLoginEnabled(
-      mode: AuthenticationMode.sync,
-    );
+    // Ensure sync biometrics is disabled
+    await store.setBiometricEnabled(enabled: false, mode: AuthenticationMode.sync);
     if (mounted) {
       setState(() {
         _localBiometricsEnabled = localEnabled;
-        _syncBiometricsEnabled = syncEnabled;
       });
     }
   }
@@ -213,11 +210,7 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
           await store.setBiometricEnabled(enabled: false, mode: mode);
           if (mounted) {
             setState(() {
-              if (mode.isLocal) {
-                _localBiometricsEnabled = false;
-              } else {
-                _syncBiometricsEnabled = false;
-              }
+              _localBiometricsEnabled = false;
             });
           }
           return;
@@ -241,11 +234,7 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
 
     if (mounted) {
       setState(() {
-        if (mode.isLocal) {
-          _localBiometricsEnabled = value;
-        } else {
-          _syncBiometricsEnabled = value;
-        }
+        _localBiometricsEnabled = value;
       });
     }
   }
@@ -285,20 +274,11 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
               if (lock.biometricAvailable) ...[
                 SettingsTile(
                   icon: Icons.fingerprint_rounded,
-                  title: '${l10n.authLocalModeLabel} — ${l10n.authBiometricsSettingsTitle}',
+                  title: l10n.authBiometricsSettingsTitle,
                   subtitle: l10n.authBiometricsSettingsSubtitle,
                   trailing: Switch.adaptive(
                     value: _localBiometricsEnabled,
                     onChanged: (val) => _toggleBiometrics(val, AuthenticationMode.local),
-                  ),
-                ),
-                SettingsTile(
-                  icon: Icons.cloud_done_rounded,
-                  title: '${l10n.authSyncModeLabel} — ${l10n.authBiometricsSettingsTitle}',
-                  subtitle: l10n.authBiometricsSettingsSubtitle,
-                  trailing: Switch.adaptive(
-                    value: _syncBiometricsEnabled,
-                    onChanged: (val) => _toggleBiometrics(val, AuthenticationMode.sync),
                   ),
                 ),
               ],

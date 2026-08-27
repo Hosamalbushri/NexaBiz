@@ -53,14 +53,13 @@ class PlatformSettingsPage extends ConsumerWidget {
     final unread = ref.watch(unreadNotificationsCountProvider);
 
     return Scaffold(
-      backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
         title: l10n.settingsTitle,
-        centerTitle: false,
+        centerTitle: true,
+        leading: const AppBarSyncActions(),
         showNotifications: true,
         notificationCount: unread,
         onNotifications: () => context.push(AppRoutes.notifications),
-        actions: const [AppBarSyncActions()],
       ),
       body: const _PlatformSettingsBody(),
     );
@@ -83,17 +82,35 @@ class _PlatformSettingsBody extends ConsumerWidget {
         ref.watch(syncOverviewProvider).asData?.value ?? SyncOverview.initial();
     final syncEnabled = ref.watch(syncEnabledProvider);
     final repository = ref.read(settingsRepositoryProvider);
-    final categories = ref.watch(moduleRegistryProvider).allSettingsCategories;
+    final registry = ref.watch(moduleRegistryProvider);
+    final categories = registry.allSettingsCategories;
 
-    return ListView(
-      padding: AppConstants.pageInsets(context),
+    final pageInsets = AppConstants.pageInsets(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _CompanyHeaderCard(
-          profile: companyAsync.asData?.value,
-          onTap: () => context.push(AppRoutes.settingsSetup),
+        Padding(
+          padding: EdgeInsets.only(
+            left: pageInsets.left,
+            right: pageInsets.right,
+            top: pageInsets.top,
+            bottom: AppSpacing.sm,
+          ),
+          child: _CompanyHeaderCard(
+            profile: companyAsync.asData?.value,
+            onTap: () => context.push(AppRoutes.settingsSetup),
+          ),
         ),
-        const SizedBox(height: AppSpacing.lg),
-        SettingsExpandableSection(
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.only(
+              left: pageInsets.left,
+              right: pageInsets.right,
+              bottom: pageInsets.bottom,
+            ),
+            children: [
+              SettingsExpandableSection(
           icon: Icons.tune_rounded,
           title: l10n.settingsGeneralSection,
           subtitle: l10n.settingsGeneralSectionSubtitle,
@@ -228,40 +245,26 @@ class _PlatformSettingsBody extends ConsumerWidget {
             ),
           ],
         ),
-        SettingsGroup(
-          children: [
-            SettingsTile(
-              icon: Icons.grid_view_rounded,
-              title: l10n.moduleUnitsSettingsTitle,
-              subtitle: l10n.moduleUnitsSettingsSubtitle,
-              showChevron: true,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ModulesSettingsPage(categories: categories),
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        SettingsGroup(
-          children: [
-            SettingsTile(
-              icon: Icons.cloud_sync_outlined,
-              title: l10n.settingsDataSection,
-              subtitle: syncEnabled
-                  ? (syncOverview.isOnline
-                        ? l10n.syncConnectionOnline
-                        : l10n.syncConnectionOffline)
-                  : l10n.subscriptionAndPackagesSubtitle,
-              showChevron: true,
-              onTap: () => context.push(AppRoutes.settingsDataSync),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
+        if (categories.isNotEmpty) ...[
+          SettingsGroup(
+            children: [
+              SettingsTile(
+                icon: Icons.grid_view_rounded,
+                title: l10n.moduleUnitsSettingsTitle,
+                subtitle: l10n.moduleUnitsSettingsSubtitle,
+                showChevron: true,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ModulesSettingsPage(categories: categories),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
         SettingsExpandableSection(
           icon: Icons.info_outline_rounded,
           title: l10n.about,
@@ -312,7 +315,10 @@ class _PlatformSettingsBody extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.xxl),
       ],
-    );
+    ),
+  ),
+],
+);
   }
 
   Future<void> _saveTheme(
@@ -518,193 +524,78 @@ class _CompanyHeaderCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
     final name = (profile?.name.trim().isNotEmpty ?? false)
         ? profile!.name.trim()
         : l10n.systemSetupEditCompany;
-    final legalName = profile?.legalName?.trim();
-    final showLegal =
-        legalName != null && legalName.isNotEmpty && legalName != name;
-    final city = profile?.city?.trim();
-    final country = profile?.country?.trim();
-    final location = [
-      if (city != null && city.isNotEmpty) city,
-      if (country != null && country.isNotEmpty) country,
-    ].join(', ');
-    final tax = profile?.taxNumber?.trim();
-    final metaChips = <({IconData icon, String label})>[
-      if (location.isNotEmpty)
-        (icon: Icons.location_on_outlined, label: location),
-      if (tax != null && tax.isNotEmpty)
-        (icon: Icons.receipt_long_outlined, label: tax),
-    ];
 
     return Material(
       color: colorScheme.surface,
-      elevation: 1.5,
-      shadowColor: colorScheme.shadow.withValues(alpha: 0.16),
+      elevation: 1.25,
+      shadowColor: colorScheme.shadow.withValues(alpha: 0.18),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.xl),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         side: BorderSide(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.32),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.35),
         ),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.sm,
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _CompanyAvatar(profile: profile),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.setupCompanyIdentitySection.toUpperCase(),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.9,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xxs),
-                        Text(
-                          name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.35,
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          showLegal
-                              ? legalName
-                              : l10n.setupSettingsCardSubtitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (metaChips.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  0,
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                ),
-                child: Wrap(
-                  spacing: AppSpacing.xs,
-                  runSpacing: AppSpacing.xs,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.md - 2,
+          ),
+          child: Row(
+            children: [
+              _CompanyAvatar(profile: profile),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    for (final chip in metaChips)
-                      _CompanyMetaChip(icon: chip.icon, label: chip.label),
+                    Flexible(
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.verified_rounded,
+                      size: 16,
+                      color: colorScheme.primary,
+                    ),
                   ],
                 ),
               ),
-            Divider(
-              height: 1,
-              color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.apartment_outlined,
-                    size: 18,
+              const SizedBox(width: AppSpacing.sm),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Text(
+                  l10n.localeName == 'ar' ? 'تعديل' : 'Edit',
+                  style: theme.textTheme.labelMedium?.copyWith(
                     color: colorScheme.primary,
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: Text(
-                      l10n.systemSetupEditCompany,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: colorScheme.primary,
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CompanyMetaChip extends StatelessWidget {
-  const _CompanyMetaChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xxs + 2,
-      ),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: colorScheme.onSurfaceVariant),
-          const SizedBox(width: 6),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 160),
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface,
-              ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -726,34 +617,26 @@ class _CompanyAvatar extends StatelessWidget {
         : 'B';
 
     return Container(
-      width: 72,
-      height: 72,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.35),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-        image: hasLogo
-            ? DecorationImage(
-                image: FileImage(File(logoPath)),
-                fit: BoxFit.cover,
-              )
-            : null,
+        color: colorScheme.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       alignment: Alignment.center,
       child: hasLogo
-          ? null
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              child: Image.file(
+                File(logoPath),
+                width: 44,
+                height: 44,
+                fit: BoxFit.cover,
+              ),
+            )
           : Text(
               initial,
-              style: theme.textTheme.headlineMedium?.copyWith(
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w800,
                 color: colorScheme.primary,
               ),
