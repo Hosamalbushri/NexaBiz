@@ -7,10 +7,10 @@ import '../../localization/app_localizations.dart';
 import '../../notifications/presentation/providers/notifications_provider.dart';
 import '../../router/app_routes.dart';
 import '../../sync/app_bar_sync_actions.dart';
-import '../../sync/sync_enabled_provider.dart';
 import '../../../core/modules/module_providers.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/auth/presentation/providers/auth_state_core.dart';
+import '../../../core/widgets/app_responsive.dart';
 import '../../../shared/widgets/service_launcher.dart';
 
 /// Services branch: launches business modules via the module registry.
@@ -36,18 +36,20 @@ class ServiceLauncherPage extends ConsumerWidget {
       ),
       body: SingleChildScrollView(
         padding: AppConstants.pageInsets(context),
-        child: ServiceLauncher(
-          title: l10n.servicesTitle,
-          subtitle: l10n.servicesSubtitle,
-          modules: modules,
-          onModuleSelected: (module) {
-            if (!module.isEnabled) {
-              return;
-            }
-            // Prefer go over push — see dashboard module launch comment
-            // (go_router ShellRouteMatch duplicate page keys).
-            context.go(module.rootRoute);
-          },
+        child: AppContentConstraint(
+          child: ServiceLauncher(
+            title: l10n.servicesTitle,
+            subtitle: l10n.servicesSubtitle,
+            modules: modules,
+            onModuleSelected: (module) {
+              if (!module.isEnabled) {
+                return;
+              }
+              // Prefer go over push — see dashboard module launch comment
+              // (go_router ShellRouteMatch duplicate page keys).
+              context.go(module.rootRoute);
+            },
+          ),
         ),
       ),
     );

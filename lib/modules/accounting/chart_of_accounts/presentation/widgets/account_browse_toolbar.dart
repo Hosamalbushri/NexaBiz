@@ -36,6 +36,9 @@ class AccountBrowseToolbar extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final scheme = theme.colorScheme;
+    final mediaHeight = MediaQuery.of(context).size.height;
+    final isCompactLandscape = mediaHeight < 500;
+    final effectiveShowSubtitle = showSubtitle && !isCompactLandscape;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -50,17 +53,17 @@ class AccountBrowseToolbar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.md,
-              AppSpacing.md,
+              isCompactLandscape ? AppSpacing.xs : AppSpacing.md,
               AppSpacing.sm,
-              AppSpacing.sm,
+              isCompactLandscape ? AppSpacing.xs : AppSpacing.sm,
             ),
             child: Row(
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: isCompactLandscape ? 32 : 40,
+                  height: isCompactLandscape ? 32 : 40,
                   decoration: BoxDecoration(
                     color: scheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -68,7 +71,7 @@ class AccountBrowseToolbar extends StatelessWidget {
                   child: Icon(
                     Icons.account_tree_rounded,
                     color: scheme.primary,
-                    size: 22,
+                    size: isCompactLandscape ? 18 : 22,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -78,12 +81,15 @@ class AccountBrowseToolbar extends StatelessWidget {
                     children: [
                       Text(
                         l10n.accountingChartOfAccounts,
-                        style: theme.textTheme.titleSmall?.copyWith(
+                        style: (isCompactLandscape
+                                ? theme.textTheme.labelLarge
+                                : theme.textTheme.titleSmall)
+                            ?.copyWith(
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.2,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      if (!isCompactLandscape) const SizedBox(height: 2),
                       Text(
                         accountsCount == null
                             ? '…'
@@ -91,6 +97,7 @@ class AccountBrowseToolbar extends StatelessWidget {
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: scheme.onSurfaceVariant,
                           fontWeight: FontWeight.w600,
+                          fontSize: isCompactLandscape ? 11 : null,
                         ),
                       ),
                     ],
@@ -124,7 +131,7 @@ class AccountBrowseToolbar extends StatelessWidget {
               ],
             ),
           ),
-          if (showSubtitle) ...[
+          if (effectiveShowSubtitle) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: Text(

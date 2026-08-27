@@ -33,9 +33,19 @@ import 'stock_count/presentation/pages/inventory_search_page.dart';
 import 'stock_count/presentation/pages/stock_count_home_page.dart';
 import 'stock_count/presentation/pages/stock_count_settings_page.dart';
 
+import 'stock_movements/presentation/pages/stock_issue_form_page.dart';
+import 'stock_movements/presentation/pages/stock_issues_list_page.dart';
+import 'stock_movements/presentation/pages/stock_receipt_form_page.dart';
+import 'stock_movements/presentation/pages/stock_receipts_list_page.dart';
+
+import 'cost_valuation/presentation/pages/cost_valuation_settings_page.dart';
+import 'warehouses/presentation/pages/stock_transfer_form_page.dart';
+import 'warehouses/presentation/pages/stock_transfers_list_page.dart';
+import 'warehouses/presentation/pages/warehouses_settings_page.dart';
+
 /// Inventory business module — self-contained routes and features.
 ///
-/// Platform service: Inventory. Intra-module services: Stock count + Products.
+/// Platform service: Inventory. Intra-module services: Stock count + Products + Stock Movements.
 class InventoryModule extends AppModule {
   const InventoryModule();
 
@@ -213,6 +223,51 @@ class InventoryModule extends AppModule {
           ],
         ),
         GoRoute(
+          path: 'stock-movements',
+          name: 'inventoryStockMovements',
+          builder: (context, state) => const StockReceiptsListPage(),
+          routes: [
+            GoRoute(
+              path: 'receipts',
+              name: 'inventoryStockReceiptsList',
+              builder: (context, state) => const StockReceiptsListPage(),
+              routes: [
+                GoRoute(
+                  path: 'new',
+                  name: 'inventoryStockReceiptsNew',
+                  builder: (context, state) => const StockReceiptFormPage(),
+                ),
+                GoRoute(
+                  path: ':id/edit',
+                  name: 'inventoryStockReceiptsEdit',
+                  builder: (context, state) => StockReceiptFormPage(
+                    receiptId: state.pathParameters['id'],
+                  ),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: 'issues',
+              name: 'inventoryStockIssuesList',
+              builder: (context, state) => const StockIssuesListPage(),
+              routes: [
+                GoRoute(
+                  path: 'new',
+                  name: 'inventoryStockIssuesNew',
+                  builder: (context, state) => const StockIssueFormPage(),
+                ),
+                GoRoute(
+                  path: ':id/edit',
+                  name: 'inventoryStockIssuesEdit',
+                  builder: (context, state) => StockIssueFormPage(
+                    issueId: int.tryParse(state.pathParameters['id'] ?? ''),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        GoRoute(
           path: 'products',
           name: 'inventoryProducts',
           builder: (context, state) => const ProductsHomePage(),
@@ -254,6 +309,28 @@ class InventoryModule extends AppModule {
                 }
                 return ProductFormPage(productId: id);
               },
+            ),
+          ],
+        ),
+        GoRoute(
+          path: 'warehouses/settings',
+          name: 'inventoryWarehousesSettings',
+          builder: (context, state) => const WarehousesSettingsPage(),
+        ),
+        GoRoute(
+          path: 'cost-valuation/settings',
+          name: 'inventoryCostValuationSettings',
+          builder: (context, state) => const CostValuationSettingsPage(),
+        ),
+        GoRoute(
+          path: 'stock-transfers',
+          name: 'inventoryStockTransfers',
+          builder: (context, state) => const StockTransfersListPage(),
+          routes: [
+            GoRoute(
+              path: 'new',
+              name: 'inventoryStockTransfersNew',
+              builder: (context, state) => const StockTransferFormPage(),
             ),
           ],
         ),

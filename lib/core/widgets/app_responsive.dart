@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../app/constants/app_constants.dart';
 import '../../app/theme/app_breakpoints.dart';
 import '../../app/theme/app_spacing.dart';
 
@@ -79,7 +80,7 @@ class AppResponsiveForm extends StatelessWidget {
         final columns = switch (tier) {
           AppBreakpointTier.compact => 1,
           AppBreakpointTier.medium => 2.clamp(1, maxColumns),
-          AppBreakpointTier.expanded => maxColumns,
+          AppBreakpointTier.expanded || AppBreakpointTier.wide => maxColumns,
         };
 
         if (columns <= 1) {
@@ -112,3 +113,30 @@ class AppResponsiveForm extends StatelessWidget {
     );
   }
 }
+
+/// Wraps page or section content in a centered container with a maximum width
+/// cap on tablet/desktop/web screens (defaults to [AppConstants.maxContentWidth]).
+class AppContentConstraint extends StatelessWidget {
+  const AppContentConstraint({
+    super.key,
+    required this.child,
+    this.maxWidth = AppConstants.maxContentWidth,
+    this.alignment = Alignment.topCenter,
+  });
+
+  final Widget child;
+  final double maxWidth;
+  final AlignmentGeometry alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: alignment,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: child,
+      ),
+    );
+  }
+}
+

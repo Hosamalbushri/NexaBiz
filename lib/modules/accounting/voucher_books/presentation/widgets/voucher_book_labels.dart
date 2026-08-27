@@ -17,6 +17,9 @@ String voucherBookTypeLabel(AppLocalizations l10n, VoucherBookType type) {
     VoucherBookType.journal => l10n.accountingVoucherBookTypeJournal,
     VoucherBookType.receiptsPayments =>
       l10n.accountingVoucherBookTypeReceiptsPayments,
+    VoucherBookType.stockReceipts => 'إيصالات الاستلام (مخزون)',
+    VoucherBookType.stockIssues => 'أوامر الصرف (مخزون)',
+    VoucherBookType.inventory => 'دفاتر المخزون',
   };
 }
 
@@ -36,5 +39,8 @@ IconData voucherBookTypeIcon(VoucherBookType type) {
     VoucherBookType.purchaseReturns => Icons.undo_outlined,
     VoucherBookType.journal => Icons.menu_book_outlined,
     VoucherBookType.receiptsPayments => Icons.account_balance_wallet_outlined,
+    VoucherBookType.stockReceipts => Icons.move_to_inbox_outlined,
+    VoucherBookType.stockIssues => Icons.outbox_outlined,
+    VoucherBookType.inventory => Icons.inventory_2_outlined,
   };
 }

@@ -80,17 +80,24 @@ final syncBackgroundSchedulerProvider = Provider<SyncBackgroundScheduler>((ref) 
       return ref.read(authStateProvider).canUseRemoteSync && hasCapability;
     },
   );
+
+  void safeReconfigure() {
+    scheduleMicrotask(() {
+      scheduler.reconfigure();
+    });
+  }
+
   ref.listen<SyncAutoPreferences>(syncAutoPreferencesProvider, (_, __) {
-    scheduler.reconfigure();
+    safeReconfigure();
   });
   ref.listen<bool>(syncEnabledProvider, (_, __) {
-    scheduler.reconfigure();
+    safeReconfigure();
   });
   ref.listen<AuthState>(authStateProvider, (_, __) {
-    scheduler.reconfigure();
+    safeReconfigure();
   });
   ref.listen(currentEntitlementProvider, (_, __) {
-    scheduler.reconfigure();
+    safeReconfigure();
   });
   ref.onDispose(scheduler.dispose);
   return scheduler;
@@ -137,6 +144,17 @@ class SyncBackgroundScheduler with WidgetsBindingObserver {
     unawaited(_osBridge.initialize());
     reconfigure();
     unawaited(_drainOsWake());
+  }
+
+  /// Explicitly stop background scheduler and cancel timers/subscriptions.
+  void stop() {
+    _started = false;
+    WidgetsBinding.instance.removeObserver(this);
+    _debounce?.cancel();
+    _debounce = null;
+    _periodic?.cancel();
+    _periodic = null;
+    unawaited(_osBridge.cancel());
   }
 
   void reconfigure() {

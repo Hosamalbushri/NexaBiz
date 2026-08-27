@@ -8,6 +8,7 @@ import 'package:stock_count/app/theme/app_breakpoints.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_shadows.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/modules/inventory/permissions/inventory_permission_package.dart';
@@ -52,7 +53,8 @@ class ProductsHomePage extends ConsumerWidget {
         title: l10n.productsHubTitle,
         showBackButton: true,
       ),
-      body: ListView(
+      body: AppContentConstraint(
+        child: ListView(
           padding: AppConstants.pageInsets(context),
           children: [
             Text(
@@ -99,6 +101,7 @@ class ProductsHomePage extends ConsumerWidget {
             ),
           ],
         ),
+      ),
     );
   }
 }
@@ -155,56 +158,69 @@ class _ProductsFeatureCard extends StatelessWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.sm),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          colorScheme.primary.withValues(alpha: 0.16),
-                          colorScheme.secondary.withValues(alpha: 0.10),
-                        ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isCompact = constraints.maxHeight < 130;
+                  final circleSize = isCompact ? 44.0 : 56.0;
+                  final iconSize = isCompact ? 22.0 : 28.0;
+                  final spacing = isCompact ? AppSpacing.xs : AppSpacing.sm;
+
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              colorScheme.primary.withValues(alpha: 0.16),
+                              colorScheme.secondary.withValues(alpha: 0.10),
+                            ],
+                          ),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: colorScheme.primary.withValues(alpha: 0.12),
+                          ),
+                        ),
+                        child: SizedBox(
+                          width: circleSize,
+                          height: circleSize,
+                          child: Icon(icon, color: colorScheme.primary, size: iconSize),
+                        ),
                       ),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: colorScheme.primary.withValues(alpha: 0.12),
+                      SizedBox(height: spacing),
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: (isCompact
+                                ? theme.textTheme.titleSmall
+                                : theme.textTheme.titleMedium)
+                            ?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                          height: 1.15,
+                        ),
                       ),
-                    ),
-                    child: SizedBox(
-                      width: 64,
-                      height: 64,
-                      child: Icon(icon, color: colorScheme.primary, size: 32),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.2,
-                      height: 1.15,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Flexible(
-                    child: Text(
-                      subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        height: 1.2,
+                      const SizedBox(height: 2),
+                      Flexible(
+                        child: Text(
+                          subtitle,
+                          maxLines: isCompact ? 1 : 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            height: 1.2,
+                            fontSize: isCompact ? 11 : null,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                },
               ),
             ),
           ),

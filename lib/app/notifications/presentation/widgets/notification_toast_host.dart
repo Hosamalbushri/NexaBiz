@@ -87,26 +87,32 @@ class _NotificationToastHostState extends ConsumerState<NotificationToastHost> {
               0,
             ),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
+              constraints: BoxConstraints(
+                maxWidth: 520,
+                maxHeight: MediaQuery.sizeOf(context).height * 0.7,
+              ),
               child: Material(
                 type: MaterialType.transparency,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var i = 0; i < toasts.length; i++) ...[
-                      if (i > 0) const SizedBox(height: AppSpacing.sm),
-                      _AnimatedToast(
-                        key: ValueKey(toasts[i].notification.id),
-                        notification: toasts[i].notification,
-                        onClose: () {
-                          ref
-                              .read(floatingNotificationsProvider.notifier)
-                              .dismiss(toasts[i].notification.id);
-                        },
-                        onAction: () => _handleAction(toasts[i].notification),
-                      ),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var i = 0; i < toasts.length; i++) ...[
+                        if (i > 0) const SizedBox(height: AppSpacing.sm),
+                        _AnimatedToast(
+                          key: ValueKey(toasts[i].notification.id),
+                          notification: toasts[i].notification,
+                          onClose: () {
+                            ref
+                                .read(floatingNotificationsProvider.notifier)
+                                .dismiss(toasts[i].notification.id);
+                          },
+                          onAction: () => _handleAction(toasts[i].notification),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),

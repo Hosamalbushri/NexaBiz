@@ -12,6 +12,9 @@ class AppConstants {
   static const double borderRadius = AppRadius.control;
   static const double pagePadding = AppSpacing.page;
 
+  /// Maximum content width cap for large screens / desktop / web.
+  static const double maxContentWidth = 900.0;
+
   /// Page content insets that clear shell chrome and keep a trailing margin so
   /// the bottom navigation (when present) is the last visible surface.
   ///

@@ -5191,16 +5191,16 @@ class AppLocalizationsAr extends AppLocalizations {
       'أنت غير متصل. اتصل بالإنترنت ثم اضغط «مزامنة الآن».';
 
   @override
-  String get syncStatusSynced => 'تمت المزامنة';
+  String get syncStatusSynced => 'متطابق';
 
   @override
-  String get syncStatusSyncing => 'جاري المزامنة…';
+  String get syncStatusSyncing => 'جاري';
 
   @override
-  String get syncStatusPending => 'معلّق';
+  String get syncStatusPending => 'معلق';
 
   @override
-  String get syncStatusFailed => 'فشلت المزامنة';
+  String get syncStatusFailed => 'تعارض/فشل';
 
   @override
   String get syncStatusConflict => 'تعارض';
@@ -6408,4 +6408,227 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get selectModuleReportsPrompt =>
       'اختر المودل للاطلاع على التقارير المتاحة لوحداته';
+
+  @override
+  String get accountSearchTitle => 'الدليل المحاسبي';
+
+  @override
+  String get accountSearchHint => 'ابحث برقم الحساب أو الاسم…';
+
+  @override
+  String get accountPostingOnlyToggle => 'حسابات الترحيل فقط';
+
+  @override
+  String get accountTypeFilterAll => 'الكل';
+
+  @override
+  String get accountSearchEmptyTitle => 'لا توجد حسابات مطابقة';
+
+  @override
+  String get accountSearchEmptyMessage => 'جرب البحث برقم أو اسم حساب آخر.';
+
+  @override
+  String get accountSearchNotAvailable => 'موديول الدليل المحاسبي غير مفعل.';
+
+  @override
+  String get accountInlineBrowseTree =>
+      'تصفح واستعراض الشجرة المحاسبية الكاملة…';
+
+  @override
+  String get accountSelectCurrencyTitle => 'اختر العملة (الدليل المحاسبي)';
+
+  @override
+  String get accountBaseCurrencyNotice => 'العملة الأساسية للنظام';
+
+  @override
+  String accountExchangeRateLabel(String rate) {
+    return 'سعر الصرف: $rate';
+  }
+
+  @override
+  String get stockIssuesTitle => 'أذونات الصرف';
+
+  @override
+  String get stockIssuesNewTooltip => 'إضافة إذن صرف جديد';
+
+  @override
+  String get stockIssuesNewButton => 'إذن صرف جديد';
+
+  @override
+  String get stockIssuesEmptyTitle => 'لا توجد أذونات صرف مخزنية';
+
+  @override
+  String get stockIssuesEmptyAction => 'إضافة أول إذن صرف';
+
+  @override
+  String get stockIssuesDeleteTitle => 'حذف إذن الصرف';
+
+  @override
+  String get stockIssuesDeleteConfirm =>
+      'هل أنت تأكد من حذف إذن الصرف هذا؟ سيتم إرجاع الكميات إلى المخزون تلقائياً.';
+
+  @override
+  String get stockReceiptsTitle => 'إيصالات الاستلام';
+
+  @override
+  String get stockReceiptsNewTooltip => 'إضافة إيصال جديد';
+
+  @override
+  String get stockReceiptsNewButton => 'إيصال جديد';
+
+  @override
+  String get stockReceiptsEmptyTitle => 'لا توجد إيصالات استلام مخزنية';
+
+  @override
+  String get stockReceiptsEmptyAction => 'إضافة أول إيصال';
+
+  @override
+  String get stockReceiptsDeleteTitle => 'حذف إيصال الاستلام';
+
+  @override
+  String get stockReceiptsDeleteConfirm =>
+      'هل أنت تأكد من حذف هذا الإيصال؟ سيتم خصم الكميات من المخزون تلقائياً.';
+
+  @override
+  String get stockReceiptNewTitle => 'إيصال استلام جديد';
+
+  @override
+  String get stockReceiptEditTitle => 'تعديل إيصال استلام';
+
+  @override
+  String get stockReceiptNumberLabel => 'رقم الإيصال *';
+
+  @override
+  String get stockReceiptSupplierLabel => 'المورد (اختياري)';
+
+  @override
+  String get stockReceiptDateLabel => 'تاريخ الاستلام';
+
+  @override
+  String stockReceiptItemsHeader(int count) {
+    return 'أصناف الاستلام ($count)';
+  }
+
+  @override
+  String get stockReceiptAddLineButton => 'إضافة صنف';
+
+  @override
+  String get stockReceiptEmptyLines =>
+      'لم يتم إضافة أي أصناف بعد. انقر \'إضافة صنف\' للاختيار.';
+
+  @override
+  String get stockReceiptSaveButton => 'حفظ الإيصال وتحديث المخزون';
+
+  @override
+  String get stockReceiptSelectProductTitle => 'اختر منتجاً للاستلام';
+
+  @override
+  String get stockReceiptProductLabel => 'المنتج';
+
+  @override
+  String get stockReceiptQuantityLabel => 'الكمية المستلمة';
+
+  @override
+  String get stockReceiptUnitCostLabel => 'تكلفة الوحدة';
+
+  @override
+  String get stockReceiptAddToReceipt => 'إضافة إلى الإيصال';
+
+  @override
+  String get stockReceiptNoProductsMessage =>
+      'لا يوجد منتجات في الكتالوج. يرجى إضافة منتجات أولاً.';
+
+  @override
+  String get stockReceiptAddAtLeastOneLine => 'يرجى إضافة صنف واحد على الأقل.';
+
+  @override
+  String get stockReceiptSaveSuccess =>
+      'تم حفظ إيصال الاستلام وتحديث المخزون بنجاح';
+
+  @override
+  String get stockIssueNewTitle => 'أمر صرف جديد';
+
+  @override
+  String get stockIssueEditTitle => 'تعديل أمر الصرف';
+
+  @override
+  String get stockIssueNumberLabel => 'رقم أمر الصرف';
+
+  @override
+  String get stockIssueVoucherBookLabel => 'دفتر السندات';
+
+  @override
+  String get stockIssueDateLabel => 'تاريخ الصرف';
+
+  @override
+  String get stockIssueAccountLabel => 'الحساب';
+
+  @override
+  String get stockIssueWarehouseLabel => 'المستودع / المخزن';
+
+  @override
+  String get stockIssueNotesLabel => 'الملاحظات والبيان';
+
+  @override
+  String get stockIssueItemsHeader => 'الأصناف والتكاليف';
+
+  @override
+  String get stockIssueAddLineButton => 'إضافة صنف جديد';
+
+  @override
+  String get stockIssueSelectProductPrompt => 'اختر صنفاً من الكتالوج...';
+
+  @override
+  String get stockIssueEmptyItemsMessage =>
+      'لم يتم إضافة أي أصناف حتى الآن في أمر الصرف';
+
+  @override
+  String get stockIssueSaveButton => 'حفظ أمر الصرف';
+
+  @override
+  String get stockIssuePostButton => 'حفظ واعتماد التكلفة';
+
+  @override
+  String get stockIssueUnsavedChangesTitle => 'تنبيه قبل المغادرة';
+
+  @override
+  String get stockIssueUnsavedChangesMessage =>
+      'توجد تعديلات غير محفوظة على أمر الصرف. هل ترغب في المغادرة وتجاهل التعديلات؟';
+
+  @override
+  String get stockIssueDiscardChanges => 'تجاهل والمغادرة';
+
+  @override
+  String get stockIssueLoadingMessage => 'جاري تحميل أمر الصرف...';
+
+  @override
+  String get stockIssueSavingMessage => 'جاري حفظ أمر الصرف...';
+
+  @override
+  String get stockIssueSaveSuccess => 'تم حفظ أمر الصرف بنجاح';
+
+  @override
+  String get stockIssueSaveFailed => 'فشل حفظ أمر الصرف';
+
+  @override
+  String get stockIssueAddAtLeastOneLine => 'يرجى إضافة صنف واحد على الأقل';
+
+  @override
+  String get accountSearchDisabledTitle =>
+      'وحدة المحاسبة والدليل غير متوفرة أو غير مفعّلة حالياً';
+
+  @override
+  String get accountSearchDisabledSubtitle =>
+      'يرجى التأكد من تفعيل وحدة الحسابات في إعدادات النظام';
+
+  @override
+  String get accountSearchEmptyTreeTitle => 'دليل الحسابات فارغ';
+
+  @override
+  String get accountSearchEmptyTreeSubtitle =>
+      'لم يتم إنشاء أو توليد دليل الحسابات الافتراضي بعد';
+
+  @override
+  String get accountSearchNoResultsSubtitle =>
+      'لم يتم العثور على حسابات تطابق معايير البحث';
 }

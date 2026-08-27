@@ -6,6 +6,7 @@ import '../../../core/modules/module_providers.dart';
 import '../../../core/widgets/app_bottom_sheet.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_loading.dart';
+import '../../../core/widgets/app_responsive.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../constants/app_constants.dart';
 import '../../localization/app_localizations.dart';
@@ -59,32 +60,30 @@ class DashboardPage extends ConsumerWidget {
           final permissions = ref.watch(currentPermissionsProvider);
           final modules =
               controller.resolveModules(permissions: permissions);
-
           return SingleChildScrollView(
             padding: AppConstants.pageInsets(context),
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                DashboardServicesPanel(
-                  modules: modules,
-                  customizeLabel: l10n.dashboardCustomizeServices,
-                  onCustomize: () => _openCustomize(context, ref),
-                  onModuleSelected: (module) {
-                    if (!module.isEnabled) {
-                      return;
-                    }
-                    // Use go (not push): leaving StatefulShellRoute under a
-                    // pushed module, then later pushing a shell tab, duplicates
-                    // ShellRouteMatch page keys (go_router #140586).
-                    context.go(module.rootRoute);
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-                const DashboardRecentOperations(),
-              ],
+            child: AppContentConstraint(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DashboardServicesPanel(
+                    modules: modules,
+                    customizeLabel: l10n.dashboardCustomizeServices,
+                    onCustomize: () => _openCustomize(context, ref),
+                    onModuleSelected: (module) {
+                      if (!module.isEnabled) {
+                        return;
+                      }
+                      context.go(module.rootRoute);
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  const DashboardRecentOperations(),
+                ],
+              ),
             ),
           );
         },

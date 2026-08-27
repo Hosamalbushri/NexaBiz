@@ -9539,7 +9539,7 @@ abstract class AppLocalizations {
   /// No description provided for @syncStatusSyncing.
   ///
   /// In en, this message translates to:
-  /// **'Syncing…'**
+  /// **'Syncing'**
   String get syncStatusSyncing;
 
   /// No description provided for @syncStatusPending.
@@ -9551,7 +9551,7 @@ abstract class AppLocalizations {
   /// No description provided for @syncStatusFailed.
   ///
   /// In en, this message translates to:
-  /// **'Sync failed'**
+  /// **'Conflict/Failed'**
   String get syncStatusFailed;
 
   /// No description provided for @syncStatusConflict.
@@ -11743,6 +11743,420 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select a module to view its available unit reports'**
   String get selectModuleReportsPrompt;
+
+  /// No description provided for @accountSearchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart of Accounts Search'**
+  String get accountSearchTitle;
+
+  /// No description provided for @accountSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by account code or name...'**
+  String get accountSearchHint;
+
+  /// No description provided for @accountPostingOnlyToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Posting Accounts Only'**
+  String get accountPostingOnlyToggle;
+
+  /// No description provided for @accountTypeFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get accountTypeFilterAll;
+
+  /// No description provided for @accountSearchEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching accounts'**
+  String get accountSearchEmptyTitle;
+
+  /// No description provided for @accountSearchEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try searching with a different account code or title.'**
+  String get accountSearchEmptyMessage;
+
+  /// No description provided for @accountSearchNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart of Accounts Module is not active.'**
+  String get accountSearchNotAvailable;
+
+  /// No description provided for @accountInlineBrowseTree.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse full Chart of Accounts tree...'**
+  String get accountInlineBrowseTree;
+
+  /// No description provided for @accountSelectCurrencyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Currency (Chart of Accounts)'**
+  String get accountSelectCurrencyTitle;
+
+  /// No description provided for @accountBaseCurrencyNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Base System Currency'**
+  String get accountBaseCurrencyNotice;
+
+  /// No description provided for @accountExchangeRateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Exchange rate: {rate}'**
+  String accountExchangeRateLabel(String rate);
+
+  /// No description provided for @stockIssuesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Issues'**
+  String get stockIssuesTitle;
+
+  /// No description provided for @stockIssuesNewTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new stock issue'**
+  String get stockIssuesNewTooltip;
+
+  /// No description provided for @stockIssuesNewButton.
+  ///
+  /// In en, this message translates to:
+  /// **'New Stock Issue'**
+  String get stockIssuesNewButton;
+
+  /// No description provided for @stockIssuesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No stock issues found'**
+  String get stockIssuesEmptyTitle;
+
+  /// No description provided for @stockIssuesEmptyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add First Stock Issue'**
+  String get stockIssuesEmptyAction;
+
+  /// No description provided for @stockIssuesDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Stock Issue'**
+  String get stockIssuesDeleteTitle;
+
+  /// No description provided for @stockIssuesDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this stock issue? Quantities will be returned to inventory automatically.'**
+  String get stockIssuesDeleteConfirm;
+
+  /// No description provided for @stockReceiptsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Receipts'**
+  String get stockReceiptsTitle;
+
+  /// No description provided for @stockReceiptsNewTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add new stock receipt'**
+  String get stockReceiptsNewTooltip;
+
+  /// No description provided for @stockReceiptsNewButton.
+  ///
+  /// In en, this message translates to:
+  /// **'New Stock Receipt'**
+  String get stockReceiptsNewButton;
+
+  /// No description provided for @stockReceiptsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No stock receipts found'**
+  String get stockReceiptsEmptyTitle;
+
+  /// No description provided for @stockReceiptsEmptyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add First Stock Receipt'**
+  String get stockReceiptsEmptyAction;
+
+  /// No description provided for @stockReceiptsDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Stock Receipt'**
+  String get stockReceiptsDeleteTitle;
+
+  /// No description provided for @stockReceiptsDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this stock receipt? Quantities will be deducted from inventory automatically.'**
+  String get stockReceiptsDeleteConfirm;
+
+  /// No description provided for @stockReceiptNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Stock Receipt'**
+  String get stockReceiptNewTitle;
+
+  /// No description provided for @stockReceiptEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Stock Receipt'**
+  String get stockReceiptEditTitle;
+
+  /// No description provided for @stockReceiptNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt Number *'**
+  String get stockReceiptNumberLabel;
+
+  /// No description provided for @stockReceiptSupplierLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier (Optional)'**
+  String get stockReceiptSupplierLabel;
+
+  /// No description provided for @stockReceiptDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt Date'**
+  String get stockReceiptDateLabel;
+
+  /// No description provided for @stockReceiptItemsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt Lines ({count})'**
+  String stockReceiptItemsHeader(int count);
+
+  /// No description provided for @stockReceiptAddLineButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Line'**
+  String get stockReceiptAddLineButton;
+
+  /// No description provided for @stockReceiptEmptyLines.
+  ///
+  /// In en, this message translates to:
+  /// **'No items added yet. Click \'Add Line\' to select.'**
+  String get stockReceiptEmptyLines;
+
+  /// No description provided for @stockReceiptSaveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Receipt & Update Stock'**
+  String get stockReceiptSaveButton;
+
+  /// No description provided for @stockReceiptSelectProductTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Product for Receipt'**
+  String get stockReceiptSelectProductTitle;
+
+  /// No description provided for @stockReceiptProductLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get stockReceiptProductLabel;
+
+  /// No description provided for @stockReceiptQuantityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Received Quantity'**
+  String get stockReceiptQuantityLabel;
+
+  /// No description provided for @stockReceiptUnitCostLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit Cost'**
+  String get stockReceiptUnitCostLabel;
+
+  /// No description provided for @stockReceiptAddToReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Receipt'**
+  String get stockReceiptAddToReceipt;
+
+  /// No description provided for @stockReceiptNoProductsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No products in catalog. Please add products first.'**
+  String get stockReceiptNoProductsMessage;
+
+  /// No description provided for @stockReceiptAddAtLeastOneLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Please add at least one item line.'**
+  String get stockReceiptAddAtLeastOneLine;
+
+  /// No description provided for @stockReceiptSaveSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock receipt saved and inventory updated successfully.'**
+  String get stockReceiptSaveSuccess;
+
+  /// No description provided for @stockIssueNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Stock Issue'**
+  String get stockIssueNewTitle;
+
+  /// No description provided for @stockIssueEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Stock Issue'**
+  String get stockIssueEditTitle;
+
+  /// No description provided for @stockIssueNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue Number'**
+  String get stockIssueNumberLabel;
+
+  /// No description provided for @stockIssueVoucherBookLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Voucher Book'**
+  String get stockIssueVoucherBookLabel;
+
+  /// No description provided for @stockIssueDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue Date'**
+  String get stockIssueDateLabel;
+
+  /// No description provided for @stockIssueAccountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get stockIssueAccountLabel;
+
+  /// No description provided for @stockIssueWarehouseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Warehouse / Store'**
+  String get stockIssueWarehouseLabel;
+
+  /// No description provided for @stockIssueNotesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes & Statement'**
+  String get stockIssueNotesLabel;
+
+  /// No description provided for @stockIssueItemsHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Items & Costs'**
+  String get stockIssueItemsHeader;
+
+  /// No description provided for @stockIssueAddLineButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Item'**
+  String get stockIssueAddLineButton;
+
+  /// No description provided for @stockIssueSelectProductPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an item from catalog...'**
+  String get stockIssueSelectProductPrompt;
+
+  /// No description provided for @stockIssueEmptyItemsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No items added yet in this stock issue'**
+  String get stockIssueEmptyItemsMessage;
+
+  /// No description provided for @stockIssueSaveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Stock Issue'**
+  String get stockIssueSaveButton;
+
+  /// No description provided for @stockIssuePostButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & Post Cost'**
+  String get stockIssuePostButton;
+
+  /// No description provided for @stockIssueUnsavedChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning Before Leaving'**
+  String get stockIssueUnsavedChangesTitle;
+
+  /// No description provided for @stockIssueUnsavedChangesMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'There are unsaved changes on the stock issue. Do you want to leave and discard changes?'**
+  String get stockIssueUnsavedChangesMessage;
+
+  /// No description provided for @stockIssueDiscardChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard & Leave'**
+  String get stockIssueDiscardChanges;
+
+  /// No description provided for @stockIssueLoadingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading stock issue...'**
+  String get stockIssueLoadingMessage;
+
+  /// No description provided for @stockIssueSavingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving stock issue...'**
+  String get stockIssueSavingMessage;
+
+  /// No description provided for @stockIssueSaveSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock issue saved successfully'**
+  String get stockIssueSaveSuccess;
+
+  /// No description provided for @stockIssueSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save stock issue'**
+  String get stockIssueSaveFailed;
+
+  /// No description provided for @stockIssueAddAtLeastOneLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Please add at least one item line'**
+  String get stockIssueAddAtLeastOneLine;
+
+  /// No description provided for @accountSearchDisabledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounting module and chart of accounts are currently unavailable or disabled'**
+  String get accountSearchDisabledTitle;
+
+  /// No description provided for @accountSearchDisabledSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please ensure the Accounting module is enabled in system settings'**
+  String get accountSearchDisabledSubtitle;
+
+  /// No description provided for @accountSearchEmptyTreeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart of accounts is empty'**
+  String get accountSearchEmptyTreeTitle;
+
+  /// No description provided for @accountSearchEmptyTreeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The default chart of accounts has not been created or generated yet'**
+  String get accountSearchEmptyTreeSubtitle;
+
+  /// No description provided for @accountSearchNoResultsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounts matched your search criteria'**
+  String get accountSearchNoResultsSubtitle;
 }
 
 class _AppLocalizationsDelegate

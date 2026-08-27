@@ -76,13 +76,16 @@ class AppDataTable<T> extends StatelessWidget {
                     ],
                   ),
                 ),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                  child: DataTable(
-                    columns: columns,
-                    rows: items.map(rowBuilder).toList(),
+              Scrollbar(
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: DataTable(
+                      columns: columns,
+                      rows: items.map(rowBuilder).toList(),
+                    ),
                   ),
                 ),
               ),

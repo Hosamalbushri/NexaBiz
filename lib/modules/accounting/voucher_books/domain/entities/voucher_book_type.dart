@@ -14,7 +14,10 @@ enum VoucherBookType {
   purchaseReturns,
   journal,
   /// Combined R&P hub: receipts, payments, cash transfers, currency exchange.
-  receiptsPayments;
+  receiptsPayments,
+  stockReceipts,
+  stockIssues,
+  inventory;
 
   String get storageValue => name;
 
@@ -31,6 +34,9 @@ enum VoucherBookType {
       VoucherBookType.exchanges ||
       VoucherBookType.receiptsPayments => VoucherBookType.receiptsPayments,
       VoucherBookType.journal => VoucherBookType.journal,
+      VoucherBookType.stockReceipts ||
+      VoucherBookType.stockIssues ||
+      VoucherBookType.inventory => VoucherBookType.inventory,
     };
   }
 
@@ -40,6 +46,7 @@ enum VoucherBookType {
     VoucherBookType.receiptsPayments,
     VoucherBookType.purchases,
     VoucherBookType.journal,
+    VoucherBookType.inventory,
   ];
 
   /// Leaf kinds that may be created under [section].
@@ -60,6 +67,10 @@ enum VoucherBookType {
         VoucherBookType.exchanges,
       ],
       VoucherBookType.journal => const [VoucherBookType.journal],
+      VoucherBookType.inventory => const [
+        VoucherBookType.stockReceipts,
+        VoucherBookType.stockIssues,
+      ],
       _ => const [],
     };
   }

@@ -1,0 +1,957 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:stock_count/app/localization/app_localizations.dart';
+import 'package:stock_count/app/theme/app_radius.dart';
+import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/utils/digit_normalization.dart';
+import 'package:stock_count/core/widgets/app_empty_state.dart';
+import 'package:stock_count/core/widgets/app_loading.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_labels.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/widgets/account_type_style.dart';
+
+/// Shows the global [AppAccountSearchPickerSheet] as a bottom sheet.
+Future<Account?> showAppAccountPicker(
+  BuildContext context, {
+  String? title,
+  AccountType? initialTypeFilter,
+  bool postingOnlyDefault = true,
+  String? selectedUuid,
+}) {
+  return showModalBottomSheet<Account>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => AppAccountSearchPickerSheet(
+      title: title,
+      initialTypeFilter: initialTypeFilter,
+      postingOnlyDefault: postingOnlyDefault,
+      selectedUuid: selectedUuid,
+    ),
+  );
+}
+
+/// Global Core Bottom Sheet for Chart of Accounts search & selection.
+class AppAccountSearchPickerSheet extends StatelessWidget {
+  const AppAccountSearchPickerSheet({
+    super.key,
+    this.title,
+    this.initialTypeFilter,
+    this.postingOnlyDefault = true,
+    this.selectedUuid,
+  });
+
+  final String? title;
+  final AccountType? initialTypeFilter;
+  final bool postingOnlyDefault;
+  final String? selectedUuid;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final height = MediaQuery.sizeOf(context).height * 0.85;
+
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppRadius.xl),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, -6),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: AppSpacing.sm),
+          Container(
+            width: 38,
+            height: 4.5,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                  ),
+                  child: Icon(
+                    Icons.account_tree_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    title ?? l10n.accountingChartOfAccounts,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded),
+                  tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: AppAccountSearchPicker(
+              initialTypeFilter: initialTypeFilter,
+              postingOnlyDefault: postingOnlyDefault,
+              selectedUuid: selectedUuid,
+              onAccountSelected: (account) {
+                Navigator.of(context).pop(account);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Global Core Chart of Accounts Search & Presentation Widget.
+///
+/// Automatically validates Accounting Module availability. If the module is
+/// uninitialized or disabled, it displays a non-breaking friendly fallback view.
+class AppAccountSearchPicker extends ConsumerStatefulWidget {
+  const AppAccountSearchPicker({
+    super.key,
+    this.initialTypeFilter,
+    this.postingOnlyDefault = false,
+    this.selectedUuid,
+    this.onAccountSelected,
+  });
+
+  final AccountType? initialTypeFilter;
+  final bool postingOnlyDefault;
+  final String? selectedUuid;
+  final ValueChanged<Account>? onAccountSelected;
+
+  @override
+  ConsumerState<AppAccountSearchPicker> createState() =>
+      _AppAccountSearchPickerState();
+}
+
+class _AppAccountSearchPickerState
+    extends ConsumerState<AppAccountSearchPicker> {
+  static const _searchDebounce = Duration(milliseconds: 250);
+
+  late final TextEditingController _searchController;
+  final _searchFocusNode = FocusNode();
+  Timer? _debounceTimer;
+
+  String _searchQuery = '';
+  AccountType? _selectedType;
+  late bool _postingOnly;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _selectedType = widget.initialTypeFilter;
+    _postingOnly = widget.postingOnlyDefault;
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(_searchDebounce, () {
+      if (!mounted) return;
+      setState(() {
+        _searchQuery = normalizeDigitsToWestern(value).trim();
+      });
+    });
+  }
+
+  void _clearSearch() {
+    _debounceTimer?.cancel();
+    _searchController.clear();
+    setState(() => _searchQuery = '');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final accountsAsync = ref.watch(allAccountsProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Search & Filter Header
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            border: Border(
+              bottom: BorderSide(
+                color: scheme.outlineVariant.withValues(alpha: 0.35),
+              ),
+            ),
+          ),
+          child: Column(
+            children: [
+              TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                inputFormatters: const [WesternDigitsInputFormatter()],
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: l10n.accountSearchHint,
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    color: scheme.primary,
+                  ),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.cancel_rounded, size: 18),
+                          onPressed: _clearSearch,
+                        )
+                      : null,
+                  isDense: true,
+                  filled: true,
+                  fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderSide: BorderSide(
+                      color: scheme.outlineVariant.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderSide: BorderSide(color: scheme.primary, width: 1.5),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+
+              // Filter Chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    FilterChip(
+                      selected: _selectedType == null,
+                      label: Text(l10n.accountTypeFilterAll),
+                      labelStyle: TextStyle(
+                        fontWeight: _selectedType == null
+                            ? FontWeight.w800
+                            : FontWeight.w600,
+                        color: _selectedType == null
+                            ? scheme.onPrimary
+                            : scheme.onSurfaceVariant,
+                      ),
+                      selectedColor: scheme.primary,
+                      backgroundColor:
+                          scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      showCheckmark: false,
+                      visualDensity: VisualDensity.compact,
+                      onSelected: (_) => setState(() => _selectedType = null),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    for (final type in AccountType.values) ...[
+                      _AccountTypeFilterChip(
+                        type: type,
+                        selected: _selectedType == type,
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedType = selected ? type : null;
+                          });
+                        },
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+
+              // Posting Only Switch Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.filter_list_rounded,
+                          size: 16,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            l10n.accountPostingOnlyToggle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Transform.scale(
+                    scale: 0.75,
+                    child: Switch(
+                      value: _postingOnly,
+                      onChanged: (val) => setState(() => _postingOnly = val),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // Accounts List View or Module Unavailable Fallback
+        Expanded(
+          child: accountsAsync.when(
+            loading: () => const AppLoading(),
+            error: (err, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.account_balance_wallet_outlined,
+                      size: 48,
+                      color: scheme.error.withValues(alpha: 0.7),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      l10n.accountSearchDisabledTitle,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      l10n.accountSearchDisabledSubtitle,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            data: (allAccounts) {
+              if (allAccounts.isEmpty) {
+                return AppEmptyState(
+                  title: l10n.accountSearchEmptyTreeTitle,
+                  subtitle: l10n.accountSearchEmptyTreeSubtitle,
+                  icon: Icons.account_tree_outlined,
+                );
+              }
+
+              if (_searchQuery.trim().isNotEmpty && _searchQuery.trim().length < 2) {
+                return const AppEmptyState(
+                  title: 'أدخل حرفين على الأقل للبحث',
+                  subtitle: 'يرجى كتابة حرفين أو أكثر لبدء البحث عن الحساب',
+                  icon: Icons.search_rounded,
+                );
+              }
+
+              final filtered = allAccounts.where((account) {
+                if (account.isDeleted) return false;
+                if (_postingOnly && !account.isPostingAccount) return false;
+                if (_selectedType != null &&
+                    account.accountType != _selectedType) {
+                  return false;
+                }
+                if (_searchQuery.isNotEmpty) {
+                  final codeMatch = account.accountCode
+                      .toLowerCase()
+                      .contains(_searchQuery.toLowerCase());
+                  final nameMatch = AccountLabels.matchesQuery(
+                    l10n,
+                    account,
+                    _searchQuery,
+                  );
+                  final descMatch = account.description != null &&
+                      account.description!
+                          .toLowerCase()
+                          .contains(_searchQuery.toLowerCase());
+                  if (!codeMatch && !nameMatch && !descMatch) {
+                    return false;
+                  }
+                }
+                return true;
+              }).toList();
+
+              if (filtered.isEmpty) {
+                return AppEmptyState(
+                  title: l10n.accountingNoSearchResults,
+                  subtitle: l10n.accountSearchNoResultsSubtitle,
+                  icon: Icons.search_off_rounded,
+                );
+              }
+
+              return ListView.separated(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.md,
+                ),
+                itemCount: filtered.length,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.xs + 2),
+                itemBuilder: (context, index) {
+                  final account = filtered[index];
+                  final isSelected = account.uuid == widget.selectedUuid;
+
+                  return _AccountResultCard(
+                    account: account,
+                    isSelected: isSelected,
+                    onTap: () {
+                      if (widget.onAccountSelected != null) {
+                        widget.onAccountSelected!(account);
+                      }
+                    },
+                  )
+                      .animate(delay: (20 * (index % 12)).ms)
+                      .fadeIn(duration: 180.ms)
+                      .moveY(begin: 6, end: 0, duration: 200.ms);
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AccountTypeFilterChip extends StatelessWidget {
+  const _AccountTypeFilterChip({
+    required this.type,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final AccountType type;
+  final bool selected;
+  final ValueChanged<bool> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+    final color = accountTypeColor(theme.colorScheme, type);
+
+    return FilterChip(
+      selected: selected,
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(accountTypeIcon(type), size: 14, color: selected ? Colors.white : color),
+          const SizedBox(width: 4),
+          Text(AccountLabels.typeLabel(l10n, type)),
+        ],
+      ),
+      labelStyle: TextStyle(
+        fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+        color: selected ? Colors.white : theme.colorScheme.onSurface,
+        fontSize: 12,
+      ),
+      selectedColor: color,
+      backgroundColor: color.withValues(alpha: 0.12),
+      showCheckmark: false,
+      visualDensity: VisualDensity.compact,
+      onSelected: onSelected,
+    );
+  }
+}
+
+class _AccountResultCard extends StatelessWidget {
+  const _AccountResultCard({
+    required this.account,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final Account account;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final typeColor = accountTypeColor(scheme, account.accountType);
+
+    return Material(
+      color: isSelected
+          ? scheme.primaryContainer.withValues(alpha: 0.35)
+          : scheme.surface,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm + 4,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(
+              color: isSelected
+                  ? scheme.primary
+                  : scheme.outlineVariant.withValues(alpha: 0.45),
+              width: isSelected ? 1.5 : 1.0,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: typeColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                  border: Border.all(
+                    color: typeColor.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Text(
+                  account.accountCode,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.4,
+                    color: typeColor,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm + 2),
+              Expanded(
+                child: Text(
+                  AccountLabels.displayName(l10n, account),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    height: 1.2,
+                    color: account.isActive
+                        ? scheme.onSurface
+                        : scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Inline Chart of Accounts search field matching Customer Search pattern in Sales.
+class AppAccountInlineSearchField extends ConsumerStatefulWidget {
+  const AppAccountInlineSearchField({
+    super.key,
+    required this.onAccountSelected,
+    this.onCancel,
+    this.onBrowseFullTree,
+    this.initialQuery = '',
+    this.hintText,
+    this.autofocus = false,
+    this.postingOnly = true,
+  });
+
+  final ValueChanged<Account> onAccountSelected;
+  final VoidCallback? onCancel;
+  final VoidCallback? onBrowseFullTree;
+  final String initialQuery;
+  final String? hintText;
+  final bool autofocus;
+  final bool postingOnly;
+
+  @override
+  ConsumerState<AppAccountInlineSearchField> createState() =>
+      _AppAccountInlineSearchFieldState();
+}
+
+class _AppAccountInlineSearchFieldState
+    extends ConsumerState<AppAccountInlineSearchField> {
+  static const _searchDebounce = Duration(milliseconds: 200);
+
+  late final TextEditingController _controller;
+  final _focusNode = FocusNode(skipTraversal: true);
+  Timer? _debounceTimer;
+
+  String _searchQuery = '';
+  var _showResults = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialQuery);
+    _searchQuery = normalizeDigitsToWestern(widget.initialQuery).trim();
+    if (widget.autofocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focusNode.requestFocus();
+      });
+    }
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus) {
+        Future.delayed(const Duration(milliseconds: 160), () {
+          if (mounted && !_focusNode.hasFocus) {
+            setState(() => _showResults = false);
+          }
+        });
+      } else {
+        setState(() => _showResults = true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String value) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(_searchDebounce, () {
+      if (!mounted) return;
+      setState(() {
+        _searchQuery = normalizeDigitsToWestern(value).trim();
+        _showResults = true;
+      });
+    });
+  }
+
+  void _select(Account account) {
+    widget.onAccountSelected(account);
+    _controller.text = account.accountCode;
+    setState(() => _showResults = false);
+    _focusNode.unfocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final accountsAsync = ref.watch(allAccountsProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          controller: _controller,
+          focusNode: _focusNode,
+          inputFormatters: const [WesternDigitsInputFormatter()],
+          textInputAction: TextInputAction.search,
+          onChanged: _onChanged,
+          onTap: () => setState(() => _showResults = true),
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: scheme.surface,
+            hintText: widget.hintText ?? l10n.accountSearchHint,
+            hintStyle: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurface.withValues(alpha: 0.45),
+            ),
+            prefixIcon: Icon(
+              Icons.search_rounded,
+              color: scheme.primary,
+            ),
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_controller.text.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.cancel_rounded, size: 18),
+                    onPressed: () {
+                      _controller.clear();
+                      _onChanged('');
+                    },
+                  ),
+                if (widget.onCancel != null)
+                  IconButton(
+                    tooltip: MaterialLocalizations.of(context).cancelButtonLabel,
+                    onPressed: widget.onCancel,
+                    icon: Icon(
+                      Icons.close_rounded,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              borderSide: BorderSide(
+                color: scheme.outlineVariant.withValues(alpha: 0.4),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              borderSide: BorderSide(
+                color: scheme.primary,
+                width: 1.4,
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: 12,
+            ),
+          ),
+        ),
+        if (_showResults) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Material(
+            color: scheme.surface,
+            elevation: 3,
+            shadowColor: scheme.shadow.withValues(alpha: 0.16),
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            clipBehavior: Clip.antiAlias,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 230),
+              child: accountsAsync.when(
+                loading: () => const Padding(
+                  padding: EdgeInsets.all(AppSpacing.md),
+                  child: Center(
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                ),
+                error: (err, _) => Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Text(
+                    l10n.accountSearchNotAvailable,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.error,
+                    ),
+                  ),
+                ),
+                data: (allAccounts) {
+                  final queryTrimmed = _searchQuery.trim();
+                  final isQueryEmpty = queryTrimmed.isEmpty;
+                  final isQueryTooShort = !isQueryEmpty && queryTrimmed.length < 2;
+
+                  final filtered = (isQueryEmpty || isQueryTooShort)
+                      ? <Account>[]
+                      : allAccounts.where((account) {
+                          if (account.isDeleted) return false;
+                          if (widget.postingOnly && !account.isPostingAccount) {
+                            return false;
+                          }
+                          final codeMatch = account.accountCode
+                              .toLowerCase()
+                              .contains(queryTrimmed.toLowerCase());
+                          final nameMatch = AccountLabels.matchesQuery(
+                            l10n,
+                            account,
+                            queryTrimmed,
+                          );
+                          return codeMatch || nameMatch;
+                        }).toList();
+
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (widget.onBrowseFullTree != null)
+                        InkWell(
+                          onTap: () {
+                            setState(() => _showResults = false);
+                            widget.onBrowseFullTree!();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: 10,
+                            ),
+                            color: scheme.primary.withValues(alpha: 0.08),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.account_tree_rounded,
+                                  size: 16,
+                                  color: scheme.primary,
+                                ),
+                                const SizedBox(width: AppSpacing.xs),
+                                Expanded(
+                                  child: Text(
+                                    l10n.accountInlineBrowseTree,
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      color: scheme.primary,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right,
+                                  size: 16,
+                                  color: scheme.primary,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      if (filtered.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Text(
+                            isQueryEmpty
+                                ? l10n.accountSearchHint
+                                : (isQueryTooShort
+                                    ? 'أدخل حرفين على الأقل للبحث'
+                                    : l10n.accountSearchNoResultsSubtitle),
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        )
+                      else
+                        Flexible(
+                          child: ListView.separated(
+                            shrinkWrap: true,
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, _) => Divider(
+                              height: 1,
+                              color: scheme.outlineVariant.withValues(alpha: 0.35),
+                            ),
+                            itemBuilder: (context, index) {
+                              final account = filtered[index];
+                              final typeColor = accountTypeColor(
+                                scheme,
+                                account.accountType,
+                              );
+
+                              return InkWell(
+                                onTap: () => _select(account),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.md,
+                                    vertical: AppSpacing.sm + 2,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: typeColor.withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(AppRadius.xs),
+                                            ),
+                                            child: Text(
+                                              account.accountCode,
+                                              style: theme.textTheme.labelMedium
+                                                  ?.copyWith(
+                                                color: typeColor,
+                                                fontWeight: FontWeight.w900,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        AccountLabels.displayName(
+                                          l10n,
+                                          account,
+                                        ),
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}

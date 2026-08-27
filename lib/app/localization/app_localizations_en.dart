@@ -5257,13 +5257,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncStatusSynced => 'Synced';
 
   @override
-  String get syncStatusSyncing => 'Syncing…';
+  String get syncStatusSyncing => 'Syncing';
 
   @override
   String get syncStatusPending => 'Pending';
 
   @override
-  String get syncStatusFailed => 'Sync failed';
+  String get syncStatusFailed => 'Conflict/Failed';
 
   @override
   String get syncStatusConflict => 'Conflict';
@@ -6480,4 +6480,230 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get selectModuleReportsPrompt =>
       'Select a module to view its available unit reports';
+
+  @override
+  String get accountSearchTitle => 'Chart of Accounts Search';
+
+  @override
+  String get accountSearchHint => 'Search by account code or name...';
+
+  @override
+  String get accountPostingOnlyToggle => 'Posting Accounts Only';
+
+  @override
+  String get accountTypeFilterAll => 'All';
+
+  @override
+  String get accountSearchEmptyTitle => 'No matching accounts';
+
+  @override
+  String get accountSearchEmptyMessage =>
+      'Try searching with a different account code or title.';
+
+  @override
+  String get accountSearchNotAvailable =>
+      'Chart of Accounts Module is not active.';
+
+  @override
+  String get accountInlineBrowseTree => 'Browse full Chart of Accounts tree...';
+
+  @override
+  String get accountSelectCurrencyTitle =>
+      'Select Currency (Chart of Accounts)';
+
+  @override
+  String get accountBaseCurrencyNotice => 'Base System Currency';
+
+  @override
+  String accountExchangeRateLabel(String rate) {
+    return 'Exchange rate: $rate';
+  }
+
+  @override
+  String get stockIssuesTitle => 'Stock Issues';
+
+  @override
+  String get stockIssuesNewTooltip => 'Add new stock issue';
+
+  @override
+  String get stockIssuesNewButton => 'New Stock Issue';
+
+  @override
+  String get stockIssuesEmptyTitle => 'No stock issues found';
+
+  @override
+  String get stockIssuesEmptyAction => 'Add First Stock Issue';
+
+  @override
+  String get stockIssuesDeleteTitle => 'Delete Stock Issue';
+
+  @override
+  String get stockIssuesDeleteConfirm =>
+      'Are you sure you want to delete this stock issue? Quantities will be returned to inventory automatically.';
+
+  @override
+  String get stockReceiptsTitle => 'Stock Receipts';
+
+  @override
+  String get stockReceiptsNewTooltip => 'Add new stock receipt';
+
+  @override
+  String get stockReceiptsNewButton => 'New Stock Receipt';
+
+  @override
+  String get stockReceiptsEmptyTitle => 'No stock receipts found';
+
+  @override
+  String get stockReceiptsEmptyAction => 'Add First Stock Receipt';
+
+  @override
+  String get stockReceiptsDeleteTitle => 'Delete Stock Receipt';
+
+  @override
+  String get stockReceiptsDeleteConfirm =>
+      'Are you sure you want to delete this stock receipt? Quantities will be deducted from inventory automatically.';
+
+  @override
+  String get stockReceiptNewTitle => 'New Stock Receipt';
+
+  @override
+  String get stockReceiptEditTitle => 'Edit Stock Receipt';
+
+  @override
+  String get stockReceiptNumberLabel => 'Receipt Number *';
+
+  @override
+  String get stockReceiptSupplierLabel => 'Supplier (Optional)';
+
+  @override
+  String get stockReceiptDateLabel => 'Receipt Date';
+
+  @override
+  String stockReceiptItemsHeader(int count) {
+    return 'Receipt Lines ($count)';
+  }
+
+  @override
+  String get stockReceiptAddLineButton => 'Add Line';
+
+  @override
+  String get stockReceiptEmptyLines =>
+      'No items added yet. Click \'Add Line\' to select.';
+
+  @override
+  String get stockReceiptSaveButton => 'Save Receipt & Update Stock';
+
+  @override
+  String get stockReceiptSelectProductTitle => 'Select Product for Receipt';
+
+  @override
+  String get stockReceiptProductLabel => 'Product';
+
+  @override
+  String get stockReceiptQuantityLabel => 'Received Quantity';
+
+  @override
+  String get stockReceiptUnitCostLabel => 'Unit Cost';
+
+  @override
+  String get stockReceiptAddToReceipt => 'Add to Receipt';
+
+  @override
+  String get stockReceiptNoProductsMessage =>
+      'No products in catalog. Please add products first.';
+
+  @override
+  String get stockReceiptAddAtLeastOneLine =>
+      'Please add at least one item line.';
+
+  @override
+  String get stockReceiptSaveSuccess =>
+      'Stock receipt saved and inventory updated successfully.';
+
+  @override
+  String get stockIssueNewTitle => 'New Stock Issue';
+
+  @override
+  String get stockIssueEditTitle => 'Edit Stock Issue';
+
+  @override
+  String get stockIssueNumberLabel => 'Issue Number';
+
+  @override
+  String get stockIssueVoucherBookLabel => 'Voucher Book';
+
+  @override
+  String get stockIssueDateLabel => 'Issue Date';
+
+  @override
+  String get stockIssueAccountLabel => 'Account';
+
+  @override
+  String get stockIssueWarehouseLabel => 'Warehouse / Store';
+
+  @override
+  String get stockIssueNotesLabel => 'Notes & Statement';
+
+  @override
+  String get stockIssueItemsHeader => 'Items & Costs';
+
+  @override
+  String get stockIssueAddLineButton => 'Add New Item';
+
+  @override
+  String get stockIssueSelectProductPrompt => 'Select an item from catalog...';
+
+  @override
+  String get stockIssueEmptyItemsMessage =>
+      'No items added yet in this stock issue';
+
+  @override
+  String get stockIssueSaveButton => 'Save Stock Issue';
+
+  @override
+  String get stockIssuePostButton => 'Save & Post Cost';
+
+  @override
+  String get stockIssueUnsavedChangesTitle => 'Warning Before Leaving';
+
+  @override
+  String get stockIssueUnsavedChangesMessage =>
+      'There are unsaved changes on the stock issue. Do you want to leave and discard changes?';
+
+  @override
+  String get stockIssueDiscardChanges => 'Discard & Leave';
+
+  @override
+  String get stockIssueLoadingMessage => 'Loading stock issue...';
+
+  @override
+  String get stockIssueSavingMessage => 'Saving stock issue...';
+
+  @override
+  String get stockIssueSaveSuccess => 'Stock issue saved successfully';
+
+  @override
+  String get stockIssueSaveFailed => 'Failed to save stock issue';
+
+  @override
+  String get stockIssueAddAtLeastOneLine => 'Please add at least one item line';
+
+  @override
+  String get accountSearchDisabledTitle =>
+      'Accounting module and chart of accounts are currently unavailable or disabled';
+
+  @override
+  String get accountSearchDisabledSubtitle =>
+      'Please ensure the Accounting module is enabled in system settings';
+
+  @override
+  String get accountSearchEmptyTreeTitle => 'Chart of accounts is empty';
+
+  @override
+  String get accountSearchEmptyTreeSubtitle =>
+      'The default chart of accounts has not been created or generated yet';
+
+  @override
+  String get accountSearchNoResultsSubtitle =>
+      'No accounts matched your search criteria';
 }

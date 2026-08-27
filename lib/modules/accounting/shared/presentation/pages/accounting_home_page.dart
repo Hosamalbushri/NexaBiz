@@ -6,6 +6,7 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'accounting_routes.dart';
 
@@ -24,9 +25,10 @@ class AccountingHomePage extends ConsumerWidget {
         title: l10n.moduleAccounting,
         showBackButton: true,
       ),
-      body: ListView(
-        padding: AppConstants.pageInsets(context),
-        children: [
+      body: AppContentConstraint(
+        child: ListView(
+          padding: AppConstants.pageInsets(context),
+          children: [
             Text(
               l10n.servicesTitle,
               style: theme.textTheme.titleMedium?.copyWith(
@@ -149,6 +151,7 @@ class AccountingHomePage extends ConsumerWidget {
                 ),
           ],
         ),
+      ),
     );
   }
 }
@@ -169,6 +172,10 @@ class _ServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isCompactLandscape = MediaQuery.of(context).size.height < 500;
+    final boxSize = isCompactLandscape ? 40.0 : 52.0;
+    final iconSize = isCompactLandscape ? 22.0 : 28.0;
+
     return Material(
       color: theme.colorScheme.surface,
       elevation: 0,
@@ -185,17 +192,17 @@ class _ServiceCard extends StatelessWidget {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(isCompactLandscape ? AppSpacing.sm : AppSpacing.md),
             child: Row(
               children: [
                 Container(
-                  width: 52,
-                  height: 52,
+                  width: boxSize,
+                  height: boxSize,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
-                  child: Icon(icon, color: theme.colorScheme.primary, size: 28),
+                  child: Icon(icon, color: theme.colorScheme.primary, size: iconSize),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
@@ -204,16 +211,22 @@ class _ServiceCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: theme.textTheme.titleMedium?.copyWith(
+                        style: (isCompactLandscape
+                                ? theme.textTheme.titleSmall
+                                : theme.textTheme.titleMedium)
+                            ?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         subtitle,
+                        maxLines: isCompactLandscape ? 1 : 2,
+                        overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                           height: 1.35,
+                          fontSize: isCompactLandscape ? 12 : null,
                         ),
                       ),
                     ],

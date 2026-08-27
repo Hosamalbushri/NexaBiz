@@ -35,6 +35,13 @@ class InventoryRoutes {
 
   static String productsEdit(int id) => '/inventory/products/$id/edit';
 
+  /// Stock Movements service (receipts & issues)
+  static const String stockMovements = '/inventory/stock-movements';
+  static const String stockReceipts = '/inventory/stock-movements/receipts';
+  static const String stockReceiptsNew = '/inventory/stock-movements/receipts/new';
+  static const String stockIssues = '/inventory/stock-movements/issues';
+  static const String stockIssuesNew = '/inventory/stock-movements/issues/new';
+
   static void goRoot(BuildContext context) => context.go(root);
 
   static void goStockCount(BuildContext context) => context.go(stockCount);
@@ -68,4 +75,42 @@ class InventoryRoutes {
 
   static void pushProductsBarcode(BuildContext context) =>
       context.push(productsBarcode);
+
+  static void pushStockReceipts(BuildContext context) =>
+      context.push(stockReceipts);
+
+  static void pushStockReceiptsNew(BuildContext context) =>
+      context.push(stockReceiptsNew);
+
+  static void pushStockReceiptsEdit(BuildContext context, String id) =>
+      context.push('/inventory/stock-movements/receipts/$id/edit');
+
+  static void pushStockIssues(BuildContext context) =>
+      context.push(stockIssues);
+
+  static void pushStockIssuesNew(BuildContext context) =>
+      context.push(stockIssuesNew);
+
+  static void pushStockIssuesEdit(BuildContext context, String id) =>
+      context.push('/inventory/stock-movements/issues/$id/edit');
+
+  /// Multi-Warehouse & Inventory Cost Valuation Settings
+  static const String warehousesSettings = '/inventory/warehouses/settings';
+  static const String costValuationSettings = '/inventory/cost-valuation/settings';
+
+  /// Inter-Warehouse Stock Transfers
+  static const String stockTransfers = '/inventory/stock-transfers';
+  static const String stockTransfersNew = '/inventory/stock-transfers/new';
+
+  static void pushWarehousesSettings(BuildContext context) =>
+      context.push(warehousesSettings);
+
+  static void pushCostValuationSettings(BuildContext context) =>
+      context.push(costValuationSettings);
+
+  static void pushStockTransfers(BuildContext context) =>
+      context.push(stockTransfers);
+
+  static void pushStockTransfersNew(BuildContext context) =>
+      context.push(stockTransfersNew);
 }

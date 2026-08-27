@@ -6,6 +6,7 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
 import 'package:stock_count/modules/sales/permissions/sales_permission_package.dart';
@@ -26,9 +27,10 @@ class SalesHomePage extends ConsumerWidget {
         title: l10n.moduleSales,
         showBackButton: true,
       ),
-      body: ListView(
-        padding: AppConstants.pageInsets(context),
-        children: [
+      body: AppContentConstraint(
+        child: ListView(
+          padding: AppConstants.pageInsets(context),
+          children: [
             Text(
               l10n.servicesTitle,
               style: theme.textTheme.titleMedium?.copyWith(
@@ -72,7 +74,8 @@ class SalesHomePage extends ConsumerWidget {
                     duration: 280.ms,
                   ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -28,6 +28,22 @@ List<ModuleSettingsCategoryDefinition> buildInventorySettingsCategories(String m
           titleBuilder: (l10n) => l10n.stockCountSettingsTitle,
           subtitleBuilder: (l10n) => l10n.stockCountSettingsSubtitle,
         ),
+        ModuleSettingsItemDefinition(
+          id: 'inventory_warehouses_settings',
+          moduleId: moduleId,
+          icon: Icons.warehouse_outlined,
+          path: InventoryRoutes.warehousesSettings,
+          titleBuilder: (l10n) => l10n.localeName == 'ar' ? 'إدارة المستودعات' : 'Warehouses Management',
+          subtitleBuilder: (l10n) => l10n.localeName == 'ar' ? 'تهيئة المستودعات الرئيسية والفروع وتحديد المستودع الافتراضي' : 'Manage main warehouses, branches, and set default location',
+        ),
+        ModuleSettingsItemDefinition(
+          id: 'inventory_cost_valuation_settings',
+          moduleId: moduleId,
+          icon: Icons.monetization_on_outlined,
+          path: InventoryRoutes.costValuationSettings,
+          titleBuilder: (l10n) => l10n.localeName == 'ar' ? 'تقييم تكلفة المخزون' : 'Inventory Cost Valuation',
+          subtitleBuilder: (l10n) => l10n.localeName == 'ar' ? 'اختيار طريقة احتساب التكلفة (FIFO, LIFO, المتوسط المرجح)' : 'Select valuation method (FIFO, LIFO, Weighted Average)',
+        ),
       ],
     ),
   ];

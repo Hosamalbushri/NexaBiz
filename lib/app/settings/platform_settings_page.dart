@@ -11,6 +11,7 @@ import '../../core/di/app_providers.dart';
 import '../../core/modules/module_providers.dart';
 import '../../core/modules/module_settings_definition.dart';
 import '../../core/widgets/app_dialog.dart';
+import '../../core/widgets/app_responsive.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/custom_app_bar.dart';
 import '../../core/widgets/empty_state_widget.dart';
@@ -84,32 +85,32 @@ class _PlatformSettingsBody extends ConsumerWidget {
     final repository = ref.read(settingsRepositoryProvider);
     final registry = ref.watch(moduleRegistryProvider);
     final categories = registry.allSettingsCategories;
-
     final pageInsets = AppConstants.pageInsets(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: EdgeInsets.only(
-            left: pageInsets.left,
-            right: pageInsets.right,
-            top: pageInsets.top,
-            bottom: AppSpacing.sm,
-          ),
-          child: _CompanyHeaderCard(
-            profile: companyAsync.asData?.value,
-            onTap: () => context.push(AppRoutes.settingsSetup),
-          ),
-        ),
-        Expanded(
-          child: ListView(
+    return AppContentConstraint(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
             padding: EdgeInsets.only(
               left: pageInsets.left,
               right: pageInsets.right,
-              bottom: pageInsets.bottom,
+              top: pageInsets.top,
+              bottom: AppSpacing.sm,
             ),
-            children: [
+            child: _CompanyHeaderCard(
+              profile: companyAsync.asData?.value,
+              onTap: () => context.push(AppRoutes.settingsSetup),
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.only(
+                left: pageInsets.left,
+                right: pageInsets.right,
+                bottom: pageInsets.bottom,
+              ),
+              children: [
               SettingsExpandableSection(
           icon: Icons.tune_rounded,
           title: l10n.settingsGeneralSection,
@@ -313,12 +314,13 @@ class _PlatformSettingsBody extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xxl),
-      ],
-    ),
-  ),
-],
-);
+                const SizedBox(height: AppSpacing.xxl),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _saveTheme(

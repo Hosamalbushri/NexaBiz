@@ -67,5 +67,15 @@ class DefaultVoucherBooks {
       nameEn: 'Main journal book',
       nameAr: 'دفتر القيود الرئيسي',
     ),
+    DefaultVoucherBookSeed(
+      bookType: VoucherBookType.stockReceipts,
+      nameEn: 'Main stock receipts book',
+      nameAr: 'دفتر إيصالات الاستلام الرئيسي',
+    ),
+    DefaultVoucherBookSeed(
+      bookType: VoucherBookType.stockIssues,
+      nameEn: 'Main stock issues book',
+      nameAr: 'دفتر أوامر الصرف الرئيسي',
+    ),
   ];
 }

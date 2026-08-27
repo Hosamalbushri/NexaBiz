@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/modules/app_module.dart';
 import '../../../core/modules/module_providers.dart';
 import '../../../core/widgets/app_empty_state.dart';
+import '../../../core/widgets/app_responsive.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../constants/app_constants.dart';
 import '../../localization/app_localizations.dart';
@@ -64,8 +65,9 @@ class PlatformReportsPage extends ConsumerWidget {
                 subtitle: l10n.platformReportsServiceComingSoon,
               ),
             )
-          : ListView(
-              padding: AppConstants.pageInsets(context),
+          : AppContentConstraint(
+              child: ListView(
+                padding: AppConstants.pageInsets(context),
               children: [
                 Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -111,6 +113,7 @@ class PlatformReportsPage extends ConsumerWidget {
                 ),
               ],
             ),
+          ),
     );
   }
 }

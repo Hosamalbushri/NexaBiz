@@ -54,8 +54,12 @@ class _QuickActionsCustomizeSheetState
 
   void _onReorder(int oldIndex, int newIndex) {
     setState(() {
+      var targetIndex = newIndex;
+      if (oldIndex < targetIndex) {
+        targetIndex -= 1;
+      }
       final id = _selectedIds.removeAt(oldIndex);
-      _selectedIds.insert(newIndex, id);
+      _selectedIds.insert(targetIndex, id);
     });
   }
 

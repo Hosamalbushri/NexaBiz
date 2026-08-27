@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import '../pages/inventory_routes.dart';
 
 /// A service offered inside the Inventory module (not a platform AppModule).
 @immutable
@@ -29,6 +28,20 @@ class InventoryServiceDefinition {
 List<InventoryServiceDefinition> inventoryServiceCatalog() {
   return const [
     InventoryServiceDefinition(
+      id: 'stock_receipts',
+      icon: Icons.move_to_inbox_outlined,
+      path: InventoryRoutes.stockReceipts,
+      titleBuilder: _stockReceiptsTitle,
+      subtitleBuilder: _stockReceiptsSubtitle,
+    ),
+    InventoryServiceDefinition(
+      id: 'stock_issues',
+      icon: Icons.outbox_outlined,
+      path: InventoryRoutes.stockIssues,
+      titleBuilder: _stockIssuesTitle,
+      subtitleBuilder: _stockIssuesSubtitle,
+    ),
+    InventoryServiceDefinition(
       id: 'stock_count',
       icon: Icons.fact_check_outlined,
       path: InventoryRoutes.stockCount,
@@ -44,6 +57,12 @@ List<InventoryServiceDefinition> inventoryServiceCatalog() {
     ),
   ];
 }
+
+String _stockReceiptsTitle(AppLocalizations l10n) => 'إيصالات الاستلام';
+String _stockReceiptsSubtitle(AppLocalizations l10n) => 'استلام بضائع وتحديث أصل المخزون';
+
+String _stockIssuesTitle(AppLocalizations l10n) => 'أذونات الصرف';
+String _stockIssuesSubtitle(AppLocalizations l10n) => 'صرف بضائع وتغذية التكلفة والمصروفات';
 
 String _stockCountTitle(AppLocalizations l10n) =>
     l10n.inventoryStockCountService;

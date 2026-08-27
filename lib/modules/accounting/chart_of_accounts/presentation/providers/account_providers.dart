@@ -102,6 +102,14 @@ final accountsProvider = StreamProvider<List<Account>>((ref) async* {
       .call(includeInactive: includeInactive);
 });
 
+/// All accounts in the chart of accounts (including inactive), ensuring full catalog search.
+final allAccountsProvider = StreamProvider<List<Account>>((ref) async* {
+  await ref.watch(ensureDefaultChartUseCaseProvider).call();
+  yield* ref
+      .watch(watchAccountsUseCaseProvider)
+      .call(includeInactive: true);
+});
+
 final accountSearchQueryProvider = StateProvider.autoDispose<String>(
   (ref) => '',
 );

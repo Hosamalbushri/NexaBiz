@@ -8,6 +8,8 @@ import '../../localization/app_localizations.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../../core/auth/presentation/providers/auth_state_core.dart';
+import '../../../core/widgets/app_responsive.dart';
+import '../../theme/app_breakpoints.dart';
 import '../models/quick_action_definition.dart';
 import '../providers/quick_actions_provider.dart';
 import '../quick_action_runner.dart';
@@ -46,40 +48,42 @@ class QuickActionsPanel extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.sm,
-            AppSpacing.md,
-            AppSpacing.sm,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(999),
+        child: AppContentConstraint(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
                   ),
                 ),
-              ),
-              Center(
-                child: Text(
-                  l10n.quickActionsTitle,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                Center(
+                  child: Text(
+                    l10n.quickActionsTitle,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              QuickActionsSheetBody(onClose: onClose),
-            ],
+                const SizedBox(height: AppSpacing.md),
+                QuickActionsSheetBody(onClose: onClose),
+              ],
+            ),
           ),
         ),
       ),
@@ -190,32 +194,42 @@ class QuickActionsSheetBody extends ConsumerWidget {
                   ),
                 ),
               ),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: actions.length + 1,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: AppSpacing.sm,
-                mainAxisSpacing: AppSpacing.sm,
-                childAspectRatio: 0.92,
-              ),
-              itemBuilder: (context, index) {
-                if (index == actions.length) {
-                  return _QuickActionCustomizeTile(
-                    label: l10n.quickActionsCustomize,
-                    onTap: () => _openCustomize(context, ref),
-                  );
-                }
-                final action = actions[index];
-                return _QuickActionTile(
-                  icon: action.icon,
-                  label: action.title(l10n),
-                  onTap: () => runner.run(
-                    sheetContext: context,
-                    action: action,
-                    onClose: () => _dismiss(context),
+            ResponsiveBuilder(
+              builder: (context, constraints, tier) {
+                final columns = switch (tier) {
+                  AppBreakpointTier.compact => 3,
+                  AppBreakpointTier.medium => 4,
+                  AppBreakpointTier.expanded || AppBreakpointTier.wide => 6,
+                };
+
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: actions.length + 1,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: AppSpacing.sm,
+                    mainAxisSpacing: AppSpacing.sm,
+                    childAspectRatio: 0.92,
                   ),
+                  itemBuilder: (context, index) {
+                    if (index == actions.length) {
+                      return _QuickActionCustomizeTile(
+                        label: l10n.quickActionsCustomize,
+                        onTap: () => _openCustomize(context, ref),
+                      );
+                    }
+                    final action = actions[index];
+                    return _QuickActionTile(
+                      icon: action.icon,
+                      label: action.title(l10n),
+                      onTap: () => runner.run(
+                        sheetContext: context,
+                        action: action,
+                        onClose: () => _dismiss(context),
+                      ),
+                    );
+                  },
                 );
               },
             ),
