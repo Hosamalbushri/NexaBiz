@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/sync/app_sync_adapters.dart';
 import '../../app/sync/sync_settings_section.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/module_settings_definition.dart';
+import 'sync.dart';
 import 'sync_module_settings.dart';
 
 /// Sync module — encapsulates offline-first synchronization infrastructure.
@@ -67,4 +70,23 @@ class SyncModule extends AppModule {
 
   @override
   String? description(BuildContext context) => 'مزامنة البيانات السحابية';
+
+  @override
+  List<Override> get providerOverrides => [
+        localDatasetRecordCountersProvider.overrideWith((ref) => [
+              AccountingRecordCounter(ref),
+              InventoryRecordCounter(ref),
+              CustomerRecordCounter(ref),
+              SaleRecordCounter(ref),
+              RpRecordCounter(ref),
+            ]),
+        initialCloudEntityScannersProvider.overrideWith((ref) => [
+              AccountInitialCloudScanner(),
+              CustomerInitialCloudScanner(),
+              ProductInitialCloudScanner(),
+              SaleInitialCloudScanner(),
+              FinancialTransactionInitialCloudScanner(),
+              JournalEntryInitialCloudScanner(),
+            ]),
+      ];
 }

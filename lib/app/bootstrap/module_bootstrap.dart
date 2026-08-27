@@ -2,8 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/modules/module_providers.dart';
 import '../../core/modules/module_registry.dart';
-import '../../modules/sync/sync.dart';
-import '../sync/app_sync_adapters.dart';
 import 'module_bootstrap_manifest.dart';
 
 /// App composition root: reads self-registered business modules from [ModuleRegistry].
@@ -19,20 +17,5 @@ List<Override> moduleRegistryOverrides() {
   return [
     moduleRegistryProvider.overrideWithValue(registry),
     ...registry.allModuleOverrides,
-    localDatasetRecordCountersProvider.overrideWith((ref) => [
-      AccountingRecordCounter(ref),
-      InventoryRecordCounter(ref),
-      CustomerRecordCounter(ref),
-      SaleRecordCounter(ref),
-      RpRecordCounter(ref),
-    ]),
-    initialCloudEntityScannersProvider.overrideWith((ref) => [
-      AccountInitialCloudScanner(),
-      CustomerInitialCloudScanner(),
-      ProductInitialCloudScanner(),
-      SaleInitialCloudScanner(),
-      FinancialTransactionInitialCloudScanner(),
-      JournalEntryInitialCloudScanner(),
-    ]),
   ];
 }
