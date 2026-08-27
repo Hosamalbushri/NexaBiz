@@ -1053,7 +1053,20 @@
   "accountingAccountDetails": "تفاصيل الحساب",
   "accountingSearchHint": "ابحث بالاسم أو الرمز",
   "accountingEmptyTitle": "لا توجد حسابات بعد",
-  "accountingEmptyMessage": "ستظهر الحسابات الافتراضية عند أول فتح، أو أضف حساباتك.",
+  "accountingEmptyMessage": "يمكنك إنشاء دليل الحسابات الافتراضي أو إضافة حساباتك الخاصة.",
+  "accountingChartSeedSuccess": "تم توليد دليل الحسابات الافتراضي بنجاح",
+  "accountingGenerateDefaultChart": "توليد دليل الحسابات الافتراضي",
+  "accountingChartSettingsSubtitle": "إعدادات وإدارة دليل الحسابات الافتراضي",
+  "accountingDefaultChartTitle": "دليل الحسابات الافتراضي",
+  "accountingChartCurrentlyEmpty": "دليل الحسابات فارغ حالياً",
+  "accountingChartCreatedCount": "تم إنشاء دليل الحسابات (إجمالي {count} حساب)",
+  "@accountingChartCreatedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "accountingGenerateChartAction": "توليد الدليل",
+  "accountingRealignChartAction": "إعادة محاذاة الدليل",
   "accountingNoSearchResults": "لا توجد حسابات مطابقة",
   "accountingNoSearchResultsMessage": "جرّب اسماً أو رمزاً مختلفاً.",
   "accountingExpandAll": "توسيع الكل",

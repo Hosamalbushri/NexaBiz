@@ -2641,7 +2641,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountingEmptyMessage =>
-      'Default accounts will appear after first open, or add your own.';
+      'You can generate the default Chart of Accounts or add your own accounts.';
+
+  @override
+  String get accountingChartSeedSuccess =>
+      'Default Chart of Accounts generated successfully';
+
+  @override
+  String get accountingGenerateDefaultChart =>
+      'Generate default Chart of Accounts';
+
+  @override
+  String get accountingChartSettingsSubtitle =>
+      'Settings and management for default Chart of Accounts';
+
+  @override
+  String get accountingDefaultChartTitle => 'Default Chart of Accounts';
+
+  @override
+  String get accountingChartCurrentlyEmpty =>
+      'Chart of Accounts is currently empty';
+
+  @override
+  String accountingChartCreatedCount(int count) {
+    return 'Chart of Accounts created ($count total accounts)';
+  }
+
+  @override
+  String get accountingGenerateChartAction => 'Generate chart';
+
+  @override
+  String get accountingRealignChartAction => 'Re-align chart';
 
   @override
   String get accountingNoSearchResults => 'No matching accounts';

@@ -218,13 +218,13 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
                               if (context.mounted) {
                                 showAppSnackBar(
                                   context,
-                                  message: 'تم توليد دليل الحسابات الافتراضي بنجاح',
+                                  message: l10n.accountingChartSeedSuccess,
                                   isSuccess: true,
                                 );
                               }
                             },
                             icon: const Icon(Icons.account_tree_rounded),
-                            label: const Text('توليد دليل الحسابات الافتراضي'),
+                            label: Text(l10n.accountingGenerateDefaultChart),
                           ),
                         ],
                       ],

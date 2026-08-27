@@ -4835,8 +4835,56 @@ abstract class AppLocalizations {
   /// No description provided for @accountingEmptyMessage.
   ///
   /// In en, this message translates to:
-  /// **'Default accounts will appear after first open, or add your own.'**
+  /// **'You can generate the default Chart of Accounts or add your own accounts.'**
   String get accountingEmptyMessage;
+
+  /// No description provided for @accountingChartSeedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Chart of Accounts generated successfully'**
+  String get accountingChartSeedSuccess;
+
+  /// No description provided for @accountingGenerateDefaultChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate default Chart of Accounts'**
+  String get accountingGenerateDefaultChart;
+
+  /// No description provided for @accountingChartSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings and management for default Chart of Accounts'**
+  String get accountingChartSettingsSubtitle;
+
+  /// No description provided for @accountingDefaultChartTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Chart of Accounts'**
+  String get accountingDefaultChartTitle;
+
+  /// No description provided for @accountingChartCurrentlyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart of Accounts is currently empty'**
+  String get accountingChartCurrentlyEmpty;
+
+  /// No description provided for @accountingChartCreatedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart of Accounts created ({count} total accounts)'**
+  String accountingChartCreatedCount(int count);
+
+  /// No description provided for @accountingGenerateChartAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate chart'**
+  String get accountingGenerateChartAction;
+
+  /// No description provided for @accountingRealignChartAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-align chart'**
+  String get accountingRealignChartAction;
 
   /// No description provided for @accountingNoSearchResults.
   ///

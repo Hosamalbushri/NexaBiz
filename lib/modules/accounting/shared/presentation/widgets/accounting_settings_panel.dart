@@ -24,7 +24,7 @@ class AccountingSettingsPanel extends ConsumerWidget {
       children: [
         SettingsSubSection(
           title: l10n.accountingChartOfAccounts,
-          subtitle: 'إعدادات وإدارة دليل الحسابات الافتراضي',
+          subtitle: l10n.accountingChartSettingsSubtitle,
           child: Consumer(
             builder: (context, ref, _) {
               final accountsAsync = ref.watch(accountsProvider);
@@ -33,11 +33,11 @@ class AccountingSettingsPanel extends ConsumerWidget {
 
               return ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('دليل الحسابات الافتراضي'),
+                title: Text(l10n.accountingDefaultChartTitle),
                 subtitle: Text(
                   isEmpty
-                      ? 'دليل الحسابات فارغ حالياً'
-                      : 'تم إنشاء دليل الحسابات (إجمالي ${accounts.length} حساب)',
+                      ? l10n.accountingChartCurrentlyEmpty
+                      : l10n.accountingChartCreatedCount(accounts.length),
                 ),
                 trailing: ElevatedButton.icon(
                   onPressed: accountsAsync.isLoading
@@ -49,13 +49,17 @@ class AccountingSettingsPanel extends ConsumerWidget {
                           if (context.mounted) {
                             showAppSnackBar(
                               context,
-                              message: 'تم توليد دليل الحسابات الافتراضي بنجاح',
+                              message: l10n.accountingChartSeedSuccess,
                               isSuccess: true,
                             );
                           }
                         },
                   icon: const Icon(Icons.account_tree_outlined),
-                  label: Text(isEmpty ? 'توليد الدليل' : 'إعادة محاذاة الدليل'),
+                  label: Text(
+                    isEmpty
+                        ? l10n.accountingGenerateChartAction
+                        : l10n.accountingRealignChartAction,
+                  ),
                 ),
               );
             },

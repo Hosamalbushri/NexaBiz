@@ -2614,7 +2614,35 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get accountingEmptyMessage =>
-      'ستظهر الحسابات الافتراضية عند أول فتح، أو أضف حساباتك.';
+      'يمكنك إنشاء دليل الحسابات الافتراضي أو إضافة حساباتك الخاصة.';
+
+  @override
+  String get accountingChartSeedSuccess =>
+      'تم توليد دليل الحسابات الافتراضي بنجاح';
+
+  @override
+  String get accountingGenerateDefaultChart => 'توليد دليل الحسابات الافتراضي';
+
+  @override
+  String get accountingChartSettingsSubtitle =>
+      'إعدادات وإدارة دليل الحسابات الافتراضي';
+
+  @override
+  String get accountingDefaultChartTitle => 'دليل الحسابات الافتراضي';
+
+  @override
+  String get accountingChartCurrentlyEmpty => 'دليل الحسابات فارغ حالياً';
+
+  @override
+  String accountingChartCreatedCount(int count) {
+    return 'تم إنشاء دليل الحسابات (إجمالي $count حساب)';
+  }
+
+  @override
+  String get accountingGenerateChartAction => 'توليد الدليل';
+
+  @override
+  String get accountingRealignChartAction => 'إعادة محاذاة الدليل';
 
   @override
   String get accountingNoSearchResults => 'لا توجد حسابات مطابقة';

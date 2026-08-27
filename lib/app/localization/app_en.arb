@@ -1053,7 +1053,20 @@
   "accountingAccountDetails": "Account details",
   "accountingSearchHint": "Search by name or code",
   "accountingEmptyTitle": "No accounts yet",
-  "accountingEmptyMessage": "Default accounts will appear after first open, or add your own.",
+  "accountingEmptyMessage": "You can generate the default Chart of Accounts or add your own accounts.",
+  "accountingChartSeedSuccess": "Default Chart of Accounts generated successfully",
+  "accountingGenerateDefaultChart": "Generate default Chart of Accounts",
+  "accountingChartSettingsSubtitle": "Settings and management for default Chart of Accounts",
+  "accountingDefaultChartTitle": "Default Chart of Accounts",
+  "accountingChartCurrentlyEmpty": "Chart of Accounts is currently empty",
+  "accountingChartCreatedCount": "Chart of Accounts created ({count} total accounts)",
+  "@accountingChartCreatedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "accountingGenerateChartAction": "Generate chart",
+  "accountingRealignChartAction": "Re-align chart",
   "accountingNoSearchResults": "No matching accounts",
   "accountingNoSearchResultsMessage": "Try a different name or account code.",
   "accountingExpandAll": "Expand all",
