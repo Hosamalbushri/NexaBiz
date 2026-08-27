@@ -38,6 +38,9 @@ abstract class AccountRepository {
   /// Ensures default system accounts exist (idempotent).
   Future<void> ensureDefaultChartSeeded();
 
+  /// Manually seeds default system Chart of Accounts on demand.
+  Future<void> seedDefaultChart();
+
   Future<List<Account>> getByType(
     AccountType type, {
     bool includeInactive = false,

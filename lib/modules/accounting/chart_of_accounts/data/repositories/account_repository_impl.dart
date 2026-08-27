@@ -595,15 +595,7 @@ class AccountRepositoryImpl implements AccountRepository {
     }
 
     final existing = await (_db.select(_db.accounts)..where(_scoped)..limit(1)).get();
-    if (existing.isEmpty) {
-      final preferRemote = await settingsRepo.loadChartBootstrapPreferRemote();
-      final suppressFn = await _shouldSuppressLocalChartSeed?.call() ?? false;
-      if (preferRemote || suppressFn || deviceInitRecord.mode == DeviceInitializationMode.server) {
-        // Joining device: wait for background pull — do not create a local CoA.
-        return;
-      }
-      await _seedDefaultChart();
-    } else {
+    if (existing.isNotEmpty) {
       await _alignSystemAccountCodes();
       await _alignSystemAccountFlags();
       await _insertMissingSystemAccounts();
@@ -612,7 +604,8 @@ class AccountRepositoryImpl implements AccountRepository {
     }
   }
 
-  Future<void> _seedDefaultChart() async {
+  @override
+  Future<void> seedDefaultChart() async {
     final keyToUuid = <String, String>{};
     final keyToLevel = <String, int>{};
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;

@@ -6,6 +6,7 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
 import 'package:stock_count/app/settings/widgets/settings_chrome.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
 
 /// Accounting module settings bundle (embedded in the Settings module hub).
@@ -21,6 +22,46 @@ class AccountingSettingsPanel extends ConsumerWidget {
 
     return Column(
       children: [
+        SettingsSubSection(
+          title: l10n.accountingChartOfAccounts,
+          subtitle: 'إعدادات وإدارة دليل الحسابات الافتراضي',
+          child: Consumer(
+            builder: (context, ref, _) {
+              final accountsAsync = ref.watch(accountsProvider);
+              final accounts = accountsAsync.valueOrNull ?? const [];
+              final isEmpty = accounts.isEmpty;
+
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('دليل الحسابات الافتراضي'),
+                subtitle: Text(
+                  isEmpty
+                      ? 'دليل الحسابات فارغ حالياً'
+                      : 'تم إنشاء دليل الحسابات (إجمالي ${accounts.length} حساب)',
+                ),
+                trailing: ElevatedButton.icon(
+                  onPressed: accountsAsync.isLoading
+                      ? null
+                      : () async {
+                          final repo = ref.read(accountRepositoryProvider);
+                          await repo.seedDefaultChart();
+                          ref.invalidate(accountsProvider);
+                          if (context.mounted) {
+                            showAppSnackBar(
+                              context,
+                              message: 'تم توليد دليل الحسابات الافتراضي بنجاح',
+                              isSuccess: true,
+                            );
+                          }
+                        },
+                  icon: const Icon(Icons.account_tree_outlined),
+                  label: Text(isEmpty ? 'توليد الدليل' : 'إعادة محاذاة الدليل'),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
         SettingsSubSection(
           title: l10n.accountingFiscalClosedSectionTitle,
           subtitle:

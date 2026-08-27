@@ -8,6 +8,7 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
+import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/models/account_tree_node.dart';
 import '../../domain/services/account_labels.dart';
@@ -194,14 +195,39 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
                 ),
                 data: (roots) {
                   if (roots.isEmpty) {
-                    return AppEmptyState(
-                      title: query.trim().isEmpty
-                          ? l10n.accountingEmptyTitle
-                          : l10n.accountingNoSearchResults,
-                      subtitle: query.trim().isEmpty
-                          ? l10n.accountingEmptyMessage
-                          : l10n.accountingNoSearchResultsMessage,
-                      icon: Icons.account_tree_outlined,
+                    final isSearchEmpty = query.trim().isEmpty;
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AppEmptyState(
+                          title: isSearchEmpty
+                              ? l10n.accountingEmptyTitle
+                              : l10n.accountingNoSearchResults,
+                          subtitle: isSearchEmpty
+                              ? l10n.accountingEmptyMessage
+                              : l10n.accountingNoSearchResultsMessage,
+                          icon: Icons.account_tree_outlined,
+                        ),
+                        if (isSearchEmpty) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              final repo = ref.read(accountRepositoryProvider);
+                              await repo.seedDefaultChart();
+                              ref.invalidate(accountsProvider);
+                              if (context.mounted) {
+                                showAppSnackBar(
+                                  context,
+                                  message: 'تم توليد دليل الحسابات الافتراضي بنجاح',
+                                  isSuccess: true,
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.account_tree_rounded),
+                            label: const Text('توليد دليل الحسابات الافتراضي'),
+                          ),
+                        ],
+                      ],
                     );
                   }
                   return AccountTree(
