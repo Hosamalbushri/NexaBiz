@@ -83,7 +83,7 @@ class SystemInitializationCoordinator {
   }
 
   /// Runs the seed data step. If [seedDefaults] is true, populates default chart of accounts.
-  Future<SetupProgress> runSeedDataStep({bool seedDefaults = true}) async {
+  Future<SetupProgress> runSeedDataStep({bool seedDefaults = false}) async {
     return runStep(SetupStepId.seedData, () async {
       if (seedDefaults) {
         await _seedPort.ensureLocalDefaults();
@@ -93,7 +93,7 @@ class SystemInitializationCoordinator {
 
   /// Runs the local seed step via [SystemSetupSeedPort].
   Future<SetupProgress> runSeedLocal() {
-    return runSeedDataStep(seedDefaults: true);
+    return runSeedDataStep(seedDefaults: false);
   }
 
   /// Runs Chart of Accounts bootstrap by pulling from the remote company.

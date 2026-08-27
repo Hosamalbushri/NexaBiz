@@ -893,7 +893,7 @@ class _SeedDataStep extends ConsumerStatefulWidget {
 }
 
 class _SeedDataStepState extends ConsumerState<_SeedDataStep> {
-  bool _seedOption = true;
+  bool _seedOption = false;
 
   @override
   Widget build(BuildContext context) {

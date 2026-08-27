@@ -27,8 +27,6 @@ class AccountingSystemSetupSeedAdapter implements SystemSetupSeedPort {
   @override
   Future<void> ensureLocalDefaults() async {
     await _settings.saveChartBootstrapPreferRemote(false);
-    await _accounts.ensureDefaultChartSeeded();
-    await _voucherBooks.ensureDefaultSections();
   }
 
   @override
@@ -38,7 +36,6 @@ class AccountingSystemSetupSeedAdapter implements SystemSetupSeedPort {
     }
 
     await _settings.saveChartBootstrapPreferRemote(true);
-    await _voucherBooks.ensureDefaultSections();
 
     try {
       final result = await _syncManager.syncNow(
@@ -56,14 +53,8 @@ class AccountingSystemSetupSeedAdapter implements SystemSetupSeedPort {
       }
     } catch (e) {
       if (e is SystemSetupSeedException) rethrow;
-      // Timeout or network error — fallback to local seeding below.
     }
 
-    final accounts = await _accounts.getAll(includeInactive: true);
-    if (accounts.isEmpty) {
-      // Fallback: seed local default chart so the user is never blocked or stuck
-      await _accounts.ensureDefaultChartSeeded();
-    }
     await _settings.saveChartBootstrapPreferRemote(false);
   }
 }

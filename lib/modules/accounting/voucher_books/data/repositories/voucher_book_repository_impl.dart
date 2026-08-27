@@ -295,50 +295,6 @@ class VoucherBookRepositoryImpl implements VoucherBookRepository {
         ),
       );
     }
-
-    // Seed one default leaf book per kind when that kind has none yet.
-    refreshed = await getAll();
-    final leavesBySectionAndType = <String, Set<VoucherBookType>>{};
-    for (final book in refreshed) {
-      if (book.isGroup) {
-        continue;
-      }
-      final parent = book.parentId;
-      if (parent == null || parent.isEmpty) {
-        continue;
-      }
-      (leavesBySectionAndType[parent] ??= {}).add(book.bookType);
-    }
-
-    for (final seed in DefaultVoucherBooks.seeds) {
-      final sectionUuid = groupUuidBySection[seed.bookType.section];
-      if (sectionUuid == null) {
-        continue;
-      }
-      final existingKinds = leavesBySectionAndType[sectionUuid] ?? const {};
-      if (existingKinds.contains(seed.bookType)) {
-        continue;
-      }
-      await _db
-          .into(_db.voucherBooks)
-          .insert(
-            VoucherBooksCompanion.insert(
-              uuid: generateUuidV4(),
-              parentId: Value(sectionUuid),
-              name: seed.nameAr,
-              bookType: seed.bookType.storageValue,
-              isGroup: const Value(false),
-              nextNumber: Value(seed.currentNumber),
-              endNumber: Value(seed.endNumber),
-              isActive: const Value(true),
-              notes: Value(seed.nameEn),
-              createdAt: nowMs,
-              updatedAt: nowMs,
-              companyId: Value(_currentCompanyId),
-            ),
-          );
-      (leavesBySectionAndType[sectionUuid] ??= {}).add(seed.bookType);
-    }
   }
 
   @override
