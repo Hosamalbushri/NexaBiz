@@ -303,28 +303,48 @@ class _AppShellState extends ConsumerState<AppShell>
       return Scaffold(
           body: Row(
             children: [
-              NavigationRail(
-                selectedIndex: railIndex,
-                onDestinationSelected: (i) => _onSelect(context, i),
-                labelType: NavigationRailLabelType.all,
-                leading: Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                  child: FloatingActionButton(
-                    key: kQuickActionsNavButtonKey,
-                    mini: true,
-                    tooltip: l10n.quickActionsTitle,
-                    onPressed: _toggleQuickActions,
-                    child: _animatedQuickActionIcon(mini: true),
-                  ),
-                ),
-                destinations: [
-                  for (final item in items)
-                    NavigationRailDestination(
-                      icon: Icon(item.icon),
-                      selectedIcon: Icon(item.selectedIcon),
-                      label: Text(item.label(l10n)),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isShortScreen = constraints.maxHeight < 480;
+                  final labelType = isShortScreen
+                      ? NavigationRailLabelType.selected
+                      : NavigationRailLabelType.all;
+
+                  return SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: IntrinsicHeight(
+                        child: NavigationRail(
+                          selectedIndex: railIndex,
+                          onDestinationSelected: (i) => _onSelect(context, i),
+                          labelType: labelType,
+                          leading: Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.md,
+                            ),
+                            child: FloatingActionButton(
+                              key: kQuickActionsNavButtonKey,
+                              mini: true,
+                              tooltip: l10n.quickActionsTitle,
+                              onPressed: _toggleQuickActions,
+                              child: _animatedQuickActionIcon(mini: true),
+                            ),
+                          ),
+                          destinations: [
+                            for (final item in items)
+                              NavigationRailDestination(
+                                icon: Icon(item.icon),
+                                selectedIcon: Icon(item.selectedIcon),
+                                label: Text(item.label(l10n)),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
-                ],
+                  );
+                },
               ),
               const VerticalDivider(width: 1),
               Expanded(
