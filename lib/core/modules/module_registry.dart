@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../permissions/permission_defs.dart';
@@ -120,6 +121,14 @@ class ModuleRegistry {
     return [
       for (final module in _modules)
         if (module.isEnabled) ...module.routes,
+    ];
+  }
+
+  /// Flat list of Riverpod provider overrides contributed by enabled modules.
+  List<Override> get allModuleOverrides {
+    return [
+      for (final module in _modules)
+        if (module.isEnabled) ...module.providerOverrides,
     ];
   }
 

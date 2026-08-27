@@ -1,11 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
+import '../../app/presentation/providers/dashboard_services_provider.dart';
+import '../../app/reports/account_statement_report_data_adapter.dart';
+import '../../app/reports/journal_book_report_data_adapter.dart';
+import '../../app/reports/rp_report_data_adapter.dart';
+import '../../app/reports/sales_period_report_data_adapter.dart';
+import '../../app/reports/trial_balance_report_data_adapter.dart';
+import '../../app/settings/settings_repository.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
+import '../../core/modules/report_category_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
+import '../accounting/chart_of_accounts/presentation/providers/account_providers.dart';
+import '../accounting/journals/presentation/providers/journal_providers.dart';
+import '../accounting/shared/presentation/providers/currency_rate_providers.dart';
+import '../receipts_payments/transactions/presentation/providers/rp_providers.dart';
+import '../sales/invoices/presentation/providers/sale_providers.dart';
 import 'financial_reports/presentation/pages/account_statement_report_page.dart';
 import 'financial_reports/presentation/pages/journal_book_report_page.dart';
 import 'financial_reports/presentation/pages/trial_balance_report_page.dart';
@@ -16,8 +30,7 @@ import 'shared/domain/services/rp_report_data_port.dart';
 import 'shared/presentation/pages/report_pdf_preview_page.dart';
 import 'shared/presentation/pages/reports_home_page.dart';
 import 'shared/presentation/pages/reports_routes.dart';
-
-import '../../core/modules/report_category_definition.dart';
+import 'shared/presentation/providers/reports_providers.dart';
 
 /// Platform reports module — generic PDF catalog, preview, print/share.
 ///
@@ -338,4 +351,44 @@ class ReportsModule extends AppModule {
       ],
     ),
   ];
+
+  @override
+  List<Override> get providerOverrides => [
+        salesPeriodReportDataPortProvider.overrideWith((ref) {
+          return SalesPeriodReportDataAdapter(
+            ref.watch(saleRepositoryProvider),
+          );
+        }),
+        accountStatementReportDataPortProvider.overrideWith((ref) {
+          return AccountStatementReportDataAdapter(
+            accounts: ref.watch(accountRepositoryProvider),
+            currencyRates: ref.watch(currencyRateRepositoryProvider),
+            journals: ref.watch(journalRepositoryProvider),
+            loadCompanyProfile: () =>
+                ref.read(settingsRepositoryProvider).loadCompanyProfile(),
+            loadSalesForAccount: (accountUuid) =>
+                ref.read(saleRepositoryProvider).listByAccountLink(accountUuid),
+            ledger: ref.watch(saleLedgerPostingPortProvider),
+          );
+        }),
+        trialBalanceReportDataPortProvider.overrideWith((ref) {
+          return TrialBalanceReportDataAdapter(
+            journals: ref.watch(journalRepositoryProvider),
+            loadCompanyProfile: () =>
+                ref.read(settingsRepositoryProvider).loadCompanyProfile(),
+          );
+        }),
+        journalBookReportDataPortProvider.overrideWith((ref) {
+          return JournalBookReportDataAdapter(
+            journals: ref.watch(journalRepositoryProvider),
+            loadCompanyProfile: () =>
+                ref.read(settingsRepositoryProvider).loadCompanyProfile(),
+          );
+        }),
+        rpReportDataPortProvider.overrideWith((ref) {
+          return RpReportDataAdapter(
+            ref.watch(financialTransactionRepositoryProvider),
+          );
+        }),
+      ];
 }

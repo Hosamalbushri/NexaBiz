@@ -38,10 +38,15 @@
      
      @override
      int get sortOrder => 60; // الترتيب في العرض
+
+     @override
+     List<Override> get providerOverrides => [
+       myModuleProviderPort.overrideWith((ref) => MyModuleAdapter()),
+     ];
    }
    ```
 3. **التسجيل في المانفيست `module_bootstrap_manifest.dart`**:
-   ملف `lib/app/bootstrap/module_bootstrap.dart` هو **ملف للقراءة فقط ولا يحتوي على أي تعريفات للموديولات**.
+   ملف `lib/app/bootstrap/module_bootstrap.dart` هو **ملف للقراءة فقط ولا يحتوي على أي تعريفات أو Overrides للموديولات**.
    لإدراج الموديول الجديد في التسجيل الذاتي عند بدء التطبيق، افتح `lib/app/bootstrap/module_bootstrap_manifest.dart` وأضف:
    ```dart
    MyNewModule.register();

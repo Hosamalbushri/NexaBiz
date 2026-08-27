@@ -3,15 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
+import '../../app/presentation/providers/dashboard_services_provider.dart';
+import '../../app/receipts_payments/customers_rp_lookup_adapter.dart';
+import '../../app/sales/customers_sale_lookup_adapter.dart';
+import '../../app/settings/settings_repository.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
 import '../../core/modules/route_access_rule.dart';
+import '../../core/permissions/permission_defs.dart';
+import '../receipts_payments/transactions/presentation/providers/rp_providers.dart';
+import '../sales/invoices/presentation/providers/sale_providers.dart';
+import 'accounts/presentation/pages/customers_accounts_page.dart';
 import 'customers_module_quick_actions.dart';
 import 'customers_module_settings.dart';
-import '../../core/permissions/permission_defs.dart';
-import 'accounts/presentation/pages/customers_accounts_page.dart';
 import 'directory/presentation/pages/customer_details_page.dart';
 import 'directory/presentation/pages/customer_form_page.dart';
 import 'directory/presentation/pages/customers_home_page.dart';
@@ -113,9 +119,6 @@ class CustomersModule extends AppModule {
       buildCustomersSettingsCategories(moduleId);
 
   @override
-  List<Override> get providerOverrides => const [];
-
-  @override
   bool get hasSettings => true;
 
   @override
@@ -196,4 +199,22 @@ class CustomersModule extends AppModule {
       ],
     ),
   ];
+
+  @override
+  List<Override> get providerOverrides => [
+        saleCustomerLookupPortProvider.overrideWith((ref) {
+          return CustomersSaleLookupAdapter(
+            repository: ref.watch(customerRepositoryProvider),
+            accountLinkPort: ref.watch(customerAccountLinkPortProvider),
+            settings: ref.watch(settingsRepositoryProvider),
+          );
+        }),
+        rpCustomerLookupPortProvider.overrideWith((ref) {
+          return CustomersRpLookupAdapter(
+            repository: ref.watch(customerRepositoryProvider),
+            accountLinkPort: ref.watch(customerAccountLinkPortProvider),
+            settings: ref.watch(settingsRepositoryProvider),
+          );
+        }),
+      ];
 }

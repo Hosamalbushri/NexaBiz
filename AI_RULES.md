@@ -35,7 +35,8 @@ Read this file before modifying the project. For full context see [`AI_CONTEXT.m
   - Every module MUST inherit from `AppModule` (`lib/core/modules/app_module.dart`).
   - Every module MUST provide a `static void register()` method using `ModuleRegistry.register(const MyModule());`.
   - Every module MUST provide a `static void unregister()` method using `ModuleRegistry.unregister(moduleId);`.
-  - `lib/app/bootstrap/module_bootstrap.dart` is **STRICTLY READ-ONLY**: it MUST NOT contain any hardcoded module imports, module definitions, or direct registration calls.
+  - Every module MUST declare its Riverpod provider overrides, ports, and adapters inside `override List<Override> get providerOverrides`.
+  - `lib/app/bootstrap/module_bootstrap.dart` is **STRICTLY READ-ONLY**: it MUST NOT contain any hardcoded module imports, module definitions, direct registration calls, or module-specific provider overrides.
   - Module self-registration catalog is initialized via `initializeModuleCatalog()` in `lib/app/bootstrap/module_bootstrap_manifest.dart`.
 - **Centralized Reports Architecture**:
   - Business modules MUST NOT override or declare `reportCategories`.

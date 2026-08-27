@@ -3,22 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
+import '../../app/sales/inventory_sale_product_catalog_adapter.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
 import '../../core/modules/route_access_rule.dart';
-import 'inventory_module_quick_actions.dart';
-import 'inventory_module_settings.dart';
 import '../../core/permissions/permission_defs.dart';
 import '../../core/reporting/pdf_document_preview_page.dart';
+import '../sales/invoices/presentation/providers/sale_barcode_capture_provider.dart';
+import '../sales/invoices/presentation/providers/sale_providers.dart';
+import 'inventory_module_quick_actions.dart';
+import 'inventory_module_settings.dart';
 import 'permissions/inventory_permission_package.dart';
+import 'products/presentation/pages/product_barcode_scanner_page.dart';
 import 'products/presentation/pages/product_form_page.dart';
 import 'products/presentation/pages/products_barcode_page.dart';
 import 'products/presentation/pages/products_home_page.dart';
 import 'products/presentation/pages/products_import_page.dart';
 import 'products/presentation/pages/products_list_page.dart';
 import 'products/presentation/pages/products_settings_page.dart';
+import 'products/presentation/providers/product_providers.dart';
 import 'shared/presentation/pages/inventory_home_page.dart';
 import 'shared/presentation/pages/inventory_routes.dart';
 import 'stock_count/presentation/pages/inventory_count_page.dart';
@@ -143,9 +148,6 @@ class InventoryModule extends AppModule {
       buildInventorySettingsCategories(moduleId);
 
   @override
-  List<Override> get providerOverrides => const [];
-
-  @override
   List<RouteBase> get routes => [
     GoRoute(
       path: InventoryRoutes.root,
@@ -258,4 +260,17 @@ class InventoryModule extends AppModule {
       ],
     ),
   ];
+
+  @override
+  List<Override> get providerOverrides => [
+        saleProductCatalogPortProvider.overrideWith((ref) {
+          return InventorySaleProductCatalogAdapter(
+            repository: ref.watch(productRepositoryProvider),
+            scanResolver: ref.watch(productScanResolverProvider),
+          );
+        }),
+        saleBarcodeCaptureProvider.overrideWithValue(
+          (context) => ProductBarcodeScannerPage.open(context),
+        ),
+      ];
 }
