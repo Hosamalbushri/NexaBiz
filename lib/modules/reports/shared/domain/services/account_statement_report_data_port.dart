@@ -85,6 +85,7 @@ class AccountStatementLine {
     this.currencyCode,
     this.displayCurrencyCode,
     this.isPosted = true,
+    this.entryUuid,
   });
 
   final DateTime entryDate;
@@ -106,6 +107,9 @@ class AccountStatementLine {
   /// System catalog symbol for printing (ر.ي, ر.س, …).
   final String? displayCurrencyCode;
   final bool isPosted;
+
+  /// Unique journal entry UUID for deep navigation.
+  final String? entryUuid;
 }
 
 /// Per-currency totals for Soft2 "الرصيد النهائي على مستوى العملة".

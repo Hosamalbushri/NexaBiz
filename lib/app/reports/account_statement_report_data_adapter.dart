@@ -166,6 +166,7 @@ class AccountStatementReportDataAdapter
             currencyCode: m.currencyCode,
             displayCurrencyCode: AppCurrencies.byCode(m.currencyCode).symbol,
             isPosted: m.isPosted,
+            entryUuid: m.entryUuid,
           ),
         );
       }

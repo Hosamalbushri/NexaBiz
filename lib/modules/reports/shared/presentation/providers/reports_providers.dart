@@ -13,6 +13,7 @@ import '../../domain/services/trial_balance_report_data_port.dart';
 import '../../domain/services/trial_balance_report_definition.dart';
 import '../../domain/services/journal_book_report_data_port.dart';
 import '../../domain/services/journal_book_report_definition.dart';
+import '../../domain/services/product_stock_movement_report_definition.dart';
 import '../pages/reports_routes.dart';
 
 final reportFileActionsProvider = Provider<ReportFileActions>((ref) {
@@ -46,6 +47,11 @@ final journalBookReportDefinitionProvider =
 final rpTransactionReportDefinitionProvider =
     Provider<RpTransactionReportDefinition>((ref) {
   return const RpTransactionReportDefinition();
+});
+
+final productStockMovementReportDefinitionProvider =
+    Provider<ProductStockMovementReportDefinition>((ref) {
+  return const ProductStockMovementReportDefinition();
 });
 
 /// Override in App with Sales-backed adapter.

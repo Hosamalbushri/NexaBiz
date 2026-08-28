@@ -18,9 +18,14 @@ class ReportsRoutes {
       '/module-reports/rp-customer-receipts';
   static const String rpDailySummary = '/module-reports/rp-daily-summary';
   static const String rpPeriodSummary = '/module-reports/rp-period-summary';
+  static const String productStockMovement =
+      '/module-reports/product-stock-movement';
   static const String preview = '/module-reports/preview';
 
   static void goRoot(BuildContext context) => context.go(root);
+
+  static void pushProductStockMovement(BuildContext context) =>
+      context.push(productStockMovement);
 
   static void pushSalesPeriod(BuildContext context) =>
       context.push(salesPeriod);

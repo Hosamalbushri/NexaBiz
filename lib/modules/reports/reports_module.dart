@@ -25,6 +25,10 @@ import 'financial_reports/presentation/pages/journal_book_report_page.dart';
 import 'financial_reports/presentation/pages/trial_balance_report_page.dart';
 import 'operational_reports/presentation/pages/rp_transaction_report_page.dart';
 import 'operational_reports/presentation/pages/sales_period_report_page.dart';
+import 'operational_reports/presentation/pages/product_stock_movement_report_page.dart';
+import '../../app/reports/product_stock_movement_report_data_adapter.dart';
+import '../inventory/products/presentation/providers/product_providers.dart';
+import 'shared/domain/services/product_stock_movement_report_data_port.dart';
 import 'permissions/reports_permission_package.dart';
 import 'shared/domain/services/rp_report_data_port.dart';
 import 'shared/presentation/pages/report_pdf_preview_page.dart';
@@ -223,6 +227,14 @@ class ReportsModule extends AppModule {
           subtitleBuilder: (l10n) => l10n.reportsInventoryCategorySubtitle,
           reports: [
             ReportItemDefinition(
+              id: 'reports_product_stock_movement',
+              moduleId: 'inventory',
+              icon: Icons.compare_arrows_outlined,
+              path: ReportsRoutes.productStockMovement,
+              titleBuilder: (l10n) => l10n.localeName == 'ar' ? 'تقرير حركة صنف' : 'Product Stock Movement Report',
+              subtitleBuilder: (l10n) => l10n.localeName == 'ar' ? 'كشف تفصيلي بحركات التوريد والصرف والتحويل ورصيد التكلفة' : 'Detailed product inward, outward, and balance cost movements',
+            ),
+            ReportItemDefinition(
               id: 'reports_stock_balance',
               moduleId: 'inventory',
               icon: Icons.assessment_outlined,
@@ -344,6 +356,12 @@ class ReportsModule extends AppModule {
               const RpTransactionReportPage(kind: RpReportKind.periodSummary),
         ),
         GoRoute(
+          path: 'product-stock-movement',
+          name: 'reportsProductStockMovement',
+          builder: (context, state) =>
+              const ProductStockMovementReportPage(),
+        ),
+        GoRoute(
           path: 'preview',
           name: 'reportsPdfPreview',
           builder: (context, state) => const ReportPdfPreviewPage(),
@@ -388,6 +406,13 @@ class ReportsModule extends AppModule {
         rpReportDataPortProvider.overrideWith((ref) {
           return RpReportDataAdapter(
             ref.watch(financialTransactionRepositoryProvider),
+          );
+        }),
+        productStockMovementReportDataPortProvider.overrideWith((ref) {
+          return ProductStockMovementReportDataAdapter(
+            db: ref.watch(inventoryDatabaseProvider),
+            loadCompanyProfile: () =>
+                ref.read(settingsRepositoryProvider).loadCompanyProfile(),
           );
         }),
       ];
