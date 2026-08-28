@@ -5,13 +5,18 @@ import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import '../../domain/services/inventory_accounting_poster.dart';
 
+import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
+
 class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
   InventoryAccountingPosterImpl(
     this._accountingDb, {
+    JournalPostingService? journalPostingService,
     this._readCompanyId,
-  });
+  }) : _journalPostingService = journalPostingService;
 
   final AccountingDatabase _accountingDb;
+  final JournalPostingService? _journalPostingService;
   final String Function()? _readCompanyId;
 
   String get _currentCompanyId =>
@@ -104,7 +109,15 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
       }
     }
 
-    // No default fallback account! Throw explicit error.
+    // 6. Fallback match to default system account for inventory movement
+    final fallbackCode = voucherTypeStr.contains('صرف') ? '5100' : '1230';
+    final fallbackKey = voucherTypeStr.contains('صرف') ? 'cost_of_goods' : 'inventory';
+    final fallbackUuid = await _resolveAccountUuid(code: fallbackCode, systemKey: fallbackKey);
+    if (fallbackUuid != null) {
+      return fallbackUuid;
+    }
+
+    // No default fallback account found! Throw explicit error.
     throw StateError(
       'خطأ محاسبي: لم يتم تحديد حساب محاسبي للمستند ($voucherTypeStr). يرجى اختيار الحساب أولاً.',
     );
@@ -118,13 +131,75 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
     bool isPosted = true,
   }) async {
     if (totalAmount <= 0) return;
+    if (!isPosted) {
+      await reverseAccountingEntry(document: document);
+      return;
+    }
+    if (document.documentType == InventoryDocumentType.salesInvoice) {
+      // Sales invoices post their accounting entries centrally through DocumentPostingOrchestrator
+      return;
+    }
+
+    final isReceipt = document.documentType == InventoryDocumentType.stockReceipt;
+    final voucherTypeStr = isReceipt ? 'أمر توريد' : 'أمر صرف';
+
+    // 1. Dynamically resolve valid account UUIDs
+    final inventoryUuid = await _resolveAccountUuid(code: '1230', systemKey: 'inventory');
+    if (inventoryUuid == null) {
+      throw StateError('خطأ محاسبي: لم يتم العثور على حساب المخزون (1230) في الدليل المحاسبي.');
+    }
+
+    final resolvedOffset = await _resolveSelectedAccountRequired(
+      accountId: accountId,
+      voucherTypeStr: voucherTypeStr,
+    );
+
+    final resolvedInventory = inventoryUuid;
+    final sourceType = document.documentType.storageValue;
+    final sourceId = document.documentId;
+
+    final String entryCurrency = isReceipt ? document.currencyCode : 'YER';
+    final double entryRate = isReceipt ? document.exchangeRate : 1.0;
+    final double calculatedBaseDebit = isReceipt ? (totalAmount * document.exchangeRate) : totalAmount;
+
+    if (_journalPostingService != null) {
+      final draft = JournalEntryDraft(
+        entryDate: document.documentDate,
+        voucherNumber: document.documentNumber,
+        voucherType: voucherTypeStr,
+        currencyCode: entryCurrency,
+        description: 'قيد تلقائي للمستند $voucherTypeStr: ${document.documentNumber}',
+        isPosted: isPosted,
+        sourceType: sourceType,
+        sourceId: sourceId,
+        lines: [
+          JournalLineDraft(
+            accountUuid: isReceipt ? resolvedInventory : resolvedOffset,
+            debit: totalAmount,
+            credit: 0.0,
+            currencyCode: entryCurrency,
+            exchangeRateToBase: entryRate,
+            lineDescription: 'مخزون - ${document.documentNumber}',
+            sortOrder: 1,
+          ),
+          JournalLineDraft(
+            accountUuid: isReceipt ? resolvedOffset : resolvedInventory,
+            debit: 0.0,
+            credit: totalAmount,
+            currencyCode: entryCurrency,
+            exchangeRateToBase: entryRate,
+            lineDescription: 'مخزون - ${document.documentNumber}',
+            sortOrder: 2,
+          ),
+        ],
+      );
+      await _journalPostingService.post(draft);
+      return;
+    }
 
     final now = DateTime.now().toUtc();
 
     await _accountingDb.transaction(() async {
-      final sourceType = document.documentType.storageValue;
-      final sourceId = document.documentId;
-
       // Check if entry already exists for this source document
       final existingEntry = await (_accountingDb.select(_accountingDb.journalEntries)
             ..where((tbl) =>
@@ -132,8 +207,6 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
           .getSingleOrNull();
 
       final String entryUuid;
-      final isReceipt = document.documentType == InventoryDocumentType.stockReceipt;
-      final voucherTypeStr = isReceipt ? 'أمر توريد' : 'أمر صرف';
 
       if (existingEntry != null) {
         entryUuid = existingEntry.uuid;
@@ -148,6 +221,7 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
             description: Value(
               'قيد تلقائي للمستند $voucherTypeStr: ${document.documentNumber}',
             ),
+            currencyCode: Value(entryCurrency),
             isPosted: Value(isPosted),
             companyId: Value(_currentCompanyId),
             deletedAt: const Value(null),
@@ -171,7 +245,7 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
                 description: Value(
                   'قيد تلقائي للمستند $voucherTypeStr: ${document.documentNumber}',
                 ),
-                currencyCode: const Value('SAR'),
+                currencyCode: Value(entryCurrency),
                 isPosted: Value(isPosted),
                 sourceType: Value(sourceType),
                 sourceId: Value(sourceId),
@@ -182,19 +256,6 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
             );
       }
 
-      // 2. Dynamically resolve valid account UUIDs
-      final inventoryUuid = await _resolveAccountUuid(code: '1230', systemKey: 'inventory');
-      if (inventoryUuid == null) {
-        throw StateError('خطأ محاسبي: لم يتم العثور على حساب المخزون (1230) في الدليل المحاسبي.');
-      }
-
-      final resolvedOffset = await _resolveSelectedAccountRequired(
-        accountId: accountId,
-        voucherTypeStr: voucherTypeStr,
-      );
-
-      final resolvedInventory = inventoryUuid;
-
       // Line 1: Debit Line
       await _accountingDb.into(_accountingDb.journalLines).insert(
             JournalLinesCompanion(
@@ -203,10 +264,10 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
               accountUuid: Value(isReceipt ? resolvedInventory : resolvedOffset),
               debit: Value(totalAmount),
               credit: const Value(0.0),
-              baseDebit: Value(totalAmount),
+              baseDebit: Value(calculatedBaseDebit),
               baseCredit: const Value(0.0),
-              currencyCode: const Value('SAR'),
-              exchangeRateToBase: const Value(1.0),
+              currencyCode: Value(entryCurrency),
+              exchangeRateToBase: Value(entryRate),
               lineDescription: Value('مخزون - ${document.documentNumber}'),
             ),
           );
@@ -220,9 +281,9 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
               debit: const Value(0.0),
               credit: Value(totalAmount),
               baseDebit: const Value(0.0),
-              baseCredit: Value(totalAmount),
-              currencyCode: const Value('SAR'),
-              exchangeRateToBase: const Value(1.0),
+              baseCredit: Value(calculatedBaseDebit),
+              currencyCode: Value(entryCurrency),
+              exchangeRateToBase: Value(entryRate),
               lineDescription: Value('مخزون - ${document.documentNumber}'),
             ),
           );
@@ -252,13 +313,24 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
   Future<void> reverseAccountingEntry({
     required InventoryDocumentRef document,
   }) async {
+    final sourceType = document.documentType.storageValue;
+    final sourceId = document.documentId;
+
+    if (_journalPostingService != null) {
+      await _journalPostingService.voidBySource(
+        sourceType: sourceType,
+        sourceId: sourceId,
+      );
+      return;
+    }
+
     final now = DateTime.now().toUtc();
 
     // Soft delete journal entry for this source document
     await (_accountingDb.update(_accountingDb.journalEntries)
           ..where((tbl) =>
-              tbl.sourceType.equals(document.documentType.storageValue) &
-              tbl.sourceId.equals(document.documentId)))
+              tbl.sourceType.equals(sourceType) &
+              tbl.sourceId.equals(sourceId)))
         .write(
       JournalEntriesCompanion(
         deletedAt: Value(now.millisecondsSinceEpoch),

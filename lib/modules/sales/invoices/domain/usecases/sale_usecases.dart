@@ -287,8 +287,8 @@ class ConfirmSale {
     }
 
     // Standalone sales upsert local journal as posted.
-    // Integrated mode keeps operational submit only — no local ledger entry.
-    if (!integrated) {
+    // When perpetual inventory posting is enabled, DocumentPostingOrchestrator handles all journal posting (Revenue + COGS).
+    if (!integrated && !isSalePostingEnabled(_inventoryEffect)) {
       try {
         await _ledgerPosting.syncSale(updated);
       } catch (e) {
@@ -343,7 +343,9 @@ class CancelSale {
     _workflow.assertCanCancel(sale);
     final hadInventoryEffect = sale.saleStatus.affectsInventory;
 
-    await _ledgerPosting.voidSale(sale);
+    if (!isSalePostingEnabled(_inventoryEffect)) {
+      await _ledgerPosting.voidSale(sale);
+    }
 
     if (hadInventoryEffect) {
       await _inventoryEffect.onCancelled(sale);

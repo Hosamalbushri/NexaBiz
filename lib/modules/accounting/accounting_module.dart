@@ -10,7 +10,6 @@ import '../../app/receipts_payments/accounting_rp_ledger_adapter.dart';
 import '../../app/receipts_payments/accounting_rp_treasury_adapter.dart';
 import '../../app/receipts_payments/accounting_rp_voucher_book_adapter.dart';
 import '../../app/sales/accounting_sale_bridge_adapter.dart';
-import '../../app/sales/accounting_sale_cogs_adapter.dart';
 import '../../app/sales/accounting_sale_currency_adapter.dart';
 import '../../app/sales/accounting_sale_ledger_adapter.dart';
 import '../../app/sales/accounting_sale_treasury_adapter.dart';

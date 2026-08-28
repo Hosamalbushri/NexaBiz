@@ -86,6 +86,8 @@ class InventoryDocumentRef {
     required this.documentDate,
     this.warehouseId,
     this.status = InventoryDocumentStatus.draft,
+    this.currencyCode = 'SAR',
+    this.exchangeRate = 1.0,
   });
 
   final String documentId;
@@ -94,6 +96,8 @@ class InventoryDocumentRef {
   final DateTime documentDate;
   final String? warehouseId;
   final InventoryDocumentStatus status;
+  final String currencyCode;
+  final double exchangeRate;
 
   @override
   bool operator ==(Object other) =>

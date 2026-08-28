@@ -52,6 +52,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   var _exportBusy = _CodeExportBusy.none;
   var _price = 0.0;
   var _priceError = false;
+  var _unitCost = 0.0;
   DateTime? _createdAt;
   DateTime? _updatedAt;
   String? _uuid;
@@ -61,6 +62,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   String _initialBarcode = '';
   String _initialPackSize = '';
   double _initialPrice = 0.0;
+  double _initialUnitCost = 0.0;
 
   bool get _exporting => _exportBusy != _CodeExportBusy.none;
 
@@ -114,13 +116,15 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
       return _nameController.text.trim().isNotEmpty ||
           _barcodeController.text.trim().isNotEmpty ||
           _packSizeController.text.trim().isNotEmpty ||
-          _price != 0.0;
+          _price != 0.0 ||
+          _unitCost != 0.0;
     }
     return _codeController.text != _initialCode ||
         _nameController.text != _initialName ||
         _barcodeController.text != _initialBarcode ||
         _packSizeController.text != _initialPackSize ||
-        _price != _initialPrice;
+        _price != _initialPrice ||
+        _unitCost != _initialUnitCost;
   }
 
   void _hydrate(Product product) {
@@ -133,6 +137,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     _barcodeController.text = product.barcode ?? '';
     _packSizeController.text = '${product.packSize}';
     _price = product.price;
+    _unitCost = product.unitCost;
     _createdAt = product.createdAt;
     _updatedAt = product.updatedAt;
     _uuid = product.uuid;
@@ -142,6 +147,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     _initialBarcode = _barcodeController.text;
     _initialPackSize = _packSizeController.text;
     _initialPrice = _price;
+    _initialUnitCost = _unitCost;
   }
 
   Product? _productSnapshot() {
@@ -321,6 +327,22 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                       : l10n.priceRequiredHint,
                   readOnly: widget.isEditing,
                   errorText: _priceError ? l10n.productsInvalidForm : null,
+                ),
+                AppAmountField(
+                  value: _unitCost,
+                  onChanged: (value) {
+                    setState(() {
+                      _unitCost = value;
+                    });
+                  },
+                  decimalPlaces: 2,
+                  emptyWhenZero: false,
+                  trimTrailingZeros: true,
+                  label: 'تكلفة المنتج (للوحدة)',
+                  hint: widget.isEditing
+                      ? l10n.productsFieldLockedHint
+                      : 'أدخل تكلفة التوريد الافتراضية',
+                  readOnly: widget.isEditing,
                 ),
               ],
             ),
@@ -541,6 +563,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
           : _barcodeController.text.trim(),
       packSize: int.parse(_packSizeController.text.trim()),
       price: _price,
+      unitCost: _unitCost,
     );
 
     setState(() => _saving = true);

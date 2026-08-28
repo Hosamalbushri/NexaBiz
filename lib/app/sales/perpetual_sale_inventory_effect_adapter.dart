@@ -1,7 +1,11 @@
-import 'package:stock_count/modules/inventory/products/domain/models/product_exception.dart';
-import 'package:stock_count/modules/inventory/stock_count/domain/models/stock_quantity_line.dart';
-import 'package:stock_count/modules/inventory/stock_count/domain/services/product_stock_service.dart';
+import 'package:stock_count/modules/accounting/shared/domain/services/document_posting_orchestrator.dart';
+import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
+import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_issue.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_movement_line.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/repositories/stock_movements_repository.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
 import 'package:stock_count/modules/sales/invoices/domain/models/sale_exception.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_inventory_effect_port.dart';
 
@@ -12,55 +16,75 @@ abstract class SaleCogsEffectPort {
   Future<void> voidSale(Sale sale);
 }
 
-/// Perpetual inventory: issue stock on post, receive on cancel, with COGS journal.
+/// Perpetual inventory: orchestrates stock issue, FIFO cost layers, and dual journal entries on post.
 class PerpetualSaleInventoryEffectAdapter implements SaleInventoryEffectPort {
   PerpetualSaleInventoryEffectAdapter({
-    required ProductStockService stock,
-    required SaleCogsEffectPort cogs,
-  }) : _stock = stock,
-       _cogs = cogs;
+    required DocumentPostingOrchestrator orchestrator,
+    required StockMovementsRepository stockMovementsRepository,
+  })  : _orchestrator = orchestrator,
+        _stockMovementsRepository = stockMovementsRepository;
 
-  final ProductStockService _stock;
-  final SaleCogsEffectPort _cogs;
+  final DocumentPostingOrchestrator _orchestrator;
+  final StockMovementsRepository _stockMovementsRepository;
 
   @override
   Future<void> onConfirmed(Sale sale) async {
-    final lines = _linesFor(sale);
-    try {
-      await _stock.issueLines(lines);
-    } on ProductException catch (e) {
-      if (e.code == ProductException.insufficientStock) {
-        throw const SaleException(SaleException.insufficientStock);
-      }
-      rethrow;
-    }
+    final lines = [
+      for (final item in sale.items)
+        if (item.quantity > 0)
+          StockMovementLine(
+            movementUuid: sale.uuid,
+            movementType: 'issue',
+            itemCode: item.productCode.isNotEmpty ? item.productCode : item.productId,
+            itemName: item.productName,
+            mainQuantity: item.mainQuantity,
+            subQuantity: item.subQuantity,
+            quantity: item.quantity,
+            unitCost: item.unitPrice,
+            totalCost: item.total,
+          ),
+    ];
 
-    try {
-      await _cogs.syncSale(sale);
-    } catch (e) {
-      try {
-        await _stock.receiveLines(lines);
-      } catch (_) {
-        // Best-effort stock rollback; surface COGS failure to caller.
+    // 1. Save movement lines in inventory DB without creating StockIssue header
+    await _stockMovementsRepository.saveMovementLines(
+      movementUuid: sale.uuid,
+      movementType: 'issue',
+      lines: lines,
+    );
+
+    // 2. Post via DocumentPostingOrchestrator
+    final docRef = InventoryDocumentRef(
+      documentId: sale.uuid,
+      documentNumber: sale.saleNumber,
+      documentType: InventoryDocumentType.salesInvoice,
+      documentDate: sale.saleDate,
+      status: InventoryDocumentStatus.draft,
+    );
+
+    final result = await _orchestrator.postSaleInvoice(sale: sale, docRef: docRef);
+
+    if (result is OrchestrationFailure) {
+      if (result.reason.contains('غير كافية') || result.reason.contains('نقص')) {
+        throw SaleException(SaleException.insufficientStock, result.reason);
       }
-      rethrow;
+      throw SaleException('posting_failed', result.reason);
     }
   }
 
   @override
   Future<void> onCancelled(Sale sale) async {
-    await _cogs.voidSale(sale);
-    await _stock.receiveLines(_linesFor(sale));
-  }
+    final docRef = InventoryDocumentRef(
+      documentId: sale.uuid,
+      documentNumber: sale.saleNumber,
+      documentType: InventoryDocumentType.salesInvoice,
+      documentDate: sale.saleDate,
+      status: InventoryDocumentStatus.posted,
+    );
 
-  List<StockQuantityLine> _linesFor(Sale sale) {
-    return [
-      for (final item in sale.items)
-        if (item.quantity > 0 && item.productId.trim().isNotEmpty)
-          StockQuantityLine(
-            productUuid: item.productId,
-            quantity: item.quantity,
-          ),
-    ];
+    final result = await _orchestrator.unpostSaleInvoice(sale: sale, docRef: docRef);
+
+    if (result is OrchestrationFailure) {
+      throw SaleException('unpost_failed', result.reason);
+    }
   }
 }

@@ -4,6 +4,7 @@ import 'package:stock_count/modules/inventory/products/domain/entities/product.d
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_movement_line.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_receipt.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/repositories/stock_movements_repository.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/services/cost_layer_service.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_account_port.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_voucher_book_port.dart';
 
@@ -16,7 +17,8 @@ class StockReceiptLineDraft {
     this.subQuantity = 0.0,
     this.packSize = 1.0,
     this.unitCost = 0.0,
-  });
+    double? baseUnitCost,
+  }) : baseUnitCost = baseUnitCost ?? unitCost;
 
   final String itemCode;
   final String itemName;
@@ -24,6 +26,7 @@ class StockReceiptLineDraft {
   final double subQuantity;
   final double packSize;
   final double unitCost;
+  final double baseUnitCost;
 
   String get productName => itemName;
 
@@ -39,6 +42,7 @@ class StockReceiptLineDraft {
     double? subQuantity,
     double? packSize,
     double? unitCost,
+    double? baseUnitCost,
   }) {
     return StockReceiptLineDraft(
       itemCode: itemCode ?? this.itemCode,
@@ -47,6 +51,7 @@ class StockReceiptLineDraft {
       subQuantity: subQuantity ?? this.subQuantity,
       packSize: packSize ?? this.packSize,
       unitCost: unitCost ?? this.unitCost,
+      baseUnitCost: baseUnitCost ?? this.baseUnitCost,
     );
   }
 }
@@ -58,7 +63,7 @@ class StockReceiptComposerState {
     this.voucherBook,
     this.previewReceiptNumber,
     this.account,
-    this.currencyCode = 'SAR',
+    this.currencyCode = '',
     this.exchangeRate = 1.0,
     this.supplier,
     this.warehouse,
@@ -145,7 +150,7 @@ class StockReceiptComposerNotifier
   void reset([String? defaultCurrencyCode]) {
     state = StockReceiptComposerState(
       receiptDate: DateTime.now(),
-      currencyCode: defaultCurrencyCode ?? 'YER',
+      currencyCode: defaultCurrencyCode ?? '',
     );
   }
 
@@ -184,6 +189,7 @@ class StockReceiptComposerNotifier
                 subQuantity: l.subQuantity,
                 packSize: l.packSize,
                 unitCost: l.unitCost,
+                baseUnitCost: l.unitCost * (receiptToEdit.exchangeRate > 0 ? receiptToEdit.exchangeRate : 1.0),
               ),
             )
             .toList(),
@@ -192,7 +198,7 @@ class StockReceiptComposerNotifier
       state = StockReceiptComposerState(
         receiptDate: DateTime.now(),
         voucherBook: defaultBook,
-        currencyCode: defaultCurrencyCode ?? 'YER',
+        currencyCode: defaultCurrencyCode ?? '',
         previewReceiptNumber: defaultBook?.previewNumber,
       );
     }
@@ -218,7 +224,16 @@ class StockReceiptComposerNotifier
   }
 
   void setCurrency(String code, [double rate = 1.0]) {
-    state = state.copyWith(currencyCode: code, exchangeRate: rate);
+    final effectiveRate = rate <= 0 ? 1.0 : rate;
+    final updatedLines = state.lines.map((l) {
+      final convertedCost = l.baseUnitCost / effectiveRate;
+      return l.copyWith(unitCost: convertedCost);
+    }).toList();
+    state = state.copyWith(
+      currencyCode: code,
+      exchangeRate: effectiveRate,
+      lines: updatedLines,
+    );
   }
 
   void setWarehouse(String? warehouse) {
@@ -235,12 +250,23 @@ class StockReceiptComposerNotifier
     );
   }
 
-  void addProduct(Product product) {
+  Future<void> addProduct(Product product, {CostLayerService? costLayerService}) async {
+    double baseCost = product.unitCost;
+    if (baseCost <= 0 && costLayerService != null) {
+      baseCost = await costLayerService.getItemCostValuation(
+        itemCode: product.itemCode,
+        warehouseId: state.warehouse,
+      );
+    }
+    final rate = state.exchangeRate <= 0 ? 1.0 : state.exchangeRate;
+    final docUnitCost = baseCost / rate;
+
     addLine(StockReceiptLineDraft(
       itemCode: product.itemCode,
       itemName: product.name,
       packSize: product.packSize > 0 ? product.packSize.toDouble() : 1.0,
-      unitCost: product.unitCost,
+      unitCost: docUnitCost,
+      baseUnitCost: baseCost,
       mainQuantity: 1.0,
       subQuantity: 0.0,
     ));
@@ -270,7 +296,11 @@ class StockReceiptComposerNotifier
   }) {
     if (index < 0 || index >= state.lines.length) return;
     final updated = List<StockReceiptLineDraft>.from(state.lines);
-    updated[index] = updated[index].copyWith(unitCost: unitCost);
+    final rate = state.exchangeRate <= 0 ? 1.0 : state.exchangeRate;
+    updated[index] = updated[index].copyWith(
+      unitCost: unitCost,
+      baseUnitCost: unitCost * rate,
+    );
     state = state.copyWith(lines: updated);
   }
 
@@ -300,6 +330,20 @@ class StockReceiptComposerNotifier
 
     if (state.account == null || state.account!.accountId.trim().isEmpty) {
       state = state.copyWith(error: 'يرجى اختيار الحساب المحاسبي للمستند أولاً');
+      return false;
+    }
+
+    for (final line in state.lines) {
+      if (line.unitCost <= 0 || line.totalCost <= 0) {
+        state = state.copyWith(
+          error: 'لا يمكن حفظ أمر التوريد بتكلفة صفرية للصنف (${line.itemName}). يرجى إدخال تكلفة الصنف.',
+        );
+        return false;
+      }
+    }
+
+    if (state.totalCost <= 0) {
+      state = state.copyWith(error: 'لا يمكن حفظ أمر التوريد بتكلفة إجمالية صفرية.');
       return false;
     }
 

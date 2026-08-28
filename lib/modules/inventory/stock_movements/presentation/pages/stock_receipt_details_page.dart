@@ -2,18 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
+import 'package:stock_count/app/settings/company/app_currency.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
+import 'package:stock_count/modules/accounting/shared/domain/services/document_posting_orchestrator.dart';
+import 'package:stock_count/modules/accounting/shared/presentation/providers/document_posting_providers.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
-import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_dependency_dialog.dart';
-import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_shortage_dialog.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_status_badge.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_receipt.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_coordinator.dart';
 import 'package:stock_count/modules/sales/invoices/domain/services/device_sale_number.dart';
 import '../providers/stock_movements_providers.dart';
 
@@ -34,32 +33,23 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
 
   Future<void> _handlePost(StockReceipt receipt) async {
     if (_isProcessing) return;
-    final coordinator = ref.read(postingCoordinatorProvider);
-    final docRef = InventoryDocumentRef(
-      documentId: receipt.id,
-      documentNumber: receipt.receiptNumber,
-      documentType: InventoryDocumentType.stockReceipt,
-      documentDate: receipt.receiptDate,
-      status: receipt.status,
-    );
+    final orchestrator = ref.read(documentPostingOrchestratorProvider);
 
     setState(() => _isProcessing = true);
     try {
-      final result = await coordinator.post(document: docRef);
+      final result = await orchestrator.postReceipt(receipt: receipt);
       if (!mounted) return;
 
-      if (result is PostSuccess) {
+      if (result is OrchestrationSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('تم ترحيل أمر التوريد ${receipt.receiptNumber} بنجاح'),
+            content: Text(result.message),
             backgroundColor: Colors.green,
           ),
         );
         ref.invalidate(stockReceiptByIdProvider(widget.receiptId));
         ref.invalidate(stockReceiptsStreamProvider);
-      } else if (result is PostStockShortage) {
-        await InventoryShortageDialog.show(context, shortages: result.shortages);
-      } else if (result is PostInvalidStatus) {
+      } else if (result is OrchestrationFailure) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(result.reason), backgroundColor: Colors.red),
         );
@@ -77,34 +67,25 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
 
   Future<void> _handleUnpost(StockReceipt receipt) async {
     if (_isProcessing) return;
-    final coordinator = ref.read(postingCoordinatorProvider);
-    final docRef = InventoryDocumentRef(
-      documentId: receipt.id,
-      documentNumber: receipt.receiptNumber,
-      documentType: InventoryDocumentType.stockReceipt,
-      documentDate: receipt.receiptDate,
-      status: receipt.status,
-    );
+    final orchestrator = ref.read(documentPostingOrchestratorProvider);
 
     setState(() => _isProcessing = true);
     try {
-      final result = await coordinator.unpost(document: docRef);
+      final result = await orchestrator.unpostReceipt(receipt: receipt);
       if (!mounted) return;
 
-      if (result is UnpostSuccess) {
+      if (result is OrchestrationSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('تم إلغاء ترحيل أمر التوريد ${receipt.receiptNumber} بنجاح'),
+            content: Text(result.message),
             backgroundColor: Colors.orange,
           ),
         );
         ref.invalidate(stockReceiptByIdProvider(widget.receiptId));
         ref.invalidate(stockReceiptsStreamProvider);
-      } else if (result is UnpostBlockedByDependencies) {
-        await InventoryDependencyDialog.show(
-          context,
-          dependentDocuments: result.dependentDocuments,
-          targetDocument: docRef,
+      } else if (result is OrchestrationFailure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result.reason), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
@@ -346,6 +327,7 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
                   _DocumentHero(
                     documentNumber: receipt.receiptNumber,
                     currencyCode: receipt.currencyCode,
+                    exchangeRate: receipt.exchangeRate,
                     totalCost: totalCostSum,
                     status: receipt.status,
                     documentTypeName: 'أمر توريد مخزني',
@@ -521,6 +503,7 @@ class _DocumentHero extends StatelessWidget {
   const _DocumentHero({
     required this.documentNumber,
     required this.currencyCode,
+    required this.exchangeRate,
     required this.totalCost,
     required this.status,
     required this.documentTypeName,
@@ -528,6 +511,7 @@ class _DocumentHero extends StatelessWidget {
 
   final String documentNumber;
   final String currencyCode;
+  final double exchangeRate;
   final double totalCost;
   final InventoryDocumentStatus status;
   final String documentTypeName;
@@ -536,6 +520,7 @@ class _DocumentHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final appCurrency = AppCurrencies.byCode(currencyCode);
 
     return Container(
       decoration: BoxDecoration(
@@ -571,23 +556,27 @@ class _DocumentHero extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: scheme.surface.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    border: Border.all(
-                      color: scheme.outlineVariant.withValues(alpha: 0.4),
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
                     ),
-                  ),
-                  child: Text(
-                    currencyCode,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: scheme.primary,
+                    decoration: BoxDecoration(
+                      color: scheme.surface.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      border: Border.all(
+                        color: scheme.outlineVariant.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Text(
+                      '${appCurrency.code} (${appCurrency.nameAr})',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: scheme.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -604,7 +593,7 @@ class _DocumentHero extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '${totalCost.toStringAsFixed(2)} $currencyCode',
+              '${totalCost.toStringAsFixed(2)} ${appCurrency.symbol}',
               style: theme.textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.w900,
                 color: scheme.primary,
@@ -612,6 +601,16 @@ class _DocumentHero extends StatelessWidget {
                 height: 1.05,
               ),
             ),
+            if (exchangeRate != 1.0) ...[
+              const SizedBox(height: 4),
+              Text(
+                'سعر الصرف: ${exchangeRate.toStringAsFixed(4)}',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -841,6 +840,7 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final appCurrency = AppCurrencies.byCode(currencyCode);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -881,11 +881,18 @@ class _SummaryCard extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text(
-                '${totalCost.toStringAsFixed(2)} $currencyCode',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: scheme.primary,
+              const SizedBox(width: AppSpacing.sm),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '${totalCost.toStringAsFixed(2)} ${appCurrency.symbol} (${appCurrency.code})',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: scheme.primary,
+                    ),
+                  ),
                 ),
               ),
             ],

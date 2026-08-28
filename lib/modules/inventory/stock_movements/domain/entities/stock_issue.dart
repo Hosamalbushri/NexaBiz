@@ -18,7 +18,7 @@ class StockIssue {
     this.notes,
     required this.issueDate,
     this.lines = const [],
-    this.status = InventoryDocumentStatus.posted,
+    this.status = InventoryDocumentStatus.draft,
     this.postedAt,
     DateTime? createdAt,
     DateTime? updatedAt,

@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
@@ -68,7 +69,7 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
         if (lines.isNotEmpty) {
           final headerUuid = lines.first.movementUuid;
 
-          // Check if it's a posted Stock Issue
+          // Check Stock Issue
           final issues = await (_db.select(_db.stockIssues)
                 ..where((tbl) => tbl.uuid.equals(headerUuid))
                 ..where((tbl) => tbl.deletedAt.isNull()))
@@ -91,7 +92,7 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
             }
           }
 
-          // Check if it's a posted Stock Return
+          // Check Stock Return
           final returns = await (_db.select(_db.stockReturns)
                 ..where((tbl) => tbl.uuid.equals(headerUuid))
                 ..where((tbl) => tbl.deletedAt.isNull()))
@@ -113,6 +114,40 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
               );
             }
           }
+
+          // Check Stock Transfer
+          final transfers = await (_db.select(_db.stockTransfers)
+                ..where((tbl) => tbl.uuid.equals(headerUuid))
+                ..where((tbl) => tbl.deletedAt.isNull()))
+              .get();
+
+          if (transfers.isNotEmpty) {
+            final trRow = transfers.first;
+            final status = InventoryDocumentStatus.fromStorage(trRow.status);
+            if (status == InventoryDocumentStatus.posted) {
+              direct.add(
+                InventoryDocumentRef(
+                  documentId: trRow.uuid,
+                  documentNumber: trRow.transferNumber,
+                  documentType: InventoryDocumentType.stockTransfer,
+                  documentDate: DateTime.fromMillisecondsSinceEpoch(trRow.transferDate),
+                  warehouseId: trRow.fromWarehouseId,
+                  status: status,
+                ),
+              );
+            }
+          }
+        } else {
+          // Outbound consumption from Sales Invoice or external movement
+          direct.add(
+            InventoryDocumentRef(
+              documentId: cons.issueLineUuid,
+              documentNumber: 'فاتورة مبيعات / سحب مخزني',
+              documentType: InventoryDocumentType.salesInvoice,
+              documentDate: DateTime.fromMillisecondsSinceEpoch(cons.createdAt),
+              status: InventoryDocumentStatus.posted,
+            ),
+          );
         }
       }
     }
@@ -139,134 +174,63 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
       }
     }
 
-    // 3. Subsequent Posted Movements (Chronological Sequence Enforcement)
-    int? docPostedAt;
-    int? docDate;
-
-    if (doc.documentType == InventoryDocumentType.stockReceipt) {
-      final rec = await (_db.select(_db.stockReceipts)
-            ..where((tbl) => tbl.uuid.equals(doc.documentId)))
-          .getSingleOrNull();
-      if (rec != null) {
-        docPostedAt = rec.postedAt;
-        docDate = rec.receiptDate;
-      }
-    } else if (doc.documentType == InventoryDocumentType.stockIssue) {
-      final iss = await (_db.select(_db.stockIssues)
-            ..where((tbl) => tbl.uuid.equals(doc.documentId)))
-          .getSingleOrNull();
-      if (iss != null) {
-        docPostedAt = iss.postedAt;
-        docDate = iss.issueDate;
-      }
-    } else if (doc.documentType == InventoryDocumentType.stockReturn) {
-      final ret = await (_db.select(_db.stockReturns)
-            ..where((tbl) => tbl.uuid.equals(doc.documentId)))
-          .getSingleOrNull();
-      if (ret != null) {
-        docPostedAt = ret.postedAt;
-        docDate = ret.returnDate;
-      }
-    } else if (doc.documentType == InventoryDocumentType.stockTransfer) {
-      final trf = await (_db.select(_db.stockTransfers)
-            ..where((tbl) => tbl.uuid.equals(doc.documentId)))
-          .getSingleOrNull();
-      if (trf != null) {
-        docPostedAt = trf.postedAt;
-        docDate = trf.transferDate;
-      }
-    }
-
-    final benchmarkTs = docPostedAt ?? docDate ?? doc.documentDate.millisecondsSinceEpoch;
-
-    // Subsequent posted StockReceipts
-    final allReceipts = await (_db.select(_db.stockReceipts)
-          ..where((tbl) => tbl.status.equals('posted'))
-          ..where((tbl) => tbl.deletedAt.isNull()))
+    // 3. Chronological Downstream Movements Check:
+    // Check if any line item in doc has subsequent posted movements after doc.documentDate
+    final docLines = await (_db.select(_db.stockMovementLines)
+          ..where((tbl) => tbl.movementUuid.equals(doc.documentId)))
         .get();
 
-    for (final rec in allReceipts) {
-      if (rec.uuid == doc.documentId) continue;
-      final pAt = rec.postedAt ?? rec.receiptDate;
-      if (pAt > benchmarkTs) {
-        direct.add(
-          InventoryDocumentRef(
-            documentId: rec.uuid,
-            documentNumber: rec.receiptNumber,
-            documentType: InventoryDocumentType.stockReceipt,
-            documentDate: DateTime.fromMillisecondsSinceEpoch(rec.receiptDate),
-            status: InventoryDocumentStatus.posted,
-          ),
-        );
-      }
-    }
+    final itemCodes = docLines.map((l) => l.itemCode).toSet();
+    final docDateEpoch = doc.documentDate.millisecondsSinceEpoch;
 
-    // Subsequent posted StockIssues
-    final allIssues = await (_db.select(_db.stockIssues)
-          ..where((tbl) => tbl.status.equals('posted'))
-          ..where((tbl) => tbl.deletedAt.isNull()))
-        .get();
+    for (final itemCode in itemCodes) {
+      final subLines = await (_db.select(_db.stockMovementLines)
+            ..where((tbl) => tbl.itemCode.equals(itemCode)))
+          .get();
 
-    for (final iss in allIssues) {
-      if (iss.uuid == doc.documentId) continue;
-      final pAt = iss.postedAt ?? iss.issueDate;
-      if (pAt > benchmarkTs) {
-        direct.add(
-          InventoryDocumentRef(
-            documentId: iss.uuid,
-            documentNumber: iss.issueNumber,
-            documentType: InventoryDocumentType.stockIssue,
-            documentDate: DateTime.fromMillisecondsSinceEpoch(iss.issueDate),
-            warehouseId: iss.warehouse,
-            status: InventoryDocumentStatus.posted,
-          ),
-        );
-      }
-    }
+      for (final l in subLines) {
+        if (l.movementUuid == doc.documentId) continue;
 
-    // Subsequent posted StockReturns
-    final allReturns = await (_db.select(_db.stockReturns)
-          ..where((tbl) => tbl.status.equals('posted'))
-          ..where((tbl) => tbl.deletedAt.isNull()))
-        .get();
+        // Check Stock Issue
+        final subIssues = await (_db.select(_db.stockIssues)
+              ..where((tbl) => tbl.uuid.equals(l.movementUuid))
+              ..where((tbl) => tbl.issueDate.isBiggerThan(Constant(docDateEpoch)))
+              ..where((tbl) => tbl.deletedAt.isNull()))
+            .get();
 
-    for (final ret in allReturns) {
-      if (ret.uuid == doc.documentId) continue;
-      final pAt = ret.postedAt ?? ret.returnDate;
-      if (pAt > benchmarkTs) {
-        direct.add(
-          InventoryDocumentRef(
-            documentId: ret.uuid,
-            documentNumber: ret.returnNumber,
-            documentType: InventoryDocumentType.stockReturn,
-            documentDate: DateTime.fromMillisecondsSinceEpoch(ret.returnDate),
-            warehouseId: ret.warehouse,
-            status: InventoryDocumentStatus.posted,
-          ),
-        );
-      }
-    }
+        for (final iss in subIssues) {
+          if (InventoryDocumentStatus.fromStorage(iss.status) == InventoryDocumentStatus.posted) {
+            final depRef = InventoryDocumentRef(
+              documentId: iss.uuid,
+              documentNumber: iss.issueNumber,
+              documentType: InventoryDocumentType.stockIssue,
+              documentDate: DateTime.fromMillisecondsSinceEpoch(iss.issueDate),
+              warehouseId: iss.warehouse,
+              status: InventoryDocumentStatus.posted,
+            );
+            if (!direct.contains(depRef)) direct.add(depRef);
+          }
+        }
 
-    // Subsequent posted StockTransfers
-    final allTransfers = await (_db.select(_db.stockTransfers)
-          ..where((tbl) => tbl.status.equals('posted'))
-          ..where((tbl) => tbl.deletedAt.isNull()))
-        .get();
+        // Check Stock Receipts
+        final subReceipts = await (_db.select(_db.stockReceipts)
+              ..where((tbl) => tbl.uuid.equals(l.movementUuid))
+              ..where((tbl) => tbl.receiptDate.isBiggerThan(Constant(docDateEpoch)))
+              ..where((tbl) => tbl.deletedAt.isNull()))
+            .get();
 
-    for (final trf in allTransfers) {
-      if (trf.uuid == doc.documentId) continue;
-      final pAt = trf.postedAt ?? trf.transferDate;
-      if (pAt > benchmarkTs) {
-        direct.add(
-          InventoryDocumentRef(
-            documentId: trf.uuid,
-            documentNumber: trf.transferNumber,
-            documentType: InventoryDocumentType.stockTransfer,
-            documentDate: DateTime.fromMillisecondsSinceEpoch(trf.transferDate),
-            warehouseId: trf.fromWarehouseId,
-            status: InventoryDocumentStatus.posted,
-          ),
-        );
+        for (final rec in subReceipts) {
+          if (InventoryDocumentStatus.fromStorage(rec.status) == InventoryDocumentStatus.posted) {
+            final depRef = InventoryDocumentRef(
+              documentId: rec.uuid,
+              documentNumber: rec.receiptNumber,
+              documentType: InventoryDocumentType.stockReceipt,
+              documentDate: DateTime.fromMillisecondsSinceEpoch(rec.receiptDate),
+              status: InventoryDocumentStatus.posted,
+            );
+            if (!direct.contains(depRef)) direct.add(depRef);
+          }
+        }
       }
     }
 

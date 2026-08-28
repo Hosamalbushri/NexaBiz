@@ -26,27 +26,24 @@ class JournalPostingService {
     return _journals.post(draft);
   }
 
-  /// Voids a journal: soft-delete drafts; reverse posted entries.
+  /// Voids a journal: tombstones/deletes draft and posted entries.
   Future<void> voidByUuid(String uuid) async {
     final existing = await _journals.getByUuid(uuid);
     if (existing == null) {
-      throw const JournalException(JournalException.notFound);
+      return;
     }
+    await _periodValidator.assertEntryAllowed(existing.entryDate);
     if (!existing.isPosted) {
-      await _periodValidator.assertEntryAllowed(existing.entryDate);
       await _journals.softDeleteByUuid(uuid);
       return;
     }
-    await reverseByUuid(uuid);
+    await _journals.softDeletePostedAfterReverse(existing.uuid);
   }
 
   /// Voids the active journal for a business document (sale, R&P, …).
   ///
-  /// Posted → reverse JE, then tombstone original + reverse so the source id
-  /// can be re-posted (pair leaves active ledgers at net zero via removal after
-  /// reverse was recorded). Draft → soft-delete only.
-  ///
-  /// Manual UI void uses [voidByUuid] which keeps both original and reverse.
+  /// Removes journal entries upon unpost so that re-posting recreates the journal
+  /// under the same voucher number without leaving residual reverse entries.
   Future<void> voidBySource({
     required String sourceType,
     required String sourceId,
@@ -58,17 +55,15 @@ class JournalPostingService {
     if (existing == null) {
       return;
     }
+    await _periodValidator.assertEntryAllowed(existing.entryDate);
     if (!existing.isPosted) {
-      await _periodValidator.assertEntryAllowed(existing.entryDate);
       await _journals.softDeleteBySource(
         sourceType: sourceType,
         sourceId: sourceId,
       );
       return;
     }
-    final reverse = await reverseByUuid(existing.uuid);
     await _journals.softDeletePostedAfterReverse(existing.uuid);
-    await _journals.softDeletePostedAfterReverse(reverse.uuid);
   }
 
   /// Posts a reversing entry for a posted journal (swap debit/credit).

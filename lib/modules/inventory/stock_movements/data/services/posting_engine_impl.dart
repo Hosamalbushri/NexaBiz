@@ -22,10 +22,14 @@ class PostingEngineImpl implements PostingEngine {
     required DateTime documentDate,
   }) async {
     final nowEpoch = DateTime.now().millisecondsSinceEpoch;
+    final rate = (document.exchangeRate > 0) ? document.exchangeRate : 1.0;
     double totalValue = 0.0;
 
     await _db.transaction(() async {
       for (final line in lines) {
+        final baseUnitCost = line.unitCost * rate;
+        final baseTotalCost = line.quantity * baseUnitCost;
+
         final layer = CostLayer(
           id: generateUuidV4(),
           itemCode: line.itemCode,
@@ -35,8 +39,8 @@ class PostingEngineImpl implements PostingEngine {
           receivedDate: documentDate,
           receivedQty: line.quantity,
           remainingQty: line.quantity,
-          unitCost: line.unitCost,
-          totalCost: line.totalCost,
+          unitCost: baseUnitCost,
+          totalCost: baseTotalCost,
           closed: false,
           createdAt: DateTime.now().toUtc(),
           updatedAt: DateTime.now().toUtc(),
@@ -45,17 +49,17 @@ class PostingEngineImpl implements PostingEngine {
         await _costLayerService.createLayer(layer);
         await _adjustProductQty(line.itemCode, warehouseId, line.quantity);
 
-        // Update line posted details
+        // Update line posted details in base currency
         await (_db.update(_db.stockMovementLines)
               ..where((tbl) => tbl.uuid.equals(line.lineUuid)))
             .write(
           StockMovementLinesCompanion(
-            postedCost: Value(line.unitCost),
+            postedCost: Value(baseUnitCost),
             postedAt: Value(nowEpoch),
           ),
         );
 
-        totalValue += line.totalCost;
+        totalValue += baseTotalCost;
       }
 
       // Mark header document as posted
@@ -278,6 +282,28 @@ class PostingEngineImpl implements PostingEngine {
             await _costLayerService.reverseLayer(document.documentId);
             await _setDocumentStatus(document, InventoryDocumentStatus.draft, null);
           }
+          break;
+
+        case InventoryDocumentType.salesInvoice:
+          final lines = await (_db.select(_db.stockMovementLines)
+                ..where((tbl) => tbl.movementUuid.equals(document.documentId)))
+              .get();
+
+          for (final line in lines) {
+            await _costLayerService.reverseConsumptions(line.uuid);
+            await _adjustProductQty(line.itemCode, document.warehouseId, line.quantity);
+
+            await (_db.update(_db.stockMovementLines)
+                  ..where((tbl) => tbl.uuid.equals(line.uuid)))
+                .write(
+              const StockMovementLinesCompanion(
+                postedCost: Value.absent(),
+                postedAt: Value.absent(),
+              ),
+            );
+          }
+
+          await _setDocumentStatus(document, InventoryDocumentStatus.draft, null);
           break;
 
         default:

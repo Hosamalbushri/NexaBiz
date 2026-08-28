@@ -144,6 +144,29 @@ class JournalRepositoryImpl implements JournalRepository {
         sourceId: sourceId,
       );
     }
+    if (!draft.isPosted) {
+      if (existing != null) {
+        await softDeletePostedAfterReverse(existing.uuid);
+      }
+      final now = DateTime.now().toUtc();
+      return JournalEntry(
+        id: existing?.id ?? 0,
+        uuid: existing?.uuid ?? replaceUuid ?? generateUuidV4(),
+        entryDate: draft.entryDate,
+        voucherNumber: draft.voucherNumber,
+        voucherType: draft.voucherType,
+        currencyCode: draft.currencyCode,
+        description: draft.description,
+        isPosted: false,
+        sourceType: sourceType,
+        sourceId: sourceId,
+        createdAt: now,
+        updatedAt: now,
+        version: (existing?.version ?? 0) + 1,
+        syncStatus: SyncStatus.synced,
+        lines: const [],
+      );
+    }
     if (existing != null && existing.isPosted) {
       throw const JournalException(JournalException.postedImmutable);
     }

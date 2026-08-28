@@ -11,7 +11,7 @@ class StockReceipt {
     this.supplier,
     this.accountId,
     this.accountName,
-    this.currencyCode = 'YER',
+    this.currencyCode = 'SAR',
     this.exchangeRate = 1.0,
     this.warehouse,
     this.notes,

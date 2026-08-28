@@ -7,12 +7,14 @@ import '../../domain/entities/stock_receipt.dart';
 import '../../domain/repositories/stock_movements_repository.dart';
 import '../../domain/usecases/stock_movement_usecases.dart';
 
+import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/app/inventory/accounting_inventory_account_adapter.dart';
 import 'package:stock_count/app/inventory/accounting_inventory_voucher_book_adapter.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/accounting/voucher_books/presentation/providers/voucher_book_providers.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/services/cost_layer_service.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_accounting_poster_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_dependency_detector_impl.dart';
@@ -82,16 +84,23 @@ final inventoryDependencyDetectorProvider = Provider<InventoryDependencyDetector
   return InventoryDependencyDetectorImpl(db);
 });
 
+final costLayerServiceProvider = Provider<CostLayerService>((ref) {
+  final db = ref.watch(inventoryDatabaseProvider);
+  return CostLayerServiceImpl(db: db);
+});
+
 final postingEngineProvider = Provider<PostingEngine>((ref) {
   final db = ref.watch(inventoryDatabaseProvider);
-  final costLayerService = CostLayerServiceImpl(db: db);
+  final costLayerService = ref.watch(costLayerServiceProvider);
   return PostingEngineImpl(db, costLayerService);
 });
 
 final inventoryAccountingPosterProvider = Provider<InventoryAccountingPoster>((ref) {
   final db = ref.watch(accountingDatabaseProvider);
+  final postingService = ref.watch(journalPostingServiceProvider);
   return InventoryAccountingPosterImpl(
     db,
+    journalPostingService: postingService,
     readCompanyId: () => ref.read(currentCompanyIdProvider),
   );
 });
@@ -101,14 +110,12 @@ final postingCoordinatorProvider = Provider<PostingCoordinator>((ref) {
   final validationService = ref.watch(stockValidationServiceProvider);
   final dependencyDetector = ref.watch(inventoryDependencyDetectorProvider);
   final postingEngine = ref.watch(postingEngineProvider);
-  final accountingPoster = ref.watch(inventoryAccountingPosterProvider);
 
   return PostingCoordinatorImpl(
     db: db,
     stockValidationService: validationService,
     dependencyDetector: dependencyDetector,
     postingEngine: postingEngine,
-    accountingPoster: accountingPoster,
   );
 });
 

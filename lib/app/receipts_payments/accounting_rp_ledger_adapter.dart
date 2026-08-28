@@ -103,6 +103,11 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
 
   @override
   Future<void> syncTransaction(FinancialTransaction txn) async {
+    if (!txn.documentStatus.isPosted) {
+      await voidTransaction(txn);
+      return;
+    }
+
     final cashAmount = JournalMoney.round(txn.amount);
     if (cashAmount <= 0) {
       return;

@@ -235,9 +235,10 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
             );
             Navigator.of(context).pop();
           } else {
+            final latestError = ref.read(stockIssueComposerProvider).error;
             showAppSnackBar(
               context,
-              message: state.error ?? l10n.stockIssueSaveFailed,
+              message: latestError ?? state.error ?? l10n.stockIssueSaveFailed,
               isSuccess: false,
             );
           }
@@ -299,14 +300,17 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
       onPickDate: _pickDate,
       onAccountSelected: composer.setAccount,
       onVoucherBookSelected: composer.setVoucherBook,
-      onCurrencyChanged: (code) => composer.setCurrency(code),
+      onCurrencyChanged: (code, rate) => composer.setCurrency(code, rate),
       onWarehouseChanged: composer.setWarehouse,
       onNotesChanged: composer.setNotes,
     );
 
     final productsTable = StockIssueProductsTable(
       items: state.items,
-      onProductSelected: composer.addProduct,
+      onProductSelected: (p) async {
+        final costService = ref.read(costLayerServiceProvider);
+        await composer.addProduct(p, costLayerService: costService);
+      },
       onQuantitiesChanged: (index, main, sub) {
         composer.updateQuantities(index: index, mainQty: main, subQty: sub);
       },
@@ -399,7 +403,7 @@ class _StockIssueHeaderCard extends ConsumerWidget {
   final VoidCallback onPickDate;
   final ValueChanged<InventoryAccountRef?> onAccountSelected;
   final ValueChanged<InventoryVoucherBookRef?> onVoucherBookSelected;
-  final ValueChanged<String> onCurrencyChanged;
+  final void Function(String code, double rate) onCurrencyChanged;
   final ValueChanged<String> onWarehouseChanged;
   final ValueChanged<String> onNotesChanged;
 
@@ -525,7 +529,7 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                     placeholder: l10n.salesCurrency,
                     onTap: () async {
                       final currencyListItems = currencyItemsAsync.asData?.value ?? [];
-                      final selected = await showModalBottomSheet<String>(
+                      final selected = await showModalBottomSheet<CurrencyRateListItem>(
                         context: context,
                         useSafeArea: true,
                         builder: (ctx) {
@@ -553,13 +557,13 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                                             ? theme.colorScheme.primary
                                             : theme.colorScheme.onSurfaceVariant,
                                       ),
-                                      title: Text(item.currency.code),
+                                      title: Text('${item.currency.code} - ${item.currency.nameAr}'),
                                       subtitle: item.isBase
-                                          ? null
+                                          ? const Text('العملة الرئيسية')
                                           : Text(
-                                              item.displayRate.toStringAsFixed(4),
+                                              'سعر الصرف: ${item.displayRate.toStringAsFixed(4)}',
                                             ),
-                                      onTap: () => Navigator.of(ctx).pop(item.currency.code),
+                                      onTap: () => Navigator.of(ctx).pop(item),
                                     )
                                 else
                                   Padding(
@@ -578,7 +582,9 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                           );
                         },
                       );
-                      if (selected != null) onCurrencyChanged(selected);
+                      if (selected != null) {
+                        onCurrencyChanged(selected.currency.code, selected.displayRate);
+                      }
                     },
                   ),
                 ),
@@ -1345,6 +1351,7 @@ class _FilledRow extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: AppAmountField(
                   value: item.unitCost,
+                  readOnly: true,
                   variant: AppAmountFieldVariant.compact,
                   onChanged: onUnitCostChanged,
                 ),
@@ -1469,7 +1476,7 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
                           final p = filtered[i];
                           return ListTile(
                             title: Text(p.name),
-                            subtitle: Text('المتوفر: ${p.onHandQty} | الرمز: ${p.itemCode}'),
+                            subtitle: Text('الرمز: ${p.itemCode} | التكلفة للمنتج: ${p.unitCost.toStringAsFixed(2)} | المتوفر: ${p.onHandQty}'),
                             onTap: () => widget.onProductSelected(p),
                           );
                         },

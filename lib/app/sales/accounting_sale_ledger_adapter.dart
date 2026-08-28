@@ -35,6 +35,11 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
 
   @override
   Future<void> syncSale(Sale sale) async {
+    if (!sale.saleStatus.isPosted) {
+      await voidSale(sale);
+      return;
+    }
+
     final netAmount = sale.total;
     final discountAmount = _totalDiscount(sale);
     if (netAmount <= 0 && discountAmount <= 0) {

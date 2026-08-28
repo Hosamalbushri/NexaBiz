@@ -7,15 +7,14 @@ import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/app_responsive.dart';
+import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
-import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_dependency_dialog.dart';
-import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_shortage_dialog.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_status_badge.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_coordinator.dart';
 import 'package:stock_count/modules/sales/invoices/domain/services/device_sale_number.dart';
 import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/modules/accounting/shared/domain/services/document_posting_orchestrator.dart';
+import 'package:stock_count/modules/accounting/shared/presentation/providers/document_posting_providers.dart';
 import '../../domain/entities/stock_receipt.dart';
 import '../providers/stock_movements_providers.dart';
 
@@ -181,26 +180,20 @@ class _StockReceiptCard extends ConsumerWidget {
                 icon: const Icon(Icons.send_rounded, color: Colors.green),
                 tooltip: 'ترحيل',
                 onPressed: () async {
-                  final docRef = InventoryDocumentRef(
-                    documentId: receipt.id,
-                    documentNumber: receipt.receiptNumber,
-                    documentType: InventoryDocumentType.stockReceipt,
-                    documentDate: receipt.receiptDate,
-                    warehouseId: receipt.warehouse,
-                    status: receipt.status,
-                  );
-
-                  final result = await ref.read(postingCoordinatorProvider).post(document: docRef);
+                  final orchestrator = ref.read(documentPostingOrchestratorProvider);
+                  final result = await orchestrator.postReceipt(receipt: receipt);
                   if (context.mounted) {
-                    if (result is PostSuccess) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('تم ترحيل المستند ${receipt.receiptNumber} بنجاح.')),
+                    if (result is OrchestrationSuccess) {
+                      showAppSnackBar(
+                        context,
+                        message: result.message,
+                        isSuccess: true,
                       );
-                    } else if (result is PostStockShortage) {
-                      InventoryShortageDialog.show(context, shortages: result.shortages);
-                    } else if (result is PostInvalidStatus) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(result.reason)),
+                    } else if (result is OrchestrationFailure) {
+                      showAppSnackBar(
+                        context,
+                        message: result.reason,
+                        isSuccess: false,
                       );
                     }
                   }
@@ -211,30 +204,20 @@ class _StockReceiptCard extends ConsumerWidget {
                 icon: const Icon(Icons.undo_rounded, color: Colors.orange),
                 tooltip: 'إلغاء الترحيل',
                 onPressed: () async {
-                  final docRef = InventoryDocumentRef(
-                    documentId: receipt.id,
-                    documentNumber: receipt.receiptNumber,
-                    documentType: InventoryDocumentType.stockReceipt,
-                    documentDate: receipt.receiptDate,
-                    warehouseId: receipt.warehouse,
-                    status: receipt.status,
-                  );
-
-                  final result = await ref.read(postingCoordinatorProvider).unpost(document: docRef);
+                  final orchestrator = ref.read(documentPostingOrchestratorProvider);
+                  final result = await orchestrator.unpostReceipt(receipt: receipt);
                   if (context.mounted) {
-                    if (result is UnpostSuccess) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('تم إلغاء ترحيل المستند ${receipt.receiptNumber} بنجاح.')),
-                      );
-                    } else if (result is UnpostBlockedByDependencies) {
-                      InventoryDependencyDialog.show(
+                    if (result is OrchestrationSuccess) {
+                      showAppSnackBar(
                         context,
-                        dependentDocuments: result.dependentDocuments,
-                        targetDocument: docRef,
+                        message: result.message,
+                        isSuccess: true,
                       );
-                    } else if (result is UnpostInvalidStatus) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(result.reason)),
+                    } else if (result is OrchestrationFailure) {
+                      showAppSnackBar(
+                        context,
+                        message: result.reason,
+                        isSuccess: false,
                       );
                     }
                   }

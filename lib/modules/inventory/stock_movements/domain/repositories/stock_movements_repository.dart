@@ -1,4 +1,5 @@
 import '../entities/stock_issue.dart';
+import '../entities/stock_movement_line.dart';
 import '../entities/stock_receipt.dart';
 
 abstract class StockMovementsRepository {
@@ -15,4 +16,11 @@ abstract class StockMovementsRepository {
   Future<StockIssue?> getIssueById(String id);
   Future<void> saveIssue(StockIssue issue);
   Future<void> deleteIssue(String id);
+
+  // Direct Movement Lines
+  Future<void> saveMovementLines({
+    required String movementUuid,
+    required String movementType,
+    required List<StockMovementLine> lines,
+  });
 }

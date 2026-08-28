@@ -49,6 +49,14 @@ abstract class CostLayerService {
   /// Computes current weighted average cost per main unit for [itemCode].
   Future<double> getWeightedAverageCost(String itemCode, {String? warehouseId});
 
+  /// Resolves unit cost for [itemCode] based on active inventory layers and valuation [method].
+  /// Falls back to historical layers, product unitCost, or price to guarantee non-zero return when data exists.
+  Future<double> getItemCostValuation({
+    required String itemCode,
+    CostValuationMethod method = CostValuationMethod.weightedAverage,
+    String? warehouseId,
+  });
+
   /// Returns open (non-closed) active cost layers for [itemCode].
   Future<List<CostLayer>> getOpenLayers(String itemCode, {String? warehouseId});
 }

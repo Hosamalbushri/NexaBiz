@@ -14,7 +14,10 @@ String saleErrorMessage(AppLocalizations l10n, Object error) {
     return journalExceptionMessage(l10n, error);
   }
   if (error is SaleException) {
-    return switch (error.code) {
+    if (error.message != null && error.message!.trim().isNotEmpty) {
+      return error.message!;
+    }
+    final localized = switch (error.code) {
       SaleException.emptyItems => l10n.salesErrorEmptyItems,
       SaleException.invalidQuantity => l10n.salesErrorInvalidQuantity,
       SaleException.invalidPrice => l10n.salesErrorInvalidPrice,
@@ -35,13 +38,29 @@ String saleErrorMessage(AppLocalizations l10n, Object error) {
       SaleException.notFound => l10n.salesNotFound,
       SaleException.duplicateSaleNumber => l10n.salesErrorInvalidStatus,
       SaleException.insufficientStock => l10n.salesErrorInvalidQuantity,
-      SaleException.syncFailed => l10n.somethingWentWrong,
-      SaleException.externalIntegrationFailed => l10n.somethingWentWrong,
-      SaleException.ledgerPostingFailed => l10n.somethingWentWrong,
       SaleException.postingRequiresInventory =>
         l10n.salesPostRequiresInventory,
-      _ => l10n.somethingWentWrong,
+      _ => null,
     };
+    if (localized != null) {
+      return localized;
+    }
   }
+
+  if (error is StateError) {
+    if (error.message.toString().trim().isNotEmpty) {
+      return error.message.toString();
+    }
+  }
+
+  final rawStr = error.toString();
+  final cleaned = rawStr
+      .replaceFirst(RegExp(r'^(Bad state|StateError|Error|Exception):\s*'), '')
+      .trim();
+
+  if (cleaned.isNotEmpty && !cleaned.startsWith('Instance of')) {
+    return cleaned;
+  }
+
   return l10n.somethingWentWrong;
 }

@@ -388,10 +388,83 @@ class CostLayerServiceImpl implements CostLayerService {
         .toList();
   }
 
+  @override
+  Future<double> getItemCostValuation({
+    required String itemCode,
+    CostValuationMethod method = CostValuationMethod.weightedAverage,
+    String? warehouseId,
+  }) async {
+    var query = _db.select(_db.inventoryCostLayers)
+      ..where((tbl) =>
+          tbl.itemCode.equals(itemCode) &
+          tbl.closed.equals(0) &
+          tbl.deletedAt.isNull());
+
+    if (warehouseId != null && warehouseId.isNotEmpty) {
+      query = query..where((tbl) => tbl.warehouseId.equals(warehouseId));
+    }
+
+    if (method == CostValuationMethod.fifo) {
+      query = query..orderBy([(tbl) => OrderingTerm.asc(tbl.receivedDate)]);
+    } else if (method == CostValuationMethod.lifo) {
+      query = query..orderBy([(tbl) => OrderingTerm.desc(tbl.receivedDate)]);
+    }
+
+    final layers = await query.get();
+    var resolvedCost = 0.0;
+
+    if (layers.isNotEmpty) {
+      if (method == CostValuationMethod.weightedAverage) {
+        var totalValue = 0.0;
+        var totalQty = 0.0;
+        for (final layer in layers) {
+          if (layer.remainingQty > 0) {
+            totalQty += layer.remainingQty;
+            totalValue += (layer.remainingQty * layer.unitCost);
+          }
+        }
+        if (totalQty > 0) {
+          resolvedCost = totalValue / totalQty;
+        }
+      } else {
+        // FIFO or LIFO: pick cost from the first active layer with remainingQty > 0
+        for (final layer in layers) {
+          if (layer.remainingQty > 0 && layer.unitCost > 0) {
+            resolvedCost = layer.unitCost;
+            break;
+          }
+        }
+      }
+    }
+
+    // If open layers yielded zero, lookup historical cost layers for itemCode
+    if (resolvedCost <= 0) {
+      final historicalQuery = _db.select(_db.inventoryCostLayers)
+        ..where((tbl) =>
+            tbl.itemCode.equals(itemCode) &
+            tbl.unitCost.isBiggerThanValue(0) &
+            tbl.deletedAt.isNull())
+        ..orderBy([(tbl) => OrderingTerm.desc(tbl.receivedDate)])
+        ..limit(1);
+      final lastLayer = await historicalQuery.getSingleOrNull();
+      if (lastLayer != null && lastLayer.unitCost > 0) {
+        resolvedCost = lastLayer.unitCost;
+      }
+    }
+
+    // Fallback to product catalog unitCost
+    if (resolvedCost <= 0) {
+      resolvedCost = await _getFallbackUnitCost(itemCode);
+    }
+
+    return resolvedCost;
+  }
+
   Future<double> _getFallbackUnitCost(String itemCode) async {
     final query = _db.select(_db.products)
       ..where((tbl) => tbl.itemCode.equals(itemCode));
     final product = await query.getSingleOrNull();
-    return product?.unitCost ?? 0.0;
+    if (product == null) return 0.0;
+    return product.unitCost > 0 ? product.unitCost : 0.0;
   }
 }

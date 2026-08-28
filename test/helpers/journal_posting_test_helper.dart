@@ -1,9 +1,9 @@
-import 'package:stock_count/modules/accounting/domain/entities/fiscal_year.dart';
-import 'package:stock_count/modules/accounting/domain/repositories/fiscal_year_repository.dart';
-import 'package:stock_count/modules/accounting/domain/repositories/journal_repository.dart';
-import 'package:stock_count/modules/accounting/domain/services/accounting_period_validator.dart';
-import 'package:stock_count/modules/accounting/domain/services/fiscal_period_policy.dart';
-import 'package:stock_count/modules/accounting/domain/services/journal_posting_service.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/entities/fiscal_year.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/repositories/fiscal_year_repository.dart';
+import 'package:stock_count/modules/accounting/journals/domain/repositories/journal_repository.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/fiscal_period_policy.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
 
 /// Empty fiscal-year store so validators fall back to [FiscalPeriodPolicy].
 class EmptyFiscalYearRepository implements FiscalYearRepository {

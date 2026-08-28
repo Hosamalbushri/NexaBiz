@@ -16,18 +16,15 @@ class PostingCoordinatorImpl implements PostingCoordinator {
     required StockValidationService stockValidationService,
     required InventoryDependencyDetector dependencyDetector,
     required PostingEngine postingEngine,
-    InventoryAccountingPoster? accountingPoster,
   })  : _db = db,
         _stockValidationService = stockValidationService,
         _dependencyDetector = dependencyDetector,
-        _postingEngine = postingEngine,
-        _accountingPoster = accountingPoster;
+        _postingEngine = postingEngine;
 
   final InventoryDatabase _db;
   final StockValidationService _stockValidationService;
   final InventoryDependencyDetector _dependencyDetector;
   final PostingEngine _postingEngine;
-  final InventoryAccountingPoster? _accountingPoster;
 
   @override
   Future<PostResult> post({
@@ -67,6 +64,15 @@ class PostingCoordinatorImpl implements PostingCoordinator {
     }
 
     // 3. Execute Posting via PostingEngine
+    // Defensive check: block posting if any line item has zero cost
+    for (final l in dbLines) {
+      if (l.unitCost <= 0 || l.totalCost <= 0) {
+        return PostInvalidStatus(
+          reason: 'لا يمكن ترحيل المستند بتكلفة صفرية للصنف (${l.itemName}). يرجى إدخال التكلفة أولاً.',
+        );
+      }
+    }
+
     double value = 0.0;
     if (document.documentType == InventoryDocumentType.stockReceipt) {
       final inboundLines = dbLines
@@ -85,7 +91,8 @@ class PostingCoordinatorImpl implements PostingCoordinator {
         warehouseId: document.warehouseId,
         documentDate: document.documentDate,
       );
-    } else if (document.documentType == InventoryDocumentType.stockIssue) {
+    } else if (document.documentType == InventoryDocumentType.stockIssue ||
+        document.documentType == InventoryDocumentType.salesInvoice) {
       final outboundLines = dbLines
           .map((l) => OutboundLineData(
                 lineUuid: l.uuid,
@@ -159,17 +166,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
       );
     }
 
-    // 5. Post Accounting Journal Entry to General Ledger (isPosted = true)
-    if (_accountingPoster != null && value > 0) {
-      await _accountingPoster!.postAccountingEntry(
-        document: document,
-        totalAmount: value,
-        accountId: docAccountId,
-        isPosted: true,
-      );
-    }
-
-    // 6. Write to InventoryAuditTrail
+    // 5. Write to InventoryAuditTrail
     await _recordAudit(
       documentId: document.documentId,
       documentType: document.documentType.storageValue,
@@ -230,15 +227,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
       );
     }
 
-    // 4. Update Accounting Journal Entry status to draft (isPosted = false)
-    if (_accountingPoster != null) {
-      await _accountingPoster!.setAccountingEntryPostingStatus(
-        document: document,
-        isPosted: false,
-      );
-    }
-
-    // 5. Write to InventoryAuditTrail
+    // 4. Write to InventoryAuditTrail
     await _recordAudit(
       documentId: document.documentId,
       documentType: document.documentType.storageValue,

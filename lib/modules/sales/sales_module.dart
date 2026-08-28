@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
-import '../../app/sales/accounting_sale_cogs_adapter.dart';
 import '../../app/sales/perpetual_sale_inventory_effect_adapter.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
@@ -14,7 +13,9 @@ import '../../core/permissions/permission_defs.dart';
 import '../../core/reporting/pdf_document_preview_page.dart';
 import '../accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import '../accounting/journals/presentation/providers/journal_providers.dart';
+import '../accounting/shared/presentation/providers/document_posting_providers.dart';
 import '../inventory/products/presentation/providers/product_providers.dart';
+import '../inventory/stock_movements/presentation/providers/stock_movements_providers.dart';
 import 'invoices/presentation/pages/sale_details_page.dart';
 import 'invoices/presentation/pages/sale_form_page.dart';
 import 'invoices/presentation/pages/sales_home_page.dart';
@@ -155,12 +156,8 @@ class SalesModule extends AppModule {
   List<Override> get providerOverrides => [
         saleInventoryEffectPortProvider.overrideWith((ref) {
           return PerpetualSaleInventoryEffectAdapter(
-            stock: ref.watch(productStockServiceProvider),
-            cogs: AccountingSaleCogsAdapter(
-              posting: ref.watch(journalPostingServiceProvider),
-              accounts: ref.watch(accountRepositoryProvider),
-              stock: ref.watch(productStockServiceProvider),
-            ),
+            orchestrator: ref.watch(documentPostingOrchestratorProvider),
+            stockMovementsRepository: ref.watch(stockMovementsRepositoryProvider),
           );
         }),
       ];

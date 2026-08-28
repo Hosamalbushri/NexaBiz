@@ -72,6 +72,11 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
   @override
   Future<void> saveReceipt(StockReceipt receipt) async {
+    for (final line in receipt.lines) {
+      if (line.unitCost <= 0 || line.totalCost <= 0) {
+        throw ArgumentError('لا يمكن حفظ أمر التوريد بتكلفة صفرية للصنف (${line.itemName})');
+      }
+    }
     await _db.transaction(() async {
       final existing = await (_db.select(_db.stockReceipts)
             ..where((tbl) => tbl.uuid.equals(receipt.id)))
@@ -149,7 +154,8 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
       await _enqueueReceipt(receipt.copyWith(version: newVersion), existing == null ? SyncOperationType.create : SyncOperationType.update);
 
-      if (_accountingPoster != null) {
+      final poster = _accountingPoster;
+      if (poster != null) {
         final totalAmount = receipt.lines.fold(0.0, (sum, l) => sum + l.totalCost);
         final docRef = InventoryDocumentRef(
           documentId: receipt.id,
@@ -157,8 +163,10 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receipt.receiptDate,
           status: receipt.status,
+          currencyCode: receipt.currencyCode,
+          exchangeRate: receipt.exchangeRate,
         );
-        await _accountingPoster!.postAccountingEntry(
+        await poster.postAccountingEntry(
           document: docRef,
           totalAmount: totalAmount,
           accountId: receipt.accountId,
@@ -191,15 +199,18 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
       await _enqueueReceipt(receipt.copyWith(version: receipt.version + 1, deletedAt: now), SyncOperationType.delete);
 
-      if (_accountingPoster != null) {
+      final poster = _accountingPoster;
+      if (poster != null) {
         final docRef = InventoryDocumentRef(
           documentId: id,
           documentNumber: receipt.receiptNumber,
           documentType: InventoryDocumentType.stockReceipt,
           documentDate: receipt.receiptDate,
           status: receipt.status,
+          currencyCode: receipt.currencyCode,
+          exchangeRate: receipt.exchangeRate,
         );
-        await _accountingPoster!.reverseAccountingEntry(document: docRef);
+        await poster.reverseAccountingEntry(document: docRef);
       }
     });
   }
@@ -250,6 +261,11 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
   @override
   Future<void> saveIssue(StockIssue issue) async {
+    for (final line in issue.lines) {
+      if (line.unitCost <= 0 || line.totalCost <= 0) {
+        throw ArgumentError('لا يمكن حفظ أمر الصرف بتكلفة صفرية للصنف (${line.itemName})');
+      }
+    }
     await _db.transaction(() async {
       final existing = await (_db.select(_db.stockIssues)
             ..where((tbl) => tbl.uuid.equals(issue.id)))
@@ -331,7 +347,8 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
       await _enqueueIssue(issue.copyWith(version: newVersion), existing == null ? SyncOperationType.create : SyncOperationType.update);
 
-      if (_accountingPoster != null) {
+      final poster = _accountingPoster;
+      if (poster != null) {
         final totalAmount = issue.lines.fold(0.0, (sum, l) => sum + l.totalCost);
         final docRef = InventoryDocumentRef(
           documentId: issue.id,
@@ -340,8 +357,10 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
           documentDate: issue.issueDate,
           warehouseId: issue.warehouse,
           status: issue.status,
+          currencyCode: issue.currencyCode,
+          exchangeRate: issue.exchangeRate,
         );
-        await _accountingPoster!.postAccountingEntry(
+        await poster.postAccountingEntry(
           document: docRef,
           totalAmount: totalAmount,
           accountId: issue.accountId,
@@ -374,7 +393,8 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
       await _enqueueIssue(issue.copyWith(version: issue.version + 1, deletedAt: now), SyncOperationType.delete);
 
-      if (_accountingPoster != null) {
+      final poster = _accountingPoster;
+      if (poster != null) {
         final docRef = InventoryDocumentRef(
           documentId: id,
           documentNumber: issue.issueNumber,
@@ -382,8 +402,10 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
           documentDate: issue.issueDate,
           warehouseId: issue.warehouse,
           status: issue.status,
+          currencyCode: issue.currencyCode,
+          exchangeRate: issue.exchangeRate,
         );
-        await _accountingPoster!.reverseAccountingEntry(document: docRef);
+        await poster.reverseAccountingEntry(document: docRef);
       }
     });
   }
@@ -547,5 +569,37 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
         },
       ),
     );
+  }
+
+  @override
+  Future<void> saveMovementLines({
+    required String movementUuid,
+    required String movementType,
+    required List<StockMovementLine> lines,
+  }) async {
+    await _db.transaction(() async {
+      await (_db.delete(_db.stockMovementLines)
+            ..where((tbl) => tbl.movementUuid.equals(movementUuid)))
+          .go();
+
+      for (final line in lines) {
+        await _db.into(_db.stockMovementLines).insert(
+              StockMovementLinesCompanion(
+                uuid: Value(line.id),
+                movementUuid: Value(movementUuid),
+                movementType: Value(movementType),
+                itemCode: Value(line.itemCode),
+                itemName: Value(line.itemName),
+                mainQuantity: Value(line.mainQuantity),
+                subQuantity: Value(line.subQuantity),
+                quantity: Value(line.quantity),
+                unitCost: Value(line.unitCost),
+                totalCost: Value(line.totalCost),
+                postedCost: Value(line.postedCost),
+                postedAt: Value(line.postedAt?.millisecondsSinceEpoch),
+              ),
+            );
+      }
+    });
   }
 }
