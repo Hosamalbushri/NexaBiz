@@ -29,6 +29,14 @@ List<ModuleSettingsCategoryDefinition> buildInventorySettingsCategories(String m
           subtitleBuilder: (l10n) => l10n.stockCountSettingsSubtitle,
         ),
         ModuleSettingsItemDefinition(
+          id: 'inventory_categories_settings',
+          moduleId: moduleId,
+          icon: Icons.account_tree_outlined,
+          path: InventoryRoutes.categoriesSettings,
+          titleBuilder: (l10n) => l10n.localeName == 'ar' ? 'شجرة تصنيفات المخزون' : 'Inventory Category Tree',
+          subtitleBuilder: (l10n) => l10n.localeName == 'ar' ? 'إدارة شجرة التصنيفات المرتبطة بالمستودعات ووراثة طرق احتساب التكلفة' : 'Manage warehouse-rooted category tree & cost valuation inheritance',
+        ),
+        ModuleSettingsItemDefinition(
           id: 'inventory_warehouses_settings',
           moduleId: moduleId,
           icon: Icons.warehouse_outlined,

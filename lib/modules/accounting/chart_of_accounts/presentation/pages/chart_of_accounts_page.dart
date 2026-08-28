@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
@@ -145,9 +146,10 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
           icon: const Icon(Icons.add_rounded),
           label: Text(l10n.accountingAddAccount),
         ),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+        body: AppContentConstraint(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             AccountExpandableSearch(
               expanded: _searchExpanded,
               onExpandedChanged: _setSearchExpanded,
@@ -254,7 +256,8 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   int _countAccounts(List<AccountTreeNode> roots) {

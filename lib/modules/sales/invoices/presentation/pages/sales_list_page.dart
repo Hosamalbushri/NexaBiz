@@ -11,6 +11,9 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
+import 'package:stock_count/core/widgets/app_filter_sheet.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
+import 'package:stock_count/core/widgets/app_search_bar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
@@ -104,95 +107,77 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
     SaleStatus? status = current.saleStatus;
     PaymentMethod? method = current.paymentMethod;
 
-    final applied = await showModalBottomSheet<SaleListFilter>(
+    SaleListFilter? resultFilter;
+
+    await AppFilterSheet.show<void>(
       context: context,
-      isScrollControlled: true,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setModalState) {
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      l10n.salesFiltersTitle,
-                      style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    DropdownButtonFormField<SaleStatus?>(
-                      initialValue: status,
-                      decoration: InputDecoration(labelText: l10n.salesStatus),
-                      items: [
-                        DropdownMenuItem(
-                          value: null,
-                          child: Text(l10n.salesFilterAll),
-                        ),
-                        ...SaleStatus.values.map(
-                          (s) => DropdownMenuItem(
-                            value: s,
-                            child: Text(_saleStatusLabel(l10n, s)),
-                          ),
-                        ),
-                      ],
-                      onChanged: (v) => setModalState(() => status = v),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    DropdownButtonFormField<PaymentMethod?>(
-                      initialValue: method,
-                      decoration: InputDecoration(
-                        labelText: l10n.salesPaymentMethod,
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: null,
-                          child: Text(l10n.salesFilterAll),
-                        ),
-                        ...PaymentMethod.values.map(
-                          (m) => DropdownMenuItem(
-                            value: m,
-                            child: Text(_paymentMethodLabel(l10n, m)),
-                          ),
-                        ),
-                      ],
-                      onChanged: (v) => setModalState(() => method = v),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    FilledButton(
-                      onPressed: () {
-                        Navigator.of(ctx).pop(
-                          current.copyWith(
-                            saleStatus: status,
-                            clearSaleStatus: status == null,
-                            clearPaymentStatus: true,
-                            paymentMethod: method,
-                            clearPaymentMethod: method == null,
-                          ),
-                        );
-                      },
-                      child: Text(l10n.salesApplyFilters),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(ctx).pop(const SaleListFilter());
-                      },
-                      child: Text(l10n.salesClearFilters),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+      title: l10n.salesFiltersTitle,
+      applyLabel: l10n.salesApplyFilters,
+      resetLabel: l10n.salesClearFilters,
+      onReset: () {
+        resultFilter = const SaleListFilter();
+      },
+      onApply: () {
+        resultFilter = current.copyWith(
+          saleStatus: status,
+          clearSaleStatus: status == null,
+          clearPaymentStatus: true,
+          paymentMethod: method,
+          clearPaymentMethod: method == null,
         );
       },
+      children: [
+        StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                DropdownButtonFormField<SaleStatus?>(
+                  initialValue: status,
+                  decoration: InputDecoration(labelText: l10n.salesStatus),
+                  items: [
+                    DropdownMenuItem(
+                      value: null,
+                      child: Text(l10n.salesFilterAll),
+                    ),
+                    ...SaleStatus.values.map(
+                      (s) => DropdownMenuItem(
+                        value: s,
+                        child: Text(_saleStatusLabel(l10n, s)),
+                      ),
+                    ),
+                  ],
+                  onChanged: (v) => setModalState(() => status = v),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                DropdownButtonFormField<PaymentMethod?>(
+                  initialValue: method,
+                  decoration: InputDecoration(
+                    labelText: l10n.salesPaymentMethod,
+                  ),
+                  items: [
+                    DropdownMenuItem(
+                      value: null,
+                      child: Text(l10n.salesFilterAll),
+                    ),
+                    ...PaymentMethod.values.map(
+                      (m) => DropdownMenuItem(
+                        value: m,
+                        child: Text(_paymentMethodLabel(l10n, m)),
+                      ),
+                    ),
+                  ],
+                  onChanged: (v) => setModalState(() => method = v),
+                ),
+              ],
+            );
+          },
+        ),
+      ],
     );
 
-    if (applied != null && mounted) {
-      ref.read(saleListFilterProvider.notifier).state = applied.copyWith(
+    if (resultFilter != null && mounted) {
+      ref.read(saleListFilterProvider.notifier).state = resultFilter!.copyWith(
         query: _searchController.text.trim(),
       );
     }
@@ -237,67 +222,25 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
           label: Text(l10n.salesCreateTitle),
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppConstants.pagePadding,
-              AppSpacing.md,
-              AppConstants.pagePadding,
-              AppSpacing.sm,
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                setState(() {});
-                _onQueryChanged(value);
-              },
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                isDense: true,
-                filled: true,
-                fillColor: scheme.surface,
-                hintText: l10n.salesSearchHint,
-                prefixIcon: Icon(
-                  Icons.search_rounded,
-                  color: scheme.primary,
-                ),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        tooltip: MaterialLocalizations.of(context)
-                            .deleteButtonTooltip,
-                        onPressed: () {
-                          _searchController.clear();
-                          _onQueryChanged('');
-                          setState(() {});
-                        },
-                        icon: const Icon(Icons.close_rounded),
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: BorderSide(
-                    color: scheme.outlineVariant.withValues(alpha: 0.5),
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: BorderSide(
-                    color: scheme.outlineVariant.withValues(alpha: 0.45),
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                  borderSide: BorderSide(color: scheme.primary, width: 1.4),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: 14,
-                ),
+      body: AppContentConstraint(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppConstants.pagePadding,
+                AppSpacing.md,
+                AppConstants.pagePadding,
+                AppSpacing.sm,
               ),
-              onTapOutside: (_) => FocusScope.of(context).unfocus(),
+              child: AppSearchBar(
+                controller: _searchController,
+                hint: l10n.salesSearchHint,
+                onChanged: (val) {
+                  setState(() {});
+                  _onQueryChanged(val);
+                },
+              ),
             ),
-          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -356,6 +299,7 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -431,8 +375,8 @@ class _SaleListTile extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             customerName,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                            softWrap: true,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: scheme.onSurfaceVariant,
                               fontWeight: FontWeight.w600,

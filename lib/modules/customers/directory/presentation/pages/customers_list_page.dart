@@ -7,10 +7,12 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
+import 'package:stock_count/core/widgets/app_search_bar.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
@@ -96,27 +98,22 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
           child: const Icon(Icons.add),
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppConstants.pagePadding,
-              AppSpacing.md,
-              AppConstants.pagePadding,
-              AppSpacing.sm,
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onQueryChanged,
-              decoration: InputDecoration(
-                hintText: l10n.customersSearchHint,
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
+      body: AppContentConstraint(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppConstants.pagePadding,
+                AppSpacing.md,
+                AppConstants.pagePadding,
+                AppSpacing.sm,
+              ),
+              child: AppSearchBar(
+                controller: _searchController,
+                onChanged: _onQueryChanged,
+                hint: l10n.customersSearchHint,
               ),
             ),
-          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -256,7 +253,8 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 

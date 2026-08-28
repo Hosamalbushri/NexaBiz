@@ -13,7 +13,6 @@ import '../../domain/services/sale_calculation_service.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_product_catalog_port.dart';
 import '../providers/sale_providers.dart';
 import '../utils/sale_autocomplete.dart';
-import '../../domain/services/sale_autocomplete_defaults.dart';
 import 'sale_status_badge.dart';
 
 /// Fixed multi-column widths for the products spreadsheet.
@@ -260,6 +259,8 @@ class _SaleProductsTableState extends ConsumerState<SaleProductsTable> {
                                 onUnitPriceBelowMin: widget.onUnitPriceBelowMin,
                                 onRemove: () => widget.onRemove(i),
                               ),
+                            if (widget.items.isNotEmpty)
+                              _TableFooter(items: widget.items, theme: theme),
                           ],
                         ),
                       ),
@@ -579,6 +580,100 @@ class _EmptyAddCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _TableFooter extends StatelessWidget {
+  const _TableFooter({required this.items, required this.theme});
+
+  final List<SaleItemDraft> items;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = theme.colorScheme;
+    final totalMain = items.fold(0.0, (sum, i) => sum + i.mainQuantity);
+    final totalSub = items.fold(0.0, (sum, i) => sum + i.subQuantity);
+    final grandTotal = items.fold(
+      0.0,
+      (sum, i) => sum + const SaleCalculationService().calculateLine(i).total,
+    );
+
+    String fmtQty(double v) => v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(2);
+
+    final style = theme.textTheme.labelSmall?.copyWith(
+      fontWeight: FontWeight.w800,
+      letterSpacing: 0.2,
+      color: scheme.onSurfaceVariant,
+    );
+    final totalStyle = theme.textTheme.labelSmall?.copyWith(
+      fontWeight: FontWeight.w900,
+      color: scheme.primary,
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm + 2,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
+        border: Border(
+          top: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: 0.45),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: _Cols.index,
+            child: Text('#', style: style, textAlign: TextAlign.center),
+          ),
+          SizedBox(
+            width: _Cols.product,
+            child: Text(
+              'المجموع الإجمالي (${items.length})',
+              style: style,
+            ),
+          ),
+          SizedBox(
+            width: _Cols.main,
+            child: Text(
+              fmtQty(totalMain),
+              style: style?.copyWith(color: scheme.onSurface),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(
+            width: _Cols.sub,
+            child: Text(
+              fmtQty(totalSub),
+              style: style?.copyWith(color: scheme.onSurface),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(
+            width: _Cols.price,
+            child: Text(
+              '—',
+              style: style,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(
+            width: _Cols.total,
+            child: Text(
+              grandTotal.toStringAsFixed(2),
+              style: totalStyle,
+              textAlign: TextAlign.end,
+            ),
+          ),
+          const SizedBox(width: _Cols.actions),
+        ],
       ),
     );
   }

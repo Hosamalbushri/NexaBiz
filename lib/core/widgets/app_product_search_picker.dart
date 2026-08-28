@@ -870,8 +870,8 @@ class _ProductResultCard extends StatelessWidget {
                   children: [
                     Text(
                       product.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                      softWrap: true,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),

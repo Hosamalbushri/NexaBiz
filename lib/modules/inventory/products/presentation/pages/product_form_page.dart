@@ -15,10 +15,15 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/notifications/notification_type.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
+import 'package:stock_count/core/widgets/app_expandable_form_section.dart';
+import 'package:stock_count/core/widgets/app_form_section.dart';
 import 'package:stock_count/core/widgets/app_responsive.dart';
+import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import '../../domain/entities/product.dart';
+import 'package:stock_count/modules/inventory/categories/presentation/providers/category_providers.dart';
 import '../../domain/models/product_code_format.dart';
 import '../../domain/models/product_exception.dart';
 import '../../domain/services/product_qr_payload_builder.dart';
@@ -53,6 +58,8 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   var _price = 0.0;
   var _priceError = false;
   var _unitCost = 0.0;
+  String? _categoryId;
+  CostValuationMethod? _costValuationMethod;
   DateTime? _createdAt;
   DateTime? _updatedAt;
   String? _uuid;
@@ -63,6 +70,8 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   String _initialPackSize = '';
   double _initialPrice = 0.0;
   double _initialUnitCost = 0.0;
+  String? _initialCategoryId;
+  CostValuationMethod? _initialCostValuationMethod;
 
   bool get _exporting => _exportBusy != _CodeExportBusy.none;
 
@@ -117,14 +126,18 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
           _barcodeController.text.trim().isNotEmpty ||
           _packSizeController.text.trim().isNotEmpty ||
           _price != 0.0 ||
-          _unitCost != 0.0;
+          _unitCost != 0.0 ||
+          _categoryId != null ||
+          _costValuationMethod != null;
     }
     return _codeController.text != _initialCode ||
         _nameController.text != _initialName ||
         _barcodeController.text != _initialBarcode ||
         _packSizeController.text != _initialPackSize ||
         _price != _initialPrice ||
-        _unitCost != _initialUnitCost;
+        _unitCost != _initialUnitCost ||
+        _categoryId != _initialCategoryId ||
+        _costValuationMethod != _initialCostValuationMethod;
   }
 
   void _hydrate(Product product) {
@@ -138,6 +151,8 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     _packSizeController.text = '${product.packSize}';
     _price = product.price;
     _unitCost = product.unitCost;
+    _categoryId = product.categoryId;
+    _costValuationMethod = product.costValuationMethod;
     _createdAt = product.createdAt;
     _updatedAt = product.updatedAt;
     _uuid = product.uuid;
@@ -148,6 +163,8 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     _initialPackSize = _packSizeController.text;
     _initialPrice = _price;
     _initialUnitCost = _unitCost;
+    _initialCategoryId = _categoryId;
+    _initialCostValuationMethod = _costValuationMethod;
   }
 
   Product? _productSnapshot() {
@@ -229,230 +246,339 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
     return UnsavedChangesScope(
       hasUnsavedChanges: _hasUnsavedChanges,
-      child: Scaffold(
-      appBar: CustomAppBar(
-        title: widget.isEditing ? l10n.productsEdit : l10n.productsAdd,
-        showBackButton: true,
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(AppConstants.pagePadding),
-          children: [
-            AppResponsiveForm(
-              maxColumns: 2,
-              children: [
-                TextFormField(
-                  controller: _codeController,
-                  readOnly: true,
-                  enableInteractiveSelection: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.codeLabel,
-                    helperText: l10n.productsItemCodeAutoHint,
-                    suffixIcon: _generatingCode
-                        ? const Padding(
-                            padding: EdgeInsets.all(12),
-                            child: SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          )
-                        : Icon(
-                            Icons.lock_outline,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return l10n.productsInvalidForm;
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: InputDecoration(labelText: l10n.itemName),
-                  textInputAction: TextInputAction.next,
-                  onChanged: widget.isEditing ? (_) => setState(() {}) : null,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return l10n.productsInvalidForm;
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  controller: _packSizeController,
-                  readOnly: widget.isEditing,
-                  enableInteractiveSelection: true,
-                  decoration: InputDecoration(
-                    labelText: l10n.packSize,
-                    hintText: widget.isEditing ? null : l10n.packSizeRequiredHint,
-                    helperText: widget.isEditing
-                        ? l10n.productsFieldLockedHint
-                        : null,
-                    suffixIcon: widget.isEditing
-                        ? Icon(
-                            Icons.lock_outline,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          )
-                        : null,
-                  ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    final pack = int.tryParse(value?.trim() ?? '');
-                    if (pack == null || pack <= 0) {
-                      return l10n.invalidPackSize;
-                    }
-                    return null;
-                  },
-                ),
-                AppAmountField(
-                  value: _price,
-                  onChanged: (value) {
-                    setState(() {
-                      _price = value;
-                      _priceError = false;
-                    });
-                  },
-                  decimalPlaces: 2,
-                  emptyWhenZero: false,
-                  trimTrailingZeros: true,
-                  label: l10n.price,
-                  hint: widget.isEditing
-                      ? l10n.productsFieldLockedHint
-                      : l10n.priceRequiredHint,
-                  readOnly: widget.isEditing,
-                  errorText: _priceError ? l10n.productsInvalidForm : null,
-                ),
-                AppAmountField(
-                  value: _unitCost,
-                  onChanged: (value) {
-                    setState(() {
-                      _unitCost = value;
-                    });
-                  },
-                  decimalPlaces: 2,
-                  emptyWhenZero: false,
-                  trimTrailingZeros: true,
-                  label: 'تكلفة المنتج (للوحدة)',
-                  hint: widget.isEditing
-                      ? l10n.productsFieldLockedHint
-                      : 'أدخل تكلفة التوريد الافتراضية',
-                  readOnly: widget.isEditing,
-                ),
-              ],
-            ),
-            if (widget.isEditing) ...[
-              const SizedBox(height: AppSpacing.xl),
-              Text(
-                l10n.productsCodesSection,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+      child: AppResponsiveScaffold(
+        appBar: CustomAppBar(
+          title: widget.isEditing ? l10n.productsEdit : l10n.productsAdd,
+          showBackButton: true,
+        ),
+        body: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(AppConstants.pagePadding),
+            children: [
+              AppFormSection(
+                title: l10n.localeName == 'ar' ? 'بيانات المنتج الأساسية' : 'Basic Product Info',
+                icon: Icons.inventory_2_outlined,
+                topSpacing: 0,
               ),
-              const SizedBox(height: AppSpacing.md),
-              DefaultTabController(
-                length: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Material(
-                      color: theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      child: TabBar(
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        dividerColor: Colors.transparent,
-                        indicator: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer.withValues(
-                            alpha: 0.85,
-                          ),
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                        ),
-                        labelColor: theme.colorScheme.onPrimaryContainer,
-                        unselectedLabelColor:
-                            theme.colorScheme.onSurfaceVariant,
-                        tabs: [
-                          Tab(
-                            icon: const Icon(
-                              Icons.view_week_outlined,
-                              size: 20,
+              AppResponsiveForm(
+                maxColumns: 2,
+                children: [
+                  TextFormField(
+                    controller: _codeController,
+                    readOnly: true,
+                    enableInteractiveSelection: true,
+                    decoration: InputDecoration(
+                      labelText: l10n.codeLabel,
+                      helperText: l10n.productsItemCodeAutoHint,
+                      prefixIcon: const Icon(Icons.qr_code_outlined),
+                      suffixIcon: _generatingCode
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : Icon(
+                              Icons.lock_outline,
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
-                            text: l10n.productsBarcodeFormatBarcode,
-                          ),
-                          Tab(
-                            icon: const Icon(
-                              Icons.qr_code_2_outlined,
-                              size: 20,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.productsInvalidForm;
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      labelText: l10n.itemName,
+                      prefixIcon: const Icon(Icons.edit_note_outlined),
+                    ),
+                    textInputAction: TextInputAction.next,
+                    onChanged: widget.isEditing ? (_) => setState(() {}) : null,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.productsInvalidForm;
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: _packSizeController,
+                    readOnly: widget.isEditing,
+                    enableInteractiveSelection: true,
+                    decoration: InputDecoration(
+                      labelText: l10n.packSize,
+                      hintText: widget.isEditing ? null : l10n.packSizeRequiredHint,
+                      helperText: widget.isEditing
+                          ? l10n.productsFieldLockedHint
+                          : null,
+                      prefixIcon: const Icon(Icons.numbers_outlined),
+                      suffixIcon: widget.isEditing
+                          ? Icon(
+                              Icons.lock_outline,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            )
+                          : null,
+                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    textInputAction: TextInputAction.next,
+                    validator: (value) {
+                      final pack = int.tryParse(value?.trim() ?? '');
+                      if (pack == null || pack <= 0) {
+                        return l10n.invalidPackSize;
+                      }
+                      return null;
+                    },
+                  ),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final isAr = l10n.localeName == 'ar';
+                      final categoriesAsync = ref.watch(allCategoriesStreamProvider);
+                      return categoriesAsync.when(
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, _) => const SizedBox.shrink(),
+                        data: (categories) {
+                          return DropdownButtonFormField<String?>(
+                            initialValue: _categoryId,
+                            isExpanded: true,
+                            decoration: InputDecoration(
+                              labelText: isAr ? 'تصنيف المنتج' : 'Product Category',
+                              prefixIcon: const Icon(Icons.category_outlined),
                             ),
-                            text: l10n.productsBarcodeFormatQr,
-                          ),
-                        ],
+                            items: [
+                              DropdownMenuItem<String?>(
+                                value: null,
+                                child: Text(
+                                  isAr ? '-- بدون تصنيف --' : '-- Uncategorized --',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                                ),
+                              ),
+                              ...categories.map((cat) {
+                                return DropdownMenuItem<String?>(
+                                  value: cat.id,
+                                  child: Text(
+                                    '${cat.name} (${cat.code})',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              }),
+                            ],
+                            onChanged: (val) => setState(() => _categoryId = val),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+              AppFormSection(
+                title: l10n.localeName == 'ar' ? 'التسعير والتكلفة' : 'Pricing & Unit Cost',
+                icon: Icons.payments_outlined,
+              ),
+              AppResponsiveForm(
+                maxColumns: 2,
+                children: [
+                  AppAmountField(
+                    value: _price,
+                    onChanged: (value) {
+                      setState(() {
+                        _price = value;
+                        _priceError = false;
+                      });
+                    },
+                    decimalPlaces: 2,
+                    emptyWhenZero: false,
+                    trimTrailingZeros: true,
+                    label: l10n.price,
+                    prefixText: null,
+                    hint: widget.isEditing
+                        ? l10n.productsFieldLockedHint
+                        : l10n.priceRequiredHint,
+                    readOnly: widget.isEditing,
+                    errorText: _priceError ? l10n.productsInvalidForm : null,
+                  ),
+                  AppAmountField(
+                    value: _unitCost,
+                    onChanged: (value) {
+                      setState(() {
+                        _unitCost = value;
+                      });
+                    },
+                    decimalPlaces: 2,
+                    emptyWhenZero: false,
+                    trimTrailingZeros: true,
+                    label: l10n.localeName == 'ar' ? 'تكلفة المنتج (للوحدة)' : 'Unit Cost',
+                    hint: widget.isEditing
+                        ? l10n.productsFieldLockedHint
+                        : l10n.localeName == 'ar' ? 'أدخل تكلفة التوريد الافتراضية' : 'Default unit cost',
+                    readOnly: widget.isEditing,
+                  ),
+                ],
+              ),
+              AppExpandableFormSection(
+                title: l10n.localeName == 'ar' ? 'سياسة احتساب التكلفة المتقدمة' : 'Advanced Cost Valuation',
+                subtitle: l10n.localeName == 'ar'
+                    ? 'تجاوز طريقة احتساب التكلفة المورثة من التصنيف والمستودع'
+                    : 'Overrides inherited category/warehouse cost method',
+                icon: Icons.calculate_outlined,
+                initiallyExpanded: _costValuationMethod != null,
+                badgeText: _costValuationMethod != null ? _costValuationMethod!.name.toUpperCase() : null,
+                child: DropdownButtonFormField<CostValuationMethod?>(
+                  initialValue: _costValuationMethod,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: l10n.localeName == 'ar' ? 'طريقة احتساب التكلفة' : 'Cost Valuation Method',
+                    prefixIcon: const Icon(Icons.calculate_outlined),
+                  ),
+                  items: [
+                    DropdownMenuItem<CostValuationMethod?>(
+                      value: null,
+                      child: Text(
+                        l10n.localeName == 'ar' ? 'افتراضي (وراثة من التصنيف / المستودع)' : 'Inherit from Category / Warehouse',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    SizedBox(
-                      height: 380,
-                      child: TabBarView(
-                        children: [
-                          _BarcodeCodeTab(
-                            controller: _barcodeController,
-                            generating: _generatingBarcode,
-                            printLoading:
-                                _exportBusy == _CodeExportBusy.printBarcode,
-                            shareLoading:
-                                _exportBusy == _CodeExportBusy.shareBarcode,
-                            disabled: _exporting || _generatingBarcode,
-                            onGenerate: _generateBarcode,
-                            onScan: () => _scanBarcodeIntoField(context),
-                            onPrint: () => _exportCode(
-                              ProductCodeFormat.barcode,
-                              share: false,
-                            ),
-                            onShare: () => _exportCode(
-                              ProductCodeFormat.barcode,
-                              share: true,
-                            ),
-                          ),
-                          _QrCodeTab(
-                            qrData: qrData,
-                            printLoading:
-                                _exportBusy == _CodeExportBusy.printQr,
-                            shareLoading:
-                                _exportBusy == _CodeExportBusy.shareQr,
-                            disabled: _exporting,
-                            onPrint: () => _exportCode(
-                              ProductCodeFormat.qrCode,
-                              share: false,
-                            ),
-                            onShare: () => _exportCode(
-                              ProductCodeFormat.qrCode,
-                              share: true,
-                            ),
-                          ),
-                        ],
+                    DropdownMenuItem<CostValuationMethod?>(
+                      value: CostValuationMethod.fifo,
+                      child: Text(
+                        l10n.localeName == 'ar' ? 'FIFO - الوارد أولاً يصدر أولاً' : 'FIFO',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    DropdownMenuItem<CostValuationMethod?>(
+                      value: CostValuationMethod.lifo,
+                      child: Text(
+                        l10n.localeName == 'ar' ? 'LIFO - الوارد أخيراً يصدر أولاً' : 'LIFO',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    DropdownMenuItem<CostValuationMethod?>(
+                      value: CostValuationMethod.weightedAverage,
+                      child: Text(
+                        l10n.localeName == 'ar' ? 'Weighted Average - المتوسط المرجح' : 'Weighted Average',
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
+                  onChanged: (val) => setState(() => _costValuationMethod = val),
                 ),
               ),
+              if (widget.isEditing) ...[
+                const SizedBox(height: AppSpacing.md),
+                AppExpandableFormSection(
+                  title: l10n.productsCodesSection,
+                  subtitle: l10n.localeName == 'ar' ? 'طباعة وتوليد رموز الباركوم وQR' : 'Print & Generate Barcode and QR labels',
+                  icon: Icons.qr_code_2_outlined,
+                  initiallyExpanded: false,
+                  child: DefaultTabController(
+                    length: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Material(
+                          color: theme.colorScheme.surfaceContainerHighest
+                              .withValues(alpha: 0.35),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          child: TabBar(
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            dividerColor: Colors.transparent,
+                            indicator: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer.withValues(
+                                alpha: 0.85,
+                              ),
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                            ),
+                            labelColor: theme.colorScheme.onPrimaryContainer,
+                            unselectedLabelColor:
+                                theme.colorScheme.onSurfaceVariant,
+                            tabs: [
+                              Tab(
+                                icon: const Icon(
+                                  Icons.view_week_outlined,
+                                  size: 20,
+                                ),
+                                text: l10n.productsBarcodeFormatBarcode,
+                              ),
+                              Tab(
+                                icon: const Icon(
+                                  Icons.qr_code_2_outlined,
+                                  size: 20,
+                                ),
+                                text: l10n.productsBarcodeFormatQr,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        SizedBox(
+                          height: 380,
+                          child: TabBarView(
+                            children: [
+                              _BarcodeCodeTab(
+                                controller: _barcodeController,
+                                generating: _generatingBarcode,
+                                printLoading:
+                                    _exportBusy == _CodeExportBusy.printBarcode,
+                                shareLoading:
+                                    _exportBusy == _CodeExportBusy.shareBarcode,
+                                disabled: _exporting || _generatingBarcode,
+                                onGenerate: _generateBarcode,
+                                onScan: () => _scanBarcodeIntoField(context),
+                                onPrint: () => _exportCode(
+                                  ProductCodeFormat.barcode,
+                                  share: false,
+                                ),
+                                onShare: () => _exportCode(
+                                  ProductCodeFormat.barcode,
+                                  share: true,
+                                ),
+                              ),
+                              _QrCodeTab(
+                                qrData: qrData,
+                                printLoading:
+                                    _exportBusy == _CodeExportBusy.printQr,
+                                shareLoading:
+                                    _exportBusy == _CodeExportBusy.shareQr,
+                                disabled: _exporting,
+                                onPrint: () => _exportCode(
+                                  ProductCodeFormat.qrCode,
+                                  share: false,
+                                ),
+                                onShare: () => _exportCode(
+                                  ProductCodeFormat.qrCode,
+                                  share: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ],
-            const SizedBox(height: AppSpacing.xl),
-            AppButton(
-              label: l10n.confirm,
-              icon: Icons.save_outlined,
-              expand: true,
-              isLoading: _saving,
-              onPressed: _saving ? null : () => _save(context),
-            ),
-          ],
+          ),
+        ),
+        bottomActions: AppBottomActions(
+          child: AppButton(
+            label: l10n.confirm,
+            icon: Icons.save_outlined,
+            expand: true,
+            isLoading: _saving,
+            onPressed: _saving ? null : () => _save(context),
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -564,6 +690,8 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
       packSize: int.parse(_packSizeController.text.trim()),
       price: _price,
       unitCost: _unitCost,
+      categoryId: _categoryId,
+      costValuationMethod: _costValuationMethod,
     );
 
     setState(() => _saving = true);

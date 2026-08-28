@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_meta_info_chip.dart';
 import '../../domain/entities/sale_summary.dart';
 import 'sale_status_badge.dart';
 
@@ -164,10 +165,10 @@ class SaleStickySummary extends StatelessWidget {
             ),
             if (summary.paidAmount > 0) ...[
               const SizedBox(height: AppSpacing.sm),
-              _SummaryMetaChip(
+              AppMetaInfoChip(
                 label: l10n.salesPaid,
                 value: formatSaleMoney(context, summary.paidAmount),
-                color: scheme.tertiary,
+                valueColor: scheme.tertiary,
               ),
             ],
             const SizedBox(height: AppSpacing.md),

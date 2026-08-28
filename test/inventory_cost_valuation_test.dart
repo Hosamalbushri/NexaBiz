@@ -23,8 +23,6 @@ void main() {
     service = CostLayerServiceImpl(db: db);
     repo = StockMovementsRepositoryImpl(
       db: db,
-      costLayerService: service,
-      valuationMethod: CostValuationMethod.fifo,
     );
     returnsRepo = StockReturnsRepositoryImpl(
       db: db,

@@ -5,6 +5,7 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/settings/company/app_currency.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_expandable_text.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/document_posting_orchestrator.dart';
@@ -473,11 +474,9 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
                             ),
                           ),
                           const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            receipt.notes!,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              height: 1.45,
-                            ),
+                          AppExpandableText(
+                            text: receipt.notes!,
+                            maxCollapsedLines: 3,
                           ),
                         ],
                       ),

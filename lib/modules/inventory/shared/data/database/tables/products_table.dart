@@ -24,6 +24,12 @@ class Products extends Table {
   /// Unit cost for COGS (company base currency per main unit).
   RealColumn get unitCost => real().withDefault(const Constant(0))();
 
+  /// Category UUID linking product to warehouse-rooted category tree.
+  TextColumn get categoryId => text().nullable()();
+
+  /// Cost Valuation Method Override: 'fifo', 'lifo', 'weightedAverage', or NULL (Inherit).
+  TextColumn get costValuationMethod => text().nullable()();
+
   IntColumn get createdAt => integer()();
 
   IntColumn get updatedAt => integer()();

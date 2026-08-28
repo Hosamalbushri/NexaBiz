@@ -10,6 +10,7 @@ class Warehouses extends Table {
   TextColumn get address => text().nullable()();
   TextColumn get phone => text().nullable()();
   TextColumn get managerName => text().nullable()();
+  TextColumn get costValuationMethod => text().nullable()();
 
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();

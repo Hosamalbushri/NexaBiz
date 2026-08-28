@@ -12,6 +12,7 @@ import 'package:stock_count/core/reporting/pdf_document_preview_page.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
+import 'package:stock_count/core/widgets/app_expandable_text.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
@@ -539,11 +540,9 @@ class _SaleDetailsBody extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    sale.notes!,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      height: 1.45,
-                    ),
+                  AppExpandableText(
+                    text: sale.notes!,
+                    maxCollapsedLines: 3,
                   ),
                 ],
               ),

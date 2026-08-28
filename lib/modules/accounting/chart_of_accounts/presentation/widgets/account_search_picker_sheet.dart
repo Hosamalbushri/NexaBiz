@@ -411,7 +411,7 @@ class _AccountSearchPickerState extends ConsumerState<AccountSearchPicker> {
                   final isSelected = account.uuid == widget.selectedUuid;
                   final pathText = _buildBreadcrumbPath(account, uuidMap, l10n);
 
-                  return _AccountResultCard(
+                  final cardWidget = _AccountResultCard(
                     account: account,
                     breadcrumbPath: pathText,
                     isSelected: isSelected,
@@ -420,10 +420,16 @@ class _AccountSearchPickerState extends ConsumerState<AccountSearchPicker> {
                         widget.onAccountSelected!(account);
                       }
                     },
-                  )
-                      .animate(delay: (20 * (index % 12)).ms)
-                      .fadeIn(duration: 180.ms)
-                      .moveY(begin: 6, end: 0, duration: 200.ms);
+                  );
+
+                  if (index < 12) {
+                    return cardWidget
+                        .animate(delay: (20 * (index % 12)).ms)
+                        .fadeIn(duration: 180.ms)
+                        .moveY(begin: 6, end: 0, duration: 200.ms);
+                  }
+
+                  return cardWidget;
                 },
               );
             },
@@ -554,7 +560,8 @@ class _AccountResultCard extends StatelessWidget {
                     if (breadcrumbPath.isNotEmpty) ...[
                       Text(
                         breadcrumbPath,
-                        maxLines: 1,
+                        maxLines: 2,
+                        softWrap: true,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
@@ -566,11 +573,12 @@ class _AccountResultCard extends StatelessWidget {
                     ],
                     Text(
                       AccountLabels.displayName(l10n, account),
-                      maxLines: 1,
+                      maxLines: 2,
+                      softWrap: true,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                        height: 1.2,
+                        height: 1.25,
                         color: account.isActive
                             ? scheme.onSurface
                             : scheme.onSurfaceVariant,
@@ -645,9 +653,10 @@ class _AccountResultCard extends StatelessWidget {
 
               // Tabular Monospace Code Badge
               Container(
+                constraints: const BoxConstraints(minWidth: 42),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
+                  horizontal: 7,
+                  vertical: 3,
                 ),
                 decoration: BoxDecoration(
                   color: typeColor.withValues(alpha: 0.08),
@@ -658,10 +667,12 @@ class _AccountResultCard extends StatelessWidget {
                 ),
                 child: Text(
                   account.accountCode,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.4,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.2,
                     color: typeColor,
+                    fontSize: 11,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),

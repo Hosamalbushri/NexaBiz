@@ -8,6 +8,7 @@ import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 
+import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import '../../domain/entities/warehouse.dart';
 import '../providers/warehouse_providers.dart';
 
@@ -92,9 +93,12 @@ class WarehousesSettingsPage extends ConsumerWidget {
                     ),
                     title: Row(
                       children: [
-                        Text(
-                          wh.name,
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        Flexible(
+                          child: Text(
+                            wh.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          ),
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         if (wh.isDefault)
@@ -183,6 +187,7 @@ class WarehousesSettingsPage extends ConsumerWidget {
     final phoneCtrl = TextEditingController(text: warehouse?.phone ?? '');
     final managerCtrl = TextEditingController(text: warehouse?.managerName ?? '');
     bool isDefault = warehouse?.isDefault ?? false;
+    CostValuationMethod? costValuationMethod = warehouse?.costValuationMethod;
     final isEditing = warehouse != null;
 
     showDialog(
@@ -190,95 +195,295 @@ class WarehousesSettingsPage extends ConsumerWidget {
       builder: (ctx) => StatefulBuilder(
         builder: (context, setStateDialog) {
           final l10n = AppLocalizations.of(context);
-          return AlertDialog(
-            title: Text(
-              isEditing
-                  ? (l10n.localeName == 'ar' ? 'تعديل المستودع' : 'Edit Warehouse')
-                  : (l10n.localeName == 'ar' ? 'إضافة مستودع جديد' : 'Add New Warehouse'),
+          final theme = Theme.of(context);
+          final colorScheme = theme.colorScheme;
+          final isAr = l10n.localeName == 'ar';
+
+          return Dialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
             ),
-            content: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextField(
-                    controller: codeCtrl,
-                    decoration: InputDecoration(
-                      labelText: l10n.localeName == 'ar' ? 'كود المستودع' : 'Warehouse Code',
-                      hintText: 'WH-01',
+                  // Modern Header Bar
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 16, 16),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            isEditing ? Icons.warehouse_rounded : Icons.add_business_rounded,
+                            color: colorScheme.primary,
+                            size: 26,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isEditing
+                                    ? (isAr ? 'تعديل بيانات المستودع' : 'Edit Warehouse Details')
+                                    : (isAr ? 'إضافة مستودع جديد' : 'Add New Warehouse'),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                isAr
+                                    ? 'أدخل بيانات وإعدادات التكلفة للمستودع'
+                                    : 'Specify details and cost valuation rules',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          icon: const Icon(Icons.close_rounded),
+                          tooltip: isAr ? 'إغلاق' : 'Close',
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  TextField(
-                    controller: nameCtrl,
-                    decoration: InputDecoration(
-                      labelText: l10n.localeName == 'ar' ? 'اسم المستودع' : 'Warehouse Name',
-                      hintText: 'المستودع الرئيسي',
+                  const Divider(height: 1),
+
+                  // Form Scrollable Body
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Basic Info Section Header
+                          Text(
+                            isAr ? 'البيانات الأساسية' : 'Basic Information',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: TextField(
+                                  controller: codeCtrl,
+                                  decoration: InputDecoration(
+                                    labelText: isAr ? 'كود المستودع *' : 'Code *',
+                                    hintText: 'WH-01',
+                                    prefixIcon: const Icon(Icons.qr_code_rounded, size: 20),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                flex: 3,
+                                child: TextField(
+                                  controller: nameCtrl,
+                                  decoration: InputDecoration(
+                                    labelText: isAr ? 'اسم المستودع *' : 'Warehouse Name *',
+                                    hintText: 'المستودع الرئيسي',
+                                    prefixIcon: const Icon(Icons.store_rounded, size: 20),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          TextField(
+                            controller: managerCtrl,
+                            decoration: InputDecoration(
+                              labelText: isAr ? 'أمين / مدير المستودع' : 'Warehouse Manager',
+                              hintText: isAr ? 'اسم المسؤول عن المستودع' : 'Manager Name',
+                              prefixIcon: const Icon(Icons.person_outline_rounded, size: 20),
+                            ),
+                          ),
+
+                          const SizedBox(height: AppSpacing.md),
+                          // Contact & Location Section
+                          Text(
+                            isAr ? 'بيانات التواصل والموقع' : 'Contact & Location',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          TextField(
+                            controller: phoneCtrl,
+                            keyboardType: TextInputType.phone,
+                            decoration: InputDecoration(
+                              labelText: isAr ? 'رقم الهاتف' : 'Phone Number',
+                              prefixIcon: const Icon(Icons.phone_outlined, size: 20),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          TextField(
+                            controller: addressCtrl,
+                            decoration: InputDecoration(
+                              labelText: isAr ? 'العنوان / الموقع' : 'Address / Location',
+                              prefixIcon: const Icon(Icons.location_on_outlined, size: 20),
+                            ),
+                          ),
+
+                          const SizedBox(height: AppSpacing.md),
+                          // Valuation & Policy Section
+                          Text(
+                            isAr ? 'سياسة احتساب التكلفة' : 'Cost Valuation Policy',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          DropdownButtonFormField<CostValuationMethod?>(
+                            isExpanded: true,
+                            initialValue: costValuationMethod,
+                            decoration: InputDecoration(
+                              labelText: isAr ? 'طريقة احتساب التكلفة الافتراضية' : 'Default Valuation Method',
+                              prefixIcon: const Icon(Icons.calculate_outlined, size: 20),
+                              helperText: isAr ? 'تطبق على جميع المنتجات ما لم يُحدد خلاف ذلك' : 'Applies to products unless overridden',
+                            ),
+                            items: [
+                              DropdownMenuItem<CostValuationMethod?>(
+                                value: null,
+                                child: Text(
+                                  isAr ? 'افتراضي للنظام (المتوسط المرجح)' : 'System Default (Weighted Average)',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                                ),
+                              ),
+                              DropdownMenuItem<CostValuationMethod?>(
+                                value: CostValuationMethod.fifo,
+                                child: Text(
+                                  isAr ? 'FIFO - الوارد أولاً يصدر أولاً' : 'FIFO (First-In, First-Out)',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              DropdownMenuItem<CostValuationMethod?>(
+                                value: CostValuationMethod.lifo,
+                                child: Text(
+                                  isAr ? 'LIFO - الوارد أخيراً يصدر أولاً' : 'LIFO (Last-In, First-Out)',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              DropdownMenuItem<CostValuationMethod?>(
+                                value: CostValuationMethod.weightedAverage,
+                                child: Text(
+                                  isAr ? 'Weighted Average - المتوسط المرجح' : 'Weighted Average',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                            onChanged: (val) => setStateDialog(() => costValuationMethod = val),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerLow,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                              ),
+                            ),
+                            child: CheckboxListTile(
+                              value: isDefault,
+                              onChanged: (val) => setStateDialog(() => isDefault = val ?? false),
+                              title: Text(
+                                isAr ? 'تعيين كمستودع افتراضي للنظام' : 'Set as Default Warehouse',
+                                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                isAr ? 'سيتم اعتماد هذا المستودع تلقائياً في العمليات' : 'Auto-selected for default transactions',
+                                style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                              ),
+                              controlAffinity: ListTileControlAffinity.leading,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  TextField(
-                    controller: managerCtrl,
-                    decoration: InputDecoration(
-                      labelText: l10n.localeName == 'ar' ? 'أمين / مدير المستودع' : 'Warehouse Manager',
+
+                  const Divider(height: 1),
+                  // Actions Bar
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text(isAr ? 'إلغاء' : 'Cancel'),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        FilledButton.icon(
+                          onPressed: () async {
+                            if (codeCtrl.text.trim().isEmpty || nameCtrl.text.trim().isEmpty) {
+                              showAppSnackBar(
+                                context,
+                                message: isAr ? 'يرجى إدخال كود واسم المستودع' : 'Please enter code and name',
+                                isSuccess: false,
+                              );
+                              return;
+                            }
+
+                            final newWh = Warehouse(
+                              id: warehouse?.id ?? generateUuidV4(),
+                              code: codeCtrl.text.trim(),
+                              name: nameCtrl.text.trim(),
+                              isDefault: isDefault,
+                              costValuationMethod: costValuationMethod,
+                              address: addressCtrl.text.trim().isEmpty ? null : addressCtrl.text.trim(),
+                              phone: phoneCtrl.text.trim().isEmpty ? null : phoneCtrl.text.trim(),
+                              managerName: managerCtrl.text.trim().isEmpty ? null : managerCtrl.text.trim(),
+                              version: warehouse?.version ?? 1,
+                            );
+
+                            Navigator.of(ctx).pop();
+                            final success = await ref.read(warehouseControllerProvider.notifier).saveWarehouse(newWh);
+                            if (context.mounted && success) {
+                              showAppSnackBar(
+                                context,
+                                message: isAr ? 'تم حفظ المستودع بنجاح' : 'Warehouse saved successfully',
+                                isSuccess: true,
+                              );
+                            }
+                          },
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(Icons.check_circle_rounded, size: 20),
+                          label: Text(isAr ? 'حفظ البيانات' : 'Save Details'),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  TextField(
-                    controller: phoneCtrl,
-                    decoration: InputDecoration(
-                      labelText: l10n.localeName == 'ar' ? 'رقم الهاتف' : 'Phone Number',
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  TextField(
-                    controller: addressCtrl,
-                    decoration: InputDecoration(
-                      labelText: l10n.localeName == 'ar' ? 'العنوان / الموقع' : 'Address / Location',
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  CheckboxListTile(
-                    value: isDefault,
-                    onChanged: (val) => setStateDialog(() => isDefault = val ?? false),
-                    title: Text(l10n.localeName == 'ar' ? 'تعيين كمستودع افتراضي' : 'Set as Default Warehouse'),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
                   ),
                 ],
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(l10n.localeName == 'ar' ? 'إلغاء' : 'Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (codeCtrl.text.trim().isEmpty || nameCtrl.text.trim().isEmpty) {
-                    showAppSnackBar(context, message: l10n.localeName == 'ar' ? 'يرجى إدخال كود واسم المستودع' : 'Please enter code and name', isSuccess: false);
-                    return;
-                  }
-
-                  final newWh = Warehouse(
-                    id: warehouse?.id ?? generateUuidV4(),
-                    code: codeCtrl.text.trim(),
-                    name: nameCtrl.text.trim(),
-                    isDefault: isDefault,
-                    address: addressCtrl.text.trim().isEmpty ? null : addressCtrl.text.trim(),
-                    phone: phoneCtrl.text.trim().isEmpty ? null : phoneCtrl.text.trim(),
-                    managerName: managerCtrl.text.trim().isEmpty ? null : managerCtrl.text.trim(),
-                    version: warehouse?.version ?? 1,
-                  );
-
-                  Navigator.of(ctx).pop();
-                  final success = await ref.read(warehouseControllerProvider.notifier).saveWarehouse(newWh);
-                  if (context.mounted && success) {
-                    showAppSnackBar(context, message: l10n.localeName == 'ar' ? 'تم حفظ المستودع بنجاح' : 'Warehouse saved successfully', isSuccess: true);
-                  }
-                },
-                child: Text(l10n.localeName == 'ar' ? 'حفظ' : 'Save'),
-              ),
-            ],
           );
         },
       ),

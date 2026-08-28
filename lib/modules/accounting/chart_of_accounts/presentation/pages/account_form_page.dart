@@ -9,6 +9,9 @@ import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
+import 'package:stock_count/core/widgets/app_form_section.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
+import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/entities/account.dart';
@@ -203,176 +206,205 @@ class _AccountFormPageState extends ConsumerState<AccountFormPage> {
 
     return UnsavedChangesScope(
       hasUnsavedChanges: _hasUnsavedChanges,
-      child: Scaffold(
+      child: AppResponsiveScaffold(
         appBar: CustomAppBar(
-        title: widget.isEditing
-            ? l10n.accountingEditAccount
-            : l10n.accountingAddAccount,
-        showBackButton: true,
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: AppConstants.pageInsets(context),
-          children: [
-            if (systemLocked)
-              InputDecorator(
-                decoration: InputDecoration(
-                  labelText: l10n.accountingFieldName,
-                  helperText: l10n.accountingSystemAccountHint,
-                ),
-                child: Text(
-                  AccountLabels.displayName(l10n, _existing!),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-              )
-            else
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: l10n.accountingFieldName,
-                ),
-                textInputAction: TextInputAction.next,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return l10n.accountingErrorNameRequired;
-                  }
-                  return null;
-                },
-              ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _codeController,
-              enabled: !systemLocked,
-              onChanged: (_) => _codeAutoFilled = false,
-              decoration: InputDecoration(
-                labelText: l10n.accountingFieldCode,
-                helperText: systemLocked
-                    ? l10n.accountingSystemAccountHint
-                    : l10n.accountingFieldCodeHelper,
-                suffixIcon: widget.isEditing || systemLocked
-                    ? null
-                    : IconButton(
-                        tooltip: l10n.accountingGenerateCode,
-                        onPressed: _generatingCode || _parentId == null
-                            ? null
-                            : () => _assignCodeFromParent(force: true),
-                        icon: _generatingCode
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.auto_awesome),
-                      ),
-              ),
-              textInputAction: TextInputAction.next,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.accountingErrorCodeRequired;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            parentsAsync.when(
-              loading: () => const LinearProgressIndicator(),
-              error: (_, _) => Text(l10n.somethingWentWrong),
-              data: (parents) {
-                final options = [
-                  for (final p in parents)
-                    if (!widget.isEditing || p.uuid != _existing?.uuid) p,
-                ];
-                return DropdownButtonFormField<String?>(
-                  // ignore: deprecated_member_use
-                  value: _parentId,
-                  decoration: InputDecoration(
-                    labelText: l10n.accountingFieldParent,
-                  ),
-                  items: [
-                    DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text(l10n.accountingRootAccount),
-                    ),
-                    for (final parent in options)
-                      DropdownMenuItem<String?>(
-                        value: parent.uuid,
-                        child: Text(
-                          '${parent.accountCode} — ${AccountLabels.displayName(l10n, parent)}',
-                        ),
-                      ),
-                  ],
-                  onChanged: systemLocked
-                      ? null
-                      : (value) => _applyParentSelection(value),
-                );
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            DropdownButtonFormField<AccountType>(
-              // ignore: deprecated_member_use
-              value: _accountType,
-              decoration: InputDecoration(
-                labelText: l10n.accountingFieldType,
-                helperText: _parentId == null
-                    ? null
-                    : l10n.accountingTypeInheritedHint,
-              ),
-              items: [
-                for (final type in AccountType.values)
-                  DropdownMenuItem(
-                    value: type,
-                    child: Text(AccountLabels.typeLabel(l10n, type)),
-                  ),
-              ],
-              onChanged: systemLocked || _parentId != null
-                  ? null
-                  : (value) {
-                      if (value != null) {
-                        setState(() => _accountType = value);
-                      }
-                    },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _descriptionController,
-              decoration: InputDecoration(
-                labelText: l10n.accountingFieldDescription,
-              ),
-              maxLines: 3,
-              textInputAction: TextInputAction.newline,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.accountingAccountGroup),
-              subtitle: Text(l10n.accountingAccountGroupHint),
-              value: _isGroup,
-              onChanged: systemLocked
-                  ? null
-                  : (value) => setState(() => _isGroup = value),
-            ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.accountingAccountActive),
-              value: _isActive,
-              onChanged: systemLocked
-                  ? null
-                  : (value) => setState(() => _isActive = value),
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            AppButton(
-              label: l10n.accountingSaveAccount,
-              expand: true,
-              isLoading: _saving,
+          title: widget.isEditing
+              ? l10n.accountingEditAccount
+              : l10n.accountingAddAccount,
+          showBackButton: true,
+        ),
+        bottomActions: AppBottomActions(
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
               onPressed: _saving ? null : _save,
+              icon: _saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.save_outlined),
+              label: Text(l10n.accountingSaveAccount),
             ),
-          ],
+          ),
+        ),
+        body: Form(
+          key: _formKey,
+          child: ListView(
+            padding: AppConstants.pageInsets(context),
+            children: [
+              AppFormSection(
+                title: l10n.localeName == 'ar' ? 'البيانات الأساسية' : 'Basic Details',
+                icon: Icons.account_tree_outlined,
+                topSpacing: 0,
+              ),
+              AppResponsiveForm(
+                maxColumns: 2,
+                children: [
+                  if (systemLocked)
+                    InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: l10n.accountingFieldName,
+                        helperText: l10n.accountingSystemAccountHint,
+                      ),
+                      child: Text(
+                        AccountLabels.displayName(l10n, _existing!),
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    )
+                  else
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: l10n.accountingFieldName,
+                      ),
+                      textInputAction: TextInputAction.next,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return l10n.accountingErrorNameRequired;
+                        }
+                        return null;
+                      },
+                    ),
+                  TextFormField(
+                    controller: _codeController,
+                    enabled: !systemLocked,
+                    onChanged: (_) => _codeAutoFilled = false,
+                    decoration: InputDecoration(
+                      labelText: l10n.accountingFieldCode,
+                      helperText: systemLocked
+                          ? l10n.accountingSystemAccountHint
+                          : l10n.accountingFieldCodeHelper,
+                      suffixIcon: widget.isEditing || systemLocked
+                          ? null
+                          : IconButton(
+                              tooltip: l10n.accountingGenerateCode,
+                              onPressed: _generatingCode || _parentId == null
+                                  ? null
+                                  : () => _assignCodeFromParent(force: true),
+                              icon: _generatingCode
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.auto_awesome),
+                            ),
+                    ),
+                    textInputAction: TextInputAction.next,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.accountingErrorCodeRequired;
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+              AppFormSection(
+                title: l10n.localeName == 'ar' ? 'التسلسل الهيكلي والنوع' : 'Hierarchy & Type',
+                icon: Icons.account_balance_outlined,
+              ),
+              AppResponsiveForm(
+                maxColumns: 2,
+                children: [
+                  parentsAsync.when(
+                    loading: () => const LinearProgressIndicator(),
+                    error: (_, _) => Text(l10n.somethingWentWrong),
+                    data: (parents) {
+                      final options = [
+                        for (final p in parents)
+                          if (!widget.isEditing || p.uuid != _existing?.uuid) p,
+                      ];
+                      return DropdownButtonFormField<String?>(
+                        // ignore: deprecated_member_use
+                        value: _parentId,
+                        decoration: InputDecoration(
+                          labelText: l10n.accountingFieldParent,
+                        ),
+                        items: [
+                          DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text(l10n.accountingRootAccount),
+                          ),
+                          for (final parent in options)
+                            DropdownMenuItem<String?>(
+                              value: parent.uuid,
+                              child: Text(
+                                '${parent.accountCode} — ${AccountLabels.displayName(l10n, parent)}',
+                              ),
+                            ),
+                        ],
+                        onChanged: systemLocked
+                            ? null
+                            : (value) => _applyParentSelection(value),
+                      );
+                    },
+                  ),
+                  DropdownButtonFormField<AccountType>(
+                    // ignore: deprecated_member_use
+                    value: _accountType,
+                    decoration: InputDecoration(
+                      labelText: l10n.accountingFieldType,
+                      helperText: _parentId == null
+                          ? null
+                          : l10n.accountingTypeInheritedHint,
+                    ),
+                    items: [
+                      for (final type in AccountType.values)
+                        DropdownMenuItem(
+                          value: type,
+                          child: Text(AccountLabels.typeLabel(l10n, type)),
+                        ),
+                    ],
+                    onChanged: systemLocked || _parentId != null
+                        ? null
+                        : (value) {
+                            if (value != null) {
+                              setState(() => _accountType = value);
+                            }
+                          },
+                  ),
+                ],
+              ),
+              AppFormSection(
+                title: l10n.localeName == 'ar' ? 'الوصف والإعدادات' : 'Description & Options',
+                icon: Icons.tune_outlined,
+              ),
+              TextFormField(
+                controller: _descriptionController,
+                decoration: InputDecoration(
+                  labelText: l10n.accountingFieldDescription,
+                ),
+                maxLines: 3,
+                textInputAction: TextInputAction.newline,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.accountingAccountGroup),
+                subtitle: Text(l10n.accountingAccountGroupHint),
+                value: _isGroup,
+                onChanged: systemLocked
+                    ? null
+                    : (value) => setState(() => _isGroup = value),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.accountingAccountActive),
+                value: _isActive,
+                onChanged: systemLocked
+                    ? null
+                    : (value) => setState(() => _isActive = value),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 

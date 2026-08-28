@@ -12,6 +12,19 @@ class AccountTreeNode {
 
   bool get hasChildren => children.isNotEmpty;
 
+  /// Recursively counts all descendant nodes under this tree node.
+  int get descendantCount {
+    var count = 0;
+    void walk(AccountTreeNode n) {
+      for (final child in n.children) {
+        count++;
+        walk(child);
+      }
+    }
+    walk(this);
+    return count;
+  }
+
   /// Builds a forest from a flat account list (any order).
   static List<AccountTreeNode> buildForest(List<Account> accounts) {
     final byParent = <String?, List<Account>>{};
@@ -81,4 +94,5 @@ class AccountTreeFlatEntry {
   final bool isSelected;
 
   Account get account => node.account;
+  bool get isRoot => depth == 0;
 }

@@ -6,13 +6,19 @@ import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_docu
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/cost_layer_service.dart';
+import 'package:stock_count/modules/inventory/cost_valuation/domain/services/cost_method_inheritance_resolver.dart';
 import '../../domain/services/posting_engine.dart';
 
 class PostingEngineImpl implements PostingEngine {
-  PostingEngineImpl(this._db, this._costLayerService);
+  PostingEngineImpl(
+    this._db,
+    this._costLayerService, [
+    this._inheritanceResolver,
+  ]);
 
   final InventoryDatabase _db;
   final CostLayerService _costLayerService;
+  final CostMethodInheritanceResolver? _inheritanceResolver;
 
   @override
   Future<double> applyInboundPosting({
@@ -81,10 +87,17 @@ class PostingEngineImpl implements PostingEngine {
 
     await _db.transaction(() async {
       for (final line in lines) {
+        final effectiveValuationMethod = _inheritanceResolver != null
+            ? (await _inheritanceResolver!.resolveForProduct(
+                itemCode: line.itemCode,
+                warehouseId: warehouseId,
+              )).effectiveMethod
+            : valuationMethod;
+
         final consumptionResult = await _costLayerService.consumeLayers(
           itemCode: line.itemCode,
           quantity: line.quantity,
-          method: valuationMethod,
+          method: effectiveValuationMethod,
           issueLineUuid: line.lineUuid,
           movementType: document.documentType.storageValue,
           warehouseId: warehouseId,
@@ -125,11 +138,18 @@ class PostingEngineImpl implements PostingEngine {
 
     await _db.transaction(() async {
       for (final line in lines) {
+        final effectiveValuationMethod = _inheritanceResolver != null
+            ? (await _inheritanceResolver!.resolveForProduct(
+                itemCode: line.itemCode,
+                warehouseId: fromWarehouseId,
+              )).effectiveMethod
+            : valuationMethod;
+
         // 1. Consume from source warehouse
         final consumptionResult = await _costLayerService.consumeLayers(
           itemCode: line.itemCode,
           quantity: line.quantity,
-          method: valuationMethod,
+          method: effectiveValuationMethod,
           issueLineUuid: line.lineUuid,
           movementType: 'stock_transfer_out',
           warehouseId: fromWarehouseId,

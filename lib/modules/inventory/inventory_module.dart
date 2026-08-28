@@ -39,6 +39,7 @@ import 'stock_movements/presentation/pages/stock_issue_form_page.dart';
 import 'stock_movements/presentation/pages/stock_receipt_details_page.dart';
 import 'stock_movements/presentation/pages/stock_receipt_form_page.dart';
 
+import 'categories/presentation/pages/categories_settings_page.dart';
 import 'cost_valuation/presentation/pages/cost_valuation_settings_page.dart';
 import 'warehouses/presentation/pages/stock_transfer_form_page.dart';
 import 'warehouses/presentation/pages/warehouses_settings_page.dart';
@@ -330,6 +331,11 @@ class InventoryModule extends AppModule {
           path: 'warehouses/settings',
           name: 'inventoryWarehousesSettings',
           builder: (context, state) => const WarehousesSettingsPage(),
+        ),
+        GoRoute(
+          path: 'categories/settings',
+          name: 'inventoryCategoriesSettings',
+          builder: (context, state) => const CategoriesSettingsPage(),
         ),
         GoRoute(
           path: 'cost-valuation/settings',

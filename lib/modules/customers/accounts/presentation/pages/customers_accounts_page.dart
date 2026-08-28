@@ -5,6 +5,7 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
@@ -39,78 +40,80 @@ class CustomersAccountsPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppConstants.pagePadding,
-              AppSpacing.md,
-              AppConstants.pagePadding,
-              AppSpacing.sm,
-            ),
-            child: parentAsync.when(
-              loading: () => const SizedBox.shrink(),
-              error: (_, _) => Text(
-                l10n.customersParentAccountNotSet,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
-              ),
-              data: (parent) {
-                if (parent == null) {
-                  return Text(
-                    l10n.customersParentAccountNotSet,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.error,
-                    ),
-                  );
-                }
-                return Text(
-                  l10n.customersAccountsUnderParent(parent.code, parent.name),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.35,
-                  ),
-                );
-              },
-            ),
-          ),
-          Expanded(
-            child: Padding(
+      body: AppContentConstraint(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppConstants.pagePadding,
-                0,
+                AppSpacing.md,
                 AppConstants.pagePadding,
-                AppConstants.pagePadding,
+                AppSpacing.sm,
               ),
-              child: accountsAsync.when(
-                loading: () => const AppLoading(),
-                error: (error, _) => AppErrorState(message: error.toString()),
-                data: (accounts) {
-                  if (accounts.isEmpty) {
-                    return AppEmptyState(
-                      title: l10n.customersAccountsEmptyTitle,
-                      subtitle: l10n.customersAccountsEmptyMessage,
-                      icon: Icons.account_balance_outlined,
-                      actionLabel: l10n.customersListTitle,
-                      actionIcon: Icons.people_outline,
-                      onAction: () => CustomersRoutes.goList(context),
+              child: parentAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => Text(
+                  l10n.customersParentAccountNotSet,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+                data: (parent) {
+                  if (parent == null) {
+                    return Text(
+                      l10n.customersParentAccountNotSet,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
                     );
                   }
-                  return ListView.separated(
-                    itemCount: accounts.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.sm),
-                    itemBuilder: (context, index) {
-                      return _AccountRow(account: accounts[index]);
-                    },
+                  return Text(
+                    l10n.customersAccountsUnderParent(parent.code, parent.name),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      height: 1.35,
+                    ),
                   );
                 },
               ),
             ),
-          ),
-        ],
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppConstants.pagePadding,
+                  0,
+                  AppConstants.pagePadding,
+                  AppConstants.pagePadding,
+                ),
+                child: accountsAsync.when(
+                  loading: () => const AppLoading(),
+                  error: (error, _) => AppErrorState(message: error.toString()),
+                  data: (accounts) {
+                    if (accounts.isEmpty) {
+                      return AppEmptyState(
+                        title: l10n.customersAccountsEmptyTitle,
+                        subtitle: l10n.customersAccountsEmptyMessage,
+                        icon: Icons.account_balance_outlined,
+                        actionLabel: l10n.customersListTitle,
+                        actionIcon: Icons.people_outline,
+                        onAction: () => CustomersRoutes.goList(context),
+                      );
+                    }
+                    return ListView.separated(
+                      itemCount: accounts.length,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(height: AppSpacing.sm),
+                      itemBuilder: (context, index) {
+                        return _AccountRow(account: accounts[index]);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

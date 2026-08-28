@@ -11,6 +11,7 @@ import 'package:stock_count/core/widgets/app_amount_field.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/sales/invoices/domain/services/device_sale_number.dart';
@@ -24,8 +25,11 @@ import '../providers/transaction_list_provider.dart';
 import '../widgets/rp_account_search_field.dart';
 import 'package:stock_count/app/exit/app_exit_scope.dart';
 import '../widgets/rp_entry_lines_table.dart';
-import '../widgets/rp_error_messages.dart';
+import 'package:stock_count/core/widgets/app_filter_sheet.dart';
+import 'package:stock_count/core/widgets/app_kpi_tile.dart';
+import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import 'package:stock_count/modules/receipts_payments/shared/presentation/pages/receipts_payments_routes.dart';
+import '../widgets/rp_error_messages.dart';
 
 class FinancialTransactionFormPage extends ConsumerStatefulWidget {
   const FinancialTransactionFormPage({
@@ -217,51 +221,42 @@ class _FinancialTransactionFormPageState
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final current = ref.read(transactionComposerProvider).currencyCode;
-    final selected = await showModalBottomSheet<RpCurrencyRef>(
+    RpCurrencyRef? selectedCurrency;
+
+    await AppFilterSheet.show<void>(
       context: context,
-      useSafeArea: true,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Text(
-                  l10n.rpCurrency,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+      title: l10n.rpCurrency,
+      applyLabel: l10n.rpSave,
+      onApply: () {},
+      children: [
+        for (final c in _currencies)
+          ListTile(
+            leading: Icon(
+              c.code == current
+                  ? Icons.check_circle
+                  : Icons.circle_outlined,
+              color: c.code == current
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+            title: Text(c.code),
+            subtitle: c.isBase
+                ? Text(l10n.rpBaseCurrency)
+                : Text(
+                    '${l10n.rpExchangeRate}: ${c.rateToBase.toStringAsFixed(4)}',
                   ),
-                ),
-              ),
-              for (final c in _currencies)
-                ListTile(
-                  leading: Icon(
-                    c.code == current
-                        ? Icons.check_circle
-                        : Icons.circle_outlined,
-                    color: c.code == current
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  title: Text(c.code),
-                  subtitle: c.isBase
-                      ? Text(l10n.rpBaseCurrency)
-                      : Text(
-                          '${l10n.rpExchangeRate}: ${c.rateToBase.toStringAsFixed(4)}',
-                        ),
-                  onTap: () => Navigator.of(ctx).pop(c),
-                ),
-              const SizedBox(height: AppSpacing.sm),
-            ],
+            onTap: () {
+              selectedCurrency = c;
+              Navigator.of(context).pop();
+            },
           ),
-        );
-      },
+      ],
     );
-    if (selected != null) {
+
+    if (selectedCurrency != null) {
       ref.read(transactionComposerProvider.notifier).setCurrency(
-            code: selected.code,
-            rateToBase: selected.rateToBase,
+            code: selectedCurrency!.code,
+            rateToBase: selectedCurrency!.rateToBase,
           );
       setState(() => _dirty = true);
     }
@@ -346,7 +341,7 @@ class _FinancialTransactionFormPageState
         : (type.isReceipt ? l10n.rpFormTitleReceipt : l10n.rpFormTitlePayment);
 
     if (_loading) {
-      return Scaffold(
+      return AppResponsiveScaffold(
         backgroundColor: theme.colorScheme.surfaceContainerLowest,
         appBar: CustomAppBar(title: title, showBackButton: true),
         body: AppLoading(message: l10n.rpLoading),
@@ -354,7 +349,7 @@ class _FinancialTransactionFormPageState
     }
 
     if (_loadError != null) {
-      return Scaffold(
+      return AppResponsiveScaffold(
         backgroundColor: theme.colorScheme.surfaceContainerLowest,
         appBar: CustomAppBar(title: title, showBackButton: true),
         body: AppErrorState(message: _loadError!, onRetry: _loadPage),
@@ -371,117 +366,118 @@ class _FinancialTransactionFormPageState
 
     return UnsavedChangesScope(
       hasUnsavedChanges: _hasUnsavedChanges,
-      child: Scaffold(
+      child: AppResponsiveScaffold(
         backgroundColor: theme.colorScheme.surfaceContainerLowest,
         appBar: CustomAppBar(title: title, showBackButton: true),
         body: ListView(
-        padding: AppConstants.pageInsets(context),
-        children: [
-          _HeaderCard(
-            numberLabel: number,
-            dateLabel: dateLabel,
-            onPickDate: _pickDate,
-            voucherBooks: _voucherBooks,
-            selectedBook: state.voucherBook,
-            canChangeBook: !_isEdit,
-            onBookChanged: (book) {
-              ref
-                  .read(transactionComposerProvider.notifier)
-                  .setVoucherBook(book);
-              setState(() => _dirty = true);
-            },
-            cashAccount: state.cashAccount,
-            onCashSelected: (account) {
-              ref
-                  .read(transactionComposerProvider.notifier)
-                  .setCashAccount(account);
-            },
-            cashAmount: state.amount,
-            onCashAmountChanged: (value) {
-              ref.read(transactionComposerProvider.notifier).setAmount(value);
-              setState(() => _dirty = true);
-            },
-            currencyCode: state.currencyCode,
-            onPickCurrency: _pickCurrency,
-            equivalentLabel: equivalentLabel,
-            exchangeRate: state.exchangeRate,
-            descriptionController: _descriptionController,
-            onDescriptionChanged: (value) {
-              ref
-                  .read(transactionComposerProvider.notifier)
-                  .setDescription(value);
-              setState(() => _dirty = true);
-            },
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          RpEntryLinesTable(
-            lines: state.lines,
-            cashCurrencyCode: state.currencyCode,
-            currencies: _currencies,
-            amountColumnLabel: type.isReceipt
-                ? l10n.rpLineAmountCredit
-                : l10n.rpLineAmountDebit,
-            onAccountSelected: (account) {
-              ref
-                  .read(transactionComposerProvider.notifier)
-                  .addEntryLineWithAccount(account);
-              setState(() => _dirty = true);
-            },
-            onAmountChanged: (index, amount) {
-              ref
-                  .read(transactionComposerProvider.notifier)
-                  .setLineAmount(index, amount, manual: true);
-              setState(() => _dirty = true);
-            },
-            onCrossRateChanged: (index, rate) {
-              ref
-                  .read(transactionComposerProvider.notifier)
-                  .setLineCrossRate(index, rate);
-              setState(() => _dirty = true);
-            },
-            onCurrencyChanged: (index, code, rate) {
-              ref.read(transactionComposerProvider.notifier).setLineCurrency(
-                    index: index,
-                    code: code,
-                    rateToBase: rate,
-                  );
-              setState(() => _dirty = true);
-            },
-            onLineDescriptionChanged: (index, value) {
-              ref
-                  .read(transactionComposerProvider.notifier)
-                  .setLineDescription(index, value);
-              setState(() => _dirty = true);
-            },
-            onRemoveLine: (index) {
-              ref
-                  .read(transactionComposerProvider.notifier)
-                  .removeEntryLine(index);
-              setState(() => _dirty = true);
-            },
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          _BalanceSummaryCard(
-            debitLabel: l10n.rpTotalsDebit,
-            creditLabel: l10n.rpTotalsCredit,
-            differenceLabel: l10n.rpTotalsDifference,
-            baseCurrencyCode: state.baseCurrencyCode,
-            debit: state.totalDebitBase,
-            credit: state.totalCreditBase,
-            difference: state.balanceDifferenceBase,
-            isBalanced: state.isBalanced,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          AppButton(
+          padding: AppConstants.pageInsets(context),
+          children: [
+            _HeaderCard(
+              numberLabel: number,
+              dateLabel: dateLabel,
+              onPickDate: _pickDate,
+              voucherBooks: _voucherBooks,
+              selectedBook: state.voucherBook,
+              canChangeBook: !_isEdit,
+              onBookChanged: (book) {
+                ref
+                    .read(transactionComposerProvider.notifier)
+                    .setVoucherBook(book);
+                setState(() => _dirty = true);
+              },
+              cashAccount: state.cashAccount,
+              onCashSelected: (account) {
+                ref
+                    .read(transactionComposerProvider.notifier)
+                    .setCashAccount(account);
+              },
+              cashAmount: state.amount,
+              onCashAmountChanged: (value) {
+                ref.read(transactionComposerProvider.notifier).setAmount(value);
+                setState(() => _dirty = true);
+              },
+              currencyCode: state.currencyCode,
+              onPickCurrency: _pickCurrency,
+              equivalentLabel: equivalentLabel,
+              exchangeRate: state.exchangeRate,
+              descriptionController: _descriptionController,
+              onDescriptionChanged: (value) {
+                ref
+                    .read(transactionComposerProvider.notifier)
+                    .setDescription(value);
+                setState(() => _dirty = true);
+              },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            RpEntryLinesTable(
+              lines: state.lines,
+              cashCurrencyCode: state.currencyCode,
+              currencies: _currencies,
+              amountColumnLabel: type.isReceipt
+                  ? l10n.rpLineAmountCredit
+                  : l10n.rpLineAmountDebit,
+              onAccountSelected: (account) {
+                ref
+                    .read(transactionComposerProvider.notifier)
+                    .addEntryLineWithAccount(account);
+                setState(() => _dirty = true);
+              },
+              onAmountChanged: (index, amount) {
+                ref
+                    .read(transactionComposerProvider.notifier)
+                    .setLineAmount(index, amount, manual: true);
+                setState(() => _dirty = true);
+              },
+              onCrossRateChanged: (index, rate) {
+                ref
+                    .read(transactionComposerProvider.notifier)
+                    .setLineCrossRate(index, rate);
+                setState(() => _dirty = true);
+              },
+              onCurrencyChanged: (index, code, rate) {
+                ref.read(transactionComposerProvider.notifier).setLineCurrency(
+                      index: index,
+                      code: code,
+                      rateToBase: rate,
+                    );
+                setState(() => _dirty = true);
+              },
+              onLineDescriptionChanged: (index, value) {
+                ref
+                    .read(transactionComposerProvider.notifier)
+                    .setLineDescription(index, value);
+                setState(() => _dirty = true);
+              },
+              onRemoveLine: (index) {
+                ref
+                    .read(transactionComposerProvider.notifier)
+                    .removeEntryLine(index);
+                setState(() => _dirty = true);
+              },
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _BalanceSummaryCard(
+              debitLabel: l10n.rpTotalsDebit,
+              creditLabel: l10n.rpTotalsCredit,
+              differenceLabel: l10n.rpTotalsDifference,
+              baseCurrencyCode: state.baseCurrencyCode,
+              debit: state.totalDebitBase,
+              credit: state.totalCreditBase,
+              difference: state.balanceDifferenceBase,
+              isBalanced: state.isBalanced,
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+        ),
+        bottomActions: AppBottomActions(
+          child: AppButton(
             label: l10n.rpSave,
             onPressed: (_saving || !state.isBalanced) ? null : _save,
             isLoading: _saving,
             expand: true,
           ),
-          const SizedBox(height: AppSpacing.xl),
-        ],
+        ),
       ),
-    ),
     );
   }
 }
@@ -538,14 +534,14 @@ class _BalanceSummaryCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _BalanceTile(
+                  child: AppKpiTile(
                     label: debitLabel,
                     value: _fmt(debit),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: _BalanceTile(
+                  child: AppKpiTile(
                     label: creditLabel,
                     value: _fmt(credit),
                   ),
@@ -553,7 +549,7 @@ class _BalanceSummaryCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            _BalanceTile(
+            AppKpiTile(
               label: differenceLabel,
               value: _fmt(difference),
               valueColor: differenceColor,
@@ -561,66 +557,6 @@ class _BalanceSummaryCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _BalanceTile extends StatelessWidget {
-  const _BalanceTile({
-    required this.label,
-    required this.value,
-    this.valueColor,
-    this.emphasized = false,
-  });
-
-  final String label;
-  final String value;
-  final Color? valueColor;
-  final bool emphasized;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm + 2,
-      ),
-      decoration: BoxDecoration(
-        color: emphasized
-            ? (valueColor ?? scheme.primary).withValues(alpha: 0.08)
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: emphasized
-            ? Border.all(
-                color: (valueColor ?? scheme.primary).withValues(alpha: 0.28),
-              )
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: valueColor,
-              letterSpacing: -0.2,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -797,6 +733,7 @@ class _HeaderCard extends StatelessWidget {
               decoration: InputDecoration(
                 labelText: l10n.rpGeneralDescription,
                 alignLabelWithHint: true,
+                prefixIcon: const Icon(Icons.notes_outlined),
               ),
               maxLines: 3,
               onChanged: onDescriptionChanged,

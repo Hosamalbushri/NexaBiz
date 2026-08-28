@@ -10,6 +10,9 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/permissions/permission_error_messages.dart';
 import 'package:stock_count/core/utils/business_date.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
+import 'package:stock_count/core/widgets/app_form_section.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
+import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
@@ -177,30 +180,81 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
       l10n.accountingFiscalWizardStepPreview,
     ];
 
-    return Scaffold(
+    return AppResponsiveScaffold(
       appBar: CustomAppBar(
         title: l10n.accountingFiscalYearCreateTitle,
         showBackButton: true,
       ),
+      bottomActions: AppBottomActions(
+        child: Row(
+          children: [
+            if (_step > 0) ...[
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _saving ? null : () => setState(() => _step -= 1),
+                  icon: const Icon(Icons.arrow_back),
+                  label: Text(l10n.accountingFiscalWizardBack),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+            ],
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _saving
+                    ? null
+                    : () {
+                        if (_step < 3) {
+                          setState(() => _step += 1);
+                          if (_step == 3) {
+                            _rebuildPreview();
+                          }
+                        } else {
+                          _create();
+                        }
+                      },
+                icon: _saving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(_step == 3 ? Icons.check_circle_outlined : Icons.arrow_forward),
+                label: Text(
+                  _step == 3
+                      ? l10n.accountingFiscalWizardCreate
+                      : l10n.accountingFiscalWizardNext,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
       body: ListView(
         padding: AppConstants.pageInsets(context),
         children: [
-          Text(
-            stepTitles[_step],
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+          AppFormSection(
+            title: stepTitles[_step],
+            icon: switch (_step) {
+              0 => Icons.calendar_today_outlined,
+              1 => Icons.date_range_outlined,
+              2 => Icons.currency_exchange_outlined,
+              _ => Icons.preview_outlined,
+            },
+            topSpacing: 0,
           ),
-          const SizedBox(height: AppSpacing.md),
           if (_step == 0) ...[
-            TextField(
-              controller: _codeController,
-              decoration: InputDecoration(labelText: l10n.accountingFiscalYearCode),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: l10n.accountingFiscalYearName),
+            AppResponsiveForm(
+              maxColumns: 2,
+              children: [
+                TextField(
+                  controller: _codeController,
+                  decoration: InputDecoration(labelText: l10n.accountingFiscalYearCode),
+                ),
+                TextField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: l10n.accountingFiscalYearName),
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.md),
             ListTile(
@@ -331,42 +385,7 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
                   trailing: Text(l10n.accountingPeriodStatusClosed),
                 ),
           ],
-          const SizedBox(height: AppSpacing.xl),
-          Row(
-            children: [
-              if (_step > 0)
-                Expanded(
-                  child: AppButton(
-                    label: l10n.accountingFiscalWizardBack,
-                    variant: AppButtonVariant.outlined,
-                    onPressed: _saving
-                        ? null
-                        : () => setState(() => _step -= 1),
-                  ),
-                ),
-              if (_step > 0) const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: AppButton(
-                  label: _step == 3
-                      ? l10n.accountingFiscalWizardCreate
-                      : l10n.accountingFiscalWizardNext,
-                  isLoading: _saving,
-                  onPressed: _saving
-                      ? null
-                      : () {
-                          if (_step < 3) {
-                            setState(() => _step += 1);
-                            if (_step == 3) {
-                              _rebuildPreview();
-                            }
-                          } else {
-                            _create();
-                          }
-                        },
-                ),
-              ),
-            ],
-          ),
+          const SizedBox(height: AppSpacing.lg),
         ],
       ),
     );

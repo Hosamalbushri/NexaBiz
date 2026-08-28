@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/database/encrypted_drift_connection.dart';
 
+import 'tables/categories_table.dart';
 import 'tables/inventory_audit_trail_table.dart';
 import 'tables/inventory_cost_consumptions_table.dart';
 import 'tables/inventory_cost_layers_table.dart';
@@ -28,6 +29,7 @@ part 'inventory_database.g.dart';
   ProductWarehouseStocks,
   StockTransfers,
   InventoryAuditTrail,
+  Categories,
 ])
 class InventoryDatabase extends _$InventoryDatabase {
   InventoryDatabase({String? name, QueryExecutor? executor})
@@ -37,7 +39,7 @@ class InventoryDatabase extends _$InventoryDatabase {
   InventoryDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -361,6 +363,38 @@ class InventoryDatabase extends _$InventoryDatabase {
         );
         await customStatement(
           "UPDATE stock_issues SET status = 'posted', posted_at = created_at WHERE status IS NULL OR status = ''",
+        );
+      }
+      if (from < 13) {
+        await customStatement('''
+          CREATE TABLE IF NOT EXISTS categories (
+            uuid TEXT NOT NULL PRIMARY KEY,
+            code TEXT NOT NULL,
+            name TEXT NOT NULL,
+            warehouse_id TEXT NOT NULL,
+            parent_id TEXT NULL,
+            cost_valuation_method TEXT NULL,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            sync_status TEXT NOT NULL DEFAULT 'pending',
+            version INTEGER NOT NULL DEFAULT 1,
+            company_id TEXT NULL,
+            deleted_at INTEGER NULL,
+            UNIQUE(warehouse_id, code)
+          );
+        ''');
+        await customStatement(
+          'ALTER TABLE warehouses ADD COLUMN cost_valuation_method TEXT NULL',
+        );
+        await customStatement(
+          'ALTER TABLE products ADD COLUMN category_id TEXT NULL',
+        );
+        await customStatement(
+          'ALTER TABLE products ADD COLUMN cost_valuation_method TEXT NULL',
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_categories_wh_parent '
+          'ON categories (warehouse_id, parent_id)',
         );
       }
     },

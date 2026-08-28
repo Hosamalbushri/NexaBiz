@@ -7,6 +7,7 @@ abstract class WarehouseRepository {
   Stream<List<Warehouse>> watchAllWarehouses();
   Future<Warehouse?> getWarehouseById(String id);
   Future<Warehouse?> getDefaultWarehouse();
+  Future<Warehouse> ensureDefaultWarehouse();
   Future<void> saveWarehouse(Warehouse warehouse);
   Future<void> deleteWarehouse(String id);
 

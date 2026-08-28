@@ -48,6 +48,13 @@ List<InventoryServiceDefinition> inventoryServiceCatalog() {
       titleBuilder: _productsTitle,
       subtitleBuilder: _productsSubtitle,
     ),
+    InventoryServiceDefinition(
+      id: 'categories',
+      icon: Icons.account_tree_outlined,
+      path: InventoryRoutes.categoriesSettings,
+      titleBuilder: _categoriesTitle,
+      subtitleBuilder: _categoriesSubtitle,
+    ),
   ];
 }
 
@@ -64,6 +71,14 @@ String _productsTitle(AppLocalizations l10n) => l10n.inventoryProductsService;
 
 String _productsSubtitle(AppLocalizations l10n) =>
     l10n.inventoryProductsServiceDescription;
+
+String _categoriesTitle(AppLocalizations l10n) =>
+    l10n.localeName == 'ar' ? 'التصنيفات' : 'Categories';
+
+String _categoriesSubtitle(AppLocalizations l10n) =>
+    l10n.localeName == 'ar'
+        ? 'شجرة التصنيفات المرتبطة بالمستودعات'
+        : 'Warehouse-rooted category tree';
 
 InventoryServiceDefinition? findInventoryServiceById(String id) {
   for (final service in inventoryServiceCatalog()) {

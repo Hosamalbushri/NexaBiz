@@ -19,6 +19,7 @@ class AppTextField extends StatelessWidget {
     this.obscureText = false,
     this.enabled = true,
     this.maxLines = 1,
+    this.minLines,
     this.autofocus = false,
   });
 
@@ -36,6 +37,7 @@ class AppTextField extends StatelessWidget {
   final bool obscureText;
   final bool enabled;
   final int? maxLines;
+  final int? minLines;
   final bool autofocus;
 
   @override
@@ -47,6 +49,7 @@ class AppTextField extends StatelessWidget {
       autofocus: autofocus,
       obscureText: obscureText,
       maxLines: maxLines,
+      minLines: minLines,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       inputFormatters: inputFormatters,

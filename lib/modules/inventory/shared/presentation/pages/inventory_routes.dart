@@ -102,6 +102,7 @@ class InventoryRoutes {
 
   /// Multi-Warehouse & Inventory Cost Valuation Settings
   static const String warehousesSettings = '/inventory/warehouses/settings';
+  static const String categoriesSettings = '/inventory/categories/settings';
   static const String costValuationSettings = '/inventory/cost-valuation/settings';
 
   /// Inter-Warehouse Stock Transfers
@@ -110,6 +111,9 @@ class InventoryRoutes {
 
   static void pushWarehousesSettings(BuildContext context) =>
       context.push(warehousesSettings);
+
+  static void pushCategoriesSettings(BuildContext context) =>
+      context.push(categoriesSettings);
 
   static void pushCostValuationSettings(BuildContext context) =>
       context.push(costValuationSettings);

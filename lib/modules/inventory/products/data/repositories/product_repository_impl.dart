@@ -4,6 +4,7 @@ import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import '../../domain/entities/product.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import '../../domain/models/catalog_search_field.dart';
 import 'package:stock_count/modules/inventory/stock_count/domain/models/paged_result.dart';
 import '../../domain/models/product_exception.dart';
@@ -33,6 +34,14 @@ class ProductRepositoryImpl implements ProductRepository {
   Expression<bool> _scoped($ProductsTable t) =>
       t.deletedAt.isNull() & _tenantScoped(t);
 
+  CostValuationMethod? _parseCostValuationMethod(String? str) {
+    if (str == null) return null;
+    for (final method in CostValuationMethod.values) {
+      if (method.name == str) return method;
+    }
+    return null;
+  }
+
   Product _map(ProductRow row) {
     return Product(
       id: row.id,
@@ -44,6 +53,8 @@ class ProductRepositoryImpl implements ProductRepository {
       price: row.price,
       onHandQty: row.onHandQty,
       unitCost: row.unitCost,
+      categoryId: row.categoryId,
+      costValuationMethod: _parseCostValuationMethod(row.costValuationMethod),
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         row.createdAt,
         isUtc: true,
@@ -405,6 +416,8 @@ class ProductRepositoryImpl implements ProductRepository {
             packSize: draft.packSize,
             price: draft.price,
             unitCost: Value(draft.unitCost),
+            categoryId: Value(draft.categoryId),
+            costValuationMethod: Value(draft.costValuationMethod?.name),
             createdAt: nowMs,
             updatedAt: nowMs,
             syncStatus: const Value('pending'),
@@ -443,6 +456,8 @@ class ProductRepositoryImpl implements ProductRepository {
         packSize: Value(draft.packSize),
         price: Value(draft.price),
         unitCost: Value(draft.unitCost),
+        categoryId: Value(draft.categoryId),
+        costValuationMethod: Value(draft.costValuationMethod?.name),
         updatedAt: Value(now.millisecondsSinceEpoch),
         syncStatus: const Value('pending'),
         version: Value(nextVersion),

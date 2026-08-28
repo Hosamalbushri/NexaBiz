@@ -7,6 +7,7 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_search_bar.dart';
 import '../../domain/entities/transaction_status.dart';
 import '../providers/transaction_list_provider.dart';
 
@@ -80,53 +81,13 @@ class _TransactionFilterBarState extends ConsumerState<TransactionFilterBar> {
             AppConstants.pagePadding,
             AppSpacing.sm,
           ),
-          child: TextField(
+          child: AppSearchBar(
             controller: _searchController,
+            hint: l10n.rpSearchHint,
             onChanged: (value) {
               setState(() {});
               _onQueryChanged(value);
             },
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              isDense: true,
-              filled: true,
-              fillColor: scheme.surface,
-              hintText: l10n.rpSearchHint,
-              prefixIcon: Icon(Icons.search_rounded, color: scheme.primary),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      tooltip: MaterialLocalizations.of(context)
-                          .deleteButtonTooltip,
-                      onPressed: () {
-                        _searchController.clear();
-                        _onQueryChanged('');
-                        setState(() {});
-                      },
-                      icon: const Icon(Icons.close_rounded),
-                    )
-                  : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                borderSide: BorderSide(
-                  color: scheme.outlineVariant.withValues(alpha: 0.5),
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                borderSide: BorderSide(
-                  color: scheme.outlineVariant.withValues(alpha: 0.45),
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                borderSide: BorderSide(color: scheme.primary, width: 1.4),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: 14,
-              ),
-            ),
-            onTapOutside: (_) => FocusScope.of(context).unfocus(),
           ),
         ),
         Padding(

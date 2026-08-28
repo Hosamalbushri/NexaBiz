@@ -447,7 +447,8 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                   child: _MetaChip(
                     label: numberLabel,
                     value: numberValue,
-                    icon: Icons.numbers_outlined,
+                    icon: Icons.tag_rounded,
+                    emphasized: true,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -618,39 +619,59 @@ class _MetaChip extends StatelessWidget {
     required this.value,
     required this.icon,
     this.onTap,
+    this.emphasized = false,
   });
 
   final String label;
   final String value;
   final IconData icon;
   final VoidCallback? onTap;
+  final bool emphasized;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final bg = emphasized
+        ? scheme.primaryContainer.withValues(alpha: 0.45)
+        : scheme.surfaceContainerHighest.withValues(alpha: 0.55);
+    final iconBg = emphasized
+        ? scheme.primary.withValues(alpha: 0.14)
+        : scheme.onSurface.withValues(alpha: 0.06);
+    final iconColor = emphasized ? scheme.primary : scheme.onSurfaceVariant;
+    final valueColor = emphasized ? scheme.primary : scheme.onSurface;
 
     return Material(
-      color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
-      borderRadius: BorderRadius.circular(AppRadius.md),
+      color: bg,
+      borderRadius: BorderRadius.circular(AppRadius.sm),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
         child: Container(
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm + 2,
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.md),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
             border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.35),
+              color: emphasized
+                  ? scheme.primary.withValues(alpha: 0.18)
+                  : scheme.outlineVariant.withValues(alpha: 0.45),
             ),
           ),
           child: Row(
             children: [
-              Icon(icon, size: 18, color: scheme.primary),
-              const SizedBox(width: AppSpacing.sm),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 16, color: iconColor),
+              ),
+              const SizedBox(width: AppSpacing.xs + 2),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -658,26 +679,42 @@ class _MetaChip extends StatelessWidget {
                   children: [
                     Text(
                       label,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                    Text(
-                      value,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 10,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        value,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: valueColor,
+                          letterSpacing: -0.15,
+                          height: 1.15,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-              if (onTap != null)
+              if (onTap != null) ...[
+                const SizedBox(width: 2),
                 Icon(
-                  Icons.arrow_drop_down,
-                  color: scheme.onSurfaceVariant,
+                  Icons.edit_calendar_outlined,
+                  size: 15,
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.65),
                 ),
+              ],
             ],
           ),
         ),
@@ -1048,6 +1085,8 @@ class _StockReceiptProductsTableState
                                 },
                                 onRemove: () => widget.onRemove(i),
                               ),
+                            if (widget.items.isNotEmpty)
+                              _TableFooter(items: widget.items, theme: theme),
                           ],
                         ),
                       ),
@@ -1187,6 +1226,97 @@ class _TableHeader extends StatelessWidget {
           SizedBox(
             width: _Cols.total,
             child: Text('إجمالي التكلفة', style: style, textAlign: TextAlign.end),
+          ),
+          const SizedBox(width: _Cols.actions),
+        ],
+      ),
+    );
+  }
+}
+
+class _TableFooter extends StatelessWidget {
+  const _TableFooter({required this.items, required this.theme});
+
+  final List<StockReceiptLineDraft> items;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = theme.colorScheme;
+    final totalMain = items.fold(0.0, (sum, i) => sum + i.mainQuantity);
+    final totalSub = items.fold(0.0, (sum, i) => sum + i.subQuantity);
+    final totalCostSum = items.fold(0.0, (sum, i) => sum + i.totalCost);
+
+    String fmtQty(double v) => v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(2);
+
+    final style = theme.textTheme.labelSmall?.copyWith(
+      fontWeight: FontWeight.w800,
+      letterSpacing: 0.2,
+      color: scheme.onSurfaceVariant,
+    );
+    final totalStyle = theme.textTheme.labelSmall?.copyWith(
+      fontWeight: FontWeight.w900,
+      color: scheme.primary,
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm + 2,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
+        border: Border(
+          top: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: 0.45),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: _Cols.index,
+            child: Text('#', style: style, textAlign: TextAlign.center),
+          ),
+          SizedBox(
+            width: _Cols.product,
+            child: Text(
+              'المجموع الإجمالي (${items.length})',
+              style: style,
+            ),
+          ),
+          SizedBox(
+            width: _Cols.main,
+            child: Text(
+              fmtQty(totalMain),
+              style: style?.copyWith(color: scheme.onSurface),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(
+            width: _Cols.sub,
+            child: Text(
+              fmtQty(totalSub),
+              style: style?.copyWith(color: scheme.onSurface),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(
+            width: _Cols.cost,
+            child: Text(
+              '—',
+              style: style,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(
+            width: _Cols.total,
+            child: Text(
+              totalCostSum.toStringAsFixed(2),
+              style: totalStyle,
+              textAlign: TextAlign.end,
+            ),
           ),
           const SizedBox(width: _Cols.actions),
         ],

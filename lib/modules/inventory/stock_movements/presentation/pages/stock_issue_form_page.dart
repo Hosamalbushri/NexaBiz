@@ -6,12 +6,15 @@ import 'package:intl/intl.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
+import 'package:stock_count/app/theme/app_breakpoints.dart';
+import 'package:stock_count/app/theme/app_colors.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
 import 'package:stock_count/core/utils/digit_normalization.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
+import 'package:stock_count/core/widgets/app_filter_sheet.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/widgets/app_account_search_picker.dart';
@@ -276,6 +279,7 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     final state = ref.watch(stockIssueComposerProvider);
     final composer = ref.read(stockIssueComposerProvider.notifier);
 
@@ -334,19 +338,21 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: Colors.amber.shade50,
+              color: AppColors.warningContainer,
               borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: Colors.amber.shade400),
+              border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
             ),
             child: Row(
               children: [
-                Icon(Icons.lock_rounded, color: Colors.amber.shade900),
+                const Icon(Icons.lock_rounded, color: AppColors.warning),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
-                    'هذا المستند مرحّل ولا يمكن حفظ أي تعديل عليه إلا بعد إلغاء الترحيل.',
-                    style: TextStyle(
-                      color: Colors.amber.shade900,
+                    l10n.localeName == 'ar'
+                        ? 'هذا المستند مرحّل ولا يمكن حفظ أي تعديل عليه إلا بعد إلغاء الترحيل.'
+                        : 'This document is posted and locked. Unpost to edit.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.warning,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -479,43 +485,32 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                     placeholder: l10n.stockIssueVoucherBookLabel,
                     onTap: canSelectVoucherBook
                         ? () async {
-                            final selected = await showModalBottomSheet<InventoryVoucherBookRef>(
+                            InventoryVoucherBookRef? chosenBook;
+                            await AppFilterSheet.show<void>(
                               context: context,
-                              useSafeArea: true,
-                              builder: (ctx) {
-                                return SafeArea(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(AppSpacing.md),
-                                        child: Text(
-                                          'دفاتر المخزون',
-                                          style: theme.textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      ),
-                                      for (final b in voucherBooks)
-                                        ListTile(
-                                          leading: Icon(
-                                            b.bookId == state.voucherBook?.bookId
-                                                ? Icons.check_circle
-                                                : Icons.circle_outlined,
-                                            color: b.bookId == state.voucherBook?.bookId
-                                                ? theme.colorScheme.primary
-                                                : theme.colorScheme.onSurfaceVariant,
-                                          ),
-                                          title: Text(b.name),
-                                          onTap: () => Navigator.of(ctx).pop(b),
-                                        ),
-                                      const SizedBox(height: AppSpacing.sm),
-                                    ],
+                              title: l10n.localeName == 'ar' ? 'دفاتر المخزون' : 'Voucher Books',
+                              applyLabel: l10n.stockIssueSaveButton,
+                              onApply: () {},
+                              children: [
+                                for (final b in voucherBooks)
+                                  ListTile(
+                                    leading: Icon(
+                                      b.bookId == state.voucherBook?.bookId
+                                          ? Icons.check_circle
+                                          : Icons.circle_outlined,
+                                      color: b.bookId == state.voucherBook?.bookId
+                                          ? theme.colorScheme.primary
+                                          : theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    title: Text(b.name),
+                                    onTap: () {
+                                      chosenBook = b;
+                                      Navigator.of(context).pop();
+                                    },
                                   ),
-                                );
-                              },
+                              ],
                             );
-                            if (selected != null) onVoucherBookSelected(selected);
+                            if (chosenBook != null) onVoucherBookSelected(chosenBook!);
                           }
                         : null,
                   ),
@@ -529,61 +524,52 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                     placeholder: l10n.salesCurrency,
                     onTap: () async {
                       final currencyListItems = currencyItemsAsync.asData?.value ?? [];
-                      final selected = await showModalBottomSheet<CurrencyRateListItem>(
+                      CurrencyRateListItem? chosenCurrency;
+                      await AppFilterSheet.show<void>(
                         context: context,
-                        useSafeArea: true,
-                        builder: (ctx) {
-                          return SafeArea(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(AppSpacing.md),
-                                  child: Text(
-                                    l10n.salesCurrency,
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
+                        title: l10n.salesCurrency,
+                        applyLabel: l10n.stockIssueSaveButton,
+                        onApply: () {},
+                        children: [
+                          if (currencyListItems.isNotEmpty)
+                            for (final item in currencyListItems)
+                              ListTile(
+                                leading: Icon(
+                                  item.currency.code == state.currencyCode
+                                      ? Icons.check_circle
+                                      : Icons.circle_outlined,
+                                  color: item.currency.code == state.currencyCode
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.onSurfaceVariant,
                                 ),
-                                if (currencyListItems.isNotEmpty)
-                                  for (final item in currencyListItems)
-                                    ListTile(
-                                      leading: Icon(
-                                        item.currency.code == state.currencyCode
-                                            ? Icons.check_circle
-                                            : Icons.circle_outlined,
-                                        color: item.currency.code == state.currencyCode
-                                            ? theme.colorScheme.primary
-                                            : theme.colorScheme.onSurfaceVariant,
+                                title: Text('${item.currency.code} - ${item.currency.nameAr}'),
+                                subtitle: item.isBase
+                                    ? Text(l10n.salesBaseCurrency)
+                                    : Text(
+                                        '${l10n.localeName == "ar" ? "سعر الصرف" : "Rate"}: ${item.displayRate.toStringAsFixed(4)}',
                                       ),
-                                      title: Text('${item.currency.code} - ${item.currency.nameAr}'),
-                                      subtitle: item.isBase
-                                          ? const Text('العملة الرئيسية')
-                                          : Text(
-                                              'سعر الصرف: ${item.displayRate.toStringAsFixed(4)}',
-                                            ),
-                                      onTap: () => Navigator.of(ctx).pop(item),
-                                    )
-                                else
-                                  Padding(
-                                    padding: const EdgeInsets.all(AppSpacing.md),
-                                    child: Text(
-                                      'لا توجد عملات معرفة في الدليل حالياً',
-                                      textAlign: TextAlign.center,
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ),
-                                const SizedBox(height: AppSpacing.sm),
-                              ],
+                                onTap: () {
+                                  chosenCurrency = item;
+                                  Navigator.of(context).pop();
+                                },
+                              )
+                          else
+                            Padding(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              child: Text(
+                                l10n.localeName == 'ar'
+                                    ? 'لا توجد عملات معرفة في الدليل حالياً'
+                                    : 'No currencies configured.',
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                             ),
-                          );
-                        },
+                        ],
                       );
-                      if (selected != null) {
-                        onCurrencyChanged(selected.currency.code, selected.displayRate);
+                      if (chosenCurrency != null) {
+                        onCurrencyChanged(chosenCurrency!.currency.code, chosenCurrency!.displayRate);
                       }
                     },
                   ),
@@ -651,7 +637,7 @@ class _MetaChip extends StatelessWidget {
     final scheme = theme.colorScheme;
     final bg = emphasized
         ? scheme.primaryContainer.withValues(alpha: 0.45)
-        : scheme.surfaceContainerHighest.withValues(alpha: 0.4);
+        : scheme.surfaceContainerHighest.withValues(alpha: 0.55);
     final iconBg = emphasized
         ? scheme.primary.withValues(alpha: 0.14)
         : scheme.onSurface.withValues(alpha: 0.06);
@@ -674,7 +660,7 @@ class _MetaChip extends StatelessWidget {
             border: Border.all(
               color: emphasized
                   ? scheme.primary.withValues(alpha: 0.18)
-                  : scheme.outlineVariant.withValues(alpha: 0.4),
+                  : scheme.outlineVariant.withValues(alpha: 0.45),
             ),
           ),
           child: Row(
@@ -702,23 +688,30 @@ class _MetaChip extends StatelessWidget {
                         color: scheme.onSurfaceVariant,
                         fontWeight: FontWeight.w600,
                         fontSize: 10,
+                        height: 1.1,
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      value,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: valueColor,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        value,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: valueColor,
+                          letterSpacing: -0.15,
+                          height: 1.15,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
               if (onTap != null) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: 2),
                 Icon(
                   Icons.edit_calendar_outlined,
                   size: 15,
@@ -1068,37 +1061,57 @@ class _StockIssueProductsTableState extends State<StockIssueProductsTable> {
               borderRadius: BorderRadius.circular(AppRadius.lg),
               child: Column(
                 children: [
-                  Scrollbar(
-                    controller: _horizontalScroll,
-                    thumbVisibility: true,
-                    radius: const Radius.circular(8),
-                    notificationPredicate: (n) => n.metrics.axis == Axis.horizontal,
-                    child: SingleChildScrollView(
+                  if (AppBreakpoints.isMobile(MediaQuery.sizeOf(context).width))
+                    Column(
+                      children: [
+                        for (var i = 0; i < widget.items.length; i++)
+                          _MobileIssueItemCard(
+                            index: i,
+                            item: widget.items[i],
+                            onQuantitiesChanged: (main, sub) {
+                              widget.onQuantitiesChanged(i, main, sub);
+                            },
+                            onUnitCostChanged: (cost) {
+                              widget.onUnitCostChanged(i, cost);
+                            },
+                            onRemove: () => widget.onRemove(i),
+                          ),
+                      ],
+                    )
+                  else
+                    Scrollbar(
                       controller: _horizontalScroll,
-                      scrollDirection: Axis.horizontal,
-                      child: SizedBox(
-                        width: tableWidth,
-                        child: Column(
-                          children: [
-                            _TableHeader(theme: theme),
-                            for (var i = 0; i < widget.items.length; i++)
-                              _FilledRow(
-                                index: i,
-                                item: widget.items[i],
-                                striped: i.isOdd,
-                                onQuantitiesChanged: (main, sub) {
-                                  widget.onQuantitiesChanged(i, main, sub);
-                                },
-                                onUnitCostChanged: (cost) {
-                                  widget.onUnitCostChanged(i, cost);
-                                },
-                                onRemove: () => widget.onRemove(i),
-                              ),
-                          ],
+                      thumbVisibility: true,
+                      radius: const Radius.circular(8),
+                      notificationPredicate: (n) => n.metrics.axis == Axis.horizontal,
+                      child: SingleChildScrollView(
+                        controller: _horizontalScroll,
+                        scrollDirection: Axis.horizontal,
+                        child: SizedBox(
+                          width: tableWidth,
+                          child: Column(
+                            children: [
+                              _TableHeader(theme: theme),
+                              for (var i = 0; i < widget.items.length; i++)
+                                _FilledRow(
+                                  index: i,
+                                  item: widget.items[i],
+                                  striped: i.isOdd,
+                                  onQuantitiesChanged: (main, sub) {
+                                    widget.onQuantitiesChanged(i, main, sub);
+                                  },
+                                  onUnitCostChanged: (cost) {
+                                    widget.onUnitCostChanged(i, cost);
+                                  },
+                                  onRemove: () => widget.onRemove(i),
+                                ),
+                              if (widget.items.isNotEmpty)
+                                _TableFooter(items: widget.items, theme: theme),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
                   for (final draftId in _draftRowIds)
                     _DraftProductRow(
                       key: ValueKey('draft-$draftId'),
@@ -1232,6 +1245,97 @@ class _TableHeader extends StatelessWidget {
           SizedBox(
             width: _Cols.total,
             child: Text('إجمالي التكلفة', style: style, textAlign: TextAlign.end),
+          ),
+          const SizedBox(width: _Cols.actions),
+        ],
+      ),
+    );
+  }
+}
+
+class _TableFooter extends StatelessWidget {
+  const _TableFooter({required this.items, required this.theme});
+
+  final List<StockIssueLineDraft> items;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = theme.colorScheme;
+    final totalMain = items.fold(0.0, (sum, i) => sum + i.mainQuantity);
+    final totalSub = items.fold(0.0, (sum, i) => sum + i.subQuantity);
+    final totalCostSum = items.fold(0.0, (sum, i) => sum + i.totalCost);
+
+    String fmtQty(double v) => v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(2);
+
+    final style = theme.textTheme.labelSmall?.copyWith(
+      fontWeight: FontWeight.w800,
+      letterSpacing: 0.2,
+      color: scheme.onSurfaceVariant,
+    );
+    final totalStyle = theme.textTheme.labelSmall?.copyWith(
+      fontWeight: FontWeight.w900,
+      color: scheme.primary,
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm + 2,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
+        border: Border(
+          top: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: 0.45),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: _Cols.index,
+            child: Text('#', style: style, textAlign: TextAlign.center),
+          ),
+          SizedBox(
+            width: _Cols.product,
+            child: Text(
+              'المجموع الإجمالي (${items.length})',
+              style: style,
+            ),
+          ),
+          SizedBox(
+            width: _Cols.main,
+            child: Text(
+              fmtQty(totalMain),
+              style: style?.copyWith(color: scheme.onSurface),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(
+            width: _Cols.sub,
+            child: Text(
+              fmtQty(totalSub),
+              style: style?.copyWith(color: scheme.onSurface),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(
+            width: _Cols.cost,
+            child: Text(
+              '—',
+              style: style,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(
+            width: _Cols.total,
+            child: Text(
+              totalCostSum.toStringAsFixed(2),
+              style: totalStyle,
+              textAlign: TextAlign.end,
+            ),
           ),
           const SizedBox(width: _Cols.actions),
         ],
@@ -1386,6 +1490,131 @@ class _FilledRow extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MobileIssueItemCard extends StatelessWidget {
+  const _MobileIssueItemCard({
+    required this.index,
+    required this.item,
+    required this.onQuantitiesChanged,
+    required this.onUnitCostChanged,
+    required this.onRemove,
+  });
+
+  final int index;
+  final StockIssueLineDraft item;
+  final void Function(double main, double sub) onQuantitiesChanged;
+  final void Function(double cost) onUnitCostChanged;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+    final totalCost = item.totalQuantity * item.unitCost;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(
+          color: scheme.outlineVariant.withValues(alpha: 0.4),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                ),
+                child: Text(
+                  '#${index + 1}',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  item.productName,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.delete_outline_rounded,
+                  color: scheme.error,
+                  size: 20,
+                ),
+                onPressed: onRemove,
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: AppAmountField(
+                  label: l10n.localeName == 'ar' ? 'الكمية الأساسية' : 'Main Qty',
+                  value: item.mainQuantity,
+                  decimalPlaces: 3,
+                  trimTrailingZeros: true,
+                  variant: AppAmountFieldVariant.compact,
+                  onChanged: (main) => onQuantitiesChanged(main, item.subQuantity),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: AppAmountField(
+                  label: l10n.localeName == 'ar' ? 'الكمية الفرعية' : 'Sub Qty',
+                  value: item.subQuantity,
+                  decimalPlaces: 3,
+                  trimTrailingZeros: true,
+                  variant: AppAmountFieldVariant.compact,
+                  onChanged: (sub) => onQuantitiesChanged(item.mainQuantity, sub),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${l10n.localeName == "ar" ? "التكلفة" : "Unit Cost"}: ${item.unitCost.toStringAsFixed(2)}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+              Text(
+                '${l10n.localeName == "ar" ? "الإجمالي" : "Total"}: ${totalCost.toStringAsFixed(2)}',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: scheme.primary,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

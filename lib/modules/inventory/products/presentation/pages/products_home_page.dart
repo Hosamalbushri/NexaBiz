@@ -32,6 +32,13 @@ class ProductsHomePage extends ConsumerWidget {
           subtitle: l10n.productsListSubtitle,
           path: InventoryRoutes.productsList,
         ),
+      if (auth.hasAnyPermission(InventoryPermissions.productsView))
+        _ProductsFeature(
+          icon: Icons.account_tree_outlined,
+          title: l10n.localeName == 'ar' ? 'تصنيفات المنتجات' : 'Product Categories',
+          subtitle: l10n.localeName == 'ar' ? 'شجرة التصنيفات المرتبطة بالمستودعات وطرق التكلفة' : 'Warehouse-rooted categories & valuation methods',
+          path: InventoryRoutes.categoriesSettings,
+        ),
       if (auth.hasAnyPermission(InventoryPermissions.productsBarcode))
         _ProductsFeature(
           icon: Icons.qr_code_2_outlined,

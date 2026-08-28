@@ -8,9 +8,11 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
+import 'package:stock_count/core/widgets/app_search_bar.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/accounting_routes.dart';
@@ -157,22 +159,18 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
           icon: const Icon(Icons.add_rounded),
           label: Text(isAr ? 'إضافة قيد يدوي' : 'Add Manual Entry'),
         ),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: AppConstants.pageInsets(context).copyWith(bottom: 0, top: AppSpacing.sm),
-              child: TextField(
-                controller: _searchController,
-                onChanged: _onSearch,
-                decoration: InputDecoration(
-                  hintText: l10n.accountingJournalsSearchHint,
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  border: const OutlineInputBorder(),
-                  isDense: true,
+        body: AppContentConstraint(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: AppConstants.pageInsets(context).copyWith(bottom: 0, top: AppSpacing.sm),
+                child: AppSearchBar(
+                  controller: _searchController,
+                  onChanged: _onSearch,
+                  hint: l10n.accountingJournalsSearchHint,
                 ),
               ),
-            ),
             const SizedBox(height: AppSpacing.sm),
             Expanded(
               child: entriesAsync.when(
@@ -216,7 +214,8 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildAutomatedTab({

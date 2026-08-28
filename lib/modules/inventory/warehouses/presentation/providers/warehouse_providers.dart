@@ -10,17 +10,21 @@ import '../../domain/repositories/warehouse_repository.dart';
 final warehouseRepositoryProvider = Provider<WarehouseRepository>((ref) {
   final db = ref.watch(inventoryDatabaseProvider);
   final syncQueue = ref.watch(syncQueueProvider);
-  return WarehouseRepositoryImpl(db: db, syncQueue: syncQueue);
+  return WarehouseRepositoryImpl(db, syncQueue);
 });
 
-final warehousesListStreamProvider = StreamProvider<List<Warehouse>>((ref) {
+final warehousesListStreamProvider = StreamProvider<List<Warehouse>>((ref) async* {
   final repo = ref.watch(warehouseRepositoryProvider);
-  return repo.watchAllWarehouses();
+  
+  // Ensure default warehouse exists prior to emitting stream
+  await repo.ensureDefaultWarehouse();
+  
+  yield* repo.watchAllWarehouses();
 });
 
-final defaultWarehouseProvider = FutureProvider<Warehouse?>((ref) async {
+final defaultWarehouseProvider = FutureProvider<Warehouse>((ref) async {
   final repo = ref.watch(warehouseRepositoryProvider);
-  return repo.getDefaultWarehouse();
+  return repo.ensureDefaultWarehouse();
 });
 
 final warehouseStocksProvider = FutureProvider.family<List<ProductWarehouseStock>, String>((ref, warehouseId) async {

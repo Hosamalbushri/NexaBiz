@@ -6,6 +6,9 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
+import 'package:stock_count/core/widgets/app_form_section.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
+import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import '../../domain/entities/voucher_book.dart';
@@ -273,7 +276,7 @@ class _VoucherBookFormPageState extends ConsumerState<VoucherBookFormPage> {
         ? _bookType
         : (leafKinds.contains(_bookType) ? _bookType : leafKinds.first);
 
-    return Scaffold(
+    return AppResponsiveScaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
       appBar: CustomAppBar(
         title: widget.isEditing
@@ -281,70 +284,104 @@ class _VoucherBookFormPageState extends ConsumerState<VoucherBookFormPage> {
             : l10n.accountingVoucherBooksAdd,
         showBackButton: true,
       ),
+      bottomActions: AppBottomActions(
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _saving
+                ? null
+                : () {
+                    _parentId = parentUuid;
+                    _bookType = effectiveType;
+                    _save();
+                  },
+            icon: _saving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.save_outlined),
+            label: Text(l10n.accountingVoucherBooksSave),
+          ),
+        ),
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: AppConstants.pageInsets(context),
           children: [
-            DropdownButtonFormField<String>(
-              key: ValueKey('parent-$parentUuid'),
-              initialValue: parentUuid,
-              decoration: InputDecoration(
-                labelText: l10n.accountingVoucherBooksParentSection,
-              ),
-              items: [
-                for (final node in sections)
-                  DropdownMenuItem(
-                    value: node.group.uuid,
-                    child: Text(
-                      voucherBookSectionLabel(l10n, node.group.bookType),
-                    ),
-                  ),
-              ],
-              onChanged: (widget.isEditing || widget.initialParentId != null)
-                  ? null
-                  : (value) {
-                      if (value == null) {
-                        return;
-                      }
-                      setState(() {
-                        _parentId = value;
-                        final parent = sections
-                            .firstWhere((s) => s.group.uuid == value)
-                            .group;
-                        final kinds = VoucherBookType.leafKindsFor(
-                          parent.bookType,
-                        );
-                        if (!_lockBookType && !kinds.contains(_bookType)) {
-                          _bookType = kinds.first;
-                        }
-                      });
-                    },
+            AppFormSection(
+              title: l10n.localeName == 'ar' ? 'تصنيف الدفتر' : 'Book Classification',
+              icon: Icons.category_outlined,
+              topSpacing: 0,
             ),
-            const SizedBox(height: AppSpacing.md),
-            DropdownButtonFormField<VoucherBookType>(
-              key: ValueKey('type-$effectiveType-$parentUuid'),
-              initialValue: effectiveType,
-              decoration: InputDecoration(
-                labelText: l10n.accountingVoucherBooksType,
-              ),
-              items: [
-                for (final type in leafKinds)
-                  DropdownMenuItem(
-                    value: type,
-                    child: Text(voucherBookTypeLabel(l10n, type)),
+            AppResponsiveForm(
+              maxColumns: 2,
+              children: [
+                DropdownButtonFormField<String>(
+                  key: ValueKey('parent-$parentUuid'),
+                  initialValue: parentUuid,
+                  decoration: InputDecoration(
+                    labelText: l10n.accountingVoucherBooksParentSection,
                   ),
+                  items: [
+                    for (final node in sections)
+                      DropdownMenuItem(
+                        value: node.group.uuid,
+                        child: Text(
+                          voucherBookSectionLabel(l10n, node.group.bookType),
+                        ),
+                      ),
+                  ],
+                  onChanged: (widget.isEditing || widget.initialParentId != null)
+                      ? null
+                      : (value) {
+                          if (value == null) {
+                            return;
+                          }
+                          setState(() {
+                            _parentId = value;
+                            final parent = sections
+                                .firstWhere((s) => s.group.uuid == value)
+                                .group;
+                            final kinds = VoucherBookType.leafKindsFor(
+                              parent.bookType,
+                            );
+                            if (!_lockBookType && !kinds.contains(_bookType)) {
+                              _bookType = kinds.first;
+                            }
+                          });
+                        },
+                ),
+                DropdownButtonFormField<VoucherBookType>(
+                  key: ValueKey('type-$effectiveType-$parentUuid'),
+                  initialValue: effectiveType,
+                  decoration: InputDecoration(
+                    labelText: l10n.accountingVoucherBooksType,
+                  ),
+                  items: [
+                    for (final type in leafKinds)
+                      DropdownMenuItem(
+                        value: type,
+                        child: Text(voucherBookTypeLabel(l10n, type)),
+                      ),
+                  ],
+                  onChanged: (_lockBookType || widget.isEditing)
+                      ? null
+                      : (value) {
+                          if (value == null) {
+                            return;
+                          }
+                          setState(() => _bookType = value);
+                        },
+                ),
               ],
-              onChanged: (_lockBookType || widget.isEditing)
-                  ? null
-                  : (value) {
-                      if (value == null) {
-                        return;
-                      }
-                      setState(() => _bookType = value);
-                    },
             ),
-            const SizedBox(height: AppSpacing.md),
+            AppFormSection(
+              title: l10n.localeName == 'ar' ? 'بيانات الترقيم والاسم' : 'Name & Numbering',
+              icon: Icons.format_list_numbered_outlined,
+            ),
             TextFormField(
               controller: _nameController,
               textInputAction: TextInputAction.next,
@@ -360,46 +397,53 @@ class _VoucherBookFormPageState extends ConsumerState<VoucherBookFormPage> {
               },
             ),
             const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _currentNumberController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                labelText: l10n.accountingVoucherBooksCurrentNumber,
-                helperText: l10n.accountingVoucherBooksCurrentNumberHelper,
-              ),
-              validator: (value) {
-                final n = int.tryParse(value?.trim() ?? '');
-                if (n == null || n < 1) {
-                  return l10n.accountingVoucherBooksErrorCurrentNumber;
-                }
-                return null;
-              },
+            AppResponsiveForm(
+              maxColumns: 2,
+              children: [
+                TextFormField(
+                  controller: _currentNumberController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    labelText: l10n.accountingVoucherBooksCurrentNumber,
+                    helperText: l10n.accountingVoucherBooksCurrentNumberHelper,
+                  ),
+                  validator: (value) {
+                    final n = int.tryParse(value?.trim() ?? '');
+                    if (n == null || n < 1) {
+                      return l10n.accountingVoucherBooksErrorCurrentNumber;
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _endNumberController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    labelText: l10n.accountingVoucherBooksEndNumber,
+                    helperText: l10n.accountingVoucherBooksEndNumberHelper,
+                  ),
+                  validator: (value) {
+                    final end = int.tryParse(value?.trim() ?? '');
+                    final current = int.tryParse(
+                      _currentNumberController.text.trim(),
+                    );
+                    if (end == null || end < 1) {
+                      return l10n.accountingVoucherBooksErrorEndNumber;
+                    }
+                    if (current != null && end < current) {
+                      return l10n.accountingVoucherBooksErrorEndBeforeCurrent;
+                    }
+                    return null;
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _endNumberController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                labelText: l10n.accountingVoucherBooksEndNumber,
-                helperText: l10n.accountingVoucherBooksEndNumberHelper,
-              ),
-              validator: (value) {
-                final end = int.tryParse(value?.trim() ?? '');
-                final current = int.tryParse(
-                  _currentNumberController.text.trim(),
-                );
-                if (end == null || end < 1) {
-                  return l10n.accountingVoucherBooksErrorEndNumber;
-                }
-                if (current != null && end < current) {
-                  return l10n.accountingVoucherBooksErrorEndBeforeCurrent;
-                }
-                return null;
-              },
+            AppFormSection(
+              title: l10n.localeName == 'ar' ? 'ملاحظات وحالة الدفتر' : 'Notes & Status',
+              icon: Icons.notes_outlined,
             ),
-            const SizedBox(height: AppSpacing.md),
             TextFormField(
               controller: _notesController,
               maxLines: 3,
@@ -416,17 +460,6 @@ class _VoucherBookFormPageState extends ConsumerState<VoucherBookFormPage> {
               onChanged: (value) => setState(() => _isActive = value),
             ),
             const SizedBox(height: AppSpacing.lg),
-            AppButton(
-              label: l10n.accountingVoucherBooksSave,
-              onPressed: _saving
-                  ? null
-                  : () {
-                      _parentId = parentUuid;
-                      _bookType = effectiveType;
-                      _save();
-                    },
-              isLoading: _saving,
-            ),
           ],
         ),
       ),

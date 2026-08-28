@@ -1,3 +1,4 @@
+import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
 /// Master product in the inventory catalog (Drift-backed).
@@ -11,6 +12,8 @@ class Product {
     required this.price,
     this.unitCost = 0,
     this.onHandQty = 0,
+    this.categoryId,
+    this.costValuationMethod,
     required this.createdAt,
     required this.updatedAt,
     this.barcode,
@@ -29,6 +32,13 @@ class Product {
   final double price;
   final double onHandQty;
   final double unitCost;
+
+  /// Category UUID linking product to warehouse-rooted category tree.
+  final String? categoryId;
+
+  /// Cost Valuation Method Override: Null = inherit from Category/Warehouse/System.
+  final CostValuationMethod? costValuationMethod;
+
   final DateTime createdAt;
   final DateTime updatedAt;
   final SyncStatus syncStatus;
@@ -49,6 +59,10 @@ class Product {
     double? price,
     double? onHandQty,
     double? unitCost,
+    String? categoryId,
+    bool clearCategoryId = false,
+    CostValuationMethod? costValuationMethod,
+    bool clearCostValuationMethod = false,
     DateTime? createdAt,
     DateTime? updatedAt,
     SyncStatus? syncStatus,
@@ -68,6 +82,10 @@ class Product {
       price: price ?? this.price,
       onHandQty: onHandQty ?? this.onHandQty,
       unitCost: unitCost ?? this.unitCost,
+      categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
+      costValuationMethod: clearCostValuationMethod
+          ? null
+          : (costValuationMethod ?? this.costValuationMethod),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,
@@ -89,6 +107,8 @@ class ProductDraft {
     required this.price,
     this.unitCost = 0,
     this.barcode,
+    this.categoryId,
+    this.costValuationMethod,
   });
 
   final String itemCode;
@@ -97,4 +117,6 @@ class ProductDraft {
   final int packSize;
   final double price;
   final double unitCost;
+  final String? categoryId;
+  final CostValuationMethod? costValuationMethod;
 }

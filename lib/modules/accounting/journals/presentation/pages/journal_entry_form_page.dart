@@ -8,6 +8,8 @@ import 'package:stock_count/app/settings/company/company_profile_providers.dart'
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
+import 'package:stock_count/core/widgets/app_responsive.dart';
+import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
@@ -105,7 +107,7 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
 
     final accountsAsync = ref.watch(accountsProvider);
 
-    return Scaffold(
+    return AppResponsiveScaffold(
       appBar: CustomAppBar(
         title: widget.isEditing
             ? l10n.accountingJournalEdit
@@ -117,60 +119,62 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
         child: ListView(
           padding: AppConstants.pageInsets(context),
           children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.accountingJournalFieldDate),
-              subtitle: Text(
-                MaterialLocalizations.of(context).formatMediumDate(_entryDate),
-              ),
-              trailing: const Icon(Icons.calendar_today_outlined),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _entryDate,
-                  firstDate: DateTime(2000),
-                  lastDate: DateTime(2100),
-                );
-                if (picked != null) {
-                  setState(() => _entryDate = picked);
-                }
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _voucherController,
-              decoration: InputDecoration(
-                labelText: l10n.accountingJournalFieldVoucherNumber,
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return l10n.accountingJournalFieldVoucherNumber;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              controller: _descriptionController,
-              decoration: InputDecoration(
-                labelText: l10n.accountingJournalFieldDescription,
-              ),
-              maxLines: 2,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              initialValue: _currencyCode,
-              decoration: InputDecoration(
-                labelText: l10n.accountingJournalFieldCurrency,
-              ),
-              textCapitalization: TextCapitalization.characters,
-              onChanged: (value) => _currencyCode = value.trim().toUpperCase(),
-              validator: (value) {
-                if (value == null || value.trim().length < 3) {
-                  return l10n.accountingJournalFieldCurrency;
-                }
-                return null;
-              },
+            AppResponsiveForm(
+              maxColumns: 2,
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.accountingJournalFieldDate),
+                  subtitle: Text(
+                    MaterialLocalizations.of(context).formatMediumDate(_entryDate),
+                  ),
+                  trailing: const Icon(Icons.calendar_today_outlined),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _entryDate,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null) {
+                      setState(() => _entryDate = picked);
+                    }
+                  },
+                ),
+                TextFormField(
+                  controller: _voucherController,
+                  decoration: InputDecoration(
+                    labelText: l10n.accountingJournalFieldVoucherNumber,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.accountingJournalFieldVoucherNumber;
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: InputDecoration(
+                    labelText: l10n.accountingJournalFieldDescription,
+                  ),
+                  maxLines: 2,
+                ),
+                TextFormField(
+                  initialValue: _currencyCode,
+                  decoration: InputDecoration(
+                    labelText: l10n.accountingJournalFieldCurrency,
+                  ),
+                  textCapitalization: TextCapitalization.characters,
+                  onChanged: (value) => _currencyCode = value.trim().toUpperCase(),
+                  validator: (value) {
+                    if (value == null || value.trim().length < 3) {
+                      return l10n.accountingJournalFieldCurrency;
+                    }
+                    return null;
+                  },
+                ),
+              ],
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
@@ -204,19 +208,22 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
                 );
               },
             ),
-            TextButton.icon(
+            const SizedBox(height: AppSpacing.xs),
+            OutlinedButton.icon(
               onPressed: () => setState(() => _lines.add(_LineForm())),
               icon: const Icon(Icons.add),
               label: Text(l10n.accountingJournalAddLine),
             ),
-            const SizedBox(height: AppSpacing.xl),
-            AppButton(
-              label: l10n.accountingJournalSave,
-              expand: true,
-              isLoading: _saving,
-              onPressed: _saving ? null : _save,
-            ),
+            const SizedBox(height: AppSpacing.lg),
           ],
+        ),
+      ),
+      bottomActions: AppBottomActions(
+        child: AppButton(
+          label: l10n.accountingJournalSave,
+          expand: true,
+          isLoading: _saving,
+          onPressed: _saving ? null : _save,
         ),
       ),
     );
@@ -228,78 +235,117 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
     int index,
   ) {
     final line = _lines[index];
+    final mediaWidth = MediaQuery.of(context).size.width;
+    final isCompact = mediaWidth < 500;
+
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.sm),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            DropdownButtonFormField<String>(
-              // ignore: deprecated_member_use
-              value: line.accountUuid,
-              isExpanded: true,
-              decoration: InputDecoration(
-                labelText: l10n.accountingJournalAccount,
-              ),
-              items: [
-                for (final account in posting)
-                  DropdownMenuItem(
-                    value: account.uuid,
-                    child: Text(
-                      '${account.accountCode} — ${AccountLabels.displayName(l10n, account)}',
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-              ],
-              onChanged: (value) => setState(() => line.accountUuid = value),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return l10n.accountingJournalPickAccount;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSpacing.sm),
             Row(
               children: [
                 Expanded(
-                  child: AppAmountField(
-                    value: line.debit,
-                    label: l10n.accountingJournalDebit,
-                    emptyWhenZero: true,
-                    onChanged: (value) => setState(() {
-                      line.debit = value;
-                      if (value > 0) {
-                        line.credit = 0;
+                  child: DropdownButtonFormField<String>(
+                    // ignore: deprecated_member_use
+                    value: line.accountUuid,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: l10n.accountingJournalAccount,
+                    ),
+                    items: [
+                      for (final account in posting)
+                        DropdownMenuItem(
+                          value: account.uuid,
+                          child: Text(
+                            '${account.accountCode} — ${AccountLabels.displayName(l10n, account)}',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                    onChanged: (value) => setState(() => line.accountUuid = value),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.accountingJournalPickAccount;
                       }
-                    }),
+                      return null;
+                    },
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: AppAmountField(
-                    value: line.credit,
-                    label: l10n.accountingJournalCredit,
-                    emptyWhenZero: true,
-                    onChanged: (value) => setState(() {
-                      line.credit = value;
-                      if (value > 0) {
-                        line.debit = 0;
-                      }
-                    }),
-                  ),
-                ),
-                if (_lines.length > 2)
+                if (_lines.length > 2) ...[
+                  const SizedBox(width: AppSpacing.xs),
                   IconButton(
                     onPressed: () {
                       setState(() {
                         _lines.removeAt(index);
                       });
                     },
-                    icon: const Icon(Icons.delete_outline),
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    tooltip: 'حذف السطر',
                   ),
+                ],
               ],
             ),
+            const SizedBox(height: AppSpacing.sm),
+            if (isCompact) ...[
+              AppAmountField(
+                value: line.debit,
+                label: l10n.accountingJournalDebit,
+                emptyWhenZero: true,
+                onChanged: (value) => setState(() {
+                  line.debit = value;
+                  if (value > 0) {
+                    line.credit = 0;
+                  }
+                }),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              AppAmountField(
+                value: line.credit,
+                label: l10n.accountingJournalCredit,
+                emptyWhenZero: true,
+                onChanged: (value) => setState(() {
+                  line.credit = value;
+                  if (value > 0) {
+                    line.debit = 0;
+                  }
+                }),
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: AppAmountField(
+                      value: line.debit,
+                      label: l10n.accountingJournalDebit,
+                      emptyWhenZero: true,
+                      onChanged: (value) => setState(() {
+                        line.debit = value;
+                        if (value > 0) {
+                          line.credit = 0;
+                        }
+                      }),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: AppAmountField(
+                      value: line.credit,
+                      label: l10n.accountingJournalCredit,
+                      emptyWhenZero: true,
+                      onChanged: (value) => setState(() {
+                        line.credit = value;
+                        if (value > 0) {
+                          line.debit = 0;
+                        }
+                      }),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

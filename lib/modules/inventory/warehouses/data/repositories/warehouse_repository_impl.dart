@@ -8,11 +8,7 @@ import '../../domain/entities/warehouse.dart';
 import '../../domain/repositories/warehouse_repository.dart';
 
 class WarehouseRepositoryImpl implements WarehouseRepository {
-  WarehouseRepositoryImpl({
-    required InventoryDatabase db,
-    SyncQueue? syncQueue,
-  })  : _db = db,
-        _syncQueue = syncQueue;
+  WarehouseRepositoryImpl(this._db, [this._syncQueue]);
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
@@ -48,7 +44,52 @@ class WarehouseRepositoryImpl implements WarehouseRepository {
     final query = _db.select(_db.warehouses)
       ..where((tbl) => tbl.isDefault.equals(true) & tbl.deletedAt.isNull());
     final row = await query.getSingleOrNull();
-    return row == null ? null : _mapRowToWarehouse(row);
+    if (row != null) {
+      return _mapRowToWarehouse(row);
+    }
+    // Auto-create default warehouse if none marked default
+    return ensureDefaultWarehouse();
+  }
+
+  @override
+  Future<Warehouse> ensureDefaultWarehouse() async {
+    final existingDefault = await (_db.select(_db.warehouses)
+          ..where((tbl) => tbl.isDefault.equals(true) & tbl.deletedAt.isNull()))
+        .getSingleOrNull();
+
+    if (existingDefault != null) {
+      return _mapRowToWarehouse(existingDefault);
+    }
+
+    final anyWarehouse = await (_db.select(_db.warehouses)
+          ..where((tbl) => tbl.deletedAt.isNull()))
+        .getSingleOrNull();
+
+    if (anyWarehouse != null) {
+      // Mark first existing warehouse as default
+      final updated = _mapRowToWarehouse(anyWarehouse).copyWith(isDefault: true);
+      await saveWarehouse(updated);
+      return updated;
+    }
+
+    // Auto-seed initial default main warehouse
+    final now = DateTime.now().toUtc();
+    final defaultWarehouse = Warehouse(
+      id: generateUuidV4(),
+      code: 'WH-MAIN',
+      name: 'المستودع الرئيسي',
+      isDefault: true,
+      isActive: true,
+      address: 'المقر الرئيسي',
+      phone: '',
+      managerName: 'إدارة المخزون',
+      createdAt: now,
+      updatedAt: now,
+      version: 1,
+    );
+
+    await saveWarehouse(defaultWarehouse);
+    return defaultWarehouse;
   }
 
   @override

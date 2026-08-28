@@ -1,3 +1,5 @@
+import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
+
 class Warehouse {
   Warehouse({
     required this.id,
@@ -8,6 +10,7 @@ class Warehouse {
     this.address,
     this.phone,
     this.managerName,
+    this.costValuationMethod,
     DateTime? createdAt,
     DateTime? updatedAt,
     this.version = 1,
@@ -24,6 +27,10 @@ class Warehouse {
   final String? address;
   final String? phone;
   final String? managerName;
+
+  /// Cost Valuation Method Override: Null = inherit from System Default.
+  final CostValuationMethod? costValuationMethod;
+
   final DateTime createdAt;
   final DateTime updatedAt;
   final int version;
@@ -39,6 +46,8 @@ class Warehouse {
     String? address,
     String? phone,
     String? managerName,
+    CostValuationMethod? costValuationMethod,
+    bool clearCostValuationMethod = false,
     DateTime? createdAt,
     DateTime? updatedAt,
     int? version,
@@ -54,6 +63,9 @@ class Warehouse {
       address: address ?? this.address,
       phone: phone ?? this.phone,
       managerName: managerName ?? this.managerName,
+      costValuationMethod: clearCostValuationMethod
+          ? null
+          : (costValuationMethod ?? this.costValuationMethod),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       version: version ?? this.version,

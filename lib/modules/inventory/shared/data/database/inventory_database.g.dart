@@ -121,6 +121,28 @@ class $ProductsTable extends Products
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _costValuationMethodMeta =
+      const VerificationMeta('costValuationMethod');
+  @override
+  late final GeneratedColumn<String> costValuationMethod =
+      GeneratedColumn<String>(
+        'cost_valuation_method',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -211,6 +233,8 @@ class $ProductsTable extends Products
     price,
     onHandQty,
     unitCost,
+    categoryId,
+    costValuationMethod,
     createdAt,
     updatedAt,
     syncStatus,
@@ -290,6 +314,21 @@ class $ProductsTable extends Products
       context.handle(
         _unitCostMeta,
         unitCost.isAcceptableOrUnknown(data['unit_cost']!, _unitCostMeta),
+      );
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    }
+    if (data.containsKey('cost_valuation_method')) {
+      context.handle(
+        _costValuationMethodMeta,
+        costValuationMethod.isAcceptableOrUnknown(
+          data['cost_valuation_method']!,
+          _costValuationMethodMeta,
+        ),
       );
     }
     if (data.containsKey('created_at')) {
@@ -386,6 +425,14 @@ class $ProductsTable extends Products
         DriftSqlType.double,
         data['${effectivePrefix}unit_cost'],
       )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      ),
+      costValuationMethod: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cost_valuation_method'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
@@ -439,6 +486,12 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
 
   /// Unit cost for COGS (company base currency per main unit).
   final double unitCost;
+
+  /// Category UUID linking product to warehouse-rooted category tree.
+  final String? categoryId;
+
+  /// Cost Valuation Method Override: 'fifo', 'lifo', 'weightedAverage', or NULL (Inherit).
+  final String? costValuationMethod;
   final int createdAt;
   final int updatedAt;
 
@@ -462,6 +515,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     required this.price,
     required this.onHandQty,
     required this.unitCost,
+    this.categoryId,
+    this.costValuationMethod,
     required this.createdAt,
     required this.updatedAt,
     required this.syncStatus,
@@ -484,6 +539,12 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     map['price'] = Variable<double>(price);
     map['on_hand_qty'] = Variable<double>(onHandQty);
     map['unit_cost'] = Variable<double>(unitCost);
+    if (!nullToAbsent || categoryId != null) {
+      map['category_id'] = Variable<String>(categoryId);
+    }
+    if (!nullToAbsent || costValuationMethod != null) {
+      map['cost_valuation_method'] = Variable<String>(costValuationMethod);
+    }
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
     map['sync_status'] = Variable<String>(syncStatus);
@@ -513,6 +574,12 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       price: Value(price),
       onHandQty: Value(onHandQty),
       unitCost: Value(unitCost),
+      categoryId: categoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryId),
+      costValuationMethod: costValuationMethod == null && nullToAbsent
+          ? const Value.absent()
+          : Value(costValuationMethod),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       syncStatus: Value(syncStatus),
@@ -544,6 +611,10 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       price: serializer.fromJson<double>(json['price']),
       onHandQty: serializer.fromJson<double>(json['onHandQty']),
       unitCost: serializer.fromJson<double>(json['unitCost']),
+      categoryId: serializer.fromJson<String?>(json['categoryId']),
+      costValuationMethod: serializer.fromJson<String?>(
+        json['costValuationMethod'],
+      ),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
@@ -566,6 +637,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       'price': serializer.toJson<double>(price),
       'onHandQty': serializer.toJson<double>(onHandQty),
       'unitCost': serializer.toJson<double>(unitCost),
+      'categoryId': serializer.toJson<String?>(categoryId),
+      'costValuationMethod': serializer.toJson<String?>(costValuationMethod),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'syncStatus': serializer.toJson<String>(syncStatus),
@@ -586,6 +659,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     double? price,
     double? onHandQty,
     double? unitCost,
+    Value<String?> categoryId = const Value.absent(),
+    Value<String?> costValuationMethod = const Value.absent(),
     int? createdAt,
     int? updatedAt,
     String? syncStatus,
@@ -603,6 +678,10 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     price: price ?? this.price,
     onHandQty: onHandQty ?? this.onHandQty,
     unitCost: unitCost ?? this.unitCost,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
+    costValuationMethod: costValuationMethod.present
+        ? costValuationMethod.value
+        : this.costValuationMethod,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     syncStatus: syncStatus ?? this.syncStatus,
@@ -622,6 +701,12 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
       price: data.price.present ? data.price.value : this.price,
       onHandQty: data.onHandQty.present ? data.onHandQty.value : this.onHandQty,
       unitCost: data.unitCost.present ? data.unitCost.value : this.unitCost,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      costValuationMethod: data.costValuationMethod.present
+          ? data.costValuationMethod.value
+          : this.costValuationMethod,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       syncStatus: data.syncStatus.present
@@ -648,6 +733,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
           ..write('price: $price, ')
           ..write('onHandQty: $onHandQty, ')
           ..write('unitCost: $unitCost, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('costValuationMethod: $costValuationMethod, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('syncStatus: $syncStatus, ')
@@ -670,6 +757,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
     price,
     onHandQty,
     unitCost,
+    categoryId,
+    costValuationMethod,
     createdAt,
     updatedAt,
     syncStatus,
@@ -691,6 +780,8 @@ class ProductRow extends DataClass implements Insertable<ProductRow> {
           other.price == this.price &&
           other.onHandQty == this.onHandQty &&
           other.unitCost == this.unitCost &&
+          other.categoryId == this.categoryId &&
+          other.costValuationMethod == this.costValuationMethod &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.syncStatus == this.syncStatus &&
@@ -710,6 +801,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
   final Value<double> price;
   final Value<double> onHandQty;
   final Value<double> unitCost;
+  final Value<String?> categoryId;
+  final Value<String?> costValuationMethod;
   final Value<int> createdAt;
   final Value<int> updatedAt;
   final Value<String> syncStatus;
@@ -727,6 +820,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     this.price = const Value.absent(),
     this.onHandQty = const Value.absent(),
     this.unitCost = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.costValuationMethod = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
@@ -745,6 +840,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     required double price,
     this.onHandQty = const Value.absent(),
     this.unitCost = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.costValuationMethod = const Value.absent(),
     required int createdAt,
     required int updatedAt,
     this.syncStatus = const Value.absent(),
@@ -769,6 +866,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     Expression<double>? price,
     Expression<double>? onHandQty,
     Expression<double>? unitCost,
+    Expression<String>? categoryId,
+    Expression<String>? costValuationMethod,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<String>? syncStatus,
@@ -787,6 +886,9 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
       if (price != null) 'price': price,
       if (onHandQty != null) 'on_hand_qty': onHandQty,
       if (unitCost != null) 'unit_cost': unitCost,
+      if (categoryId != null) 'category_id': categoryId,
+      if (costValuationMethod != null)
+        'cost_valuation_method': costValuationMethod,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (syncStatus != null) 'sync_status': syncStatus,
@@ -807,6 +909,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     Value<double>? price,
     Value<double>? onHandQty,
     Value<double>? unitCost,
+    Value<String?>? categoryId,
+    Value<String?>? costValuationMethod,
     Value<int>? createdAt,
     Value<int>? updatedAt,
     Value<String>? syncStatus,
@@ -825,6 +929,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
       price: price ?? this.price,
       onHandQty: onHandQty ?? this.onHandQty,
       unitCost: unitCost ?? this.unitCost,
+      categoryId: categoryId ?? this.categoryId,
+      costValuationMethod: costValuationMethod ?? this.costValuationMethod,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,
@@ -865,6 +971,14 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
     if (unitCost.present) {
       map['unit_cost'] = Variable<double>(unitCost.value);
     }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (costValuationMethod.present) {
+      map['cost_valuation_method'] = Variable<String>(
+        costValuationMethod.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
@@ -901,6 +1015,8 @@ class ProductsCompanion extends UpdateCompanion<ProductRow> {
           ..write('price: $price, ')
           ..write('onHandQty: $onHandQty, ')
           ..write('unitCost: $unitCost, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('costValuationMethod: $costValuationMethod, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('syncStatus: $syncStatus, ')
@@ -6823,6 +6939,17 @@ class $WarehousesTable extends Warehouses
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _costValuationMethodMeta =
+      const VerificationMeta('costValuationMethod');
+  @override
+  late final GeneratedColumn<String> costValuationMethod =
+      GeneratedColumn<String>(
+        'cost_valuation_method',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -6901,6 +7028,7 @@ class $WarehousesTable extends Warehouses
     address,
     phone,
     managerName,
+    costValuationMethod,
     createdAt,
     updatedAt,
     syncStatus,
@@ -6974,6 +7102,15 @@ class $WarehousesTable extends Warehouses
         managerName.isAcceptableOrUnknown(
           data['manager_name']!,
           _managerNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cost_valuation_method')) {
+      context.handle(
+        _costValuationMethodMeta,
+        costValuationMethod.isAcceptableOrUnknown(
+          data['cost_valuation_method']!,
+          _costValuationMethodMeta,
         ),
       );
     }
@@ -7058,6 +7195,10 @@ class $WarehousesTable extends Warehouses
         DriftSqlType.string,
         data['${effectivePrefix}manager_name'],
       ),
+      costValuationMethod: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cost_valuation_method'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
@@ -7100,6 +7241,7 @@ class WarehouseRow extends DataClass implements Insertable<WarehouseRow> {
   final String? address;
   final String? phone;
   final String? managerName;
+  final String? costValuationMethod;
   final int createdAt;
   final int updatedAt;
   final String syncStatus;
@@ -7115,6 +7257,7 @@ class WarehouseRow extends DataClass implements Insertable<WarehouseRow> {
     this.address,
     this.phone,
     this.managerName,
+    this.costValuationMethod,
     required this.createdAt,
     required this.updatedAt,
     required this.syncStatus,
@@ -7138,6 +7281,9 @@ class WarehouseRow extends DataClass implements Insertable<WarehouseRow> {
     }
     if (!nullToAbsent || managerName != null) {
       map['manager_name'] = Variable<String>(managerName);
+    }
+    if (!nullToAbsent || costValuationMethod != null) {
+      map['cost_valuation_method'] = Variable<String>(costValuationMethod);
     }
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
@@ -7168,6 +7314,9 @@ class WarehouseRow extends DataClass implements Insertable<WarehouseRow> {
       managerName: managerName == null && nullToAbsent
           ? const Value.absent()
           : Value(managerName),
+      costValuationMethod: costValuationMethod == null && nullToAbsent
+          ? const Value.absent()
+          : Value(costValuationMethod),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       syncStatus: Value(syncStatus),
@@ -7195,6 +7344,9 @@ class WarehouseRow extends DataClass implements Insertable<WarehouseRow> {
       address: serializer.fromJson<String?>(json['address']),
       phone: serializer.fromJson<String?>(json['phone']),
       managerName: serializer.fromJson<String?>(json['managerName']),
+      costValuationMethod: serializer.fromJson<String?>(
+        json['costValuationMethod'],
+      ),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
@@ -7215,6 +7367,7 @@ class WarehouseRow extends DataClass implements Insertable<WarehouseRow> {
       'address': serializer.toJson<String?>(address),
       'phone': serializer.toJson<String?>(phone),
       'managerName': serializer.toJson<String?>(managerName),
+      'costValuationMethod': serializer.toJson<String?>(costValuationMethod),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'syncStatus': serializer.toJson<String>(syncStatus),
@@ -7233,6 +7386,7 @@ class WarehouseRow extends DataClass implements Insertable<WarehouseRow> {
     Value<String?> address = const Value.absent(),
     Value<String?> phone = const Value.absent(),
     Value<String?> managerName = const Value.absent(),
+    Value<String?> costValuationMethod = const Value.absent(),
     int? createdAt,
     int? updatedAt,
     String? syncStatus,
@@ -7248,6 +7402,9 @@ class WarehouseRow extends DataClass implements Insertable<WarehouseRow> {
     address: address.present ? address.value : this.address,
     phone: phone.present ? phone.value : this.phone,
     managerName: managerName.present ? managerName.value : this.managerName,
+    costValuationMethod: costValuationMethod.present
+        ? costValuationMethod.value
+        : this.costValuationMethod,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     syncStatus: syncStatus ?? this.syncStatus,
@@ -7267,6 +7424,9 @@ class WarehouseRow extends DataClass implements Insertable<WarehouseRow> {
       managerName: data.managerName.present
           ? data.managerName.value
           : this.managerName,
+      costValuationMethod: data.costValuationMethod.present
+          ? data.costValuationMethod.value
+          : this.costValuationMethod,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       syncStatus: data.syncStatus.present
@@ -7289,6 +7449,7 @@ class WarehouseRow extends DataClass implements Insertable<WarehouseRow> {
           ..write('address: $address, ')
           ..write('phone: $phone, ')
           ..write('managerName: $managerName, ')
+          ..write('costValuationMethod: $costValuationMethod, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('syncStatus: $syncStatus, ')
@@ -7309,6 +7470,7 @@ class WarehouseRow extends DataClass implements Insertable<WarehouseRow> {
     address,
     phone,
     managerName,
+    costValuationMethod,
     createdAt,
     updatedAt,
     syncStatus,
@@ -7328,6 +7490,7 @@ class WarehouseRow extends DataClass implements Insertable<WarehouseRow> {
           other.address == this.address &&
           other.phone == this.phone &&
           other.managerName == this.managerName &&
+          other.costValuationMethod == this.costValuationMethod &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.syncStatus == this.syncStatus &&
@@ -7345,6 +7508,7 @@ class WarehousesCompanion extends UpdateCompanion<WarehouseRow> {
   final Value<String?> address;
   final Value<String?> phone;
   final Value<String?> managerName;
+  final Value<String?> costValuationMethod;
   final Value<int> createdAt;
   final Value<int> updatedAt;
   final Value<String> syncStatus;
@@ -7361,6 +7525,7 @@ class WarehousesCompanion extends UpdateCompanion<WarehouseRow> {
     this.address = const Value.absent(),
     this.phone = const Value.absent(),
     this.managerName = const Value.absent(),
+    this.costValuationMethod = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
@@ -7378,6 +7543,7 @@ class WarehousesCompanion extends UpdateCompanion<WarehouseRow> {
     this.address = const Value.absent(),
     this.phone = const Value.absent(),
     this.managerName = const Value.absent(),
+    this.costValuationMethod = const Value.absent(),
     required int createdAt,
     required int updatedAt,
     this.syncStatus = const Value.absent(),
@@ -7399,6 +7565,7 @@ class WarehousesCompanion extends UpdateCompanion<WarehouseRow> {
     Expression<String>? address,
     Expression<String>? phone,
     Expression<String>? managerName,
+    Expression<String>? costValuationMethod,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<String>? syncStatus,
@@ -7416,6 +7583,8 @@ class WarehousesCompanion extends UpdateCompanion<WarehouseRow> {
       if (address != null) 'address': address,
       if (phone != null) 'phone': phone,
       if (managerName != null) 'manager_name': managerName,
+      if (costValuationMethod != null)
+        'cost_valuation_method': costValuationMethod,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (syncStatus != null) 'sync_status': syncStatus,
@@ -7435,6 +7604,7 @@ class WarehousesCompanion extends UpdateCompanion<WarehouseRow> {
     Value<String?>? address,
     Value<String?>? phone,
     Value<String?>? managerName,
+    Value<String?>? costValuationMethod,
     Value<int>? createdAt,
     Value<int>? updatedAt,
     Value<String>? syncStatus,
@@ -7452,6 +7622,7 @@ class WarehousesCompanion extends UpdateCompanion<WarehouseRow> {
       address: address ?? this.address,
       phone: phone ?? this.phone,
       managerName: managerName ?? this.managerName,
+      costValuationMethod: costValuationMethod ?? this.costValuationMethod,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,
@@ -7489,6 +7660,11 @@ class WarehousesCompanion extends UpdateCompanion<WarehouseRow> {
     if (managerName.present) {
       map['manager_name'] = Variable<String>(managerName.value);
     }
+    if (costValuationMethod.present) {
+      map['cost_valuation_method'] = Variable<String>(
+        costValuationMethod.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
@@ -7524,6 +7700,7 @@ class WarehousesCompanion extends UpdateCompanion<WarehouseRow> {
           ..write('address: $address, ')
           ..write('phone: $phone, ')
           ..write('managerName: $managerName, ')
+          ..write('costValuationMethod: $costValuationMethod, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('syncStatus: $syncStatus, ')
@@ -9720,6 +9897,885 @@ class InventoryAuditTrailCompanion
   }
 }
 
+class $CategoriesTable extends Categories
+    with TableInfo<$CategoriesTable, CategoryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CategoriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _warehouseIdMeta = const VerificationMeta(
+    'warehouseId',
+  );
+  @override
+  late final GeneratedColumn<String> warehouseId = GeneratedColumn<String>(
+    'warehouse_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _parentIdMeta = const VerificationMeta(
+    'parentId',
+  );
+  @override
+  late final GeneratedColumn<String> parentId = GeneratedColumn<String>(
+    'parent_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _costValuationMethodMeta =
+      const VerificationMeta('costValuationMethod');
+  @override
+  late final GeneratedColumn<String> costValuationMethod =
+      GeneratedColumn<String>(
+        'cost_valuation_method',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<int> level = GeneratedColumn<int>(
+    'level',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _isGroupMeta = const VerificationMeta(
+    'isGroup',
+  );
+  @override
+  late final GeneratedColumn<bool> isGroup = GeneratedColumn<bool>(
+    'is_group',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_group" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    uuid,
+    code,
+    name,
+    warehouseId,
+    parentId,
+    costValuationMethod,
+    level,
+    isGroup,
+    isActive,
+    createdAt,
+    updatedAt,
+    syncStatus,
+    version,
+    companyId,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'categories';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CategoryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+        _codeMeta,
+        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('warehouse_id')) {
+      context.handle(
+        _warehouseIdMeta,
+        warehouseId.isAcceptableOrUnknown(
+          data['warehouse_id']!,
+          _warehouseIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_warehouseIdMeta);
+    }
+    if (data.containsKey('parent_id')) {
+      context.handle(
+        _parentIdMeta,
+        parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta),
+      );
+    }
+    if (data.containsKey('cost_valuation_method')) {
+      context.handle(
+        _costValuationMethodMeta,
+        costValuationMethod.isAcceptableOrUnknown(
+          data['cost_valuation_method']!,
+          _costValuationMethodMeta,
+        ),
+      );
+    }
+    if (data.containsKey('level')) {
+      context.handle(
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
+    }
+    if (data.containsKey('is_group')) {
+      context.handle(
+        _isGroupMeta,
+        isGroup.isAcceptableOrUnknown(data['is_group']!, _isGroupMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {warehouseId, code},
+  ];
+  @override
+  CategoryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CategoryRow(
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      warehouseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}warehouse_id'],
+      )!,
+      parentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}parent_id'],
+      ),
+      costValuationMethod: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cost_valuation_method'],
+      ),
+      level: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}level'],
+      )!,
+      isGroup: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_group'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $CategoriesTable createAlias(String alias) {
+    return $CategoriesTable(attachedDatabase, alias);
+  }
+}
+
+class CategoryRow extends DataClass implements Insertable<CategoryRow> {
+  final String uuid;
+  final String code;
+  final String name;
+
+  /// Top root: Warehouse identifier where this category belongs.
+  final String warehouseId;
+
+  /// Parent category UUID for tree hierarchy (null for root categories).
+  final String? parentId;
+
+  /// Cost Valuation Method Override: 'fifo', 'lifo', 'weightedAverage', or NULL (Inherit).
+  final String? costValuationMethod;
+
+  /// Depth in the tree (roots under warehouse = 0).
+  final int level;
+
+  /// When true, this is a group (header) category — contains subcategories.
+  /// When false, this is a leaf category — directly holds products.
+  final bool isGroup;
+  final bool isActive;
+  final int createdAt;
+  final int updatedAt;
+  final String syncStatus;
+  final int version;
+  final String? companyId;
+  final int? deletedAt;
+  const CategoryRow({
+    required this.uuid,
+    required this.code,
+    required this.name,
+    required this.warehouseId,
+    this.parentId,
+    this.costValuationMethod,
+    required this.level,
+    required this.isGroup,
+    required this.isActive,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.syncStatus,
+    required this.version,
+    this.companyId,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['code'] = Variable<String>(code);
+    map['name'] = Variable<String>(name);
+    map['warehouse_id'] = Variable<String>(warehouseId);
+    if (!nullToAbsent || parentId != null) {
+      map['parent_id'] = Variable<String>(parentId);
+    }
+    if (!nullToAbsent || costValuationMethod != null) {
+      map['cost_valuation_method'] = Variable<String>(costValuationMethod);
+    }
+    map['level'] = Variable<int>(level);
+    map['is_group'] = Variable<bool>(isGroup);
+    map['is_active'] = Variable<bool>(isActive);
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    map['sync_status'] = Variable<String>(syncStatus);
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || companyId != null) {
+      map['company_id'] = Variable<String>(companyId);
+    }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
+    return map;
+  }
+
+  CategoriesCompanion toCompanion(bool nullToAbsent) {
+    return CategoriesCompanion(
+      uuid: Value(uuid),
+      code: Value(code),
+      name: Value(name),
+      warehouseId: Value(warehouseId),
+      parentId: parentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parentId),
+      costValuationMethod: costValuationMethod == null && nullToAbsent
+          ? const Value.absent()
+          : Value(costValuationMethod),
+      level: Value(level),
+      isGroup: Value(isGroup),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      syncStatus: Value(syncStatus),
+      version: Value(version),
+      companyId: companyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(companyId),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory CategoryRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CategoryRow(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      code: serializer.fromJson<String>(json['code']),
+      name: serializer.fromJson<String>(json['name']),
+      warehouseId: serializer.fromJson<String>(json['warehouseId']),
+      parentId: serializer.fromJson<String?>(json['parentId']),
+      costValuationMethod: serializer.fromJson<String?>(
+        json['costValuationMethod'],
+      ),
+      level: serializer.fromJson<int>(json['level']),
+      isGroup: serializer.fromJson<bool>(json['isGroup']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      version: serializer.fromJson<int>(json['version']),
+      companyId: serializer.fromJson<String?>(json['companyId']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'code': serializer.toJson<String>(code),
+      'name': serializer.toJson<String>(name),
+      'warehouseId': serializer.toJson<String>(warehouseId),
+      'parentId': serializer.toJson<String?>(parentId),
+      'costValuationMethod': serializer.toJson<String?>(costValuationMethod),
+      'level': serializer.toJson<int>(level),
+      'isGroup': serializer.toJson<bool>(isGroup),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'version': serializer.toJson<int>(version),
+      'companyId': serializer.toJson<String?>(companyId),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
+    };
+  }
+
+  CategoryRow copyWith({
+    String? uuid,
+    String? code,
+    String? name,
+    String? warehouseId,
+    Value<String?> parentId = const Value.absent(),
+    Value<String?> costValuationMethod = const Value.absent(),
+    int? level,
+    bool? isGroup,
+    bool? isActive,
+    int? createdAt,
+    int? updatedAt,
+    String? syncStatus,
+    int? version,
+    Value<String?> companyId = const Value.absent(),
+    Value<int?> deletedAt = const Value.absent(),
+  }) => CategoryRow(
+    uuid: uuid ?? this.uuid,
+    code: code ?? this.code,
+    name: name ?? this.name,
+    warehouseId: warehouseId ?? this.warehouseId,
+    parentId: parentId.present ? parentId.value : this.parentId,
+    costValuationMethod: costValuationMethod.present
+        ? costValuationMethod.value
+        : this.costValuationMethod,
+    level: level ?? this.level,
+    isGroup: isGroup ?? this.isGroup,
+    isActive: isActive ?? this.isActive,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    version: version ?? this.version,
+    companyId: companyId.present ? companyId.value : this.companyId,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  CategoryRow copyWithCompanion(CategoriesCompanion data) {
+    return CategoryRow(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      code: data.code.present ? data.code.value : this.code,
+      name: data.name.present ? data.name.value : this.name,
+      warehouseId: data.warehouseId.present
+          ? data.warehouseId.value
+          : this.warehouseId,
+      parentId: data.parentId.present ? data.parentId.value : this.parentId,
+      costValuationMethod: data.costValuationMethod.present
+          ? data.costValuationMethod.value
+          : this.costValuationMethod,
+      level: data.level.present ? data.level.value : this.level,
+      isGroup: data.isGroup.present ? data.isGroup.value : this.isGroup,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      version: data.version.present ? data.version.value : this.version,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryRow(')
+          ..write('uuid: $uuid, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('warehouseId: $warehouseId, ')
+          ..write('parentId: $parentId, ')
+          ..write('costValuationMethod: $costValuationMethod, ')
+          ..write('level: $level, ')
+          ..write('isGroup: $isGroup, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('version: $version, ')
+          ..write('companyId: $companyId, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    uuid,
+    code,
+    name,
+    warehouseId,
+    parentId,
+    costValuationMethod,
+    level,
+    isGroup,
+    isActive,
+    createdAt,
+    updatedAt,
+    syncStatus,
+    version,
+    companyId,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CategoryRow &&
+          other.uuid == this.uuid &&
+          other.code == this.code &&
+          other.name == this.name &&
+          other.warehouseId == this.warehouseId &&
+          other.parentId == this.parentId &&
+          other.costValuationMethod == this.costValuationMethod &&
+          other.level == this.level &&
+          other.isGroup == this.isGroup &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.version == this.version &&
+          other.companyId == this.companyId &&
+          other.deletedAt == this.deletedAt);
+}
+
+class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
+  final Value<String> uuid;
+  final Value<String> code;
+  final Value<String> name;
+  final Value<String> warehouseId;
+  final Value<String?> parentId;
+  final Value<String?> costValuationMethod;
+  final Value<int> level;
+  final Value<bool> isGroup;
+  final Value<bool> isActive;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<String> syncStatus;
+  final Value<int> version;
+  final Value<String?> companyId;
+  final Value<int?> deletedAt;
+  final Value<int> rowid;
+  const CategoriesCompanion({
+    this.uuid = const Value.absent(),
+    this.code = const Value.absent(),
+    this.name = const Value.absent(),
+    this.warehouseId = const Value.absent(),
+    this.parentId = const Value.absent(),
+    this.costValuationMethod = const Value.absent(),
+    this.level = const Value.absent(),
+    this.isGroup = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.version = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CategoriesCompanion.insert({
+    required String uuid,
+    required String code,
+    required String name,
+    required String warehouseId,
+    this.parentId = const Value.absent(),
+    this.costValuationMethod = const Value.absent(),
+    this.level = const Value.absent(),
+    this.isGroup = const Value.absent(),
+    this.isActive = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.syncStatus = const Value.absent(),
+    this.version = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : uuid = Value(uuid),
+       code = Value(code),
+       name = Value(name),
+       warehouseId = Value(warehouseId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<CategoryRow> custom({
+    Expression<String>? uuid,
+    Expression<String>? code,
+    Expression<String>? name,
+    Expression<String>? warehouseId,
+    Expression<String>? parentId,
+    Expression<String>? costValuationMethod,
+    Expression<int>? level,
+    Expression<bool>? isGroup,
+    Expression<bool>? isActive,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<String>? syncStatus,
+    Expression<int>? version,
+    Expression<String>? companyId,
+    Expression<int>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (code != null) 'code': code,
+      if (name != null) 'name': name,
+      if (warehouseId != null) 'warehouse_id': warehouseId,
+      if (parentId != null) 'parent_id': parentId,
+      if (costValuationMethod != null)
+        'cost_valuation_method': costValuationMethod,
+      if (level != null) 'level': level,
+      if (isGroup != null) 'is_group': isGroup,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (version != null) 'version': version,
+      if (companyId != null) 'company_id': companyId,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CategoriesCompanion copyWith({
+    Value<String>? uuid,
+    Value<String>? code,
+    Value<String>? name,
+    Value<String>? warehouseId,
+    Value<String?>? parentId,
+    Value<String?>? costValuationMethod,
+    Value<int>? level,
+    Value<bool>? isGroup,
+    Value<bool>? isActive,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+    Value<String>? syncStatus,
+    Value<int>? version,
+    Value<String?>? companyId,
+    Value<int?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return CategoriesCompanion(
+      uuid: uuid ?? this.uuid,
+      code: code ?? this.code,
+      name: name ?? this.name,
+      warehouseId: warehouseId ?? this.warehouseId,
+      parentId: parentId ?? this.parentId,
+      costValuationMethod: costValuationMethod ?? this.costValuationMethod,
+      level: level ?? this.level,
+      isGroup: isGroup ?? this.isGroup,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      version: version ?? this.version,
+      companyId: companyId ?? this.companyId,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (warehouseId.present) {
+      map['warehouse_id'] = Variable<String>(warehouseId.value);
+    }
+    if (parentId.present) {
+      map['parent_id'] = Variable<String>(parentId.value);
+    }
+    if (costValuationMethod.present) {
+      map['cost_valuation_method'] = Variable<String>(
+        costValuationMethod.value,
+      );
+    }
+    if (level.present) {
+      map['level'] = Variable<int>(level.value);
+    }
+    if (isGroup.present) {
+      map['is_group'] = Variable<bool>(isGroup.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoriesCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('code: $code, ')
+          ..write('name: $name, ')
+          ..write('warehouseId: $warehouseId, ')
+          ..write('parentId: $parentId, ')
+          ..write('costValuationMethod: $costValuationMethod, ')
+          ..write('level: $level, ')
+          ..write('isGroup: $isGroup, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('version: $version, ')
+          ..write('companyId: $companyId, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$InventoryDatabase extends GeneratedDatabase {
   _$InventoryDatabase(QueryExecutor e) : super(e);
   $InventoryDatabaseManager get managers => $InventoryDatabaseManager(this);
@@ -9739,6 +10795,7 @@ abstract class _$InventoryDatabase extends GeneratedDatabase {
   late final $StockTransfersTable stockTransfers = $StockTransfersTable(this);
   late final $InventoryAuditTrailTable inventoryAuditTrail =
       $InventoryAuditTrailTable(this);
+  late final $CategoriesTable categories = $CategoriesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -9755,6 +10812,7 @@ abstract class _$InventoryDatabase extends GeneratedDatabase {
     productWarehouseStocks,
     stockTransfers,
     inventoryAuditTrail,
+    categories,
   ];
 }
 
@@ -9769,6 +10827,8 @@ typedef $$ProductsTableCreateCompanionBuilder =
       required double price,
       Value<double> onHandQty,
       Value<double> unitCost,
+      Value<String?> categoryId,
+      Value<String?> costValuationMethod,
       required int createdAt,
       required int updatedAt,
       Value<String> syncStatus,
@@ -9788,6 +10848,8 @@ typedef $$ProductsTableUpdateCompanionBuilder =
       Value<double> price,
       Value<double> onHandQty,
       Value<double> unitCost,
+      Value<String?> categoryId,
+      Value<String?> costValuationMethod,
       Value<int> createdAt,
       Value<int> updatedAt,
       Value<String> syncStatus,
@@ -9848,6 +10910,16 @@ class $$ProductsTableFilterComposer
 
   ColumnFilters<double> get unitCost => $composableBuilder(
     column: $table.unitCost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get costValuationMethod => $composableBuilder(
+    column: $table.costValuationMethod,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9941,6 +11013,16 @@ class $$ProductsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get costValuationMethod => $composableBuilder(
+    column: $table.costValuationMethod,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -10013,6 +11095,16 @@ class $$ProductsTableAnnotationComposer
   GeneratedColumn<double> get unitCost =>
       $composableBuilder(column: $table.unitCost, builder: (column) => column);
 
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get costValuationMethod => $composableBuilder(
+    column: $table.costValuationMethod,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -10079,6 +11171,8 @@ class $$ProductsTableTableManager
                 Value<double> price = const Value.absent(),
                 Value<double> onHandQty = const Value.absent(),
                 Value<double> unitCost = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<String?> costValuationMethod = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
@@ -10096,6 +11190,8 @@ class $$ProductsTableTableManager
                 price: price,
                 onHandQty: onHandQty,
                 unitCost: unitCost,
+                categoryId: categoryId,
+                costValuationMethod: costValuationMethod,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 syncStatus: syncStatus,
@@ -10115,6 +11211,8 @@ class $$ProductsTableTableManager
                 required double price,
                 Value<double> onHandQty = const Value.absent(),
                 Value<double> unitCost = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
+                Value<String?> costValuationMethod = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
                 Value<String> syncStatus = const Value.absent(),
@@ -10132,6 +11230,8 @@ class $$ProductsTableTableManager
                 price: price,
                 onHandQty: onHandQty,
                 unitCost: unitCost,
+                categoryId: categoryId,
+                costValuationMethod: costValuationMethod,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 syncStatus: syncStatus,
@@ -12813,6 +13913,7 @@ typedef $$WarehousesTableCreateCompanionBuilder =
       Value<String?> address,
       Value<String?> phone,
       Value<String?> managerName,
+      Value<String?> costValuationMethod,
       required int createdAt,
       required int updatedAt,
       Value<String> syncStatus,
@@ -12831,6 +13932,7 @@ typedef $$WarehousesTableUpdateCompanionBuilder =
       Value<String?> address,
       Value<String?> phone,
       Value<String?> managerName,
+      Value<String?> costValuationMethod,
       Value<int> createdAt,
       Value<int> updatedAt,
       Value<String> syncStatus,
@@ -12886,6 +13988,11 @@ class $$WarehousesTableFilterComposer
 
   ColumnFilters<String> get managerName => $composableBuilder(
     column: $table.managerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get costValuationMethod => $composableBuilder(
+    column: $table.costValuationMethod,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12969,6 +14076,11 @@ class $$WarehousesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get costValuationMethod => $composableBuilder(
+    column: $table.costValuationMethod,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -13035,6 +14147,11 @@ class $$WarehousesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get costValuationMethod => $composableBuilder(
+    column: $table.costValuationMethod,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -13095,6 +14212,7 @@ class $$WarehousesTableTableManager
                 Value<String?> address = const Value.absent(),
                 Value<String?> phone = const Value.absent(),
                 Value<String?> managerName = const Value.absent(),
+                Value<String?> costValuationMethod = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
                 Value<String> syncStatus = const Value.absent(),
@@ -13111,6 +14229,7 @@ class $$WarehousesTableTableManager
                 address: address,
                 phone: phone,
                 managerName: managerName,
+                costValuationMethod: costValuationMethod,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 syncStatus: syncStatus,
@@ -13129,6 +14248,7 @@ class $$WarehousesTableTableManager
                 Value<String?> address = const Value.absent(),
                 Value<String?> phone = const Value.absent(),
                 Value<String?> managerName = const Value.absent(),
+                Value<String?> costValuationMethod = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
                 Value<String> syncStatus = const Value.absent(),
@@ -13145,6 +14265,7 @@ class $$WarehousesTableTableManager
                 address: address,
                 phone: phone,
                 managerName: managerName,
+                costValuationMethod: costValuationMethod,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 syncStatus: syncStatus,
@@ -14238,6 +15359,402 @@ typedef $$InventoryAuditTrailTableProcessedTableManager =
       InventoryAuditTrailRow,
       PrefetchHooks Function()
     >;
+typedef $$CategoriesTableCreateCompanionBuilder =
+    CategoriesCompanion Function({
+      required String uuid,
+      required String code,
+      required String name,
+      required String warehouseId,
+      Value<String?> parentId,
+      Value<String?> costValuationMethod,
+      Value<int> level,
+      Value<bool> isGroup,
+      Value<bool> isActive,
+      required int createdAt,
+      required int updatedAt,
+      Value<String> syncStatus,
+      Value<int> version,
+      Value<String?> companyId,
+      Value<int?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$CategoriesTableUpdateCompanionBuilder =
+    CategoriesCompanion Function({
+      Value<String> uuid,
+      Value<String> code,
+      Value<String> name,
+      Value<String> warehouseId,
+      Value<String?> parentId,
+      Value<String?> costValuationMethod,
+      Value<int> level,
+      Value<bool> isGroup,
+      Value<bool> isActive,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+      Value<String> syncStatus,
+      Value<int> version,
+      Value<String?> companyId,
+      Value<int?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$CategoriesTableFilterComposer
+    extends Composer<_$InventoryDatabase, $CategoriesTable> {
+  $$CategoriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get warehouseId => $composableBuilder(
+    column: $table.warehouseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get parentId => $composableBuilder(
+    column: $table.parentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get costValuationMethod => $composableBuilder(
+    column: $table.costValuationMethod,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isGroup => $composableBuilder(
+    column: $table.isGroup,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CategoriesTableOrderingComposer
+    extends Composer<_$InventoryDatabase, $CategoriesTable> {
+  $$CategoriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get warehouseId => $composableBuilder(
+    column: $table.warehouseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get parentId => $composableBuilder(
+    column: $table.parentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get costValuationMethod => $composableBuilder(
+    column: $table.costValuationMethod,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isGroup => $composableBuilder(
+    column: $table.isGroup,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CategoriesTableAnnotationComposer
+    extends Composer<_$InventoryDatabase, $CategoriesTable> {
+  $$CategoriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get warehouseId => $composableBuilder(
+    column: $table.warehouseId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get parentId =>
+      $composableBuilder(column: $table.parentId, builder: (column) => column);
+
+  GeneratedColumn<String> get costValuationMethod => $composableBuilder(
+    column: $table.costValuationMethod,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
+  GeneratedColumn<bool> get isGroup =>
+      $composableBuilder(column: $table.isGroup, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$CategoriesTableTableManager
+    extends
+        RootTableManager<
+          _$InventoryDatabase,
+          $CategoriesTable,
+          CategoryRow,
+          $$CategoriesTableFilterComposer,
+          $$CategoriesTableOrderingComposer,
+          $$CategoriesTableAnnotationComposer,
+          $$CategoriesTableCreateCompanionBuilder,
+          $$CategoriesTableUpdateCompanionBuilder,
+          (
+            CategoryRow,
+            BaseReferences<_$InventoryDatabase, $CategoriesTable, CategoryRow>,
+          ),
+          CategoryRow,
+          PrefetchHooks Function()
+        > {
+  $$CategoriesTableTableManager(_$InventoryDatabase db, $CategoriesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CategoriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CategoriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CategoriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> uuid = const Value.absent(),
+                Value<String> code = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> warehouseId = const Value.absent(),
+                Value<String?> parentId = const Value.absent(),
+                Value<String?> costValuationMethod = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<bool> isGroup = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoriesCompanion(
+                uuid: uuid,
+                code: code,
+                name: name,
+                warehouseId: warehouseId,
+                parentId: parentId,
+                costValuationMethod: costValuationMethod,
+                level: level,
+                isGroup: isGroup,
+                isActive: isActive,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                version: version,
+                companyId: companyId,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String uuid,
+                required String code,
+                required String name,
+                required String warehouseId,
+                Value<String?> parentId = const Value.absent(),
+                Value<String?> costValuationMethod = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<bool> isGroup = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoriesCompanion.insert(
+                uuid: uuid,
+                code: code,
+                name: name,
+                warehouseId: warehouseId,
+                parentId: parentId,
+                costValuationMethod: costValuationMethod,
+                level: level,
+                isGroup: isGroup,
+                isActive: isActive,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                version: version,
+                companyId: companyId,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CategoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$InventoryDatabase,
+      $CategoriesTable,
+      CategoryRow,
+      $$CategoriesTableFilterComposer,
+      $$CategoriesTableOrderingComposer,
+      $$CategoriesTableAnnotationComposer,
+      $$CategoriesTableCreateCompanionBuilder,
+      $$CategoriesTableUpdateCompanionBuilder,
+      (
+        CategoryRow,
+        BaseReferences<_$InventoryDatabase, $CategoriesTable, CategoryRow>,
+      ),
+      CategoryRow,
+      PrefetchHooks Function()
+    >;
 
 class $InventoryDatabaseManager {
   final _$InventoryDatabase _db;
@@ -14270,4 +15787,6 @@ class $InventoryDatabaseManager {
       $$StockTransfersTableTableManager(_db, _db.stockTransfers);
   $$InventoryAuditTrailTableTableManager get inventoryAuditTrail =>
       $$InventoryAuditTrailTableTableManager(_db, _db.inventoryAuditTrail);
+  $$CategoriesTableTableManager get categories =>
+      $$CategoriesTableTableManager(_db, _db.categories);
 }
