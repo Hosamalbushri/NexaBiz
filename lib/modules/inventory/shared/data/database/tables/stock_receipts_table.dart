@@ -13,6 +13,10 @@ class StockReceipts extends Table {
 
   TextColumn get supplier => text().nullable()();
 
+  TextColumn get accountId => text().nullable()();
+
+  TextColumn get accountName => text().nullable()();
+
   TextColumn get currencyCode =>
       text().withDefault(const Constant('YER'))();
 
@@ -37,6 +41,12 @@ class StockReceipts extends Table {
 
   /// Company / Tenant owner ID for local multi-tenant data isolation.
   TextColumn get companyId => text().nullable()();
+
+  /// Document posting status ('draft', 'posted', 'cancelled')
+  TextColumn get status => text().withDefault(const Constant('draft'))();
+
+  /// Epoch UTC timestamp when the document was posted
+  IntColumn get postedAt => integer().nullable()();
 
   /// Soft-delete tombstone (UTC epoch ms). Null = active.
   IntColumn get deletedAt => integer().nullable()();

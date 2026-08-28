@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/app_draggable_quick_nav.dart';
 import '../../core/widgets/custom_bottom_nav.dart';
 import '../exit/app_exit_scope.dart';
 import '../localization/app_localizations.dart';
@@ -168,6 +169,7 @@ class _AppShellState extends ConsumerState<AppShell>
           fit: StackFit.expand,
           children: [
             child,
+            if (!_showShellChrome) const AppDraggableQuickNav(),
             if (t > 0)
               Positioned(
                 left: 0,

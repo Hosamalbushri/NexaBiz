@@ -1,4 +1,5 @@
 import 'package:stock_count/core/utils/id_generator.dart';
+import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'stock_movement_line.dart';
 
@@ -8,12 +9,16 @@ class StockReceipt {
     String? id,
     required this.receiptNumber,
     this.supplier,
+    this.accountId,
+    this.accountName,
     this.currencyCode = 'YER',
     this.exchangeRate = 1.0,
     this.warehouse,
     this.notes,
     required this.receiptDate,
     this.lines = const [],
+    this.status = InventoryDocumentStatus.draft,
+    this.postedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
     this.syncStatus = SyncStatus.synced,
@@ -28,12 +33,16 @@ class StockReceipt {
   final String id;
   final String receiptNumber;
   final String? supplier;
+  final String? accountId;
+  final String? accountName;
   final String currencyCode;
   final double exchangeRate;
   final String? warehouse;
   final String? notes;
   final DateTime receiptDate;
   final List<StockMovementLine> lines;
+  final InventoryDocumentStatus status;
+  final DateTime? postedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   final SyncStatus syncStatus;
@@ -43,6 +52,8 @@ class StockReceipt {
   final DateTime? deletedAt;
 
   bool get isDeleted => deletedAt != null;
+  bool get isPosted => status == InventoryDocumentStatus.posted;
+  bool get isDraft => status == InventoryDocumentStatus.draft;
 
   double get totalQuantity => lines.fold(0.0, (sum, line) => sum + line.quantity);
   double get totalCost => lines.fold(0.0, (sum, line) => sum + line.totalCost);
@@ -51,12 +62,17 @@ class StockReceipt {
     String? id,
     String? receiptNumber,
     String? supplier,
+    String? accountId,
+    String? accountName,
     String? currencyCode,
     double? exchangeRate,
     String? warehouse,
     String? notes,
     DateTime? receiptDate,
     List<StockMovementLine>? lines,
+    InventoryDocumentStatus? status,
+    DateTime? postedAt,
+    bool clearPostedAt = false,
     DateTime? createdAt,
     DateTime? updatedAt,
     SyncStatus? syncStatus,
@@ -71,12 +87,16 @@ class StockReceipt {
       id: id ?? this.id,
       receiptNumber: receiptNumber ?? this.receiptNumber,
       supplier: supplier ?? this.supplier,
+      accountId: accountId ?? this.accountId,
+      accountName: accountName ?? this.accountName,
       currencyCode: currencyCode ?? this.currencyCode,
       exchangeRate: exchangeRate ?? this.exchangeRate,
       warehouse: warehouse ?? this.warehouse,
       notes: notes ?? this.notes,
       receiptDate: receiptDate ?? this.receiptDate,
       lines: lines ?? this.lines,
+      status: status ?? this.status,
+      postedAt: clearPostedAt ? null : (postedAt ?? this.postedAt),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,

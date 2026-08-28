@@ -159,10 +159,18 @@ class StockReceiptComposerNotifier
     String? defaultCurrencyCode,
   }) {
     if (receiptToEdit != null) {
+      final accountRef = (receiptToEdit.accountId != null && receiptToEdit.accountId!.isNotEmpty)
+          ? InventoryAccountRef(
+              accountId: receiptToEdit.accountId!,
+              code: '',
+              name: receiptToEdit.accountName ?? receiptToEdit.supplier ?? '',
+            )
+          : null;
       state = StockReceiptComposerState(
         editingReceiptId: receiptToEdit.id,
         receiptDate: receiptToEdit.receiptDate,
         previewReceiptNumber: receiptToEdit.receiptNumber,
+        account: accountRef,
         supplier: receiptToEdit.supplier,
         currencyCode: receiptToEdit.currencyCode,
         exchangeRate: receiptToEdit.exchangeRate,
@@ -290,9 +298,18 @@ class StockReceiptComposerNotifier
       return false;
     }
 
+    if (state.account == null || state.account!.accountId.trim().isEmpty) {
+      state = state.copyWith(error: 'يرجى اختيار الحساب المحاسبي للمستند أولاً');
+      return false;
+    }
+
     state = state.copyWith(isSaving: true, clearError: true);
     try {
-      String number = state.previewReceiptNumber ?? '';
+      String number = '';
+      if (state.editingReceiptId != null) {
+        number = state.previewReceiptNumber ?? '';
+      }
+
       if (number.isEmpty) {
         if (state.voucherBook != null) {
           number = await voucherPort.allocateReceiptNumber(state.voucherBook!.bookId);
@@ -307,6 +324,8 @@ class StockReceiptComposerNotifier
         receiptNumber: number,
         receiptDate: state.receiptDate,
         supplier: state.account?.name ?? state.supplier,
+        accountId: state.account?.accountId,
+        accountName: state.account?.name ?? state.supplier,
         currencyCode: state.currencyCode,
         exchangeRate: state.exchangeRate,
         notes: state.notes,

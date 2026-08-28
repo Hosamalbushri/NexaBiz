@@ -28,18 +28,11 @@ class InventoryServiceDefinition {
 List<InventoryServiceDefinition> inventoryServiceCatalog() {
   return const [
     InventoryServiceDefinition(
-      id: 'stock_receipts',
-      icon: Icons.move_to_inbox_outlined,
-      path: InventoryRoutes.stockReceipts,
-      titleBuilder: _stockReceiptsTitle,
-      subtitleBuilder: _stockReceiptsSubtitle,
-    ),
-    InventoryServiceDefinition(
-      id: 'stock_issues',
-      icon: Icons.outbox_outlined,
-      path: InventoryRoutes.stockIssues,
-      titleBuilder: _stockIssuesTitle,
-      subtitleBuilder: _stockIssuesSubtitle,
+      id: 'stock_movements',
+      icon: Icons.swap_vert_rounded,
+      path: InventoryRoutes.stockMovements,
+      titleBuilder: _stockMovementsTitle,
+      subtitleBuilder: _stockMovementsSubtitle,
     ),
     InventoryServiceDefinition(
       id: 'stock_count',
@@ -58,11 +51,8 @@ List<InventoryServiceDefinition> inventoryServiceCatalog() {
   ];
 }
 
-String _stockReceiptsTitle(AppLocalizations l10n) => 'إيصالات الاستلام';
-String _stockReceiptsSubtitle(AppLocalizations l10n) => 'استلام بضائع وتحديث أصل المخزون';
-
-String _stockIssuesTitle(AppLocalizations l10n) => 'أذونات الصرف';
-String _stockIssuesSubtitle(AppLocalizations l10n) => 'صرف بضائع وتغذية التكلفة والمصروفات';
+String _stockMovementsTitle(AppLocalizations l10n) => 'الحركة';
+String _stockMovementsSubtitle(AppLocalizations l10n) => 'أوامر الصرف وأوامر التوريد للمخزون';
 
 String _stockCountTitle(AppLocalizations l10n) =>
     l10n.inventoryStockCountService;
@@ -80,6 +70,9 @@ InventoryServiceDefinition? findInventoryServiceById(String id) {
     if (service.id == id) {
       return service;
     }
+  }
+  if (id == 'stock_receipts' || id == 'stock_issues' || id == 'stock_transfers') {
+    return findInventoryServiceById('stock_movements');
   }
   return null;
 }

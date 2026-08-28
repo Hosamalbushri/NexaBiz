@@ -273,19 +273,19 @@ class ProductStockMovementReportDefinition
                         _cellText('${row.inCartons}'),
                         _cellText('${row.inPieces.toStringAsFixed(0)}'),
                         _cellText('${row.inTotalQty.toStringAsFixed(0)}'),
-                        _cellText(row.inCost > 0 ? row.inCost.toStringAsFixed(0) : '0', isBold: row.inCost > 0),
+                        _cellText(row.inCost > 0 ? row.unitCost.toStringAsFixed(0) : '0', isBold: row.inCost > 0),
 
                         // Outward
                         _cellText('${row.outCartons}'),
                         _cellText('${row.outPieces.toStringAsFixed(0)}'),
                         _cellText('${row.outTotalQty.toStringAsFixed(0)}'),
-                        _cellText(row.outCost > 0 ? row.outCost.toStringAsFixed(0) : '0', isBold: row.outCost > 0),
+                        _cellText(row.outCost > 0 ? row.unitCost.toStringAsFixed(0) : '0', isBold: row.outCost > 0),
 
                         // Ending Balance
                         _cellText('${row.balanceCartons}'),
                         _cellText('${row.balancePieces.toStringAsFixed(0)}'),
                         _cellText('${row.balanceTotalQty.toStringAsFixed(0)}'),
-                        _cellText('${row.balanceCost.toStringAsFixed(0)}', isBold: true),
+                        _cellText('${row.unitCost.toStringAsFixed(0)}', isBold: true),
                       ],
                     ),
                 ],

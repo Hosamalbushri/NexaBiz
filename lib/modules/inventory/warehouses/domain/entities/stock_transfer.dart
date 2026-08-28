@@ -1,3 +1,5 @@
+import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
+
 class StockTransferLine {
   const StockTransferLine({
     required this.id,
@@ -59,6 +61,8 @@ class StockTransfer {
     required this.transferDate,
     this.notes,
     this.lines = const [],
+    this.status = InventoryDocumentStatus.draft,
+    this.postedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
     this.version = 1,
@@ -74,11 +78,17 @@ class StockTransfer {
   final DateTime transferDate;
   final String? notes;
   final List<StockTransferLine> lines;
+  final InventoryDocumentStatus status;
+  final DateTime? postedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   final int version;
   final String? companyId;
   final DateTime? deletedAt;
+
+  bool get isDeleted => deletedAt != null;
+  bool get isPosted => status == InventoryDocumentStatus.posted;
+  bool get isDraft => status == InventoryDocumentStatus.draft;
 
   StockTransfer copyWith({
     String? id,
@@ -88,6 +98,9 @@ class StockTransfer {
     DateTime? transferDate,
     String? notes,
     List<StockTransferLine>? lines,
+    InventoryDocumentStatus? status,
+    DateTime? postedAt,
+    bool clearPostedAt = false,
     DateTime? createdAt,
     DateTime? updatedAt,
     int? version,
@@ -102,6 +115,8 @@ class StockTransfer {
       transferDate: transferDate ?? this.transferDate,
       notes: notes ?? this.notes,
       lines: lines ?? this.lines,
+      status: status ?? this.status,
+      postedAt: clearPostedAt ? null : (postedAt ?? this.postedAt),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       version: version ?? this.version,

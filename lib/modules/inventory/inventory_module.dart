@@ -33,14 +33,14 @@ import 'stock_count/presentation/pages/inventory_search_page.dart';
 import 'stock_count/presentation/pages/stock_count_home_page.dart';
 import 'stock_count/presentation/pages/stock_count_settings_page.dart';
 
+import 'stock_movements/presentation/pages/stock_movements_page.dart';
+import 'stock_movements/presentation/pages/stock_issue_details_page.dart';
 import 'stock_movements/presentation/pages/stock_issue_form_page.dart';
-import 'stock_movements/presentation/pages/stock_issues_list_page.dart';
+import 'stock_movements/presentation/pages/stock_receipt_details_page.dart';
 import 'stock_movements/presentation/pages/stock_receipt_form_page.dart';
-import 'stock_movements/presentation/pages/stock_receipts_list_page.dart';
 
 import 'cost_valuation/presentation/pages/cost_valuation_settings_page.dart';
 import 'warehouses/presentation/pages/stock_transfer_form_page.dart';
-import 'warehouses/presentation/pages/stock_transfers_list_page.dart';
 import 'warehouses/presentation/pages/warehouses_settings_page.dart';
 
 /// Inventory business module — self-contained routes and features.
@@ -225,17 +225,24 @@ class InventoryModule extends AppModule {
         GoRoute(
           path: 'stock-movements',
           name: 'inventoryStockMovements',
-          builder: (context, state) => const StockReceiptsListPage(),
+          builder: (context, state) => const StockMovementsPage(initialIndex: 0),
           routes: [
             GoRoute(
               path: 'receipts',
               name: 'inventoryStockReceiptsList',
-              builder: (context, state) => const StockReceiptsListPage(),
+              builder: (context, state) => const StockMovementsPage(initialIndex: 1),
               routes: [
                 GoRoute(
                   path: 'new',
                   name: 'inventoryStockReceiptsNew',
                   builder: (context, state) => const StockReceiptFormPage(),
+                ),
+                GoRoute(
+                  path: ':id',
+                  name: 'inventoryStockReceiptsDetails',
+                  builder: (context, state) => StockReceiptDetailsPage(
+                    receiptId: state.pathParameters['id'] ?? '',
+                  ),
                 ),
                 GoRoute(
                   path: ':id/edit',
@@ -249,12 +256,19 @@ class InventoryModule extends AppModule {
             GoRoute(
               path: 'issues',
               name: 'inventoryStockIssuesList',
-              builder: (context, state) => const StockIssuesListPage(),
+              builder: (context, state) => const StockMovementsPage(initialIndex: 0),
               routes: [
                 GoRoute(
                   path: 'new',
                   name: 'inventoryStockIssuesNew',
                   builder: (context, state) => const StockIssueFormPage(),
+                ),
+                GoRoute(
+                  path: ':id',
+                  name: 'inventoryStockIssuesDetails',
+                  builder: (context, state) => StockIssueDetailsPage(
+                    issueId: state.pathParameters['id'] ?? '',
+                  ),
                 ),
                 GoRoute(
                   path: ':id/edit',
@@ -325,7 +339,7 @@ class InventoryModule extends AppModule {
         GoRoute(
           path: 'stock-transfers',
           name: 'inventoryStockTransfers',
-          builder: (context, state) => const StockTransfersListPage(),
+          builder: (context, state) => const StockMovementsPage(initialIndex: 2),
           routes: [
             GoRoute(
               path: 'new',

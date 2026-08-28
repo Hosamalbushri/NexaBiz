@@ -1,4 +1,5 @@
 import 'package:stock_count/core/utils/id_generator.dart';
+import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'stock_movement_line.dart';
 
@@ -22,6 +23,8 @@ class StockReturn {
     this.notes,
     required this.returnDate,
     this.lines = const [],
+    this.status = InventoryDocumentStatus.draft,
+    this.postedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
     this.syncStatus = SyncStatus.pending,
@@ -42,6 +45,8 @@ class StockReturn {
   final String? notes;
   final DateTime returnDate;
   final List<StockMovementLine> lines;
+  final InventoryDocumentStatus status;
+  final DateTime? postedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   final SyncStatus syncStatus;
@@ -51,6 +56,8 @@ class StockReturn {
   final DateTime? deletedAt;
 
   bool get isDeleted => deletedAt != null;
+  bool get isPosted => status == InventoryDocumentStatus.posted;
+  bool get isDraft => status == InventoryDocumentStatus.draft;
   bool get isPurchaseReturn => returnType == StockReturnType.purchaseReturn;
   bool get isSalesReturn => returnType == StockReturnType.salesReturn;
 
@@ -64,6 +71,9 @@ class StockReturn {
     String? notes,
     DateTime? returnDate,
     List<StockMovementLine>? lines,
+    InventoryDocumentStatus? status,
+    DateTime? postedAt,
+    bool clearPostedAt = false,
     DateTime? createdAt,
     DateTime? updatedAt,
     SyncStatus? syncStatus,
@@ -82,6 +92,8 @@ class StockReturn {
       notes: notes ?? this.notes,
       returnDate: returnDate ?? this.returnDate,
       lines: lines ?? this.lines,
+      status: status ?? this.status,
+      postedAt: clearPostedAt ? null : (postedAt ?? this.postedAt),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,

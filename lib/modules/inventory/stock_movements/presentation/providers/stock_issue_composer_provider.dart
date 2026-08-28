@@ -291,9 +291,18 @@ class StockIssueComposerNotifier
       return false;
     }
 
+    if (state.account == null || state.account!.accountId.trim().isEmpty) {
+      state = state.copyWith(error: 'يرجى اختيار الحساب المحاسبي للمستند أولاً');
+      return false;
+    }
+
     state = state.copyWith(isSaving: true, clearError: true);
     try {
-      String number = state.previewIssueNumber ?? '';
+      String number = '';
+      if (state.editingIssueId != null) {
+        number = state.previewIssueNumber ?? '';
+      }
+
       if (number.isEmpty) {
         if (state.voucherBook != null) {
           number = await voucherPort.allocateIssueNumber(state.voucherBook!.bookId);

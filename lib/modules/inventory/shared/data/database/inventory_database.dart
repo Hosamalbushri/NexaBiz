@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/database/encrypted_drift_connection.dart';
 
+import 'tables/inventory_audit_trail_table.dart';
 import 'tables/inventory_cost_consumptions_table.dart';
 import 'tables/inventory_cost_layers_table.dart';
 import 'tables/product_warehouse_stocks_table.dart';
@@ -26,6 +27,7 @@ part 'inventory_database.g.dart';
   Warehouses,
   ProductWarehouseStocks,
   StockTransfers,
+  InventoryAuditTrail,
 ])
 class InventoryDatabase extends _$InventoryDatabase {
   InventoryDatabase({String? name, QueryExecutor? executor})
@@ -35,7 +37,7 @@ class InventoryDatabase extends _$InventoryDatabase {
   InventoryDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -44,6 +46,14 @@ class InventoryDatabase extends _$InventoryDatabase {
       await _createSearchIndexes();
     },
     onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 12) {
+        await customStatement(
+          'ALTER TABLE stock_receipts ADD COLUMN account_id TEXT NULL',
+        );
+        await customStatement(
+          'ALTER TABLE stock_receipts ADD COLUMN account_name TEXT NULL',
+        );
+      }
       if (from < 2) {
         await customStatement(
           "ALTER TABLE products ADD COLUMN uuid TEXT NOT NULL DEFAULT ''",
@@ -298,6 +308,59 @@ class InventoryDatabase extends _$InventoryDatabase {
         await customStatement(
           'CREATE INDEX IF NOT EXISTS idx_product_wh_stocks '
           'ON product_warehouse_stocks (item_code, warehouse_id)',
+        );
+      }
+      if (from < 11) {
+        await customStatement(
+          "ALTER TABLE stock_receipts ADD COLUMN status TEXT NOT NULL DEFAULT 'draft'",
+        );
+        await customStatement(
+          'ALTER TABLE stock_receipts ADD COLUMN posted_at INTEGER NULL',
+        );
+        await customStatement(
+          "ALTER TABLE stock_issues ADD COLUMN status TEXT NOT NULL DEFAULT 'posted'",
+        );
+        await customStatement(
+          'ALTER TABLE stock_issues ADD COLUMN posted_at INTEGER NULL',
+        );
+        await customStatement(
+          "ALTER TABLE stock_returns ADD COLUMN status TEXT NOT NULL DEFAULT 'draft'",
+        );
+        await customStatement(
+          'ALTER TABLE stock_returns ADD COLUMN posted_at INTEGER NULL',
+        );
+        await customStatement(
+          "ALTER TABLE stock_transfers ADD COLUMN status TEXT NOT NULL DEFAULT 'draft'",
+        );
+        await customStatement(
+          'ALTER TABLE stock_transfers ADD COLUMN posted_at INTEGER NULL',
+        );
+        await customStatement(
+          'ALTER TABLE stock_movement_lines ADD COLUMN posted_cost REAL NULL',
+        );
+        await customStatement(
+          'ALTER TABLE stock_movement_lines ADD COLUMN posted_at INTEGER NULL',
+        );
+        await customStatement('''
+          CREATE TABLE IF NOT EXISTS inventory_audit_trail (
+            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            uuid TEXT NOT NULL UNIQUE,
+            document_id TEXT NOT NULL,
+            document_type TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            user_id TEXT NULL,
+            notes TEXT NULL,
+            timestamp INTEGER NOT NULL,
+            metadata TEXT NULL,
+            company_id TEXT NULL
+          );
+        ''');
+        // Backfill status = 'posted' for existing receipts & issues (since they were saved as posted)
+        await customStatement(
+          "UPDATE stock_receipts SET status = 'posted', posted_at = created_at WHERE status = 'draft'",
+        );
+        await customStatement(
+          "UPDATE stock_issues SET status = 'posted', posted_at = created_at WHERE status IS NULL OR status = ''",
         );
       }
     },

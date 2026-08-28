@@ -8,19 +8,93 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
+import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_dependency_dialog.dart';
+import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_shortage_dialog.dart';
+import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_status_badge.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_coordinator.dart';
+import 'package:stock_count/modules/sales/invoices/domain/services/device_sale_number.dart';
+import 'package:stock_count/modules/sync/sync.dart';
 import '../../domain/entities/stock_issue.dart';
 import '../providers/stock_movements_providers.dart';
 
 class StockIssuesListPage extends ConsumerWidget {
-  const StockIssuesListPage({super.key});
+  const StockIssuesListPage({
+    super.key,
+    this.embedInTab = false,
+  });
+
+  final bool embedInTab;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final issuesAsync = ref.watch(stockIssuesStreamProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+
+    final content = AppContentConstraint(
+      child: issuesAsync.when(
+        loading: () => const AppLoading(),
+        error: (err, stack) => Center(child: Text('خطأ: $err')),
+        data: (issues) {
+          return ListView(
+            padding: AppConstants.pageInsets(context),
+            children: [
+              _MovementCategoryActionHeader(
+                title: l10n.localeName == 'ar' ? 'أوامر الصرف' : 'Stock Issues',
+                subtitle: l10n.localeName == 'ar'
+                    ? 'صرف البضائع وتغذية التكلفة والمصروفات'
+                    : 'Issue items & assign cost expenses',
+                icon: Icons.outbox_rounded,
+                count: issues.length,
+                onNewPressed: () => InventoryRoutes.pushStockIssuesNew(context),
+              ),
+              if (issues.isEmpty)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.outbox_outlined,
+                          size: 64,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          l10n.stockIssuesEmptyTitle,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        ElevatedButton.icon(
+                          onPressed: () => InventoryRoutes.pushStockIssuesNew(context),
+                          icon: const Icon(Icons.add),
+                          label: Text(l10n.stockIssuesEmptyAction),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                ...issues.map(
+                  (issue) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _StockIssueCard(issue: issue),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (embedInTab) {
+      return content;
+    }
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -39,51 +113,7 @@ class StockIssuesListPage extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: Text(l10n.stockIssuesNewButton),
       ),
-      body: AppContentConstraint(
-        child: issuesAsync.when(
-          loading: () => const AppLoading(),
-          error: (err, stack) => Center(child: Text('خطأ: $err')),
-          data: (issues) {
-            if (issues.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.outbox_outlined,
-                      size: 64,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      l10n.stockIssuesEmptyTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    ElevatedButton.icon(
-                      onPressed: () => InventoryRoutes.pushStockIssuesNew(context),
-                      icon: const Icon(Icons.add),
-                      label: Text(l10n.stockIssuesEmptyAction),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return ListView.separated(
-              padding: AppConstants.pageInsets(context),
-              itemCount: issues.length,
-              separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
-              itemBuilder: (context, index) {
-                final issue = issues[index];
-                return _StockIssueCard(issue: issue);
-              },
-            );
-          },
-        ),
-      ),
+      body: content,
     );
   }
 }
@@ -108,7 +138,7 @@ class _StockIssueCard extends ConsumerWidget {
         ),
       ),
       child: ListTile(
-        onTap: () => InventoryRoutes.pushStockIssuesEdit(context, issue.id),
+        onTap: () => InventoryRoutes.pushStockIssueDetails(context, issue.id),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.xs,
@@ -120,15 +150,18 @@ class _StockIssueCard extends ConsumerWidget {
             color: theme.colorScheme.onSecondaryContainer,
           ),
         ),
-        title: Row(
+        title: Wrap(
+          spacing: AppSpacing.xs,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(
-              issue.issueNumber,
+              formatSaleNumberPrimary(issue.issueNumber),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(width: AppSpacing.xs),
+            InventoryStatusBadge(status: issue.status, compact: true),
             _SyncStatusBadge(status: issue.syncStatus),
           ],
         ),
@@ -140,34 +173,110 @@ class _StockIssueCard extends ConsumerWidget {
             Text('${l10n.stockIssueDateLabel}: $dateStr | ${l10n.stockReceiptItemsHeader(issue.lines.length)}'),
           ],
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-          onPressed: () async {
-            final confirm = await showDialog<bool>(
-              context: context,
-              builder: (ctx) => AlertDialog(
-                title: Text(l10n.stockIssuesDeleteTitle),
-                content: Text(l10n.stockIssuesDeleteConfirm),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                    ),
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: Text(MaterialLocalizations.of(context).deleteButtonTooltip, style: const TextStyle(color: Colors.white)),
-                  ),
-                ],
-              ),
-            );
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (issue.isDraft)
+              IconButton(
+                icon: const Icon(Icons.send_rounded, color: Colors.green),
+                tooltip: 'ترحيل',
+                onPressed: () async {
+                  final docRef = InventoryDocumentRef(
+                    documentId: issue.id,
+                    documentNumber: issue.issueNumber,
+                    documentType: InventoryDocumentType.stockIssue,
+                    documentDate: issue.issueDate,
+                    warehouseId: issue.warehouse,
+                    status: issue.status,
+                  );
 
-            if (confirm == true) {
-              await ref.read(stockMovementUseCasesProvider).deleteIssue(issue.id);
-            }
-          },
+                  final result = await ref.read(postingCoordinatorProvider).post(document: docRef);
+                  if (context.mounted) {
+                    if (result is PostSuccess) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('تم ترحيل المستند ${issue.issueNumber} بنجاح.')),
+                      );
+                    } else if (result is PostStockShortage) {
+                      InventoryShortageDialog.show(context, shortages: result.shortages);
+                    } else if (result is PostInvalidStatus) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(result.reason)),
+                      );
+                    }
+                  }
+                },
+              )
+            else if (issue.isPosted)
+              IconButton(
+                icon: const Icon(Icons.undo_rounded, color: Colors.orange),
+                tooltip: 'إلغاء الترحيل',
+                onPressed: () async {
+                  final docRef = InventoryDocumentRef(
+                    documentId: issue.id,
+                    documentNumber: issue.issueNumber,
+                    documentType: InventoryDocumentType.stockIssue,
+                    documentDate: issue.issueDate,
+                    warehouseId: issue.warehouse,
+                    status: issue.status,
+                  );
+
+                  final result = await ref.read(postingCoordinatorProvider).unpost(document: docRef);
+                  if (context.mounted) {
+                    if (result is UnpostSuccess) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('تم إلغاء ترحيل المستند ${issue.issueNumber} بنجاح.')),
+                      );
+                    } else if (result is UnpostBlockedByDependencies) {
+                      InventoryDependencyDialog.show(
+                        context,
+                        dependentDocuments: result.dependentDocuments,
+                        targetDocument: docRef,
+                      );
+                    } else if (result is UnpostInvalidStatus) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(result.reason)),
+                      );
+                    }
+                  }
+                },
+              ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              onPressed: () async {
+                if (issue.isPosted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('لا يمكن حذف مستند مرحّل. يجب إلغاء ترحيله أولاً.')),
+                  );
+                  return;
+                }
+
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text(l10n.stockIssuesDeleteTitle),
+                    content: Text(l10n.stockIssuesDeleteConfirm),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: Text(MaterialLocalizations.of(context).deleteButtonTooltip, style: const TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true) {
+                  await ref.read(stockMovementUseCasesProvider).deleteIssue(issue.id);
+                }
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -218,6 +327,109 @@ class _SyncStatusBadge extends StatelessWidget {
           fontSize: 10,
           fontWeight: FontWeight.bold,
         ),
+      ),
+    );
+  }
+}
+
+class _MovementCategoryActionHeader extends StatelessWidget {
+  const _MovementCategoryActionHeader({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.count,
+    required this.onNewPressed,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final int count;
+  final VoidCallback onNewPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isAr = AppLocalizations.of(context).localeName == 'ar';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: theme.colorScheme.primaryContainer,
+                child: Icon(icon, color: theme.colorScheme.onPrimaryContainer),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Chip(
+                backgroundColor: theme.colorScheme.secondaryContainer,
+                label: Text(
+                  '$count ${isAr ? 'أمر' : 'items'}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSecondaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: onNewPressed,
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: Text(isAr ? 'إنشاء أمر جديد' : 'Create New'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.list_alt_rounded, size: 18),
+                  label: Text(isAr ? 'عرض كل الأوامر' : 'View All'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

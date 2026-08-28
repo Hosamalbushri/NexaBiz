@@ -30,4 +30,10 @@ class StockMovementLines extends Table {
   RealColumn get unitCost => real().withDefault(const Constant(0))();
 
   RealColumn get totalCost => real().withDefault(const Constant(0))();
+
+  /// Unit cost locked at post time
+  RealColumn get postedCost => real().nullable()();
+
+  /// Epoch UTC timestamp when line was posted
+  IntColumn get postedAt => integer().nullable()();
 }

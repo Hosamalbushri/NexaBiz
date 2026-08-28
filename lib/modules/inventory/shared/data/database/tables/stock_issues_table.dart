@@ -45,6 +45,12 @@ class StockIssues extends Table {
   /// Company / Tenant owner ID for local multi-tenant data isolation.
   TextColumn get companyId => text().nullable()();
 
+  /// Document posting status ('draft', 'posted', 'cancelled')
+  TextColumn get status => text().withDefault(const Constant('posted'))();
+
+  /// Epoch UTC timestamp when the document was posted
+  IntColumn get postedAt => integer().nullable()();
+
   /// Soft-delete tombstone (UTC epoch ms). Null = active.
   IntColumn get deletedAt => integer().nullable()();
 }

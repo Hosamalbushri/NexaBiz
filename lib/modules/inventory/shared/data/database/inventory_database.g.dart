@@ -973,6 +973,28 @@ class $StockReceiptsTable extends StockReceipts
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _accountNameMeta = const VerificationMeta(
+    'accountName',
+  );
+  @override
+  late final GeneratedColumn<String> accountName = GeneratedColumn<String>(
+    'account_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
     'currencyCode',
   );
@@ -1085,6 +1107,27 @@ class $StockReceiptsTable extends StockReceipts
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('draft'),
+  );
+  static const VerificationMeta _postedAtMeta = const VerificationMeta(
+    'postedAt',
+  );
+  @override
+  late final GeneratedColumn<int> postedAt = GeneratedColumn<int>(
+    'posted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _deletedAtMeta = const VerificationMeta(
     'deletedAt',
   );
@@ -1102,6 +1145,8 @@ class $StockReceiptsTable extends StockReceipts
     uuid,
     receiptNumber,
     supplier,
+    accountId,
+    accountName,
     currencyCode,
     exchangeRate,
     notes,
@@ -1112,6 +1157,8 @@ class $StockReceiptsTable extends StockReceipts
     lastSyncedAt,
     version,
     companyId,
+    status,
+    postedAt,
     deletedAt,
   ];
   @override
@@ -1152,6 +1199,21 @@ class $StockReceiptsTable extends StockReceipts
       context.handle(
         _supplierMeta,
         supplier.isAcceptableOrUnknown(data['supplier']!, _supplierMeta),
+      );
+    }
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    }
+    if (data.containsKey('account_name')) {
+      context.handle(
+        _accountNameMeta,
+        accountName.isAcceptableOrUnknown(
+          data['account_name']!,
+          _accountNameMeta,
+        ),
       );
     }
     if (data.containsKey('currency_code')) {
@@ -1232,6 +1294,18 @@ class $StockReceiptsTable extends StockReceipts
         companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
       );
     }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('posted_at')) {
+      context.handle(
+        _postedAtMeta,
+        postedAt.isAcceptableOrUnknown(data['posted_at']!, _postedAtMeta),
+      );
+    }
     if (data.containsKey('deleted_at')) {
       context.handle(
         _deletedAtMeta,
@@ -1262,6 +1336,14 @@ class $StockReceiptsTable extends StockReceipts
       supplier: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}supplier'],
+      ),
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      ),
+      accountName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_name'],
       ),
       currencyCode: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -1303,6 +1385,14 @@ class $StockReceiptsTable extends StockReceipts
         DriftSqlType.string,
         data['${effectivePrefix}company_id'],
       ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      postedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}posted_at'],
+      ),
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
@@ -1323,6 +1413,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
   final String uuid;
   final String receiptNumber;
   final String? supplier;
+  final String? accountId;
+  final String? accountName;
   final String currencyCode;
   final double exchangeRate;
   final String? notes;
@@ -1338,6 +1430,12 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
   /// Company / Tenant owner ID for local multi-tenant data isolation.
   final String? companyId;
 
+  /// Document posting status ('draft', 'posted', 'cancelled')
+  final String status;
+
+  /// Epoch UTC timestamp when the document was posted
+  final int? postedAt;
+
   /// Soft-delete tombstone (UTC epoch ms). Null = active.
   final int? deletedAt;
   const StockReceiptRow({
@@ -1345,6 +1443,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     required this.uuid,
     required this.receiptNumber,
     this.supplier,
+    this.accountId,
+    this.accountName,
     required this.currencyCode,
     required this.exchangeRate,
     this.notes,
@@ -1355,6 +1455,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     this.lastSyncedAt,
     required this.version,
     this.companyId,
+    required this.status,
+    this.postedAt,
     this.deletedAt,
   });
   @override
@@ -1365,6 +1467,12 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     map['receipt_number'] = Variable<String>(receiptNumber);
     if (!nullToAbsent || supplier != null) {
       map['supplier'] = Variable<String>(supplier);
+    }
+    if (!nullToAbsent || accountId != null) {
+      map['account_id'] = Variable<String>(accountId);
+    }
+    if (!nullToAbsent || accountName != null) {
+      map['account_name'] = Variable<String>(accountName);
     }
     map['currency_code'] = Variable<String>(currencyCode);
     map['exchange_rate'] = Variable<double>(exchangeRate);
@@ -1382,6 +1490,10 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     if (!nullToAbsent || companyId != null) {
       map['company_id'] = Variable<String>(companyId);
     }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || postedAt != null) {
+      map['posted_at'] = Variable<int>(postedAt);
+    }
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
     }
@@ -1396,6 +1508,12 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
       supplier: supplier == null && nullToAbsent
           ? const Value.absent()
           : Value(supplier),
+      accountId: accountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountId),
+      accountName: accountName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountName),
       currencyCode: Value(currencyCode),
       exchangeRate: Value(exchangeRate),
       notes: notes == null && nullToAbsent
@@ -1412,6 +1530,10 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
       companyId: companyId == null && nullToAbsent
           ? const Value.absent()
           : Value(companyId),
+      status: Value(status),
+      postedAt: postedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(postedAt),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
@@ -1428,6 +1550,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
       uuid: serializer.fromJson<String>(json['uuid']),
       receiptNumber: serializer.fromJson<String>(json['receiptNumber']),
       supplier: serializer.fromJson<String?>(json['supplier']),
+      accountId: serializer.fromJson<String?>(json['accountId']),
+      accountName: serializer.fromJson<String?>(json['accountName']),
       currencyCode: serializer.fromJson<String>(json['currencyCode']),
       exchangeRate: serializer.fromJson<double>(json['exchangeRate']),
       notes: serializer.fromJson<String?>(json['notes']),
@@ -1438,6 +1562,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
       lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
       version: serializer.fromJson<int>(json['version']),
       companyId: serializer.fromJson<String?>(json['companyId']),
+      status: serializer.fromJson<String>(json['status']),
+      postedAt: serializer.fromJson<int?>(json['postedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
     );
   }
@@ -1449,6 +1575,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
       'uuid': serializer.toJson<String>(uuid),
       'receiptNumber': serializer.toJson<String>(receiptNumber),
       'supplier': serializer.toJson<String?>(supplier),
+      'accountId': serializer.toJson<String?>(accountId),
+      'accountName': serializer.toJson<String?>(accountName),
       'currencyCode': serializer.toJson<String>(currencyCode),
       'exchangeRate': serializer.toJson<double>(exchangeRate),
       'notes': serializer.toJson<String?>(notes),
@@ -1459,6 +1587,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
       'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
       'version': serializer.toJson<int>(version),
       'companyId': serializer.toJson<String?>(companyId),
+      'status': serializer.toJson<String>(status),
+      'postedAt': serializer.toJson<int?>(postedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
     };
   }
@@ -1468,6 +1598,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     String? uuid,
     String? receiptNumber,
     Value<String?> supplier = const Value.absent(),
+    Value<String?> accountId = const Value.absent(),
+    Value<String?> accountName = const Value.absent(),
     String? currencyCode,
     double? exchangeRate,
     Value<String?> notes = const Value.absent(),
@@ -1478,12 +1610,16 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     Value<int?> lastSyncedAt = const Value.absent(),
     int? version,
     Value<String?> companyId = const Value.absent(),
+    String? status,
+    Value<int?> postedAt = const Value.absent(),
     Value<int?> deletedAt = const Value.absent(),
   }) => StockReceiptRow(
     id: id ?? this.id,
     uuid: uuid ?? this.uuid,
     receiptNumber: receiptNumber ?? this.receiptNumber,
     supplier: supplier.present ? supplier.value : this.supplier,
+    accountId: accountId.present ? accountId.value : this.accountId,
+    accountName: accountName.present ? accountName.value : this.accountName,
     currencyCode: currencyCode ?? this.currencyCode,
     exchangeRate: exchangeRate ?? this.exchangeRate,
     notes: notes.present ? notes.value : this.notes,
@@ -1494,6 +1630,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
     version: version ?? this.version,
     companyId: companyId.present ? companyId.value : this.companyId,
+    status: status ?? this.status,
+    postedAt: postedAt.present ? postedAt.value : this.postedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   StockReceiptRow copyWithCompanion(StockReceiptsCompanion data) {
@@ -1504,6 +1642,10 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
           ? data.receiptNumber.value
           : this.receiptNumber,
       supplier: data.supplier.present ? data.supplier.value : this.supplier,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      accountName: data.accountName.present
+          ? data.accountName.value
+          : this.accountName,
       currencyCode: data.currencyCode.present
           ? data.currencyCode.value
           : this.currencyCode,
@@ -1524,6 +1666,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
           : this.lastSyncedAt,
       version: data.version.present ? data.version.value : this.version,
       companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      status: data.status.present ? data.status.value : this.status,
+      postedAt: data.postedAt.present ? data.postedAt.value : this.postedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
@@ -1535,6 +1679,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
           ..write('uuid: $uuid, ')
           ..write('receiptNumber: $receiptNumber, ')
           ..write('supplier: $supplier, ')
+          ..write('accountId: $accountId, ')
+          ..write('accountName: $accountName, ')
           ..write('currencyCode: $currencyCode, ')
           ..write('exchangeRate: $exchangeRate, ')
           ..write('notes: $notes, ')
@@ -1545,6 +1691,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
           ..write('lastSyncedAt: $lastSyncedAt, ')
           ..write('version: $version, ')
           ..write('companyId: $companyId, ')
+          ..write('status: $status, ')
+          ..write('postedAt: $postedAt, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -1556,6 +1704,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     uuid,
     receiptNumber,
     supplier,
+    accountId,
+    accountName,
     currencyCode,
     exchangeRate,
     notes,
@@ -1566,6 +1716,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     lastSyncedAt,
     version,
     companyId,
+    status,
+    postedAt,
     deletedAt,
   );
   @override
@@ -1576,6 +1728,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
           other.uuid == this.uuid &&
           other.receiptNumber == this.receiptNumber &&
           other.supplier == this.supplier &&
+          other.accountId == this.accountId &&
+          other.accountName == this.accountName &&
           other.currencyCode == this.currencyCode &&
           other.exchangeRate == this.exchangeRate &&
           other.notes == this.notes &&
@@ -1586,6 +1740,8 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
           other.lastSyncedAt == this.lastSyncedAt &&
           other.version == this.version &&
           other.companyId == this.companyId &&
+          other.status == this.status &&
+          other.postedAt == this.postedAt &&
           other.deletedAt == this.deletedAt);
 }
 
@@ -1594,6 +1750,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
   final Value<String> uuid;
   final Value<String> receiptNumber;
   final Value<String?> supplier;
+  final Value<String?> accountId;
+  final Value<String?> accountName;
   final Value<String> currencyCode;
   final Value<double> exchangeRate;
   final Value<String?> notes;
@@ -1604,12 +1762,16 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
   final Value<int?> lastSyncedAt;
   final Value<int> version;
   final Value<String?> companyId;
+  final Value<String> status;
+  final Value<int?> postedAt;
   final Value<int?> deletedAt;
   const StockReceiptsCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
     this.receiptNumber = const Value.absent(),
     this.supplier = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.accountName = const Value.absent(),
     this.currencyCode = const Value.absent(),
     this.exchangeRate = const Value.absent(),
     this.notes = const Value.absent(),
@@ -1620,6 +1782,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
     this.companyId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.postedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
   });
   StockReceiptsCompanion.insert({
@@ -1627,6 +1791,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     required String uuid,
     required String receiptNumber,
     this.supplier = const Value.absent(),
+    this.accountId = const Value.absent(),
+    this.accountName = const Value.absent(),
     this.currencyCode = const Value.absent(),
     this.exchangeRate = const Value.absent(),
     this.notes = const Value.absent(),
@@ -1637,6 +1803,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
     this.companyId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.postedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
   }) : uuid = Value(uuid),
        receiptNumber = Value(receiptNumber),
@@ -1648,6 +1816,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     Expression<String>? uuid,
     Expression<String>? receiptNumber,
     Expression<String>? supplier,
+    Expression<String>? accountId,
+    Expression<String>? accountName,
     Expression<String>? currencyCode,
     Expression<double>? exchangeRate,
     Expression<String>? notes,
@@ -1658,6 +1828,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     Expression<int>? lastSyncedAt,
     Expression<int>? version,
     Expression<String>? companyId,
+    Expression<String>? status,
+    Expression<int>? postedAt,
     Expression<int>? deletedAt,
   }) {
     return RawValuesInsertable({
@@ -1665,6 +1837,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
       if (uuid != null) 'uuid': uuid,
       if (receiptNumber != null) 'receipt_number': receiptNumber,
       if (supplier != null) 'supplier': supplier,
+      if (accountId != null) 'account_id': accountId,
+      if (accountName != null) 'account_name': accountName,
       if (currencyCode != null) 'currency_code': currencyCode,
       if (exchangeRate != null) 'exchange_rate': exchangeRate,
       if (notes != null) 'notes': notes,
@@ -1675,6 +1849,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
       if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
       if (version != null) 'version': version,
       if (companyId != null) 'company_id': companyId,
+      if (status != null) 'status': status,
+      if (postedAt != null) 'posted_at': postedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
     });
   }
@@ -1684,6 +1860,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     Value<String>? uuid,
     Value<String>? receiptNumber,
     Value<String?>? supplier,
+    Value<String?>? accountId,
+    Value<String?>? accountName,
     Value<String>? currencyCode,
     Value<double>? exchangeRate,
     Value<String?>? notes,
@@ -1694,6 +1872,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     Value<int?>? lastSyncedAt,
     Value<int>? version,
     Value<String?>? companyId,
+    Value<String>? status,
+    Value<int?>? postedAt,
     Value<int?>? deletedAt,
   }) {
     return StockReceiptsCompanion(
@@ -1701,6 +1881,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
       uuid: uuid ?? this.uuid,
       receiptNumber: receiptNumber ?? this.receiptNumber,
       supplier: supplier ?? this.supplier,
+      accountId: accountId ?? this.accountId,
+      accountName: accountName ?? this.accountName,
       currencyCode: currencyCode ?? this.currencyCode,
       exchangeRate: exchangeRate ?? this.exchangeRate,
       notes: notes ?? this.notes,
@@ -1711,6 +1893,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
       version: version ?? this.version,
       companyId: companyId ?? this.companyId,
+      status: status ?? this.status,
+      postedAt: postedAt ?? this.postedAt,
       deletedAt: deletedAt ?? this.deletedAt,
     );
   }
@@ -1729,6 +1913,12 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     }
     if (supplier.present) {
       map['supplier'] = Variable<String>(supplier.value);
+    }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
+    if (accountName.present) {
+      map['account_name'] = Variable<String>(accountName.value);
     }
     if (currencyCode.present) {
       map['currency_code'] = Variable<String>(currencyCode.value);
@@ -1760,6 +1950,12 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     if (companyId.present) {
       map['company_id'] = Variable<String>(companyId.value);
     }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (postedAt.present) {
+      map['posted_at'] = Variable<int>(postedAt.value);
+    }
     if (deletedAt.present) {
       map['deleted_at'] = Variable<int>(deletedAt.value);
     }
@@ -1773,6 +1969,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
           ..write('uuid: $uuid, ')
           ..write('receiptNumber: $receiptNumber, ')
           ..write('supplier: $supplier, ')
+          ..write('accountId: $accountId, ')
+          ..write('accountName: $accountName, ')
           ..write('currencyCode: $currencyCode, ')
           ..write('exchangeRate: $exchangeRate, ')
           ..write('notes: $notes, ')
@@ -1783,6 +1981,8 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
           ..write('lastSyncedAt: $lastSyncedAt, ')
           ..write('version: $version, ')
           ..write('companyId: $companyId, ')
+          ..write('status: $status, ')
+          ..write('postedAt: $postedAt, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -2005,6 +2205,27 @@ class $StockIssuesTable extends StockIssues
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('posted'),
+  );
+  static const VerificationMeta _postedAtMeta = const VerificationMeta(
+    'postedAt',
+  );
+  @override
+  late final GeneratedColumn<int> postedAt = GeneratedColumn<int>(
+    'posted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _deletedAtMeta = const VerificationMeta(
     'deletedAt',
   );
@@ -2036,6 +2257,8 @@ class $StockIssuesTable extends StockIssues
     lastSyncedAt,
     version,
     companyId,
+    status,
+    postedAt,
     deletedAt,
   ];
   @override
@@ -2186,6 +2409,18 @@ class $StockIssuesTable extends StockIssues
         companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
       );
     }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('posted_at')) {
+      context.handle(
+        _postedAtMeta,
+        postedAt.isAcceptableOrUnknown(data['posted_at']!, _postedAtMeta),
+      );
+    }
     if (data.containsKey('deleted_at')) {
       context.handle(
         _deletedAtMeta,
@@ -2273,6 +2508,14 @@ class $StockIssuesTable extends StockIssues
         DriftSqlType.string,
         data['${effectivePrefix}company_id'],
       ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      postedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}posted_at'],
+      ),
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
@@ -2312,6 +2555,12 @@ class StockIssueRow extends DataClass implements Insertable<StockIssueRow> {
   /// Company / Tenant owner ID for local multi-tenant data isolation.
   final String? companyId;
 
+  /// Document posting status ('draft', 'posted', 'cancelled')
+  final String status;
+
+  /// Epoch UTC timestamp when the document was posted
+  final int? postedAt;
+
   /// Soft-delete tombstone (UTC epoch ms). Null = active.
   final int? deletedAt;
   const StockIssueRow({
@@ -2333,6 +2582,8 @@ class StockIssueRow extends DataClass implements Insertable<StockIssueRow> {
     this.lastSyncedAt,
     required this.version,
     this.companyId,
+    required this.status,
+    this.postedAt,
     this.deletedAt,
   });
   @override
@@ -2371,6 +2622,10 @@ class StockIssueRow extends DataClass implements Insertable<StockIssueRow> {
     map['version'] = Variable<int>(version);
     if (!nullToAbsent || companyId != null) {
       map['company_id'] = Variable<String>(companyId);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || postedAt != null) {
+      map['posted_at'] = Variable<int>(postedAt);
     }
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
@@ -2414,6 +2669,10 @@ class StockIssueRow extends DataClass implements Insertable<StockIssueRow> {
       companyId: companyId == null && nullToAbsent
           ? const Value.absent()
           : Value(companyId),
+      status: Value(status),
+      postedAt: postedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(postedAt),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
@@ -2444,6 +2703,8 @@ class StockIssueRow extends DataClass implements Insertable<StockIssueRow> {
       lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
       version: serializer.fromJson<int>(json['version']),
       companyId: serializer.fromJson<String?>(json['companyId']),
+      status: serializer.fromJson<String>(json['status']),
+      postedAt: serializer.fromJson<int?>(json['postedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
     );
   }
@@ -2469,6 +2730,8 @@ class StockIssueRow extends DataClass implements Insertable<StockIssueRow> {
       'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
       'version': serializer.toJson<int>(version),
       'companyId': serializer.toJson<String?>(companyId),
+      'status': serializer.toJson<String>(status),
+      'postedAt': serializer.toJson<int?>(postedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
     };
   }
@@ -2492,6 +2755,8 @@ class StockIssueRow extends DataClass implements Insertable<StockIssueRow> {
     Value<int?> lastSyncedAt = const Value.absent(),
     int? version,
     Value<String?> companyId = const Value.absent(),
+    String? status,
+    Value<int?> postedAt = const Value.absent(),
     Value<int?> deletedAt = const Value.absent(),
   }) => StockIssueRow(
     id: id ?? this.id,
@@ -2514,6 +2779,8 @@ class StockIssueRow extends DataClass implements Insertable<StockIssueRow> {
     lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
     version: version ?? this.version,
     companyId: companyId.present ? companyId.value : this.companyId,
+    status: status ?? this.status,
+    postedAt: postedAt.present ? postedAt.value : this.postedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   StockIssueRow copyWithCompanion(StockIssuesCompanion data) {
@@ -2552,6 +2819,8 @@ class StockIssueRow extends DataClass implements Insertable<StockIssueRow> {
           : this.lastSyncedAt,
       version: data.version.present ? data.version.value : this.version,
       companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      status: data.status.present ? data.status.value : this.status,
+      postedAt: data.postedAt.present ? data.postedAt.value : this.postedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
@@ -2577,13 +2846,15 @@ class StockIssueRow extends DataClass implements Insertable<StockIssueRow> {
           ..write('lastSyncedAt: $lastSyncedAt, ')
           ..write('version: $version, ')
           ..write('companyId: $companyId, ')
+          ..write('status: $status, ')
+          ..write('postedAt: $postedAt, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     uuid,
     issueNumber,
@@ -2602,8 +2873,10 @@ class StockIssueRow extends DataClass implements Insertable<StockIssueRow> {
     lastSyncedAt,
     version,
     companyId,
+    status,
+    postedAt,
     deletedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2626,6 +2899,8 @@ class StockIssueRow extends DataClass implements Insertable<StockIssueRow> {
           other.lastSyncedAt == this.lastSyncedAt &&
           other.version == this.version &&
           other.companyId == this.companyId &&
+          other.status == this.status &&
+          other.postedAt == this.postedAt &&
           other.deletedAt == this.deletedAt);
 }
 
@@ -2648,6 +2923,8 @@ class StockIssuesCompanion extends UpdateCompanion<StockIssueRow> {
   final Value<int?> lastSyncedAt;
   final Value<int> version;
   final Value<String?> companyId;
+  final Value<String> status;
+  final Value<int?> postedAt;
   final Value<int?> deletedAt;
   const StockIssuesCompanion({
     this.id = const Value.absent(),
@@ -2668,6 +2945,8 @@ class StockIssuesCompanion extends UpdateCompanion<StockIssueRow> {
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
     this.companyId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.postedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
   });
   StockIssuesCompanion.insert({
@@ -2689,6 +2968,8 @@ class StockIssuesCompanion extends UpdateCompanion<StockIssueRow> {
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
     this.companyId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.postedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
   }) : uuid = Value(uuid),
        issueNumber = Value(issueNumber),
@@ -2714,6 +2995,8 @@ class StockIssuesCompanion extends UpdateCompanion<StockIssueRow> {
     Expression<int>? lastSyncedAt,
     Expression<int>? version,
     Expression<String>? companyId,
+    Expression<String>? status,
+    Expression<int>? postedAt,
     Expression<int>? deletedAt,
   }) {
     return RawValuesInsertable({
@@ -2735,6 +3018,8 @@ class StockIssuesCompanion extends UpdateCompanion<StockIssueRow> {
       if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
       if (version != null) 'version': version,
       if (companyId != null) 'company_id': companyId,
+      if (status != null) 'status': status,
+      if (postedAt != null) 'posted_at': postedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
     });
   }
@@ -2758,6 +3043,8 @@ class StockIssuesCompanion extends UpdateCompanion<StockIssueRow> {
     Value<int?>? lastSyncedAt,
     Value<int>? version,
     Value<String?>? companyId,
+    Value<String>? status,
+    Value<int?>? postedAt,
     Value<int?>? deletedAt,
   }) {
     return StockIssuesCompanion(
@@ -2779,6 +3066,8 @@ class StockIssuesCompanion extends UpdateCompanion<StockIssueRow> {
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
       version: version ?? this.version,
       companyId: companyId ?? this.companyId,
+      status: status ?? this.status,
+      postedAt: postedAt ?? this.postedAt,
       deletedAt: deletedAt ?? this.deletedAt,
     );
   }
@@ -2840,6 +3129,12 @@ class StockIssuesCompanion extends UpdateCompanion<StockIssueRow> {
     if (companyId.present) {
       map['company_id'] = Variable<String>(companyId.value);
     }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (postedAt.present) {
+      map['posted_at'] = Variable<int>(postedAt.value);
+    }
     if (deletedAt.present) {
       map['deleted_at'] = Variable<int>(deletedAt.value);
     }
@@ -2867,6 +3162,8 @@ class StockIssuesCompanion extends UpdateCompanion<StockIssueRow> {
           ..write('lastSyncedAt: $lastSyncedAt, ')
           ..write('version: $version, ')
           ..write('companyId: $companyId, ')
+          ..write('status: $status, ')
+          ..write('postedAt: $postedAt, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -3026,6 +3323,28 @@ class $StockMovementLinesTable extends StockMovementLines
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _postedCostMeta = const VerificationMeta(
+    'postedCost',
+  );
+  @override
+  late final GeneratedColumn<double> postedCost = GeneratedColumn<double>(
+    'posted_cost',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _postedAtMeta = const VerificationMeta(
+    'postedAt',
+  );
+  @override
+  late final GeneratedColumn<int> postedAt = GeneratedColumn<int>(
+    'posted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3039,6 +3358,8 @@ class $StockMovementLinesTable extends StockMovementLines
     quantity,
     unitCost,
     totalCost,
+    postedCost,
+    postedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3137,6 +3458,18 @@ class $StockMovementLinesTable extends StockMovementLines
         totalCost.isAcceptableOrUnknown(data['total_cost']!, _totalCostMeta),
       );
     }
+    if (data.containsKey('posted_cost')) {
+      context.handle(
+        _postedCostMeta,
+        postedCost.isAcceptableOrUnknown(data['posted_cost']!, _postedCostMeta),
+      );
+    }
+    if (data.containsKey('posted_at')) {
+      context.handle(
+        _postedAtMeta,
+        postedAt.isAcceptableOrUnknown(data['posted_at']!, _postedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -3190,6 +3523,14 @@ class $StockMovementLinesTable extends StockMovementLines
         DriftSqlType.double,
         data['${effectivePrefix}total_cost'],
       )!,
+      postedCost: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}posted_cost'],
+      ),
+      postedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}posted_at'],
+      ),
     );
   }
 
@@ -3218,6 +3559,12 @@ class StockMovementLineRow extends DataClass
   final double quantity;
   final double unitCost;
   final double totalCost;
+
+  /// Unit cost locked at post time
+  final double? postedCost;
+
+  /// Epoch UTC timestamp when line was posted
+  final int? postedAt;
   const StockMovementLineRow({
     required this.id,
     required this.uuid,
@@ -3230,6 +3577,8 @@ class StockMovementLineRow extends DataClass
     required this.quantity,
     required this.unitCost,
     required this.totalCost,
+    this.postedCost,
+    this.postedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3245,6 +3594,12 @@ class StockMovementLineRow extends DataClass
     map['quantity'] = Variable<double>(quantity);
     map['unit_cost'] = Variable<double>(unitCost);
     map['total_cost'] = Variable<double>(totalCost);
+    if (!nullToAbsent || postedCost != null) {
+      map['posted_cost'] = Variable<double>(postedCost);
+    }
+    if (!nullToAbsent || postedAt != null) {
+      map['posted_at'] = Variable<int>(postedAt);
+    }
     return map;
   }
 
@@ -3261,6 +3616,12 @@ class StockMovementLineRow extends DataClass
       quantity: Value(quantity),
       unitCost: Value(unitCost),
       totalCost: Value(totalCost),
+      postedCost: postedCost == null && nullToAbsent
+          ? const Value.absent()
+          : Value(postedCost),
+      postedAt: postedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(postedAt),
     );
   }
 
@@ -3281,6 +3642,8 @@ class StockMovementLineRow extends DataClass
       quantity: serializer.fromJson<double>(json['quantity']),
       unitCost: serializer.fromJson<double>(json['unitCost']),
       totalCost: serializer.fromJson<double>(json['totalCost']),
+      postedCost: serializer.fromJson<double?>(json['postedCost']),
+      postedAt: serializer.fromJson<int?>(json['postedAt']),
     );
   }
   @override
@@ -3298,6 +3661,8 @@ class StockMovementLineRow extends DataClass
       'quantity': serializer.toJson<double>(quantity),
       'unitCost': serializer.toJson<double>(unitCost),
       'totalCost': serializer.toJson<double>(totalCost),
+      'postedCost': serializer.toJson<double?>(postedCost),
+      'postedAt': serializer.toJson<int?>(postedAt),
     };
   }
 
@@ -3313,6 +3678,8 @@ class StockMovementLineRow extends DataClass
     double? quantity,
     double? unitCost,
     double? totalCost,
+    Value<double?> postedCost = const Value.absent(),
+    Value<int?> postedAt = const Value.absent(),
   }) => StockMovementLineRow(
     id: id ?? this.id,
     uuid: uuid ?? this.uuid,
@@ -3325,6 +3692,8 @@ class StockMovementLineRow extends DataClass
     quantity: quantity ?? this.quantity,
     unitCost: unitCost ?? this.unitCost,
     totalCost: totalCost ?? this.totalCost,
+    postedCost: postedCost.present ? postedCost.value : this.postedCost,
+    postedAt: postedAt.present ? postedAt.value : this.postedAt,
   );
   StockMovementLineRow copyWithCompanion(StockMovementLinesCompanion data) {
     return StockMovementLineRow(
@@ -3347,6 +3716,10 @@ class StockMovementLineRow extends DataClass
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
       unitCost: data.unitCost.present ? data.unitCost.value : this.unitCost,
       totalCost: data.totalCost.present ? data.totalCost.value : this.totalCost,
+      postedCost: data.postedCost.present
+          ? data.postedCost.value
+          : this.postedCost,
+      postedAt: data.postedAt.present ? data.postedAt.value : this.postedAt,
     );
   }
 
@@ -3363,7 +3736,9 @@ class StockMovementLineRow extends DataClass
           ..write('subQuantity: $subQuantity, ')
           ..write('quantity: $quantity, ')
           ..write('unitCost: $unitCost, ')
-          ..write('totalCost: $totalCost')
+          ..write('totalCost: $totalCost, ')
+          ..write('postedCost: $postedCost, ')
+          ..write('postedAt: $postedAt')
           ..write(')'))
         .toString();
   }
@@ -3381,6 +3756,8 @@ class StockMovementLineRow extends DataClass
     quantity,
     unitCost,
     totalCost,
+    postedCost,
+    postedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -3396,7 +3773,9 @@ class StockMovementLineRow extends DataClass
           other.subQuantity == this.subQuantity &&
           other.quantity == this.quantity &&
           other.unitCost == this.unitCost &&
-          other.totalCost == this.totalCost);
+          other.totalCost == this.totalCost &&
+          other.postedCost == this.postedCost &&
+          other.postedAt == this.postedAt);
 }
 
 class StockMovementLinesCompanion
@@ -3412,6 +3791,8 @@ class StockMovementLinesCompanion
   final Value<double> quantity;
   final Value<double> unitCost;
   final Value<double> totalCost;
+  final Value<double?> postedCost;
+  final Value<int?> postedAt;
   const StockMovementLinesCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
@@ -3424,6 +3805,8 @@ class StockMovementLinesCompanion
     this.quantity = const Value.absent(),
     this.unitCost = const Value.absent(),
     this.totalCost = const Value.absent(),
+    this.postedCost = const Value.absent(),
+    this.postedAt = const Value.absent(),
   });
   StockMovementLinesCompanion.insert({
     this.id = const Value.absent(),
@@ -3437,6 +3820,8 @@ class StockMovementLinesCompanion
     this.quantity = const Value.absent(),
     this.unitCost = const Value.absent(),
     this.totalCost = const Value.absent(),
+    this.postedCost = const Value.absent(),
+    this.postedAt = const Value.absent(),
   }) : uuid = Value(uuid),
        movementUuid = Value(movementUuid),
        movementType = Value(movementType),
@@ -3454,6 +3839,8 @@ class StockMovementLinesCompanion
     Expression<double>? quantity,
     Expression<double>? unitCost,
     Expression<double>? totalCost,
+    Expression<double>? postedCost,
+    Expression<int>? postedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3467,6 +3854,8 @@ class StockMovementLinesCompanion
       if (quantity != null) 'quantity': quantity,
       if (unitCost != null) 'unit_cost': unitCost,
       if (totalCost != null) 'total_cost': totalCost,
+      if (postedCost != null) 'posted_cost': postedCost,
+      if (postedAt != null) 'posted_at': postedAt,
     });
   }
 
@@ -3482,6 +3871,8 @@ class StockMovementLinesCompanion
     Value<double>? quantity,
     Value<double>? unitCost,
     Value<double>? totalCost,
+    Value<double?>? postedCost,
+    Value<int?>? postedAt,
   }) {
     return StockMovementLinesCompanion(
       id: id ?? this.id,
@@ -3495,6 +3886,8 @@ class StockMovementLinesCompanion
       quantity: quantity ?? this.quantity,
       unitCost: unitCost ?? this.unitCost,
       totalCost: totalCost ?? this.totalCost,
+      postedCost: postedCost ?? this.postedCost,
+      postedAt: postedAt ?? this.postedAt,
     );
   }
 
@@ -3534,6 +3927,12 @@ class StockMovementLinesCompanion
     if (totalCost.present) {
       map['total_cost'] = Variable<double>(totalCost.value);
     }
+    if (postedCost.present) {
+      map['posted_cost'] = Variable<double>(postedCost.value);
+    }
+    if (postedAt.present) {
+      map['posted_at'] = Variable<int>(postedAt.value);
+    }
     return map;
   }
 
@@ -3550,7 +3949,9 @@ class StockMovementLinesCompanion
           ..write('subQuantity: $subQuantity, ')
           ..write('quantity: $quantity, ')
           ..write('unitCost: $unitCost, ')
-          ..write('totalCost: $totalCost')
+          ..write('totalCost: $totalCost, ')
+          ..write('postedCost: $postedCost, ')
+          ..write('postedAt: $postedAt')
           ..write(')'))
         .toString();
   }
@@ -5488,6 +5889,27 @@ class $StockReturnsTable extends StockReturns
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('draft'),
+  );
+  static const VerificationMeta _postedAtMeta = const VerificationMeta(
+    'postedAt',
+  );
+  @override
+  late final GeneratedColumn<int> postedAt = GeneratedColumn<int>(
+    'posted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _deletedAtMeta = const VerificationMeta(
     'deletedAt',
   );
@@ -5516,6 +5938,8 @@ class $StockReturnsTable extends StockReturns
     lastSyncedAt,
     version,
     companyId,
+    status,
+    postedAt,
     deletedAt,
   ];
   @override
@@ -5638,6 +6062,18 @@ class $StockReturnsTable extends StockReturns
         companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
       );
     }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('posted_at')) {
+      context.handle(
+        _postedAtMeta,
+        postedAt.isAcceptableOrUnknown(data['posted_at']!, _postedAtMeta),
+      );
+    }
     if (data.containsKey('deleted_at')) {
       context.handle(
         _deletedAtMeta,
@@ -5713,6 +6149,14 @@ class $StockReturnsTable extends StockReturns
         DriftSqlType.string,
         data['${effectivePrefix}company_id'],
       ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      postedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}posted_at'],
+      ),
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
@@ -5742,6 +6186,12 @@ class StockReturnRow extends DataClass implements Insertable<StockReturnRow> {
   final int? lastSyncedAt;
   final int version;
   final String? companyId;
+
+  /// Document posting status ('draft', 'posted', 'cancelled')
+  final String status;
+
+  /// Epoch UTC timestamp when the document was posted
+  final int? postedAt;
   final int? deletedAt;
   const StockReturnRow({
     required this.id,
@@ -5759,6 +6209,8 @@ class StockReturnRow extends DataClass implements Insertable<StockReturnRow> {
     this.lastSyncedAt,
     required this.version,
     this.companyId,
+    required this.status,
+    this.postedAt,
     this.deletedAt,
   });
   @override
@@ -5790,6 +6242,10 @@ class StockReturnRow extends DataClass implements Insertable<StockReturnRow> {
     map['version'] = Variable<int>(version);
     if (!nullToAbsent || companyId != null) {
       map['company_id'] = Variable<String>(companyId);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || postedAt != null) {
+      map['posted_at'] = Variable<int>(postedAt);
     }
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
@@ -5826,6 +6282,10 @@ class StockReturnRow extends DataClass implements Insertable<StockReturnRow> {
       companyId: companyId == null && nullToAbsent
           ? const Value.absent()
           : Value(companyId),
+      status: Value(status),
+      postedAt: postedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(postedAt),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
@@ -5855,6 +6315,8 @@ class StockReturnRow extends DataClass implements Insertable<StockReturnRow> {
       lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
       version: serializer.fromJson<int>(json['version']),
       companyId: serializer.fromJson<String?>(json['companyId']),
+      status: serializer.fromJson<String>(json['status']),
+      postedAt: serializer.fromJson<int?>(json['postedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
     );
   }
@@ -5877,6 +6339,8 @@ class StockReturnRow extends DataClass implements Insertable<StockReturnRow> {
       'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
       'version': serializer.toJson<int>(version),
       'companyId': serializer.toJson<String?>(companyId),
+      'status': serializer.toJson<String>(status),
+      'postedAt': serializer.toJson<int?>(postedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
     };
   }
@@ -5897,6 +6361,8 @@ class StockReturnRow extends DataClass implements Insertable<StockReturnRow> {
     Value<int?> lastSyncedAt = const Value.absent(),
     int? version,
     Value<String?> companyId = const Value.absent(),
+    String? status,
+    Value<int?> postedAt = const Value.absent(),
     Value<int?> deletedAt = const Value.absent(),
   }) => StockReturnRow(
     id: id ?? this.id,
@@ -5916,6 +6382,8 @@ class StockReturnRow extends DataClass implements Insertable<StockReturnRow> {
     lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
     version: version ?? this.version,
     companyId: companyId.present ? companyId.value : this.companyId,
+    status: status ?? this.status,
+    postedAt: postedAt.present ? postedAt.value : this.postedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   StockReturnRow copyWithCompanion(StockReturnsCompanion data) {
@@ -5947,6 +6415,8 @@ class StockReturnRow extends DataClass implements Insertable<StockReturnRow> {
           : this.lastSyncedAt,
       version: data.version.present ? data.version.value : this.version,
       companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      status: data.status.present ? data.status.value : this.status,
+      postedAt: data.postedAt.present ? data.postedAt.value : this.postedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
@@ -5969,6 +6439,8 @@ class StockReturnRow extends DataClass implements Insertable<StockReturnRow> {
           ..write('lastSyncedAt: $lastSyncedAt, ')
           ..write('version: $version, ')
           ..write('companyId: $companyId, ')
+          ..write('status: $status, ')
+          ..write('postedAt: $postedAt, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -5991,6 +6463,8 @@ class StockReturnRow extends DataClass implements Insertable<StockReturnRow> {
     lastSyncedAt,
     version,
     companyId,
+    status,
+    postedAt,
     deletedAt,
   );
   @override
@@ -6012,6 +6486,8 @@ class StockReturnRow extends DataClass implements Insertable<StockReturnRow> {
           other.lastSyncedAt == this.lastSyncedAt &&
           other.version == this.version &&
           other.companyId == this.companyId &&
+          other.status == this.status &&
+          other.postedAt == this.postedAt &&
           other.deletedAt == this.deletedAt);
 }
 
@@ -6031,6 +6507,8 @@ class StockReturnsCompanion extends UpdateCompanion<StockReturnRow> {
   final Value<int?> lastSyncedAt;
   final Value<int> version;
   final Value<String?> companyId;
+  final Value<String> status;
+  final Value<int?> postedAt;
   final Value<int?> deletedAt;
   const StockReturnsCompanion({
     this.id = const Value.absent(),
@@ -6048,6 +6526,8 @@ class StockReturnsCompanion extends UpdateCompanion<StockReturnRow> {
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
     this.companyId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.postedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
   });
   StockReturnsCompanion.insert({
@@ -6066,6 +6546,8 @@ class StockReturnsCompanion extends UpdateCompanion<StockReturnRow> {
     this.lastSyncedAt = const Value.absent(),
     this.version = const Value.absent(),
     this.companyId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.postedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
   }) : uuid = Value(uuid),
        returnNumber = Value(returnNumber),
@@ -6089,6 +6571,8 @@ class StockReturnsCompanion extends UpdateCompanion<StockReturnRow> {
     Expression<int>? lastSyncedAt,
     Expression<int>? version,
     Expression<String>? companyId,
+    Expression<String>? status,
+    Expression<int>? postedAt,
     Expression<int>? deletedAt,
   }) {
     return RawValuesInsertable({
@@ -6108,6 +6592,8 @@ class StockReturnsCompanion extends UpdateCompanion<StockReturnRow> {
       if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
       if (version != null) 'version': version,
       if (companyId != null) 'company_id': companyId,
+      if (status != null) 'status': status,
+      if (postedAt != null) 'posted_at': postedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
     });
   }
@@ -6128,6 +6614,8 @@ class StockReturnsCompanion extends UpdateCompanion<StockReturnRow> {
     Value<int?>? lastSyncedAt,
     Value<int>? version,
     Value<String?>? companyId,
+    Value<String>? status,
+    Value<int?>? postedAt,
     Value<int?>? deletedAt,
   }) {
     return StockReturnsCompanion(
@@ -6146,6 +6634,8 @@ class StockReturnsCompanion extends UpdateCompanion<StockReturnRow> {
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
       version: version ?? this.version,
       companyId: companyId ?? this.companyId,
+      status: status ?? this.status,
+      postedAt: postedAt ?? this.postedAt,
       deletedAt: deletedAt ?? this.deletedAt,
     );
   }
@@ -6200,6 +6690,12 @@ class StockReturnsCompanion extends UpdateCompanion<StockReturnRow> {
     if (companyId.present) {
       map['company_id'] = Variable<String>(companyId.value);
     }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (postedAt.present) {
+      map['posted_at'] = Variable<int>(postedAt.value);
+    }
     if (deletedAt.present) {
       map['deleted_at'] = Variable<int>(deletedAt.value);
     }
@@ -6224,6 +6720,8 @@ class StockReturnsCompanion extends UpdateCompanion<StockReturnRow> {
           ..write('lastSyncedAt: $lastSyncedAt, ')
           ..write('version: $version, ')
           ..write('companyId: $companyId, ')
+          ..write('status: $status, ')
+          ..write('postedAt: $postedAt, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -7899,6 +8397,27 @@ class $StockTransfersTable extends StockTransfers
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('draft'),
+  );
+  static const VerificationMeta _postedAtMeta = const VerificationMeta(
+    'postedAt',
+  );
+  @override
+  late final GeneratedColumn<int> postedAt = GeneratedColumn<int>(
+    'posted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _deletedAtMeta = const VerificationMeta(
     'deletedAt',
   );
@@ -7923,6 +8442,8 @@ class $StockTransfersTable extends StockTransfers
     syncStatus,
     version,
     companyId,
+    status,
+    postedAt,
     deletedAt,
   ];
   @override
@@ -8029,6 +8550,18 @@ class $StockTransfersTable extends StockTransfers
         companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
       );
     }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('posted_at')) {
+      context.handle(
+        _postedAtMeta,
+        postedAt.isAcceptableOrUnknown(data['posted_at']!, _postedAtMeta),
+      );
+    }
     if (data.containsKey('deleted_at')) {
       context.handle(
         _deletedAtMeta,
@@ -8088,6 +8621,14 @@ class $StockTransfersTable extends StockTransfers
         DriftSqlType.string,
         data['${effectivePrefix}company_id'],
       ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      postedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}posted_at'],
+      ),
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
@@ -8114,6 +8655,12 @@ class StockTransferRow extends DataClass
   final String syncStatus;
   final int version;
   final String? companyId;
+
+  /// Document posting status ('draft', 'posted', 'cancelled')
+  final String status;
+
+  /// Epoch UTC timestamp when the document was posted
+  final int? postedAt;
   final int? deletedAt;
   const StockTransferRow({
     required this.uuid,
@@ -8127,6 +8674,8 @@ class StockTransferRow extends DataClass
     required this.syncStatus,
     required this.version,
     this.companyId,
+    required this.status,
+    this.postedAt,
     this.deletedAt,
   });
   @override
@@ -8146,6 +8695,10 @@ class StockTransferRow extends DataClass
     map['version'] = Variable<int>(version);
     if (!nullToAbsent || companyId != null) {
       map['company_id'] = Variable<String>(companyId);
+    }
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || postedAt != null) {
+      map['posted_at'] = Variable<int>(postedAt);
     }
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
@@ -8170,6 +8723,10 @@ class StockTransferRow extends DataClass
       companyId: companyId == null && nullToAbsent
           ? const Value.absent()
           : Value(companyId),
+      status: Value(status),
+      postedAt: postedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(postedAt),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
@@ -8193,6 +8750,8 @@ class StockTransferRow extends DataClass
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
       version: serializer.fromJson<int>(json['version']),
       companyId: serializer.fromJson<String?>(json['companyId']),
+      status: serializer.fromJson<String>(json['status']),
+      postedAt: serializer.fromJson<int?>(json['postedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
     );
   }
@@ -8211,6 +8770,8 @@ class StockTransferRow extends DataClass
       'syncStatus': serializer.toJson<String>(syncStatus),
       'version': serializer.toJson<int>(version),
       'companyId': serializer.toJson<String?>(companyId),
+      'status': serializer.toJson<String>(status),
+      'postedAt': serializer.toJson<int?>(postedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
     };
   }
@@ -8227,6 +8788,8 @@ class StockTransferRow extends DataClass
     String? syncStatus,
     int? version,
     Value<String?> companyId = const Value.absent(),
+    String? status,
+    Value<int?> postedAt = const Value.absent(),
     Value<int?> deletedAt = const Value.absent(),
   }) => StockTransferRow(
     uuid: uuid ?? this.uuid,
@@ -8240,6 +8803,8 @@ class StockTransferRow extends DataClass
     syncStatus: syncStatus ?? this.syncStatus,
     version: version ?? this.version,
     companyId: companyId.present ? companyId.value : this.companyId,
+    status: status ?? this.status,
+    postedAt: postedAt.present ? postedAt.value : this.postedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   StockTransferRow copyWithCompanion(StockTransfersCompanion data) {
@@ -8265,6 +8830,8 @@ class StockTransferRow extends DataClass
           : this.syncStatus,
       version: data.version.present ? data.version.value : this.version,
       companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      status: data.status.present ? data.status.value : this.status,
+      postedAt: data.postedAt.present ? data.postedAt.value : this.postedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
@@ -8283,6 +8850,8 @@ class StockTransferRow extends DataClass
           ..write('syncStatus: $syncStatus, ')
           ..write('version: $version, ')
           ..write('companyId: $companyId, ')
+          ..write('status: $status, ')
+          ..write('postedAt: $postedAt, ')
           ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
@@ -8301,6 +8870,8 @@ class StockTransferRow extends DataClass
     syncStatus,
     version,
     companyId,
+    status,
+    postedAt,
     deletedAt,
   );
   @override
@@ -8318,6 +8889,8 @@ class StockTransferRow extends DataClass
           other.syncStatus == this.syncStatus &&
           other.version == this.version &&
           other.companyId == this.companyId &&
+          other.status == this.status &&
+          other.postedAt == this.postedAt &&
           other.deletedAt == this.deletedAt);
 }
 
@@ -8333,6 +8906,8 @@ class StockTransfersCompanion extends UpdateCompanion<StockTransferRow> {
   final Value<String> syncStatus;
   final Value<int> version;
   final Value<String?> companyId;
+  final Value<String> status;
+  final Value<int?> postedAt;
   final Value<int?> deletedAt;
   final Value<int> rowid;
   const StockTransfersCompanion({
@@ -8347,6 +8922,8 @@ class StockTransfersCompanion extends UpdateCompanion<StockTransferRow> {
     this.syncStatus = const Value.absent(),
     this.version = const Value.absent(),
     this.companyId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.postedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -8362,6 +8939,8 @@ class StockTransfersCompanion extends UpdateCompanion<StockTransferRow> {
     this.syncStatus = const Value.absent(),
     this.version = const Value.absent(),
     this.companyId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.postedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : uuid = Value(uuid),
@@ -8383,6 +8962,8 @@ class StockTransfersCompanion extends UpdateCompanion<StockTransferRow> {
     Expression<String>? syncStatus,
     Expression<int>? version,
     Expression<String>? companyId,
+    Expression<String>? status,
+    Expression<int>? postedAt,
     Expression<int>? deletedAt,
     Expression<int>? rowid,
   }) {
@@ -8398,6 +8979,8 @@ class StockTransfersCompanion extends UpdateCompanion<StockTransferRow> {
       if (syncStatus != null) 'sync_status': syncStatus,
       if (version != null) 'version': version,
       if (companyId != null) 'company_id': companyId,
+      if (status != null) 'status': status,
+      if (postedAt != null) 'posted_at': postedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -8415,6 +8998,8 @@ class StockTransfersCompanion extends UpdateCompanion<StockTransferRow> {
     Value<String>? syncStatus,
     Value<int>? version,
     Value<String?>? companyId,
+    Value<String>? status,
+    Value<int?>? postedAt,
     Value<int?>? deletedAt,
     Value<int>? rowid,
   }) {
@@ -8430,6 +9015,8 @@ class StockTransfersCompanion extends UpdateCompanion<StockTransferRow> {
       syncStatus: syncStatus ?? this.syncStatus,
       version: version ?? this.version,
       companyId: companyId ?? this.companyId,
+      status: status ?? this.status,
+      postedAt: postedAt ?? this.postedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -8471,6 +9058,12 @@ class StockTransfersCompanion extends UpdateCompanion<StockTransferRow> {
     if (companyId.present) {
       map['company_id'] = Variable<String>(companyId.value);
     }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (postedAt.present) {
+      map['posted_at'] = Variable<int>(postedAt.value);
+    }
     if (deletedAt.present) {
       map['deleted_at'] = Variable<int>(deletedAt.value);
     }
@@ -8494,8 +9087,634 @@ class StockTransfersCompanion extends UpdateCompanion<StockTransferRow> {
           ..write('syncStatus: $syncStatus, ')
           ..write('version: $version, ')
           ..write('companyId: $companyId, ')
+          ..write('status: $status, ')
+          ..write('postedAt: $postedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $InventoryAuditTrailTable extends InventoryAuditTrail
+    with TableInfo<$InventoryAuditTrailTable, InventoryAuditTrailRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $InventoryAuditTrailTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _documentIdMeta = const VerificationMeta(
+    'documentId',
+  );
+  @override
+  late final GeneratedColumn<String> documentId = GeneratedColumn<String>(
+    'document_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _documentTypeMeta = const VerificationMeta(
+    'documentType',
+  );
+  @override
+  late final GeneratedColumn<String> documentType = GeneratedColumn<String>(
+    'document_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _eventTypeMeta = const VerificationMeta(
+    'eventType',
+  );
+  @override
+  late final GeneratedColumn<String> eventType = GeneratedColumn<String>(
+    'event_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _timestampMeta = const VerificationMeta(
+    'timestamp',
+  );
+  @override
+  late final GeneratedColumn<int> timestamp = GeneratedColumn<int>(
+    'timestamp',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _metadataMeta = const VerificationMeta(
+    'metadata',
+  );
+  @override
+  late final GeneratedColumn<String> metadata = GeneratedColumn<String>(
+    'metadata',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    uuid,
+    documentId,
+    documentType,
+    eventType,
+    userId,
+    notes,
+    timestamp,
+    metadata,
+    companyId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'inventory_audit_trail';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<InventoryAuditTrailRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('document_id')) {
+      context.handle(
+        _documentIdMeta,
+        documentId.isAcceptableOrUnknown(data['document_id']!, _documentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_documentIdMeta);
+    }
+    if (data.containsKey('document_type')) {
+      context.handle(
+        _documentTypeMeta,
+        documentType.isAcceptableOrUnknown(
+          data['document_type']!,
+          _documentTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_documentTypeMeta);
+    }
+    if (data.containsKey('event_type')) {
+      context.handle(
+        _eventTypeMeta,
+        eventType.isAcceptableOrUnknown(data['event_type']!, _eventTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_eventTypeMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('timestamp')) {
+      context.handle(
+        _timestampMeta,
+        timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_timestampMeta);
+    }
+    if (data.containsKey('metadata')) {
+      context.handle(
+        _metadataMeta,
+        metadata.isAcceptableOrUnknown(data['metadata']!, _metadataMeta),
+      );
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  InventoryAuditTrailRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return InventoryAuditTrailRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      documentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_id'],
+      )!,
+      documentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_type'],
+      )!,
+      eventType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}event_type'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      timestamp: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}timestamp'],
+      )!,
+      metadata: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}metadata'],
+      ),
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      ),
+    );
+  }
+
+  @override
+  $InventoryAuditTrailTable createAlias(String alias) {
+    return $InventoryAuditTrailTable(attachedDatabase, alias);
+  }
+}
+
+class InventoryAuditTrailRow extends DataClass
+    implements Insertable<InventoryAuditTrailRow> {
+  final int id;
+
+  /// UUID of the audit event.
+  final String uuid;
+
+  /// Associated document ID (uuid of receipt, issue, sale, return, transfer, etc.)
+  final String documentId;
+
+  /// Type of document ('stock_receipt', 'stock_issue', 'sale', 'stock_return', 'stock_transfer')
+  final String documentType;
+
+  /// Event type ('post', 'unpost', 'edit', 'delete')
+  final String eventType;
+
+  /// User ID who performed the action
+  final String? userId;
+
+  /// Timestamp of action in UTC milliseconds
+  final String? notes;
+  final int timestamp;
+
+  /// Optional JSON metadata (e.g. reason for unpost, shortages)
+  final String? metadata;
+  final String? companyId;
+  const InventoryAuditTrailRow({
+    required this.id,
+    required this.uuid,
+    required this.documentId,
+    required this.documentType,
+    required this.eventType,
+    this.userId,
+    this.notes,
+    required this.timestamp,
+    this.metadata,
+    this.companyId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
+    map['document_id'] = Variable<String>(documentId);
+    map['document_type'] = Variable<String>(documentType);
+    map['event_type'] = Variable<String>(eventType);
+    if (!nullToAbsent || userId != null) {
+      map['user_id'] = Variable<String>(userId);
+    }
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['timestamp'] = Variable<int>(timestamp);
+    if (!nullToAbsent || metadata != null) {
+      map['metadata'] = Variable<String>(metadata);
+    }
+    if (!nullToAbsent || companyId != null) {
+      map['company_id'] = Variable<String>(companyId);
+    }
+    return map;
+  }
+
+  InventoryAuditTrailCompanion toCompanion(bool nullToAbsent) {
+    return InventoryAuditTrailCompanion(
+      id: Value(id),
+      uuid: Value(uuid),
+      documentId: Value(documentId),
+      documentType: Value(documentType),
+      eventType: Value(eventType),
+      userId: userId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userId),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      timestamp: Value(timestamp),
+      metadata: metadata == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metadata),
+      companyId: companyId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(companyId),
+    );
+  }
+
+  factory InventoryAuditTrailRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return InventoryAuditTrailRow(
+      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      documentId: serializer.fromJson<String>(json['documentId']),
+      documentType: serializer.fromJson<String>(json['documentType']),
+      eventType: serializer.fromJson<String>(json['eventType']),
+      userId: serializer.fromJson<String?>(json['userId']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      timestamp: serializer.fromJson<int>(json['timestamp']),
+      metadata: serializer.fromJson<String?>(json['metadata']),
+      companyId: serializer.fromJson<String?>(json['companyId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
+      'documentId': serializer.toJson<String>(documentId),
+      'documentType': serializer.toJson<String>(documentType),
+      'eventType': serializer.toJson<String>(eventType),
+      'userId': serializer.toJson<String?>(userId),
+      'notes': serializer.toJson<String?>(notes),
+      'timestamp': serializer.toJson<int>(timestamp),
+      'metadata': serializer.toJson<String?>(metadata),
+      'companyId': serializer.toJson<String?>(companyId),
+    };
+  }
+
+  InventoryAuditTrailRow copyWith({
+    int? id,
+    String? uuid,
+    String? documentId,
+    String? documentType,
+    String? eventType,
+    Value<String?> userId = const Value.absent(),
+    Value<String?> notes = const Value.absent(),
+    int? timestamp,
+    Value<String?> metadata = const Value.absent(),
+    Value<String?> companyId = const Value.absent(),
+  }) => InventoryAuditTrailRow(
+    id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
+    documentId: documentId ?? this.documentId,
+    documentType: documentType ?? this.documentType,
+    eventType: eventType ?? this.eventType,
+    userId: userId.present ? userId.value : this.userId,
+    notes: notes.present ? notes.value : this.notes,
+    timestamp: timestamp ?? this.timestamp,
+    metadata: metadata.present ? metadata.value : this.metadata,
+    companyId: companyId.present ? companyId.value : this.companyId,
+  );
+  InventoryAuditTrailRow copyWithCompanion(InventoryAuditTrailCompanion data) {
+    return InventoryAuditTrailRow(
+      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      documentId: data.documentId.present
+          ? data.documentId.value
+          : this.documentId,
+      documentType: data.documentType.present
+          ? data.documentType.value
+          : this.documentType,
+      eventType: data.eventType.present ? data.eventType.value : this.eventType,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
+      metadata: data.metadata.present ? data.metadata.value : this.metadata,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryAuditTrailRow(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('documentId: $documentId, ')
+          ..write('documentType: $documentType, ')
+          ..write('eventType: $eventType, ')
+          ..write('userId: $userId, ')
+          ..write('notes: $notes, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('metadata: $metadata, ')
+          ..write('companyId: $companyId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    uuid,
+    documentId,
+    documentType,
+    eventType,
+    userId,
+    notes,
+    timestamp,
+    metadata,
+    companyId,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is InventoryAuditTrailRow &&
+          other.id == this.id &&
+          other.uuid == this.uuid &&
+          other.documentId == this.documentId &&
+          other.documentType == this.documentType &&
+          other.eventType == this.eventType &&
+          other.userId == this.userId &&
+          other.notes == this.notes &&
+          other.timestamp == this.timestamp &&
+          other.metadata == this.metadata &&
+          other.companyId == this.companyId);
+}
+
+class InventoryAuditTrailCompanion
+    extends UpdateCompanion<InventoryAuditTrailRow> {
+  final Value<int> id;
+  final Value<String> uuid;
+  final Value<String> documentId;
+  final Value<String> documentType;
+  final Value<String> eventType;
+  final Value<String?> userId;
+  final Value<String?> notes;
+  final Value<int> timestamp;
+  final Value<String?> metadata;
+  final Value<String?> companyId;
+  const InventoryAuditTrailCompanion({
+    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.documentId = const Value.absent(),
+    this.documentType = const Value.absent(),
+    this.eventType = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.timestamp = const Value.absent(),
+    this.metadata = const Value.absent(),
+    this.companyId = const Value.absent(),
+  });
+  InventoryAuditTrailCompanion.insert({
+    this.id = const Value.absent(),
+    required String uuid,
+    required String documentId,
+    required String documentType,
+    required String eventType,
+    this.userId = const Value.absent(),
+    this.notes = const Value.absent(),
+    required int timestamp,
+    this.metadata = const Value.absent(),
+    this.companyId = const Value.absent(),
+  }) : uuid = Value(uuid),
+       documentId = Value(documentId),
+       documentType = Value(documentType),
+       eventType = Value(eventType),
+       timestamp = Value(timestamp);
+  static Insertable<InventoryAuditTrailRow> custom({
+    Expression<int>? id,
+    Expression<String>? uuid,
+    Expression<String>? documentId,
+    Expression<String>? documentType,
+    Expression<String>? eventType,
+    Expression<String>? userId,
+    Expression<String>? notes,
+    Expression<int>? timestamp,
+    Expression<String>? metadata,
+    Expression<String>? companyId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
+      if (documentId != null) 'document_id': documentId,
+      if (documentType != null) 'document_type': documentType,
+      if (eventType != null) 'event_type': eventType,
+      if (userId != null) 'user_id': userId,
+      if (notes != null) 'notes': notes,
+      if (timestamp != null) 'timestamp': timestamp,
+      if (metadata != null) 'metadata': metadata,
+      if (companyId != null) 'company_id': companyId,
+    });
+  }
+
+  InventoryAuditTrailCompanion copyWith({
+    Value<int>? id,
+    Value<String>? uuid,
+    Value<String>? documentId,
+    Value<String>? documentType,
+    Value<String>? eventType,
+    Value<String?>? userId,
+    Value<String?>? notes,
+    Value<int>? timestamp,
+    Value<String?>? metadata,
+    Value<String?>? companyId,
+  }) {
+    return InventoryAuditTrailCompanion(
+      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
+      documentId: documentId ?? this.documentId,
+      documentType: documentType ?? this.documentType,
+      eventType: eventType ?? this.eventType,
+      userId: userId ?? this.userId,
+      notes: notes ?? this.notes,
+      timestamp: timestamp ?? this.timestamp,
+      metadata: metadata ?? this.metadata,
+      companyId: companyId ?? this.companyId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (documentId.present) {
+      map['document_id'] = Variable<String>(documentId.value);
+    }
+    if (documentType.present) {
+      map['document_type'] = Variable<String>(documentType.value);
+    }
+    if (eventType.present) {
+      map['event_type'] = Variable<String>(eventType.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (timestamp.present) {
+      map['timestamp'] = Variable<int>(timestamp.value);
+    }
+    if (metadata.present) {
+      map['metadata'] = Variable<String>(metadata.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryAuditTrailCompanion(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('documentId: $documentId, ')
+          ..write('documentType: $documentType, ')
+          ..write('eventType: $eventType, ')
+          ..write('userId: $userId, ')
+          ..write('notes: $notes, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('metadata: $metadata, ')
+          ..write('companyId: $companyId')
           ..write(')'))
         .toString();
   }
@@ -8518,6 +9737,8 @@ abstract class _$InventoryDatabase extends GeneratedDatabase {
   late final $ProductWarehouseStocksTable productWarehouseStocks =
       $ProductWarehouseStocksTable(this);
   late final $StockTransfersTable stockTransfers = $StockTransfersTable(this);
+  late final $InventoryAuditTrailTable inventoryAuditTrail =
+      $InventoryAuditTrailTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8533,6 +9754,7 @@ abstract class _$InventoryDatabase extends GeneratedDatabase {
     warehouses,
     productWarehouseStocks,
     stockTransfers,
+    inventoryAuditTrail,
   ];
 }
 
@@ -8949,6 +10171,8 @@ typedef $$StockReceiptsTableCreateCompanionBuilder =
       required String uuid,
       required String receiptNumber,
       Value<String?> supplier,
+      Value<String?> accountId,
+      Value<String?> accountName,
       Value<String> currencyCode,
       Value<double> exchangeRate,
       Value<String?> notes,
@@ -8959,6 +10183,8 @@ typedef $$StockReceiptsTableCreateCompanionBuilder =
       Value<int?> lastSyncedAt,
       Value<int> version,
       Value<String?> companyId,
+      Value<String> status,
+      Value<int?> postedAt,
       Value<int?> deletedAt,
     });
 typedef $$StockReceiptsTableUpdateCompanionBuilder =
@@ -8967,6 +10193,8 @@ typedef $$StockReceiptsTableUpdateCompanionBuilder =
       Value<String> uuid,
       Value<String> receiptNumber,
       Value<String?> supplier,
+      Value<String?> accountId,
+      Value<String?> accountName,
       Value<String> currencyCode,
       Value<double> exchangeRate,
       Value<String?> notes,
@@ -8977,6 +10205,8 @@ typedef $$StockReceiptsTableUpdateCompanionBuilder =
       Value<int?> lastSyncedAt,
       Value<int> version,
       Value<String?> companyId,
+      Value<String> status,
+      Value<int?> postedAt,
       Value<int?> deletedAt,
     });
 
@@ -9006,6 +10236,16 @@ class $$StockReceiptsTableFilterComposer
 
   ColumnFilters<String> get supplier => $composableBuilder(
     column: $table.supplier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountName => $composableBuilder(
+    column: $table.accountName,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9059,6 +10299,16 @@ class $$StockReceiptsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get postedAt => $composableBuilder(
+    column: $table.postedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get deletedAt => $composableBuilder(
     column: $table.deletedAt,
     builder: (column) => ColumnFilters(column),
@@ -9091,6 +10341,16 @@ class $$StockReceiptsTableOrderingComposer
 
   ColumnOrderings<String> get supplier => $composableBuilder(
     column: $table.supplier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountName => $composableBuilder(
+    column: $table.accountName,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -9144,6 +10404,16 @@ class $$StockReceiptsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get postedAt => $composableBuilder(
+    column: $table.postedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get deletedAt => $composableBuilder(
     column: $table.deletedAt,
     builder: (column) => ColumnOrderings(column),
@@ -9172,6 +10442,14 @@ class $$StockReceiptsTableAnnotationComposer
 
   GeneratedColumn<String> get supplier =>
       $composableBuilder(column: $table.supplier, builder: (column) => column);
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<String> get accountName => $composableBuilder(
+    column: $table.accountName,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get currencyCode => $composableBuilder(
     column: $table.currencyCode,
@@ -9212,6 +10490,12 @@ class $$StockReceiptsTableAnnotationComposer
 
   GeneratedColumn<String> get companyId =>
       $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get postedAt =>
+      $composableBuilder(column: $table.postedAt, builder: (column) => column);
 
   GeneratedColumn<int> get deletedAt =>
       $composableBuilder(column: $table.deletedAt, builder: (column) => column);
@@ -9258,6 +10542,8 @@ class $$StockReceiptsTableTableManager
                 Value<String> uuid = const Value.absent(),
                 Value<String> receiptNumber = const Value.absent(),
                 Value<String?> supplier = const Value.absent(),
+                Value<String?> accountId = const Value.absent(),
+                Value<String?> accountName = const Value.absent(),
                 Value<String> currencyCode = const Value.absent(),
                 Value<double> exchangeRate = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
@@ -9268,12 +10554,16 @@ class $$StockReceiptsTableTableManager
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<String?> companyId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> postedAt = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
               }) => StockReceiptsCompanion(
                 id: id,
                 uuid: uuid,
                 receiptNumber: receiptNumber,
                 supplier: supplier,
+                accountId: accountId,
+                accountName: accountName,
                 currencyCode: currencyCode,
                 exchangeRate: exchangeRate,
                 notes: notes,
@@ -9284,6 +10574,8 @@ class $$StockReceiptsTableTableManager
                 lastSyncedAt: lastSyncedAt,
                 version: version,
                 companyId: companyId,
+                status: status,
+                postedAt: postedAt,
                 deletedAt: deletedAt,
               ),
           createCompanionCallback:
@@ -9292,6 +10584,8 @@ class $$StockReceiptsTableTableManager
                 required String uuid,
                 required String receiptNumber,
                 Value<String?> supplier = const Value.absent(),
+                Value<String?> accountId = const Value.absent(),
+                Value<String?> accountName = const Value.absent(),
                 Value<String> currencyCode = const Value.absent(),
                 Value<double> exchangeRate = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
@@ -9302,12 +10596,16 @@ class $$StockReceiptsTableTableManager
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<String?> companyId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> postedAt = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
               }) => StockReceiptsCompanion.insert(
                 id: id,
                 uuid: uuid,
                 receiptNumber: receiptNumber,
                 supplier: supplier,
+                accountId: accountId,
+                accountName: accountName,
                 currencyCode: currencyCode,
                 exchangeRate: exchangeRate,
                 notes: notes,
@@ -9318,6 +10616,8 @@ class $$StockReceiptsTableTableManager
                 lastSyncedAt: lastSyncedAt,
                 version: version,
                 companyId: companyId,
+                status: status,
+                postedAt: postedAt,
                 deletedAt: deletedAt,
               ),
           withReferenceMapper: (p0) => p0
@@ -9369,6 +10669,8 @@ typedef $$StockIssuesTableCreateCompanionBuilder =
       Value<int?> lastSyncedAt,
       Value<int> version,
       Value<String?> companyId,
+      Value<String> status,
+      Value<int?> postedAt,
       Value<int?> deletedAt,
     });
 typedef $$StockIssuesTableUpdateCompanionBuilder =
@@ -9391,6 +10693,8 @@ typedef $$StockIssuesTableUpdateCompanionBuilder =
       Value<int?> lastSyncedAt,
       Value<int> version,
       Value<String?> companyId,
+      Value<String> status,
+      Value<int?> postedAt,
       Value<int?> deletedAt,
     });
 
@@ -9490,6 +10794,16 @@ class $$StockIssuesTableFilterComposer
 
   ColumnFilters<String> get companyId => $composableBuilder(
     column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get postedAt => $composableBuilder(
+    column: $table.postedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9598,6 +10912,16 @@ class $$StockIssuesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get postedAt => $composableBuilder(
+    column: $table.postedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get deletedAt => $composableBuilder(
     column: $table.deletedAt,
     builder: (column) => ColumnOrderings(column),
@@ -9683,6 +11007,12 @@ class $$StockIssuesTableAnnotationComposer
   GeneratedColumn<String> get companyId =>
       $composableBuilder(column: $table.companyId, builder: (column) => column);
 
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get postedAt =>
+      $composableBuilder(column: $table.postedAt, builder: (column) => column);
+
   GeneratedColumn<int> get deletedAt =>
       $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
@@ -9742,6 +11072,8 @@ class $$StockIssuesTableTableManager
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<String?> companyId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> postedAt = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
               }) => StockIssuesCompanion(
                 id: id,
@@ -9762,6 +11094,8 @@ class $$StockIssuesTableTableManager
                 lastSyncedAt: lastSyncedAt,
                 version: version,
                 companyId: companyId,
+                status: status,
+                postedAt: postedAt,
                 deletedAt: deletedAt,
               ),
           createCompanionCallback:
@@ -9784,6 +11118,8 @@ class $$StockIssuesTableTableManager
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<String?> companyId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> postedAt = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
               }) => StockIssuesCompanion.insert(
                 id: id,
@@ -9804,6 +11140,8 @@ class $$StockIssuesTableTableManager
                 lastSyncedAt: lastSyncedAt,
                 version: version,
                 companyId: companyId,
+                status: status,
+                postedAt: postedAt,
                 deletedAt: deletedAt,
               ),
           withReferenceMapper: (p0) => p0
@@ -9844,6 +11182,8 @@ typedef $$StockMovementLinesTableCreateCompanionBuilder =
       Value<double> quantity,
       Value<double> unitCost,
       Value<double> totalCost,
+      Value<double?> postedCost,
+      Value<int?> postedAt,
     });
 typedef $$StockMovementLinesTableUpdateCompanionBuilder =
     StockMovementLinesCompanion Function({
@@ -9858,6 +11198,8 @@ typedef $$StockMovementLinesTableUpdateCompanionBuilder =
       Value<double> quantity,
       Value<double> unitCost,
       Value<double> totalCost,
+      Value<double?> postedCost,
+      Value<int?> postedAt,
     });
 
 class $$StockMovementLinesTableFilterComposer
@@ -9921,6 +11263,16 @@ class $$StockMovementLinesTableFilterComposer
 
   ColumnFilters<double> get totalCost => $composableBuilder(
     column: $table.totalCost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get postedCost => $composableBuilder(
+    column: $table.postedCost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get postedAt => $composableBuilder(
+    column: $table.postedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -9988,6 +11340,16 @@ class $$StockMovementLinesTableOrderingComposer
     column: $table.totalCost,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<double> get postedCost => $composableBuilder(
+    column: $table.postedCost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get postedAt => $composableBuilder(
+    column: $table.postedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$StockMovementLinesTableAnnotationComposer
@@ -10039,6 +11401,14 @@ class $$StockMovementLinesTableAnnotationComposer
 
   GeneratedColumn<double> get totalCost =>
       $composableBuilder(column: $table.totalCost, builder: (column) => column);
+
+  GeneratedColumn<double> get postedCost => $composableBuilder(
+    column: $table.postedCost,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get postedAt =>
+      $composableBuilder(column: $table.postedAt, builder: (column) => column);
 }
 
 class $$StockMovementLinesTableTableManager
@@ -10092,6 +11462,8 @@ class $$StockMovementLinesTableTableManager
                 Value<double> quantity = const Value.absent(),
                 Value<double> unitCost = const Value.absent(),
                 Value<double> totalCost = const Value.absent(),
+                Value<double?> postedCost = const Value.absent(),
+                Value<int?> postedAt = const Value.absent(),
               }) => StockMovementLinesCompanion(
                 id: id,
                 uuid: uuid,
@@ -10104,6 +11476,8 @@ class $$StockMovementLinesTableTableManager
                 quantity: quantity,
                 unitCost: unitCost,
                 totalCost: totalCost,
+                postedCost: postedCost,
+                postedAt: postedAt,
               ),
           createCompanionCallback:
               ({
@@ -10118,6 +11492,8 @@ class $$StockMovementLinesTableTableManager
                 Value<double> quantity = const Value.absent(),
                 Value<double> unitCost = const Value.absent(),
                 Value<double> totalCost = const Value.absent(),
+                Value<double?> postedCost = const Value.absent(),
+                Value<int?> postedAt = const Value.absent(),
               }) => StockMovementLinesCompanion.insert(
                 id: id,
                 uuid: uuid,
@@ -10130,6 +11506,8 @@ class $$StockMovementLinesTableTableManager
                 quantity: quantity,
                 unitCost: unitCost,
                 totalCost: totalCost,
+                postedCost: postedCost,
+                postedAt: postedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -10983,6 +12361,8 @@ typedef $$StockReturnsTableCreateCompanionBuilder =
       Value<int?> lastSyncedAt,
       Value<int> version,
       Value<String?> companyId,
+      Value<String> status,
+      Value<int?> postedAt,
       Value<int?> deletedAt,
     });
 typedef $$StockReturnsTableUpdateCompanionBuilder =
@@ -11002,6 +12382,8 @@ typedef $$StockReturnsTableUpdateCompanionBuilder =
       Value<int?> lastSyncedAt,
       Value<int> version,
       Value<String?> companyId,
+      Value<String> status,
+      Value<int?> postedAt,
       Value<int?> deletedAt,
     });
 
@@ -11086,6 +12468,16 @@ class $$StockReturnsTableFilterComposer
 
   ColumnFilters<String> get companyId => $composableBuilder(
     column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get postedAt => $composableBuilder(
+    column: $table.postedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11179,6 +12571,16 @@ class $$StockReturnsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get postedAt => $composableBuilder(
+    column: $table.postedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get deletedAt => $composableBuilder(
     column: $table.deletedAt,
     builder: (column) => ColumnOrderings(column),
@@ -11251,6 +12653,12 @@ class $$StockReturnsTableAnnotationComposer
   GeneratedColumn<String> get companyId =>
       $composableBuilder(column: $table.companyId, builder: (column) => column);
 
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get postedAt =>
+      $composableBuilder(column: $table.postedAt, builder: (column) => column);
+
   GeneratedColumn<int> get deletedAt =>
       $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
@@ -11307,6 +12715,8 @@ class $$StockReturnsTableTableManager
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<String?> companyId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> postedAt = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
               }) => StockReturnsCompanion(
                 id: id,
@@ -11324,6 +12734,8 @@ class $$StockReturnsTableTableManager
                 lastSyncedAt: lastSyncedAt,
                 version: version,
                 companyId: companyId,
+                status: status,
+                postedAt: postedAt,
                 deletedAt: deletedAt,
               ),
           createCompanionCallback:
@@ -11343,6 +12755,8 @@ class $$StockReturnsTableTableManager
                 Value<int?> lastSyncedAt = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<String?> companyId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> postedAt = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
               }) => StockReturnsCompanion.insert(
                 id: id,
@@ -11360,6 +12774,8 @@ class $$StockReturnsTableTableManager
                 lastSyncedAt: lastSyncedAt,
                 version: version,
                 companyId: companyId,
+                status: status,
+                postedAt: postedAt,
                 deletedAt: deletedAt,
               ),
           withReferenceMapper: (p0) => p0
@@ -12135,6 +13551,8 @@ typedef $$StockTransfersTableCreateCompanionBuilder =
       Value<String> syncStatus,
       Value<int> version,
       Value<String?> companyId,
+      Value<String> status,
+      Value<int?> postedAt,
       Value<int?> deletedAt,
       Value<int> rowid,
     });
@@ -12151,6 +13569,8 @@ typedef $$StockTransfersTableUpdateCompanionBuilder =
       Value<String> syncStatus,
       Value<int> version,
       Value<String?> companyId,
+      Value<String> status,
+      Value<int?> postedAt,
       Value<int?> deletedAt,
       Value<int> rowid,
     });
@@ -12216,6 +13636,16 @@ class $$StockTransfersTableFilterComposer
 
   ColumnFilters<String> get companyId => $composableBuilder(
     column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get postedAt => $composableBuilder(
+    column: $table.postedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12289,6 +13719,16 @@ class $$StockTransfersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get postedAt => $composableBuilder(
+    column: $table.postedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get deletedAt => $composableBuilder(
     column: $table.deletedAt,
     builder: (column) => ColumnOrderings(column),
@@ -12347,6 +13787,12 @@ class $$StockTransfersTableAnnotationComposer
   GeneratedColumn<String> get companyId =>
       $composableBuilder(column: $table.companyId, builder: (column) => column);
 
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get postedAt =>
+      $composableBuilder(column: $table.postedAt, builder: (column) => column);
+
   GeneratedColumn<int> get deletedAt =>
       $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
@@ -12399,6 +13845,8 @@ class $$StockTransfersTableTableManager
                 Value<String> syncStatus = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<String?> companyId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> postedAt = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => StockTransfersCompanion(
@@ -12413,6 +13861,8 @@ class $$StockTransfersTableTableManager
                 syncStatus: syncStatus,
                 version: version,
                 companyId: companyId,
+                status: status,
+                postedAt: postedAt,
                 deletedAt: deletedAt,
                 rowid: rowid,
               ),
@@ -12429,6 +13879,8 @@ class $$StockTransfersTableTableManager
                 Value<String> syncStatus = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<String?> companyId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int?> postedAt = const Value.absent(),
                 Value<int?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => StockTransfersCompanion.insert(
@@ -12443,6 +13895,8 @@ class $$StockTransfersTableTableManager
                 syncStatus: syncStatus,
                 version: version,
                 companyId: companyId,
+                status: status,
+                postedAt: postedAt,
                 deletedAt: deletedAt,
                 rowid: rowid,
               ),
@@ -12475,6 +13929,315 @@ typedef $$StockTransfersTableProcessedTableManager =
       StockTransferRow,
       PrefetchHooks Function()
     >;
+typedef $$InventoryAuditTrailTableCreateCompanionBuilder =
+    InventoryAuditTrailCompanion Function({
+      Value<int> id,
+      required String uuid,
+      required String documentId,
+      required String documentType,
+      required String eventType,
+      Value<String?> userId,
+      Value<String?> notes,
+      required int timestamp,
+      Value<String?> metadata,
+      Value<String?> companyId,
+    });
+typedef $$InventoryAuditTrailTableUpdateCompanionBuilder =
+    InventoryAuditTrailCompanion Function({
+      Value<int> id,
+      Value<String> uuid,
+      Value<String> documentId,
+      Value<String> documentType,
+      Value<String> eventType,
+      Value<String?> userId,
+      Value<String?> notes,
+      Value<int> timestamp,
+      Value<String?> metadata,
+      Value<String?> companyId,
+    });
+
+class $$InventoryAuditTrailTableFilterComposer
+    extends Composer<_$InventoryDatabase, $InventoryAuditTrailTable> {
+  $$InventoryAuditTrailTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get eventType => $composableBuilder(
+    column: $table.eventType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get metadata => $composableBuilder(
+    column: $table.metadata,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$InventoryAuditTrailTableOrderingComposer
+    extends Composer<_$InventoryDatabase, $InventoryAuditTrailTable> {
+  $$InventoryAuditTrailTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get eventType => $composableBuilder(
+    column: $table.eventType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get metadata => $composableBuilder(
+    column: $table.metadata,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$InventoryAuditTrailTableAnnotationComposer
+    extends Composer<_$InventoryDatabase, $InventoryAuditTrailTable> {
+  $$InventoryAuditTrailTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentType => $composableBuilder(
+    column: $table.documentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get eventType =>
+      $composableBuilder(column: $table.eventType, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<int> get timestamp =>
+      $composableBuilder(column: $table.timestamp, builder: (column) => column);
+
+  GeneratedColumn<String> get metadata =>
+      $composableBuilder(column: $table.metadata, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+}
+
+class $$InventoryAuditTrailTableTableManager
+    extends
+        RootTableManager<
+          _$InventoryDatabase,
+          $InventoryAuditTrailTable,
+          InventoryAuditTrailRow,
+          $$InventoryAuditTrailTableFilterComposer,
+          $$InventoryAuditTrailTableOrderingComposer,
+          $$InventoryAuditTrailTableAnnotationComposer,
+          $$InventoryAuditTrailTableCreateCompanionBuilder,
+          $$InventoryAuditTrailTableUpdateCompanionBuilder,
+          (
+            InventoryAuditTrailRow,
+            BaseReferences<
+              _$InventoryDatabase,
+              $InventoryAuditTrailTable,
+              InventoryAuditTrailRow
+            >,
+          ),
+          InventoryAuditTrailRow,
+          PrefetchHooks Function()
+        > {
+  $$InventoryAuditTrailTableTableManager(
+    _$InventoryDatabase db,
+    $InventoryAuditTrailTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$InventoryAuditTrailTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$InventoryAuditTrailTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$InventoryAuditTrailTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
+                Value<String> documentId = const Value.absent(),
+                Value<String> documentType = const Value.absent(),
+                Value<String> eventType = const Value.absent(),
+                Value<String?> userId = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<int> timestamp = const Value.absent(),
+                Value<String?> metadata = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
+              }) => InventoryAuditTrailCompanion(
+                id: id,
+                uuid: uuid,
+                documentId: documentId,
+                documentType: documentType,
+                eventType: eventType,
+                userId: userId,
+                notes: notes,
+                timestamp: timestamp,
+                metadata: metadata,
+                companyId: companyId,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String uuid,
+                required String documentId,
+                required String documentType,
+                required String eventType,
+                Value<String?> userId = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                required int timestamp,
+                Value<String?> metadata = const Value.absent(),
+                Value<String?> companyId = const Value.absent(),
+              }) => InventoryAuditTrailCompanion.insert(
+                id: id,
+                uuid: uuid,
+                documentId: documentId,
+                documentType: documentType,
+                eventType: eventType,
+                userId: userId,
+                notes: notes,
+                timestamp: timestamp,
+                metadata: metadata,
+                companyId: companyId,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$InventoryAuditTrailTableProcessedTableManager =
+    ProcessedTableManager<
+      _$InventoryDatabase,
+      $InventoryAuditTrailTable,
+      InventoryAuditTrailRow,
+      $$InventoryAuditTrailTableFilterComposer,
+      $$InventoryAuditTrailTableOrderingComposer,
+      $$InventoryAuditTrailTableAnnotationComposer,
+      $$InventoryAuditTrailTableCreateCompanionBuilder,
+      $$InventoryAuditTrailTableUpdateCompanionBuilder,
+      (
+        InventoryAuditTrailRow,
+        BaseReferences<
+          _$InventoryDatabase,
+          $InventoryAuditTrailTable,
+          InventoryAuditTrailRow
+        >,
+      ),
+      InventoryAuditTrailRow,
+      PrefetchHooks Function()
+    >;
 
 class $InventoryDatabaseManager {
   final _$InventoryDatabase _db;
@@ -12505,4 +14268,6 @@ class $InventoryDatabaseManager {
       );
   $$StockTransfersTableTableManager get stockTransfers =>
       $$StockTransfersTableTableManager(_db, _db.stockTransfers);
+  $$InventoryAuditTrailTableTableManager get inventoryAuditTrail =>
+      $$InventoryAuditTrailTableTableManager(_db, _db.inventoryAuditTrail);
 }

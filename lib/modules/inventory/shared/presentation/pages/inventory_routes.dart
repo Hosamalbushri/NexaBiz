@@ -79,6 +79,9 @@ class InventoryRoutes {
   static void pushStockReceipts(BuildContext context) =>
       context.push(stockReceipts);
 
+  static void pushStockReceiptDetails(BuildContext context, String id) =>
+      context.push('/inventory/stock-movements/receipts/$id');
+
   static void pushStockReceiptsNew(BuildContext context) =>
       context.push(stockReceiptsNew);
 
@@ -87,6 +90,9 @@ class InventoryRoutes {
 
   static void pushStockIssues(BuildContext context) =>
       context.push(stockIssues);
+
+  static void pushStockIssueDetails(BuildContext context, String id) =>
+      context.push('/inventory/stock-movements/issues/$id');
 
   static void pushStockIssuesNew(BuildContext context) =>
       context.push(stockIssuesNew);

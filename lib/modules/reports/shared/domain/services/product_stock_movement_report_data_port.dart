@@ -80,6 +80,7 @@ class ProductStockMovementRow {
     required this.voucherBook,
     required this.documentNumber,
     this.documentUuid,
+    this.unitCost = 0.0,
     this.inCartons = 0,
     this.inPieces = 0.0,
     this.inTotalQty = 0.0,
@@ -99,6 +100,9 @@ class ProductStockMovementRow {
   final String voucherBook;
   final String documentNumber;
   final String? documentUuid;
+
+  /// Unit cost of the main pack / unit.
+  final double unitCost;
 
   // Inward (الوارد)
   final int inCartons;

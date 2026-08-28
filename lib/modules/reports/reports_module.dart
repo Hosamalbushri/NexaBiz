@@ -9,7 +9,6 @@ import '../../app/reports/journal_book_report_data_adapter.dart';
 import '../../app/reports/rp_report_data_adapter.dart';
 import '../../app/reports/sales_period_report_data_adapter.dart';
 import '../../app/reports/trial_balance_report_data_adapter.dart';
-import '../../app/settings/settings_repository.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/report_category_definition.dart';
@@ -411,6 +410,7 @@ class ReportsModule extends AppModule {
         productStockMovementReportDataPortProvider.overrideWith((ref) {
           return ProductStockMovementReportDataAdapter(
             db: ref.watch(inventoryDatabaseProvider),
+            salesDb: ref.watch(salesDatabaseProvider),
             loadCompanyProfile: () =>
                 ref.read(settingsRepositoryProvider).loadCompanyProfile(),
           );

@@ -59,6 +59,7 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
   var _loading = true;
   var _loaded = false;
   var _saving = false;
+  var _isPostedLocked = false;
   String? _loadError;
   List<InventoryVoucherBookRef> _voucherBooks = const [];
   List<InventoryAccountRef> _accounts = const [];
@@ -95,6 +96,7 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
     setState(() {
       _loading = true;
       _loadError = null;
+      _isPostedLocked = false;
     });
 
     try {
@@ -117,6 +119,9 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
             final repo = ref.read(stockMovementsRepositoryProvider);
             final receipt = await repo.getReceiptById(widget.receiptId!);
             if (receipt == null) throw Exception('أمر التوريد غير موجود');
+            if (receipt.isPosted) {
+              _isPostedLocked = true;
+            }
             composer.loadFromReceipt(receipt);
             _notesController.text = receipt.notes ?? '';
           } else {
@@ -188,6 +193,14 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
 
   Future<void> _save() async {
     if (_saving) return;
+    if (_isPostedLocked) {
+      showAppSnackBar(
+        context,
+        message: 'لا يمكن تعديل المستند وهو في حالة (مرحّل). يرجى إلغاء الترحيل أولاً.',
+        isSuccess: false,
+      );
+      return;
+    }
     final state = ref.read(stockReceiptComposerProvider);
     final composer = ref.read(stockReceiptComposerProvider.notifier);
     final l10n = AppLocalizations.of(context);
@@ -313,6 +326,33 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
     final body = ListView(
       padding: AppConstants.pageInsets(context),
       children: [
+        if (_isPostedLocked) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade50,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(color: Colors.amber.shade400),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lock_rounded, color: Colors.amber.shade900),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    'هذا المستند مرحّل ولا يمكن حفظ أي تعديل عليه إلا بعد إلغاء الترحيل.',
+                    style: TextStyle(
+                      color: Colors.amber.shade900,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         header,
         const SizedBox(height: AppSpacing.md),
         productsTable,

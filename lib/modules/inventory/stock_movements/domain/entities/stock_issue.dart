@@ -1,4 +1,5 @@
 import 'package:stock_count/core/utils/id_generator.dart';
+import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'stock_movement_line.dart';
 
@@ -17,6 +18,8 @@ class StockIssue {
     this.notes,
     required this.issueDate,
     this.lines = const [],
+    this.status = InventoryDocumentStatus.posted,
+    this.postedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
     this.syncStatus = SyncStatus.synced,
@@ -40,6 +43,8 @@ class StockIssue {
   final String? notes;
   final DateTime issueDate;
   final List<StockMovementLine> lines;
+  final InventoryDocumentStatus status;
+  final DateTime? postedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   final SyncStatus syncStatus;
@@ -49,6 +54,8 @@ class StockIssue {
   final DateTime? deletedAt;
 
   bool get isDeleted => deletedAt != null;
+  bool get isPosted => status == InventoryDocumentStatus.posted;
+  bool get isDraft => status == InventoryDocumentStatus.draft;
 
   double get totalQuantity => lines.fold(0.0, (sum, line) => sum + line.quantity);
   double get totalCost => lines.fold(0.0, (sum, line) => sum + line.totalCost);
@@ -70,6 +77,9 @@ class StockIssue {
     String? notes,
     DateTime? issueDate,
     List<StockMovementLine>? lines,
+    InventoryDocumentStatus? status,
+    DateTime? postedAt,
+    bool clearPostedAt = false,
     DateTime? createdAt,
     DateTime? updatedAt,
     SyncStatus? syncStatus,
@@ -93,6 +103,8 @@ class StockIssue {
       notes: notes ?? this.notes,
       issueDate: issueDate ?? this.issueDate,
       lines: lines ?? this.lines,
+      status: status ?? this.status,
+      postedAt: clearPostedAt ? null : (postedAt ?? this.postedAt),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       syncStatus: syncStatus ?? this.syncStatus,

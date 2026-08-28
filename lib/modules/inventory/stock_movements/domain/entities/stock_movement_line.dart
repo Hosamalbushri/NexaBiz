@@ -14,6 +14,8 @@ class StockMovementLine {
     double? quantity,
     this.unitCost = 0.0,
     double? totalCost,
+    this.postedCost,
+    this.postedAt,
   })  : id = id ?? generateUuidV4(),
         quantity = quantity ?? (mainQuantity + (packSize > 0 ? subQuantity / packSize : 0.0)),
         totalCost = totalCost ?? ((quantity ?? (mainQuantity + (packSize > 0 ? subQuantity / packSize : 0.0))) * unitCost);
@@ -29,6 +31,8 @@ class StockMovementLine {
   final double quantity;
   final double unitCost;
   final double totalCost;
+  final double? postedCost;
+  final DateTime? postedAt;
 
   StockMovementLine copyWith({
     String? id,
@@ -42,6 +46,8 @@ class StockMovementLine {
     double? quantity,
     double? unitCost,
     double? totalCost,
+    double? postedCost,
+    DateTime? postedAt,
   }) {
     final mainQty = mainQuantity ?? this.mainQuantity;
     final subQty = subQuantity ?? this.subQuantity;
@@ -60,6 +66,8 @@ class StockMovementLine {
       quantity: qty,
       unitCost: cost,
       totalCost: totalCost ?? (qty * cost),
+      postedCost: postedCost ?? this.postedCost,
+      postedAt: postedAt ?? this.postedAt,
     );
   }
 }
