@@ -36,6 +36,6 @@ class Categories extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-        {warehouseId, code},
+        {companyId, warehouseId, code},
       ];
 }

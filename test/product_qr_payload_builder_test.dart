@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/modules/inventory/domain/entities/product.dart';
-import 'package:stock_count/modules/inventory/domain/services/product_qr_payload_builder.dart';
+import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
+import 'package:stock_count/modules/inventory/products/domain/services/product_qr_payload_builder.dart';
 
 void main() {
   const builder = ProductQrPayloadBuilder();

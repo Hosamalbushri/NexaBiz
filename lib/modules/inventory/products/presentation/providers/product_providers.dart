@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/core/database/tenant_database_name.dart';
@@ -95,19 +96,31 @@ final thermalBarcodeLabelPrinterProvider = Provider<BarcodeLabelPrinter>((ref) {
 });
 
 final createProductUseCaseProvider = Provider<CreateProduct>((ref) {
-  return CreateProduct(ref.watch(productRepositoryProvider));
+  return CreateProduct(
+    ref.watch(productRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
+  );
 });
 
 final updateProductUseCaseProvider = Provider<UpdateProduct>((ref) {
-  return UpdateProduct(ref.watch(productRepositoryProvider));
+  return UpdateProduct(
+    ref.watch(productRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
+  );
 });
 
 final deleteProductUseCaseProvider = Provider<DeleteProduct>((ref) {
-  return DeleteProduct(ref.watch(productRepositoryProvider));
+  return DeleteProduct(
+    ref.watch(productRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
+  );
 });
 
 final upsertProductsUseCaseProvider = Provider<UpsertProducts>((ref) {
-  return UpsertProducts(ref.watch(productRepositoryProvider));
+  return UpsertProducts(
+    ref.watch(productRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
+  );
 });
 
 final productExcelImportDatasourceProvider =

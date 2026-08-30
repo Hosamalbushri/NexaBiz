@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
@@ -10,7 +11,11 @@ import '../../domain/repositories/warehouse_repository.dart';
 final warehouseRepositoryProvider = Provider<WarehouseRepository>((ref) {
   final db = ref.watch(inventoryDatabaseProvider);
   final syncQueue = ref.watch(syncQueueProvider);
-  return WarehouseRepositoryImpl(db, syncQueue);
+  return WarehouseRepositoryImpl(
+    db,
+    syncQueue,
+    () => ref.read(currentCompanyIdProvider),
+  );
 });
 
 final warehousesListStreamProvider = StreamProvider<List<Warehouse>>((ref) async* {

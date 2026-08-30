@@ -37,4 +37,15 @@ class AccountingPeriodValidator {
       );
     }
   }
+
+  /// Validates mutations (edits, backdating, deletions) across target date and original date.
+  Future<void> assertMutationAllowed({
+    required DateTime entryDate,
+    DateTime? originalDate,
+  }) async {
+    if (originalDate != null) {
+      await assertEntryAllowed(originalDate);
+    }
+    await assertEntryAllowed(entryDate);
+  }
 }

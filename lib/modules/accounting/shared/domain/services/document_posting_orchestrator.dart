@@ -87,9 +87,25 @@ class DocumentPostingOrchestrator {
 
       // 2. Build and post Journal Entry after inventory layer creation succeeds
       if (totalAmount > 0) {
+        final sourceType = docRef.documentType.storageValue;
+        final sourceId = docRef.documentId;
+
+        final existing = await _journalPostingService.findBySource(
+          sourceType: sourceType,
+          sourceId: sourceId,
+        );
+
+        if (existing != null && existing.isPosted) {
+          return OrchestrationSuccess(
+            documentId: receipt.id,
+            journalEntryUuid: existing.uuid,
+            message: 'تم ترحيل أمر التوريد والقيود المحاسبية بنجاح',
+          );
+        }
+
         await _journalPostingService.voidBySource(
-          sourceType: docRef.documentType.storageValue,
-          sourceId: docRef.documentId,
+          sourceType: sourceType,
+          sourceId: sourceId,
         );
 
         final draft = await _entryBuilder.buildDraftFromInventoryDocument(
@@ -98,12 +114,17 @@ class DocumentPostingOrchestrator {
           offsetAccountId: receipt.accountId ?? receipt.supplier,
           isPosted: true,
         );
-        await _journalPostingService.post(draft);
+        final entry = await _journalPostingService.post(draft);
+        return OrchestrationSuccess(
+          documentId: receipt.id,
+          journalEntryUuid: entry.uuid,
+          message: 'تم ترحيل أمر التوريد والقيود المحاسبية بنجاح',
+        );
       }
 
       return OrchestrationSuccess(
         documentId: receipt.id,
-        message: 'تم ترحيل أمر التوريد والقيود المحاسبية بنجاح',
+        message: 'تم ترحيل أمر التوريد بنجاح',
       );
     } catch (e) {
       final docRef = InventoryDocumentRef(
@@ -116,7 +137,11 @@ class DocumentPostingOrchestrator {
         currencyCode: receipt.currencyCode,
         exchangeRate: receipt.exchangeRate,
       );
-      await _postingCoordinator.unpost(document: docRef);
+      try {
+        await _postingCoordinator.unpost(document: docRef);
+      } catch (_) {
+        // Force status compensation if unpost fails during failure recovery
+      }
       await _journalPostingService.voidBySource(
         sourceType: docRef.documentType.storageValue,
         sourceId: docRef.documentId,
@@ -167,9 +192,25 @@ class DocumentPostingOrchestrator {
 
       // 2. Build and post Journal Entry using consumed layer cost in Base Currency
       if (calculatedCogsCost > 0) {
+        final sourceType = docRef.documentType.storageValue;
+        final sourceId = docRef.documentId;
+
+        final existing = await _journalPostingService.findBySource(
+          sourceType: sourceType,
+          sourceId: sourceId,
+        );
+
+        if (existing != null && existing.isPosted) {
+          return OrchestrationSuccess(
+            documentId: issue.id,
+            journalEntryUuid: existing.uuid,
+            message: 'تم ترحيل أمر الصرف والقيود المحاسبية بنجاح',
+          );
+        }
+
         await _journalPostingService.voidBySource(
-          sourceType: docRef.documentType.storageValue,
-          sourceId: docRef.documentId,
+          sourceType: sourceType,
+          sourceId: sourceId,
         );
 
         final draft = await _entryBuilder.buildDraftFromInventoryDocument(
@@ -179,12 +220,17 @@ class DocumentPostingOrchestrator {
           isPosted: true,
           useBaseCurrencyForCogs: true,
         );
-        await _journalPostingService.post(draft);
+        final entry = await _journalPostingService.post(draft);
+        return OrchestrationSuccess(
+          documentId: issue.id,
+          journalEntryUuid: entry.uuid,
+          message: 'تم ترحيل أمر الصرف والقيود المحاسبية بنجاح',
+        );
       }
 
       return OrchestrationSuccess(
         documentId: issue.id,
-        message: 'تم ترحيل أمر الصرف والقيود المحاسبية بنجاح',
+        message: 'تم ترحيل أمر الصرف بنجاح',
       );
     } catch (e) {
       final docRef = InventoryDocumentRef(
@@ -197,7 +243,11 @@ class DocumentPostingOrchestrator {
         currencyCode: issue.currencyCode,
         exchangeRate: issue.exchangeRate,
       );
-      await _postingCoordinator.unpost(document: docRef);
+      try {
+        await _postingCoordinator.unpost(document: docRef);
+      } catch (_) {
+        // Force status compensation if unpost fails during failure recovery
+      }
       await _journalPostingService.voidBySource(
         sourceType: docRef.documentType.storageValue,
         sourceId: docRef.documentId,
@@ -349,7 +399,9 @@ class DocumentPostingOrchestrator {
         message: 'تم ترحيل فاتورة المبيعات وحركات المخزون والقيود المحاسبية بنجاح',
       );
     } catch (e) {
-      await _postingCoordinator.unpost(document: docRef);
+      try {
+        await _postingCoordinator.unpost(document: docRef);
+      } catch (_) {}
       await _journalPostingService.voidBySource(sourceType: 'sale', sourceId: sale.uuid);
       await _journalPostingService.voidBySource(sourceType: 'sale_cogs', sourceId: sale.uuid);
 

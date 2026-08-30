@@ -47,7 +47,86 @@ class JournalBaseAmountResolver {
         ),
       );
     }
+
+    // Enforce base currency debit/credit balancing for foreign currency conversions.
+    // Line-by-line rounding can introduce 1-cent/fils disparities across multi-line vouchers.
+    _applyBasePennyBalancing(resolved);
+
     return resolved;
+  }
+
+  /// Adjusts minor unit (cents/fils) disparity caused by line-by-line exchange rate rounding
+  /// so that SUM(baseDebit) == SUM(baseCredit) is strictly guaranteed.
+  void _applyBasePennyBalancing(List<JournalLineDraft> resolved) {
+    if (resolved.length < 2) return;
+
+    var totalBaseDebitCents = 0;
+    var totalBaseCreditCents = 0;
+    for (final line in resolved) {
+      totalBaseDebitCents += JournalMoney.toCents(line.baseDebit ?? 0);
+      totalBaseCreditCents += JournalMoney.toCents(line.baseCredit ?? 0);
+    }
+
+    final diffCents = totalBaseDebitCents - totalBaseCreditCents;
+    if (diffCents == 0) return;
+
+    // Adjust the largest credit line if diff > 0, or largest debit line if diff < 0.
+    if (diffCents > 0) {
+      // Base debits exceed base credits by diffCents. Add diffCents to the largest credit line.
+      int maxCreditIndex = -1;
+      double maxCreditVal = -1;
+      for (var i = 0; i < resolved.length; i++) {
+        final c = resolved[i].baseCredit ?? 0;
+        if (c > maxCreditVal) {
+          maxCreditVal = c;
+          maxCreditIndex = i;
+        }
+      }
+      if (maxCreditIndex != -1 && maxCreditVal > 0) {
+        final target = resolved[maxCreditIndex];
+        final newBaseCreditCents = JournalMoney.toCents(target.baseCredit ?? 0) + diffCents;
+        resolved[maxCreditIndex] = JournalLineDraft(
+          accountUuid: target.accountUuid,
+          debit: target.debit,
+          credit: target.credit,
+          currencyCode: target.currencyCode,
+          lineDescription: target.lineDescription,
+          sortOrder: target.sortOrder,
+          uuid: target.uuid,
+          exchangeRateToBase: target.exchangeRateToBase,
+          baseDebit: target.baseDebit,
+          baseCredit: JournalMoney.fromCents(newBaseCreditCents),
+        );
+      }
+    } else {
+      // Base credits exceed base debits by abs(diffCents). Add abs(diffCents) to the largest debit line.
+      final absDiff = diffCents.abs();
+      int maxDebitIndex = -1;
+      double maxDebitVal = -1;
+      for (var i = 0; i < resolved.length; i++) {
+        final d = resolved[i].baseDebit ?? 0;
+        if (d > maxDebitVal) {
+          maxDebitVal = d;
+          maxDebitIndex = i;
+        }
+      }
+      if (maxDebitIndex != -1 && maxDebitVal > 0) {
+        final target = resolved[maxDebitIndex];
+        final newBaseDebitCents = JournalMoney.toCents(target.baseDebit ?? 0) + absDiff;
+        resolved[maxDebitIndex] = JournalLineDraft(
+          accountUuid: target.accountUuid,
+          debit: target.debit,
+          credit: target.credit,
+          currencyCode: target.currencyCode,
+          lineDescription: target.lineDescription,
+          sortOrder: target.sortOrder,
+          uuid: target.uuid,
+          exchangeRateToBase: target.exchangeRateToBase,
+          baseDebit: JournalMoney.fromCents(newBaseDebitCents),
+          baseCredit: target.baseCredit,
+        );
+      }
+    }
   }
 
   Future<double> _resolveRate({

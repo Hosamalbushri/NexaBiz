@@ -34,8 +34,10 @@ class AccountingDatabase extends _$AccountingDatabase {
   /// In-memory database for tests.
   AccountingDatabase.memory() : super(NativeDatabase.memory());
 
+
+
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -192,6 +194,9 @@ class AccountingDatabase extends _$AccountingDatabase {
           "UPDATE currency_rates SET company_id = 'local-company' WHERE company_id IS NULL",
         );
       }
+      if (from < 14) {
+        await _createJournalSourceUniqueIndex();
+      }
     },
   );
 
@@ -292,12 +297,19 @@ class AccountingDatabase extends _$AccountingDatabase {
 
   Future<void> _createJournalIndexes() async {
     await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_journal_entries_company '
+      'ON journal_entries (company_id)',
+    );
+    await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_journal_entries_date '
       'ON journal_entries (entry_date)',
     );
     await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_journal_entries_voucher '
-      'ON journal_entries (voucher_number)',
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_journal_entries_tenant_voucher '
+      'ON journal_entries (company_id, voucher_number) '
+      'WHERE deleted_at IS NULL '
+      'AND voucher_number IS NOT NULL '
+      'AND voucher_number != \'\'',
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_journal_entries_source '
@@ -315,12 +327,15 @@ class AccountingDatabase extends _$AccountingDatabase {
     await _createJournalLedgerIndexes();
   }
 
-  /// One active (non-deleted) journal per operational source document.
+  /// One active (non-deleted) journal per operational source document per company.
   /// Soft-deleted rows may reuse the same source pair after void.
   Future<void> _createJournalSourceUniqueIndex() async {
     await customStatement(
+      'DROP INDEX IF EXISTS idx_journal_entries_source_active',
+    );
+    await customStatement(
       'CREATE UNIQUE INDEX IF NOT EXISTS idx_journal_entries_source_active '
-      'ON journal_entries (source_type, source_id) '
+      'ON journal_entries (company_id, source_type, source_id) '
       'WHERE deleted_at IS NULL '
       'AND source_type IS NOT NULL '
       'AND source_id IS NOT NULL',

@@ -33,7 +33,7 @@ class GetCustomerById {
 class CreateCustomer {
   const CreateCustomer(
     this._repository, {
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
   }) : _guard = permissionGuard;
 
   final CustomerRepository _repository;
@@ -48,7 +48,7 @@ class CreateCustomer {
 class UpdateCustomer {
   const UpdateCustomer(
     this._repository, {
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
   }) : _guard = permissionGuard;
 
   final CustomerRepository _repository;
@@ -63,7 +63,7 @@ class UpdateCustomer {
 class DeleteCustomer {
   const DeleteCustomer(
     this._repository, {
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
   }) : _guard = permissionGuard;
 
   final CustomerRepository _repository;
@@ -78,7 +78,7 @@ class DeleteCustomer {
 class UpsertCustomerFromExternal {
   const UpsertCustomerFromExternal(
     this._repository, {
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
   }) : _guard = permissionGuard;
 
   final CustomerRepository _repository;
@@ -93,7 +93,7 @@ class UpsertCustomerFromExternal {
 class UpsertCustomers {
   const UpsertCustomers(
     this._repository, {
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
   }) : _guard = permissionGuard;
 
   final CustomerRepository _repository;

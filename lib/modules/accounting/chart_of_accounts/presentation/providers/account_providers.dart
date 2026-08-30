@@ -78,7 +78,7 @@ final deactivateAccountUseCaseProvider = Provider<DeactivateAccount>((ref) {
 final softDeleteAccountUseCaseProvider = Provider<SoftDeleteAccount>((ref) {
   return SoftDeleteAccount(
     ref.watch(accountRepositoryProvider),
-    ref.watch(permissionGuardProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
   );
 });
 

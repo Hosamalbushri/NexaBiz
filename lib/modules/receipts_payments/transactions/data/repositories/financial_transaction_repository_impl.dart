@@ -19,18 +19,31 @@ import 'package:stock_count/modules/receipts_payments/shared/data/database/recei
 
 import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 
+import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
+import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+
+import 'package:stock_count/core/permissions/permission_guard.dart';
+import 'package:stock_count/modules/receipts_payments/permissions/receipts_payments_permission_package.dart';
+
 class FinancialTransactionRepositoryImpl
     implements FinancialTransactionRepository {
   FinancialTransactionRepositoryImpl(
     this._db, {
+    AccountingPeriodValidator? periodValidator,
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
     SyncQueue? syncQueue,
     String Function()? readCompanyId,
-  }) : _syncQueue = syncQueue,
+  }) : _periodValidator = periodValidator,
+       _permissionGuard = permissionGuard,
+       _syncQueue = syncQueue,
        _readCompanyId = readCompanyId;
 
   final ReceiptsPaymentsDatabase _db;
+  final AccountingPeriodValidator? _periodValidator;
+  final PermissionGuard _permissionGuard;
   final SyncQueue? _syncQueue;
   final String Function()? _readCompanyId;
+
 
   static const entityType = 'financial_transaction';
 
@@ -291,7 +304,14 @@ class FinancialTransactionRepositoryImpl
     FinancialTransactionDraft draft, {
     required String transactionNumber,
   }) async {
+    if (draft.documentStatus == TransactionStatus.posted) {
+      _permissionGuard.requireAny(ReceiptsPaymentsPermissions.postFor(draft.transactionType));
+    } else {
+      _permissionGuard.requireAny(ReceiptsPaymentsPermissions.createFor(draft.transactionType));
+    }
+    await _periodValidator?.assertEntryAllowed(draft.transactionDate);
     final now = DateTime.now().toUtc();
+
     final uuid = generateUuidV4();
     final id = await _db.into(_db.financialTransactions).insert(
           FinancialTransactionsCompanion.insert(
@@ -353,6 +373,13 @@ class FinancialTransactionRepositoryImpl
         FinancialTransactionException.notFound,
       );
     }
+    if (existing.documentStatus == TransactionStatus.posted) {
+      throw const JournalException(JournalException.postedImmutable);
+    }
+    await _periodValidator?.assertMutationAllowed(
+      entryDate: draft.transactionDate,
+      originalDate: existing.transactionDate,
+    );
     final now = DateTime.now().toUtc();
     await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id) & _scoped(t)))
         .write(
@@ -408,6 +435,7 @@ class FinancialTransactionRepositoryImpl
         FinancialTransactionException.notFound,
       );
     }
+    await _periodValidator?.assertEntryAllowed(existing.transactionDate);
     final now = DateTime.now().toUtc();
     await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id) & _scoped(t)))
         .write(
@@ -437,6 +465,7 @@ class FinancialTransactionRepositoryImpl
         FinancialTransactionException.notFound,
       );
     }
+    await _periodValidator?.assertEntryAllowed(existing.transactionDate);
     final now = DateTime.now().toUtc();
     await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id) & _scoped(t)))
         .write(
@@ -466,6 +495,7 @@ class FinancialTransactionRepositoryImpl
         FinancialTransactionException.notFound,
       );
     }
+    await _periodValidator?.assertEntryAllowed(existing.transactionDate);
     final now = DateTime.now().toUtc();
     await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id) & _scoped(t)))
         .write(
@@ -491,6 +521,12 @@ class FinancialTransactionRepositoryImpl
   Future<void> softDelete(int id) async {
     final existing = await getById(id);
     if (existing == null) return;
+    _permissionGuard.requireAny(ReceiptsPaymentsPermissions.cancelFor(existing.transactionType));
+    if (existing.documentStatus == TransactionStatus.posted) {
+      throw const JournalException(JournalException.postedImmutable);
+    }
+
+    await _periodValidator?.assertEntryAllowed(existing.transactionDate);
     final now = DateTime.now().toUtc();
     await (_db.update(_db.financialTransactions)..where((t) => t.id.equals(id) & _scoped(t)))
         .write(

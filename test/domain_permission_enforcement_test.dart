@@ -1,21 +1,21 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/core/permissions/permission_guard.dart';
-import 'package:stock_count/modules/customers/domain/entities/customer.dart';
-import 'package:stock_count/modules/customers/domain/entities/customer_data_source.dart';
-import 'package:stock_count/modules/customers/domain/models/import_session.dart';
-import 'package:stock_count/modules/customers/domain/repositories/customer_repository.dart';
-import 'package:stock_count/modules/customers/domain/usecases/customer_usecases.dart';
+import 'package:stock_count/modules/customers/directory/domain/entities/customer.dart';
+import 'package:stock_count/modules/customers/directory/domain/entities/customer_data_source.dart';
+import 'package:stock_count/modules/customers/directory/domain/models/import_session.dart';
+import 'package:stock_count/modules/customers/directory/domain/repositories/customer_repository.dart';
+import 'package:stock_count/modules/customers/directory/domain/usecases/customer_usecases.dart';
 import 'package:stock_count/modules/customers/permissions/customers_permission_package.dart';
-import 'package:stock_count/modules/inventory/domain/entities/inventory_item.dart';
-import 'package:stock_count/modules/inventory/domain/entities/item_status.dart';
-import 'package:stock_count/modules/inventory/domain/entities/product.dart';
-import 'package:stock_count/modules/inventory/domain/entities/report_summary.dart';
-import 'package:stock_count/modules/inventory/domain/models/catalog_search_field.dart';
-import 'package:stock_count/modules/inventory/domain/models/paged_result.dart';
-import 'package:stock_count/modules/inventory/domain/repositories/inventory_repository.dart';
-import 'package:stock_count/modules/inventory/domain/repositories/product_repository.dart';
-import 'package:stock_count/modules/inventory/domain/usecases/inventory_usecases.dart';
-import 'package:stock_count/modules/inventory/domain/usecases/product_usecases.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/entities/inventory_item.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/entities/item_status.dart';
+import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/entities/report_summary.dart';
+import 'package:stock_count/modules/inventory/products/domain/models/catalog_search_field.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/models/paged_result.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/repositories/inventory_repository.dart';
+import 'package:stock_count/modules/inventory/products/domain/repositories/product_repository.dart';
+import 'package:stock_count/modules/inventory/stock_count/domain/usecases/inventory_usecases.dart';
+import 'package:stock_count/modules/inventory/products/domain/usecases/product_usecases.dart';
 import 'package:stock_count/modules/inventory/permissions/inventory_permission_package.dart';
 
 class _FakeProductRepository implements ProductRepository {

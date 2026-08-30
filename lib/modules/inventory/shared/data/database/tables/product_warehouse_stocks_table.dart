@@ -21,6 +21,6 @@ class ProductWarehouseStocks extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-        {itemCode, warehouseId},
+        {itemCode, warehouseId, companyId},
       ];
 }

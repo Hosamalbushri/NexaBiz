@@ -104,6 +104,10 @@ class SalesDatabase extends _$SalesDatabase {
       'CREATE INDEX IF NOT EXISTS idx_sale_payments_sale '
       'ON sale_payments (sale_uuid)',
     );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_sales_status_date '
+      'ON sales (company_id, sale_status, sale_date) WHERE deleted_at IS NULL',
+    );
   }
 
   static QueryExecutor _openConnection(String name) {

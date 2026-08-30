@@ -139,6 +139,7 @@ class AccountingEntryBuilder {
       await _validationService.assertCanPost(debitRef.accountUuid);
       await _validationService.assertCanPost(revenueRef.accountUuid);
 
+      final rate = sale.exchangeRate <= 0 ? 1.0 : sale.exchangeRate;
       final lines = <JournalLineDraft>[];
       int sortOrder = 1;
 
@@ -149,6 +150,7 @@ class AccountingEntryBuilder {
             debit: netAmount,
             credit: 0.0,
             currencyCode: sale.currencyCode,
+            exchangeRateToBase: rate,
             lineDescription: 'مبيعات فاتورة ${sale.saleNumber}',
             sortOrder: sortOrder++,
           ),
@@ -164,6 +166,7 @@ class AccountingEntryBuilder {
               debit: discountAmount,
               credit: 0.0,
               currencyCode: sale.currencyCode,
+              exchangeRateToBase: rate,
               lineDescription: 'خصم مبيعات فاتورة ${sale.saleNumber}',
               sortOrder: sortOrder++,
             ),
@@ -178,6 +181,7 @@ class AccountingEntryBuilder {
           debit: 0.0,
           credit: grossRevenue,
           currencyCode: sale.currencyCode,
+          exchangeRateToBase: rate,
           lineDescription: 'إيراد مبيعات فاتورة ${sale.saleNumber}',
           sortOrder: sortOrder++,
         ),

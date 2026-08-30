@@ -42,7 +42,7 @@ class GetProductByBarcode {
 class CreateProduct {
   const CreateProduct(
     this._repository, {
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
   }) : _guard = permissionGuard;
 
   final ProductRepository _repository;
@@ -57,7 +57,7 @@ class CreateProduct {
 class UpdateProduct {
   const UpdateProduct(
     this._repository, {
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
   }) : _guard = permissionGuard;
 
   final ProductRepository _repository;
@@ -72,7 +72,7 @@ class UpdateProduct {
 class DeleteProduct {
   const DeleteProduct(
     this._repository, {
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
   }) : _guard = permissionGuard;
 
   final ProductRepository _repository;
@@ -87,7 +87,7 @@ class DeleteProduct {
 class UpsertProducts {
   const UpsertProducts(
     this._repository, {
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
   }) : _guard = permissionGuard;
 
   final ProductRepository _repository;

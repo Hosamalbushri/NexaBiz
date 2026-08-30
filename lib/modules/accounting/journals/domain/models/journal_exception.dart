@@ -18,6 +18,7 @@ class JournalException implements Exception {
   static const String notPosted = 'not_posted';
   static const String alreadyReversed = 'already_reversed';
   static const String debitAccountMissing = 'debit_account_missing';
+  static const String insufficientStock = 'insufficient_stock';
 
   final String code;
   final String? message;

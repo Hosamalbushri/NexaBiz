@@ -46,7 +46,80 @@ abstract final class InventoryPermissions {
     'inventory.products.view',
     'products.view',
   ];
+  static const receiptsView = [
+    'inventory.receipts.view',
+    'inventory.view',
+  ];
+  static const receiptsCreate = [
+    'inventory.receipts.create',
+    'inventory.create',
+  ];
+  static const receiptsUpdate = [
+    'inventory.receipts.update',
+    'inventory.update',
+  ];
+  static const receiptsDelete = [
+    'inventory.receipts.delete',
+    'inventory.delete',
+  ];
+  static const receiptsPost = [
+    'inventory.receipts.post',
+    'inventory.receipts.create',
+    'inventory.create',
+  ];
+  static const receiptsReverse = [
+    'inventory.receipts.reverse',
+    'inventory.receipts.delete',
+    'inventory.delete',
+  ];
+  static const issuesView = [
+    'inventory.issues.view',
+    'inventory.view',
+  ];
+  static const issuesCreate = [
+    'inventory.issues.create',
+    'inventory.create',
+  ];
+  static const issuesUpdate = [
+    'inventory.issues.update',
+    'inventory.update',
+  ];
+  static const issuesDelete = [
+    'inventory.issues.delete',
+    'inventory.delete',
+  ];
+  static const issuesPost = [
+    'inventory.issues.post',
+    'inventory.issues.create',
+    'inventory.create',
+  ];
+  static const issuesReverse = [
+    'inventory.issues.reverse',
+    'inventory.issues.delete',
+    'inventory.delete',
+  ];
+
+  static const transfersView = ['inventory.transfers.view', 'inventory.view'];
+  static const transfersCreate = ['inventory.transfers.create', 'inventory.create'];
+  static const transfersUpdate = ['inventory.transfers.update', 'inventory.update'];
+  static const transfersDelete = ['inventory.transfers.delete', 'inventory.delete'];
+  static const transfersPost = ['inventory.transfers.post', 'inventory.create'];
+  static const transfersReverse = ['inventory.transfers.reverse', 'inventory.delete'];
+
+  static const returnsView = ['inventory.returns.view', 'inventory.view'];
+  static const returnsCreate = ['inventory.returns.create', 'inventory.create'];
+  static const returnsUpdate = ['inventory.returns.update', 'inventory.update'];
+  static const returnsDelete = ['inventory.returns.delete', 'inventory.delete'];
+  static const returnsPost = ['inventory.returns.post', 'inventory.create'];
+  static const returnsReverse = ['inventory.returns.reverse', 'inventory.delete'];
+
+  static const adjustCost = [
+    'inventory.stock_count.adjust',
+    'inventory.cost.adjust',
+    'inventory.adjust',
+  ];
 }
+
 
 /// Inventory RBAC package — Stock count + Products services.
 PermissionPackageDef inventoryPermissionPackage() {

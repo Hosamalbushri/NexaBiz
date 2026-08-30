@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/core/database/tenant_database_name.dart';
@@ -66,19 +67,31 @@ final getCustomerByIdUseCaseProvider = Provider<GetCustomerById>((ref) {
 });
 
 final createCustomerUseCaseProvider = Provider<CreateCustomer>((ref) {
-  return CreateCustomer(ref.watch(customerRepositoryProvider));
+  return CreateCustomer(
+    ref.watch(customerRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
+  );
 });
 
 final updateCustomerUseCaseProvider = Provider<UpdateCustomer>((ref) {
-  return UpdateCustomer(ref.watch(customerRepositoryProvider));
+  return UpdateCustomer(
+    ref.watch(customerRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
+  );
 });
 
 final deleteCustomerUseCaseProvider = Provider<DeleteCustomer>((ref) {
-  return DeleteCustomer(ref.watch(customerRepositoryProvider));
+  return DeleteCustomer(
+    ref.watch(customerRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
+  );
 });
 
 final upsertCustomersUseCaseProvider = Provider<UpsertCustomers>((ref) {
-  return UpsertCustomers(ref.watch(customerRepositoryProvider));
+  return UpsertCustomers(
+    ref.watch(customerRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
+  );
 });
 
 final ensureCustomerAccountLinksProvider = Provider<EnsureCustomerAccountLinks>(

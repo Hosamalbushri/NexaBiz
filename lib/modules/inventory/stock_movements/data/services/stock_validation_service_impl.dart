@@ -1,10 +1,19 @@
+import 'package:drift/drift.dart';
+import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import '../../domain/services/stock_validation_service.dart';
 
 class StockValidationServiceImpl implements StockValidationService {
-  StockValidationServiceImpl(this._db);
+  StockValidationServiceImpl(
+    this._db, [
+    String Function()? readCompanyId,
+  ]) : _readCompanyId = readCompanyId;
 
   final InventoryDatabase _db;
+  final String Function()? _readCompanyId;
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
 
   @override
   Future<double> getPostedBalance({
@@ -12,9 +21,11 @@ class StockValidationServiceImpl implements StockValidationService {
     String? warehouseId,
   }) async {
     final query = _db.select(_db.inventoryCostLayers)
-      ..where((tbl) => tbl.itemCode.equals(itemCode))
-      ..where((tbl) => tbl.closed.equals(0))
-      ..where((tbl) => tbl.deletedAt.isNull());
+      ..where((tbl) =>
+          tbl.itemCode.equals(itemCode) &
+          tbl.companyId.equals(_currentCompanyId) &
+          tbl.closed.equals(0) &
+          tbl.deletedAt.isNull());
 
     if (warehouseId != null && warehouseId.isNotEmpty) {
       query.where((tbl) => tbl.warehouseId.equals(warehouseId));

@@ -9,6 +9,7 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/entities/st
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_receipt.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 
+import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_returns_repository_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_return.dart';
 
@@ -241,6 +242,7 @@ void main() {
         receiptNumber: 'REC-001',
         supplier: 'Test Supplier',
         receiptDate: DateTime.utc(2026, 1, 1),
+        status: InventoryDocumentStatus.posted,
         lines: [
           StockMovementLine(
             id: rcptLineId,
@@ -256,6 +258,17 @@ void main() {
       );
 
       await repo.saveReceipt(receipt);
+      await service.createLayer(
+        CostLayer(
+          id: generateUuidV4(),
+          itemCode: 'ITEM-REPO',
+          movementUuid: rcptId,
+          movementType: 'receipt',
+          receivedDate: DateTime.utc(2026, 1, 1),
+          receivedQty: 20,
+          unitCost: 50,
+        ),
+      );
 
       final openLayers = await service.getOpenLayers('ITEM-REPO');
       expect(openLayers.length, 1);
@@ -265,6 +278,7 @@ void main() {
         id: issueId,
         issueNumber: 'ISS-001',
         issueDate: DateTime.utc(2026, 1, 2),
+        status: InventoryDocumentStatus.posted,
         lines: [
           StockMovementLine(
             id: issueLineId,
@@ -273,13 +287,20 @@ void main() {
             itemCode: 'ITEM-REPO',
             itemName: 'Repo Item',
             quantity: 5,
-            unitCost: 0, // Should be updated by cost layer
-            totalCost: 0,
+            unitCost: 50,
+            totalCost: 250,
           ),
         ],
       );
 
       await repo.saveIssue(issue);
+      await service.consumeLayers(
+        itemCode: 'ITEM-REPO',
+        quantity: 5,
+        method: CostValuationMethod.fifo,
+        issueLineUuid: issueLineId,
+        movementType: 'issue',
+      );
 
       final savedIssue = await repo.getIssueById(issueId);
       expect(savedIssue, isNotNull);
@@ -301,6 +322,7 @@ void main() {
         returnNumber: 'SR-001',
         returnType: StockReturnType.salesReturn,
         returnDate: DateTime.utc(2026, 1, 3),
+        status: InventoryDocumentStatus.posted,
         lines: [
           StockMovementLine(
             id: salesReturnLineId,
@@ -331,6 +353,7 @@ void main() {
         returnNumber: 'PR-001',
         returnType: StockReturnType.purchaseReturn,
         returnDate: DateTime.utc(2026, 1, 4),
+        status: InventoryDocumentStatus.posted,
         lines: [
           StockMovementLine(
             id: purchaseReturnLineId,

@@ -3,7 +3,7 @@ import 'package:drift/drift.dart';
 @DataClassName('WarehouseRow')
 class Warehouses extends Table {
   TextColumn get uuid => text()();
-  TextColumn get code => text().unique()();
+  TextColumn get code => text()();
   TextColumn get name => text()();
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
@@ -21,4 +21,9 @@ class Warehouses extends Table {
 
   @override
   Set<Column> get primaryKey => {uuid};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {companyId, code},
+      ];
 }

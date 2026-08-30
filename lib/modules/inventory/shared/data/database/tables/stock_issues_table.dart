@@ -8,7 +8,7 @@ class StockIssues extends Table {
   /// Client-generated UUID for offline-safe identity / sync.
   TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
 
-  TextColumn get issueNumber => text().withLength(min: 1, max: 128).unique()();
+  TextColumn get issueNumber => text().withLength(min: 1, max: 128)();
 
   TextColumn get destination => text().nullable()();
 
@@ -46,7 +46,7 @@ class StockIssues extends Table {
   TextColumn get companyId => text().nullable()();
 
   /// Document posting status ('draft', 'posted', 'cancelled')
-  TextColumn get status => text().withDefault(const Constant('posted'))();
+  TextColumn get status => text().withDefault(const Constant('draft'))();
 
   /// Epoch UTC timestamp when the document was posted
   IntColumn get postedAt => integer().nullable()();

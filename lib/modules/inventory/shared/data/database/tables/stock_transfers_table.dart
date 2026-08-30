@@ -3,7 +3,7 @@ import 'package:drift/drift.dart';
 @DataClassName('StockTransferRow')
 class StockTransfers extends Table {
   TextColumn get uuid => text()();
-  TextColumn get transferNumber => text().unique()();
+  TextColumn get transferNumber => text()();
   TextColumn get fromWarehouseId => text()();
   TextColumn get toWarehouseId => text()();
   IntColumn get transferDate => integer()();

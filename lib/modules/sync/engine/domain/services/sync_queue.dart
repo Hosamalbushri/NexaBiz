@@ -128,10 +128,11 @@ class SyncQueue {
   static int _entityTypePriority(String entityType) {
     return switch (entityType) {
       'company_profile' || 'fiscal_year' || 'currency_rate' => 1,
-      'account' || 'customer' || 'product' => 2,
-      'inventory_item' || 'sale' || 'receipt_payment' => 3,
-      'journal_entry' => 4,
-      _ => 5,
+      'account' || 'customer' || 'product' || 'warehouse' => 2,
+      'stock_receipt' || 'purchase_return' || 'sales_return' => 3,
+      'stock_issue' || 'stock_transfer' || 'sales_invoice' || 'inventory_item' || 'sale' || 'receipt_payment' => 4,
+      'inventory_reversal' || 'journal_entry' => 5,
+      _ => 6,
     };
   }
 

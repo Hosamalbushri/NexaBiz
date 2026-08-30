@@ -29,38 +29,42 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/services/po
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_engine.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/stock_validation_service.dart';
 
+import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+
 final stockMovementsRepositoryProvider = Provider<StockMovementsRepository>((ref) {
   final db = ref.watch(inventoryDatabaseProvider);
   final accountingPoster = ref.watch(inventoryAccountingPosterProvider);
   return StockMovementsRepositoryImpl(
     db: db,
     accountingPoster: accountingPoster,
+    readCompanyId: () => ref.read(currentCompanyIdProvider),
   );
 });
 
 final stockMovementUseCasesProvider = Provider<StockMovementUseCases>((ref) {
   final repo = ref.watch(stockMovementsRepositoryProvider);
-  return StockMovementUseCases(repo);
+  final guard = ref.watch(permissionGuardProvider);
+  return StockMovementUseCases(repo, permissionGuard: guard);
 });
 
 final stockReceiptsStreamProvider = StreamProvider<List<StockReceipt>>((ref) {
-  final repo = ref.watch(stockMovementsRepositoryProvider);
-  return repo.watchAllReceipts();
+  final usecases = ref.watch(stockMovementUseCasesProvider);
+  return usecases.watchAllReceipts();
 });
 
 final stockReceiptByIdProvider = FutureProvider.family<StockReceipt?, String>((ref, id) async {
-  final repo = ref.watch(stockMovementsRepositoryProvider);
-  return repo.getReceiptById(id);
+  final usecases = ref.watch(stockMovementUseCasesProvider);
+  return usecases.getReceiptById(id);
 });
 
 final stockIssuesStreamProvider = StreamProvider<List<StockIssue>>((ref) {
-  final repo = ref.watch(stockMovementsRepositoryProvider);
-  return repo.watchAllIssues();
+  final usecases = ref.watch(stockMovementUseCasesProvider);
+  return usecases.watchAllIssues();
 });
 
 final stockIssueByIdProvider = FutureProvider.family<StockIssue?, String>((ref, id) async {
-  final repo = ref.watch(stockMovementsRepositoryProvider);
-  return repo.getIssueById(id);
+  final usecases = ref.watch(stockMovementUseCasesProvider);
+  return usecases.getIssueById(id);
 });
 
 final inventoryVoucherBookPortProvider = Provider<InventoryVoucherBookPort>((ref) {

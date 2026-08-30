@@ -41,10 +41,15 @@ class ProductScanResolver {
     final payload = qrPayloadBuilder.tryDecode(trimmed);
     if (payload != null) {
       final fromCatalog = await _resolveFromPayload(payload);
+      if (fromCatalog == null) {
+        // UNTRUSTED QR PAYLOAD WITH UNKNOWN PRODUCT:
+        // Do NOT construct trusted Product entity from untrusted QR payload fields.
+        return null;
+      }
       return ProductScanResolution(
-        product: fromCatalog ?? _productFromPayload(payload),
+        product: fromCatalog,
         fromProductQr: true,
-        fromCatalog: fromCatalog != null,
+        fromCatalog: true,
         payload: payload,
       );
     }
@@ -71,9 +76,11 @@ class ProductScanResolver {
   }
 
   Future<Product?> _resolveFromPayload(ProductQrPayload payload) async {
-    final byId = await _repository.getById(payload.id);
-    if (byId != null) {
-      return byId;
+    if (payload.id > 0) {
+      final byId = await _repository.getById(payload.id);
+      if (byId != null) {
+        return byId;
+      }
     }
 
     final barcode = payload.barcode?.trim();
@@ -84,22 +91,11 @@ class ProductScanResolver {
       }
     }
 
-    return _repository.getByItemCode(payload.itemCode);
-  }
+    final itemCode = payload.itemCode.trim();
+    if (itemCode.isNotEmpty) {
+      return _repository.getByItemCode(itemCode);
+    }
 
-  /// Offline fallback when the QR is valid but the catalog row is missing.
-  Product _productFromPayload(ProductQrPayload payload) {
-    final now = DateTime.now();
-    return Product(
-      id: payload.id,
-      uuid: '00000000-0000-4000-8000-${payload.id.toString().padLeft(12, '0')}',
-      itemCode: payload.itemCode,
-      name: payload.name,
-      barcode: payload.barcode,
-      packSize: payload.packSize,
-      price: payload.price,
-      createdAt: now,
-      updatedAt: now,
-    );
+    return null;
   }
 }

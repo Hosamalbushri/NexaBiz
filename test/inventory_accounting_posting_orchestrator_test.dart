@@ -238,16 +238,19 @@ void main() {
       final unpostResult = await orchestrator.unpostReceipt(receipt: receipt);
       expect(unpostResult, isA<OrchestrationSuccess>());
 
-      // 3. Verify original entry is deleted (voided/soft deleted)
-      final deletedEntry = await journalRepo.findBySource(
+      // 3. Verify original entry is no longer returned as active source entry
+      final activeEntry = await journalRepo.findBySource(
         sourceType: 'stock_receipt',
         sourceId: receiptId,
       );
-      expect(deletedEntry, isNull);
+      expect(activeEntry, isNull);
 
-      // Verify no reversal entry was created
-      final allEntries = await journalRepo.listHeaders();
-      expect(allEntries.isEmpty, isTrue);
+      // Verify reversal entry exists in audit trail
+      final reversalEntry = await journalRepo.findBySource(
+        sourceType: JournalPostingService.reverseSourceType,
+        sourceId: postedEntry!.uuid,
+      );
+      expect(reversalEntry, isNotNull);
     });
 
     test('unposting stock issue deletes journal entry directly', () async {
@@ -360,11 +363,17 @@ void main() {
       final unpostIssueResult = await orchestrator.unpostIssue(issue: issue);
       expect(unpostIssueResult, isA<OrchestrationSuccess>());
 
-      final deletedIssueJournal = await journalRepo.findBySource(
+      final activeIssueJournal = await journalRepo.findBySource(
         sourceType: 'stock_issue',
         sourceId: issueId,
       );
-      expect(deletedIssueJournal, isNull);
+      expect(activeIssueJournal, isNull);
+
+      final reversalIssueJournal = await journalRepo.findBySource(
+        sourceType: JournalPostingService.reverseSourceType,
+        sourceId: issueJournal!.uuid,
+      );
+      expect(reversalIssueJournal, isNotNull);
     });
 
     test('draft journal entry with isPosted = false is NOT saved into database', () async {

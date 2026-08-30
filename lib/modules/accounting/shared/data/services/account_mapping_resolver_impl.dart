@@ -26,23 +26,16 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
   Future<Account?> _findAccountByCodeOrKey(String code, String systemKey) async {
     final all = await _accountRepository.getAll();
 
-    // 1. By code
+    // 1. By exact code
     for (final acc in all) {
-      if (acc.accountCode == code && !acc.isGroup && acc.canPost) {
+      if (acc.accountCode == code && !acc.isGroup && acc.canPost && acc.isActive) {
         return acc;
       }
     }
 
     // 2. By system key
     for (final acc in all) {
-      if (AccountLabels.systemKeyOf(acc) == systemKey && !acc.isGroup && acc.canPost) {
-        return acc;
-      }
-    }
-
-    // 3. Fallback matching code prefix
-    for (final acc in all) {
-      if (acc.accountCode.startsWith(code) && !acc.isGroup && acc.canPost) {
+      if (AccountLabels.systemKeyOf(acc) == systemKey && !acc.isGroup && acc.canPost && acc.isActive) {
         return acc;
       }
     }

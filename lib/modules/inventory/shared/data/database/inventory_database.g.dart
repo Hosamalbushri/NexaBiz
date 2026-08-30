@@ -1076,7 +1076,6 @@ class $StockReceiptsTable extends StockReceipts
     ),
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
   static const VerificationMeta _supplierMeta = const VerificationMeta(
     'supplier',
@@ -2152,7 +2151,6 @@ class $StockIssuesTable extends StockIssues
     ),
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
   static const VerificationMeta _destinationMeta = const VerificationMeta(
     'destination',
@@ -2329,7 +2327,7 @@ class $StockIssuesTable extends StockIssues
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultValue: const Constant('posted'),
+    defaultValue: const Constant('draft'),
   );
   static const VerificationMeta _postedAtMeta = const VerificationMeta(
     'postedAt',
@@ -6867,7 +6865,6 @@ class $WarehousesTable extends Warehouses
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -7159,6 +7156,10 @@ class $WarehousesTable extends Warehouses
 
   @override
   Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, code},
+  ];
   @override
   WarehouseRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -7977,7 +7978,7 @@ class $ProductWarehouseStocksTable extends ProductWarehouseStocks
   Set<GeneratedColumn> get $primaryKey => {uuid};
   @override
   List<Set<GeneratedColumn>> get uniqueKeys => [
-    {itemCode, warehouseId},
+    {itemCode, warehouseId, companyId},
   ];
   @override
   ProductWarehouseStockRow map(
@@ -8473,7 +8474,6 @@ class $StockTransfersTable extends StockTransfers
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
   static const VerificationMeta _fromWarehouseIdMeta = const VerificationMeta(
     'fromWarehouseId',
@@ -10216,7 +10216,7 @@ class $CategoriesTable extends Categories
   Set<GeneratedColumn> get $primaryKey => {uuid};
   @override
   List<Set<GeneratedColumn>> get uniqueKeys => [
-    {warehouseId, code},
+    {companyId, warehouseId, code},
   ];
   @override
   CategoryRow map(Map<String, dynamic> data, {String? tablePrefix}) {

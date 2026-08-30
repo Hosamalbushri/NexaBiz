@@ -209,6 +209,15 @@ class _AppReportQueryFilterPanelState
     );
   }
 
+  void _handlePrimaryAction() {
+    _submitQuery();
+    if (widget.onViewAsTable != null) {
+      widget.onViewAsTable!();
+    } else if (widget.onPrint != null) {
+      widget.onPrint!();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -527,7 +536,7 @@ class _AppReportQueryFilterPanelState
                 // 5. FIFTH ROW: Bottom Main Action Button ("طباعة التقرير")
                 Row(
                   children: [
-                    // Main Primary Action Button: "طباعة التقرير" (Print Report)
+                    // Primary Action Button: "عرض التقرير / طباعة"
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
@@ -542,25 +551,34 @@ class _AppReportQueryFilterPanelState
                         ),
                         child: AppButton(
                           label: widget.applyButtonLabel ??
-                              (isArabic ? 'طباعة' : 'Print'),
-                          icon: Icons.print_rounded,
+                              (isArabic ? 'عرض التقرير' : 'View Report'),
+                          icon: Icons.analytics_rounded,
                           isLoading: widget.isLoading,
-                          onPressed: widget.isLoading ? null : _submitQuery,
+                          onPressed: widget.isLoading ? null : _handlePrimaryAction,
                         ),
                       ),
                     ),
-                    if (widget.onViewAsTable != null) ...[
+                    if (widget.onPrint != null && widget.onViewAsTable != null) ...[
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: widget.onViewAsTable,
-                          icon: Icon(
-                            Icons.table_chart_rounded,
-                            size: 18,
-                            color: scheme.secondary,
-                          ),
+                          onPressed: widget.isLoading ? null : widget.onPrint,
+                          icon: widget.isLoading
+                              ? SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: scheme.secondary,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.print_rounded,
+                                  size: 18,
+                                  color: scheme.secondary,
+                                ),
                           label: Text(
-                            isArabic ? 'عرض كجدول' : 'View Table',
+                            isArabic ? 'طباعة / PDF' : 'Print / PDF',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,

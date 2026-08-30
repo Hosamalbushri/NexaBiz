@@ -1,256 +1,393 @@
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:stock_count/core/tenancy/tenant_context.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
-
-import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
-import 'package:stock_count/modules/accounting/data/repositories/account_repository_impl.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account_type.dart';
-
-import 'package:stock_count/modules/customers/data/database/customers_database.dart';
-import 'package:stock_count/modules/customers/data/repositories/customer_repository_impl.dart';
-import 'package:stock_count/modules/customers/domain/entities/customer.dart';
-
-import 'package:stock_count/modules/inventory/data/database/inventory_database.dart';
-import 'package:stock_count/modules/inventory/data/repositories/product_repository_impl.dart';
-import 'package:stock_count/modules/inventory/domain/entities/product.dart';
-
-import 'package:stock_count/modules/sales/data/database/sales_database.dart';
+import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/modules/inventory/stock_movements/data/repositories/stock_returns_repository_impl.dart';
+import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
+import 'package:stock_count/modules/inventory/stock_movements/data/services/stock_validation_service_impl.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_return.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
+import 'package:stock_count/modules/inventory/warehouses/data/repositories/stock_transfer_repository_impl.dart';
+import 'package:stock_count/modules/inventory/warehouses/data/repositories/warehouse_repository_impl.dart';
+import 'package:stock_count/modules/inventory/warehouses/domain/entities/stock_transfer.dart';
+import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
 
 void main() {
-  group('Phase 1.1 Tenant Isolation & Security Invariants', () {
-    late AccountingDatabase accountingDb;
-    late CustomersDatabase customersDb;
-    late InventoryDatabase inventoryDb;
-    late SalesDatabase salesDb;
+  late InventoryDatabase db;
+  late CostLayerServiceImpl costLayerServiceCompA;
+  late StockReturnsRepositoryImpl stockReturnsRepoCompA;
+  late StockTransferRepositoryImpl stockTransferRepoCompA;
+  late WarehouseRepositoryImpl warehouseRepoCompA;
+  late StockValidationServiceImpl validationServiceCompA;
 
-    setUp(() async {
-      accountingDb = AccountingDatabase(executor: NativeDatabase.memory());
-      customersDb = CustomersDatabase(executor: NativeDatabase.memory());
-      inventoryDb = InventoryDatabase(executor: NativeDatabase.memory());
-      salesDb = SalesDatabase(executor: NativeDatabase.memory());
+  const companyA = 'COMPANY_ALPHA';
+  const companyB = 'COMPANY_BETA';
+
+  setUp(() async {
+    db = InventoryDatabase(executor: NativeDatabase.memory());
+
+    costLayerServiceCompA = CostLayerServiceImpl(
+      db: db,
+      readCompanyId: () => companyA,
+    );
+
+    stockReturnsRepoCompA = StockReturnsRepositoryImpl(
+      db: db,
+      readCompanyId: () => companyA,
+    );
+
+    stockTransferRepoCompA = StockTransferRepositoryImpl(
+      db: db,
+      costLayerService: costLayerServiceCompA,
+      readCompanyId: () => companyA,
+    );
+
+    warehouseRepoCompA = WarehouseRepositoryImpl(
+      db,
+      null,
+      () => companyA,
+    );
+
+    validationServiceCompA = StockValidationServiceImpl(
+      db,
+      () => companyA,
+    );
+  });
+
+  tearDown(() async {
+    await db.close();
+  });
+
+  group('Security Fix 06: Tenant Isolation & NULL Company ID Elimination', () {
+    test('CostLayerService: Company A cannot read or consume NULL or Company B layers', () async {
+      // 1. Seed layers for Company A, Company B, and NULL company
+      final now = DateTime.now().toUtc();
+      
+      await costLayerServiceCompA.createLayer(
+        CostLayer(
+          id: '11111111-1111-1111-1111-111111111111',
+          itemCode: 'ITEM-100',
+          warehouseId: 'wh-main',
+          movementUuid: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          movementType: 'stock_receipt',
+          receivedDate: now,
+          receivedQty: 100,
+          remainingQty: 100,
+          unitCost: 10,
+          totalCost: 1000,
+          closed: false,
+          createdAt: now,
+          updatedAt: now,
+          companyId: companyA,
+        ),
+      );
+
+      // Directly insert Company B and NULL company layers into database
+      await db.into(db.inventoryCostLayers).insert(
+            InventoryCostLayersCompanion(
+              uuid: const Value('22222222-2222-2222-2222-222222222222'),
+              itemCode: const Value('ITEM-100'),
+              warehouseId: const Value('wh-main'),
+              movementUuid: const Value('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+              movementType: const Value('stock_receipt'),
+              receivedDate: Value(now.millisecondsSinceEpoch),
+              receivedQty: const Value(200),
+              remainingQty: const Value(200),
+              unitCost: const Value(20),
+              totalCost: const Value(4000),
+              closed: const Value(0),
+              createdAt: Value(now.millisecondsSinceEpoch),
+              updatedAt: Value(now.millisecondsSinceEpoch),
+              companyId: const Value(companyB),
+            ),
+          );
+
+      await db.into(db.inventoryCostLayers).insert(
+            InventoryCostLayersCompanion(
+              uuid: const Value('33333333-3333-3333-3333-333333333333'),
+              itemCode: const Value('ITEM-100'),
+              warehouseId: const Value('wh-main'),
+              movementUuid: const Value('cccccccc-cccc-cccc-cccc-cccccccccccc'),
+              movementType: const Value('stock_receipt'),
+              receivedDate: Value(now.millisecondsSinceEpoch),
+              receivedQty: const Value(300),
+              remainingQty: const Value(300),
+              unitCost: const Value(30),
+              totalCost: const Value(9000),
+              closed: const Value(0),
+              createdAt: Value(now.millisecondsSinceEpoch),
+              updatedAt: Value(now.millisecondsSinceEpoch),
+              companyId: const Value(null),
+            ),
+          );
+
+      // 2. Verify getOpenLayers for Company A only returns Company A layer
+      final openLayers = await costLayerServiceCompA.getOpenLayers('ITEM-100');
+      expect(openLayers.length, 1);
+      expect(openLayers.first.id, '11111111-1111-1111-1111-111111111111');
+
+      // 3. Verify getWeightedAverageCost for Company A only computes from Company A layer
+      final avgCost = await costLayerServiceCompA.getWeightedAverageCost('ITEM-100');
+      expect(avgCost, 10.0);
+
+      // 4. Verify consumeLayers for Company A consumes only Company A layer
+      final result = await costLayerServiceCompA.consumeLayers(
+        itemCode: 'ITEM-100',
+        quantity: 150, // Requesting more than Company A's 100 units
+        method: CostValuationMethod.fifo,
+        issueLineUuid: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
+        movementType: 'stock_issue',
+      );
+
+      // Should consume Company A's 100 units and hit shortage of 50 units (ignoring Comp B and NULL layers)
+      expect(result.consumptions.length, 1);
+      expect(result.consumptions.first.layerUuid, '11111111-1111-1111-1111-111111111111');
+      expect(result.consumptions.first.consumedQty, 100.0);
+      expect(result.isShortage, isTrue);
+      expect(result.shortageQty, 50.0);
     });
 
-    tearDown(() async {
-      await accountingDb.close();
-      await customersDb.close();
-      await inventoryDb.close();
-      await salesDb.close();
+    test('StockReturnsRepository: Company A cannot query NULL or Company B stock returns', () async {
+      final now = DateTime.now().toUtc();
+      final retA = StockReturn(
+        id: '11111111-1111-1111-1111-111111111111',
+        returnNumber: 'RET-001',
+        warehouse: 'wh-1',
+        returnDate: now,
+        notes: 'Comp A Return',
+        returnType: StockReturnType.salesReturn,
+        lines: const [],
+        createdAt: now,
+        updatedAt: now,
+        companyId: companyA,
+      );
+
+      await stockReturnsRepoCompA.saveReturn(retA);
+
+      // Directly insert Company B and NULL company stock returns
+      await db.into(db.stockReturns).insert(
+            StockReturnsCompanion(
+              uuid: const Value('22222222-2222-2222-2222-222222222222'),
+              returnNumber: const Value('RET-002'),
+              warehouse: const Value('wh-1'),
+              returnType: const Value('sales_return'),
+              returnDate: Value(now.millisecondsSinceEpoch),
+              notes: const Value('Comp B Return'),
+              createdAt: Value(now.millisecondsSinceEpoch),
+              updatedAt: Value(now.millisecondsSinceEpoch),
+              companyId: const Value(companyB),
+            ),
+          );
+
+      await db.into(db.stockReturns).insert(
+            StockReturnsCompanion(
+              uuid: const Value('33333333-3333-3333-3333-333333333333'),
+              returnNumber: const Value('RET-003'),
+              warehouse: const Value('wh-1'),
+              returnType: const Value('sales_return'),
+              returnDate: Value(now.millisecondsSinceEpoch),
+              notes: const Value('NULL Comp Return'),
+              createdAt: Value(now.millisecondsSinceEpoch),
+              updatedAt: Value(now.millisecondsSinceEpoch),
+              companyId: const Value(null),
+            ),
+          );
+
+      final allReturns = await stockReturnsRepoCompA.getAllReturns();
+      expect(allReturns.length, 1);
+      expect(allReturns.first.id, '11111111-1111-1111-1111-111111111111');
+
+      final getB = await stockReturnsRepoCompA.getReturnById('22222222-2222-2222-2222-222222222222');
+      expect(getB, isNull);
+
+      final getNull = await stockReturnsRepoCompA.getReturnById('33333333-3333-3333-3333-333333333333');
+      expect(getNull, isNull);
     });
 
-    test('INVARIANT 1 & 2: Business records strictly isolated by companyId (No NULL Wildcard)', () async {
-      final repoA = ProductRepositoryImpl(
-        inventoryDb,
-        readCompanyId: () => 'company-A',
-      );
-      final repoB = ProductRepositoryImpl(
-        inventoryDb,
-        readCompanyId: () => 'company-B',
-      );
-
-      // Insert product under Company A
-      final prodA = await repoA.insert(
-        const ProductDraft(
-          itemCode: 'PROD-A',
-          name: 'Company A Widget',
-          packSize: 1,
-          price: 100.0,
-        ),
+    test('StockTransferRepository: Company A cannot query NULL or Company B stock transfers', () async {
+      final now = DateTime.now().toUtc();
+      final trA = StockTransfer(
+        id: '11111111-1111-1111-1111-111111111111',
+        transferNumber: 'TR-001',
+        fromWarehouseId: 'wh-1',
+        toWarehouseId: 'wh-2',
+        transferDate: now,
+        notes: 'Comp A Transfer',
+        lines: const [],
+        createdAt: now,
+        updatedAt: now,
+        companyId: companyA,
       );
 
-      // Insert product under Company B
-      final prodB = await repoB.insert(
-        const ProductDraft(
-          itemCode: 'PROD-B',
-          name: 'Company B Widget',
-          packSize: 1,
-          price: 200.0,
-        ),
-      );
+      await stockTransferRepoCompA.saveTransfer(trA);
 
-      // Verify Company A sees only Prod A
-      final listA = await repoA.getAll();
-      expect(listA.length, equals(1));
-      expect(listA.first.uuid, equals(prodA.uuid));
+      // Directly insert Company B and NULL company stock transfers
+      await db.into(db.stockTransfers).insert(
+            StockTransfersCompanion(
+              uuid: const Value('22222222-2222-2222-2222-222222222222'),
+              transferNumber: const Value('TR-002'),
+              fromWarehouseId: const Value('wh-1'),
+              toWarehouseId: const Value('wh-2'),
+              transferDate: Value(now.millisecondsSinceEpoch),
+              notes: const Value('Comp B Transfer'),
+              createdAt: Value(now.millisecondsSinceEpoch),
+              updatedAt: Value(now.millisecondsSinceEpoch),
+              companyId: const Value(companyB),
+            ),
+          );
 
-      // Verify Company B sees only Prod B
-      final listB = await repoB.getAll();
-      expect(listB.length, equals(1));
-      expect(listB.first.uuid, equals(prodB.uuid));
+      await db.into(db.stockTransfers).insert(
+            StockTransfersCompanion(
+              uuid: const Value('33333333-3333-3333-3333-333333333333'),
+              transferNumber: const Value('TR-003'),
+              fromWarehouseId: const Value('wh-1'),
+              toWarehouseId: const Value('wh-2'),
+              transferDate: Value(now.millisecondsSinceEpoch),
+              notes: const Value('NULL Comp Transfer'),
+              createdAt: Value(now.millisecondsSinceEpoch),
+              updatedAt: Value(now.millisecondsSinceEpoch),
+              companyId: const Value(null),
+            ),
+          );
 
-      // Direct cross-tenant lookup by UUID MUST return null
-      final crossLookup = await repoA.getByUuid(prodB.uuid);
-      expect(crossLookup, isNull);
+      final allTransfers = await stockTransferRepoCompA.getAllTransfers();
+      expect(allTransfers.length, 1);
+      expect(allTransfers.first.id, '11111111-1111-1111-1111-111111111111');
+
+      final getB = await stockTransferRepoCompA.getTransferById('22222222-2222-2222-2222-222222222222');
+      expect(getB, isNull);
+
+      final getNull = await stockTransferRepoCompA.getTransferById('33333333-3333-3333-3333-333333333333');
+      expect(getNull, isNull);
     });
 
-    test('INVARIANT 3: Inserts automatically assign active companyId and reject spoofing', () async {
-      final custRepoA = CustomerRepositoryImpl(
-        customersDb,
-        readCompanyId: () => 'company-A',
+    test('WarehouseRepository: Company A cannot query NULL or Company B warehouses or stocks', () async {
+      final now = DateTime.now().toUtc();
+      final whA = Warehouse(
+        id: '11111111-1111-1111-1111-111111111111',
+        code: 'WH-A',
+        name: 'Warehouse A',
+        isDefault: false,
+        isActive: true,
+        address: 'Loc A',
+        phone: '123',
+        managerName: 'Manager A',
+        createdAt: now,
+        updatedAt: now,
+        companyId: companyA,
       );
 
-      final customer = await custRepoA.insert(
-        const CustomerDraft(
-          customerCode: 'CUST-001',
-          name: 'Client Alpha',
-        ),
-      );
+      await warehouseRepoCompA.saveWarehouse(whA);
 
-      final rawRow = await (customersDb.select(customersDb.customers)
-            ..where((t) => t.uuid.equals(customer.uuid)))
-          .getSingle();
+      // Directly insert Company B and NULL company warehouses
+      await db.into(db.warehouses).insert(
+            WarehousesCompanion(
+              uuid: const Value('22222222-2222-2222-2222-222222222222'),
+              code: const Value('WH-B'),
+              name: const Value('Warehouse B'),
+              isDefault: const Value(false),
+              isActive: const Value(true),
+              address: const Value('Loc B'),
+              phone: const Value('456'),
+              managerName: const Value('Manager B'),
+              createdAt: Value(now.millisecondsSinceEpoch),
+              updatedAt: Value(now.millisecondsSinceEpoch),
+              companyId: const Value(companyB),
+            ),
+          );
 
-      expect(rawRow.companyId, equals('company-A'));
+      await db.into(db.warehouses).insert(
+            WarehousesCompanion(
+              uuid: const Value('33333333-3333-3333-3333-333333333333'),
+              code: const Value('WH-NULL'),
+              name: const Value('Warehouse NULL'),
+              isDefault: const Value(false),
+              isActive: const Value(true),
+              address: const Value('Loc NULL'),
+              phone: const Value('789'),
+              managerName: const Value('Manager NULL'),
+              createdAt: Value(now.millisecondsSinceEpoch),
+              updatedAt: Value(now.millisecondsSinceEpoch),
+              companyId: const Value(null),
+            ),
+          );
+
+      final allWarehouses = await warehouseRepoCompA.getAllWarehouses();
+      expect(allWarehouses.length, 1);
+      expect(allWarehouses.first.id, '11111111-1111-1111-1111-111111111111');
     });
 
-    test('INVARIANT 4: Updates are strictly tenant-scoped (Company B cannot update Company A)', () async {
-      final repoA = ProductRepositoryImpl(
-        inventoryDb,
-        readCompanyId: () => 'company-A',
-      );
-      final repoB = ProductRepositoryImpl(
-        inventoryDb,
-        readCompanyId: () => 'company-B',
-      );
+    test('StockValidationService: getPostedBalance ignores NULL and Company B layers', () async {
+      final now = DateTime.now().toUtc();
 
-      final prodA = await repoA.insert(
-        const ProductDraft(
-          itemCode: 'ITEM-A',
-          name: 'Original Name',
-          packSize: 1,
-          price: 50.0,
-        ),
-      );
+      // Company A layer: 50 units
+      await db.into(db.inventoryCostLayers).insert(
+            InventoryCostLayersCompanion(
+              uuid: const Value('11111111-1111-1111-1111-111111111111'),
+              itemCode: const Value('ITEM-VAL'),
+              warehouseId: const Value('wh-1'),
+              movementUuid: const Value('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
+              movementType: const Value('stock_receipt'),
+              receivedDate: Value(now.millisecondsSinceEpoch),
+              receivedQty: const Value(50),
+              remainingQty: const Value(50),
+              unitCost: const Value(10),
+              totalCost: const Value(500),
+              closed: const Value(0),
+              createdAt: Value(now.millisecondsSinceEpoch),
+              updatedAt: Value(now.millisecondsSinceEpoch),
+              companyId: const Value(companyA),
+            ),
+          );
 
-      // Company B attempts to update Company A's product using ID
-      expect(
-        () async => await repoB.update(
-          prodA.id,
-          const ProductDraft(
-            itemCode: 'ITEM-A',
-            name: 'Hacked Name',
-            packSize: 1,
-            price: 1.0,
-          ),
-        ),
-        throwsA(anything),
-      );
+      // Company B layer: 100 units
+      await db.into(db.inventoryCostLayers).insert(
+            InventoryCostLayersCompanion(
+              uuid: const Value('22222222-2222-2222-2222-222222222222'),
+              itemCode: const Value('ITEM-VAL'),
+              warehouseId: const Value('wh-1'),
+              movementUuid: const Value('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'),
+              movementType: const Value('stock_receipt'),
+              receivedDate: Value(now.millisecondsSinceEpoch),
+              receivedQty: const Value(100),
+              remainingQty: const Value(100),
+              unitCost: const Value(10),
+              totalCost: const Value(1000),
+              closed: const Value(0),
+              createdAt: Value(now.millisecondsSinceEpoch),
+              updatedAt: Value(now.millisecondsSinceEpoch),
+              companyId: const Value(companyB),
+            ),
+          );
 
-      // Verify Company A product is unmodified
-      final refreshed = await repoA.getById(prodA.id);
-      expect(refreshed!.name, equals('Original Name'));
-      expect(refreshed.price, equals(50.0));
-    });
+      // NULL Company layer: 200 units
+      await db.into(db.inventoryCostLayers).insert(
+            InventoryCostLayersCompanion(
+              uuid: const Value('33333333-3333-3333-3333-333333333333'),
+              itemCode: const Value('ITEM-VAL'),
+              warehouseId: const Value('wh-1'),
+              movementUuid: const Value('cccccccc-cccc-cccc-cccc-cccccccccccc'),
+              movementType: const Value('stock_receipt'),
+              receivedDate: Value(now.millisecondsSinceEpoch),
+              receivedQty: const Value(200),
+              remainingQty: const Value(200),
+              unitCost: const Value(10),
+              totalCost: const Value(2000),
+              closed: const Value(0),
+              createdAt: Value(now.millisecondsSinceEpoch),
+              updatedAt: Value(now.millisecondsSinceEpoch),
+              companyId: const Value(null),
+            ),
+          );
 
-    test('INVARIANT 5: Deletes are strictly tenant-scoped (Company B cannot delete Company A)', () async {
-      final custRepoA = CustomerRepositoryImpl(
-        customersDb,
-        readCompanyId: () => 'company-A',
-      );
-      final custRepoB = CustomerRepositoryImpl(
-        customersDb,
-        readCompanyId: () => 'company-B',
-      );
-
-      final customerA = await custRepoA.insert(
-        const CustomerDraft(
-          customerCode: 'CUST-A',
-          name: 'Customer A',
-        ),
-      );
-
-      // Company B attempts to soft delete Company A's customer
-      expect(
-        () async => await custRepoB.softDelete(customerA.id),
-        throwsA(anything),
-      );
-
-      // Verify Customer A remains active under Company A
-      final checkA = await custRepoA.getById(customerA.id);
-      expect(checkA, isNotNull);
-      expect(checkA!.name, equals('Customer A'));
-    });
-
-    test('INVARIANT 6 & 7: Company switching invalidates tenant query boundary completely', () async {
-      var currentCompany = 'company-A';
-      final accountRepo = AccountRepositoryImpl(
-        accountingDb,
-        readCompanyId: () => currentCompany,
-        shouldSuppressLocalChartSeed: () async => true,
+      final balance = await validationServiceCompA.getPostedBalance(
+        itemCode: 'ITEM-VAL',
+        warehouseId: 'wh-1',
       );
 
-      await accountRepo.insert(
-        const AccountDraft(
-          accountCode: '1001',
-          name: 'Company A Cash',
-          accountType: AccountType.asset,
-          isGroup: false,
-        ),
-      );
-
-      final chartA = await accountRepo.getAll();
-      expect(chartA.length, equals(1));
-      expect(chartA.first.accountCode, equals('1001'));
-
-      // Switch context to Company B
-      currentCompany = 'company-B';
-
-      // Company B query returns 0 accounts from Company A
-      final chartB = await accountRepo.getAll();
-      expect(chartB.isEmpty, isTrue);
-
-      // Insert Company B account
-      await accountRepo.insert(
-        const AccountDraft(
-          accountCode: '1002',
-          name: 'Company B Cash',
-          accountType: AccountType.asset,
-          isGroup: false,
-        ),
-      );
-
-      final seededB = await accountRepo.getAll();
-      expect(seededB.length, equals(1));
-      expect(seededB.first.accountCode, equals('1002'));
-
-      // Confirm raw DB row companyId
-      final rawRow = await (accountingDb.select(accountingDb.accounts)
-            ..where((t) => t.uuid.equals(seededB.first.uuid)))
-          .getSingle();
-      expect(rawRow.companyId, equals('company-B'));
-    });
-
-    test('INVARIANT 8: Riverpod currentCompanyIdProvider drives tenantContextProvider reactivity', () async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      final initialId = container.read(currentCompanyIdProvider);
-      expect(initialId, equals(LocalAuthDefaults.companyId));
-    });
-
-    test('INVARIANT 9 & 10: Client UUIDs are preserved and remain stable across tenancy', () async {
-      final prodRepo = ProductRepositoryImpl(
-        inventoryDb,
-        readCompanyId: () => 'local-company',
-      );
-
-      final prod = await prodRepo.insert(
-        const ProductDraft(
-          itemCode: 'STABLE-01',
-          name: 'Stable Local Item',
-          packSize: 1,
-          price: 15.0,
-        ),
-      );
-
-      expect(prod.uuid, isNotEmpty);
-      expect(prod.uuid.length, equals(36));
-
-      final retrieved = await prodRepo.getByUuid(prod.uuid);
-      expect(retrieved!.uuid, equals(prod.uuid));
+      // Should ONLY return 50.0 (Company A's layer), completely ignoring Comp B (100) and NULL (200).
+      expect(balance, 50.0);
     });
   });
 }

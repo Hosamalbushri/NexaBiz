@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
+import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 
 import '../../../shared/data/database/inventory_database.dart';
 import '../../domain/entities/cost_consumption.dart';
@@ -8,12 +9,31 @@ import '../../domain/enums/cost_valuation_method.dart';
 import '../../domain/services/cost_layer_service.dart';
 
 class CostLayerServiceImpl implements CostLayerService {
-  CostLayerServiceImpl({required InventoryDatabase db}) : _db = db;
+  CostLayerServiceImpl({
+    required InventoryDatabase db,
+    String Function()? readCompanyId,
+  })  : _db = db,
+        _readCompanyId = readCompanyId;
 
   final InventoryDatabase _db;
+  final String Function()? _readCompanyId;
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
 
   @override
   Future<void> createLayer(CostLayer layer) async {
+    final effectiveCompanyId = layer.companyId ?? _currentCompanyId;
+    final existing = await (_db.select(_db.inventoryCostLayers)
+          ..where((tbl) =>
+              tbl.uuid.equals(layer.id) &
+              tbl.companyId.equals(effectiveCompanyId)))
+        .getSingleOrNull();
+
+    if (existing != null) {
+      return;
+    }
+
     await _db.into(_db.inventoryCostLayers).insert(
           InventoryCostLayersCompanion(
             uuid: Value(layer.id),
@@ -31,7 +51,7 @@ class CostLayerServiceImpl implements CostLayerService {
             updatedAt: Value(layer.updatedAt.millisecondsSinceEpoch),
             syncStatus: const Value('synced'),
             version: Value(layer.version),
-            companyId: Value(layer.companyId),
+            companyId: Value(effectiveCompanyId),
           ),
         );
   }
@@ -67,108 +87,129 @@ class CostLayerServiceImpl implements CostLayerService {
       );
     }
 
-    // FIFO or LIFO
+    // FIFO or LIFO under atomic transaction loop
+    final effectiveCompanyId = companyId ?? _currentCompanyId;
     final isFifo = method == CostValuationMethod.fifo;
-    var query = _db.select(_db.inventoryCostLayers)
-      ..where((tbl) =>
-          tbl.itemCode.equals(itemCode) &
-          tbl.closed.equals(0) &
-          tbl.deletedAt.isNull());
 
-    if (warehouseId != null && warehouseId.isNotEmpty) {
-      query = query..where((tbl) => tbl.warehouseId.equals(warehouseId));
-    }
+    return await _db.transaction(() async {
+      var remainingNeeded = quantity;
+      var accumulatedTotalCost = 0.0;
+      final consumptions = <CostConsumption>[];
 
-    query = query
-      ..orderBy([
-        (tbl) => OrderingTerm(
-              expression: tbl.receivedDate,
-              mode: isFifo ? OrderingMode.asc : OrderingMode.desc,
-            ),
-        (tbl) => OrderingTerm(
-              expression: tbl.id,
-              mode: isFifo ? OrderingMode.asc : OrderingMode.desc,
-            ),
-      ]);
+      while (remainingNeeded > 0.000001) {
+        var query = _db.select(_db.inventoryCostLayers)
+          ..where((tbl) =>
+              tbl.itemCode.equals(itemCode) &
+              tbl.companyId.equals(effectiveCompanyId) &
+              tbl.remainingQty.isBiggerThanValue(0) &
+              tbl.closed.equals(0) &
+              tbl.deletedAt.isNull());
 
-    final layers = await query.get();
-    var remainingNeeded = quantity;
-    var accumulatedTotalCost = 0.0;
-    final consumptions = <CostConsumption>[];
+        if (warehouseId != null && warehouseId.isNotEmpty) {
+          query = query..where((tbl) => tbl.warehouseId.equals(warehouseId));
+        }
 
-    for (final row in layers) {
-      if (remainingNeeded <= 0.000001) break;
+        query = query
+          ..orderBy([
+            (tbl) => OrderingTerm(
+                  expression: tbl.receivedDate,
+                  mode: isFifo ? OrderingMode.asc : OrderingMode.desc,
+                ),
+            (tbl) => OrderingTerm(
+                  expression: tbl.id,
+                  mode: isFifo ? OrderingMode.asc : OrderingMode.desc,
+                ),
+          ])
+          ..limit(1);
 
-      final avail = row.remainingQty;
-      if (avail <= 0) continue;
+        final topLayer = await query.getSingleOrNull();
+        if (topLayer == null) {
+          break;
+        }
 
-      final takeQty = avail <= remainingNeeded ? avail : remainingNeeded;
-      final newRemaining = avail - takeQty;
-      final isClosed = newRemaining <= 0.000001;
-      final lineCost = takeQty * row.unitCost;
+        final avail = topLayer.remainingQty;
+        if (avail <= 0) break;
 
-      accumulatedTotalCost += lineCost;
-      remainingNeeded -= takeQty;
+        final takeQty = avail <= remainingNeeded ? avail : remainingNeeded;
+        var newRemaining = avail - takeQty;
+        if (newRemaining < 0.000001) {
+          newRemaining = 0.0;
+        }
+        final isClosed = newRemaining <= 0.000001;
 
-      // Update layer remaining quantity
-      await (_db.update(_db.inventoryCostLayers)
-            ..where((tbl) => tbl.uuid.equals(row.uuid)))
-          .write(
-        InventoryCostLayersCompanion(
-          remainingQty: Value(newRemaining),
-          closed: Value(isClosed ? 1 : 0),
-          updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
-        ),
+        // Atomic conditional UPDATE with quantity guard to prevent concurrency race & negative quantity
+        final updatedCount = await (_db.update(_db.inventoryCostLayers)
+              ..where((tbl) =>
+                  tbl.uuid.equals(topLayer.uuid) &
+                  tbl.companyId.equals(effectiveCompanyId) &
+                  tbl.remainingQty.isBiggerOrEqualValue(takeQty) &
+                  tbl.closed.equals(0) &
+                  tbl.deletedAt.isNull()))
+            .write(
+          InventoryCostLayersCompanion(
+            remainingQty: Value(newRemaining),
+            closed: Value(isClosed ? 1 : 0),
+            updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
+          ),
+        );
+
+        if (updatedCount == 0) {
+          // Race condition detected! Another concurrent request consumed from this layer.
+          // Retry loop to evaluate latest available quantity.
+          continue;
+        }
+
+        final lineCost = takeQty * topLayer.unitCost;
+        accumulatedTotalCost += lineCost;
+        remainingNeeded -= takeQty;
+
+        final consumptionUuid = generateUuidV4();
+        final now = DateTime.now().toUtc();
+        await _db.into(_db.inventoryCostConsumptions).insert(
+              InventoryCostConsumptionsCompanion(
+                uuid: Value(consumptionUuid),
+                layerUuid: Value(topLayer.uuid),
+                issueLineUuid: Value(issueLineUuid),
+                movementType: Value(movementType),
+                consumedQty: Value(takeQty),
+                unitCost: Value(topLayer.unitCost),
+                totalCost: Value(lineCost),
+                createdAt: Value(now.millisecondsSinceEpoch),
+                companyId: Value(effectiveCompanyId),
+              ),
+            );
+
+        consumptions.add(
+          CostConsumption(
+            id: consumptionUuid,
+            layerUuid: topLayer.uuid,
+            issueLineUuid: issueLineUuid,
+            movementType: movementType,
+            consumedQty: takeQty,
+            unitCost: topLayer.unitCost,
+            totalCost: lineCost,
+            createdAt: now,
+            companyId: effectiveCompanyId,
+          ),
+        );
+      }
+
+      final isShortage = remainingNeeded > 0.000001;
+      if (isShortage) {
+        final fallbackCost = await _getFallbackUnitCost(itemCode, companyId: effectiveCompanyId);
+        accumulatedTotalCost += (remainingNeeded * fallbackCost);
+      }
+
+      final effectiveUnitCost = quantity > 0 ? accumulatedTotalCost / quantity : 0.0;
+
+      return LayerConsumptionResult(
+        consumptions: consumptions,
+        totalCost: accumulatedTotalCost,
+        effectiveUnitCost: effectiveUnitCost,
+        isShortage: isShortage,
+        shortageQty: isShortage ? remainingNeeded : 0.0,
       );
-
-      // Record consumption
-      final consumptionUuid = generateUuidV4();
-      final now = DateTime.now().toUtc();
-      await _db.into(_db.inventoryCostConsumptions).insert(
-            InventoryCostConsumptionsCompanion(
-              uuid: Value(consumptionUuid),
-              layerUuid: Value(row.uuid),
-              issueLineUuid: Value(issueLineUuid),
-              movementType: Value(movementType),
-              consumedQty: Value(takeQty),
-              unitCost: Value(row.unitCost),
-              totalCost: Value(lineCost),
-              createdAt: Value(now.millisecondsSinceEpoch),
-              companyId: Value(companyId),
-            ),
-          );
-
-      consumptions.add(
-        CostConsumption(
-          id: consumptionUuid,
-          layerUuid: row.uuid,
-          issueLineUuid: issueLineUuid,
-          movementType: movementType,
-          consumedQty: takeQty,
-          unitCost: row.unitCost,
-          totalCost: lineCost,
-          createdAt: now,
-          companyId: companyId,
-        ),
-      );
-    }
-
-    final isShortage = remainingNeeded > 0.000001;
-    if (isShortage) {
-      // If shortage exists, evaluate fallback cost for the unfulfilled quantity
-      final fallbackCost = await _getFallbackUnitCost(itemCode);
-      accumulatedTotalCost += (remainingNeeded * fallbackCost);
-    }
-
-    final effectiveUnitCost = quantity > 0 ? accumulatedTotalCost / quantity : 0.0;
-
-    return LayerConsumptionResult(
-      consumptions: consumptions,
-      totalCost: accumulatedTotalCost,
-      effectiveUnitCost: effectiveUnitCost,
-      isShortage: isShortage,
-      shortageQty: isShortage ? remainingNeeded : 0.0,
-    );
+    });
   }
 
   Future<LayerConsumptionResult> _consumeWeightedAverage({
@@ -179,149 +220,208 @@ class CostLayerServiceImpl implements CostLayerService {
     String? warehouseId,
     String? companyId,
   }) async {
-    final avgCost = await getWeightedAverageCost(itemCode, warehouseId: warehouseId);
-    final unitCostToUse = avgCost > 0 ? avgCost : await _getFallbackUnitCost(itemCode);
-    final totalCost = quantity * unitCostToUse;
+    final effectiveCompanyId = companyId ?? _currentCompanyId;
 
-    // Proportionally deduct from open FIFO layers for consistency
-    var query = _db.select(_db.inventoryCostLayers)
-      ..where((tbl) =>
-          tbl.itemCode.equals(itemCode) &
-          tbl.closed.equals(0) &
-          tbl.deletedAt.isNull());
+    return await _db.transaction(() async {
+      final avgCost = await getWeightedAverageCost(itemCode, warehouseId: warehouseId, companyId: effectiveCompanyId);
+      final unitCostToUse = avgCost > 0 ? avgCost : await _getFallbackUnitCost(itemCode, companyId: effectiveCompanyId);
 
-    if (warehouseId != null && warehouseId.isNotEmpty) {
-      query = query..where((tbl) => tbl.warehouseId.equals(warehouseId));
-    }
+      var query = _db.select(_db.inventoryCostLayers)
+        ..where((tbl) =>
+            tbl.itemCode.equals(itemCode) &
+            tbl.companyId.equals(effectiveCompanyId) &
+            tbl.closed.equals(0) &
+            tbl.deletedAt.isNull());
 
-    query = query..orderBy([(tbl) => OrderingTerm.asc(tbl.receivedDate)]);
-    final layers = await query.get();
+      if (warehouseId != null && warehouseId.isNotEmpty) {
+        query = query..where((tbl) => tbl.warehouseId.equals(warehouseId));
+      }
 
-    var remainingNeeded = quantity;
-    final consumptions = <CostConsumption>[];
+      query = query..orderBy([(tbl) => OrderingTerm.asc(tbl.receivedDate)]);
+      final layers = await query.get();
 
-    for (final row in layers) {
-      if (remainingNeeded <= 0.000001) break;
+      final totalQty = layers.fold<double>(0.0, (sum, row) => sum + row.remainingQty);
 
-      final avail = row.remainingQty;
-      if (avail <= 0) continue;
+      if (quantity > totalQty + 0.000001) {
+        final shortageQty = quantity - totalQty;
+        return LayerConsumptionResult(
+          consumptions: const [],
+          totalCost: 0.0,
+          effectiveUnitCost: unitCostToUse,
+          isShortage: true,
+          shortageQty: shortageQty,
+        );
+      }
 
-      final takeQty = avail <= remainingNeeded ? avail : remainingNeeded;
-      final newRemaining = avail - takeQty;
-      final isClosed = newRemaining <= 0.000001;
-      final lineCost = takeQty * unitCostToUse;
+      if (totalQty <= 0) {
+        return LayerConsumptionResult(
+          consumptions: const [],
+          totalCost: 0.0,
+          effectiveUnitCost: unitCostToUse,
+          isShortage: quantity > 0,
+          shortageQty: quantity,
+        );
+      }
 
-      remainingNeeded -= takeQty;
+      final fraction = quantity / totalQty;
+      final totalCost = quantity * unitCostToUse;
+      final consumptions = <CostConsumption>[];
 
-      await (_db.update(_db.inventoryCostLayers)
-            ..where((tbl) => tbl.uuid.equals(row.uuid)))
-          .write(
-        InventoryCostLayersCompanion(
-          remainingQty: Value(newRemaining),
-          closed: Value(isClosed ? 1 : 0),
-          updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
-        ),
+      for (final row in layers) {
+        final avail = row.remainingQty;
+        if (avail <= 0) continue;
+
+        final takeQty = (fraction >= 1.0) ? avail : avail * fraction;
+        var newRemaining = avail - takeQty;
+        if (newRemaining < 0.000001) {
+          newRemaining = 0.0;
+        }
+        final isClosed = newRemaining <= 0.000001;
+
+        // Atomic conditional UPDATE with quantity guard to prevent negative quantity & concurrency conflict
+        final updatedCount = await (_db.update(_db.inventoryCostLayers)
+              ..where((tbl) =>
+                  tbl.uuid.equals(row.uuid) &
+                  tbl.companyId.equals(effectiveCompanyId) &
+                  tbl.remainingQty.isBiggerOrEqualValue(takeQty) &
+                  tbl.closed.equals(0) &
+                  tbl.deletedAt.isNull()))
+            .write(
+          InventoryCostLayersCompanion(
+            remainingQty: Value(newRemaining),
+            closed: Value(isClosed ? 1 : 0),
+            updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
+          ),
+        );
+
+        if (updatedCount == 0) {
+          // Concurrent edit took place, skip layer
+          continue;
+        }
+
+        final lineCost = takeQty * unitCostToUse;
+        final consumptionUuid = generateUuidV4();
+        final now = DateTime.now().toUtc();
+        await _db.into(_db.inventoryCostConsumptions).insert(
+              InventoryCostConsumptionsCompanion(
+                uuid: Value(consumptionUuid),
+                layerUuid: Value(row.uuid),
+                issueLineUuid: Value(issueLineUuid),
+                movementType: Value(movementType),
+                consumedQty: Value(takeQty),
+                unitCost: Value(unitCostToUse),
+                totalCost: Value(lineCost),
+                createdAt: Value(now.millisecondsSinceEpoch),
+                companyId: Value(effectiveCompanyId),
+              ),
+            );
+
+        consumptions.add(
+          CostConsumption(
+            id: consumptionUuid,
+            layerUuid: row.uuid,
+            issueLineUuid: issueLineUuid,
+            movementType: movementType,
+            consumedQty: takeQty,
+            unitCost: unitCostToUse,
+            totalCost: lineCost,
+            createdAt: now,
+            companyId: effectiveCompanyId,
+          ),
+        );
+      }
+
+      return LayerConsumptionResult(
+        consumptions: consumptions,
+        totalCost: totalCost,
+        effectiveUnitCost: unitCostToUse,
+        isShortage: false,
+        shortageQty: 0.0,
       );
-
-      final consumptionUuid = generateUuidV4();
-      final now = DateTime.now().toUtc();
-      await _db.into(_db.inventoryCostConsumptions).insert(
-            InventoryCostConsumptionsCompanion(
-              uuid: Value(consumptionUuid),
-              layerUuid: Value(row.uuid),
-              issueLineUuid: Value(issueLineUuid),
-              movementType: Value(movementType),
-              consumedQty: Value(takeQty),
-              unitCost: Value(unitCostToUse),
-              totalCost: Value(lineCost),
-              createdAt: Value(now.millisecondsSinceEpoch),
-              companyId: Value(companyId),
-            ),
-          );
-
-      consumptions.add(
-        CostConsumption(
-          id: consumptionUuid,
-          layerUuid: row.uuid,
-          issueLineUuid: issueLineUuid,
-          movementType: movementType,
-          consumedQty: takeQty,
-          unitCost: unitCostToUse,
-          totalCost: lineCost,
-          createdAt: now,
-          companyId: companyId,
-        ),
-      );
-    }
-
-    final isShortage = remainingNeeded > 0.000001;
-
-    return LayerConsumptionResult(
-      consumptions: consumptions,
-      totalCost: totalCost,
-      effectiveUnitCost: unitCostToUse,
-      isShortage: isShortage,
-      shortageQty: isShortage ? remainingNeeded : 0.0,
-    );
+    });
   }
 
   @override
   Future<void> reverseConsumptions(String issueLineUuid) async {
-    final query = _db.select(_db.inventoryCostConsumptions)
-      ..where((tbl) => tbl.issueLineUuid.equals(issueLineUuid));
-    final consumptions = await query.get();
+    final effectiveCompanyId = _currentCompanyId;
+    await _db.transaction(() async {
+      final query = _db.select(_db.inventoryCostConsumptions)
+        ..where((tbl) =>
+            tbl.issueLineUuid.equals(issueLineUuid) &
+            tbl.companyId.equals(effectiveCompanyId));
+      final consumptions = await query.get();
 
-    for (final c in consumptions) {
-      final layerQuery = _db.select(_db.inventoryCostLayers)
-        ..where((tbl) => tbl.uuid.equals(c.layerUuid));
-      final layer = await layerQuery.getSingleOrNull();
+      for (final c in consumptions) {
+        final layerQuery = _db.select(_db.inventoryCostLayers)
+          ..where((tbl) =>
+              tbl.uuid.equals(c.layerUuid) &
+              tbl.companyId.equals(effectiveCompanyId));
+        final layer = await layerQuery.getSingleOrNull();
 
-      if (layer != null) {
-        final restoredQty = layer.remainingQty + c.consumedQty;
-        await (_db.update(_db.inventoryCostLayers)
-              ..where((tbl) => tbl.uuid.equals(layer.uuid)))
-            .write(
-          InventoryCostLayersCompanion(
-            remainingQty: Value(restoredQty),
-            closed: const Value(0),
-            updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
-          ),
-        );
+        if (layer != null) {
+          final restoredQty = layer.remainingQty + c.consumedQty;
+          await (_db.update(_db.inventoryCostLayers)
+                ..where((tbl) =>
+                    tbl.uuid.equals(layer.uuid) &
+                    tbl.companyId.equals(effectiveCompanyId)))
+              .write(
+            InventoryCostLayersCompanion(
+              remainingQty: Value(restoredQty),
+              closed: const Value(0),
+              updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
+            ),
+          );
+        }
       }
-    }
 
-    // Delete consumption rows
-    await (_db.delete(_db.inventoryCostConsumptions)
-          ..where((tbl) => tbl.issueLineUuid.equals(issueLineUuid)))
-        .go();
+      // Delete consumption rows scoped by tenant
+      await (_db.delete(_db.inventoryCostConsumptions)
+            ..where((tbl) =>
+                tbl.issueLineUuid.equals(issueLineUuid) &
+                tbl.companyId.equals(effectiveCompanyId)))
+          .go();
+    });
   }
 
   @override
   Future<void> reverseLayer(String movementUuid) async {
-    final query = _db.select(_db.inventoryCostLayers)
-      ..where((tbl) => tbl.movementUuid.equals(movementUuid));
-    final layers = await query.get();
+    final effectiveCompanyId = _currentCompanyId;
+    await _db.transaction(() async {
+      final query = _db.select(_db.inventoryCostLayers)
+        ..where((tbl) =>
+            tbl.movementUuid.equals(movementUuid) &
+            tbl.companyId.equals(effectiveCompanyId));
+      final layers = await query.get();
 
-    final now = DateTime.now().toUtc();
-    for (final layer in layers) {
-      // Soft-delete the layer
-      await (_db.update(_db.inventoryCostLayers)
-            ..where((tbl) => tbl.uuid.equals(layer.uuid)))
-          .write(
-        InventoryCostLayersCompanion(
-          deletedAt: Value(now.millisecondsSinceEpoch),
-          updatedAt: Value(now.millisecondsSinceEpoch),
-          closed: const Value(1),
-        ),
-      );
-    }
+      final now = DateTime.now().toUtc();
+      for (final layer in layers) {
+        // Soft-delete the layer
+        await (_db.update(_db.inventoryCostLayers)
+              ..where((tbl) =>
+                  tbl.uuid.equals(layer.uuid) &
+                  tbl.companyId.equals(effectiveCompanyId)))
+            .write(
+          InventoryCostLayersCompanion(
+            deletedAt: Value(now.millisecondsSinceEpoch),
+            updatedAt: Value(now.millisecondsSinceEpoch),
+            closed: const Value(1),
+          ),
+        );
+      }
+    });
   }
 
   @override
-  Future<double> getWeightedAverageCost(String itemCode, {String? warehouseId}) async {
+  Future<double> getWeightedAverageCost(
+    String itemCode, {
+    String? warehouseId,
+    String? companyId,
+  }) async {
+    final effectiveCompanyId = companyId ?? _currentCompanyId;
     var query = _db.select(_db.inventoryCostLayers)
       ..where((tbl) =>
           tbl.itemCode.equals(itemCode) &
+          tbl.companyId.equals(effectiveCompanyId) &
           tbl.closed.equals(0) &
           tbl.deletedAt.isNull());
 
@@ -341,17 +441,23 @@ class CostLayerServiceImpl implements CostLayerService {
     }
 
     if (totalQty <= 0) {
-      return _getFallbackUnitCost(itemCode);
+      return _getFallbackUnitCost(itemCode, companyId: effectiveCompanyId);
     }
 
     return totalValue / totalQty;
   }
 
   @override
-  Future<List<CostLayer>> getOpenLayers(String itemCode, {String? warehouseId}) async {
+  Future<List<CostLayer>> getOpenLayers(
+    String itemCode, {
+    String? warehouseId,
+    String? companyId,
+  }) async {
+    final effectiveCompanyId = companyId ?? _currentCompanyId;
     var query = _db.select(_db.inventoryCostLayers)
       ..where((tbl) =>
           tbl.itemCode.equals(itemCode) &
+          tbl.companyId.equals(effectiveCompanyId) &
           tbl.closed.equals(0) &
           tbl.deletedAt.isNull());
 
@@ -393,10 +499,13 @@ class CostLayerServiceImpl implements CostLayerService {
     required String itemCode,
     CostValuationMethod method = CostValuationMethod.weightedAverage,
     String? warehouseId,
+    String? companyId,
   }) async {
+    final effectiveCompanyId = companyId ?? _currentCompanyId;
     var query = _db.select(_db.inventoryCostLayers)
       ..where((tbl) =>
           tbl.itemCode.equals(itemCode) &
+          tbl.companyId.equals(effectiveCompanyId) &
           tbl.closed.equals(0) &
           tbl.deletedAt.isNull());
 
@@ -442,6 +551,7 @@ class CostLayerServiceImpl implements CostLayerService {
       final historicalQuery = _db.select(_db.inventoryCostLayers)
         ..where((tbl) =>
             tbl.itemCode.equals(itemCode) &
+            tbl.companyId.equals(effectiveCompanyId) &
             tbl.unitCost.isBiggerThanValue(0) &
             tbl.deletedAt.isNull())
         ..orderBy([(tbl) => OrderingTerm.desc(tbl.receivedDate)])
@@ -454,15 +564,21 @@ class CostLayerServiceImpl implements CostLayerService {
 
     // Fallback to product catalog unitCost
     if (resolvedCost <= 0) {
-      resolvedCost = await _getFallbackUnitCost(itemCode);
+      resolvedCost = await _getFallbackUnitCost(itemCode, companyId: effectiveCompanyId);
     }
 
     return resolvedCost;
   }
 
-  Future<double> _getFallbackUnitCost(String itemCode) async {
+  Future<double> _getFallbackUnitCost(
+    String itemCode, {
+    String? companyId,
+  }) async {
+    final effectiveCompanyId = companyId ?? _currentCompanyId;
     final query = _db.select(_db.products)
-      ..where((tbl) => tbl.itemCode.equals(itemCode));
+      ..where((tbl) =>
+          tbl.itemCode.equals(itemCode) &
+          tbl.companyId.equals(effectiveCompanyId));
     final product = await query.getSingleOrNull();
     if (product == null) return 0.0;
     return product.unitCost > 0 ? product.unitCost : 0.0;

@@ -1,13 +1,21 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import '../../domain/services/inventory_dependency_detector.dart';
 
 class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
-  InventoryDependencyDetectorImpl(this._db);
+  InventoryDependencyDetectorImpl(
+    this._db, [
+    String Function()? readCompanyId,
+  ]) : _readCompanyId = readCompanyId;
 
   final InventoryDatabase _db;
+  final String Function()? _readCompanyId;
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
 
   @override
   Future<List<InventoryDocumentRef>> findDependentDocuments({
@@ -49,8 +57,10 @@ class InventoryDependencyDetectorImpl implements InventoryDependencyDetector {
 
     // 1. Direct dependencies via Cost Layers & Consumptions (Inbound -> Outbound)
     final layers = await (_db.select(_db.inventoryCostLayers)
-          ..where((tbl) => tbl.movementUuid.equals(doc.documentId))
-          ..where((tbl) => tbl.deletedAt.isNull()))
+          ..where((tbl) =>
+              tbl.movementUuid.equals(doc.documentId) &
+              tbl.companyId.equals(_currentCompanyId) &
+              tbl.deletedAt.isNull()))
         .get();
 
     for (final layer in layers) {

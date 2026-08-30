@@ -30,7 +30,7 @@ class SearchInventoryItems {
 class SaveInventoryCount {
   const SaveInventoryCount(
     this._repository, {
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
   }) : _guard = permissionGuard;
 
   final InventoryRepository _repository;
@@ -45,7 +45,7 @@ class SaveInventoryCount {
 class ReplaceInventoryItems {
   const ReplaceInventoryItems(
     this._repository, {
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
   }) : _guard = permissionGuard;
 
   final InventoryRepository _repository;
@@ -63,7 +63,7 @@ class ReplaceInventoryItems {
 class ClearInventoryItems {
   const ClearInventoryItems(
     this._repository, {
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
   }) : _guard = permissionGuard;
 
   final InventoryRepository _repository;

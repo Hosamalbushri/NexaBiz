@@ -153,8 +153,8 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
     );
 
     if (confirmed == true) {
-      final repo = ref.read(stockMovementsRepositoryProvider);
-      await repo.deleteReceipt(receipt.id);
+      final useCases = ref.read(stockMovementUseCasesProvider);
+      await useCases.deleteReceipt(receipt.id);
       if (mounted) {
         ref.invalidate(stockReceiptsStreamProvider);
         Navigator.pop(context);

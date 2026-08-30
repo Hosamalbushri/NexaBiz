@@ -407,6 +407,7 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
       ..where(
         _db.journalEntries.isPosted.equals(false) &
             _db.journalEntries.deletedAt.isNull() &
+            _db.journalEntries.companyId.equals(_currentCompanyId) &
             _db.journalEntries.entryDate.isBiggerOrEqualValue(startMs) &
             _db.journalEntries.entryDate.isSmallerOrEqualValue(endMs),
       );
@@ -430,11 +431,13 @@ SELECT DISTINCT jl.currency_code AS code
 FROM journal_lines jl
 INNER JOIN journal_entries je ON je.uuid = jl.entry_uuid
 WHERE je.deleted_at IS NULL
+  AND je.company_id = ?
   AND je.entry_date >= ?
   AND je.entry_date <= ?
   AND UPPER(jl.currency_code) != ?
 ''',
           variables: [
+            Variable<String>(_currentCompanyId),
             Variable<int>(startMs),
             Variable<int>(endMs),
             Variable<String>(base),

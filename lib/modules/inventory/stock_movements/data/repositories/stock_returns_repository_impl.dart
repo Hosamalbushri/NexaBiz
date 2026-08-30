@@ -1,8 +1,12 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
+import 'package:stock_count/core/utils/id_generator.dart';
+import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import '../../../shared/data/database/inventory_database.dart';
-import '../../domain/entities/cost_layer.dart';
 import '../../domain/entities/stock_movement_line.dart';
 import '../../domain/entities/stock_return.dart';
 import '../../domain/enums/cost_valuation_method.dart';
@@ -16,22 +20,32 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
     SyncQueue? syncQueue,
     CostLayerService? costLayerService,
     CostValuationMethod valuationMethod = CostValuationMethod.fifo,
+    String Function()? readCompanyId,
   })  : _db = db,
         _syncQueue = syncQueue,
-        _costLayerService = costLayerService ?? CostLayerServiceImpl(db: db),
-        _valuationMethod = valuationMethod;
+        _costLayerService = costLayerService ?? CostLayerServiceImpl(db: db, readCompanyId: readCompanyId),
+        _valuationMethod = valuationMethod,
+        _readCompanyId = readCompanyId;
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
   final CostLayerService _costLayerService;
   final CostValuationMethod _valuationMethod;
+  final String Function()? _readCompanyId;
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+
+  Expression<bool> _scoped($StockReturnsTable tbl) {
+    return tbl.companyId.equals(_currentCompanyId);
+  }
 
   static const returnEntityType = 'stock_return';
 
   @override
   Future<List<StockReturn>> getAllReturns() async {
     final query = _db.select(_db.stockReturns)
-      ..where((tbl) => tbl.deletedAt.isNull());
+      ..where((tbl) => _scoped(tbl) & tbl.deletedAt.isNull());
     final rows = await query.get();
     final results = <StockReturn>[];
 
@@ -45,7 +59,7 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
   @override
   Stream<List<StockReturn>> watchAllReturns() {
     final query = _db.select(_db.stockReturns)
-      ..where((tbl) => tbl.deletedAt.isNull());
+      ..where((tbl) => _scoped(tbl) & tbl.deletedAt.isNull());
 
     return query.watch().asyncMap((rows) async {
       final results = <StockReturn>[];
@@ -60,7 +74,7 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
   @override
   Future<StockReturn?> getReturnById(String id) async {
     final query = _db.select(_db.stockReturns)
-      ..where((tbl) => tbl.uuid.equals(id) & tbl.deletedAt.isNull());
+      ..where((tbl) => _scoped(tbl) & tbl.uuid.equals(id) & tbl.deletedAt.isNull());
     final row = await query.getSingleOrNull();
     if (row == null) return null;
 
@@ -71,17 +85,43 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
   @override
   Future<void> saveReturn(StockReturn returnDoc) async {
     await _db.transaction(() async {
+      // 1. Cross-tenant modification rejection
+      if (returnDoc.companyId != null &&
+          returnDoc.companyId!.isNotEmpty &&
+          returnDoc.companyId != _currentCompanyId) {
+        throw const JournalException(JournalException.notFound);
+      }
+
       final existing = await (_db.select(_db.stockReturns)
-            ..where((tbl) => tbl.uuid.equals(returnDoc.id)))
+            ..where((tbl) => _scoped(tbl) & tbl.uuid.equals(returnDoc.id)))
           .getSingleOrNull();
+
+      // Prevent cross-tenant record overwrite
+      if (existing == null) {
+        final crossTenantCheck = await (_db.select(_db.stockReturns)
+              ..where((tbl) => tbl.uuid.equals(returnDoc.id)))
+            .getSingleOrNull();
+        if (crossTenantCheck != null) {
+          throw const JournalException(JournalException.notFound);
+        }
+      }
+
+      // 2. POSTED IMMUTABILITY GUARD: Reject edits to posted returns
+      if (existing != null && (existing.status == 'posted' || existing.postedAt != null)) {
+        throw const JournalException(JournalException.postedImmutable);
+      }
+      if (returnDoc.isPosted && existing != null && existing.status == 'posted') {
+        throw const JournalException(JournalException.postedImmutable);
+      }
 
       final now = DateTime.now().toUtc();
       final newVersion = (existing?.version ?? returnDoc.version) + (existing == null ? 0 : 1);
       final returnTypeStr = returnDoc.isPurchaseReturn ? 'purchase_return' : 'sales_return';
+      final effectiveCompanyId = returnDoc.companyId ?? _currentCompanyId;
 
       // Save header
       if (existing != null) {
-        await (_db.update(_db.stockReturns)..where((tbl) => tbl.uuid.equals(returnDoc.id))).write(
+        await (_db.update(_db.stockReturns)..where((tbl) => _scoped(tbl) & tbl.uuid.equals(returnDoc.id))).write(
           StockReturnsCompanion(
             returnNumber: Value(returnDoc.returnNumber),
             returnType: Value(returnTypeStr),
@@ -93,11 +133,13 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
             updatedAt: Value(now.millisecondsSinceEpoch),
             syncStatus: const Value('pending'),
             version: Value(newVersion),
-            companyId: Value(returnDoc.companyId),
+            companyId: Value(effectiveCompanyId),
+            status: Value(returnDoc.status.name),
+            postedAt: Value(returnDoc.postedAt?.millisecondsSinceEpoch),
           ),
         );
 
-        // Reverse prior effects if editing existing
+        // Reverse prior draft effects if editing existing draft
         if (returnDoc.isSalesReturn) {
           await _costLayerService.reverseLayer(returnDoc.id);
           final oldLines = await _getLinesForMovement(returnDoc.id, returnTypeStr);
@@ -126,7 +168,9 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
             updatedAt: Value(now.millisecondsSinceEpoch),
             syncStatus: const Value('pending'),
             version: Value(newVersion),
-            companyId: Value(returnDoc.companyId),
+            companyId: Value(effectiveCompanyId),
+            status: Value(returnDoc.status.name),
+            postedAt: Value(returnDoc.postedAt?.millisecondsSinceEpoch),
           ),
         );
       }
@@ -137,75 +181,55 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
           .go();
 
       for (final line in returnDoc.lines) {
-        if (returnDoc.isSalesReturn) {
-          // Sales Return: Goods return into stock -> create a new cost layer
-          await _db.into(_db.stockMovementLines).insert(
-                StockMovementLinesCompanion(
-                  uuid: Value(line.id),
-                  movementUuid: Value(returnDoc.id),
-                  movementType: Value(returnTypeStr),
-                  itemCode: Value(line.itemCode),
-                  itemName: Value(line.itemName),
-                  mainQuantity: Value(line.mainQuantity),
-                  subQuantity: Value(line.subQuantity),
-                  quantity: Value(line.quantity),
-                  unitCost: Value(line.unitCost),
-                  totalCost: Value(line.totalCost),
-                ),
-              );
+        await _db.into(_db.stockMovementLines).insert(
+              StockMovementLinesCompanion(
+                uuid: Value(line.id),
+                movementUuid: Value(returnDoc.id),
+                movementType: Value(returnTypeStr),
+                itemCode: Value(line.itemCode),
+                itemName: Value(line.itemName),
+                mainQuantity: Value(line.mainQuantity),
+                subQuantity: Value(line.subQuantity),
+                quantity: Value(line.quantity),
+                unitCost: Value(line.unitCost),
+                totalCost: Value(line.totalCost),
+              ),
+            );
+      }
 
-          await _costLayerService.createLayer(
-            CostLayer(
+      if (returnDoc.isPosted) {
+        if (returnDoc.isSalesReturn) {
+          for (final line in returnDoc.lines) {
+            final layer = CostLayer(
+              id: generateUuidV4(),
               itemCode: line.itemCode,
               movementUuid: returnDoc.id,
-              movementType: returnTypeStr,
+              movementType: 'sales_return',
               receivedDate: returnDoc.returnDate,
               receivedQty: line.quantity,
               unitCost: line.unitCost,
-              companyId: returnDoc.companyId,
-            ),
-          );
-
-          await _adjustProductQty(line.itemCode, line.quantity);
+              totalCost: line.totalCost,
+              companyId: effectiveCompanyId,
+            );
+            await _costLayerService.createLayer(layer);
+            await _adjustProductQty(line.itemCode, line.quantity);
+          }
         } else {
-          // Purchase Return: Goods leave stock back to supplier -> consume active cost layers
-          final consumptionResult = await _costLayerService.consumeLayers(
-            itemCode: line.itemCode,
-            quantity: line.quantity,
-            method: _valuationMethod,
-            issueLineUuid: line.id,
-            movementType: returnTypeStr,
-            warehouseId: returnDoc.warehouse,
-            companyId: returnDoc.companyId,
-          );
-
-          final effectiveUnitCost = consumptionResult.effectiveUnitCost > 0
-              ? consumptionResult.effectiveUnitCost
-              : line.unitCost;
-          final effectiveTotalCost = consumptionResult.totalCost > 0
-              ? consumptionResult.totalCost
-              : line.totalCost;
-
-          await _db.into(_db.stockMovementLines).insert(
-                StockMovementLinesCompanion(
-                  uuid: Value(line.id),
-                  movementUuid: Value(returnDoc.id),
-                  movementType: Value(returnTypeStr),
-                  itemCode: Value(line.itemCode),
-                  itemName: Value(line.itemName),
-                  mainQuantity: Value(line.mainQuantity),
-                  subQuantity: Value(line.subQuantity),
-                  quantity: Value(line.quantity),
-                  unitCost: Value(effectiveUnitCost),
-                  totalCost: Value(effectiveTotalCost),
-                ),
-              );
-
-          await _adjustProductQty(line.itemCode, -line.quantity);
+          for (final line in returnDoc.lines) {
+            await _costLayerService.consumeLayers(
+              itemCode: line.itemCode,
+              quantity: line.quantity,
+              method: _valuationMethod,
+              issueLineUuid: line.id,
+              movementType: 'purchase_return',
+              companyId: effectiveCompanyId,
+            );
+            await _adjustProductQty(line.itemCode, -line.quantity);
+          }
         }
       }
 
-      await _enqueueReturn(returnDoc.copyWith(version: newVersion), existing == null ? SyncOperationType.create : SyncOperationType.update);
+      await _enqueueReturn(returnDoc.copyWith(version: newVersion, companyId: effectiveCompanyId), existing == null ? SyncOperationType.create : SyncOperationType.update);
     });
   }
 
@@ -213,13 +237,20 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
   Future<void> deleteReturn(String id) async {
     await _db.transaction(() async {
       final returnDoc = await getReturnById(id);
-      if (returnDoc == null) return;
+      if (returnDoc == null) {
+        throw const JournalException(JournalException.notFound);
+      }
+
+      // POSTED IMMUTABILITY GUARD: Reject soft-deletion of posted stock returns
+      if (returnDoc.isPosted) {
+        throw const JournalException(JournalException.postedImmutable);
+      }
 
       final now = DateTime.now().toUtc();
       final returnTypeStr = returnDoc.isPurchaseReturn ? 'purchase_return' : 'sales_return';
 
-      // Soft delete header
-      await (_db.update(_db.stockReturns)..where((tbl) => tbl.uuid.equals(id))).write(
+      // Soft delete header with scoped query
+      await (_db.update(_db.stockReturns)..where((tbl) => _scoped(tbl) & tbl.uuid.equals(id))).write(
         StockReturnsCompanion(
           deletedAt: Value(now.millisecondsSinceEpoch),
           updatedAt: Value(now.millisecondsSinceEpoch),
@@ -268,12 +299,20 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
   }
 
   Future<void> _adjustProductQty(String itemCode, double delta) async {
-    final product = await (_db.select(_db.products)..where((tbl) => tbl.itemCode.equals(itemCode))).getSingleOrNull();
+    final product = await (_db.select(_db.products)
+          ..where((tbl) =>
+              tbl.itemCode.equals(itemCode) &
+              (tbl.companyId.equals(_currentCompanyId) | tbl.companyId.isNull())))
+        .getSingleOrNull();
 
     if (product != null) {
       final newQty = product.onHandQty + delta;
       final updatedUnitCost = await _costLayerService.getWeightedAverageCost(itemCode);
-      await (_db.update(_db.products)..where((tbl) => tbl.itemCode.equals(itemCode))).write(
+      await (_db.update(_db.products)
+            ..where((tbl) =>
+                tbl.itemCode.equals(itemCode) &
+                (tbl.companyId.equals(_currentCompanyId) | tbl.companyId.isNull())))
+          .write(
         ProductsCompanion(
           onHandQty: Value(newQty),
           unitCost: Value(updatedUnitCost > 0 ? updatedUnitCost : product.unitCost),
@@ -299,6 +338,10 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
       updatedAt: DateTime.fromMillisecondsSinceEpoch(row.updatedAt, isUtc: true),
       version: row.version,
       companyId: row.companyId,
+      status: InventoryDocumentStatus.fromStorage(row.status),
+      postedAt: row.postedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(row.postedAt!, isUtc: true),
       deletedAt: row.deletedAt == null
           ? null
           : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),

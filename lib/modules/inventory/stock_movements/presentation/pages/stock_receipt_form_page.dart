@@ -116,8 +116,8 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
           final composer = ref.read(stockReceiptComposerProvider.notifier);
 
           if (_isEdit) {
-            final repo = ref.read(stockMovementsRepositoryProvider);
-            final receipt = await repo.getReceiptById(widget.receiptId!);
+            final useCases = ref.read(stockMovementUseCasesProvider);
+            final receipt = await useCases.getReceiptById(widget.receiptId!);
             if (receipt == null) throw Exception('أمر التوريد غير موجود');
             if (receipt.isPosted) {
               _isPostedLocked = true;
@@ -221,10 +221,10 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
       message: 'جاري حفظ أمر التوريد...',
       action: () async {
         try {
-          final repo = ref.read(stockMovementsRepositoryProvider);
+          final useCases = ref.read(stockMovementUseCasesProvider);
           final voucherPort = ref.read(inventoryVoucherBookPortProvider);
           final success = await composer.save(
-            repo: repo,
+            useCases: useCases,
             voucherPort: voucherPort,
           );
           if (!mounted) return;

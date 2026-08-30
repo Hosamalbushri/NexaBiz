@@ -153,8 +153,8 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
     );
 
     if (confirmed == true) {
-      final repo = ref.read(stockMovementsRepositoryProvider);
-      await repo.deleteIssue(issue.id);
+      final useCases = ref.read(stockMovementUseCasesProvider);
+      await useCases.deleteIssue(issue.id);
       if (mounted) {
         ref.invalidate(stockIssuesStreamProvider);
         Navigator.pop(context);

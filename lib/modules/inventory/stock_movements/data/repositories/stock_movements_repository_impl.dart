@@ -1,4 +1,6 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
@@ -15,13 +17,31 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     required InventoryDatabase db,
     SyncQueue? syncQueue,
     InventoryAccountingPoster? accountingPoster,
+    String Function()? readCompanyId,
   })  : _db = db,
         _syncQueue = syncQueue,
-        _accountingPoster = accountingPoster;
+        _accountingPoster = accountingPoster,
+        _readCompanyId = readCompanyId;
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
   final InventoryAccountingPoster? _accountingPoster;
+  final String Function()? _readCompanyId;
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+
+  Expression<bool> _tenantScopedReceipt($StockReceiptsTable tbl) =>
+      tbl.companyId.equals(_currentCompanyId);
+
+  Expression<bool> _scopedReceipt($StockReceiptsTable tbl) =>
+      tbl.deletedAt.isNull() & _tenantScopedReceipt(tbl);
+
+  Expression<bool> _tenantScopedIssue($StockIssuesTable tbl) =>
+      tbl.companyId.equals(_currentCompanyId);
+
+  Expression<bool> _scopedIssue($StockIssuesTable tbl) =>
+      tbl.deletedAt.isNull() & _tenantScopedIssue(tbl);
 
   static const receiptEntityType = 'stock_receipt';
   static const issueEntityType = 'stock_issue';
@@ -33,7 +53,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
   @override
   Future<List<StockReceipt>> getAllReceipts() async {
     final query = _db.select(_db.stockReceipts)
-      ..where((tbl) => tbl.deletedAt.isNull());
+      ..where((tbl) => _scopedReceipt(tbl));
     final rows = await query.get();
     final results = <StockReceipt>[];
 
@@ -47,7 +67,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
   @override
   Stream<List<StockReceipt>> watchAllReceipts() {
     final query = _db.select(_db.stockReceipts)
-      ..where((tbl) => tbl.deletedAt.isNull());
+      ..where((tbl) => _scopedReceipt(tbl));
 
     return query.watch().asyncMap((rows) async {
       final results = <StockReceipt>[];
@@ -62,7 +82,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
   @override
   Future<StockReceipt?> getReceiptById(String id) async {
     final query = _db.select(_db.stockReceipts)
-      ..where((tbl) => tbl.uuid.equals(id) & tbl.deletedAt.isNull());
+      ..where((tbl) => tbl.uuid.equals(id) & _scopedReceipt(tbl));
     final row = await query.getSingleOrNull();
     if (row == null) return null;
 
@@ -72,6 +92,12 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
   @override
   Future<void> saveReceipt(StockReceipt receipt) async {
+    if (receipt.companyId != null &&
+        receipt.companyId!.isNotEmpty &&
+        receipt.companyId != _currentCompanyId) {
+      throw ArgumentError('Cross-tenant operation rejected: receipt companyId (${receipt.companyId}) does not match current tenant ($_currentCompanyId)');
+    }
+
     for (final line in receipt.lines) {
       if (line.unitCost <= 0 || line.totalCost <= 0) {
         throw ArgumentError('لا يمكن حفظ أمر التوريد بتكلفة صفرية للصنف (${line.itemName})');
@@ -79,15 +105,22 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     }
     await _db.transaction(() async {
       final existing = await (_db.select(_db.stockReceipts)
-            ..where((tbl) => tbl.uuid.equals(receipt.id)))
+            ..where((tbl) => tbl.uuid.equals(receipt.id) & _tenantScopedReceipt(tbl)))
           .getSingleOrNull();
+
+      if (existing != null && (existing.status == 'posted' || existing.postedAt != null)) {
+        throw const JournalException(JournalException.postedImmutable);
+      }
 
       final now = DateTime.now().toUtc();
       final newVersion = (existing?.version ?? receipt.version) + (existing == null ? 0 : 1);
+      final targetCompanyId = receipt.companyId ?? _currentCompanyId;
 
       // Save header row
       if (existing != null) {
-        await (_db.update(_db.stockReceipts)..where((tbl) => tbl.uuid.equals(receipt.id))).write(
+        await (_db.update(_db.stockReceipts)
+              ..where((tbl) => tbl.uuid.equals(receipt.id) & _tenantScopedReceipt(tbl)))
+            .write(
           StockReceiptsCompanion(
             receiptNumber: Value(receipt.receiptNumber),
             supplier: Value(receipt.supplier),
@@ -100,7 +133,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
             updatedAt: Value(now.millisecondsSinceEpoch),
             syncStatus: const Value('pending'),
             version: Value(newVersion),
-            companyId: Value(receipt.companyId),
+            companyId: Value(targetCompanyId),
             status: Value(receipt.status.name),
             postedAt: Value(receipt.postedAt?.millisecondsSinceEpoch),
           ),
@@ -121,7 +154,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
             updatedAt: Value(now.millisecondsSinceEpoch),
             syncStatus: const Value('pending'),
             version: Value(newVersion),
-            companyId: Value(receipt.companyId),
+            companyId: Value(targetCompanyId),
             status: Value(receipt.status.name),
             postedAt: Value(receipt.postedAt?.millisecondsSinceEpoch),
           ),
@@ -152,7 +185,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
             );
       }
 
-      await _enqueueReceipt(receipt.copyWith(version: newVersion), existing == null ? SyncOperationType.create : SyncOperationType.update);
+      await _enqueueReceipt(receipt.copyWith(version: newVersion, companyId: targetCompanyId), existing == null ? SyncOperationType.create : SyncOperationType.update);
 
       final poster = _accountingPoster;
       if (poster != null) {
@@ -188,7 +221,9 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
       final now = DateTime.now().toUtc();
 
-      await (_db.update(_db.stockReceipts)..where((tbl) => tbl.uuid.equals(id))).write(
+      await (_db.update(_db.stockReceipts)
+            ..where((tbl) => tbl.uuid.equals(id) & _tenantScopedReceipt(tbl)))
+          .write(
         StockReceiptsCompanion(
           deletedAt: Value(now.millisecondsSinceEpoch),
           updatedAt: Value(now.millisecondsSinceEpoch),
@@ -222,7 +257,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
   @override
   Future<List<StockIssue>> getAllIssues() async {
     final query = _db.select(_db.stockIssues)
-      ..where((tbl) => tbl.deletedAt.isNull());
+      ..where((tbl) => _scopedIssue(tbl));
     final rows = await query.get();
     final results = <StockIssue>[];
 
@@ -236,7 +271,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
   @override
   Stream<List<StockIssue>> watchAllIssues() {
     final query = _db.select(_db.stockIssues)
-      ..where((tbl) => tbl.deletedAt.isNull());
+      ..where((tbl) => _scopedIssue(tbl));
 
     return query.watch().asyncMap((rows) async {
       final results = <StockIssue>[];
@@ -251,7 +286,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
   @override
   Future<StockIssue?> getIssueById(String id) async {
     final query = _db.select(_db.stockIssues)
-      ..where((tbl) => tbl.uuid.equals(id) & tbl.deletedAt.isNull());
+      ..where((tbl) => tbl.uuid.equals(id) & _scopedIssue(tbl));
     final row = await query.getSingleOrNull();
     if (row == null) return null;
 
@@ -261,6 +296,12 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
   @override
   Future<void> saveIssue(StockIssue issue) async {
+    if (issue.companyId != null &&
+        issue.companyId!.isNotEmpty &&
+        issue.companyId != _currentCompanyId) {
+      throw ArgumentError('Cross-tenant operation rejected: issue companyId (${issue.companyId}) does not match current tenant ($_currentCompanyId)');
+    }
+
     for (final line in issue.lines) {
       if (line.unitCost <= 0 || line.totalCost <= 0) {
         throw ArgumentError('لا يمكن حفظ أمر الصرف بتكلفة صفرية للصنف (${line.itemName})');
@@ -268,15 +309,22 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     }
     await _db.transaction(() async {
       final existing = await (_db.select(_db.stockIssues)
-            ..where((tbl) => tbl.uuid.equals(issue.id)))
+            ..where((tbl) => tbl.uuid.equals(issue.id) & _tenantScopedIssue(tbl)))
           .getSingleOrNull();
+
+      if (existing != null && (existing.status == 'posted' || existing.postedAt != null)) {
+        throw const JournalException(JournalException.postedImmutable);
+      }
 
       final now = DateTime.now().toUtc();
       final newVersion = (existing?.version ?? issue.version) + (existing == null ? 0 : 1);
+      final targetCompanyId = issue.companyId ?? _currentCompanyId;
 
       // Save header row
       if (existing != null) {
-        await (_db.update(_db.stockIssues)..where((tbl) => tbl.uuid.equals(issue.id))).write(
+        await (_db.update(_db.stockIssues)
+              ..where((tbl) => tbl.uuid.equals(issue.id) & _tenantScopedIssue(tbl)))
+            .write(
           StockIssuesCompanion(
             issueNumber: Value(issue.issueNumber),
             destination: Value(issue.destination),
@@ -291,7 +339,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
             updatedAt: Value(now.millisecondsSinceEpoch),
             syncStatus: const Value('pending'),
             version: Value(newVersion),
-            companyId: Value(issue.companyId),
+            companyId: Value(targetCompanyId),
             status: Value(issue.status.name),
             postedAt: Value(issue.postedAt?.millisecondsSinceEpoch),
           ),
@@ -314,7 +362,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
             updatedAt: Value(now.millisecondsSinceEpoch),
             syncStatus: const Value('pending'),
             version: Value(newVersion),
-            companyId: Value(issue.companyId),
+            companyId: Value(targetCompanyId),
             status: Value(issue.status.name),
             postedAt: Value(issue.postedAt?.millisecondsSinceEpoch),
           ),
@@ -345,7 +393,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
             );
       }
 
-      await _enqueueIssue(issue.copyWith(version: newVersion), existing == null ? SyncOperationType.create : SyncOperationType.update);
+      await _enqueueIssue(issue.copyWith(version: newVersion, companyId: targetCompanyId), existing == null ? SyncOperationType.create : SyncOperationType.update);
 
       final poster = _accountingPoster;
       if (poster != null) {
@@ -382,7 +430,9 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
       final now = DateTime.now().toUtc();
 
-      await (_db.update(_db.stockIssues)..where((tbl) => tbl.uuid.equals(id))).write(
+      await (_db.update(_db.stockIssues)
+            ..where((tbl) => tbl.uuid.equals(id) & _tenantScopedIssue(tbl)))
+          .write(
         StockIssuesCompanion(
           deletedAt: Value(now.millisecondsSinceEpoch),
           updatedAt: Value(now.millisecondsSinceEpoch),

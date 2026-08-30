@@ -19,7 +19,7 @@ class CreateFiscalYear {
   CreateFiscalYear({
     required FiscalYearRepository repository,
     required AccountRepository accounts,
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
     AccountingPeriodGenerator generator = const AccountingPeriodGenerator(),
   }) : _repository = repository,
        _accounts = accounts,
@@ -67,9 +67,9 @@ class CreateFiscalYear {
 /// Opens a closed/reopened-eligible period for posting.
 class OpenAccountingPeriod {
   OpenAccountingPeriod(
-    this._repository, [
-    this._guard = const AllowAllPermissionGuard(),
-  ]);
+    this._repository, {
+    required PermissionGuard permissionGuard,
+  }) : _guard = permissionGuard;
 
   final FiscalYearRepository _repository;
   final PermissionGuard _guard;
@@ -86,9 +86,9 @@ class OpenAccountingPeriod {
 /// Reopens a closed period with an audit reason.
 class ReopenAccountingPeriod {
   ReopenAccountingPeriod(
-    this._repository, [
-    this._guard = const AllowAllPermissionGuard(),
-  ]);
+    this._repository, {
+    required PermissionGuard permissionGuard,
+  }) : _guard = permissionGuard;
 
   final FiscalYearRepository _repository;
   final PermissionGuard _guard;
@@ -118,7 +118,7 @@ class PeriodClosingService {
     required CurrencyRateRepository rates,
     required JournalPostingService posting,
     required JournalRepository journals,
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
   }) : _repository = repository,
        _rates = rates,
        _posting = posting,

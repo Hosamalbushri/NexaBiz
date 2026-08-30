@@ -6,9 +6,9 @@ import '../services/journal_posting_service.dart';
 
 class PostJournalEntry {
   const PostJournalEntry(
-    this._posting, [
-    this._guard = const AllowAllPermissionGuard(),
-  ]);
+    this._posting, {
+    required PermissionGuard permissionGuard,
+  }) : _guard = permissionGuard;
 
   final JournalPostingService _posting;
   final PermissionGuard _guard;
@@ -53,9 +53,9 @@ class ListJournalEntryHeaders {
 
 class SoftDeleteJournalEntry {
   const SoftDeleteJournalEntry(
-    this._posting, [
-    this._guard = const AllowAllPermissionGuard(),
-  ]);
+    this._posting, {
+    required PermissionGuard permissionGuard,
+  }) : _guard = permissionGuard;
 
   final JournalPostingService _posting;
   final PermissionGuard _guard;
@@ -69,9 +69,9 @@ class SoftDeleteJournalEntry {
 /// Voids a journal (reverse if posted, soft-delete if draft).
 class VoidJournalEntry {
   const VoidJournalEntry(
-    this._posting, [
-    this._guard = const AllowAllPermissionGuard(),
-  ]);
+    this._posting, {
+    required PermissionGuard permissionGuard,
+  }) : _guard = permissionGuard;
 
   final JournalPostingService _posting;
   final PermissionGuard _guard;

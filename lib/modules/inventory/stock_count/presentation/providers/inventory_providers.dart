@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import '../../data/datasources/excel_export_datasource.dart';
 import '../../data/datasources/excel_import_datasource.dart';
@@ -55,11 +56,17 @@ final searchInventoryItemsProvider = Provider<SearchInventoryItems>((ref) {
 });
 
 final saveInventoryCountProvider = Provider<SaveInventoryCount>((ref) {
-  return SaveInventoryCount(ref.watch(inventoryRepositoryProvider));
+  return SaveInventoryCount(
+    ref.watch(inventoryRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
+  );
 });
 
 final replaceInventoryItemsProvider = Provider<ReplaceInventoryItems>((ref) {
-  return ReplaceInventoryItems(ref.watch(inventoryRepositoryProvider));
+  return ReplaceInventoryItems(
+    ref.watch(inventoryRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
+  );
 });
 
 /// Lightweight invalidation for count/search/reports pages — avoids rebuilding

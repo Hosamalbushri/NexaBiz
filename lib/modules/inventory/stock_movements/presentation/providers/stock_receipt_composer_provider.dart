@@ -3,7 +3,7 @@ import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_movement_line.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_receipt.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/repositories/stock_movements_repository.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/usecases/stock_movement_usecases.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/cost_layer_service.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_account_port.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_voucher_book_port.dart';
@@ -320,7 +320,7 @@ class StockReceiptComposerNotifier
   }
 
   Future<bool> save({
-    required StockMovementsRepository repo,
+    required StockMovementUseCases useCases,
     required InventoryVoucherBookPort voucherPort,
   }) async {
     if (state.lines.isEmpty) {
@@ -389,7 +389,7 @@ class StockReceiptComposerNotifier
         }).toList(),
       );
 
-      await repo.saveReceipt(receipt);
+      await useCases.saveReceipt(receipt);
       state = state.copyWith(isSaving: false);
       return true;
     } catch (e) {

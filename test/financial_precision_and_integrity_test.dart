@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/modules/accounting/domain/services/journal_money.dart';
-import 'package:stock_count/modules/sales/domain/entities/discount_type.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_item.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_calculation_service.dart';
-import 'package:stock_count/modules/sales/domain/services/sale_money.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_money.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/discount_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_item.dart';
+import 'package:stock_count/modules/sales/invoices/domain/services/sale_calculation_service.dart';
+import 'package:stock_count/modules/sales/invoices/domain/services/sale_money.dart';
 
 void main() {
   group('Financial Precision & 3-Decimal Currency Tests', () {

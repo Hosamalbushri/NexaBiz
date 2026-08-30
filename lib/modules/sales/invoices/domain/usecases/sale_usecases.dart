@@ -38,7 +38,7 @@ class CreateSale {
   CreateSale({
     required SaleRepository repository,
     required SaleNumberAllocatorPort numberAllocator,
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
     SaleVoucherBookPort voucherBookPort = const NoOpSaleVoucherBookPort(),
     SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
     SaleAccountingBridgePort accountingBridge =
@@ -216,7 +216,7 @@ class ConfirmSale {
     required SaleRepository repository,
     required SaleAccountingBridgePort accountingBridge,
     required SaleInventoryEffectPort inventoryEffect,
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
     SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
     SaleWorkflowService workflow = const SaleWorkflowService(),
   }) : _repository = repository,
@@ -319,7 +319,7 @@ class CancelSale {
   CancelSale({
     required SaleRepository repository,
     required SaleInventoryEffectPort inventoryEffect,
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
     SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
     SaleWorkflowService workflow = const SaleWorkflowService(),
   }) : _repository = repository,

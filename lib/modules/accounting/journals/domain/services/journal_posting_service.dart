@@ -1,7 +1,11 @@
 import '../entities/journal_entry.dart';
 import '../models/journal_exception.dart';
 import '../repositories/journal_repository.dart';
+import 'package:stock_count/core/audit/domain/services/audit_trail_service.dart';
 import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
+import 'package:stock_count/core/permissions/permission_guard.dart';
+import 'package:stock_count/modules/accounting/permissions/accounting_permissions.dart';
+
 
 /// Application entry point for posting / voiding journals.
 ///
@@ -12,21 +16,90 @@ class JournalPostingService {
   const JournalPostingService({
     required JournalRepository journals,
     required AccountingPeriodValidator periodValidator,
-  }) : _journals = journals,
-       _periodValidator = periodValidator;
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    AuditTrailService? auditService,
+  })  : _journals = journals,
+        _periodValidator = periodValidator,
+        _permissionGuard = permissionGuard,
+        _auditService = auditService;
 
   /// Source type for reversing journals (`sourceId` = original entry UUID).
   static const reverseSourceType = 'journal_reverse';
 
   final JournalRepository _journals;
   final AccountingPeriodValidator _periodValidator;
+  final PermissionGuard _permissionGuard;
+  final AuditTrailService? _auditService;
 
-  Future<JournalEntry> post(JournalEntryDraft draft) async {
-    await _periodValidator.assertEntryAllowed(draft.entryDate);
-    return _journals.post(draft);
+  Future<JournalEntry?> findBySource({
+    required String sourceType,
+    required String sourceId,
+  }) =>
+      _journals.findBySource(
+        sourceType: sourceType,
+        sourceId: sourceId,
+      );
+
+  Future<JournalEntry> post(JournalEntryDraft draft, {String? userId}) async {
+    try {
+      _permissionGuard.requireAny(AccountingPermissions.journalsPost);
+    } on PermissionDeniedException catch (e) {
+      await _auditService?.recordEvent(
+        documentId: draft.uuid ?? draft.voucherNumber,
+        documentType: 'journal_entry',
+        eventType: 'unauthorized_attempt',
+        userId: userId,
+        notes: 'مرفوض: لا تملك صلاحية ترحيل القيود',
+        metadata: {
+          'operation': 'post',
+          'voucherNumber': draft.voucherNumber,
+          'errorReason': e.toString(),
+        },
+      );
+      rethrow;
+    }
+
+    try {
+      await _periodValidator.assertEntryAllowed(draft.entryDate);
+    } on JournalException catch (e) {
+      await _auditService?.recordEvent(
+        documentId: draft.uuid ?? draft.voucherNumber,
+        documentType: 'journal_entry',
+        eventType: 'unauthorized_attempt',
+        userId: userId,
+        notes: 'الفترة المحاسبية مغلقة للقيد (${e.message})',
+        metadata: {
+          'operation': 'post',
+          'voucherNumber': draft.voucherNumber,
+          'errorReason': e.message,
+          'attemptedDate': draft.entryDate.toIso8601String(),
+        },
+      );
+      rethrow;
+    }
+
+
+    final posted = await _journals.post(draft);
+
+    await _auditService?.recordEvent(
+      documentId: posted.uuid,
+      documentType: 'journal_entry',
+      eventType: draft.sourceType == reverseSourceType ? 'reverse' : 'post',
+      userId: userId,
+      metadata: {
+        'voucherNumber': posted.voucherNumber,
+        'voucherType': posted.voucherType,
+        'isPosted': posted.isPosted,
+        'lineCount': posted.lines.length,
+        'before': {'status': 'draft'},
+        'after': {'status': 'posted'},
+      },
+    );
+
+    return posted;
   }
 
-  /// Voids a journal: tombstones/deletes draft and posted entries.
+  /// Voids a journal: tombstones draft entries; reverses posted entries via offsetting entry.
   Future<void> voidByUuid(String uuid) async {
     final existing = await _journals.getByUuid(uuid);
     if (existing == null) {
@@ -37,13 +110,10 @@ class JournalPostingService {
       await _journals.softDeleteByUuid(uuid);
       return;
     }
-    await _journals.softDeletePostedAfterReverse(existing.uuid);
+    await reverseByUuid(existing.uuid);
   }
 
   /// Voids the active journal for a business document (sale, R&P, …).
-  ///
-  /// Removes journal entries upon unpost so that re-posting recreates the journal
-  /// under the same voucher number without leaving residual reverse entries.
   Future<void> voidBySource({
     required String sourceType,
     required String sourceId,
@@ -63,7 +133,7 @@ class JournalPostingService {
       );
       return;
     }
-    await _journals.softDeletePostedAfterReverse(existing.uuid);
+    await reverseByUuid(existing.uuid);
   }
 
   /// Posts a reversing entry for a posted journal (swap debit/credit).
@@ -71,6 +141,8 @@ class JournalPostingService {
     String uuid, {
     DateTime? reverseDate,
   }) async {
+    _permissionGuard.requireAny(AccountingPermissions.journalsReverse);
+
     final existing = await _journals.getByUuid(uuid.trim());
     if (existing == null) {
       throw const JournalException(JournalException.notFound);
@@ -79,23 +151,43 @@ class JournalPostingService {
       throw const JournalException(JournalException.notPosted);
     }
 
+
     final already = await _journals.findBySource(
       sourceType: reverseSourceType,
       sourceId: existing.uuid,
     );
     if (already != null) {
-      throw const JournalException(JournalException.alreadyReversed);
+      return already;
     }
 
     final entryDate = reverseDate ?? existing.entryDate;
-    await _periodValidator.assertEntryAllowed(entryDate);
+    try {
+      await _periodValidator.assertMutationAllowed(
+        entryDate: entryDate,
+        originalDate: existing.entryDate,
+      );
+    } on JournalException catch (e) {
+      await _auditService?.recordEvent(
+        documentId: existing.uuid,
+        documentType: 'journal_entry',
+        eventType: 'unauthorized_attempt',
+        notes: 'عكس القيد مرفوض بسبب الفترة المحاسبية (${e.message})',
+        metadata: {
+          'operation': 'reverse',
+          'originalTransactionId': existing.uuid,
+          'errorReason': e.message,
+          'attemptedDate': entryDate.toIso8601String(),
+        },
+      );
+      rethrow;
+    }
 
     final description = existing.description?.trim();
     final reverseDescription = (description == null || description.isEmpty)
         ? 'عكس قيد ${existing.voucherNumber}'
         : 'عكس: $description';
 
-    return _journals.post(
+    final reversal = await _journals.post(
       JournalEntryDraft(
         entryDate: entryDate,
         voucherNumber: '${existing.voucherNumber}-R',
@@ -122,6 +214,23 @@ class JournalPostingService {
         ],
       ),
     );
+
+    await _auditService?.recordEvent(
+      documentId: reversal.uuid,
+      documentType: 'journal_entry',
+      eventType: 'reverse',
+      notes: reverseDescription,
+      metadata: {
+        'originalTransactionId': existing.uuid,
+        'reversalTransactionId': reversal.uuid,
+        'originalVoucher': existing.voucherNumber,
+        'reversalVoucher': reversal.voucherNumber,
+        'before': {'status': 'posted', 'voucherNumber': existing.voucherNumber},
+        'after': {'status': 'posted', 'voucherNumber': reversal.voucherNumber},
+      },
+    );
+
+    return reversal;
   }
 
   @Deprecated('Use voidBySource — soft-delete of posted journals is blocked')

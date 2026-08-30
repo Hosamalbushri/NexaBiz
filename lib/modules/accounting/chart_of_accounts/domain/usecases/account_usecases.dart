@@ -67,9 +67,9 @@ class DeactivateAccount {
 
 class SoftDeleteAccount {
   const SoftDeleteAccount(
-    this._repository, [
-    this._guard = const AllowAllPermissionGuard(),
-  ]);
+    this._repository, {
+    required PermissionGuard permissionGuard,
+  }) : _guard = permissionGuard;
 
   final AccountRepository _repository;
   final PermissionGuard _guard;

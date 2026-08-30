@@ -182,264 +182,11 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
       return false;
     }).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // 1. Report Title & Actions Bar
-        if (widget.title != null || widget.onExportPdf != null || widget.onPrint != null)
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm + 4,
-            ),
-            decoration: BoxDecoration(
-              color: scheme.surface,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.35),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: widget.centerTitle
-                        ? CrossAxisAlignment.center
-                        : CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (widget.title != null)
-                        Text(
-                          widget.title!,
-                          textAlign: widget.centerTitle ? TextAlign.center : TextAlign.left,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 16,
-                            color: scheme.onSurface,
-                          ),
-                        ),
-                      if (widget.subtitle != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.subtitle!,
-                          textAlign: widget.centerTitle ? TextAlign.center : TextAlign.left,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            color: scheme.primary,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                if (widget.onRefresh != null)
-                  IconButton(
-                    onPressed: widget.onRefresh,
-                    icon: const Icon(Icons.refresh_rounded),
-                    tooltip: 'تحديث البيانات',
-                  ),
-                if (widget.onExportPdf != null)
-                  FilledButton.icon(
-                    onPressed: widget.onExportPdf,
-                    icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-                    label: const Text('تصدير PDF'),
-                    style: FilledButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ),
-                if (widget.onPrint != null) ...[
-                  const SizedBox(width: AppSpacing.xs),
-                  IconButton.filledTonal(
-                    onPressed: widget.onPrint,
-                    icon: const Icon(Icons.print_outlined, size: 20),
-                    tooltip: 'طباعة التقرير',
-                  ),
-                ],
-              ],
-            ),
-          ),
+    return LayoutBuilder(
+      builder: (context, parentConstraints) {
+        final hasBoundedHeight = parentConstraints.maxHeight.isFinite;
 
-        if (widget.title != null || widget.onExportPdf != null)
-          const SizedBox(height: AppSpacing.md),
-
-        // 2. Header Info Metadata Cards Grid
-        if (widget.headerInfoCards.isNotEmpty) ...[
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final crossAxisCount = constraints.maxWidth > 900
-                  ? 4
-                  : constraints.maxWidth > 600
-                      ? 2
-                      : 1;
-
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: widget.headerInfoCards.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  mainAxisExtent: 84,
-                  crossAxisSpacing: AppSpacing.sm,
-                  mainAxisSpacing: AppSpacing.sm,
-                ),
-                itemBuilder: (context, index) {
-                  final card = widget.headerInfoCards[index];
-                  final accent = card.accentColor ?? scheme.primary;
-
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: scheme.surface,
-                      borderRadius: BorderRadius.circular(AppRadius.md),
-                      border: Border.all(
-                        color: accent.withValues(alpha: 0.3),
-                        width: 1.2,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        if (card.icon != null) ...[
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: accent.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(AppRadius.xs),
-                            ),
-                            child: Icon(card.icon, size: 18, color: accent),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                        ],
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                card.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                card.value,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  color: accent,
-                                ),
-                              ),
-                              if (card.subValue != null)
-                                Text(
-                                  card.subValue!,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    fontSize: 10,
-                                    color: scheme.onSurfaceVariant,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-          const SizedBox(height: AppSpacing.md),
-        ],
-
-        // 3. Search Bar within Table
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-          child: Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 38,
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (val) => setState(() => _searchQuery = val),
-                    style: theme.textTheme.bodyMedium,
-                    decoration: InputDecoration(
-                      hintText: 'تصفية نتائج الجدول الحالية...',
-                      hintStyle: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                      ),
-                      prefixIcon: const Icon(Icons.filter_alt_outlined, size: 18),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear_rounded, size: 16),
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _searchQuery = '');
-                              },
-                            )
-                          : null,
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: 8,
-                      ),
-                      filled: true,
-                      fillColor: scheme.surface,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        borderSide: BorderSide(
-                          color: scheme.outlineVariant.withValues(alpha: 0.4),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(AppRadius.xs + 2),
-                  border: Border.all(
-                    color: scheme.primary.withValues(alpha: 0.2),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.format_list_bulleted_rounded,
-                      size: 15,
-                      color: scheme.primary,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _searchQuery.trim().isNotEmpty
-                          ? 'النتائج: ${filteredItems.length} من ${widget.items.length}'
-                          : 'إجمالي السجلات: ${widget.items.length}',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: scheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // 4. Main Dynamic Table Box
-        Container(
+        final mainTableBox = Container(
           decoration: BoxDecoration(
             color: scheme.surface,
             borderRadius: BorderRadius.circular(AppRadius.md),
@@ -467,6 +214,7 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                   child: SizedBox(
                     width: tableWidth,
                     child: Column(
+                      mainAxisSize: hasBoundedHeight ? MainAxisSize.max : MainAxisSize.min,
                       children: [
                         // Grouped Row Headers (Level 1)
                         if (widget.groupHeaders.isNotEmpty)
@@ -487,8 +235,28 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
                               icon: Icons.table_chart_outlined,
                             ),
                           )
+                        else if (hasBoundedHeight)
+                          Expanded(
+                            child: SingleChildScrollView(
+                              controller: _verticalScrollController,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  for (int i = 0; i < filteredItems.length; i++)
+                                    _buildDataRow(
+                                      context,
+                                      theme,
+                                      scheme,
+                                      filteredItems[i],
+                                      i,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          )
                         else
                           Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               for (int i = 0; i < filteredItems.length; i++)
                                 _buildDataRow(
@@ -513,10 +281,355 @@ class _AppDynamicReportTableState<T> extends State<AppDynamicReportTable<T>> {
               );
             },
           ),
-        ),
-      ],
+        );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 1. Report Title & Actions Bar
+            if (widget.title != null || widget.onExportPdf != null || widget.onPrint != null)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm + 4,
+                ),
+                decoration: BoxDecoration(
+                  color: scheme.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  border: Border.all(
+                    color: scheme.outlineVariant.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: widget.centerTitle
+                            ? CrossAxisAlignment.center
+                            : CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (widget.title != null)
+                            Text(
+                              widget.title!,
+                              textAlign: widget.centerTitle ? TextAlign.center : TextAlign.left,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 16,
+                                color: scheme.onSurface,
+                              ),
+                            ),
+                          if (widget.subtitle != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              widget.subtitle!,
+                              textAlign: widget.centerTitle ? TextAlign.center : TextAlign.left,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                                color: scheme.primary,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (widget.onRefresh != null)
+                      IconButton(
+                        onPressed: widget.onRefresh,
+                        icon: const Icon(Icons.refresh_rounded),
+                        tooltip: 'تحديث البيانات',
+                      ),
+                    if (widget.onExportPdf != null)
+                      FilledButton.icon(
+                        onPressed: widget.onExportPdf,
+                        icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                        label: const Text('تصدير PDF'),
+                        style: FilledButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ),
+                    if (widget.onPrint != null) ...[
+                      const SizedBox(width: AppSpacing.xs),
+                      IconButton.filledTonal(
+                        onPressed: widget.onPrint,
+                        icon: const Icon(Icons.print_outlined, size: 20),
+                        tooltip: 'طباعة التقرير',
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+            if (widget.title != null || widget.onExportPdf != null)
+              const SizedBox(height: AppSpacing.md),
+
+            // 2. Header Info Metadata Cards
+            if (widget.headerInfoCards.isNotEmpty) ...[
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isNarrow = constraints.maxWidth <= 600;
+
+                  if (isNarrow) {
+                    return SizedBox(
+                      height: 72,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: widget.headerInfoCards.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
+                        itemBuilder: (context, index) {
+                          final card = widget.headerInfoCards[index];
+                          final accent = card.accentColor ?? scheme.primary;
+
+                          return Container(
+                            width: 220,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                              vertical: AppSpacing.xs,
+                            ),
+                            decoration: BoxDecoration(
+                              color: scheme.surface,
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              border: Border.all(
+                                color: accent.withValues(alpha: 0.3),
+                                width: 1.2,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                if (card.icon != null) ...[
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: accent.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(AppRadius.xs),
+                                    ),
+                                    child: Icon(card.icon, size: 16, color: accent),
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs),
+                                ],
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        card.title,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        card.value,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.textTheme.titleSmall?.copyWith(
+                                          fontWeight: FontWeight.w900,
+                                          color: accent,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      if (card.subValue != null)
+                                        Text(
+                                          card.subValue!,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: theme.textTheme.labelSmall?.copyWith(
+                                            fontSize: 9.5,
+                                            color: scheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  }
+
+                  final crossAxisCount = constraints.maxWidth > 900 ? 4 : 2;
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: widget.headerInfoCards.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      mainAxisExtent: 80,
+                      crossAxisSpacing: AppSpacing.sm,
+                      mainAxisSpacing: AppSpacing.sm,
+                    ),
+                    itemBuilder: (context, index) {
+                      final card = widget.headerInfoCards[index];
+                      final accent = card.accentColor ?? scheme.primary;
+
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: scheme.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(
+                            color: accent.withValues(alpha: 0.3),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            if (card.icon != null) ...[
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: accent.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                                ),
+                                child: Icon(card.icon, size: 18, color: accent),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                            ],
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    card.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    card.value,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w900,
+                                      color: accent,
+                                    ),
+                                  ),
+                                  if (card.subValue != null)
+                                    Text(
+                                      card.subValue!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        fontSize: 10,
+                                        color: scheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+
+            // 3. Search Bar within Table
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 38,
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                        style: theme.textTheme.bodyMedium,
+                        decoration: InputDecoration(
+                          hintText: 'تصفية نتائج الجدول الحالية...',
+                          hintStyle: theme.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                          ),
+                          prefixIcon: const Icon(Icons.filter_alt_outlined, size: 18),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded, size: 16),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() => _searchQuery = '');
+                                  },
+                                )
+                              : null,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                            vertical: 8,
+                          ),
+                          filled: true,
+                          fillColor: scheme.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            borderSide: BorderSide(
+                              color: scheme.outlineVariant.withValues(alpha: 0.4),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(AppRadius.xs + 2),
+                      border: Border.all(
+                        color: scheme.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.format_list_bulleted_rounded,
+                          size: 15,
+                          color: scheme.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _searchQuery.trim().isNotEmpty
+                              ? 'النتائج: ${filteredItems.length} من ${widget.items.length}'
+                              : 'إجمالي السجلات: ${widget.items.length}',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: scheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 4. Main Dynamic Table Box (Expanded if parent is bounded, else natural container height)
+            hasBoundedHeight ? Expanded(child: mainTableBox) : mainTableBox,
+          ],
+        );
+      },
     );
   }
+
 
   /// Renders top grouped multi-column headers.
   Widget _buildGroupedHeaderRow(ThemeData theme, ColorScheme scheme) {

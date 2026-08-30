@@ -1,7 +1,9 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
+import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/cost_layer_service.dart';
 import 'package:stock_count/modules/sync/sync.dart';
@@ -15,22 +17,32 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
     SyncQueue? syncQueue,
     CostLayerService? costLayerService,
     CostValuationMethod valuationMethod = CostValuationMethod.fifo,
+    String Function()? readCompanyId,
   })  : _db = db,
         _syncQueue = syncQueue,
-        _costLayerService = costLayerService ?? CostLayerServiceImpl(db: db),
-        _valuationMethod = valuationMethod;
+        _costLayerService = costLayerService ?? CostLayerServiceImpl(db: db, readCompanyId: readCompanyId),
+        _valuationMethod = valuationMethod,
+        _readCompanyId = readCompanyId;
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
   final CostLayerService _costLayerService;
   final CostValuationMethod _valuationMethod;
+  final String Function()? _readCompanyId;
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+
+  Expression<bool> _scoped($StockTransfersTable tbl) {
+    return tbl.companyId.equals(_currentCompanyId);
+  }
 
   static const transferEntityType = 'stock_transfer';
 
   @override
   Future<List<StockTransfer>> getAllTransfers() async {
     final query = _db.select(_db.stockTransfers)
-      ..where((tbl) => tbl.deletedAt.isNull());
+      ..where((tbl) => _scoped(tbl) & tbl.deletedAt.isNull());
     final rows = await query.get();
     final results = <StockTransfer>[];
 
@@ -44,7 +56,7 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
   @override
   Stream<List<StockTransfer>> watchAllTransfers() {
     final query = _db.select(_db.stockTransfers)
-      ..where((tbl) => tbl.deletedAt.isNull());
+      ..where((tbl) => _scoped(tbl) & tbl.deletedAt.isNull());
 
     return query.watch().asyncMap((rows) async {
       final results = <StockTransfer>[];
@@ -59,7 +71,7 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
   @override
   Future<StockTransfer?> getTransferById(String id) async {
     final query = _db.select(_db.stockTransfers)
-      ..where((tbl) => tbl.uuid.equals(id) & tbl.deletedAt.isNull());
+      ..where((tbl) => _scoped(tbl) & tbl.uuid.equals(id) & tbl.deletedAt.isNull());
     final row = await query.getSingleOrNull();
     if (row == null) return null;
 
@@ -71,11 +83,16 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
   Future<void> saveTransfer(StockTransfer transfer) async {
     await _db.transaction(() async {
       final existing = await (_db.select(_db.stockTransfers)
-            ..where((tbl) => tbl.uuid.equals(transfer.id)))
+            ..where((tbl) => _scoped(tbl) & tbl.uuid.equals(transfer.id)))
           .getSingleOrNull();
+
+      if (existing != null && (existing.status == 'posted' || existing.postedAt != null)) {
+        throw const JournalException(JournalException.postedImmutable);
+      }
 
       final now = DateTime.now().toUtc();
       final newVersion = (existing?.version ?? transfer.version) + (existing == null ? 0 : 1);
+      final effectiveCompanyId = transfer.companyId ?? _currentCompanyId;
 
       if (existing != null) {
         // Reverse previous transfer effects
@@ -87,7 +104,9 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
           await _adjustWhStock(line.itemCode, existing.toWarehouseId, -line.quantity);
         }
 
-        await (_db.update(_db.stockTransfers)..where((tbl) => tbl.uuid.equals(transfer.id))).write(
+        await (_db.update(_db.stockTransfers)
+              ..where((tbl) => _scoped(tbl) & tbl.uuid.equals(transfer.id)))
+            .write(
           StockTransfersCompanion(
             transferNumber: Value(transfer.transferNumber),
             fromWarehouseId: Value(transfer.fromWarehouseId),
@@ -97,9 +116,16 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
             updatedAt: Value(now.millisecondsSinceEpoch),
             syncStatus: const Value('pending'),
             version: Value(newVersion),
-            companyId: Value(transfer.companyId),
+            companyId: Value(effectiveCompanyId),
+            status: Value(transfer.status.name),
+            postedAt: Value(transfer.postedAt?.millisecondsSinceEpoch),
           ),
         );
+
+        // Re-insert lines only for existing transfer owned by this tenant
+        await (_db.delete(_db.stockMovementLines)
+              ..where((tbl) => tbl.movementUuid.equals(transfer.id)))
+            .go();
       } else {
         await _db.into(_db.stockTransfers).insert(
           StockTransfersCompanion(
@@ -113,50 +139,15 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
             updatedAt: Value(now.millisecondsSinceEpoch),
             syncStatus: const Value('pending'),
             version: Value(newVersion),
-            companyId: Value(transfer.companyId),
+            companyId: Value(effectiveCompanyId),
+            status: Value(transfer.status.name),
+            postedAt: Value(transfer.postedAt?.millisecondsSinceEpoch),
           ),
         );
       }
 
-      // Re-insert lines
-      await (_db.delete(_db.stockMovementLines)
-            ..where((tbl) => tbl.movementUuid.equals(transfer.id)))
-          .go();
-
       for (final line in transfer.lines) {
-        // 1. Consume cost layers from source warehouse
-        final consumptionResult = await _costLayerService.consumeLayers(
-          itemCode: line.itemCode,
-          quantity: line.quantity,
-          method: _valuationMethod,
-          issueLineUuid: line.id,
-          movementType: 'transfer_out',
-          warehouseId: transfer.fromWarehouseId,
-          companyId: transfer.companyId,
-        );
-
-        final effectiveUnitCost = consumptionResult.effectiveUnitCost > 0
-            ? consumptionResult.effectiveUnitCost
-            : line.unitCost;
-        final effectiveTotalCost = consumptionResult.totalCost > 0
-            ? consumptionResult.totalCost
-            : line.totalCost;
-
-        // 2. Create new cost layer in destination warehouse
-        await _costLayerService.createLayer(
-          CostLayer(
-            itemCode: line.itemCode,
-            warehouseId: transfer.toWarehouseId,
-            movementUuid: line.id,
-            movementType: 'transfer_in',
-            receivedDate: transfer.transferDate,
-            receivedQty: line.quantity,
-            unitCost: effectiveUnitCost,
-            companyId: transfer.companyId,
-          ),
-        );
-
-        // 3. Save movement line
+        // Save movement line
         await _db.into(_db.stockMovementLines).insert(
               StockMovementLinesCompanion(
                 uuid: Value(line.id),
@@ -167,18 +158,16 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
                 mainQuantity: Value(line.mainQuantity),
                 subQuantity: Value(line.subQuantity),
                 quantity: Value(line.quantity),
-                unitCost: Value(effectiveUnitCost),
-                totalCost: Value(effectiveTotalCost),
+                unitCost: Value(line.unitCost),
+                totalCost: Value(line.totalCost),
               ),
             );
-
-        // 4. Deduct from source warehouse stock, add to destination warehouse stock
         await _adjustWhStock(line.itemCode, transfer.fromWarehouseId, -line.quantity);
         await _adjustWhStock(line.itemCode, transfer.toWarehouseId, line.quantity);
       }
 
       await _enqueueTransfer(
-        transfer.copyWith(version: newVersion),
+        transfer.copyWith(version: newVersion, companyId: effectiveCompanyId),
         existing == null ? SyncOperationType.create : SyncOperationType.update,
       );
     });
@@ -190,11 +179,17 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
       final transfer = await getTransferById(id);
       if (transfer == null) return;
 
+      if (transfer.isPosted) {
+        throw const JournalException(JournalException.postedImmutable);
+      }
+
       final now = DateTime.now().toUtc();
       final newVersion = transfer.version + 1;
 
-      // Soft delete header
-      await (_db.update(_db.stockTransfers)..where((tbl) => tbl.uuid.equals(id))).write(
+      // Soft delete header with strict company scoping
+      await (_db.update(_db.stockTransfers)
+            ..where((tbl) => _scoped(tbl) & tbl.uuid.equals(id)))
+          .write(
         StockTransfersCompanion(
           deletedAt: Value(now.millisecondsSinceEpoch),
           updatedAt: Value(now.millisecondsSinceEpoch),
@@ -242,14 +237,19 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
 
   Future<void> _adjustWhStock(String itemCode, String warehouseId, double delta) async {
     final existing = await (_db.select(_db.productWarehouseStocks)
-          ..where((tbl) => tbl.itemCode.equals(itemCode) & tbl.warehouseId.equals(warehouseId)))
+          ..where((tbl) =>
+              tbl.itemCode.equals(itemCode) &
+              tbl.warehouseId.equals(warehouseId) &
+              tbl.companyId.equals(_currentCompanyId)))
         .getSingleOrNull();
 
     final now = DateTime.now().toUtc();
     if (existing != null) {
       final newQty = existing.onHandQty + delta;
       await (_db.update(_db.productWarehouseStocks)
-            ..where((tbl) => tbl.uuid.equals(existing.uuid)))
+            ..where((tbl) =>
+                tbl.uuid.equals(existing.uuid) &
+                tbl.companyId.equals(_currentCompanyId)))
           .write(
         ProductWarehouseStocksCompanion(
           onHandQty: Value(newQty),
@@ -267,6 +267,7 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
           createdAt: Value(now.millisecondsSinceEpoch),
           updatedAt: Value(now.millisecondsSinceEpoch),
           version: const Value(1),
+          companyId: Value(_currentCompanyId),
         ),
       );
     }
@@ -281,6 +282,10 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
       transferDate: DateTime.fromMillisecondsSinceEpoch(row.transferDate, isUtc: true),
       notes: row.notes,
       lines: lines,
+      status: InventoryDocumentStatus.fromStorage(row.status),
+      postedAt: row.postedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(row.postedAt!, isUtc: true),
       createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(row.updatedAt, isUtc: true),
       version: row.version,

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
 import '../../data/repositories/category_repository_impl.dart';
 import '../../domain/entities/category.dart';
@@ -6,7 +7,10 @@ import '../../domain/repositories/category_repository.dart';
 
 final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
   final db = ref.watch(inventoryDatabaseProvider);
-  return CategoryRepositoryImpl(db);
+  return CategoryRepositoryImpl(
+    db,
+    readCompanyId: () => ref.read(currentCompanyIdProvider),
+  );
 });
 
 final allCategoriesStreamProvider = StreamProvider<List<Category>>((ref) {

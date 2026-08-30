@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
+import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
@@ -14,11 +16,16 @@ class PostingEngineImpl implements PostingEngine {
     this._db,
     this._costLayerService, [
     this._inheritanceResolver,
-  ]);
+    String Function()? readCompanyId,
+  ]) : _readCompanyId = readCompanyId;
 
   final InventoryDatabase _db;
   final CostLayerService _costLayerService;
   final CostMethodInheritanceResolver? _inheritanceResolver;
+  final String Function()? _readCompanyId;
+
+  String get _currentCompanyId =>
+      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
 
   @override
   Future<double> applyInboundPosting({
@@ -33,8 +40,18 @@ class PostingEngineImpl implements PostingEngine {
 
     await _db.transaction(() async {
       for (final line in lines) {
+        // Defensive check: skip if line is already posted
+        final dbLine = await (_db.select(_db.stockMovementLines)
+              ..where((tbl) => tbl.uuid.equals(line.lineUuid)))
+            .getSingleOrNull();
+
+        if (dbLine != null && dbLine.postedAt != null) {
+          totalValue += (dbLine.postedCost ?? 0.0) * dbLine.quantity;
+          continue;
+        }
+
         final baseUnitCost = line.unitCost * rate;
-        final baseTotalCost = line.quantity * baseUnitCost;
+        final lineTotalCost = line.quantity * baseUnitCost;
 
         final layer = CostLayer(
           id: generateUuidV4(),
@@ -46,16 +63,17 @@ class PostingEngineImpl implements PostingEngine {
           receivedQty: line.quantity,
           remainingQty: line.quantity,
           unitCost: baseUnitCost,
-          totalCost: baseTotalCost,
+          totalCost: lineTotalCost,
           closed: false,
           createdAt: DateTime.now().toUtc(),
           updatedAt: DateTime.now().toUtc(),
+          companyId: _currentCompanyId,
         );
 
         await _costLayerService.createLayer(layer);
         await _adjustProductQty(line.itemCode, warehouseId, line.quantity);
 
-        // Update line posted details in base currency
+        // Update line posted details
         await (_db.update(_db.stockMovementLines)
               ..where((tbl) => tbl.uuid.equals(line.lineUuid)))
             .write(
@@ -65,7 +83,7 @@ class PostingEngineImpl implements PostingEngine {
           ),
         );
 
-        totalValue += baseTotalCost;
+        totalValue += lineTotalCost;
       }
 
       // Mark header document as posted
@@ -87,8 +105,18 @@ class PostingEngineImpl implements PostingEngine {
 
     await _db.transaction(() async {
       for (final line in lines) {
+        // Defensive check: skip if line is already posted
+        final dbLine = await (_db.select(_db.stockMovementLines)
+              ..where((tbl) => tbl.uuid.equals(line.lineUuid)))
+            .getSingleOrNull();
+
+        if (dbLine != null && dbLine.postedAt != null) {
+          totalCogs += (dbLine.postedCost ?? 0.0) * dbLine.quantity;
+          continue;
+        }
+
         final effectiveValuationMethod = _inheritanceResolver != null
-            ? (await _inheritanceResolver!.resolveForProduct(
+            ? (await _inheritanceResolver.resolveForProduct(
                 itemCode: line.itemCode,
                 warehouseId: warehouseId,
               )).effectiveMethod
@@ -102,6 +130,13 @@ class PostingEngineImpl implements PostingEngine {
           movementType: document.documentType.storageValue,
           warehouseId: warehouseId,
         );
+
+        if (consumptionResult.isShortage) {
+          throw JournalException(
+            JournalException.insufficientStock,
+            'Insufficient cost layer stock available for line item ${line.itemCode}. Shortage: ${consumptionResult.shortageQty}',
+          );
+        }
 
         await _adjustProductQty(line.itemCode, warehouseId, -line.quantity);
 
@@ -138,8 +173,18 @@ class PostingEngineImpl implements PostingEngine {
 
     await _db.transaction(() async {
       for (final line in lines) {
+        // Defensive check: skip if line is already posted
+        final dbLine = await (_db.select(_db.stockMovementLines)
+              ..where((tbl) => tbl.uuid.equals(line.lineUuid)))
+            .getSingleOrNull();
+
+        if (dbLine != null && dbLine.postedAt != null) {
+          totalTransferredValue += (dbLine.postedCost ?? 0.0) * dbLine.quantity;
+          continue;
+        }
+
         final effectiveValuationMethod = _inheritanceResolver != null
-            ? (await _inheritanceResolver!.resolveForProduct(
+            ? (await _inheritanceResolver.resolveForProduct(
                 itemCode: line.itemCode,
                 warehouseId: fromWarehouseId,
               )).effectiveMethod
@@ -154,6 +199,13 @@ class PostingEngineImpl implements PostingEngine {
           movementType: 'stock_transfer_out',
           warehouseId: fromWarehouseId,
         );
+
+        if (consumptionResult.isShortage) {
+          throw JournalException(
+            JournalException.insufficientStock,
+            'Insufficient cost layer stock in source warehouse $fromWarehouseId for ${line.itemCode}. Shortage: ${consumptionResult.shortageQty}',
+          );
+        }
 
         await _adjustProductQty(line.itemCode, fromWarehouseId, -line.quantity);
 
@@ -174,6 +226,7 @@ class PostingEngineImpl implements PostingEngine {
           closed: false,
           createdAt: DateTime.now().toUtc(),
           updatedAt: DateTime.now().toUtc(),
+          companyId: _currentCompanyId,
         );
 
         await _costLayerService.createLayer(destLayer);
@@ -202,15 +255,6 @@ class PostingEngineImpl implements PostingEngine {
 
           for (final line in lines) {
             await _adjustProductQty(line.itemCode, document.warehouseId, -line.quantity);
-
-            await (_db.update(_db.stockMovementLines)
-                  ..where((tbl) => tbl.uuid.equals(line.uuid)))
-                .write(
-              const StockMovementLinesCompanion(
-                postedCost: Value.absent(),
-                postedAt: Value.absent(),
-              ),
-            );
           }
 
           await _costLayerService.reverseLayer(document.documentId);
@@ -225,15 +269,6 @@ class PostingEngineImpl implements PostingEngine {
           for (final line in lines) {
             await _costLayerService.reverseConsumptions(line.uuid);
             await _adjustProductQty(line.itemCode, document.warehouseId, line.quantity);
-
-            await (_db.update(_db.stockMovementLines)
-                  ..where((tbl) => tbl.uuid.equals(line.uuid)))
-                .write(
-              const StockMovementLinesCompanion(
-                postedCost: Value.absent(),
-                postedAt: Value.absent(),
-              ),
-            );
           }
 
           await _setDocumentStatus(document, InventoryDocumentStatus.draft, null);
@@ -246,7 +281,7 @@ class PostingEngineImpl implements PostingEngine {
 
           if (returns.isNotEmpty) {
             final ret = returns.first;
-            final isPurchaseReturn = ret.returnType == 'purchase_return';
+            final isPurchaseReturn = ret.returnType == 'purchase_return' || ret.returnType == 'purchaseReturn';
 
             final lines = await (_db.select(_db.stockMovementLines)
                   ..where((tbl) => tbl.movementUuid.equals(document.documentId)))
@@ -261,15 +296,6 @@ class PostingEngineImpl implements PostingEngine {
                 // Inbound return: reverse layer, decrease stock
                 await _adjustProductQty(line.itemCode, document.warehouseId, -line.quantity);
               }
-
-              await (_db.update(_db.stockMovementLines)
-                    ..where((tbl) => tbl.uuid.equals(line.uuid)))
-                  .write(
-                const StockMovementLinesCompanion(
-                  postedCost: Value.absent(),
-                  postedAt: Value.absent(),
-                ),
-              );
             }
 
             if (!isPurchaseReturn) {
@@ -312,19 +338,11 @@ class PostingEngineImpl implements PostingEngine {
           for (final line in lines) {
             await _costLayerService.reverseConsumptions(line.uuid);
             await _adjustProductQty(line.itemCode, document.warehouseId, line.quantity);
-
-            await (_db.update(_db.stockMovementLines)
-                  ..where((tbl) => tbl.uuid.equals(line.uuid)))
-                .write(
-              const StockMovementLinesCompanion(
-                postedCost: Value.absent(),
-                postedAt: Value.absent(),
-              ),
-            );
           }
 
           await _setDocumentStatus(document, InventoryDocumentStatus.draft, null);
           break;
+
 
         default:
           break;
@@ -335,48 +353,144 @@ class PostingEngineImpl implements PostingEngine {
   Future<void> _adjustProductQty(
     String itemCode,
     String? warehouseId,
-    double deltaQty,
-  ) async {
-    // 1. Update overall product table stock
-    final prodQuery = _db.select(_db.products)
-      ..where((p) => p.itemCode.equals(itemCode));
-    final prods = await prodQuery.get();
+    double deltaQty, {
+    String? companyId,
+  }) async {
+    final effectiveCompanyId = companyId ?? _currentCompanyId;
 
-    if (prods.isNotEmpty) {
-      final p = prods.first;
-      final newQty = (p.onHandQty + deltaQty).clamp(0.0, double.infinity);
-      await (_db.update(_db.products)..where((tbl) => tbl.id.equals(p.id))).write(
-        ProductsCompanion(onHandQty: Value(newQty.toDouble())),
-      );
-    }
+    if (deltaQty < 0) {
+      final reqQty = -deltaQty;
 
-    // 2. Update warehouse-specific stock if warehouseId is provided
-    if (warehouseId != null && warehouseId.isNotEmpty) {
-      final whQuery = _db.select(_db.productWarehouseStocks)
-        ..where((w) => w.itemCode.equals(itemCode))
-        ..where((w) => w.warehouseId.equals(warehouseId));
+      // 1. Check overall product table stock
+      final prodQuery = _db.select(_db.products)
+        ..where((p) =>
+            p.itemCode.equals(itemCode) &
+            p.companyId.equals(effectiveCompanyId));
+      final prods = await prodQuery.get();
 
-      final whStocks = await whQuery.get();
-
-      if (whStocks.isNotEmpty) {
-        final whStock = whStocks.first;
-        final newWhQty = (whStock.onHandQty + deltaQty).clamp(0.0, double.infinity);
-        await (_db.update(_db.productWarehouseStocks)
-              ..where((w) => w.uuid.equals(whStock.uuid)))
-            .write(
-          ProductWarehouseStocksCompanion(onHandQty: Value(newWhQty.toDouble())),
+      final availProd = prods.isNotEmpty ? prods.first.onHandQty : 0.0;
+      if (availProd < reqQty - 0.000001) {
+        throw JournalException(
+          JournalException.insufficientStock,
+          'Insufficient product stock available for $itemCode. Required: $reqQty, Available: $availProd',
         );
-      } else if (deltaQty > 0) {
-        await _db.into(_db.productWarehouseStocks).insert(
-              ProductWarehouseStocksCompanion(
+      }
+
+      final p = prods.first;
+      final newQty = p.onHandQty + deltaQty;
+      final updatedProdCount = await (_db.update(_db.products)
+            ..where((tbl) =>
+                tbl.id.equals(p.id) &
+                tbl.companyId.equals(effectiveCompanyId) &
+                tbl.onHandQty.isBiggerOrEqualValue(reqQty)))
+          .write(
+        ProductsCompanion(onHandQty: Value(newQty)),
+      );
+
+      if (updatedProdCount == 0) {
+        throw JournalException(
+          JournalException.insufficientStock,
+          'Insufficient product stock available for $itemCode due to concurrent inventory consumption.',
+        );
+      }
+
+      // 2. Check warehouse-specific stock if warehouseId is provided
+      if (warehouseId != null && warehouseId.isNotEmpty) {
+        final whQuery = _db.select(_db.productWarehouseStocks)
+          ..where((w) =>
+              w.itemCode.equals(itemCode) &
+              w.warehouseId.equals(warehouseId) &
+              w.companyId.equals(effectiveCompanyId));
+
+        final whStocks = await whQuery.get();
+        final availWh = whStocks.isNotEmpty ? whStocks.first.onHandQty : 0.0;
+
+        if (availWh < reqQty - 0.000001) {
+          throw JournalException(
+            JournalException.insufficientStock,
+            'Insufficient warehouse stock available for $itemCode in warehouse $warehouseId. Required: $reqQty, Available: $availWh',
+          );
+        }
+
+        final whStock = whStocks.first;
+        final newWhQty = whStock.onHandQty + deltaQty;
+
+        final updatedWhCount = await (_db.update(_db.productWarehouseStocks)
+              ..where((w) =>
+                  w.uuid.equals(whStock.uuid) &
+                  w.companyId.equals(effectiveCompanyId) &
+                  w.onHandQty.isBiggerOrEqualValue(reqQty)))
+            .write(
+          ProductWarehouseStocksCompanion(onHandQty: Value(newWhQty)),
+        );
+
+        if (updatedWhCount == 0) {
+          throw JournalException(
+            JournalException.insufficientStock,
+            'Insufficient warehouse stock available for $itemCode in warehouse $warehouseId due to concurrent inventory consumption.',
+          );
+        }
+      }
+    } else {
+      // Inbound / Positive deltaQty: Increment stock
+      final prodQuery = _db.select(_db.products)
+        ..where((p) =>
+            p.itemCode.equals(itemCode) &
+            p.companyId.equals(effectiveCompanyId));
+      final prods = await prodQuery.get();
+
+      if (prods.isNotEmpty) {
+        final p = prods.first;
+        final newQty = p.onHandQty + deltaQty;
+        await (_db.update(_db.products)..where((tbl) => tbl.id.equals(p.id))).write(
+          ProductsCompanion(onHandQty: Value(newQty)),
+        );
+      } else {
+        await _db.into(_db.products).insert(
+              ProductsCompanion(
                 uuid: Value(generateUuidV4()),
                 itemCode: Value(itemCode),
-                warehouseId: Value(warehouseId),
+                name: Value(itemCode),
+                packSize: const Value(1),
+                price: const Value(0.0),
                 onHandQty: Value(deltaQty),
                 createdAt: Value(DateTime.now().millisecondsSinceEpoch),
                 updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+                companyId: Value(effectiveCompanyId),
               ),
             );
+      }
+
+      if (warehouseId != null && warehouseId.isNotEmpty) {
+        final whQuery = _db.select(_db.productWarehouseStocks)
+          ..where((w) =>
+              w.itemCode.equals(itemCode) &
+              w.warehouseId.equals(warehouseId) &
+              w.companyId.equals(effectiveCompanyId));
+
+        final whStocks = await whQuery.get();
+
+        if (whStocks.isNotEmpty) {
+          final whStock = whStocks.first;
+          final newWhQty = whStock.onHandQty + deltaQty;
+          await (_db.update(_db.productWarehouseStocks)
+                ..where((w) => w.uuid.equals(whStock.uuid)))
+              .write(
+            ProductWarehouseStocksCompanion(onHandQty: Value(newWhQty)),
+          );
+        } else {
+          await _db.into(_db.productWarehouseStocks).insert(
+                ProductWarehouseStocksCompanion(
+                  uuid: Value(generateUuidV4()),
+                  itemCode: Value(itemCode),
+                  warehouseId: Value(warehouseId),
+                  onHandQty: Value(deltaQty),
+                  createdAt: Value(DateTime.now().millisecondsSinceEpoch),
+                  updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+                  companyId: Value(effectiveCompanyId),
+                ),
+              );
+        }
       }
     }
   }
@@ -395,7 +509,7 @@ class PostingEngineImpl implements PostingEngine {
             .write(
           StockReceiptsCompanion(
             status: Value(statusStr),
-            postedAt: Value(postedAtEpoch),
+            postedAt: postedAtEpoch != null ? Value(postedAtEpoch) : const Value.absent(),
           ),
         );
         break;
@@ -405,7 +519,7 @@ class PostingEngineImpl implements PostingEngine {
             .write(
           StockIssuesCompanion(
             status: Value(statusStr),
-            postedAt: Value(postedAtEpoch),
+            postedAt: postedAtEpoch != null ? Value(postedAtEpoch) : const Value.absent(),
           ),
         );
         break;
@@ -415,7 +529,7 @@ class PostingEngineImpl implements PostingEngine {
             .write(
           StockReturnsCompanion(
             status: Value(statusStr),
-            postedAt: Value(postedAtEpoch),
+            postedAt: postedAtEpoch != null ? Value(postedAtEpoch) : const Value.absent(),
           ),
         );
         break;
@@ -425,10 +539,11 @@ class PostingEngineImpl implements PostingEngine {
             .write(
           StockTransfersCompanion(
             status: Value(statusStr),
-            postedAt: Value(postedAtEpoch),
+            postedAt: postedAtEpoch != null ? Value(postedAtEpoch) : const Value.absent(),
           ),
         );
         break;
+
       default:
         break;
     }

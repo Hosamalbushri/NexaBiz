@@ -74,8 +74,6 @@ class ProductRepositoryImpl implements ProductRepository {
     );
   }
 
-  Expression<bool> _notDeleted($ProductsTable t) => t.deletedAt.isNull();
-
   String _normalizeCode(String value) => value.trim();
 
   String _normalizeName(String value) => value.trim();
@@ -698,7 +696,7 @@ class ProductRepositoryImpl implements ProductRepository {
             final nextVersion = existing.version + 1;
             await (_db.update(
               _db.products,
-            )..where((t) => t.id.equals(existing.id))).write(
+            )..where((t) => t.id.equals(existing.id) & _scoped(t))).write(
               ProductsCompanion(
                 name: Value(name),
                 barcode: Value(barcode),
@@ -771,7 +769,7 @@ class ProductRepositoryImpl implements ProductRepository {
     return _db.transaction(() async {
       final row =
           await (_db.select(_db.products)
-                ..where((t) => t.uuid.equals(id) & _notDeleted(t)))
+                ..where((t) => t.uuid.equals(id) & _scoped(t)))
               .getSingleOrNull();
       if (row == null) {
         throw const ProductException(ProductException.notFound);
@@ -784,14 +782,20 @@ class ProductRepositoryImpl implements ProductRepository {
 
       final now = DateTime.now().toUtc();
       final nextVersion = row.version + 1;
-      await (_db.update(_db.products)..where((t) => t.id.equals(row.id))).write(
+      final updatedRows = await (_db.update(_db.products)
+            ..where((t) => t.id.equals(row.id) & _scoped(t)))
+          .write(
         ProductsCompanion(
           onHandQty: Value(nextQty < 0 ? 0 : nextQty),
           updatedAt: Value(now.millisecondsSinceEpoch),
           syncStatus: const Value('pending'),
           version: Value(nextVersion),
+          companyId: Value(_currentCompanyId),
         ),
       );
+      if (updatedRows == 0) {
+        throw const ProductException(ProductException.notFound);
+      }
 
       final updated = await getById(row.id);
       if (updated == null) {

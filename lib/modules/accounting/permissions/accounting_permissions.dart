@@ -4,6 +4,8 @@ abstract final class AccountingPermissions {
   static const journalsCreate = ['accounting.journals.create'];
   static const journalsUpdate = ['accounting.journals.update'];
   static const journalsDelete = ['accounting.journals.delete'];
+  static const journalsPost = ['accounting.journals.post', 'accounting.journals.create'];
+  static const journalsReverse = ['accounting.journals.reverse', 'accounting.journals.delete'];
 
   static const accountsView = ['accounting.accounts.view'];
   static const accountsCreate = ['accounting.accounts.create'];
@@ -18,3 +20,4 @@ abstract final class AccountingPermissions {
   static const reopenPeriod = ['accounting.fiscal_years.reopen_period'];
   static const configureFx = ['accounting.fiscal_years.configure_fx'];
 }
+

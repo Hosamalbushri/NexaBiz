@@ -1,4 +1,11 @@
+import 'package:intl/intl.dart';
 import '../../core/reporting/arabic_amount_words.dart';
+import '../../core/report_engine/domain/models/report_cursor.dart';
+import '../../core/report_engine/domain/models/report_dataset.dart';
+import '../../core/report_engine/domain/models/report_execution_context.dart';
+import '../../core/report_engine/domain/models/report_page.dart';
+import '../../core/report_engine/domain/models/report_summary.dart';
+import '../../core/report_engine/domain/services/paged_report_data_provider.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
@@ -12,15 +19,10 @@ import '../settings/company/company_profile.dart';
 
 /// App adapter: account statement ← Accounting COA + journal lines.
 ///
-/// When [currencyCode] is null ("all currencies"), movements are emitted in
-/// separate per-currency blocks — each with its own opening and running balance
-/// (Soft2-compatible; never mixes YER+USD into one running total).
-///
-/// Before loading movements, optional [loadSalesForAccount] + [ledger] backfill
-/// credit-sale journals so unposted invoices created before sync-on-save still
-/// appear.
+/// Implements both legacy [AccountStatementReportDataPort] and new SQL-native
+/// [PagedReportDataProvider] for keyset pagination.
 class AccountStatementReportDataAdapter
-    implements AccountStatementReportDataPort {
+    implements AccountStatementReportDataPort, PagedReportDataProvider<ReportRowData> {
   const AccountStatementReportDataAdapter({
     required this.accounts,
     required this.currencyRates,
@@ -36,6 +38,129 @@ class AccountStatementReportDataAdapter
   final Future<CompanyProfile> Function() loadCompanyProfile;
   final Future<List<Sale>> Function(String accountUuid)? loadSalesForAccount;
   final SaleLedgerPostingPort? ledger;
+
+  @override
+  String get reportId => 'ACCOUNT_STATEMENT';
+
+  @override
+  Future<ReportSummary> fetchSummary(ReportExecutionContext context) async {
+    final accountUuid = context.filters['accountUuid'] as String? ?? '';
+    final fromDate = context.fromDate;
+    final toDate = context.toDate;
+    final isPosted = context.postingScope == PostingScope.postedOnly
+        ? true
+        : (context.postingScope == PostingScope.unpostedOnly ? false : null);
+    final singleCurrency = context.currencyScope == 'ALL' ? null : context.currencyScope;
+
+    final moves = await journals.listMovementsForAccount(
+      accountUuid: accountUuid,
+      fromDate: fromDate,
+      toDate: toDate,
+      currencyCode: singleCurrency,
+      isPosted: isPosted,
+    );
+
+    var totalDebit = 0.0;
+    var totalCredit = 0.0;
+    for (final m in moves) {
+      totalDebit += m.debit;
+      totalCredit += m.credit;
+    }
+
+    final opening = fromDate == null
+        ? 0.0
+        : await journals.sumNetBefore(
+            accountUuid: accountUuid,
+            beforeDate: fromDate,
+            currencyCode: singleCurrency,
+            isPosted: isPosted,
+          );
+
+    return ReportSummary(
+      totalCount: moves.length,
+      aggregates: {
+        'openingBalance': opening,
+        'totalDebit': totalDebit,
+        'totalCredit': totalCredit,
+        'closingBalance': opening + totalDebit - totalCredit,
+      },
+    );
+  }
+
+  @override
+  Future<ReportPage<ReportRowData>> fetchPage(
+    ReportExecutionContext context, {
+    ReportCursor? cursor,
+    int pageSize = 50,
+  }) async {
+    final accountUuid = context.filters['accountUuid'] as String? ?? '';
+    final fromDate = context.fromDate;
+    final toDate = context.toDate;
+    final isPosted = context.postingScope == PostingScope.postedOnly
+        ? true
+        : (context.postingScope == PostingScope.unpostedOnly ? false : null);
+    final singleCurrency = context.currencyScope == 'ALL' ? null : context.currencyScope;
+
+    AccountLedgerCursor? afterCursor;
+    if (cursor != null) {
+      final dateMs = cursor.primarySortValue as int;
+      final lineId = int.parse(cursor.uniqueId);
+      afterCursor = AccountLedgerCursor(
+        entryDateMs: dateMs,
+        sortOrder: 0,
+        lineId: lineId,
+      );
+    }
+
+    final moves = await journals.listMovementsForAccount(
+      accountUuid: accountUuid,
+      fromDate: fromDate,
+      toDate: toDate,
+      currencyCode: singleCurrency,
+      isPosted: isPosted,
+      limit: pageSize,
+      after: afterCursor,
+    );
+
+    final dateFormat = DateFormat('yyyy/MM/dd');
+    final currencyFormat = NumberFormat('#,##0.00');
+
+    final items = <ReportRowData>[];
+    for (final m in moves) {
+      items.add(ReportRowData(
+        documentType: 'account_statement',
+        documentUuid: m.entryUuid,
+        values: {
+          'entryDate': dateFormat.format(m.entryDate),
+          'voucherNumber': m.voucherNumber,
+          'voucherType': m.voucherType,
+          'description': m.description,
+          'debit': currencyFormat.format(m.debit),
+          'credit': currencyFormat.format(m.credit),
+          'currencyCode': m.currencyCode,
+          'isPosted': m.isPosted ? 'مرحل' : 'غير مرحل',
+          'entryUuid': m.entryUuid,
+          'id': m.lineId.toString(),
+          'dateMs': m.entryDate.toUtc().millisecondsSinceEpoch.toString(),
+        },
+      ));
+    }
+
+    ReportCursor? nextCursor;
+    if (moves.length == pageSize) {
+      final last = moves.last;
+      nextCursor = ReportCursor(
+        primarySortValue: last.entryDate.toUtc().millisecondsSinceEpoch,
+        uniqueId: last.lineId.toString(),
+      );
+    }
+
+    return ReportPage<ReportRowData>(
+      items: items,
+      nextCursor: nextCursor,
+      hasNextPage: nextCursor != null,
+    );
+  }
 
   @override
   Future<List<AccountStatementAccountRef>> searchAccounts(String query) async {
@@ -104,7 +229,7 @@ class AccountStatementReportDataAdapter
         ? null
         : currencyCode?.trim().toUpperCase();
 
-    await _ensureCreditSaleJournals(accountUuid);
+    // Reports are strictly READ-ONLY. No inline syncSale writes occur during report generation.
 
     final periodMoves = await journals.listMovementsForAccount(
       accountUuid: accountUuid,
@@ -213,8 +338,6 @@ class AccountStatementReportDataAdapter
       statementTypeLabel: typeTitle,
       postingFilterLabel: labels.postingFilterLabelOf(postingFilter),
       currencyLabel: singleCurrency ?? labels.currencyAll,
-      // Legacy single totals: meaningful for one currency; for "all" prefer
-      // [balancesByCurrency] (do not mix currencies into one running figure).
       openingBalance: singleCurrency != null ? firstOpening : aggregateOpening,
       totalDebit: aggregateDebit,
       totalCredit: aggregateCredit,
@@ -252,8 +375,6 @@ class AccountStatementReportDataAdapter
     );
   }
 
-  /// Currencies to render: the selected one, or every currency with activity
-  /// up to [toDate] (DB DISTINCT — does not load prior movement rows).
   Future<List<String>> _resolveCurrencyCodes({
     required String accountUuid,
     required String? singleCurrency,
@@ -275,24 +396,6 @@ class AccountStatementReportDataAdapter
       return [base, ...sorted];
     }
     return sorted;
-  }
-
-  /// Upserts journals for credit sales linked to [accountUuid] (idempotent).
-  Future<void> _ensureCreditSaleJournals(String accountUuid) async {
-    final loadSales = loadSalesForAccount;
-    final ledgerPort = ledger;
-    if (loadSales == null || ledgerPort == null) {
-      return;
-    }
-    final list = await loadSales(accountUuid);
-    for (final sale in list) {
-      try {
-        await ledgerPort.syncSale(sale);
-      } catch (_) {
-        // Keep statement generation resilient; missing one sale should not
-        // blank the whole report.
-      }
-    }
   }
 
   AccountStatementReportPayload _emptyPayload({

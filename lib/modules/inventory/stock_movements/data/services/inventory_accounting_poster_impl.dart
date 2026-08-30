@@ -6,6 +6,7 @@ import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_d
 import '../../domain/services/inventory_accounting_poster.dart';
 
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
+import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
 
 class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
@@ -26,36 +27,30 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
     required String code,
     required String systemKey,
   }) async {
-    // 1. Match by exact accountCode & companyId
+    // 1. Match by exact accountCode & current companyId (active, non-deleted, leaf account)
     final byCode = await (_accountingDb.select(_accountingDb.accounts)
           ..where((tbl) =>
               tbl.accountCode.equals(code) &
-              (tbl.companyId.equals(_currentCompanyId) | tbl.companyId.isNull()) &
+              tbl.companyId.equals(_currentCompanyId) &
               tbl.deletedAt.isNull() &
-              tbl.isGroup.equals(false)))
+              tbl.isGroup.equals(false) &
+              tbl.isActive.equals(true)))
         .getSingleOrNull();
     if (byCode != null) return byCode.uuid;
 
-    // 2. Match by system key in description & companyId
+    // 2. Match by system key in description & current companyId (active, non-deleted, leaf account)
     final bySystem = await (_accountingDb.select(_accountingDb.accounts)
           ..where((tbl) =>
               tbl.description.equals('system:$systemKey') &
-              (tbl.companyId.equals(_currentCompanyId) | tbl.companyId.isNull()) &
+              tbl.companyId.equals(_currentCompanyId) &
               tbl.deletedAt.isNull() &
-              tbl.isGroup.equals(false)))
+              tbl.isGroup.equals(false) &
+              tbl.isActive.equals(true)))
         .getSingleOrNull();
     if (bySystem != null) return bySystem.uuid;
 
-    // 3. Fallback: Any non-group active account in current tenant
-    final fallback = await (_accountingDb.select(_accountingDb.accounts)
-          ..where((tbl) =>
-              (tbl.companyId.equals(_currentCompanyId) | tbl.companyId.isNull()) &
-              tbl.deletedAt.isNull() &
-              tbl.isGroup.equals(false) &
-              tbl.isActive.equals(true))
-          ..limit(1))
-        .getSingleOrNull();
-    return fallback?.uuid;
+    // Strict security: NO arbitrary fallback via limit(1) or un-tenanted accounts.
+    return null;
   }
 
   Future<String> _resolveSelectedAccountRequired({
@@ -65,51 +60,36 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
     if (accountId != null && accountId.trim().isNotEmpty) {
       final target = accountId.trim();
 
-      // 1. Match by exact UUID in tenant accounts
+      // 1. Match by exact UUID in current tenant accounts (active, non-deleted, leaf account)
       final byUuid = await (_accountingDb.select(_accountingDb.accounts)
             ..where((tbl) =>
                 tbl.uuid.equals(target) &
-                (tbl.companyId.equals(_currentCompanyId) | tbl.companyId.isNull()) &
+                tbl.companyId.equals(_currentCompanyId) &
                 tbl.deletedAt.isNull() &
-                tbl.isGroup.equals(false)))
+                tbl.isGroup.equals(false) &
+                tbl.isActive.equals(true)))
           .getSingleOrNull();
       if (byUuid != null) return byUuid.uuid;
 
-      // 2. Match by exact Account Code in tenant accounts
+      // 2. Match by exact Account Code in current tenant accounts (active, non-deleted, leaf account)
       final byCode = await (_accountingDb.select(_accountingDb.accounts)
             ..where((tbl) =>
                 tbl.accountCode.equals(target) &
-                (tbl.companyId.equals(_currentCompanyId) | tbl.companyId.isNull()) &
+                tbl.companyId.equals(_currentCompanyId) &
                 tbl.deletedAt.isNull() &
-                tbl.isGroup.equals(false)))
+                tbl.isGroup.equals(false) &
+                tbl.isActive.equals(true)))
           .getSingleOrNull();
       if (byCode != null) return byCode.uuid;
 
-      // 3. Fallback match by UUID across all accounts
-      final byUuidGlobal = await (_accountingDb.select(_accountingDb.accounts)
-            ..where((tbl) =>
-                tbl.uuid.equals(target) &
-                tbl.deletedAt.isNull() &
-                tbl.isGroup.equals(false)))
-          .getSingleOrNull();
-      if (byUuidGlobal != null) return byUuidGlobal.uuid;
-
-      // 4. Fallback match by Code across all accounts
-      final byCodeGlobal = await (_accountingDb.select(_accountingDb.accounts)
-            ..where((tbl) =>
-                tbl.accountCode.equals(target) &
-                tbl.deletedAt.isNull() &
-                tbl.isGroup.equals(false)))
-          .getSingleOrNull();
-      if (byCodeGlobal != null) return byCodeGlobal.uuid;
-
-      // 5. If target looks like a valid 36-char UUID, use it directly
-      if (target.length == 36) {
-        return target;
-      }
+      // Strict security: If target accountId was specified but is not found in current tenant, or is inactive/group,
+      // STOP posting immediately! Never substitute global or arbitrary accounts.
+      throw StateError(
+        'خطأ محاسبي: الحساب المحاسبي المحدد ($target) لم يتم العثور عليه في الشركة الحالية أو غير نشط أو حساب رئيسي.',
+      );
     }
 
-    // 6. Fallback match to default system account for inventory movement
+    // Fallback match to default system account for inventory movement when no account specified
     final fallbackCode = voucherTypeStr.contains('صرف') ? '5100' : '1230';
     final fallbackKey = voucherTypeStr.contains('صرف') ? 'cost_of_goods' : 'inventory';
     final fallbackUuid = await _resolveAccountUuid(code: fallbackCode, systemKey: fallbackKey);
@@ -119,7 +99,7 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
 
     // No default fallback account found! Throw explicit error.
     throw StateError(
-      'خطأ محاسبي: لم يتم تحديد حساب محاسبي للمستند ($voucherTypeStr). يرجى اختيار الحساب أولاً.',
+      'خطأ محاسبي: لم يتم تحديد حساب محاسبي صالح للمستند ($voucherTypeStr). يرجى اختيار الحساب أولاً.',
     );
   }
 
@@ -200,19 +180,27 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
     final now = DateTime.now().toUtc();
 
     await _accountingDb.transaction(() async {
-      // Check if entry already exists for this source document
       final existingEntry = await (_accountingDb.select(_accountingDb.journalEntries)
             ..where((tbl) =>
-                tbl.sourceType.equals(sourceType) & tbl.sourceId.equals(sourceId)))
+                tbl.sourceType.equals(sourceType) &
+                tbl.sourceId.equals(sourceId) &
+                tbl.companyId.equals(_currentCompanyId) &
+                tbl.deletedAt.isNull()))
           .getSingleOrNull();
 
       final String entryUuid;
 
       if (existingEntry != null) {
+        if (existingEntry.isPosted) {
+          // Posted accounting records are immutable. Preserve existing record untouched.
+          return;
+        }
         entryUuid = existingEntry.uuid;
         // 1a. Update existing Journal Entry Header
         await (_accountingDb.update(_accountingDb.journalEntries)
-              ..where((tbl) => tbl.uuid.equals(entryUuid)))
+              ..where((tbl) =>
+                  tbl.uuid.equals(entryUuid) &
+                  tbl.companyId.equals(_currentCompanyId)))
             .write(
           JournalEntriesCompanion(
             voucherNumber: Value(document.documentNumber),
@@ -297,10 +285,24 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
   }) async {
     final now = DateTime.now().toUtc();
 
+    final existing = await (_accountingDb.select(_accountingDb.journalEntries)
+          ..where((tbl) =>
+              tbl.sourceType.equals(document.documentType.storageValue) &
+              tbl.sourceId.equals(document.documentId) &
+              tbl.companyId.equals(_currentCompanyId) &
+              tbl.deletedAt.isNull()))
+        .getSingleOrNull();
+
+    if (existing != null && existing.isPosted && !isPosted) {
+      // Unposting a posted accounting record is blocked to preserve historical integrity.
+      throw const JournalException(JournalException.postedImmutable);
+    }
+
     await (_accountingDb.update(_accountingDb.journalEntries)
           ..where((tbl) =>
               tbl.sourceType.equals(document.documentType.storageValue) &
-              tbl.sourceId.equals(document.documentId)))
+              tbl.sourceId.equals(document.documentId) &
+              tbl.companyId.equals(_currentCompanyId)))
         .write(
       JournalEntriesCompanion(
         isPosted: Value(isPosted),
@@ -326,11 +328,65 @@ class InventoryAccountingPosterImpl implements InventoryAccountingPoster {
 
     final now = DateTime.now().toUtc();
 
-    // Soft delete journal entry for this source document
+    final existing = await (_accountingDb.select(_accountingDb.journalEntries)
+          ..where((tbl) =>
+              tbl.sourceType.equals(sourceType) &
+              tbl.sourceId.equals(sourceId) &
+              tbl.companyId.equals(_currentCompanyId) &
+              tbl.deletedAt.isNull()))
+        .getSingleOrNull();
+
+    if (existing != null && existing.isPosted) {
+      // Fallback path when _journalPostingService is null:
+      // Posted journal entries must NOT be soft-deleted. Create an offsetting reversal entry instead.
+      final existingLines = await (_accountingDb.select(_accountingDb.journalLines)
+            ..where((tbl) => tbl.entryUuid.equals(existing.uuid)))
+          .get();
+
+      final reverseUuid = generateUuidV4();
+      await _accountingDb.into(_accountingDb.journalEntries).insert(
+            JournalEntriesCompanion(
+              uuid: Value(reverseUuid),
+              voucherNumber: Value('${existing.voucherNumber}-R'),
+              voucherType: Value(existing.voucherType),
+              entryDate: Value(existing.entryDate),
+              description: Value('عكس: ${existing.description ?? existing.voucherNumber}'),
+              currencyCode: Value(existing.currencyCode),
+              isPosted: const Value(true),
+              sourceType: const Value(JournalPostingService.reverseSourceType),
+              sourceId: Value(existing.uuid),
+              createdAt: Value(now.millisecondsSinceEpoch),
+              updatedAt: Value(now.millisecondsSinceEpoch),
+              companyId: Value(_currentCompanyId),
+            ),
+          );
+
+      for (final line in existingLines) {
+        await _accountingDb.into(_accountingDb.journalLines).insert(
+              JournalLinesCompanion(
+                uuid: Value(generateUuidV4()),
+                entryUuid: Value(reverseUuid),
+                accountUuid: Value(line.accountUuid),
+                debit: Value(line.credit),
+                credit: Value(line.debit),
+                baseDebit: Value(line.baseCredit),
+                baseCredit: Value(line.baseDebit),
+                currencyCode: Value(line.currencyCode),
+                exchangeRateToBase: Value(line.exchangeRateToBase),
+                lineDescription: Value(line.lineDescription),
+                sortOrder: Value(line.sortOrder),
+              ),
+            );
+      }
+      return;
+    }
+
+    // Soft delete DRAFT journal entry for this source document
     await (_accountingDb.update(_accountingDb.journalEntries)
           ..where((tbl) =>
               tbl.sourceType.equals(sourceType) &
-              tbl.sourceId.equals(sourceId)))
+              tbl.sourceId.equals(sourceId) &
+              tbl.companyId.equals(_currentCompanyId)))
         .write(
       JournalEntriesCompanion(
         deletedAt: Value(now.millisecondsSinceEpoch),

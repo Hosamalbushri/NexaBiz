@@ -95,7 +95,7 @@ final openAccountingPeriodUseCaseProvider = Provider<OpenAccountingPeriod>((
 ) {
   return OpenAccountingPeriod(
     ref.watch(fiscalYearRepositoryProvider),
-    ref.watch(permissionGuardProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
   );
 });
 
@@ -104,7 +104,7 @@ final reopenAccountingPeriodUseCaseProvider = Provider<ReopenAccountingPeriod>((
 ) {
   return ReopenAccountingPeriod(
     ref.watch(fiscalYearRepositoryProvider),
-    ref.watch(permissionGuardProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
   );
 });
 
@@ -143,7 +143,7 @@ final fiscalYearClosingsProvider = FutureProvider.autoDispose
 final postJournalEntryUseCaseProvider = Provider<PostJournalEntry>((ref) {
   return PostJournalEntry(
     ref.watch(journalPostingServiceProvider),
-    ref.watch(permissionGuardProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
   );
 });
 
@@ -163,7 +163,7 @@ final softDeleteJournalEntryUseCaseProvider = Provider<VoidJournalEntry>((
 ) {
   return VoidJournalEntry(
     ref.watch(journalPostingServiceProvider),
-    ref.watch(permissionGuardProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
   );
 });
 

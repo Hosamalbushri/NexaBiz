@@ -63,7 +63,7 @@ class GetTransactionDashboard {
 class CreateFinancialTransaction {
   CreateFinancialTransaction({
     required FinancialTransactionRepository repository,
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
     RpVoucherBookPort voucherBookPort = const NoOpRpVoucherBookPort(),
     RpLedgerPostingPort ledgerPosting = const NoOpRpLedgerPostingPort(),
     FinancialTransactionValidator validator =
@@ -190,7 +190,7 @@ class UpdateFinancialTransaction {
 class PostFinancialTransaction {
   PostFinancialTransaction({
     required FinancialTransactionRepository repository,
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
     FinancialTransactionWorkflow workflow =
         const FinancialTransactionWorkflow(),
     RpLedgerPostingPort ledgerPosting = const NoOpRpLedgerPostingPort(),
@@ -311,7 +311,7 @@ class UnpostFinancialTransaction {
 class CancelFinancialTransaction {
   CancelFinancialTransaction({
     required FinancialTransactionRepository repository,
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    required PermissionGuard permissionGuard,
     FinancialTransactionWorkflow workflow =
         const FinancialTransactionWorkflow(),
     RpLedgerPostingPort ledgerPosting = const NoOpRpLedgerPostingPort(),

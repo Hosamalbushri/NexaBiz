@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/utils/business_date.dart';
@@ -24,23 +25,30 @@ import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import '../../domain/services/sale_validator.dart';
 import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
 
+import 'package:stock_count/core/permissions/permission_guard.dart';
+import 'package:stock_count/modules/sales/permissions/sales_permission_package.dart';
+
 class SaleRepositoryImpl implements SaleRepository {
   SaleRepositoryImpl(
     this._db, {
     SyncQueue? syncQueue,
     SaleValidator validator = const SaleValidator(),
     SaleCalculationService calculator = const SaleCalculationService(),
+    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
     String Function()? readCompanyId,
   }) : _syncQueue = syncQueue,
        _validator = validator,
        _calculator = calculator,
+       _permissionGuard = permissionGuard,
        _readCompanyId = readCompanyId;
 
   final SalesDatabase _db;
   final SyncQueue? _syncQueue;
   final SaleValidator _validator;
   final SaleCalculationService _calculator;
+  final PermissionGuard _permissionGuard;
   final String Function()? _readCompanyId;
+
 
   static const entityType = 'sale';
 
@@ -620,7 +628,13 @@ class SaleRepositoryImpl implements SaleRepository {
 
   @override
   Future<Sale> insert(SaleDraft draft, {required String saleNumber}) async {
+    if (draft.saleStatus == SaleStatus.posted) {
+      _permissionGuard.requireAny(SalesPermissions.post);
+    } else {
+      _permissionGuard.requireAny(SalesPermissions.create);
+    }
     _validator.validate(draft);
+
     final summary = _calculator.calculate(
       items: draft.items,
       saleDiscountType: draft.discountType,
@@ -708,6 +722,9 @@ class SaleRepositoryImpl implements SaleRepository {
     final existing = await getById(id);
     if (existing == null) {
       throw const SaleException(SaleException.notFound);
+    }
+    if (existing.saleStatus == SaleStatus.posted) {
+      throw const JournalException(JournalException.postedImmutable);
     }
     _validator.validate(draft);
     final summary = _calculator.calculate(
@@ -837,6 +854,11 @@ class SaleRepositoryImpl implements SaleRepository {
     if (existing == null) {
       return;
     }
+    _permissionGuard.requireAny(SalesPermissions.delete);
+    if (existing.saleStatus.isPosted) {
+      throw const JournalException(JournalException.postedImmutable);
+    }
+
     final now = DateTime.now().toUtc();
     await (_db.update(_db.sales)..where((t) => t.id.equals(id))).write(
       SalesCompanion(

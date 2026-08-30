@@ -9,7 +9,7 @@ class StockReceipts extends Table {
   TextColumn get uuid => text().withLength(min: 36, max: 36).unique()();
 
   TextColumn get receiptNumber =>
-      text().withLength(min: 1, max: 128).unique()();
+      text().withLength(min: 1, max: 128)();
 
   TextColumn get supplier => text().nullable()();
 

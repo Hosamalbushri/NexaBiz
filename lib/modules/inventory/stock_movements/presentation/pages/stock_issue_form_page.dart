@@ -117,8 +117,8 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
           final composer = ref.read(stockIssueComposerProvider.notifier);
 
           if (_isEdit) {
-            final repo = ref.read(stockMovementsRepositoryProvider);
-            final issue = await repo.getIssueById(widget.issueId.toString());
+            final useCases = ref.read(stockMovementUseCasesProvider);
+            final issue = await useCases.getIssueById(widget.issueId.toString());
             if (issue == null) throw Exception('أمر الصرف غير موجود');
             if (issue.isPosted) {
               _isPostedLocked = true;
@@ -223,10 +223,10 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
       message: l10n.stockIssueSavingMessage,
       action: () async {
         try {
-          final repo = ref.read(stockMovementsRepositoryProvider);
+          final useCases = ref.read(stockMovementUseCasesProvider);
           final voucherPort = ref.read(inventoryVoucherBookPortProvider);
           final success = await composer.save(
-            repo: repo,
+            useCases: useCases,
             voucherPort: voucherPort,
           );
           if (!mounted) return;

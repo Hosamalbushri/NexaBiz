@@ -39,15 +39,19 @@ class InventoryDatabase extends _$InventoryDatabase {
   InventoryDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
       await _createSearchIndexes();
+      await _createIdempotencyIndexes();
     },
     onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 14) {
+        await _createIdempotencyIndexes();
+      }
       if (from < 12) {
         await customStatement(
           'ALTER TABLE stock_receipts ADD COLUMN account_id TEXT NULL',
@@ -108,7 +112,7 @@ class InventoryDatabase extends _$InventoryDatabase {
           CREATE TABLE IF NOT EXISTS stock_receipts (
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             uuid TEXT NOT NULL UNIQUE,
-            receipt_number TEXT NOT NULL UNIQUE,
+            receipt_number TEXT NOT NULL,
             supplier TEXT NULL,
             notes TEXT NULL,
             receipt_date INTEGER NOT NULL,
@@ -125,7 +129,7 @@ class InventoryDatabase extends _$InventoryDatabase {
           CREATE TABLE IF NOT EXISTS stock_issues (
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             uuid TEXT NOT NULL UNIQUE,
-            issue_number TEXT NOT NULL UNIQUE,
+            issue_number TEXT NOT NULL,
             destination TEXT NULL,
             notes TEXT NULL,
             issue_date INTEGER NOT NULL,
@@ -294,7 +298,7 @@ class InventoryDatabase extends _$InventoryDatabase {
         await customStatement('''
           CREATE TABLE IF NOT EXISTS stock_transfers (
             uuid TEXT NOT NULL PRIMARY KEY,
-            transfer_number TEXT NOT NULL UNIQUE,
+            transfer_number TEXT NOT NULL,
             from_warehouse_id TEXT NOT NULL,
             to_warehouse_id TEXT NOT NULL,
             transfer_date INTEGER NOT NULL,
@@ -410,6 +414,42 @@ class InventoryDatabase extends _$InventoryDatabase {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_products_alive '
       'ON products (item_code) WHERE deleted_at IS NULL',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_stock_lines_posted '
+      'ON stock_movement_lines (item_code, posted_at)',
+    );
+  }
+
+  Future<void> _createIdempotencyIndexes() async {
+    await customStatement(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_cost_layers_movement_item_active '
+      'ON inventory_cost_layers (company_id, movement_uuid, item_code) '
+      'WHERE deleted_at IS NULL',
+    );
+    await customStatement(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_cost_consumptions_issue_layer '
+      'ON inventory_cost_consumptions (company_id, issue_line_uuid, layer_uuid)',
+    );
+    await customStatement(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_stock_receipts_tenant_number '
+      'ON stock_receipts (company_id, receipt_number) '
+      'WHERE deleted_at IS NULL',
+    );
+    await customStatement(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_stock_issues_tenant_number '
+      'ON stock_issues (company_id, issue_number) '
+      'WHERE deleted_at IS NULL',
+    );
+    await customStatement(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_stock_transfers_tenant_number '
+      'ON stock_transfers (company_id, transfer_number) '
+      'WHERE deleted_at IS NULL',
+    );
+    await customStatement(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_stock_returns_tenant_number '
+      'ON stock_returns (company_id, return_number) '
+      'WHERE deleted_at IS NULL',
     );
   }
 
