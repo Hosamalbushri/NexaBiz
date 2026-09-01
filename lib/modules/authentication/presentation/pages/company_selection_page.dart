@@ -8,6 +8,7 @@ import '../../../../core/auth/presentation/providers/auth_context_providers.dart
 import '../../../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import '../providers/auth_providers.dart';
+import '../widgets/company_selection_sheet.dart';
 
 class CompanySelectionPage extends ConsumerWidget {
   const CompanySelectionPage({super.key});
@@ -19,7 +20,21 @@ class CompanySelectionPage extends ConsumerWidget {
     final companies = session?.companies ?? const [];
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.authSelectCompanyTitle)),
+      appBar: AppBar(
+        title: Text(l10n.authSelectCompanyTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_business_rounded),
+            tooltip: 'إضافة شركة جديدة',
+            onPressed: () => CompanySelectionSheet.show(context),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => CompanySelectionSheet.show(context),
+        icon: const Icon(Icons.add_business_rounded),
+        label: const Text('إضافة شركة جديدة'),
+      ),
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: companies.length,

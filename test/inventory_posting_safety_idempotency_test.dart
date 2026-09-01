@@ -17,6 +17,7 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/entities/st
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_coordinator.dart';
 import 'package:stock_count/modules/inventory/warehouses/data/repositories/stock_transfer_repository_impl.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/stock_transfer.dart';
+import 'package:stock_count/core/permissions/permission_guard.dart';
 
 void main() {
   late InventoryDatabase db;
@@ -39,6 +40,7 @@ void main() {
       stockValidationService: validationService,
       dependencyDetector: dependencyDetector,
       postingEngine: postingEngine,
+      permissionGuard: const AllowAllPermissionGuard(),
     );
     movementsRepo = StockMovementsRepositoryImpl(db: db);
     transferRepo = StockTransferRepositoryImpl(db: db);

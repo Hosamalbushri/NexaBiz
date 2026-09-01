@@ -361,12 +361,24 @@ class InventoryDatabase extends _$InventoryDatabase {
             company_id TEXT NULL
           );
         ''');
-        // Backfill status = 'posted' for existing receipts & issues (since they were saved as posted)
+        // Safe status backfill: only mark posted if cost layers or posted lines exist for the document; preserve draft status otherwise
+        await customStatement('''
+          UPDATE stock_receipts 
+          SET status = 'posted', posted_at = created_at 
+          WHERE (status IS NULL OR status = '' OR status = 'draft') 
+            AND uuid IN (SELECT movement_uuid FROM inventory_cost_layers)
+        ''');
         await customStatement(
-          "UPDATE stock_receipts SET status = 'posted', posted_at = created_at WHERE status = 'draft'",
+          "UPDATE stock_receipts SET status = 'draft' WHERE status IS NULL OR status = ''",
         );
+        await customStatement('''
+          UPDATE stock_issues 
+          SET status = 'posted', posted_at = created_at 
+          WHERE (status IS NULL OR status = '' OR status = 'draft') 
+            AND uuid IN (SELECT DISTINCT movement_uuid FROM stock_movement_lines WHERE movement_type = 'issue')
+        ''');
         await customStatement(
-          "UPDATE stock_issues SET status = 'posted', posted_at = created_at WHERE status IS NULL OR status = ''",
+          "UPDATE stock_issues SET status = 'draft' WHERE status IS NULL OR status = ''",
         );
       }
       if (from < 13) {

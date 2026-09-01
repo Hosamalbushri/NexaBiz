@@ -210,6 +210,123 @@ class CompanySelectionSheet extends ConsumerWidget {
                 },
               ),
             ),
+          const SizedBox(height: AppSpacing.md),
+          Divider(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+          const SizedBox(height: AppSpacing.xs),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+            ),
+            icon: const Icon(Icons.add_business_rounded),
+            label: const Text(
+              'إضافة شركة جديدة',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            onPressed: () => _showAddCompanyDialog(context, ref),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Future<void> _showAddCompanyDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final nameController = TextEditingController();
+    final codeController = TextEditingController(
+      text:
+          'CMP-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+    );
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.add_business_rounded, color: colorScheme.primary),
+            const SizedBox(width: AppSpacing.sm),
+            const Text('إضافة شركة جديدة'),
+          ],
+        ),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'اسم الشركة *',
+                  hintText: 'مثال: شركة التجارة المتقدمة',
+                  prefixIcon: Icon(Icons.business_rounded),
+                ),
+                validator: (val) =>
+                    val == null || val.trim().isEmpty
+                        ? 'يرجى إدخال اسم الشركة'
+                        : null,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextFormField(
+                controller: codeController,
+                decoration: const InputDecoration(
+                  labelText: 'كود الشركة *',
+                  hintText: 'مثال: CMP-02',
+                  prefixIcon: Icon(Icons.numbers_rounded),
+                ),
+                validator: (val) =>
+                    val == null || val.trim().isEmpty
+                        ? 'يرجى إدخال كود الشركة'
+                        : null,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+            ),
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              final name = nameController.text.trim();
+              final code = codeController.text.trim();
+              Navigator.of(dialogContext).pop();
+
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              }
+
+              await AppBootstrap.stopSync(ref);
+              await ref
+                  .read(authStateProvider.notifier)
+                  .createCompany(name: name, code: code);
+
+              ref.invalidate(currentEntitlementProvider);
+              ref.invalidate(currentPermissionsProvider);
+              ref.invalidate(authorizationContextProvider);
+              ref.invalidate(companyProfileProvider);
+              ref.invalidate(dashboardServicesProvider);
+              ref.invalidate(syncOverviewProvider);
+
+              await AppBootstrap.bootstrapSync(ref);
+            },
+            child: const Text('إضافة وتأكيد'),
+          ),
         ],
       ),
     );

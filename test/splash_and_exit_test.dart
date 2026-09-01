@@ -255,9 +255,14 @@ void main() {
               const Scaffold(body: Text('SetupChoiceShell')),
         ),
         GoRoute(
+          path: SystemSetupRoutes.firstRun,
+          builder: (context, state) =>
+              const Scaffold(body: Text('FirstRunSetupShell')),
+        ),
+        GoRoute(
           path: SystemSetupRoutes.root,
           builder: (context, state) =>
-              const Scaffold(body: Text('SystemSetupShell')),
+              const Scaffold(body: Text('FirstRunSetupShell')),
         ),
       ],
     );
@@ -304,13 +309,13 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
     });
 
-    testWidgets('navigates to dashboard when initialization succeeds', (
+    testWidgets('navigates to dashboard when initialization succeeds and user is authenticated', (
       tester,
     ) async {
       await tester.pumpWidget(
         wrapSplash(
           overrides: [
-            ...setupOverrides(_readyProgress(), isFirstLaunch: false),
+            ...setupOverrides(_readyProgress(), isFirstLaunch: false, onboardingCompleted: true),
             authStateProvider.overrideWith((ref) => _FakeAuthController(_testAuthenticatedState())),
           ],
         ),
@@ -322,11 +327,11 @@ void main() {
       expect(find.byType(SplashPage), findsNothing);
     });
 
-    testWidgets('navigates to onboarding when not ready', (tester) async {
+    testWidgets('navigates to first-run setup when onboarding is not completed', (tester) async {
       await tester.pumpWidget(
         wrapSplash(
           overrides: [
-            ...setupOverrides(_freshProgress()),
+            ...setupOverrides(_freshProgress(), onboardingCompleted: false),
             authStateProvider.overrideWith((ref) => _FakeAuthController(_testAuthenticatedState())),
           ],
         ),
@@ -334,27 +339,7 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('OnboardingShell'), findsOneWidget);
-      expect(find.text('SystemSetupShell'), findsNothing);
-      expect(find.text('DashboardShell'), findsNothing);
-    });
-
-    testWidgets('navigates to setup choice when onboarding already done', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        wrapSplash(
-          overrides: [
-            ...setupOverrides(_freshProgress(), onboardingCompleted: true),
-            authStateProvider.overrideWith((ref) => _FakeAuthController(_testAuthenticatedState())),
-          ],
-        ),
-      );
-
-      await tester.pumpAndSettle();
-
-      expect(find.text('SetupChoiceShell'), findsOneWidget);
-      expect(find.text('OnboardingShell'), findsNothing);
+      expect(find.text('FirstRunSetupShell'), findsOneWidget);
       expect(find.text('DashboardShell'), findsNothing);
     });
 
@@ -364,7 +349,7 @@ void main() {
       await tester.pumpWidget(
         wrapSplash(
           overrides: [
-            ...setupOverrides(_readyProgress(), isFirstLaunch: false),
+            ...setupOverrides(_readyProgress(), isFirstLaunch: false, onboardingCompleted: true),
             appInitializationControllerProvider.overrideWith((ref) {
               coordinator = _TestAppInitializationCoordinator(ref, shouldFail: true);
               return coordinator;
@@ -390,7 +375,7 @@ void main() {
       await tester.pumpWidget(
         wrapSplash(
           overrides: [
-            ...setupOverrides(_readyProgress()),
+            ...setupOverrides(_readyProgress(), onboardingCompleted: true),
             authStateProvider.overrideWith(
               (ref) => _FakeAuthController(
                 const AuthState(status: AuthStatus.unauthenticated),

@@ -1,3 +1,4 @@
+import '../../../authentication/data/local_auth_store.dart';
 import '../entities/system_setup_state.dart';
 import '../ports/system_setup_seed_port.dart';
 import '../repositories/system_setup_state_repository.dart';
@@ -7,11 +8,14 @@ class SystemInitializationCoordinator {
   SystemInitializationCoordinator({
     required SystemSetupStateRepository stateRepository,
     required SystemSetupSeedPort seedPort,
+    LocalAuthStore? authStore,
   })  : _stateRepository = stateRepository,
-        _seedPort = seedPort;
+        _seedPort = seedPort,
+        _authStore = authStore ?? LocalAuthStore();
 
   final SystemSetupStateRepository _stateRepository;
   final SystemSetupSeedPort _seedPort;
+  final LocalAuthStore _authStore;
 
   Future<SetupProgress> loadProgress() => _stateRepository.load();
 
@@ -78,7 +82,13 @@ class SystemInitializationCoordinator {
   Future<SetupProgress> runLocalAccountStep({
     required String email,
     required String password,
+    String? name,
   }) async {
+    await _authStore.updateLocalAdminCredentials(
+      newEmail: email,
+      newPassword: password,
+      newName: name,
+    );
     return markStepCompleted(SetupStepId.localAccount);
   }
 

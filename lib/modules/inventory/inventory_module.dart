@@ -13,8 +13,10 @@ import '../../core/permissions/permission_defs.dart';
 import '../../core/reporting/pdf_document_preview_page.dart';
 import '../sales/invoices/presentation/providers/sale_barcode_capture_provider.dart';
 import '../sales/invoices/presentation/providers/sale_providers.dart';
+import '../../core/modules/module_setup_definition.dart';
 import 'inventory_module_quick_actions.dart';
 import 'inventory_module_settings.dart';
+import 'inventory_module_setup.dart';
 import 'permissions/inventory_permission_package.dart';
 import 'products/presentation/pages/product_barcode_scanner_page.dart';
 import 'products/presentation/pages/product_form_page.dart';
@@ -80,62 +82,66 @@ class InventoryModule extends AppModule {
   @override
   bool get isEnabled => true;
 
+
+  @override
+  List<ModuleSetupStepDefinition> get setupSteps => inventorySetupSteps;
+
   @override
   List<String> get requiredAnyPermissions => const [
-        ...InventoryPermissions.stockView,
-        ...InventoryPermissions.productsView,
-      ];
+    ...InventoryPermissions.stockView,
+    ...InventoryPermissions.productsView,
+  ];
 
   @override
   List<RouteAccessRule> get routeAccessRules => [
-        RouteAccessRule(
-          pathEquals: InventoryRoutes.productsNew,
-          anyOf: InventoryPermissions.productsCreate,
-        ),
-        RouteAccessRule(
-          pathEquals: InventoryRoutes.productsImport,
-          anyOf: InventoryPermissions.productsImport,
-        ),
-        RouteAccessRule(
-          pathEquals: InventoryRoutes.productsBarcode,
-          anyOf: InventoryPermissions.productsBarcode,
-        ),
-        RouteAccessRule(
-          pathRegex: RegExp(r'^/inventory/products/\d+/edit$'),
-          anyOf: InventoryPermissions.productsUpdate,
-        ),
-        RouteAccessRule(
-          pathPrefix: InventoryRoutes.products,
-          anyOf: InventoryPermissions.productsView,
-        ),
-        RouteAccessRule(
-          pathEquals: InventoryRoutes.import,
-          anyOf: InventoryPermissions.stockImport,
-        ),
-        RouteAccessRule(
-          pathEquals: InventoryRoutes.reports,
-          anyOf: InventoryPermissions.stockExport,
-        ),
-        RouteAccessRule(
-          pathEquals: InventoryRoutes.reportPreview,
-          anyOf: InventoryPermissions.stockExport,
-        ),
-        RouteAccessRule(
-          pathPrefix: InventoryRoutes.count,
-          anyOf: InventoryPermissions.stockAdjust,
-        ),
-        RouteAccessRule(
-          pathPrefix: InventoryRoutes.stockCount,
-          anyOf: InventoryPermissions.stockView,
-        ),
-        RouteAccessRule(
-          pathPrefix: InventoryRoutes.root,
-          anyOf: const [
-            ...InventoryPermissions.stockView,
-            ...InventoryPermissions.productsView,
-          ],
-        ),
-      ];
+    RouteAccessRule(
+      pathEquals: InventoryRoutes.productsNew,
+      anyOf: InventoryPermissions.productsCreate,
+    ),
+    RouteAccessRule(
+      pathEquals: InventoryRoutes.productsImport,
+      anyOf: InventoryPermissions.productsImport,
+    ),
+    RouteAccessRule(
+      pathEquals: InventoryRoutes.productsBarcode,
+      anyOf: InventoryPermissions.productsBarcode,
+    ),
+    RouteAccessRule(
+      pathRegex: RegExp(r'^/inventory/products/\d+/edit$'),
+      anyOf: InventoryPermissions.productsUpdate,
+    ),
+    RouteAccessRule(
+      pathPrefix: InventoryRoutes.products,
+      anyOf: InventoryPermissions.productsView,
+    ),
+    RouteAccessRule(
+      pathEquals: InventoryRoutes.import,
+      anyOf: InventoryPermissions.stockImport,
+    ),
+    RouteAccessRule(
+      pathEquals: InventoryRoutes.reports,
+      anyOf: InventoryPermissions.stockExport,
+    ),
+    RouteAccessRule(
+      pathEquals: InventoryRoutes.reportPreview,
+      anyOf: InventoryPermissions.stockExport,
+    ),
+    RouteAccessRule(
+      pathPrefix: InventoryRoutes.count,
+      anyOf: InventoryPermissions.stockAdjust,
+    ),
+    RouteAccessRule(
+      pathPrefix: InventoryRoutes.stockCount,
+      anyOf: InventoryPermissions.stockView,
+    ),
+    RouteAccessRule(
+      pathPrefix: InventoryRoutes.root,
+      anyOf: const [
+        ...InventoryPermissions.stockView,
+        ...InventoryPermissions.productsView,
+      ],
+    ),
+  ];
 
   @override
   PermissionPackageDef? get permissionPackage => inventoryPermissionPackage();
@@ -157,6 +163,48 @@ class InventoryModule extends AppModule {
   @override
   List<ModuleSettingsCategoryDefinition> get settingsCategories =>
       buildInventorySettingsCategories(moduleId);
+
+  @override
+  bool get hasSettings => true;
+
+  @override
+  List<Widget> buildSettingsSections(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return [
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.category_outlined),
+        title: Text(l10n.productSettingsTitle),
+        subtitle: Text(l10n.productSettingsSubtitle),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => context.push(InventoryRoutes.productsSettings),
+      ),
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.warehouse_outlined),
+        title: Text(l10n.localeName == 'ar' ? 'إدارة المستودعات' : 'Warehouses Management'),
+        subtitle: Text(l10n.localeName == 'ar' ? 'تهيئة المستودعات الرئيسية والفروع وتحديد المستودع الافتراضي' : 'Manage main warehouses, branches, and set default location'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => context.push(InventoryRoutes.warehousesSettings),
+      ),
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.monetization_on_outlined),
+        title: Text(l10n.localeName == 'ar' ? 'تقييم تكلفة المخزون' : 'Inventory Cost Valuation'),
+        subtitle: Text(l10n.localeName == 'ar' ? 'اختيار طريقة احتساب التكلفة (FIFO, LIFO, المتوسط المرجح)' : 'Select valuation method (FIFO, LIFO, Weighted Average)'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => context.push(InventoryRoutes.costValuationSettings),
+      ),
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.account_tree_outlined),
+        title: Text(l10n.localeName == 'ar' ? 'شجرة تصنيفات المخزون' : 'Inventory Category Tree'),
+        subtitle: Text(l10n.localeName == 'ar' ? 'إدارة شجرة التصنيفات المرتبطة بالمستودعات ووراثة طرق احتساب التكلفة' : 'Manage warehouse-rooted category tree & cost valuation inheritance'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => context.push(InventoryRoutes.categoriesSettings),
+      ),
+    ];
+  }
 
   @override
   List<RouteBase> get routes => [
@@ -226,12 +274,14 @@ class InventoryModule extends AppModule {
         GoRoute(
           path: 'stock-movements',
           name: 'inventoryStockMovements',
-          builder: (context, state) => const StockMovementsPage(initialIndex: 0),
+          builder: (context, state) =>
+              const StockMovementsPage(initialIndex: 0),
           routes: [
             GoRoute(
               path: 'receipts',
               name: 'inventoryStockReceiptsList',
-              builder: (context, state) => const StockMovementsPage(initialIndex: 1),
+              builder: (context, state) =>
+                  const StockMovementsPage(initialIndex: 1),
               routes: [
                 GoRoute(
                   path: 'new',
@@ -257,7 +307,8 @@ class InventoryModule extends AppModule {
             GoRoute(
               path: 'issues',
               name: 'inventoryStockIssuesList',
-              builder: (context, state) => const StockMovementsPage(initialIndex: 0),
+              builder: (context, state) =>
+                  const StockMovementsPage(initialIndex: 0),
               routes: [
                 GoRoute(
                   path: 'new',
@@ -345,7 +396,8 @@ class InventoryModule extends AppModule {
         GoRoute(
           path: 'stock-transfers',
           name: 'inventoryStockTransfers',
-          builder: (context, state) => const StockMovementsPage(initialIndex: 2),
+          builder: (context, state) =>
+              const StockMovementsPage(initialIndex: 2),
           routes: [
             GoRoute(
               path: 'new',
@@ -360,14 +412,14 @@ class InventoryModule extends AppModule {
 
   @override
   List<Override> get providerOverrides => [
-        saleProductCatalogPortProvider.overrideWith((ref) {
-          return InventorySaleProductCatalogAdapter(
-            repository: ref.watch(productRepositoryProvider),
-            scanResolver: ref.watch(productScanResolverProvider),
-          );
-        }),
-        saleBarcodeCaptureProvider.overrideWithValue(
-          (context) => ProductBarcodeScannerPage.open(context),
-        ),
-      ];
+    saleProductCatalogPortProvider.overrideWith((ref) {
+      return InventorySaleProductCatalogAdapter(
+        repository: ref.watch(productRepositoryProvider),
+        scanResolver: ref.watch(productScanResolverProvider),
+      );
+    }),
+    saleBarcodeCaptureProvider.overrideWithValue(
+      (context) => ProductBarcodeScannerPage.open(context),
+    ),
+  ];
 }

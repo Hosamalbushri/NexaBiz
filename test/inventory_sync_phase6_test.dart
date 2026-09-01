@@ -22,6 +22,7 @@ import 'package:stock_count/modules/inventory/warehouses/domain/entities/stock_t
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/network/remote_sync_api.dart';
 import 'package:stock_count/core/auth/domain/services/local_access_policy.dart';
+import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:hive/hive.dart';
 
 class MockSyncBox<T> implements Box<T> {
@@ -82,6 +83,7 @@ void main() {
       stockValidationService: validationService,
       dependencyDetector: dependencyDetector,
       postingEngine: postingEngine,
+      permissionGuard: const AllowAllPermissionGuard(),
       readCompanyId: () => 'COMP-A',
       syncQueue: syncQueue,
     );

@@ -1,6 +1,8 @@
 import 'package:stock_count/core/network/authenticated_http_client.dart';
+import '../../domain/repositories/admin_repository.dart';
 
 class AdminUserSummary {
+
   const AdminUserSummary({
     required this.id,
     required this.name,
@@ -140,8 +142,9 @@ class AdminDeviceSummary {
 }
 
 /// Online-only admin API client (users / roles). Backend enforces authorization.
-class AdminApiRepository {
+class AdminApiRepository implements AdminRepository {
   AdminApiRepository(this._http);
+
 
   final AuthenticatedHttpClient _http;
 

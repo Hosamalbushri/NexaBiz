@@ -24,7 +24,8 @@ class LocalAuthRepository implements AuthRepository {
   }) : _store = store,
        _tokenStorage = tokenStorage,
        _offlineAuthStore = offlineAuthStore ?? OfflineAuthorizationStore(),
-       _entitlementRepository = entitlementRepository ?? EntitlementRepositoryImpl(),
+       _entitlementRepository =
+           entitlementRepository ?? EntitlementRepositoryImpl(),
        _readConfig = readConfig,
        _onConfigChanged = onConfigChanged;
 
@@ -69,12 +70,15 @@ class LocalAuthRepository implements AuthRepository {
   ) async {
     if (!snapshot.hasCompany) return snapshot;
     final config = _readConfig();
-    if (config.baseUrl.isEmpty) {
+    // Standalone local mode & Super Admin accounts use local permissions directly
+    if (config.baseUrl.isEmpty || snapshot.user.isSuperAdmin) {
       return snapshot;
     }
 
     final companyId = snapshot.currentCompanyId!;
-    final cachedEntitlement = await _entitlementRepository.getCachedEntitlement(companyId);
+    final cachedEntitlement = await _entitlementRepository.getCachedEntitlement(
+      companyId,
+    );
     final entitlement = cachedEntitlement ?? Entitlement.freeLocal(companyId);
 
     final restoredSnapshot = await _offlineAuthStore.loadSnapshot(
@@ -104,8 +108,10 @@ class LocalAuthRepository implements AuthRepository {
       );
     }
 
-    // Standalone local default admin has no server snapshot — allow full access.
-    if (snapshot.user.email == LocalAuthDefaults.adminEmail &&
+    // Standalone local admin or super admin fallback
+    if (snapshot.user.isSuperAdmin ||
+        snapshot.user.id == LocalAuthDefaults.adminUserId ||
+        snapshot.user.email == LocalAuthDefaults.adminEmail ||
         config.baseUrl.isEmpty) {
       return snapshot;
     }
@@ -120,15 +126,7 @@ class LocalAuthRepository implements AuthRepository {
   @override
   Future<AuthSessionSnapshot?> restoreSession() async {
     await _store.ensureSeeded();
-    var loaded = await _store.loadSession();
-    if (loaded == null) {
-      loaded = await _store.login(
-        email: LocalAuthDefaults.adminEmail,
-        password: LocalAuthDefaults.adminPassword,
-        deviceId: 'local-device',
-        companyId: LocalAuthDefaults.companyId,
-      );
-    }
+    final loaded = await _store.loadSession();
     if (loaded == null) {
       _emit(null);
       return null;
@@ -207,6 +205,14 @@ class LocalAuthRepository implements AuthRepository {
     return next;
   }
 
+  Future<AuthSessionSnapshot> createCompany({
+    required String name,
+    required String code,
+  }) async {
+    final company = await _store.createCompany(name: name, code: code);
+    return switchCompany(company.id);
+  }
+
   @override
   Future<void> logout({bool clearLocalBusinessData = false}) async {
     // G4 fix: delete all offline authorization snapshots for this user on logout.
@@ -240,7 +246,8 @@ class LocalAuthRepository implements AuthRepository {
     required String newPassword,
     String? userId,
   }) async {
-    final uid = userId ?? _cached?.user.id ?? (await _store.loadSession())?.user.id;
+    final uid =
+        userId ?? _cached?.user.id ?? (await _store.loadSession())?.user.id;
     if (uid == null || uid.isEmpty) {
       throw const AuthenticationFailure('No active session');
     }

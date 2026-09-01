@@ -7,7 +7,6 @@ import '../../core/di/app_providers.dart';
 import '../../core/widgets/app_error_state.dart';
 import '../../core/auth/presentation/providers/auth_state_core.dart';
 import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
-import '../../modules/system_setup/presentation/providers/system_setup_providers.dart';
 import '../bootstrap/app_initialization.dart';
 import '../bootstrap/app_initialization_state.dart';
 import '../localization/app_localizations.dart';
@@ -31,7 +30,10 @@ class SplashPage extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    ref.listen<InitializationState>(appInitializationControllerProvider, (previous, next) {
+    ref.listen<InitializationState>(appInitializationControllerProvider, (
+      previous,
+      next,
+    ) {
       if (next.canOperate) {
         _navigateAfterInit(context, ref);
       }
@@ -75,7 +77,9 @@ class SplashPage extends ConsumerWidget {
                 ? SafeArea(
                     child: AppErrorState(
                       title: l10n.splashInitErrorTitle,
-                      message: initState.error?.message ?? l10n.splashInitErrorMessage,
+                      message:
+                          initState.error?.message ??
+                          l10n.splashInitErrorMessage,
                       onRetry: () => ref
                           .read(appInitializationControllerProvider.notifier)
                           .retry(),
@@ -99,7 +103,6 @@ class SplashPage extends ConsumerWidget {
     final location = GoRouterState.of(context).uri.path;
     if (location != AppRoutes.splash) return;
 
-    final startup = ref.read(startupStateProvider);
     final auth = ref.read(authStateProvider);
 
     final onboardingDone = await ref
@@ -107,23 +110,19 @@ class SplashPage extends ConsumerWidget {
         .loadOnboardingCompleted();
     if (!context.mounted) return;
 
-    final ready =
-        await ref.read(systemInitializationCoordinatorProvider).isReady();
-    if (!context.mounted) return;
-
-    if (!ready) {
-      if (!onboardingDone) {
-        context.go(AppRoutes.onboarding);
-      } else {
-        context.go(SystemSetupRoutes.root);
-      }
+    // 1. First-Run Setup / Onboarding check
+    if (!onboardingDone) {
+      context.go(AppRoutes.onboarding);
       return;
     }
 
-    if (auth.isAuthenticated) {
-      context.go(AppRoutes.dashboard);
-    } else {
+
+    // 2. Authentication check
+    if (!auth.isAuthenticated) {
       context.go(AppRoutes.login);
+      return;
     }
+
+    context.go(AppRoutes.dashboard);
   }
 }

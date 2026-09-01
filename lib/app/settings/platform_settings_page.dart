@@ -222,9 +222,16 @@ class _PlatformSettingsBody extends ConsumerWidget {
         SettingsGroup(
           children: [
             SettingsTile(
+              icon: Icons.store_outlined,
+              title: l10n.setupSettingsTitle,
+              subtitle: companyAsync.asData?.value.name ?? l10n.systemSetupEditCompany,
+              showChevron: true,
+              onTap: () => context.push(AppRoutes.settingsSetup),
+            ),
+            SettingsTile(
               icon: Icons.business_outlined,
               title: l10n.authSelectCompanyTitle,
-              subtitle: companyAsync.asData?.value?.name ?? '',
+              subtitle: companyAsync.asData?.value.name ?? '',
               showChevron: true,
               onTap: () => CompanySelectionSheet.show(context),
             ),

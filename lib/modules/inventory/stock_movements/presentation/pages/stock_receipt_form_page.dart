@@ -15,9 +15,7 @@ import 'package:stock_count/core/widgets/app_amount_field.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
-import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_labels.dart';
-import 'package:stock_count/modules/accounting/shared/presentation/providers/currency_rate_providers.dart';
+import 'package:stock_count/app/providers/currency_rate_providers.dart';
 import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
 import 'package:stock_count/modules/inventory/products/presentation/pages/product_barcode_scanner_page.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
@@ -745,12 +743,13 @@ class _AccountSelectorCardState extends State<_AccountSelectorCard> {
 
   void _closeSearch() => setState(() => _searching = false);
 
-  void _handleAccountSelected(Account pickedAccount) {
+  void _handleAccountSelected(dynamic pickedAccount) {
+    if (pickedAccount == null) return;
     final ref = InventoryAccountRef(
-      accountId: pickedAccount.uuid,
-      code: pickedAccount.accountCode,
-      name: pickedAccount.name,
-      systemKey: AccountLabels.systemKeyOf(pickedAccount),
+      accountId: pickedAccount.uuid as String,
+      code: pickedAccount.accountCode as String,
+      name: pickedAccount.name as String,
+      systemKey: pickedAccount.isSystemAccount == true ? (pickedAccount.accountCode as String) : null,
     );
     widget.onAccountSelected(ref);
     _closeSearch();

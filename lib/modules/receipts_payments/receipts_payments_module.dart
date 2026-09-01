@@ -55,6 +55,7 @@ class ReceiptsPaymentsModule extends AppModule {
   @override
   bool get isEnabled => true;
 
+
   @override
   List<String> get requiredAnyPermissions => ReceiptsPaymentsPermissions.anyView;
 
@@ -122,6 +123,24 @@ class ReceiptsPaymentsModule extends AppModule {
   @override
   List<ModuleSettingsCategoryDefinition> get settingsCategories =>
       buildReceiptsPaymentsSettingsCategories(moduleId);
+
+  @override
+  bool get hasSettings => true;
+
+  @override
+  List<Widget> buildSettingsSections(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return [
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.published_with_changes_outlined),
+        title: Text(l10n.moduleReceiptsPayments),
+        subtitle: Text(l10n.moduleReceiptsPaymentsDescription),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => context.push(ReceiptsPaymentsRoutes.postingService),
+      ),
+    ];
+  }
 
   @override
   List<RouteBase> get routes => [

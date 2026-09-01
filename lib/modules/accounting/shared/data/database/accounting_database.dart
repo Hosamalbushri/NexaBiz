@@ -34,10 +34,8 @@ class AccountingDatabase extends _$AccountingDatabase {
   /// In-memory database for tests.
   AccountingDatabase.memory() : super(NativeDatabase.memory());
 
-
-
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -85,6 +83,7 @@ class AccountingDatabase extends _$AccountingDatabase {
       );
       await _createJournalIndexes();
       await _createFiscalIndexes();
+      await _createCurrenciesTable();
     },
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
@@ -197,8 +196,40 @@ class AccountingDatabase extends _$AccountingDatabase {
       if (from < 14) {
         await _createJournalSourceUniqueIndex();
       }
+      if (from < 15) {
+        await _createCurrenciesTable();
+      }
     },
   );
+
+  Future<void> _createCurrenciesTable() async {
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS currencies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        uuid TEXT NOT NULL UNIQUE,
+        code TEXT NOT NULL,
+        name_ar TEXT NOT NULL,
+        name_en TEXT NOT NULL,
+        symbol TEXT NOT NULL,
+        decimal_digits INTEGER NOT NULL DEFAULT 2,
+        is_default INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        company_id TEXT,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        deleted_at INTEGER,
+        sync_status TEXT NOT NULL DEFAULT 'synced',
+        last_synced_at INTEGER,
+        version INTEGER NOT NULL DEFAULT 1
+      )
+    ''');
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_currencies_code ON currencies (code)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_currencies_company ON currencies (company_id)',
+    );
+  }
 
   /// Assign stable UUIDs to pre-sync currency rate rows.
   Future<void> _backfillCurrencyRateUuids() async {

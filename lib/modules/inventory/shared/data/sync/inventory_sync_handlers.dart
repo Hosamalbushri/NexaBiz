@@ -379,6 +379,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
     String companyId,
     DateTime now,
   ) async {
+    int? deletedAt;
     await db.transaction(() async {
       final existing = await (db.select(db.stockReceipts)
             ..where((t) => t.uuid.equals(entityId) & t.companyId.equals(companyId)))
@@ -389,7 +390,15 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         return;
       }
 
-      final deletedAt = change.deleted || payload['deletedAt'] != null
+      if (existing != null && existing.status == 'posted') {
+        final remoteStatus = payload['status']?.toString();
+        final isRemoteDelete = change.deleted || payload['deletedAt'] != null;
+        if (remoteStatus != 'posted' || isRemoteDelete) {
+          throw StateError('Sync conflict: Cannot overwrite or unpost posted financial document ($entityId)');
+        }
+      }
+
+      deletedAt = change.deleted || payload['deletedAt'] != null
           ? (payload['deletedAt'] as int? ?? change.updatedAt.millisecondsSinceEpoch)
           : null;
 
@@ -409,7 +418,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         lastSyncedAt: Value(now.millisecondsSinceEpoch),
         version: Value(remoteVersion),
         companyId: Value(companyId),
-        status: Value(payload['status']?.toString() ?? 'draft'),
+        status: Value(_postingCoordinator != null && payload['status']?.toString() == 'posted' && (existing == null || existing.status != 'posted') ? 'draft' : (payload['status']?.toString() ?? 'draft')),
         postedAt: Value((payload['postedAt'] as int?) ?? (payload['posted_at'] as int?)),
         deletedAt: Value(deletedAt),
       );
@@ -433,12 +442,17 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
               movementUuid: Value(entityId),
               movementType: const Value('receipt'),
               itemCode: Value(l['itemCode']?.toString() ?? l['item_code']?.toString() ?? ''),
-              itemName: Value(l['itemName']?.toString() ?? l['item_name']?.toString() ?? ''),
+              itemName: Value((l['itemName']?.toString() ?? l['item_name']?.toString() ?? l['itemCode']?.toString() ?? l['item_code']?.toString() ?? '').isNotEmpty ? (l['itemName']?.toString() ?? l['item_name']?.toString() ?? l['itemCode']?.toString() ?? l['item_code']?.toString() ?? '') : 'Item'),
               mainQuantity: Value((l['mainQuantity'] as num?)?.toDouble() ?? (l['quantity'] as num?)?.toDouble() ?? 0.0),
               subQuantity: Value((l['subQuantity'] as num?)?.toDouble() ?? 0.0),
               quantity: Value((l['quantity'] as num?)?.toDouble() ?? 0.0),
               unitCost: Value((l['unitCost'] as num?)?.toDouble() ?? (l['unit_cost'] as num?)?.toDouble() ?? 0.0),
-              totalCost: Value((l['totalCost'] as num?)?.toDouble() ?? (l['total_cost'] as num?)?.toDouble() ?? 0.0),
+              totalCost: Value(
+                (l['totalCost'] as num?)?.toDouble() ??
+                (l['total_cost'] as num?)?.toDouble() ??
+                (((l['unitCost'] as num?)?.toDouble() ?? (l['unit_cost'] as num?)?.toDouble() ?? 0.0) *
+                 ((l['quantity'] as num?)?.toDouble() ?? (l['mainQuantity'] as num?)?.toDouble() ?? 0.0)),
+              ),
               postedCost: Value((l['postedCost'] as num?)?.toDouble() ?? (l['posted_cost'] as num?)?.toDouble()),
               postedAt: Value((l['postedAt'] as int?) ?? (l['posted_at'] as int?)),
             ),
@@ -446,6 +460,23 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         }
       }
     });
+
+    if (payload['status'] == 'posted' && deletedAt == null && _postingCoordinator != null) {
+      final ref = InventoryDocumentRef(
+        documentId: entityId,
+        documentNumber: payload['receiptNumber']?.toString() ?? payload['receipt_number']?.toString() ?? '',
+        documentType: InventoryDocumentType.stockReceipt,
+        warehouseId: payload['warehouseId']?.toString() ?? payload['warehouse_id']?.toString() ?? payload['warehouse']?.toString(),
+        documentDate: DateTime.fromMillisecondsSinceEpoch(
+          (payload['receiptDate'] as int?) ?? (payload['receipt_date'] as int?) ?? change.updatedAt.millisecondsSinceEpoch,
+        ),
+        status: InventoryDocumentStatus.posted,
+      );
+      final postResult = await _postingCoordinator.post(document: ref);
+      if (postResult is! PostSuccess) {
+        throw StateError('Remote sync stock receipt posting failed: $postResult');
+      }
+    }
   }
 
   Future<void> _applyStockIssue(
@@ -456,6 +487,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
     String companyId,
     DateTime now,
   ) async {
+    int? deletedAt;
     await db.transaction(() async {
       final existing = await (db.select(db.stockIssues)
             ..where((t) => t.uuid.equals(entityId) & t.companyId.equals(companyId)))
@@ -466,7 +498,15 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         return;
       }
 
-      final deletedAt = change.deleted || payload['deletedAt'] != null
+      if (existing != null && existing.status == 'posted') {
+        final remoteStatus = payload['status']?.toString();
+        final isRemoteDelete = change.deleted || payload['deletedAt'] != null;
+        if (remoteStatus != 'posted' || isRemoteDelete) {
+          throw StateError('Sync conflict: Cannot overwrite or unpost posted financial document ($entityId)');
+        }
+      }
+
+      deletedAt = change.deleted || payload['deletedAt'] != null
           ? (payload['deletedAt'] as int? ?? change.updatedAt.millisecondsSinceEpoch)
           : null;
 
@@ -491,7 +531,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         lastSyncedAt: Value(now.millisecondsSinceEpoch),
         version: Value(remoteVersion),
         companyId: Value(companyId),
-        status: Value(payload['status']?.toString() ?? 'draft'),
+        status: Value(_postingCoordinator != null && payload['status']?.toString() == 'posted' && (existing == null || existing.status != 'posted') ? 'draft' : (payload['status']?.toString() ?? 'draft')),
         postedAt: Value((payload['postedAt'] as int?) ?? (payload['posted_at'] as int?)),
         deletedAt: Value(deletedAt),
       );
@@ -515,12 +555,17 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
               movementUuid: Value(entityId),
               movementType: const Value('issue'),
               itemCode: Value(l['itemCode']?.toString() ?? l['item_code']?.toString() ?? ''),
-              itemName: Value(l['itemName']?.toString() ?? l['item_name']?.toString() ?? ''),
+              itemName: Value((l['itemName']?.toString() ?? l['item_name']?.toString() ?? l['itemCode']?.toString() ?? l['item_code']?.toString() ?? '').isNotEmpty ? (l['itemName']?.toString() ?? l['item_name']?.toString() ?? l['itemCode']?.toString() ?? l['item_code']?.toString() ?? '') : 'Item'),
               mainQuantity: Value((l['mainQuantity'] as num?)?.toDouble() ?? (l['quantity'] as num?)?.toDouble() ?? 0.0),
               subQuantity: Value((l['subQuantity'] as num?)?.toDouble() ?? 0.0),
               quantity: Value((l['quantity'] as num?)?.toDouble() ?? 0.0),
               unitCost: Value((l['unitCost'] as num?)?.toDouble() ?? (l['unit_cost'] as num?)?.toDouble() ?? 0.0),
-              totalCost: Value((l['totalCost'] as num?)?.toDouble() ?? (l['total_cost'] as num?)?.toDouble() ?? 0.0),
+              totalCost: Value(
+                (l['totalCost'] as num?)?.toDouble() ??
+                (l['total_cost'] as num?)?.toDouble() ??
+                (((l['unitCost'] as num?)?.toDouble() ?? (l['unit_cost'] as num?)?.toDouble() ?? 0.0) *
+                 ((l['quantity'] as num?)?.toDouble() ?? (l['mainQuantity'] as num?)?.toDouble() ?? 0.0)),
+              ),
               postedCost: Value((l['postedCost'] as num?)?.toDouble() ?? (l['posted_cost'] as num?)?.toDouble()),
               postedAt: Value((l['postedAt'] as int?) ?? (l['posted_at'] as int?)),
             ),
@@ -528,6 +573,23 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         }
       }
     });
+
+    if (payload['status'] == 'posted' && deletedAt == null && _postingCoordinator != null) {
+      final ref = InventoryDocumentRef(
+        documentId: entityId,
+        documentNumber: payload['issueNumber']?.toString() ?? payload['issue_number']?.toString() ?? '',
+        documentType: InventoryDocumentType.stockIssue,
+        warehouseId: payload['warehouseId']?.toString() ?? payload['warehouse_id']?.toString() ?? payload['warehouse']?.toString(),
+        documentDate: DateTime.fromMillisecondsSinceEpoch(
+          (payload['issueDate'] as int?) ?? (payload['issue_date'] as int?) ?? change.updatedAt.millisecondsSinceEpoch,
+        ),
+        status: InventoryDocumentStatus.posted,
+      );
+      final postResult = await _postingCoordinator.post(document: ref);
+      if (postResult is! PostSuccess) {
+        throw StateError('Remote sync stock issue posting failed: $postResult');
+      }
+    }
   }
 
   Future<void> _applyStockTransfer(
@@ -538,6 +600,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
     String companyId,
     DateTime now,
   ) async {
+    int? deletedAt;
     await db.transaction(() async {
       final existing = await (db.select(db.stockTransfers)
             ..where((t) => t.uuid.equals(entityId) & t.companyId.equals(companyId)))
@@ -548,7 +611,15 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         return;
       }
 
-      final deletedAt = change.deleted || payload['deletedAt'] != null
+      if (existing != null && existing.status == 'posted') {
+        final remoteStatus = payload['status']?.toString();
+        final isRemoteDelete = change.deleted || payload['deletedAt'] != null;
+        if (remoteStatus != 'posted' || isRemoteDelete) {
+          throw StateError('Sync conflict: Cannot overwrite or unpost posted financial document ($entityId)');
+        }
+      }
+
+      deletedAt = change.deleted || payload['deletedAt'] != null
           ? (payload['deletedAt'] as int? ?? change.updatedAt.millisecondsSinceEpoch)
           : null;
 
@@ -564,6 +635,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         syncStatus: const Value('synced'),
         version: Value(remoteVersion),
         companyId: Value(companyId),
+        status: Value(_postingCoordinator != null && payload['status']?.toString() == 'posted' && (existing == null || existing.status != 'posted') ? 'draft' : (payload['status']?.toString() ?? 'draft')),
         deletedAt: Value(deletedAt),
       );
 
@@ -586,17 +658,39 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
               movementUuid: Value(entityId),
               movementType: const Value('transfer'),
               itemCode: Value(l['itemCode']?.toString() ?? l['item_code']?.toString() ?? ''),
-              itemName: Value(l['itemName']?.toString() ?? l['item_name']?.toString() ?? ''),
+              itemName: Value((l['itemName']?.toString() ?? l['item_name']?.toString() ?? l['itemCode']?.toString() ?? l['item_code']?.toString() ?? '').isNotEmpty ? (l['itemName']?.toString() ?? l['item_name']?.toString() ?? l['itemCode']?.toString() ?? l['item_code']?.toString() ?? '') : 'Item'),
               mainQuantity: Value((l['mainQuantity'] as num?)?.toDouble() ?? (l['quantity'] as num?)?.toDouble() ?? 0.0),
               subQuantity: Value((l['subQuantity'] as num?)?.toDouble() ?? 0.0),
               quantity: Value((l['quantity'] as num?)?.toDouble() ?? 0.0),
               unitCost: Value((l['unitCost'] as num?)?.toDouble() ?? (l['unit_cost'] as num?)?.toDouble() ?? 0.0),
-              totalCost: Value((l['totalCost'] as num?)?.toDouble() ?? (l['total_cost'] as num?)?.toDouble() ?? 0.0),
+              totalCost: Value(
+                (l['totalCost'] as num?)?.toDouble() ??
+                (l['total_cost'] as num?)?.toDouble() ??
+                (((l['unitCost'] as num?)?.toDouble() ?? (l['unit_cost'] as num?)?.toDouble() ?? 0.0) *
+                 ((l['quantity'] as num?)?.toDouble() ?? (l['mainQuantity'] as num?)?.toDouble() ?? 0.0)),
+              ),
             ),
           );
         }
       }
     });
+
+    if (payload['status'] == 'posted' && deletedAt == null && _postingCoordinator != null) {
+      final ref = InventoryDocumentRef(
+        documentId: entityId,
+        documentNumber: payload['transferNumber']?.toString() ?? payload['transfer_number']?.toString() ?? '',
+        documentType: InventoryDocumentType.stockTransfer,
+        warehouseId: payload['fromWarehouseId']?.toString() ?? payload['from_warehouse_id']?.toString(),
+        documentDate: DateTime.fromMillisecondsSinceEpoch(
+          (payload['transferDate'] as int?) ?? (payload['transfer_date'] as int?) ?? change.updatedAt.millisecondsSinceEpoch,
+        ),
+        status: InventoryDocumentStatus.posted,
+      );
+      final postResult = await _postingCoordinator.post(document: ref);
+      if (postResult is! PostSuccess) {
+        throw StateError('Remote sync stock transfer posting failed: $postResult');
+      }
+    }
   }
 
   Future<void> _applyStockReturn(
@@ -607,6 +701,8 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
     String companyId,
     DateTime now,
   ) async {
+    int? deletedAt;
+    String returnTypeStr = 'sales_return';
     await db.transaction(() async {
       final existing = await (db.select(db.stockReturns)
             ..where((t) => t.uuid.equals(entityId) & t.companyId.equals(companyId)))
@@ -617,11 +713,19 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         return;
       }
 
-      final deletedAt = change.deleted || payload['deletedAt'] != null
+      if (existing != null && existing.status == 'posted') {
+        final remoteStatus = payload['status']?.toString();
+        final isRemoteDelete = change.deleted || payload['deletedAt'] != null;
+        if (remoteStatus != 'posted' || isRemoteDelete) {
+          throw StateError('Sync conflict: Cannot overwrite or unpost posted financial document ($entityId)');
+        }
+      }
+
+      deletedAt = change.deleted || payload['deletedAt'] != null
           ? (payload['deletedAt'] as int? ?? change.updatedAt.millisecondsSinceEpoch)
           : null;
 
-      final returnTypeStr = payload['returnType']?.toString() ?? payload['return_type']?.toString() ?? 'sales_return';
+      returnTypeStr = payload['returnType']?.toString() ?? payload['return_type']?.toString() ?? 'sales_return';
 
       final companion = StockReturnsCompanion(
         uuid: Value(entityId),
@@ -638,7 +742,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         lastSyncedAt: Value(now.millisecondsSinceEpoch),
         version: Value(remoteVersion),
         companyId: Value(companyId),
-        status: Value(payload['status']?.toString() ?? 'draft'),
+        status: Value(_postingCoordinator != null && payload['status']?.toString() == 'posted' && (existing == null || existing.status != 'posted') ? 'draft' : (payload['status']?.toString() ?? 'draft')),
         postedAt: Value((payload['postedAt'] as int?) ?? (payload['posted_at'] as int?)),
         deletedAt: Value(deletedAt),
       );
@@ -675,6 +779,23 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         }
       }
     });
+
+    if (payload['status'] == 'posted' && deletedAt == null && _postingCoordinator != null) {
+      final ref = InventoryDocumentRef(
+        documentId: entityId,
+        documentNumber: payload['returnNumber']?.toString() ?? payload['return_number']?.toString() ?? '',
+        documentType: InventoryDocumentType.stockReturn,
+        warehouseId: payload['warehouseId']?.toString() ?? payload['warehouse_id']?.toString() ?? payload['warehouse']?.toString(),
+        documentDate: DateTime.fromMillisecondsSinceEpoch(
+          (payload['returnDate'] as int?) ?? (payload['return_date'] as int?) ?? change.updatedAt.millisecondsSinceEpoch,
+        ),
+        status: InventoryDocumentStatus.posted,
+      );
+      final postResult = await _postingCoordinator.post(document: ref);
+      if (postResult is! PostSuccess) {
+        throw StateError('Remote sync stock return posting failed: $postResult');
+      }
+    }
   }
 
   Future<void> _applyInventoryReversal(
@@ -701,10 +822,13 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
     );
 
     if (_postingCoordinator != null) {
-      await _postingCoordinator.unpost(
+      final unpostResult = await _postingCoordinator.unpost(
         document: ref,
         reason: payload['reason']?.toString() ?? 'Remote sync reversal',
       );
+      if (unpostResult is! UnpostSuccess) {
+        throw StateError('Remote sync inventory reversal failed: $unpostResult');
+      }
     } else if (_postingEngine != null) {
       await _postingEngine.reversePosting(
         document: ref,

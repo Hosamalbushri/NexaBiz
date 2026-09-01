@@ -17,6 +17,10 @@ import '../../modules/authentication/data/local_auth_store.dart';
 import 'company/app_currency.dart';
 import 'company/company_profile.dart';
 import 'company/company_profile_providers.dart';
+import '../../modules/system_setup/domain/entities/system_setup_state.dart';
+import '../../modules/system_setup/presentation/providers/system_setup_providers.dart';
+import '../../modules/system_setup/presentation/widgets/system_settings_hub.dart';
+import '../../modules/system_setup/presentation/widgets/package_initialization_settings_hub.dart';
 
 /// Setup / company configuration settings page.
 class SetupSettingsPage extends ConsumerStatefulWidget {
@@ -40,7 +44,7 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
   final _websiteController = TextEditingController();
   final _invoiceHeaderRightController = TextEditingController();
   final _invoiceHeaderLeftController = TextEditingController();
-  final _adminEmailController = TextEditingController(text: 'admin@nexabiz.local');
+  final _adminEmailController = TextEditingController();
   final _adminPasswordController = TextEditingController();
 
   var _hydrated = false;
@@ -227,15 +231,31 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
             }
           });
         }
-        return Scaffold(
-          backgroundColor: theme.colorScheme.surfaceContainerLowest,
-          appBar: CustomAppBar(
-            title: l10n.setupSettingsTitle,
-            showBackButton: true,
-          ),
-          body: Form(
-            key: _formKey,
-            child: ListView(
+        return DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            backgroundColor: theme.colorScheme.surfaceContainerLowest,
+            appBar: CustomAppBar(
+              title: l10n.setupSettingsTitle,
+              showBackButton: true,
+              bottom: TabBar(
+                tabs: [
+                  Tab(
+                    icon: const Icon(Icons.apartment_outlined),
+                    text: isArabic ? 'تهيئة الشركة' : 'Company Setup',
+                  ),
+                  Tab(
+                    icon: const Icon(Icons.grid_view_outlined),
+                    text: isArabic ? 'تهيئة الحزم' : 'Package Setup',
+                  ),
+                ],
+              ),
+            ),
+            body: TabBarView(
+              children: [
+                Form(
+                  key: _formKey,
+                  child: ListView(
               padding: AppConstants.pageInsets(context),
               children: [
                 Text(
@@ -580,7 +600,11 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
               ],
             ),
           ),
-        );
+          const PackageInitializationSettingsHub(),
+        ],
+      ),
+    ),
+  );
       },
     );
   }

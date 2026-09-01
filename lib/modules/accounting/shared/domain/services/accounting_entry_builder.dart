@@ -1,19 +1,23 @@
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
-import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
-import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
-import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
+import 'package:stock_count/core/domain/entities/document_ref.dart';
+import 'package:stock_count/core/domain/ports/posting_port.dart';
 import 'account_mapping_resolver.dart';
 import 'account_validation_service.dart';
+
+import 'package:stock_count/modules/system_setup/domain/repositories/company_initialization_repository.dart';
 
 class AccountingEntryBuilder {
   AccountingEntryBuilder({
     required AccountMappingResolver mappingResolver,
     required AccountValidationService validationService,
-  })  : _mappingResolver = mappingResolver,
-        _validationService = validationService;
+    CompanyInitializationRepository? initRepository,
+  }) : _mappingResolver = mappingResolver,
+       _validationService = validationService,
+       _initRepository = initRepository;
 
   final AccountMappingResolver _mappingResolver;
   final AccountValidationService _validationService;
+  final CompanyInitializationRepository? _initRepository;
 
   Future<JournalEntryDraft> buildDraftFromInventoryDocument({
     required InventoryDocumentRef document,
@@ -23,15 +27,19 @@ class AccountingEntryBuilder {
     bool useBaseCurrencyForCogs = false,
   }) async {
     if (totalAmount <= 0) {
-      throw ArgumentError('مبلغ المستند يجب أن يكون أكبر من صفر لبناء القيد المحاسبي');
+      throw ArgumentError(
+        'مبلغ المستند يجب أن يكون أكبر من صفر لبناء القيد المحاسبي',
+      );
     }
 
-    final isReceipt = document.documentType == InventoryDocumentType.stockReceipt;
+    final isReceipt =
+        document.documentType == InventoryDocumentType.stockReceipt;
     final voucherTypeStr = isReceipt ? 'أمر توريد' : 'أمر صرف';
 
     final overrides = <AccountRole, String>{};
     if (offsetAccountId != null && offsetAccountId.trim().isNotEmpty) {
-      overrides[isReceipt ? AccountRole.payable : AccountRole.cogs] = offsetAccountId.trim();
+      overrides[isReceipt ? AccountRole.payable : AccountRole.cogs] =
+          offsetAccountId.trim();
     }
 
     final mapping = await _mappingResolver.resolveForDocument(
@@ -41,32 +49,53 @@ class AccountingEntryBuilder {
 
     final inventoryRef = mapping.getRole(AccountRole.inventory);
     if (inventoryRef == null) {
-      throw StateError('خطأ محاسبي: لم يتم تحديد حساب المخزون في الدليل المحاسبي');
+      throw StateError(
+        'خطأ محاسبي: لم يتم تحديد حساب المخزون في الدليل المحاسبي',
+      );
     }
 
-    final offsetRef = mapping.getRole(isReceipt ? AccountRole.payable : AccountRole.cogs) ??
+    final offsetRef =
+        mapping.getRole(isReceipt ? AccountRole.payable : AccountRole.cogs) ??
         mapping.getRole(AccountRole.cash);
 
     if (offsetRef == null) {
-      throw StateError('خطأ محاسبي: لم يتم تحديد الحساب المقابل للمستند ($voucherTypeStr)');
+      throw StateError(
+        'خطأ محاسبي: لم يتم تحديد الحساب المقابل للمستند ($voucherTypeStr)',
+      );
     }
 
     // Validate both accounts
     await _validationService.assertCanPost(inventoryRef.accountUuid);
     await _validationService.assertCanPost(offsetRef.accountUuid);
 
-    final debitUuid = isReceipt ? inventoryRef.accountUuid : offsetRef.accountUuid;
-    final creditUuid = isReceipt ? offsetRef.accountUuid : inventoryRef.accountUuid;
+    final debitUuid = isReceipt
+        ? inventoryRef.accountUuid
+        : offsetRef.accountUuid;
+    final creditUuid = isReceipt
+        ? offsetRef.accountUuid
+        : inventoryRef.accountUuid;
 
-    final String effectiveCurrency = useBaseCurrencyForCogs ? 'YER' : document.currencyCode;
-    final double effectiveRate = useBaseCurrencyForCogs ? 1.0 : document.exchangeRate;
+    final companyInventoryConfig = await _initRepository?.getInventoryConfig();
+    final baseCurrency =
+        (companyInventoryConfig?.inventoryBaseCurrencyId.trim().isNotEmpty ==
+            true)
+        ? companyInventoryConfig!.inventoryBaseCurrencyId.trim().toUpperCase()
+        : 'YER';
+
+    final String effectiveCurrency = useBaseCurrencyForCogs
+        ? baseCurrency
+        : document.currencyCode;
+    final double effectiveRate = useBaseCurrencyForCogs
+        ? 1.0
+        : document.exchangeRate;
 
     return JournalEntryDraft(
       entryDate: document.documentDate,
       voucherNumber: document.documentNumber,
       voucherType: voucherTypeStr,
       currencyCode: effectiveCurrency,
-      description: 'قيد تلقائي للمستند $voucherTypeStr: ${document.documentNumber}',
+      description:
+          'قيد تلقائي للمستند $voucherTypeStr: ${document.documentNumber}',
       isPosted: isPosted,
       sourceType: document.documentType.storageValue,
       sourceId: document.documentId,
@@ -94,7 +123,7 @@ class AccountingEntryBuilder {
   }
 
   Future<List<JournalEntryDraft>> buildDraftsFromSaleInvoice({
-    required Sale sale,
+    required SaleInvoicePostingData sale,
     required double calculatedCogsCost,
     bool isPosted = true,
   }) async {
@@ -106,14 +135,15 @@ class AccountingEntryBuilder {
 
     if (netAmount > 0 || discountAmount > 0) {
       final overrides = <AccountRole, String>{};
-      final debitAccountId = sale.settlementType == SaleSettlementType.credit
+      final debitAccountId = sale.settlementType == PostingSettlementType.credit
           ? sale.customerAccountId?.trim()
           : sale.cashAccountId?.trim();
 
       if (debitAccountId != null && debitAccountId.isNotEmpty) {
-        overrides[sale.settlementType == SaleSettlementType.credit
-            ? AccountRole.receivable
-            : AccountRole.cash] = debitAccountId;
+        overrides[sale.settlementType == PostingSettlementType.credit
+                ? AccountRole.receivable
+                : AccountRole.cash] =
+            debitAccountId;
       }
 
       final mapping = await _mappingResolver.resolveForDocument(
@@ -122,18 +152,24 @@ class AccountingEntryBuilder {
       );
 
       final debitRef = mapping.getRole(
-        sale.settlementType == SaleSettlementType.credit
+        sale.settlementType == PostingSettlementType.credit
             ? AccountRole.receivable
             : AccountRole.cash,
       );
       final revenueRef = mapping.getRole(AccountRole.revenue);
 
       if (debitRef == null) {
-        final roleLabel = sale.settlementType == SaleSettlementType.credit ? 'العملاء (الحسابات المدينة)' : 'الصندوق / النقدية';
-        throw StateError('تعذر تحديد حساب $roleLabel المحاسبي. يرجى التأكد من اختيار الحساب بشكل صحيح.');
+        final roleLabel = sale.settlementType == PostingSettlementType.credit
+            ? 'العملاء (الحسابات المدينة)'
+            : 'الصندوق / النقدية';
+        throw StateError(
+          'تعذر تحديد حساب $roleLabel المحاسبي. يرجى التأكد من اختيار الحساب بشكل صحيح.',
+        );
       }
       if (revenueRef == null) {
-        throw StateError('تعذر تحديد حساب إيراد المبيعات الرئيسي في دليل الحسابات.');
+        throw StateError(
+          'تعذر تحديد حساب إيراد المبيعات الرئيسي في دليل الحسابات.',
+        );
       }
 
       await _validationService.assertCanPost(debitRef.accountUuid);
@@ -174,7 +210,8 @@ class AccountingEntryBuilder {
         }
       }
 
-      final grossRevenue = netAmount + (discountAmount > 0 ? discountAmount : 0.0);
+      final grossRevenue =
+          netAmount + (discountAmount > 0 ? discountAmount : 0.0);
       lines.add(
         JournalLineDraft(
           accountUuid: revenueRef.accountUuid,
@@ -187,7 +224,7 @@ class AccountingEntryBuilder {
         ),
       );
 
-      final isCredit = sale.settlementType == SaleSettlementType.credit;
+      final isCredit = sale.settlementType == PostingSettlementType.credit;
       drafts.add(
         JournalEntryDraft(
           entryDate: sale.saleDate,

@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 /// Lightweight pre-flight check for a sync server URL.
 ///
 /// Does not authenticate — only verifies the server is reachable and
-/// responds to a basic health probe.
+/// responds to a basic health probe. Enforces HTTPS for remote server connections.
 class ServerValidator {
   const ServerValidator._();
 
@@ -26,6 +26,18 @@ class ServerValidator {
       return const ServerValidationResult(
         healthy: false,
         error: 'Invalid URL format',
+      );
+    }
+
+    final isLoopback = uri.host == 'localhost' ||
+        uri.host == '127.0.0.1' ||
+        uri.host == '10.0.2.2' ||
+        uri.host == '::1';
+
+    if (uri.scheme != 'https' && !isLoopback) {
+      return const ServerValidationResult(
+        healthy: false,
+        error: 'HTTPS protocol is required for remote server connections',
       );
     }
 

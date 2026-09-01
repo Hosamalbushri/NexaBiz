@@ -25,6 +25,7 @@ class SaleException implements Exception {
   static const externalIntegrationFailed = 'external_integration_failed';
   static const ledgerPostingFailed = 'ledger_posting_failed';
   static const postingRequiresInventory = 'posting_requires_inventory';
+  static const postedImmutable = 'posted_immutable';
 
   final String code;
   final String? message;

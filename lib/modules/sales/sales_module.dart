@@ -11,19 +11,18 @@ import '../../core/modules/quick_action_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
 import '../../core/reporting/pdf_document_preview_page.dart';
-import '../accounting/chart_of_accounts/presentation/providers/account_providers.dart';
-import '../accounting/journals/presentation/providers/journal_providers.dart';
 import '../accounting/shared/presentation/providers/document_posting_providers.dart';
-import '../inventory/products/presentation/providers/product_providers.dart';
 import '../inventory/stock_movements/presentation/providers/stock_movements_providers.dart';
 import 'invoices/presentation/pages/sale_details_page.dart';
 import 'invoices/presentation/pages/sale_form_page.dart';
 import 'invoices/presentation/pages/sales_home_page.dart';
 import 'invoices/presentation/pages/sales_list_page.dart';
 import 'invoices/presentation/providers/sale_providers.dart';
+import '../../core/modules/module_setup_definition.dart';
 import 'permissions/sales_permission_package.dart';
 import 'sales_module_quick_actions.dart';
 import 'sales_module_settings.dart';
+import 'sales_module_setup.dart';
 import 'shared/presentation/pages/sales_routes.dart';
 
 /// Sales business module — operational sales documents (offline-first).
@@ -62,24 +61,25 @@ class SalesModule extends AppModule {
   @override
   bool get isEnabled => true;
 
+
+  @override
+  List<ModuleSetupStepDefinition> get setupSteps => salesSetupSteps;
+
   @override
   List<String> get requiredAnyPermissions => SalesPermissions.view;
 
   @override
   List<RouteAccessRule> get routeAccessRules => [
-        RouteAccessRule(
-          pathEquals: SalesRoutes.create,
-          anyOf: SalesPermissions.create,
-        ),
-        RouteAccessRule(
-          pathRegex: RegExp(r'^/sales/\d+/edit$'),
-          anyOf: SalesPermissions.update,
-        ),
-        RouteAccessRule(
-          pathPrefix: SalesRoutes.root,
-          anyOf: SalesPermissions.view,
-        ),
-      ];
+    RouteAccessRule(
+      pathEquals: SalesRoutes.create,
+      anyOf: SalesPermissions.create,
+    ),
+    RouteAccessRule(
+      pathRegex: RegExp(r'^/sales/\d+/edit$'),
+      anyOf: SalesPermissions.update,
+    ),
+    RouteAccessRule(pathPrefix: SalesRoutes.root, anyOf: SalesPermissions.view),
+  ];
 
   @override
   PermissionPackageDef? get permissionPackage => salesPermissionPackage();
@@ -101,6 +101,24 @@ class SalesModule extends AppModule {
   @override
   List<ModuleSettingsCategoryDefinition> get settingsCategories =>
       buildSalesSettingsCategories(moduleId);
+
+  @override
+  bool get hasSettings => true;
+
+  @override
+  List<Widget> buildSettingsSections(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return [
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.point_of_sale_outlined),
+        title: Text(l10n.moduleSales),
+        subtitle: Text(l10n.moduleSalesDescription),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => context.push(SalesRoutes.root),
+      ),
+    ];
+  }
 
   @override
   List<RouteBase> get routes => [
@@ -154,11 +172,11 @@ class SalesModule extends AppModule {
 
   @override
   List<Override> get providerOverrides => [
-        saleInventoryEffectPortProvider.overrideWith((ref) {
-          return PerpetualSaleInventoryEffectAdapter(
-            orchestrator: ref.watch(documentPostingOrchestratorProvider),
-            stockMovementsRepository: ref.watch(stockMovementsRepositoryProvider),
-          );
-        }),
-      ];
+    saleInventoryEffectPortProvider.overrideWith((ref) {
+      return PerpetualSaleInventoryEffectAdapter(
+        orchestrator: ref.watch(documentPostingOrchestratorProvider),
+        stockMovementsRepository: ref.watch(stockMovementsRepositoryProvider),
+      );
+    }),
+  ];
 }

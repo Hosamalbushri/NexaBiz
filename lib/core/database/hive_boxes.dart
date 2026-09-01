@@ -15,6 +15,9 @@ class HiveBoxes {
   /// App Lock PIN hash / policy (never stores raw PIN).
   static const String appLock = 'app_lock';
 
+  /// AES-encrypted app lock box (migrated from [appLock]).
+  static const String appLockEncrypted = 'app_lock_v2';
+
   /// Durable in-app notification history.
   static const String notifications = 'app_notifications';
 

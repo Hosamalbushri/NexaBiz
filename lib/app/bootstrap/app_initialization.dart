@@ -23,7 +23,7 @@ const Duration kMaxBootstrapTimeout = Duration(seconds: 8);
 /// Master orchestrator for application initialization lifecycle.
 class AppInitializationCoordinator extends StateNotifier<InitializationState> {
   AppInitializationCoordinator(this._ref)
-      : super(const InitializationState.notStarted());
+    : super(const InitializationState.notStarted());
 
   final Ref _ref;
 
@@ -50,7 +50,8 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
             stage: InitializationStage.applicationReady,
             error: const AppError(
               category: AppErrorCategory.initialization,
-              message: 'Local initialization timed out. Running in degraded mode.',
+              message:
+                  'Local initialization timed out. Running in degraded mode.',
               severity: FailureSeverity.recoverable,
             ),
           );
@@ -248,7 +249,8 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
 
         state = state.copyWith(
           currentEntityType: type,
-          stageDetails: 'Downloading $type ($totalDownloaded / $totalToDownload)',
+          stageDetails:
+              'Downloading $type ($totalDownloaded / $totalToDownload)',
         );
 
         String? cursor;
@@ -270,7 +272,9 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
           cursor = page.nextCursor;
           hasMore = page.hasMore;
 
-          final frac = totalToDownload > 0 ? (totalDownloaded / totalToDownload) : 1.0;
+          final frac = totalToDownload > 0
+              ? (totalDownloaded / totalToDownload)
+              : 1.0;
           state = state.copyWith(
             downloadedCount: totalDownloaded,
             totalToDownload: totalToDownload,
@@ -301,7 +305,8 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
         if (handler != null) {
           for (final item in items) {
             final payload = (item['payload'] as Map<String, dynamic>?) ?? item;
-            final entityId = (item['entity_id'] as String?) ??
+            final entityId =
+                (item['entity_id'] as String?) ??
                 (payload['id'] as String?) ??
                 (payload['uuid'] as String?) ??
                 (item['uuid'] as String?) ??
@@ -312,8 +317,8 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
             final updatedAt = updatedAtRaw is String
                 ? (DateTime.tryParse(updatedAtRaw) ?? status.takenAt)
                 : (updatedAtRaw is int
-                    ? DateTime.fromMillisecondsSinceEpoch(updatedAtRaw)
-                    : status.takenAt);
+                      ? DateTime.fromMillisecondsSinceEpoch(updatedAtRaw)
+                      : status.takenAt);
             final deleted = (item['deleted'] as bool?) ?? false;
 
             final change = SyncRemoteChange(
@@ -354,10 +359,9 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
       }
 
       // Save sync & configuration credentials
-      await _ref.read(syncEnabledProvider.notifier).saveServer(
-            baseUrl: baseUrl,
-            apiToken: token,
-          );
+      await _ref
+          .read(syncEnabledProvider.notifier)
+          .saveServer(baseUrl: baseUrl, apiToken: token);
 
       final settings = SettingsRepository();
       await settings.saveOnboardingCompleted(true);
@@ -436,11 +440,13 @@ class AppInitializationCoordinator extends StateNotifier<InitializationState> {
 
 /// Provider for watching/reading initialization state and coordinator.
 final appInitializationControllerProvider =
-    StateNotifierProvider<AppInitializationCoordinator, InitializationState>((ref) {
-  final coordinator = AppInitializationCoordinator(ref);
-  coordinator.initialize();
-  return coordinator;
-});
+    StateNotifierProvider<AppInitializationCoordinator, InitializationState>((
+      ref,
+    ) {
+      final coordinator = AppInitializationCoordinator(ref);
+      coordinator.initialize();
+      return coordinator;
+    });
 
 /// Backwards-compatible FutureProvider for legacy listeners.
 final appInitializationProvider = FutureProvider<void>((ref) async {
@@ -449,8 +455,9 @@ final appInitializationProvider = FutureProvider<void>((ref) async {
     throw state.error ?? Exception('Initialization failed');
   }
   if (!state.canOperate) {
-    await ref.watch(appInitializationControllerProvider.notifier).stream.firstWhere(
-          (s) => s.canOperate || s.isFailed,
-        );
+    await ref
+        .watch(appInitializationControllerProvider.notifier)
+        .stream
+        .firstWhere((s) => s.canOperate || s.isFailed);
   }
 });

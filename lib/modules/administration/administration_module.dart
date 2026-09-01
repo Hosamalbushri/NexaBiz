@@ -60,7 +60,8 @@ class AdministrationModule extends AppModule {
   int get sortOrder => 70;
 
   @override
-  bool get isEnabled => true;
+  bool get isEnabled => false;
+
 
   @override
   List<String> get requiredAnyPermissions => const [

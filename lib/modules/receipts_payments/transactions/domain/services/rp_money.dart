@@ -1,4 +1,4 @@
-import 'package:stock_count/modules/accounting/journals/domain/services/journal_money.dart';
+import 'package:stock_count/core/utils/journal_money.dart';
 
 /// Cent-safe helpers for receipt/payment amounts (supports 3-decimal currencies like KWD/OMR/BHD).
 abstract final class RpMoney {

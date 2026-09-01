@@ -1,5 +1,5 @@
 import 'package:stock_count/core/permissions/permission_guard.dart';
-import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/core/errors/journal_exception.dart';
 import 'package:stock_count/modules/sales/permissions/sales_permission_package.dart';
 import '../entities/sale.dart';
 import '../entities/sale_item.dart';

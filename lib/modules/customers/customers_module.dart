@@ -66,6 +66,7 @@ class CustomersModule extends AppModule {
   @override
   bool get isEnabled => true;
 
+
   @override
   List<String> get requiredAnyPermissions => CustomersPermissions.view;
 

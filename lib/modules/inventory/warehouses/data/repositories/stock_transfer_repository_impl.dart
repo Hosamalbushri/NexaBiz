@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/core/errors/journal_exception.dart';
 import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
@@ -11,6 +11,11 @@ import 'package:stock_count/modules/sync/sync.dart';
 import '../../domain/entities/stock_transfer.dart';
 import '../../domain/repositories/stock_transfer_repository.dart';
 
+import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
+
+import '../../domain/entities/stock_transfer.dart';
+import '../../domain/repositories/stock_transfer_repository.dart';
+
 class StockTransferRepositoryImpl implements StockTransferRepository {
   StockTransferRepositoryImpl({
     required InventoryDatabase db,
@@ -18,17 +23,20 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
     CostLayerService? costLayerService,
     CostValuationMethod valuationMethod = CostValuationMethod.fifo,
     String Function()? readCompanyId,
+    InitializationGuard? initializationGuard,
   })  : _db = db,
         _syncQueue = syncQueue,
         _costLayerService = costLayerService ?? CostLayerServiceImpl(db: db, readCompanyId: readCompanyId),
         _valuationMethod = valuationMethod,
-        _readCompanyId = readCompanyId;
+        _readCompanyId = readCompanyId,
+        _initializationGuard = initializationGuard;
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
   final CostLayerService _costLayerService;
   final CostValuationMethod _valuationMethod;
   final String Function()? _readCompanyId;
+  final InitializationGuard? _initializationGuard;
 
   String get _currentCompanyId =>
       _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
@@ -81,29 +89,46 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
 
   @override
   Future<void> saveTransfer(StockTransfer transfer) async {
+    await _initializationGuard?.assertInitialized();
+    if (transfer.fromWarehouseId == transfer.toWarehouseId) {
+      throw StateError('لا يمكن إجراء تحويل بين نفس المستودع (${transfer.fromWarehouseId}).');
+    }
+
     await _db.transaction(() async {
+      final effectiveCompanyId = transfer.companyId ?? _currentCompanyId;
+
+      // Multi-tenant warehouse ownership validation
+      final whs = await (_db.select(_db.warehouses)
+            ..where((tbl) =>
+                tbl.uuid.isIn([transfer.fromWarehouseId, transfer.toWarehouseId])))
+          .get();
+
+      for (final wh in whs) {
+        if (wh.companyId != null && wh.companyId != effectiveCompanyId) {
+          throw StateError('لا يمكن نقل المخزون بين مستودعات تابعة لشركات مختلفة.');
+        }
+      }
+
       final existing = await (_db.select(_db.stockTransfers)
             ..where((tbl) => _scoped(tbl) & tbl.uuid.equals(transfer.id)))
           .getSingleOrNull();
 
-      if (existing != null && (existing.status == 'posted' || existing.postedAt != null)) {
-        throw const JournalException(JournalException.postedImmutable);
+      if (existing != null) {
+        if (existing.status == 'posted' || existing.postedAt != null) {
+          throw const JournalException(JournalException.postedImmutable);
+        }
+        if (existing.status == 'cancelled') {
+          throw const JournalException(
+            JournalException.cancelledImmutable,
+            'لا يمكن تعديل مستند تحويل ملغي.',
+          );
+        }
       }
 
       final now = DateTime.now().toUtc();
       final newVersion = (existing?.version ?? transfer.version) + (existing == null ? 0 : 1);
-      final effectiveCompanyId = transfer.companyId ?? _currentCompanyId;
 
       if (existing != null) {
-        // Reverse previous transfer effects
-        final oldLines = await _getLinesForTransfer(transfer.id);
-        for (final line in oldLines) {
-          await _costLayerService.reverseConsumptions(line.id);
-          await _costLayerService.reverseLayer(line.id);
-          await _adjustWhStock(line.itemCode, existing.fromWarehouseId, line.quantity);
-          await _adjustWhStock(line.itemCode, existing.toWarehouseId, -line.quantity);
-        }
-
         await (_db.update(_db.stockTransfers)
               ..where((tbl) => _scoped(tbl) & tbl.uuid.equals(transfer.id)))
             .write(
@@ -162,8 +187,6 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
                 totalCost: Value(line.totalCost),
               ),
             );
-        await _adjustWhStock(line.itemCode, transfer.fromWarehouseId, -line.quantity);
-        await _adjustWhStock(line.itemCode, transfer.toWarehouseId, line.quantity);
       }
 
       await _enqueueTransfer(
@@ -175,12 +198,19 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
 
   @override
   Future<void> deleteTransfer(String id) async {
+    await _initializationGuard?.assertInitialized();
     await _db.transaction(() async {
       final transfer = await getTransferById(id);
       if (transfer == null) return;
 
       if (transfer.isPosted) {
         throw const JournalException(JournalException.postedImmutable);
+      }
+      if (transfer.status == InventoryDocumentStatus.cancelled) {
+        throw const JournalException(
+          JournalException.cancelledImmutable,
+          'لا يمكن حذف مستند تحويل ملغي.',
+        );
       }
 
       final now = DateTime.now().toUtc();
@@ -198,12 +228,14 @@ class StockTransferRepositoryImpl implements StockTransferRepository {
         ),
       );
 
-      // Revert transfer line effects
-      for (final line in transfer.lines) {
-        await _costLayerService.reverseConsumptions(line.id);
-        await _costLayerService.reverseLayer(line.id);
-        await _adjustWhStock(line.itemCode, transfer.fromWarehouseId, line.quantity);
-        await _adjustWhStock(line.itemCode, transfer.toWarehouseId, -line.quantity);
+      // Revert transfer line effects only if document was posted
+      if (transfer.isPosted) {
+        for (final line in transfer.lines) {
+          await _costLayerService.reverseConsumptions(line.id);
+          await _costLayerService.reverseLayer(line.id);
+          await _adjustWhStock(line.itemCode, transfer.fromWarehouseId, line.quantity);
+          await _adjustWhStock(line.itemCode, transfer.toWarehouseId, -line.quantity);
+        }
       }
 
       await _enqueueTransfer(

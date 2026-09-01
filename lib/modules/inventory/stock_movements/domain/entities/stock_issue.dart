@@ -1,3 +1,5 @@
+import 'package:stock_count/core/domain/entities/document_ref.dart';
+import 'package:stock_count/core/domain/ports/posting_port.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/sync/sync.dart';
@@ -59,6 +61,19 @@ class StockIssue {
 
   double get totalQuantity => lines.fold(0.0, (sum, line) => sum + line.quantity);
   double get totalCost => lines.fold(0.0, (sum, line) => sum + line.totalCost);
+
+  StockDocumentPostingData toPostingData() => StockDocumentPostingData(
+        id: id,
+        documentNumber: issueNumber,
+        documentType: DocumentType.stockIssue,
+        documentDate: issueDate,
+        warehouseId: warehouse,
+        status: status,
+        totalAmount: totalCost,
+        offsetAccountId: accountId ?? destination,
+        currencyCode: currencyCode,
+        exchangeRate: exchangeRate,
+      );
 
   StockIssue copyWith({
     String? id,

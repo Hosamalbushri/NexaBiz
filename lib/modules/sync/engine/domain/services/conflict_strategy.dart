@@ -89,6 +89,30 @@ class EntityConflictPolicy {
       entityType: 'journal_entry',
       strategy: ConflictStrategy.immutableReject,
     ),
+    'stock_receipt': const EntityConflictPolicy(
+      entityType: 'stock_receipt',
+      strategy: ConflictStrategy.immutableReject,
+    ),
+    'stock_issue': const EntityConflictPolicy(
+      entityType: 'stock_issue',
+      strategy: ConflictStrategy.immutableReject,
+    ),
+    'stock_transfer': const EntityConflictPolicy(
+      entityType: 'stock_transfer',
+      strategy: ConflictStrategy.immutableReject,
+    ),
+    'stock_return': const EntityConflictPolicy(
+      entityType: 'stock_return',
+      strategy: ConflictStrategy.immutableReject,
+    ),
+    'sales_invoice': const EntityConflictPolicy(
+      entityType: 'sales_invoice',
+      strategy: ConflictStrategy.immutableReject,
+    ),
+    'inventory_reversal': const EntityConflictPolicy(
+      entityType: 'inventory_reversal',
+      strategy: ConflictStrategy.immutableReject,
+    ),
     'inventory_movement': const EntityConflictPolicy(
       entityType: 'inventory_movement',
       strategy: ConflictStrategy.appendOnly,

@@ -17,10 +17,8 @@ import '../../domain/models/transaction_paged_result.dart';
 import '../../domain/repositories/financial_transaction_repository.dart';
 import 'package:stock_count/modules/receipts_payments/shared/data/database/receipts_payments_database.dart';
 
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
-
-import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
-import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/core/domain/ports/period_validator_port.dart';
+import 'package:stock_count/core/errors/journal_exception.dart';
 
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/receipts_payments/permissions/receipts_payments_permission_package.dart';
@@ -29,7 +27,7 @@ class FinancialTransactionRepositoryImpl
     implements FinancialTransactionRepository {
   FinancialTransactionRepositoryImpl(
     this._db, {
-    AccountingPeriodValidator? periodValidator,
+    PeriodValidatorPort? periodValidator,
     PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
     SyncQueue? syncQueue,
     String Function()? readCompanyId,
@@ -39,7 +37,7 @@ class FinancialTransactionRepositoryImpl
        _readCompanyId = readCompanyId;
 
   final ReceiptsPaymentsDatabase _db;
-  final AccountingPeriodValidator? _periodValidator;
+  final PeriodValidatorPort? _periodValidator;
   final PermissionGuard _permissionGuard;
   final SyncQueue? _syncQueue;
   final String Function()? _readCompanyId;
@@ -48,7 +46,7 @@ class FinancialTransactionRepositoryImpl
   static const entityType = 'financial_transaction';
 
   String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+      _readCompanyId?.call() ?? 'default_company';
 
   Expression<bool> _tenantScoped($FinancialTransactionsTable t) =>
       t.companyId.equals(_currentCompanyId);

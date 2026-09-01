@@ -12,7 +12,7 @@ import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
-import 'package:stock_count/modules/sales/invoices/domain/services/device_sale_number.dart';
+import 'package:stock_count/core/domain/services/device_document_number.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_list_item.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
 import 'package:stock_count/modules/receipts_payments/permissions/receipts_payments_permission_package.dart';

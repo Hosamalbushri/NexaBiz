@@ -292,8 +292,14 @@ class SettingsRepository {
     await box.put(SettingsKeys.customersAutoLinkAccount, enabled);
   }
 
-  Future<CompanyProfile> loadCompanyProfile() async {
+  Future<CompanyProfile> loadCompanyProfile([String? companyId]) async {
     final box = await _settingsBox;
+    if (companyId != null && companyId.trim().isNotEmpty) {
+      final tenantRaw = box.get('company_profile_${companyId.trim()}');
+      if (tenantRaw is Map) {
+        return CompanyProfile.fromMap(Map<dynamic, dynamic>.from(tenantRaw));
+      }
+    }
     final raw = box.get(SettingsKeys.companyProfile);
     if (raw is Map) {
       return CompanyProfile.fromMap(Map<dynamic, dynamic>.from(raw));
@@ -301,9 +307,16 @@ class SettingsRepository {
     return const CompanyProfile();
   }
 
-  Future<void> saveCompanyProfile(CompanyProfile profile) async {
+  Future<void> saveCompanyProfile(
+    CompanyProfile profile, [
+    String? companyId,
+  ]) async {
     final box = await _settingsBox;
-    await box.put(SettingsKeys.companyProfile, profile.toMap());
+    final map = profile.toMap();
+    if (companyId != null && companyId.trim().isNotEmpty) {
+      await box.put('company_profile_${companyId.trim()}', map);
+    }
+    await box.put(SettingsKeys.companyProfile, map);
   }
 
   /// Base/system currency chosen during System Setup — immutable once locked.

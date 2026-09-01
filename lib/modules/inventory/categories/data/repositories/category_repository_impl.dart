@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
-import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/core/errors/journal_exception.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import '../../domain/entities/category.dart';

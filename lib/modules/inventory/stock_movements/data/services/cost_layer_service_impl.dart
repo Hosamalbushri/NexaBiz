@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
+import 'package:stock_count/core/errors/journal_exception.dart';
 import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 
 import '../../../shared/data/database/inventory_database.dart';
@@ -34,6 +35,10 @@ class CostLayerServiceImpl implements CostLayerService {
       return;
     }
 
+    final sanitizedReceivedQty = layer.receivedQty < 0 ? 0.0 : layer.receivedQty;
+    final sanitizedRemainingQty = layer.remainingQty.clamp(0.0, sanitizedReceivedQty);
+    final isClosed = layer.closed || sanitizedRemainingQty <= 0.000001;
+
     await _db.into(_db.inventoryCostLayers).insert(
           InventoryCostLayersCompanion(
             uuid: Value(layer.id),
@@ -42,11 +47,11 @@ class CostLayerServiceImpl implements CostLayerService {
             movementUuid: Value(layer.movementUuid),
             movementType: Value(layer.movementType),
             receivedDate: Value(layer.receivedDate.millisecondsSinceEpoch),
-            receivedQty: Value(layer.receivedQty),
-            remainingQty: Value(layer.remainingQty),
-            unitCost: Value(layer.unitCost),
-            totalCost: Value(layer.totalCost),
-            closed: Value(layer.closed ? 1 : 0),
+            receivedQty: Value(sanitizedReceivedQty),
+            remainingQty: Value(sanitizedRemainingQty),
+            unitCost: Value(layer.unitCost < 0 ? 0.0 : layer.unitCost),
+            totalCost: Value(sanitizedReceivedQty * (layer.unitCost < 0 ? 0.0 : layer.unitCost)),
+            closed: Value(isClosed ? 1 : 0),
             createdAt: Value(layer.createdAt.millisecondsSinceEpoch),
             updatedAt: Value(layer.updatedAt.millisecondsSinceEpoch),
             syncStatus: const Value('synced'),
@@ -76,6 +81,40 @@ class CostLayerServiceImpl implements CostLayerService {
       );
     }
 
+    final effectiveCompanyId = companyId ?? _currentCompanyId;
+
+    // Duplicate Consumption Guard: Check if issueLineUuid has ALREADY been consumed for this company
+    final existingConsumptions = await (_db.select(_db.inventoryCostConsumptions)
+          ..where((tbl) =>
+              tbl.issueLineUuid.equals(issueLineUuid) &
+              tbl.companyId.equals(effectiveCompanyId)))
+        .get();
+
+    if (existingConsumptions.isNotEmpty) {
+      final totalCost = existingConsumptions.fold<double>(0.0, (s, c) => s + c.totalCost);
+      final totalConsumed = existingConsumptions.fold<double>(0.0, (s, c) => s + c.consumedQty);
+      final effCost = totalConsumed > 0 ? totalCost / totalConsumed : 0.0;
+      return LayerConsumptionResult(
+        consumptions: existingConsumptions
+            .map((row) => CostConsumption(
+                  id: row.uuid,
+                  layerUuid: row.layerUuid,
+                  issueLineUuid: row.issueLineUuid,
+                  movementType: row.movementType,
+                  consumedQty: row.consumedQty,
+                  unitCost: row.unitCost,
+                  totalCost: row.totalCost,
+                  createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
+                  companyId: row.companyId,
+                ))
+            .toList(),
+        totalCost: totalCost,
+        effectiveUnitCost: effCost,
+        isShortage: false,
+        shortageQty: 0.0,
+      );
+    }
+
     if (method == CostValuationMethod.weightedAverage) {
       return _consumeWeightedAverage(
         itemCode: itemCode,
@@ -83,12 +122,11 @@ class CostLayerServiceImpl implements CostLayerService {
         issueLineUuid: issueLineUuid,
         movementType: movementType,
         warehouseId: warehouseId,
-        companyId: companyId,
+        companyId: effectiveCompanyId,
       );
     }
 
     // FIFO or LIFO under atomic transaction loop
-    final effectiveCompanyId = companyId ?? _currentCompanyId;
     final isFifo = method == CostValuationMethod.fifo;
 
     return await _db.transaction(() async {
@@ -295,8 +333,11 @@ class CostLayerServiceImpl implements CostLayerService {
         );
 
         if (updatedCount == 0) {
-          // Concurrent edit took place, skip layer
-          continue;
+          // Concurrency conflict detected: abort WAC loop to prevent partial consumption
+          throw JournalException(
+            JournalException.concurrencyConflict,
+            'Concurrent inventory consumption modified cost layer ${row.uuid}. Retrying consumption.',
+          );
         }
 
         final lineCost = takeQty * unitCostToUse;
@@ -351,6 +392,10 @@ class CostLayerServiceImpl implements CostLayerService {
             tbl.companyId.equals(effectiveCompanyId));
       final consumptions = await query.get();
 
+      if (consumptions.isEmpty) {
+        return;
+      }
+
       for (final c in consumptions) {
         final layerQuery = _db.select(_db.inventoryCostLayers)
           ..where((tbl) =>
@@ -359,7 +404,11 @@ class CostLayerServiceImpl implements CostLayerService {
         final layer = await layerQuery.getSingleOrNull();
 
         if (layer != null) {
-          final restoredQty = layer.remainingQty + c.consumedQty;
+          // Enforce invariant: restoredQty <= layer.receivedQty and remainingQty >= 0
+          final maxAllowed = layer.receivedQty > 0 ? layer.receivedQty : double.infinity;
+          final restoredQty = (layer.remainingQty + c.consumedQty).clamp(0.0, maxAllowed);
+          final isClosed = restoredQty <= 0.000001;
+
           await (_db.update(_db.inventoryCostLayers)
                 ..where((tbl) =>
                     tbl.uuid.equals(layer.uuid) &
@@ -367,7 +416,7 @@ class CostLayerServiceImpl implements CostLayerService {
               .write(
             InventoryCostLayersCompanion(
               remainingQty: Value(restoredQty),
-              closed: const Value(0),
+              closed: Value(isClosed ? 1 : 0),
               updatedAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
             ),
           );
@@ -395,6 +444,20 @@ class CostLayerServiceImpl implements CostLayerService {
 
       final now = DateTime.now().toUtc();
       for (final layer in layers) {
+        // Orphan Consumption Guard: check if downstream consumptions exist for this layer
+        final consumptions = await (_db.select(_db.inventoryCostConsumptions)
+              ..where((tbl) =>
+                  tbl.layerUuid.equals(layer.uuid) &
+                  tbl.companyId.equals(effectiveCompanyId)))
+            .get();
+
+        if (consumptions.isNotEmpty || layer.remainingQty < layer.receivedQty - 0.000001) {
+          throw JournalException(
+            JournalException.dependencyViolation,
+            'Cannot reverse or delete cost layer created by movement $movementUuid because downstream cost consumptions exist.',
+          );
+        }
+
         // Soft-delete the layer
         await (_db.update(_db.inventoryCostLayers)
               ..where((tbl) =>

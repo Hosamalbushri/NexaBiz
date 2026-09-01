@@ -1,15 +1,8 @@
-enum AccountRole {
-  revenue,
-  receivable,
-  payable,
-  cash,
-  inventory,
-  cogs,
-  tax,
-  discount,
-  inventoryFrom,
-  inventoryTo,
-}
+import 'package:stock_count/modules/accounting/journals/domain/models/missing_account_exception.dart';
+
+import 'package:stock_count/core/domain/entities/account_role.dart';
+
+export 'package:stock_count/core/domain/entities/account_role.dart';
 
 class AccountRoleRef {
   const AccountRoleRef({
@@ -41,7 +34,12 @@ class AccountMapping {
     }
     if (missing.isNotEmpty) {
       final roleNames = missing.map((r) => r.name).join(', ');
-      throw StateError('خطأ محاسبي: لم يتم تحديد الحسابات التالية للعملية: $roleNames');
+      throw MissingAccountException(
+        accountRole: roleNames,
+        expectedCode: 'N/A',
+        systemKey: roleNames,
+        message: 'خطأ محاسبي: لم يتم تحديد الحسابات التالية للعملية: $roleNames',
+      );
     }
   }
 }

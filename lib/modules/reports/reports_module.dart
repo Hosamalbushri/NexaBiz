@@ -4,36 +4,26 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
 import '../../app/presentation/providers/dashboard_services_provider.dart';
-import '../../app/reports/account_statement_report_data_adapter.dart';
-import '../../app/reports/journal_book_report_data_adapter.dart';
-import '../../app/reports/rp_report_data_adapter.dart';
-import '../../app/reports/sales_period_report_data_adapter.dart';
-import '../../app/reports/trial_balance_report_data_adapter.dart';
+import '../../app/reports/reports_app_providers.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/report_category_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
-import '../accounting/chart_of_accounts/presentation/providers/account_providers.dart';
-import '../accounting/journals/presentation/providers/journal_providers.dart';
-import '../accounting/shared/presentation/providers/currency_rate_providers.dart';
-import '../receipts_payments/transactions/presentation/providers/rp_providers.dart';
-import '../sales/invoices/presentation/providers/sale_providers.dart';
 import 'financial_reports/presentation/pages/account_statement_report_page.dart';
 import 'financial_reports/presentation/pages/journal_book_report_page.dart';
 import 'financial_reports/presentation/pages/trial_balance_report_page.dart';
+import 'operational_reports/presentation/pages/product_stock_movement_report_page.dart';
 import 'operational_reports/presentation/pages/rp_transaction_report_page.dart';
 import 'operational_reports/presentation/pages/sales_period_report_page.dart';
-import 'operational_reports/presentation/pages/product_stock_movement_report_page.dart';
-import '../../app/reports/product_stock_movement_report_data_adapter.dart';
-import '../inventory/products/presentation/providers/product_providers.dart';
-import 'shared/domain/services/product_stock_movement_report_data_port.dart';
 import 'permissions/reports_permission_package.dart';
+import 'shared/domain/services/product_stock_movement_report_data_port.dart';
 import 'shared/domain/services/rp_report_data_port.dart';
 import 'shared/presentation/pages/report_pdf_preview_page.dart';
 import 'shared/presentation/pages/reports_home_page.dart';
 import 'shared/presentation/pages/reports_routes.dart';
 import 'shared/presentation/providers/reports_providers.dart';
+
 
 /// Platform reports module — generic PDF catalog, preview, print/share.
 ///
@@ -71,6 +61,7 @@ class ReportsModule extends AppModule {
   @override
   bool get isEnabled => true;
 
+
   @override
   List<String> get requiredAnyPermissions => const [
         'reports.view',
@@ -100,6 +91,24 @@ class ReportsModule extends AppModule {
   @override
   String? description(BuildContext context) {
     return AppLocalizations.of(context).moduleReportsDescription;
+  }
+
+  @override
+  bool get hasSettings => true;
+
+  @override
+  List<Widget> buildSettingsSections(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return [
+      ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: const Icon(Icons.analytics_outlined),
+        title: Text(l10n.moduleReports),
+        subtitle: Text(l10n.moduleReportsDescription),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => context.push(ReportsRoutes.root),
+      ),
+    ];
   }
 
   @override
@@ -370,50 +379,6 @@ class ReportsModule extends AppModule {
   ];
 
   @override
-  List<Override> get providerOverrides => [
-        salesPeriodReportDataPortProvider.overrideWith((ref) {
-          return SalesPeriodReportDataAdapter(
-            ref.watch(saleRepositoryProvider),
-          );
-        }),
-        accountStatementReportDataPortProvider.overrideWith((ref) {
-          return AccountStatementReportDataAdapter(
-            accounts: ref.watch(accountRepositoryProvider),
-            currencyRates: ref.watch(currencyRateRepositoryProvider),
-            journals: ref.watch(journalRepositoryProvider),
-            loadCompanyProfile: () =>
-                ref.read(settingsRepositoryProvider).loadCompanyProfile(),
-            loadSalesForAccount: (accountUuid) =>
-                ref.read(saleRepositoryProvider).listByAccountLink(accountUuid),
-            ledger: ref.watch(saleLedgerPostingPortProvider),
-          );
-        }),
-        trialBalanceReportDataPortProvider.overrideWith((ref) {
-          return TrialBalanceReportDataAdapter(
-            journals: ref.watch(journalRepositoryProvider),
-            loadCompanyProfile: () =>
-                ref.read(settingsRepositoryProvider).loadCompanyProfile(),
-          );
-        }),
-        journalBookReportDataPortProvider.overrideWith((ref) {
-          return JournalBookReportDataAdapter(
-            journals: ref.watch(journalRepositoryProvider),
-            loadCompanyProfile: () =>
-                ref.read(settingsRepositoryProvider).loadCompanyProfile(),
-          );
-        }),
-        rpReportDataPortProvider.overrideWith((ref) {
-          return RpReportDataAdapter(
-            ref.watch(financialTransactionRepositoryProvider),
-          );
-        }),
-        productStockMovementReportDataPortProvider.overrideWith((ref) {
-          return ProductStockMovementReportDataAdapter(
-            db: ref.watch(inventoryDatabaseProvider),
-            salesDb: ref.watch(salesDatabaseProvider),
-            loadCompanyProfile: () =>
-                ref.read(settingsRepositoryProvider).loadCompanyProfile(),
-          );
-        }),
-      ];
+  List<Override> get providerOverrides => buildReportsAppProviderOverrides();
 }
+

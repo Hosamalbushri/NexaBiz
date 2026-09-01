@@ -16,10 +16,18 @@ enum SyncErrorCategory {
   unknown,
 }
 
+enum RetryCategory {
+  safeRetry,
+  idempotentRetry,
+  nonRetryable,
+  reconciliationRequired,
+}
+
 class SyncErrorClassification {
   const SyncErrorClassification({
     required this.category,
     required this.isRetryable,
+    required this.retryCategory,
     required this.requiresAuthentication,
     required this.requiresEntitlement,
     required this.quarantine,
@@ -29,6 +37,7 @@ class SyncErrorClassification {
 
   final SyncErrorCategory category;
   final bool isRetryable;
+  final RetryCategory retryCategory;
   final bool requiresAuthentication;
   final bool requiresEntitlement;
   final bool quarantine;
@@ -42,6 +51,7 @@ class SyncErrorClassifier {
       return const SyncErrorClassification(
         category: SyncErrorCategory.network,
         isRetryable: true,
+        retryCategory: RetryCategory.idempotentRetry,
         requiresAuthentication: false,
         requiresEntitlement: false,
         quarantine: false,
@@ -54,6 +64,7 @@ class SyncErrorClassifier {
       return const SyncErrorClassification(
         category: SyncErrorCategory.authentication,
         isRetryable: false,
+        retryCategory: RetryCategory.nonRetryable,
         requiresAuthentication: true,
         requiresEntitlement: false,
         quarantine: false,
@@ -70,6 +81,7 @@ class SyncErrorClassifier {
         return const SyncErrorClassification(
           category: SyncErrorCategory.tenantMismatch,
           isRetryable: false,
+          retryCategory: RetryCategory.nonRetryable,
           requiresAuthentication: false,
           requiresEntitlement: false,
           quarantine: true,
@@ -82,6 +94,7 @@ class SyncErrorClassifier {
         return const SyncErrorClassification(
           category: SyncErrorCategory.deviceMismatch,
           isRetryable: false,
+          retryCategory: RetryCategory.nonRetryable,
           requiresAuthentication: false,
           requiresEntitlement: false,
           quarantine: true,
@@ -93,6 +106,7 @@ class SyncErrorClassifier {
       return const SyncErrorClassification(
         category: SyncErrorCategory.authorization,
         isRetryable: false,
+        retryCategory: RetryCategory.nonRetryable,
         requiresAuthentication: false,
         requiresEntitlement: false,
         quarantine: true,
@@ -107,6 +121,7 @@ class SyncErrorClassifier {
       return const SyncErrorClassification(
         category: SyncErrorCategory.entitlement,
         isRetryable: false,
+        retryCategory: RetryCategory.nonRetryable,
         requiresAuthentication: false,
         requiresEntitlement: true,
         quarantine: false,
@@ -119,6 +134,7 @@ class SyncErrorClassifier {
       return const SyncErrorClassification(
         category: SyncErrorCategory.validation,
         isRetryable: false,
+        retryCategory: RetryCategory.nonRetryable,
         requiresAuthentication: false,
         requiresEntitlement: false,
         quarantine: true,
@@ -131,6 +147,7 @@ class SyncErrorClassifier {
       return const SyncErrorClassification(
         category: SyncErrorCategory.conflict,
         isRetryable: false,
+        retryCategory: RetryCategory.reconciliationRequired,
         requiresAuthentication: false,
         requiresEntitlement: false,
         quarantine: false,
@@ -143,6 +160,7 @@ class SyncErrorClassifier {
       return const SyncErrorClassification(
         category: SyncErrorCategory.rateLimited,
         isRetryable: true,
+        retryCategory: RetryCategory.safeRetry,
         requiresAuthentication: false,
         requiresEntitlement: false,
         quarantine: false,
@@ -161,6 +179,7 @@ class SyncErrorClassifier {
         return const SyncErrorClassification(
           category: SyncErrorCategory.network,
           isRetryable: true,
+          retryCategory: RetryCategory.idempotentRetry,
           requiresAuthentication: false,
           requiresEntitlement: false,
           quarantine: false,
@@ -173,6 +192,7 @@ class SyncErrorClassifier {
         return const SyncErrorClassification(
           category: SyncErrorCategory.rateLimited,
           isRetryable: true,
+          retryCategory: RetryCategory.safeRetry,
           requiresAuthentication: false,
           requiresEntitlement: false,
           quarantine: false,
@@ -185,6 +205,7 @@ class SyncErrorClassifier {
         return const SyncErrorClassification(
           category: SyncErrorCategory.server,
           isRetryable: true,
+          retryCategory: RetryCategory.idempotentRetry,
           requiresAuthentication: false,
           requiresEntitlement: false,
           quarantine: false,
@@ -196,6 +217,7 @@ class SyncErrorClassifier {
       return const SyncErrorClassification(
         category: SyncErrorCategory.server,
         isRetryable: false,
+        retryCategory: RetryCategory.nonRetryable,
         requiresAuthentication: false,
         requiresEntitlement: false,
         quarantine: true,
@@ -207,6 +229,7 @@ class SyncErrorClassifier {
     return const SyncErrorClassification(
       category: SyncErrorCategory.unknown,
       isRetryable: true,
+      retryCategory: RetryCategory.idempotentRetry,
       requiresAuthentication: false,
       requiresEntitlement: false,
       quarantine: false,

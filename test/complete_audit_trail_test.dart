@@ -26,6 +26,7 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/stock_validation_service.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_dependency_detector.dart';
 import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/permissions/permission_guard.dart';
 
 class _FakePostingEngine implements PostingEngine {
   @override
@@ -195,6 +196,7 @@ void main() {
       dependencyDetector: _FakeDependencyDetector(),
       postingEngine: _FakePostingEngine(),
       periodValidator: periodValidator,
+      permissionGuard: const AllowAllPermissionGuard(),
       readCompanyId: () => companyId,
       syncQueue: syncQueue,
     );

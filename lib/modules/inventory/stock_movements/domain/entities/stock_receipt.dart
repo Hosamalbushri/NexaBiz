@@ -1,3 +1,5 @@
+import 'package:stock_count/core/domain/entities/document_ref.dart';
+import 'package:stock_count/core/domain/ports/posting_port.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/sync/sync.dart';
@@ -57,6 +59,19 @@ class StockReceipt {
 
   double get totalQuantity => lines.fold(0.0, (sum, line) => sum + line.quantity);
   double get totalCost => lines.fold(0.0, (sum, line) => sum + line.totalCost);
+
+  StockDocumentPostingData toPostingData() => StockDocumentPostingData(
+        id: id,
+        documentNumber: receiptNumber,
+        documentType: DocumentType.stockReceipt,
+        documentDate: receiptDate,
+        warehouseId: warehouse,
+        status: status,
+        totalAmount: totalCost,
+        offsetAccountId: accountId ?? supplier,
+        currencyCode: currencyCode,
+        exchangeRate: exchangeRate,
+      );
 
   StockReceipt copyWith({
     String? id,

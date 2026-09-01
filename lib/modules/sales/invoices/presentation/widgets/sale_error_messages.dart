@@ -1,7 +1,7 @@
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/core/permissions/permission_error_messages.dart';
-import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
-import 'package:stock_count/modules/accounting/journals/presentation/widgets/journal_exception_messages.dart';
+import 'package:stock_count/core/errors/journal_exception.dart';
+import 'package:stock_count/core/widgets/journal_exception_messages.dart';
 import '../../domain/models/sale_exception.dart';
 
 /// Maps sales domain / unexpected errors to user-facing localized text.

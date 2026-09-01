@@ -11,19 +11,7 @@ import '../../data/repositories/sale_repository_impl.dart';
 import '../../domain/entities/sale.dart';
 import '../../domain/models/sale_list_filter.dart';
 import '../../domain/repositories/sale_repository.dart';
-import 'package:stock_count/app/sales/accounting_sale_ledger_adapter.dart';
-import 'package:stock_count/app/sales/accounting_sale_treasury_adapter.dart';
-import 'package:stock_count/app/sales/customers_sale_lookup_adapter.dart';
-import 'package:stock_count/app/sales/inventory_sale_product_catalog_adapter.dart';
-import 'package:stock_count/app/sales/perpetual_sale_inventory_effect_adapter.dart';
-import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
-import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
-import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
-import 'package:stock_count/modules/accounting/shared/presentation/providers/document_posting_providers.dart';
-import 'package:stock_count/modules/customers/directory/presentation/providers/customer_providers.dart';
-import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
-import 'package:stock_count/modules/inventory/stock_movements/presentation/providers/stock_movements_providers.dart';
-import 'package:stock_count/app/settings/settings_repository.dart';
+
 import 'package:stock_count/modules/sales/shared/domain/services/sale_accounting_bridge_port.dart';
 import '../../domain/services/sale_calculation_service.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_currency_port.dart';
@@ -64,28 +52,18 @@ final saleCalculationServiceProvider = Provider<SaleCalculationService>((ref) {
 
 /// Override in App with Customers-backed adapter.
 final saleCustomerLookupPortProvider = Provider<SaleCustomerLookupPort>((ref) {
-  return CustomersSaleLookupAdapter(
-    repository: ref.watch(customerRepositoryProvider),
-    accountLinkPort: ref.watch(customerAccountLinkPortProvider),
-    settings: ref.watch(settingsRepositoryProvider),
-  );
+  return const NoOpSaleCustomerLookupPort();
 });
 
 /// Override in App with Inventory-backed adapter.
 final saleProductCatalogPortProvider = Provider<SaleProductCatalogPort>((ref) {
-  return InventorySaleProductCatalogAdapter(
-    repository: ref.watch(productRepositoryProvider),
-    scanResolver: ref.watch(productScanResolverProvider),
-  );
+  return const NoOpSaleProductCatalogPort();
 });
 
 final saleInventoryEffectPortProvider = Provider<SaleInventoryEffectPort>((
   ref,
 ) {
-  return PerpetualSaleInventoryEffectAdapter(
-    orchestrator: ref.watch(documentPostingOrchestratorProvider),
-    stockMovementsRepository: ref.watch(stockMovementsRepositoryProvider),
-  );
+  return const NoOpSaleInventoryEffectPort();
 });
 
 final salePostingEnabledProvider = Provider<bool>((ref) {
@@ -100,10 +78,7 @@ final saleAccountingBridgePortProvider = Provider<SaleAccountingBridgePort>((
 
 /// Override in App with Accounting journal adapter (standalone credit sales).
 final saleLedgerPostingPortProvider = Provider<SaleLedgerPostingPort>((ref) {
-  return AccountingSaleLedgerAdapter(
-    posting: ref.watch(journalPostingServiceProvider),
-    accounts: ref.watch(accountRepositoryProvider),
-  );
+  return const NoOpSaleLedgerPostingPort();
 });
 
 /// Override in App with Accounting voucher-book adapter.
@@ -120,9 +95,7 @@ final saleCurrencyPortProvider = Provider<SaleCurrencyPort>((ref) {
 final saleTreasuryAccountPortProvider = Provider<SaleTreasuryAccountPort>((
   ref,
 ) {
-  return AccountingSaleTreasuryAdapter(
-    ref.watch(accountRepositoryProvider),
-  );
+  return const NoOpSaleTreasuryAccountPort();
 });
 
 /// Default: plain integer in this device's numeric lane (no device label).

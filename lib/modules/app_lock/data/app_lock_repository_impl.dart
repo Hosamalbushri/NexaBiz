@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../../../core/database/encrypted_hive_box.dart';
 import '../../../core/database/hive_boxes.dart';
 import '../domain/entities/app_lock_state.dart';
 import '../domain/repositories/app_lock_repository.dart';
@@ -13,6 +14,9 @@ class AppLockRepositoryImpl implements AppLockRepository {
   AppLockRepositoryImpl({Box<dynamic>? box}) : _box = box;
 
   Box<dynamic>? _box;
+
+  static const boxName = HiveBoxes.appLockEncrypted;
+  static const _legacyBoxName = HiveBoxes.appLock;
 
   static const _enabledKey = 'enabled';
   static const _policyKey = 'policy';
@@ -26,7 +30,14 @@ class AppLockRepositoryImpl implements AppLockRepository {
     if (_box != null && _box!.isOpen) {
       return _box!;
     }
-    _box = await Hive.openBox<dynamic>(HiveBoxes.appLock);
+    if (Hive.isBoxOpen(boxName)) {
+      _box = Hive.box<dynamic>(boxName);
+      return _box!;
+    }
+    _box = await EncryptedHive.openMigrated<dynamic>(
+      encryptedBoxName: boxName,
+      legacyPlainBoxName: _legacyBoxName,
+    );
     return _box!;
   }
 
@@ -98,7 +109,18 @@ class AppLockRepositoryImpl implements AppLockRepository {
       return false;
     }
     final normalized = _normalizePin(pin);
-    return _hashPin(normalized, salt) == hash;
+    final pbkdf2Hash = _hashPin(normalized, salt);
+    if (_constantTimeEquals(pbkdf2Hash, hash)) {
+      return true;
+    }
+    // Backward compatibility for legacy single-round SHA256 PIN hashes
+    final legacyHash = _legacyHashPin(normalized, salt);
+    if (_constantTimeEquals(legacyHash, hash)) {
+      // Opportunistically upgrade legacy hash to PBKDF2
+      await box.put(_hashKey, pbkdf2Hash);
+      return true;
+    }
+    return false;
   }
 
   @override
@@ -150,7 +172,34 @@ class AppLockRepositoryImpl implements AppLockRepository {
   }
 
   static String _hashPin(String pin, String salt) {
+    final hmacSha256 = Hmac(sha256, utf8.encode(pin));
+    final saltBytes = utf8.encode(salt);
+    var u = hmacSha256.convert([...saltBytes, 0, 0, 0, 1]).bytes;
+    final result = List<int>.from(u);
+    for (var i = 1; i < 10000; i++) {
+      u = hmacSha256.convert(u).bytes;
+      for (var j = 0; j < result.length; j++) {
+        result[j] ^= u[j];
+      }
+    }
+    return result.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
+
+  static String _legacyHashPin(String pin, String salt) {
     final digest = sha256.convert(utf8.encode('$salt::$pin'));
     return digest.toString();
+  }
+
+  static bool _constantTimeEquals(String a, String b) {
+    final aUnits = utf8.encode(a);
+    final bUnits = utf8.encode(b);
+    if (aUnits.length != bUnits.length) {
+      return false;
+    }
+    var result = 0;
+    for (var i = 0; i < aUnits.length; i++) {
+      result |= aUnits[i] ^ bUnits[i];
+    }
+    return result == 0;
   }
 }

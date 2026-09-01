@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../permissions/permission_defs.dart';
 import 'app_module.dart';
 import 'module_settings_definition.dart';
+import 'module_setup_definition.dart';
 import 'quick_action_definition.dart';
 import 'report_category_definition.dart';
 import 'route_access_rule.dart';
@@ -13,10 +14,10 @@ import 'route_access_rule.dart';
 /// Supports self-registration via [register] / [registeredModules] or explicit injection.
 class ModuleRegistry {
   ModuleRegistry([List<AppModule>? modules])
-      : _modules = List<AppModule>.unmodifiable(
-          List<AppModule>.from(modules ?? registeredModules)
-            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
-        );
+    : _modules = List<AppModule>.unmodifiable(
+        List<AppModule>.from(modules ?? registeredModules)
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder)),
+      );
 
   static final List<AppModule> _catalog = [];
 
@@ -97,10 +98,10 @@ class ModuleRegistry {
 
   /// Primary (canonical) permission codes across registered packages.
   Set<String> get primaryPermissionCodes => {
-        for (final pkg in permissionPackages)
-          for (final svc in pkg.services)
-            for (final op in svc.operations) op.code,
-      };
+    for (final pkg in permissionPackages)
+      for (final svc in pkg.services)
+        for (final op in svc.operations) op.code,
+  };
 
   /// Resolve a primary or legacy code to its operation definition.
   PermissionOperationDef? findPermissionOperation(String code) {
@@ -134,9 +135,7 @@ class ModuleRegistry {
 
   /// All quick actions contributed by enabled modules.
   List<QuickActionDefinition> get allQuickActions {
-    return [
-      for (final module in enabledModules) ...module.quickActions,
-    ];
+    return [for (final module in enabledModules) ...module.quickActions];
   }
 
   /// Find a quick action definition across all registered modules by id.
@@ -151,9 +150,7 @@ class ModuleRegistry {
 
   /// All report categories contributed by enabled modules.
   List<ReportCategoryDefinition> get allReportCategories {
-    return [
-      for (final module in enabledModules) ...module.reportCategories,
-    ];
+    return [for (final module in enabledModules) ...module.reportCategories];
   }
 
   /// All settings categories contributed by enabled modules, sorted by [AppModule.sortOrder].
@@ -175,12 +172,23 @@ class ModuleRegistry {
     return List.unmodifiable(list);
   }
 
+  /// All first-run setup steps contributed by enabled modules, sorted by [ModuleSetupStepDefinition.sortOrder].
+  List<ModuleSetupStepDefinition> get allSetupSteps {
+    final list = <ModuleSetupStepDefinition>[];
+    for (final module in _modules) {
+      if (module.isEnabled) {
+        list.addAll(module.setupSteps);
+      }
+    }
+    list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    return List.unmodifiable(list);
+  }
+
   /// Check if a module is registered by id in this registry instance.
   bool isRegistered(String id) => findById(id) != null;
 
   /// Check if a module is in the global self-registration catalog.
-  static bool isModuleRegistered(String id) =>
-      _catalog.any((m) => m.id == id);
+  static bool isModuleRegistered(String id) => _catalog.any((m) => m.id == id);
 
   AppModule? findById(String id) {
     for (final module in _modules) {

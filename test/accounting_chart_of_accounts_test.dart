@@ -17,7 +17,6 @@ import 'package:stock_count/modules/accounting/domain/services/account_validator
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-
   late AccountingDatabase db;
   late AccountRepositoryImpl repo;
   late Directory tempDir;
@@ -284,10 +283,7 @@ void main() {
 
       final pending = await queue.peekReady();
       expect(pending.where((op) => op.entityType == 'account'), isNotEmpty);
-      expect(
-        pending.any((op) => op.entityId == cash.uuid),
-        isTrue,
-      );
+      expect(pending.any((op) => op.entityId == cash.uuid), isTrue);
     });
 
     test('system account UUIDs are stable across installs', () async {

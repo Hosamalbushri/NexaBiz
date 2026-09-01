@@ -25,7 +25,11 @@ class AccountingSystemSetupSeedAdapter implements SystemSetupSeedPort {
   final SettingsRepository _settings;
 
   @override
-  Future<void> ensureLocalDefaults() async {
+  Future<void> ensureLocalDefaults({
+    String? baseCurrency,
+    String? defaultWarehouseName,
+    String? defaultWarehouseCode,
+  }) async {
     await _settings.saveChartBootstrapPreferRemote(false);
   }
 
@@ -38,12 +42,14 @@ class AccountingSystemSetupSeedAdapter implements SystemSetupSeedPort {
     await _settings.saveChartBootstrapPreferRemote(true);
 
     try {
-      final result = await _syncManager.syncNow(
-        notify: true,
-        upload: false,
-        download: true,
-        trigger: SyncPassTrigger.auto,
-      ).timeout(const Duration(seconds: 15));
+      final result = await _syncManager
+          .syncNow(
+            notify: true,
+            upload: false,
+            download: true,
+            trigger: SyncPassTrigger.auto,
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (result.outcome == SyncPassOutcome.authRequired) {
         throw const SystemSetupSeedException(SystemSetupSeedError.authRequired);

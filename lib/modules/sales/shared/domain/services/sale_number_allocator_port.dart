@@ -1,4 +1,4 @@
-import 'package:stock_count/modules/sales/invoices/domain/services/device_sale_number.dart';
+import 'package:stock_count/core/domain/services/device_document_number.dart';
 
 /// Allocates human-readable sale numbers (offline-safe).
 ///

@@ -5,7 +5,11 @@ import 'system_setup_seed_exception.dart';
 /// Implemented in App (must not import Accounting from this module).
 abstract class SystemSetupSeedPort {
   /// First device / offline: create default CoA + voucher book sections locally.
-  Future<void> ensureLocalDefaults();
+  Future<void> ensureLocalDefaults({
+    String? baseCurrency,
+    String? defaultWarehouseName,
+    String? defaultWarehouseCode,
+  });
 
   /// Joining device: mark setup complete immediately and pull CoA in the
   /// background. Must not await network or heavy local seeds — only persist
@@ -19,7 +23,11 @@ class NoOpSystemSetupSeedPort implements SystemSetupSeedPort {
   const NoOpSystemSetupSeedPort();
 
   @override
-  Future<void> ensureLocalDefaults() async {}
+  Future<void> ensureLocalDefaults({
+    String? baseCurrency,
+    String? defaultWarehouseName,
+    String? defaultWarehouseCode,
+  }) async {}
 
   @override
   Future<void> pullRemoteDefaults() async {}

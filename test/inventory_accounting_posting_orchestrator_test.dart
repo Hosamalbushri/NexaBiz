@@ -36,6 +36,7 @@ import 'package:stock_count/modules/sales/invoices/domain/entities/sale_data_sou
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
+import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'helpers/journal_posting_test_helper.dart';
 
 void main() {
@@ -84,6 +85,7 @@ void main() {
       stockValidationService: validationService,
       dependencyDetector: dependencyDetector,
       postingEngine: postingEngine,
+      permissionGuard: const AllowAllPermissionGuard(),
     );
 
     final accValidationService = AccountValidationServiceImpl(accountRepo);
@@ -797,6 +799,7 @@ void main() {
         stockValidationService: StockValidationServiceImpl(inventoryDb),
         dependencyDetector: InventoryDependencyDetectorImpl(inventoryDb),
         postingEngine: PostingEngineImpl(inventoryDb, CostLayerServiceImpl(db: inventoryDb)),
+        permissionGuard: const AllowAllPermissionGuard(),
       );
 
       final postResult = await postingCoordinator.post(
@@ -845,6 +848,7 @@ void main() {
         stockValidationService: StockValidationServiceImpl(inventoryDb),
         dependencyDetector: InventoryDependencyDetectorImpl(inventoryDb),
         postingEngine: PostingEngineImpl(inventoryDb, CostLayerServiceImpl(db: inventoryDb)),
+        permissionGuard: const AllowAllPermissionGuard(),
       );
 
       await postingCoordinator.post(

@@ -1,5 +1,4 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/utils/business_date.dart';
@@ -21,7 +20,6 @@ import '../../domain/repositories/sale_repository.dart';
 import '../../domain/services/sale_calculation_service.dart';
 import '../../domain/services/sale_quantity_math.dart';
 import '../../domain/services/device_sale_number.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import '../../domain/services/sale_validator.dart';
 import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
 
@@ -53,7 +51,7 @@ class SaleRepositoryImpl implements SaleRepository {
   static const entityType = 'sale';
 
   String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+      _readCompanyId?.call() ?? 'default_company';
 
   Expression<bool> _tenantScoped($SalesTable t) =>
       t.companyId.equals(_currentCompanyId);
@@ -724,7 +722,7 @@ class SaleRepositoryImpl implements SaleRepository {
       throw const SaleException(SaleException.notFound);
     }
     if (existing.saleStatus == SaleStatus.posted) {
-      throw const JournalException(JournalException.postedImmutable);
+      throw const SaleException(SaleException.postedImmutable);
     }
     _validator.validate(draft);
     final summary = _calculator.calculate(
@@ -856,7 +854,7 @@ class SaleRepositoryImpl implements SaleRepository {
     }
     _permissionGuard.requireAny(SalesPermissions.delete);
     if (existing.saleStatus.isPosted) {
-      throw const JournalException(JournalException.postedImmutable);
+      throw const SaleException(SaleException.postedImmutable);
     }
 
     final now = DateTime.now().toUtc();

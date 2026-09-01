@@ -27,9 +27,11 @@ import '../customers/directory/presentation/providers/customer_providers.dart';
 import '../receipts_payments/transactions/presentation/providers/rp_providers.dart';
 import '../sales/invoices/presentation/providers/sale_providers.dart';
 import '../sync/sync.dart';
+import '../../core/modules/module_setup_definition.dart';
 import '../system_setup/presentation/providers/system_setup_providers.dart';
 import 'accounting_module_quick_actions.dart';
 import 'accounting_module_settings.dart';
+import 'accounting_module_setup.dart';
 import 'chart_of_accounts/data/repositories/account_repository_impl.dart';
 import 'chart_of_accounts/presentation/pages/account_details_page.dart';
 import 'chart_of_accounts/presentation/pages/account_form_page.dart';
@@ -91,59 +93,60 @@ class AccountingModule extends AppModule {
   @override
   bool get isEnabled => true;
 
+
+  @override
+  List<ModuleSetupStepDefinition> get setupSteps => accountingSetupSteps;
+
   @override
   List<String> get requiredAnyPermissions => const [
-        'accounting.view',
-        'accounting.accounts.view',
-        'accounting.journals.view',
-      ];
+    'accounting.view',
+    'accounting.accounts.view',
+    'accounting.journals.view',
+  ];
 
   @override
   List<RouteAccessRule> get routeAccessRules => [
-        RouteAccessRule(
-          pathEquals: AccountingRoutes.accountsCreate,
-          anyOf: const ['accounting.accounts.create'],
-        ),
-        RouteAccessRule(
-          pathEquals: AccountingRoutes.accountsImport,
-          anyOf: const ['accounting.accounts.create'],
-        ),
-        RouteAccessRule(
-          pathEquals: AccountingRoutes.openingSetup,
-          anyOf: const [
-            'accounting.accounts.create',
-            'accounting.journals.create',
-          ],
-        ),
-        RouteAccessRule(
-          pathRegex: RegExp(r'^/accounting/accounts/\d+/edit$'),
-          anyOf: const ['accounting.accounts.update'],
-        ),
-        RouteAccessRule(
-          pathEquals: AccountingRoutes.journalsCreate,
-          anyOf: const ['accounting.journals.create'],
-        ),
-        RouteAccessRule(
-          pathEquals: AccountingRoutes.fiscalYearsCreate,
-          anyOf: const ['accounting.fiscal_years.create'],
-        ),
-        RouteAccessRule(
-          pathPrefix: AccountingRoutes.fiscalYears,
-          anyOf: const [
-            'accounting.fiscal_years.view',
-            'accounting.fiscal_years.create',
-            'accounting.fiscal_years.update',
-          ],
-        ),
-        RouteAccessRule(
-          pathRegex: RegExp(r'^/accounting/journals/[^/]+/edit$'),
-          anyOf: const ['accounting.journals.update'],
-        ),
-        RouteAccessRule(
-          pathPrefix: AccountingRoutes.root,
-          anyOf: requiredAnyPermissions,
-        ),
-      ];
+    RouteAccessRule(
+      pathEquals: AccountingRoutes.accountsCreate,
+      anyOf: const ['accounting.accounts.create'],
+    ),
+    RouteAccessRule(
+      pathEquals: AccountingRoutes.accountsImport,
+      anyOf: const ['accounting.accounts.create'],
+    ),
+    RouteAccessRule(
+      pathEquals: AccountingRoutes.openingSetup,
+      anyOf: const ['accounting.accounts.create', 'accounting.journals.create'],
+    ),
+    RouteAccessRule(
+      pathRegex: RegExp(r'^/accounting/accounts/\d+/edit$'),
+      anyOf: const ['accounting.accounts.update'],
+    ),
+    RouteAccessRule(
+      pathEquals: AccountingRoutes.journalsCreate,
+      anyOf: const ['accounting.journals.create'],
+    ),
+    RouteAccessRule(
+      pathEquals: AccountingRoutes.fiscalYearsCreate,
+      anyOf: const ['accounting.fiscal_years.create'],
+    ),
+    RouteAccessRule(
+      pathPrefix: AccountingRoutes.fiscalYears,
+      anyOf: const [
+        'accounting.fiscal_years.view',
+        'accounting.fiscal_years.create',
+        'accounting.fiscal_years.update',
+      ],
+    ),
+    RouteAccessRule(
+      pathRegex: RegExp(r'^/accounting/journals/[^/]+/edit$'),
+      anyOf: const ['accounting.journals.update'],
+    ),
+    RouteAccessRule(
+      pathPrefix: AccountingRoutes.root,
+      anyOf: requiredAnyPermissions,
+    ),
+  ];
 
   @override
   PermissionPackageDef? get permissionPackage => accountingPermissionPackage();
@@ -377,97 +380,95 @@ class AccountingModule extends AppModule {
 
   @override
   List<Override> get providerOverrides => [
-        systemSetupSeedPortProvider.overrideWith((ref) {
-          return AccountingSystemSetupSeedAdapter(
-            accounts: ref.watch(accountRepositoryProvider),
-            voucherBooks: ref.watch(voucherBookRepositoryProvider),
-            syncManager: ref.watch(syncManagerProvider),
-            settings: ref.watch(settingsRepositoryProvider),
-          );
-        }),
-        accountRepositoryImplProvider.overrideWith((ref) {
-          return AccountRepositoryImpl(
-            ref.watch(accountingDatabaseProvider),
-            syncQueue: ref.watch(syncQueueProvider),
-            shouldSuppressLocalChartSeed: () => ref
-                .read(settingsRepositoryProvider)
-                .loadChartBootstrapPreferRemote(),
-            onUuidRemapped: (oldUuid, newUuid) async {
-              await ref
-                  .read(customerRepositoryImplProvider)
-                  .remapAccountId(fromUuid: oldUuid, toUuid: newUuid);
-              await ref
-                  .read(journalRepositoryImplProvider)
-                  .remapAccountUuid(fromUuid: oldUuid, toUuid: newUuid);
-            },
-          );
-        }),
-        customerAccountLinkPortProvider.overrideWith((ref) {
-          return AccountingCustomerAccountLinkAdapter(
-            ref.watch(accountRepositoryProvider),
-          );
-        }),
-        saleAccountingBridgePortProvider.overrideWith((ref) {
-          return AccountingSaleBridgeAdapter(
-            integration: ref.watch(accountingIntegrationPortProvider),
-          );
-        }),
-        saleLedgerPostingPortProvider.overrideWith((ref) {
-          return AccountingSaleLedgerAdapter(
-            posting: ref.watch(journalPostingServiceProvider),
-            accounts: ref.watch(accountRepositoryProvider),
-          );
-        }),
-        saleVoucherBookPortProvider.overrideWith((ref) {
-          return AccountingSaleVoucherBookAdapter(
-            ref.watch(voucherBookRepositoryProvider),
-            deviceId: ref.watch(syncApiConfigProvider).deviceId,
-          );
-        }),
-        saleCurrencyPortProvider.overrideWith((ref) {
-          return AccountingSaleCurrencyAdapter(
-            baseCurrencyReader: () async {
-              final profile = await ref
-                  .read(settingsRepositoryProvider)
-                  .loadCompanyProfile();
-              return profile.defaultCurrencyCode;
-            },
-            rates: ref.watch(currencyRateRepositoryProvider),
-          );
-        }),
-        saleTreasuryAccountPortProvider.overrideWith((ref) {
-          return AccountingSaleTreasuryAdapter(
-            ref.watch(accountRepositoryProvider),
-          );
-        }),
-        rpLedgerPostingPortProvider.overrideWith((ref) {
-          return AccountingRpLedgerAdapter(
-            posting: ref.watch(journalPostingServiceProvider),
-            accounts: ref.watch(accountRepositoryProvider),
-            fiscalYears: ref.watch(fiscalYearRepositoryProvider),
-          );
-        }),
-        rpVoucherBookPortProvider.overrideWith((ref) {
-          return AccountingRpVoucherBookAdapter(
-            ref.watch(voucherBookRepositoryProvider),
-            deviceId: ref.watch(syncApiConfigProvider).deviceId,
-          );
-        }),
-        rpTreasuryAccountPortProvider.overrideWith((ref) {
-          return AccountingRpTreasuryAdapter(
-            ref.watch(accountRepositoryProvider),
-          );
-        }),
-        rpCurrencyPortProvider.overrideWith((ref) {
-          return AccountingRpCurrencyAdapter(
-            baseCurrencyReader: () async {
-              final profile = await ref
-                  .read(settingsRepositoryProvider)
-                  .loadCompanyProfile();
-              return profile.defaultCurrencyCode;
-            },
-            rates: ref.watch(currencyRateRepositoryProvider),
-          );
-        }),
-      ];
+    systemSetupSeedPortProvider.overrideWith((ref) {
+      return AccountingSystemSetupSeedAdapter(
+        accounts: ref.watch(accountRepositoryProvider),
+        voucherBooks: ref.watch(voucherBookRepositoryProvider),
+        syncManager: ref.watch(syncManagerProvider),
+        settings: ref.watch(settingsRepositoryProvider),
+      );
+    }),
+    accountRepositoryImplProvider.overrideWith((ref) {
+      return AccountRepositoryImpl(
+        ref.watch(accountingDatabaseProvider),
+        syncQueue: ref.watch(syncQueueProvider),
+        shouldSuppressLocalChartSeed: () => ref
+            .read(settingsRepositoryProvider)
+            .loadChartBootstrapPreferRemote(),
+        onUuidRemapped: (oldUuid, newUuid) async {
+          await ref
+              .read(customerRepositoryImplProvider)
+              .remapAccountId(fromUuid: oldUuid, toUuid: newUuid);
+          await ref
+              .read(journalRepositoryImplProvider)
+              .remapAccountUuid(fromUuid: oldUuid, toUuid: newUuid);
+        },
+      );
+    }),
+    customerAccountLinkPortProvider.overrideWith((ref) {
+      return AccountingCustomerAccountLinkAdapter(
+        ref.watch(accountRepositoryProvider),
+      );
+    }),
+    saleAccountingBridgePortProvider.overrideWith((ref) {
+      return AccountingSaleBridgeAdapter(
+        integration: ref.watch(accountingIntegrationPortProvider),
+      );
+    }),
+    saleLedgerPostingPortProvider.overrideWith((ref) {
+      return AccountingSaleLedgerAdapter(
+        posting: ref.watch(journalPostingServiceProvider),
+        accounts: ref.watch(accountRepositoryProvider),
+      );
+    }),
+    saleVoucherBookPortProvider.overrideWith((ref) {
+      return AccountingSaleVoucherBookAdapter(
+        ref.watch(voucherBookRepositoryProvider),
+        deviceId: ref.watch(syncApiConfigProvider).deviceId,
+      );
+    }),
+    saleCurrencyPortProvider.overrideWith((ref) {
+      return AccountingSaleCurrencyAdapter(
+        baseCurrencyReader: () async {
+          final profile = await ref
+              .read(settingsRepositoryProvider)
+              .loadCompanyProfile();
+          return profile.defaultCurrencyCode;
+        },
+        rates: ref.watch(currencyRateRepositoryProvider),
+      );
+    }),
+    saleTreasuryAccountPortProvider.overrideWith((ref) {
+      return AccountingSaleTreasuryAdapter(
+        ref.watch(accountRepositoryProvider),
+      );
+    }),
+    rpLedgerPostingPortProvider.overrideWith((ref) {
+      return AccountingRpLedgerAdapter(
+        posting: ref.watch(journalPostingServiceProvider),
+        accounts: ref.watch(accountRepositoryProvider),
+        fiscalYears: ref.watch(fiscalYearRepositoryProvider),
+      );
+    }),
+    rpVoucherBookPortProvider.overrideWith((ref) {
+      return AccountingRpVoucherBookAdapter(
+        ref.watch(voucherBookRepositoryProvider),
+        deviceId: ref.watch(syncApiConfigProvider).deviceId,
+      );
+    }),
+    rpTreasuryAccountPortProvider.overrideWith((ref) {
+      return AccountingRpTreasuryAdapter(ref.watch(accountRepositoryProvider));
+    }),
+    rpCurrencyPortProvider.overrideWith((ref) {
+      return AccountingRpCurrencyAdapter(
+        baseCurrencyReader: () async {
+          final profile = await ref
+              .read(settingsRepositoryProvider)
+              .loadCompanyProfile();
+          return profile.defaultCurrencyCode;
+        },
+        rates: ref.watch(currencyRateRepositoryProvider),
+      );
+    }),
+  ];
 }

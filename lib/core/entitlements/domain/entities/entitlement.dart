@@ -80,17 +80,44 @@ class Entitlement {
     return (current + requested) <= limit;
   }
 
-  /// Default Free entitlement for a local-only company.
+  /// Active commercial enterprise entitlement for a company.
   factory Entitlement.freeLocal(String companyId) {
     return Entitlement(
       companyId: companyId,
-      planId: 'plan_free',
-      tier: EntitlementTier.free,
+      planId: 'plan_business_commercial',
+      tier: EntitlementTier.enterprise,
       status: EntitlementStatus.active,
-      capabilities: const {}, // Purely local, no cloud/sync capabilities
-      packageCodes: const {},
-      limits: const {},
-      usage: const {},
+      capabilities: const {
+        EntitlementCapability.cloudBackup,
+        EntitlementCapability.multiDevice,
+        EntitlementCapability.advancedReports,
+        EntitlementCapability.multiBranch,
+        EntitlementCapability.teamUsers,
+        EntitlementCapability.cloudStorage,
+      },
+      packageCodes: const {
+        'commercial_suite',
+        'multi_device',
+        'multi_branch',
+        'advanced_reports',
+        'cloud_backup',
+        'team_users',
+        'accounting',
+        'sales',
+        'inventory',
+        'purchases',
+        'customers',
+        'reports',
+        'receipts_payments',
+      },
+      limits: const {
+        'max_devices': 99,
+        'max_users': 99,
+      },
+      usage: const {
+        'active_devices': 1,
+        'active_users': 1,
+      },
       source: EntitlementSource.localDefault,
       lastVerifiedAt: DateTime.now().toUtc(),
     );

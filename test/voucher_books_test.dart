@@ -1,4 +1,3 @@
-
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
@@ -10,7 +9,6 @@ import 'package:stock_count/modules/accounting/domain/services/default_voucher_b
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-
 
   late AccountingDatabase db;
   late VoucherBookRepositoryImpl repo;

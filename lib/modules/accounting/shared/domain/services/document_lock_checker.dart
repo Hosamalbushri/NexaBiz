@@ -1,4 +1,4 @@
-import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
+import 'package:stock_count/core/domain/entities/document_status.dart';
 
 class DocumentLockChecker {
   const DocumentLockChecker();

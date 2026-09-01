@@ -32,7 +32,7 @@ class FailingJournalPostingService extends JournalPostingService {
   FailingJournalPostingService({required super.journals, required super.periodValidator});
 
   @override
-  Future<JournalEntry> post(JournalEntryDraft draft) async {
+  Future<JournalEntry> post(JournalEntryDraft draft, {String? userId}) async {
     throw StateError('CRITICAL_ACCOUNTING_FAILURE: Database connection lost or period closed');
   }
 

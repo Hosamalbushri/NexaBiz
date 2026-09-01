@@ -1,3 +1,4 @@
+import 'package:stock_count/core/domain/ports/posting_port.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/document_posting_orchestrator.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
@@ -61,7 +62,24 @@ class PerpetualSaleInventoryEffectAdapter implements SaleInventoryEffectPort {
       status: InventoryDocumentStatus.draft,
     );
 
-    final result = await _orchestrator.postSaleInvoice(sale: sale, docRef: docRef);
+    final postingData = SaleInvoicePostingData(
+      uuid: sale.uuid,
+      saleNumber: sale.saleNumber,
+      saleDate: sale.saleDate,
+      total: sale.total,
+      itemDiscountTotal: sale.itemDiscountTotal,
+      discountAmount: sale.discountAmount,
+      settlementType: sale.settlementType == SaleSettlementType.credit
+          ? PostingSettlementType.credit
+          : PostingSettlementType.cash,
+      currencyCode: sale.currencyCode,
+      baseCurrencyCode: sale.baseCurrencyCode,
+      exchangeRate: sale.exchangeRate,
+      customerAccountId: sale.customerAccountId,
+      cashAccountId: sale.cashAccountId,
+    );
+
+    final result = await _orchestrator.postSaleInvoice(sale: postingData, docRef: docRef);
 
     if (result is OrchestrationFailure) {
       if (result.reason.contains('غير كافية') || result.reason.contains('نقص')) {
@@ -81,7 +99,24 @@ class PerpetualSaleInventoryEffectAdapter implements SaleInventoryEffectPort {
       status: InventoryDocumentStatus.posted,
     );
 
-    final result = await _orchestrator.unpostSaleInvoice(sale: sale, docRef: docRef);
+    final postingData = SaleInvoicePostingData(
+      uuid: sale.uuid,
+      saleNumber: sale.saleNumber,
+      saleDate: sale.saleDate,
+      total: sale.total,
+      itemDiscountTotal: sale.itemDiscountTotal,
+      discountAmount: sale.discountAmount,
+      settlementType: sale.settlementType == SaleSettlementType.credit
+          ? PostingSettlementType.credit
+          : PostingSettlementType.cash,
+      currencyCode: sale.currencyCode,
+      baseCurrencyCode: sale.baseCurrencyCode,
+      exchangeRate: sale.exchangeRate,
+      customerAccountId: sale.customerAccountId,
+      cashAccountId: sale.cashAccountId,
+    );
+
+    final result = await _orchestrator.unpostSaleInvoice(sale: postingData, docRef: docRef);
 
     if (result is OrchestrationFailure) {
       throw SaleException('unpost_failed', result.reason);

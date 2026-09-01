@@ -36,7 +36,7 @@ class SystemSetupModule extends AppModule {
   IconData get icon => Icons.settings_suggest_outlined;
 
   @override
-  String get rootRoute => AppRoutes.settings;
+  String get rootRoute => AppRoutes.settingsSetup;
 
   @override
   int get sortOrder => 80;
@@ -45,7 +45,7 @@ class SystemSetupModule extends AppModule {
   bool get isEnabled => true;
 
   @override
-  bool get showInLauncher => false;
+  bool get showInLauncher => true;
 
   @override
   PermissionPackageDef? get permissionPackage => platformPermissionPackage();

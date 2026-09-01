@@ -13,10 +13,10 @@ import '../../modules/app_lock/presentation/pages/app_lock_routes.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import '../../modules/authentication/presentation/pages/change_password_page.dart';
 import '../../modules/authentication/presentation/pages/login_page.dart';
-import '../../modules/authentication/presentation/pages/sync_login_page.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
+
+import '../../modules/system_setup/presentation/pages/first_run_setup_wizard_page.dart';
 import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
-import '../../modules/system_setup/presentation/pages/system_setup_wizard_page.dart';
 import '../../modules/system_setup/presentation/providers/system_setup_providers.dart';
 import '../exit/app_exit_scope.dart';
 import '../notifications/presentation/pages/notification_center_page.dart';
@@ -48,7 +48,7 @@ import '../sync/sync_enabled_provider.dart';
 bool _isPublicRoute(String path) {
   return path == AppRoutes.splash ||
       path == AppRoutes.login ||
-      path == SystemSetupRoutes.root ||
+      path == SystemSetupRoutes.firstRun ||
       path == AppRoutes.onboarding ||
       path == AppRoutes.setupChoice ||
       path == AppRoutes.serverSetup ||
@@ -100,6 +100,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.listen(currentEntitlementProvider, (_, _) {
     refresh.value++;
   });
+  ref.listen(firstRunCompletedProvider, (_, _) {
+    refresh.value++;
+  });
 
   final router = GoRouter(
     navigatorKey: appRootNavigatorKey,
@@ -108,15 +111,33 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final path = state.uri.path;
       final auth = ref.read(authStateProvider);
-      final syncEnabled = ref.read(syncEnabledProvider);
       final initState = ref.read(appInitializationControllerProvider);
       final isPublic = _isPublicRoute(path);
+
+      final firstRunAsync = ref.read(firstRunCompletedProvider);
+      final isFirstRunDone = firstRunAsync.valueOrNull ?? false;
+
+      // 0. While first run status is loading, keep displaying the splash screen
+      if (firstRunAsync.isLoading &&
+          (path == AppRoutes.splash || path == AppRoutes.root)) {
+        return AppRoutes.splash;
+      }
+
+      // 0. First-Run Setup Gate: unconfigured applications MUST complete Onboarding & First-Run setup
+      if (!isFirstRunDone) {
+        if (path != AppRoutes.onboarding &&
+            path != SystemSetupRoutes.firstRun &&
+            path != AppRoutes.splash) {
+          return AppRoutes.onboarding;
+        }
+        return null;
+      }
+
 
       // Root path '/' or empty path resolves to login or setup
       if (path == AppRoutes.root || path.isEmpty) {
         if (auth.status == AuthStatus.unauthenticated) {
-          final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
-          return ready ? AppRoutes.login : SystemSetupRoutes.root;
+          return AppRoutes.login;
         }
         return AppRoutes.splash;
       }
@@ -130,15 +151,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // 2. Mandatory Authentication Gate: ALL non-public routes require active session
       if (auth.status == AuthStatus.unauthenticated) {
         if (isPublic) return null;
-        final ready = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
-        return ready ? AppRoutes.login : SystemSetupRoutes.root;
+        return AppRoutes.login;
       }
 
       // 3. Mandatory Password Change Gate: Bypassed per product rules
       // (User sets local email & password in setup settings)
 
       // 4. Authenticated Device Initialization & Server Bootstrap Progress Gate
-      final isServerInitializing = initState.operatingMode == ApplicationOperatingMode.server &&
+      final isServerInitializing =
+          initState.operatingMode == ApplicationOperatingMode.server &&
           (initState.isDownloading ||
               initState.isWritingDatabase ||
               initState.isSynchronizing ||
@@ -167,7 +188,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // 5. Mandatory System Setup Readiness Gate:
       // Setup MUST be completed before accessing dashboard or protected pages.
-      final isSetupReady = ref.read(systemSetupReadyProvider).valueOrNull ?? false;
+      final isSetupReady =
+          ref.read(systemSetupReadyProvider).valueOrNull ?? false;
       if (!isSetupReady && !auth.isRemoteSession) {
         if (path != SystemSetupRoutes.root && path != AppRoutes.splash) {
           return SystemSetupRoutes.root;
@@ -207,7 +229,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (!_isPermissionExempt(path)) {
         var required = registry.requiredPermissionsForPath(path);
         if ((required == null || required.isEmpty) &&
-            (path == AppRoutes.reports || path.startsWith('${AppRoutes.reports}/'))) {
+            (path == AppRoutes.reports ||
+                path.startsWith('${AppRoutes.reports}/'))) {
           required = ['reports.view'];
         }
         if (required != null && required.isNotEmpty) {
@@ -223,7 +246,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         final entitlementAsync = ref.read(currentEntitlementProvider);
         final entitlementService = ref.read(entitlementServiceProvider);
         final currentEntitlement =
-            entitlementAsync.valueOrNull ?? entitlementService.currentEntitlement;
+            entitlementAsync.valueOrNull ??
+            entitlementService.currentEntitlement;
         if (!currentEntitlement.hasCapability(EntitlementCapability.sync)) {
           return AppRoutes.settingsSubscription;
         }
@@ -242,6 +266,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.login,
         name: 'login',
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: SystemSetupRoutes.firstRun,
+        name: 'firstRunSetup',
+        builder: (context, state) => const FirstRunSetupWizardPage(),
       ),
       GoRoute(
         path: AppRoutes.changePassword,
@@ -275,11 +304,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.serverBootstrapProgress,
         name: 'serverBootstrapProgress',
         builder: (context, state) => const ServerBootstrapProgressPage(),
-      ),
-      GoRoute(
-        path: SystemSetupRoutes.root,
-        name: 'systemSetup',
-        builder: (context, state) => const SystemSetupWizardPage(),
       ),
       GoRoute(
         path: AppLockRoutes.root,

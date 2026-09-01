@@ -2,5 +2,6 @@
 class SystemSetupRoutes {
   const SystemSetupRoutes._();
 
-  static const String root = '/system-setup';
+  static const String root = '/setup/first-run';
+  static const String firstRun = '/setup/first-run';
 }

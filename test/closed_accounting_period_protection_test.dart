@@ -17,6 +17,7 @@ import 'package:stock_count/modules/accounting/journals/domain/services/journal_
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_coordinator_impl.dart';
+import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_engine.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/stock_validation_service.dart';
@@ -190,6 +191,7 @@ void main() {
       dependencyDetector: _FakeDependencyDetector(),
       postingEngine: _FakePostingEngine(),
       periodValidator: periodValidator,
+      permissionGuard: const AllowAllPermissionGuard(),
       readCompanyId: () => companyId,
     );
 

@@ -265,22 +265,24 @@ class AuthController extends StateNotifier<AuthState> {
     _set(_stateFor(session, AuthBackend.local));
   }
 
-  /// Changes password for the active session (local or remote).
+  /// Creates a new company locally and sets it as active company.
+  Future<void> createCompany({
+    required String name,
+    required String code,
+  }) async {
+    final session = await _local.createCompany(name: name, code: code);
+    _set(_stateFor(session, AuthBackend.local));
+  }
+
+  /// Changes password for the active session.
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
   }) async {
-    if (state.isRemoteSession) {
-      await _remote.changePassword(
-        currentPassword: currentPassword,
-        newPassword: newPassword,
-      );
-    } else {
-      await changeLocalPassword(
-        currentPassword: currentPassword,
-        newPassword: newPassword,
-      );
-    }
+    await changeLocalPassword(
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+    );
   }
 
   /// Local offline password change (seeded admin first-login gate).
@@ -327,7 +329,7 @@ class AuthController extends StateNotifier<AuthState> {
   /// Sets authenticated session explicitly (e.g., after server bootstrap login).
   void setAuthenticatedSession(
     AuthSessionSnapshot session, {
-    AuthBackend backend = AuthBackend.remote,
+    AuthBackend backend = AuthBackend.local,
   }) {
     _set(_stateFor(session, backend));
   }
@@ -353,9 +355,10 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> switchCompany(String companyId) async {
-    final session = await _remote.switchCompany(companyId);
-    _set(_stateFor(session, AuthBackend.remote));
+    final session = await _local.switchCompany(companyId);
+    _set(_stateFor(session, AuthBackend.local));
   }
+
 
   Future<void> logoutRemote() async {
     try {

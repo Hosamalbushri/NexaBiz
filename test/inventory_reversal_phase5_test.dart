@@ -47,8 +47,8 @@ void main() {
       db: db,
       readCompanyId: () => 'COMP-A',
     );
-    transferRepo = StockTransferRepositoryImpl(db: db);
-    returnsRepo = StockReturnsRepositoryImpl(db: db);
+    transferRepo = StockTransferRepositoryImpl(db: db, readCompanyId: () => 'COMP-A');
+    returnsRepo = StockReturnsRepositoryImpl(db: db, readCompanyId: () => 'COMP-A');
 
     final now = DateTime.now().millisecondsSinceEpoch;
 

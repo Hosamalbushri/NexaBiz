@@ -14,7 +14,7 @@ import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/sales/invoices/domain/services/device_sale_number.dart';
+import 'package:stock_count/core/domain/services/device_document_number.dart';
 import '../../domain/entities/transaction_type.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_currency_port.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_treasury_account_port.dart';

@@ -26,10 +26,10 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   static const _iconAsset = 'assets/branding/nexabiz_app_icon.png';
 
   Future<void> _finish() async {
-    await ref.read(settingsRepositoryProvider).saveOnboardingCompleted(true);
     if (!mounted) return;
-    context.go(SystemSetupRoutes.root);
+    context.go(SystemSetupRoutes.firstRun);
   }
+
 
   @override
   Widget build(BuildContext context) {

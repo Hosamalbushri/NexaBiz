@@ -1,12 +1,20 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
-import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/core/errors/journal_exception.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/cost_layer.dart';
 import '../../../shared/data/database/inventory_database.dart';
+import '../../domain/entities/stock_movement_line.dart';
+import '../../domain/entities/stock_return.dart';
+import '../../domain/enums/cost_valuation_method.dart';
+import '../../domain/repositories/stock_returns_repository.dart';
+import '../../domain/services/cost_layer_service.dart';
+import '../services/cost_layer_service_impl.dart';
+
+import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
 import '../../domain/entities/stock_movement_line.dart';
 import '../../domain/entities/stock_return.dart';
 import '../../domain/enums/cost_valuation_method.dart';
@@ -21,17 +29,20 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
     CostLayerService? costLayerService,
     CostValuationMethod valuationMethod = CostValuationMethod.fifo,
     String Function()? readCompanyId,
+    InitializationGuard? initializationGuard,
   })  : _db = db,
         _syncQueue = syncQueue,
         _costLayerService = costLayerService ?? CostLayerServiceImpl(db: db, readCompanyId: readCompanyId),
         _valuationMethod = valuationMethod,
-        _readCompanyId = readCompanyId;
+        _readCompanyId = readCompanyId,
+        _initializationGuard = initializationGuard;
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
   final CostLayerService _costLayerService;
   final CostValuationMethod _valuationMethod;
   final String Function()? _readCompanyId;
+  final InitializationGuard? _initializationGuard;
 
   String get _currentCompanyId =>
       _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
@@ -84,6 +95,7 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
 
   @override
   Future<void> saveReturn(StockReturn returnDoc) async {
+    await _initializationGuard?.assertInitialized();
     await _db.transaction(() async {
       // 1. Cross-tenant modification rejection
       if (returnDoc.companyId != null &&
@@ -235,6 +247,7 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
 
   @override
   Future<void> deleteReturn(String id) async {
+    await _initializationGuard?.assertInitialized();
     await _db.transaction(() async {
       final returnDoc = await getReturnById(id);
       if (returnDoc == null) {

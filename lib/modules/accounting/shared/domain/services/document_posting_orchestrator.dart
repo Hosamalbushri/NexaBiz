@@ -1,9 +1,6 @@
+import 'package:stock_count/core/domain/entities/document_ref.dart';
+import 'package:stock_count/core/domain/ports/posting_port.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
-import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_issue.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_receipt.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_coordinator.dart';
-import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
 import 'accounting_entry_builder.dart';
 import 'document_lock_checker.dart';
 
@@ -35,7 +32,7 @@ class OrchestrationFailure extends OrchestrationResult {
 
 class DocumentPostingOrchestrator {
   DocumentPostingOrchestrator({
-    required PostingCoordinator postingCoordinator,
+    required PostingCoordinatorPort postingCoordinator,
     required JournalPostingService journalPostingService,
     required AccountingEntryBuilder entryBuilder,
     DocumentLockChecker lockChecker = const DocumentLockChecker(),
@@ -44,43 +41,34 @@ class DocumentPostingOrchestrator {
         _entryBuilder = entryBuilder,
         _lockChecker = lockChecker;
 
-  final PostingCoordinator _postingCoordinator;
+  final PostingCoordinatorPort _postingCoordinator;
   final JournalPostingService _journalPostingService;
   final AccountingEntryBuilder _entryBuilder;
   final DocumentLockChecker _lockChecker;
 
-  Future<OrchestrationResult> postReceipt({
-    required StockReceipt receipt,
+  Future<OrchestrationResult> postStockReceiptData({
+    required StockDocumentPostingData data,
   }) async {
     try {
       _lockChecker.assertCanEdit(
-        documentNumber: receipt.receiptNumber,
-        status: receipt.status,
+        documentNumber: data.documentNumber,
+        status: data.status,
       );
 
-      final totalAmount = receipt.totalCost;
-      final docRef = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-        status: receipt.status,
-        currencyCode: receipt.currencyCode,
-        exchangeRate: receipt.exchangeRate,
-      );
+      final totalAmount = data.totalAmount;
+      final docRef = data.toDocumentRef();
 
       // 1. Post Inventory movements & cost layers first
       final inventoryResult = await _postingCoordinator.post(document: docRef);
 
       if (inventoryResult is PostStockShortage) {
         return OrchestrationFailure(
-          documentId: receipt.id,
+          documentId: data.id,
           reason: 'نقص في المخزون للمواد المطلوب توريدها',
         );
       } else if (inventoryResult is PostInvalidStatus) {
         return OrchestrationFailure(
-          documentId: receipt.id,
+          documentId: data.id,
           reason: inventoryResult.reason,
         );
       }
@@ -97,7 +85,7 @@ class DocumentPostingOrchestrator {
 
         if (existing != null && existing.isPosted) {
           return OrchestrationSuccess(
-            documentId: receipt.id,
+            documentId: data.id,
             journalEntryUuid: existing.uuid,
             message: 'تم ترحيل أمر التوريد والقيود المحاسبية بنجاح',
           );
@@ -111,79 +99,62 @@ class DocumentPostingOrchestrator {
         final draft = await _entryBuilder.buildDraftFromInventoryDocument(
           document: docRef,
           totalAmount: totalAmount,
-          offsetAccountId: receipt.accountId ?? receipt.supplier,
+          offsetAccountId: data.offsetAccountId,
           isPosted: true,
         );
         final entry = await _journalPostingService.post(draft);
         return OrchestrationSuccess(
-          documentId: receipt.id,
+          documentId: data.id,
           journalEntryUuid: entry.uuid,
           message: 'تم ترحيل أمر التوريد والقيود المحاسبية بنجاح',
         );
       }
 
       return OrchestrationSuccess(
-        documentId: receipt.id,
+        documentId: data.id,
         message: 'تم ترحيل أمر التوريد بنجاح',
       );
     } catch (e) {
-      final docRef = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-        status: receipt.status,
-        currencyCode: receipt.currencyCode,
-        exchangeRate: receipt.exchangeRate,
-      );
+      final docRef = data.toDocumentRef();
+      String compErrorMsg = '';
       try {
         await _postingCoordinator.unpost(document: docRef);
-      } catch (_) {
-        // Force status compensation if unpost fails during failure recovery
+      } catch (compErr) {
+        compErrorMsg = ' (فشل إلغاء ترحيل المخزون أثناء التعويض: $compErr)';
       }
       await _journalPostingService.voidBySource(
         sourceType: docRef.documentType.storageValue,
         sourceId: docRef.documentId,
       );
       return OrchestrationFailure(
-        documentId: receipt.id,
-        reason: e.toString(),
+        documentId: data.id,
+        reason: '${e.toString()}$compErrorMsg',
       );
     }
   }
 
-  Future<OrchestrationResult> postIssue({
-    required StockIssue issue,
+  Future<OrchestrationResult> postStockIssueData({
+    required StockDocumentPostingData data,
   }) async {
     try {
       _lockChecker.assertCanEdit(
-        documentNumber: issue.issueNumber,
-        status: issue.status,
+        documentNumber: data.documentNumber,
+        status: data.status,
       );
 
-      final docRef = InventoryDocumentRef(
-        documentId: issue.id,
-        documentNumber: issue.issueNumber,
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: issue.issueDate,
-        warehouseId: issue.warehouse,
-        status: issue.status,
-        currencyCode: issue.currencyCode,
-        exchangeRate: issue.exchangeRate,
-      );
+      final docRef = data.toDocumentRef();
 
       // 1. Post Inventory movements & consume cost layers FIRST
       final inventoryResult = await _postingCoordinator.post(document: docRef);
 
       if (inventoryResult is PostStockShortage) {
         return OrchestrationFailure(
-          documentId: issue.id,
+          documentId: data.id,
           reason: 'نقص في الكميات المتاحة بالمخزن',
         );
       } else if (inventoryResult is PostInvalidStatus) {
         return OrchestrationFailure(
-          documentId: issue.id,
+          documentId: data.id,
           reason: inventoryResult.reason,
         );
       }
@@ -202,7 +173,7 @@ class DocumentPostingOrchestrator {
 
         if (existing != null && existing.isPosted) {
           return OrchestrationSuccess(
-            documentId: issue.id,
+            documentId: data.id,
             journalEntryUuid: existing.uuid,
             message: 'تم ترحيل أمر الصرف والقيود المحاسبية بنجاح',
           );
@@ -216,75 +187,56 @@ class DocumentPostingOrchestrator {
         final draft = await _entryBuilder.buildDraftFromInventoryDocument(
           document: docRef,
           totalAmount: calculatedCogsCost,
-          offsetAccountId: issue.accountId ?? issue.destination,
+          offsetAccountId: data.offsetAccountId,
           isPosted: true,
           useBaseCurrencyForCogs: true,
         );
         final entry = await _journalPostingService.post(draft);
         return OrchestrationSuccess(
-          documentId: issue.id,
+          documentId: data.id,
           journalEntryUuid: entry.uuid,
           message: 'تم ترحيل أمر الصرف والقيود المحاسبية بنجاح',
         );
       }
 
       return OrchestrationSuccess(
-        documentId: issue.id,
+        documentId: data.id,
         message: 'تم ترحيل أمر الصرف بنجاح',
       );
     } catch (e) {
-      final docRef = InventoryDocumentRef(
-        documentId: issue.id,
-        documentNumber: issue.issueNumber,
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: issue.issueDate,
-        warehouseId: issue.warehouse,
-        status: issue.status,
-        currencyCode: issue.currencyCode,
-        exchangeRate: issue.exchangeRate,
-      );
+      final docRef = data.toDocumentRef();
+      String compErrorMsg = '';
       try {
         await _postingCoordinator.unpost(document: docRef);
-      } catch (_) {
-        // Force status compensation if unpost fails during failure recovery
+      } catch (compErr) {
+        compErrorMsg = ' (فشل إلغاء ترحيل المخزون أثناء التعويض: $compErr)';
       }
       await _journalPostingService.voidBySource(
         sourceType: docRef.documentType.storageValue,
         sourceId: docRef.documentId,
       );
       return OrchestrationFailure(
-        documentId: issue.id,
-        reason: e.toString(),
+        documentId: data.id,
+        reason: '${e.toString()}$compErrorMsg',
       );
     }
   }
 
-  Future<OrchestrationResult> unpostReceipt({
-    required StockReceipt receipt,
+  Future<OrchestrationResult> unpostStockDocumentRef({
+    required DocumentRef docRef,
   }) async {
     try {
-      final docRef = InventoryDocumentRef(
-        documentId: receipt.id,
-        documentNumber: receipt.receiptNumber,
-        documentType: InventoryDocumentType.stockReceipt,
-        documentDate: receipt.receiptDate,
-        warehouseId: receipt.warehouse,
-        status: receipt.status,
-        currencyCode: receipt.currencyCode,
-        exchangeRate: receipt.exchangeRate,
-      );
-
       // 1. Check inventory downstream dependencies first
       final inventoryResult = await _postingCoordinator.unpost(document: docRef);
 
       if (inventoryResult is UnpostBlockedByDependencies) {
         return OrchestrationFailure(
-          documentId: receipt.id,
+          documentId: docRef.documentId,
           reason: inventoryResult.message,
         );
       } else if (inventoryResult is UnpostInvalidStatus) {
         return OrchestrationFailure(
-          documentId: receipt.id,
+          documentId: docRef.documentId,
           reason: inventoryResult.reason,
         );
       }
@@ -296,66 +248,20 @@ class DocumentPostingOrchestrator {
       );
 
       return OrchestrationSuccess(
-        documentId: receipt.id,
-        message: 'تم إلغاء ترحيل أمر التوريد وعكس القيد المحاسبي بنجاح',
+        documentId: docRef.documentId,
+        message: 'تم إلغاء ترحيل المستند وعكس القيد المحاسبي بنجاح',
       );
     } catch (e) {
       return OrchestrationFailure(
-        documentId: receipt.id,
-        reason: e.toString(),
-      );
-    }
-  }
-
-  Future<OrchestrationResult> unpostIssue({
-    required StockIssue issue,
-  }) async {
-    try {
-      final docRef = InventoryDocumentRef(
-        documentId: issue.id,
-        documentNumber: issue.issueNumber,
-        documentType: InventoryDocumentType.stockIssue,
-        documentDate: issue.issueDate,
-        warehouseId: issue.warehouse,
-        status: issue.status,
-        currencyCode: issue.currencyCode,
-        exchangeRate: issue.exchangeRate,
-      );
-
-      final inventoryResult = await _postingCoordinator.unpost(document: docRef);
-
-      if (inventoryResult is UnpostBlockedByDependencies) {
-        return OrchestrationFailure(
-          documentId: issue.id,
-          reason: inventoryResult.message,
-        );
-      } else if (inventoryResult is UnpostInvalidStatus) {
-        return OrchestrationFailure(
-          documentId: issue.id,
-          reason: inventoryResult.reason,
-        );
-      }
-
-      await _journalPostingService.voidBySource(
-        sourceType: docRef.documentType.storageValue,
-        sourceId: docRef.documentId,
-      );
-
-      return OrchestrationSuccess(
-        documentId: issue.id,
-        message: 'تم إلغاء ترحيل أمر الصرف وعكس القيد المحاسبي بنجاح',
-      );
-    } catch (e) {
-      return OrchestrationFailure(
-        documentId: issue.id,
+        documentId: docRef.documentId,
         reason: e.toString(),
       );
     }
   }
 
   Future<OrchestrationResult> postSaleInvoice({
-    required Sale sale,
-    required InventoryDocumentRef docRef,
+    required SaleInvoicePostingData sale,
+    required DocumentRef docRef,
   }) async {
     try {
       final inventoryResult = await _postingCoordinator.post(document: docRef);
@@ -399,22 +305,25 @@ class DocumentPostingOrchestrator {
         message: 'تم ترحيل فاتورة المبيعات وحركات المخزون والقيود المحاسبية بنجاح',
       );
     } catch (e) {
+      String compErrorMsg = '';
       try {
         await _postingCoordinator.unpost(document: docRef);
-      } catch (_) {}
+      } catch (compErr) {
+        compErrorMsg = ' (فشل إلغاء ترحيل المخزون أثناء التعويض: $compErr)';
+      }
       await _journalPostingService.voidBySource(sourceType: 'sale', sourceId: sale.uuid);
       await _journalPostingService.voidBySource(sourceType: 'sale_cogs', sourceId: sale.uuid);
 
       return OrchestrationFailure(
         documentId: sale.uuid,
-        reason: e.toString(),
+        reason: '${e.toString()}$compErrorMsg',
       );
     }
   }
 
   Future<OrchestrationResult> unpostSaleInvoice({
-    required Sale sale,
-    required InventoryDocumentRef docRef,
+    required SaleInvoicePostingData sale,
+    required DocumentRef docRef,
   }) async {
     try {
       final inventoryResult = await _postingCoordinator.unpost(document: docRef);

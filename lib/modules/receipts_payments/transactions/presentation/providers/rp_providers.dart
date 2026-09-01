@@ -10,9 +10,7 @@ import '../../data/repositories/financial_transaction_repository_impl.dart';
 import '../../domain/entities/financial_transaction.dart';
 import '../../domain/entities/transaction_dashboard_summary.dart';
 import '../../domain/repositories/financial_transaction_repository.dart';
-import 'package:stock_count/app/receipts_payments/accounting_rp_ledger_adapter.dart';
-import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
-import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
+
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_currency_port.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_customer_lookup_port.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_ledger_posting_port.dart';
@@ -63,15 +61,7 @@ final rpCustomerLookupPortProvider = Provider<RpCustomerLookupPort>((ref) {
 
 
 final rpLedgerPostingPortProvider = Provider<RpLedgerPostingPort>((ref) {
-  final journalPostingService = ref.watch(journalPostingServiceProvider);
-  final accountRepo = ref.watch(accountRepositoryProvider);
-  final fiscalYearRepo = ref.watch(fiscalYearRepositoryProvider);
-
-  return AccountingRpLedgerAdapter(
-    posting: journalPostingService,
-    accounts: accountRepo,
-    fiscalYears: fiscalYearRepo,
-  );
+  return const NoOpRpLedgerPostingPort();
 });
 
 final rpCurrencyPortProvider = Provider<RpCurrencyPort>((ref) {

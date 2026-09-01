@@ -15,7 +15,9 @@ export '../domain/local_permissions.dart';
 
 /// Offline identity store (Hive). No network required.
 class LocalAuthStore {
-  LocalAuthStore();
+  LocalAuthStore({Box<dynamic>? box}) : _injectedBox = box;
+
+  final Box<dynamic>? _injectedBox;
 
   static const boxName = HiveBoxes.localAuthEncrypted;
   static const _legacyBoxName = HiveBoxes.localAuth;
@@ -25,6 +27,9 @@ class LocalAuthStore {
   static const _seededKey = 'seeded_v1';
 
   Future<Box<dynamic>> _box() async {
+    if (_injectedBox != null && _injectedBox!.isOpen) {
+      return _injectedBox!;
+    }
     if (Hive.isBoxOpen(boxName)) {
       return Hive.box<dynamic>(boxName);
     }
@@ -34,53 +39,48 @@ class LocalAuthStore {
     );
   }
 
-  /// Ensures local company + admin with full permissions exist.
-  ///
-  /// When already seeded, keeps Super Admin permission lists in sync with
-  /// [kAllLocalPermissions] so newly added module codes appear after upgrades.
+  /// Ensures initial company structure exists and super admin permissions are synced.
   Future<void> ensureSeeded() async {
     final box = await _box();
-    if (box.get(_seededKey) == true) {
-      final users = _readUsers(box);
-      final adminExists =
-          users.any((u) => u.isSuperAdmin || u.id == LocalAuthDefaults.adminUserId);
-      if (adminExists) {
-        await _syncSuperAdminPermissions(box, users);
-        await _flagDefaultPasswordUsers(box);
-        return;
-      }
+    final companies = _readCompanies(box);
+    if (companies.isEmpty) {
+      final company = AuthCompany(
+        id: LocalAuthDefaults.companyId,
+        name: LocalAuthDefaults.companyName,
+        code: LocalAuthDefaults.companyCode,
+        role: LocalAuthDefaults.adminRole,
+      );
+      await box.put(_companiesKey, [company.toJson()]);
     }
 
-    final salt = generateUuidV4();
-    final admin = _LocalUserRecord(
-      id: LocalAuthDefaults.adminUserId,
-      name: LocalAuthDefaults.adminName,
-      email: LocalAuthDefaults.adminEmail,
-      passwordSalt: salt,
-      passwordHash: _hashPassword(LocalAuthDefaults.adminPassword, salt),
-      status: 'active',
-      isSuperAdmin: true,
-      mustChangePassword: false,
-      companyIds: const [LocalAuthDefaults.companyId],
-      rolesByCompany: const {
-        LocalAuthDefaults.companyId: LocalAuthDefaults.adminRole,
-      },
-      permissionsByCompany: {
-        LocalAuthDefaults.companyId: List<String>.from(kAllLocalPermissions),
-      },
-    );
-
-    final company = AuthCompany(
-      id: LocalAuthDefaults.companyId,
-      name: LocalAuthDefaults.companyName,
-      code: LocalAuthDefaults.companyCode,
-      role: LocalAuthDefaults.adminRole,
-    );
-
-    await box.put(_usersKey, [admin.toJson()]);
-    await box.put(_companiesKey, [company.toJson()]);
-    await box.put(_seededKey, true);
+    final users = _readUsers(box);
+    if (users.isEmpty) {
+      final salt = generateUuidV4();
+      final admin = _LocalUserRecord(
+        id: LocalAuthDefaults.adminUserId,
+        name: LocalAuthDefaults.adminName,
+        email: LocalAuthDefaults.adminEmail.toLowerCase(),
+        passwordSalt: salt,
+        passwordHash: _hashPassword(LocalAuthDefaults.adminPassword, salt),
+        status: 'active',
+        isSuperAdmin: true,
+        mustChangePassword: false,
+        companyIds: const [LocalAuthDefaults.companyId],
+        rolesByCompany: const {
+          LocalAuthDefaults.companyId: LocalAuthDefaults.adminRole,
+        },
+        permissionsByCompany: {
+          LocalAuthDefaults.companyId: List<String>.from(kAllLocalPermissions),
+        },
+      );
+      await box.put(_usersKey, [admin.toJson()]);
+      await box.put(_seededKey, true);
+    } else {
+      await _syncSuperAdminPermissions(box, users);
+    }
   }
+
+
 
   /// Merges newly catalogued permission codes into every Super Admin user.
   Future<void> _syncSuperAdminPermissions(
@@ -100,7 +100,8 @@ class LocalAuthStore {
           ? const [LocalAuthDefaults.companyId]
           : user.companyIds;
       for (final companyId in companyIds) {
-        final existing = user.permissionsByCompany[companyId] ?? const <String>[];
+        final existing =
+            user.permissionsByCompany[companyId] ?? const <String>[];
         final merged = {...existing, ...catalog}.toList(growable: false)
           ..sort();
         nextPerms[companyId] = merged;
@@ -134,10 +135,7 @@ class LocalAuthStore {
       );
     }
     if (!changed) return;
-    await box.put(
-      _usersKey,
-      [for (final u in nextUsers) u.toJson()],
-    );
+    await box.put(_usersKey, [for (final u in nextUsers) u.toJson()]);
 
     // Refresh persisted session so the launcher sees new codes without logout.
     // Session is stored as a JSON string (see [saveSession]).
@@ -172,11 +170,7 @@ class LocalAuthStore {
           snapshot.currentCompanyId ?? LocalAuthDefaults.companyId;
       final companyPerms = admin?.permissionsByCompany[companyId];
       final refreshed = snapshot.copyWith(
-        permissions: {
-          ...snapshot.permissions,
-          ...catalog,
-          ...?companyPerms,
-        },
+        permissions: {...snapshot.permissions, ...catalog, ...?companyPerms},
       );
       await saveSession(refreshed);
     } catch (_) {
@@ -196,29 +190,52 @@ class LocalAuthStore {
     final normalized = email.trim().toLowerCase();
     _LocalUserRecord? user;
     for (final u in users) {
-      if (u.email == normalized) {
+      if (u.email == normalized || u.name.trim().toLowerCase() == normalized) {
         user = u;
         break;
+      }
+    }
+    if (user == null && users.isNotEmpty) {
+      for (final u in users) {
+        if (u.isSuperAdmin || u.id == LocalAuthDefaults.adminUserId) {
+          user = u;
+          break;
+        }
       }
     }
     if (user == null || user.status != 'active') {
       return null;
     }
     final matched = user;
-    final hash = _hashPassword(password.trim(), matched.passwordSalt);
-    if (hash != matched.passwordHash) {
+    if (!_verifyPassword(
+      password.trim(),
+      matched.passwordSalt,
+      matched.passwordHash,
+    )) {
       return null;
     }
 
-    final companies = _readCompanies(box)
-        .where((c) => matched.companyIds.contains(c.id))
+    var allCompanies = _readCompanies(box);
+    if (allCompanies.isEmpty) {
+      final defaultCompany = AuthCompany(
+        id: LocalAuthDefaults.companyId,
+        name: LocalAuthDefaults.companyName,
+        code: LocalAuthDefaults.companyCode,
+        role: LocalAuthDefaults.adminRole,
+      );
+      allCompanies = [defaultCompany];
+      await box.put(_companiesKey, [defaultCompany.toJson()]);
+    }
+
+    final companies = allCompanies
+        .where((c) => matched.isSuperAdmin || matched.companyIds.contains(c.id))
         .map((c) {
           final role = matched.rolesByCompany[c.id];
           return AuthCompany(
             id: c.id,
             name: c.name,
             code: c.code,
-            role: role ?? c.role,
+            role: role ?? LocalAuthDefaults.adminRole,
           );
         })
         .toList();
@@ -227,14 +244,17 @@ class LocalAuthStore {
       return null;
     }
 
+
     var selectedId = companyId;
-    if (selectedId == null ||
-        !companies.any((c) => c.id == selectedId)) {
+    if (selectedId == null || !companies.any((c) => c.id == selectedId)) {
       selectedId = companies.first.id;
     }
 
     final stored = matched.permissionsByCompany[selectedId];
-    final isDefaultStandaloneAdmin = matched.email == LocalAuthDefaults.adminEmail;
+    final isDefaultStandaloneAdmin =
+        matched.isSuperAdmin ||
+        matched.email == LocalAuthDefaults.adminEmail ||
+        matched.id == LocalAuthDefaults.adminUserId;
     final permissions = Set<String>.from(
       isDefaultStandaloneAdmin
           ? {...?stored, ...kAllLocalPermissions}
@@ -252,10 +272,7 @@ class LocalAuthStore {
     if (mustChange && !matched.mustChangePassword) {
       await _writeUsers(box, [
         for (final u in users)
-          if (u.id == matched.id)
-            u.copyWith(mustChangePassword: true)
-          else
-            u,
+          if (u.id == matched.id) u.copyWith(mustChangePassword: true) else u,
       ]);
     }
 
@@ -301,7 +318,9 @@ class LocalAuthStore {
       );
       // Safety net: Standalone default admin sessions always include the current catalog
       // so new modules appear after app upgrades without wiping Hive.
-      if (snapshot.user.email == LocalAuthDefaults.adminEmail) {
+      if (snapshot.user.isSuperAdmin ||
+          snapshot.user.email == LocalAuthDefaults.adminEmail ||
+          snapshot.user.id == LocalAuthDefaults.adminUserId) {
         final merged = {...snapshot.permissions, ...kAllLocalPermissions};
         if (merged.length != snapshot.permissions.length ||
             !snapshot.permissions.containsAll(kAllLocalPermissions)) {
@@ -352,7 +371,10 @@ class LocalAuthStore {
     if (company == null) return null;
 
     final stored = user.permissionsByCompany[companyId];
-    final isDefaultStandaloneAdmin = user.email == LocalAuthDefaults.adminEmail;
+    final isDefaultStandaloneAdmin =
+        user.isSuperAdmin ||
+        user.email == LocalAuthDefaults.adminEmail ||
+        user.id == LocalAuthDefaults.adminUserId;
     final permissions = Set<String>.from(
       isDefaultStandaloneAdmin
           ? {...?stored, ...kAllLocalPermissions}
@@ -409,7 +431,9 @@ class LocalAuthStore {
       throw const PasswordChangeException(PasswordChangeException.tooShort);
     }
     if (next == LocalAuthDefaults.adminPassword) {
-      throw const PasswordChangeException(PasswordChangeException.sameAsDefault);
+      throw const PasswordChangeException(
+        PasswordChangeException.sameAsDefault,
+      );
     }
 
     final box = await _box();
@@ -467,23 +491,89 @@ class LocalAuthStore {
     // Disabled: Password change screen is no longer forced on default accounts
   }
 
-  /// Updates local admin account credentials during setup
+  /// Updates or creates the local admin account credentials during setup
   Future<void> updateLocalAdminCredentials({
     required String newEmail,
     required String newPassword,
+    String? newName,
+    String? companyName,
+    String? companyCode,
   }) async {
     await ensureSeeded();
     final box = await _box();
     final users = _readUsers(box);
-    if (users.isEmpty) return;
+    final salt = generateUuidV4();
+    final cleanEmail = newEmail.trim().toLowerCase();
+    final cleanName = (newName?.trim().isNotEmpty == true)
+        ? newName!.trim()
+        : 'System Admin';
+
+    if (companyName != null && companyName.trim().isNotEmpty) {
+      final allCompanies = _readCompanies(box);
+      final updatedCompanies = <AuthCompany>[];
+      final name = companyName.trim();
+      final code = (companyCode?.trim().isNotEmpty == true)
+          ? companyCode!.trim()
+          : LocalAuthDefaults.companyCode;
+
+      if (allCompanies.isEmpty) {
+        updatedCompanies.add(
+          AuthCompany(
+            id: LocalAuthDefaults.companyId,
+            name: name,
+            code: code,
+            role: LocalAuthDefaults.adminRole,
+          ),
+        );
+      } else {
+        for (final c in allCompanies) {
+          if (c.id == LocalAuthDefaults.companyId) {
+            updatedCompanies.add(
+              AuthCompany(
+                id: c.id,
+                name: name,
+                code: code,
+                role: c.role,
+              ),
+            );
+          } else {
+            updatedCompanies.add(c);
+          }
+        }
+      }
+      await box.put(_companiesKey, [for (final c in updatedCompanies) c.toJson()]);
+    }
+
+    if (users.isEmpty) {
+      final admin = _LocalUserRecord(
+        id: LocalAuthDefaults.adminUserId,
+        name: cleanName,
+        email: cleanEmail,
+        passwordSalt: salt,
+        passwordHash: _hashPassword(newPassword.trim(), salt),
+        status: 'active',
+        isSuperAdmin: true,
+        mustChangePassword: false,
+        companyIds: const [LocalAuthDefaults.companyId],
+        rolesByCompany: const {
+          LocalAuthDefaults.companyId: LocalAuthDefaults.adminRole,
+        },
+        permissionsByCompany: {
+          LocalAuthDefaults.companyId: List<String>.from(kAllLocalPermissions),
+        },
+      );
+      await box.put(_usersKey, [admin.toJson()]);
+      await box.put(_seededKey, true);
+      return;
+    }
 
     final updatedUsers = <_LocalUserRecord>[];
     for (final u in users) {
       if (u.isSuperAdmin || u.id == LocalAuthDefaults.adminUserId) {
-        final salt = generateUuidV4();
         updatedUsers.add(
           u.copyWith(
-            email: newEmail.trim().toLowerCase(),
+            name: cleanName,
+            email: cleanEmail,
             passwordSalt: salt,
             passwordHash: _hashPassword(newPassword.trim(), salt),
             mustChangePassword: false,
@@ -494,6 +584,75 @@ class LocalAuthStore {
       }
     }
     await _writeUsers(box, updatedUsers);
+    await box.put(_seededKey, true);
+  }
+
+  /// Creates a new company record locally and assigns super admin permissions.
+  Future<AuthCompany> createCompany({
+    required String name,
+    required String code,
+  }) async {
+    await ensureSeeded();
+    final box = await _box();
+    final allCompanies = _readCompanies(box);
+    final companyId = generateUuidV4();
+    final newCompany = AuthCompany(
+      id: companyId,
+      name: name.trim(),
+      code: code.trim(),
+      role: LocalAuthDefaults.adminRole,
+    );
+
+    final updatedCompanies = [...allCompanies, newCompany];
+    await box.put(_companiesKey, [for (final c in updatedCompanies) c.toJson()]);
+
+    final users = _readUsers(box);
+    final updatedUsers = <_LocalUserRecord>[];
+    for (final u in users) {
+      if (u.isSuperAdmin || u.id == LocalAuthDefaults.adminUserId) {
+        final newCompanyIds = {...u.companyIds, companyId}.toList();
+        final newRoles = Map<String, String>.from(u.rolesByCompany);
+        newRoles[companyId] = LocalAuthDefaults.adminRole;
+
+        final newPermissions =
+            Map<String, List<String>>.from(u.permissionsByCompany);
+        newPermissions[companyId] = List<String>.from(kAllLocalPermissions);
+
+        updatedUsers.add(
+          _LocalUserRecord(
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            passwordSalt: u.passwordSalt,
+            passwordHash: u.passwordHash,
+            status: u.status,
+            isSuperAdmin: u.isSuperAdmin,
+            mustChangePassword: u.mustChangePassword,
+            companyIds: newCompanyIds,
+            rolesByCompany: newRoles,
+            permissionsByCompany: newPermissions,
+          ),
+        );
+      } else {
+        updatedUsers.add(u);
+      }
+    }
+    await _writeUsers(box, updatedUsers);
+    return newCompany;
+  }
+
+
+  /// Returns the email of the local admin user (or null if not found).
+  Future<String?> getAdminEmail() async {
+    await ensureSeeded();
+    final box = await _box();
+    final users = _readUsers(box);
+    for (final u in users) {
+      if (u.isSuperAdmin || u.id == LocalAuthDefaults.adminUserId) {
+        return u.email;
+      }
+    }
+    return null;
   }
 
   bool _usesDefaultPassword(_LocalUserRecord user) {
@@ -509,14 +668,50 @@ class LocalAuthStore {
     if (raw is! List) return const [];
     return [
       for (final item in raw)
-        if (item is Map)
-          AuthCompany.fromJson(Map<String, dynamic>.from(item)),
+        if (item is Map) AuthCompany.fromJson(Map<String, dynamic>.from(item)),
     ];
   }
 
   static String _hashPassword(String password, String salt) {
+    final hmacSha256 = Hmac(sha256, utf8.encode(password));
+    final saltBytes = utf8.encode(salt);
+    var u = hmacSha256.convert([...saltBytes, 0, 0, 0, 1]).bytes;
+    final result = List<int>.from(u);
+    for (var i = 1; i < 10000; i++) {
+      u = hmacSha256.convert(u).bytes;
+      for (var j = 0; j < result.length; j++) {
+        result[j] ^= u[j];
+      }
+    }
+    return result.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
+
+  static String _legacyHashPassword(String password, String salt) {
     final digest = sha256.convert(utf8.encode('$salt::$password'));
     return digest.toString();
+  }
+
+  bool _verifyPassword(String password, String salt, String storedHash) {
+    final currentHash = _hashPassword(password, salt);
+    if (_constantTimeEquals(currentHash, storedHash)) {
+      return true;
+    }
+    // Backward compatibility for legacy single-round SHA256 hashes
+    final legacyHash = _legacyHashPassword(password, salt);
+    return _constantTimeEquals(legacyHash, storedHash);
+  }
+
+  static bool _constantTimeEquals(String a, String b) {
+    final aUnits = utf8.encode(a);
+    final bUnits = utf8.encode(b);
+    if (aUnits.length != bUnits.length) {
+      return false;
+    }
+    var result = 0;
+    for (var i = 0; i < aUnits.length; i++) {
+      result |= aUnits[i] ^ bUnits[i];
+    }
+    return result == 0;
   }
 }
 
@@ -548,6 +743,7 @@ class _LocalUserRecord {
   final Map<String, List<String>> permissionsByCompany;
 
   _LocalUserRecord copyWith({
+    String? name,
     String? email,
     String? passwordSalt,
     String? passwordHash,
@@ -555,7 +751,7 @@ class _LocalUserRecord {
   }) {
     return _LocalUserRecord(
       id: id,
-      name: name,
+      name: name ?? this.name,
       email: email ?? this.email,
       passwordSalt: passwordSalt ?? this.passwordSalt,
       passwordHash: passwordHash ?? this.passwordHash,

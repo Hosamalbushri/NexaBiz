@@ -8,13 +8,13 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_expandable_text.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/modules/accounting/shared/domain/services/document_posting_orchestrator.dart';
-import 'package:stock_count/modules/accounting/shared/presentation/providers/document_posting_providers.dart';
+import 'package:stock_count/core/presentation/providers/core_providers.dart';
+import 'package:stock_count/core/domain/ports/posting_port.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_status_badge.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_issue.dart';
-import 'package:stock_count/modules/sales/invoices/domain/services/device_sale_number.dart';
+import 'package:stock_count/core/domain/services/device_document_number.dart';
 import '../providers/stock_movements_providers.dart';
 
 class StockIssueDetailsPage extends ConsumerStatefulWidget {
@@ -34,25 +34,30 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
 
   Future<void> _handlePost(StockIssue issue) async {
     if (_isProcessing) return;
-    final orchestrator = ref.read(documentPostingOrchestratorProvider);
+    final coordinator = ref.read(postingCoordinatorPortProvider);
 
     setState(() => _isProcessing = true);
     try {
-      final result = await orchestrator.postIssue(issue: issue);
+      final docRef = issue.toPostingData().toDocumentRef();
+      final result = await coordinator.post(document: docRef);
       if (!mounted) return;
 
-      if (result is OrchestrationSuccess) {
+      if (result is PostSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.message),
+          const SnackBar(
+            content: Text('تم ترحيل أمر الصرف بنجاح'),
             backgroundColor: Colors.green,
           ),
         );
         ref.invalidate(stockIssueByIdProvider(widget.issueId));
         ref.invalidate(stockIssuesStreamProvider);
-      } else if (result is OrchestrationFailure) {
+      } else if (result is PostInvalidStatus) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(result.reason), backgroundColor: Colors.red),
+        );
+      } else if (result is PostStockShortage) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('عجز في المخزون للمستند'), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
@@ -68,25 +73,26 @@ class _StockIssueDetailsPageState extends ConsumerState<StockIssueDetailsPage> {
 
   Future<void> _handleUnpost(StockIssue issue) async {
     if (_isProcessing) return;
-    final orchestrator = ref.read(documentPostingOrchestratorProvider);
+    final coordinator = ref.read(postingCoordinatorPortProvider);
 
     setState(() => _isProcessing = true);
     try {
-      final result = await orchestrator.unpostIssue(issue: issue);
+      final docRef = issue.toPostingData().toDocumentRef();
+      final result = await coordinator.unpost(document: docRef);
       if (!mounted) return;
 
-      if (result is OrchestrationSuccess) {
+      if (result is UnpostSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.message),
+          const SnackBar(
+            content: Text('تم إلغاء ترحيل أمر الصرف بنجاح'),
             backgroundColor: Colors.orange,
           ),
         );
         ref.invalidate(stockIssueByIdProvider(widget.issueId));
         ref.invalidate(stockIssuesStreamProvider);
-      } else if (result is OrchestrationFailure) {
+      } else if (result is UnpostBlockedByDependencies) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.reason), backgroundColor: Colors.red),
+          SnackBar(content: Text(result.message), backgroundColor: Colors.red),
         );
       }
     } catch (e) {

@@ -76,7 +76,10 @@ final tenantContextProvider = Provider<TenantContext>((ref) {
         : LocalAuthDefaults.companyId,
     userId: session.user.id,
     deviceId: session.deviceId,
-    isStandalone: session.user.email == LocalAuthDefaults.adminEmail,
+    isStandalone:
+        session.user.isSuperAdmin ||
+        session.user.email == LocalAuthDefaults.adminEmail ||
+        session.user.id == LocalAuthDefaults.adminUserId,
   );
 });
 

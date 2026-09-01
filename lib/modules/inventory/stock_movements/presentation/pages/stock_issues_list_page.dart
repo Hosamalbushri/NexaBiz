@@ -11,10 +11,10 @@ import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/pages/inventory_routes.dart';
 import 'package:stock_count/modules/inventory/shared/presentation/widgets/inventory_status_badge.dart';
-import 'package:stock_count/modules/sales/invoices/domain/services/device_sale_number.dart';
+import 'package:stock_count/core/domain/services/device_document_number.dart';
+import 'package:stock_count/core/presentation/providers/core_providers.dart';
+import 'package:stock_count/core/domain/ports/posting_port.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/accounting/shared/domain/services/document_posting_orchestrator.dart';
-import 'package:stock_count/modules/accounting/shared/presentation/providers/document_posting_providers.dart';
 import '../../domain/entities/stock_issue.dart';
 import '../providers/stock_movements_providers.dart';
 
@@ -180,19 +180,26 @@ class _StockIssueCard extends ConsumerWidget {
                 icon: const Icon(Icons.send_rounded, color: Colors.green),
                 tooltip: 'ترحيل',
                 onPressed: () async {
-                  final orchestrator = ref.read(documentPostingOrchestratorProvider);
-                  final result = await orchestrator.postIssue(issue: issue);
+                  final coordinator = ref.read(postingCoordinatorPortProvider);
+                  final docRef = issue.toPostingData().toDocumentRef();
+                  final result = await coordinator.post(document: docRef);
                   if (context.mounted) {
-                    if (result is OrchestrationSuccess) {
+                    if (result is PostSuccess) {
                       showAppSnackBar(
                         context,
-                        message: result.message,
+                        message: 'تم ترحيل أمر الصرف بنجاح',
                         isSuccess: true,
                       );
-                    } else if (result is OrchestrationFailure) {
+                    } else if (result is PostInvalidStatus) {
                       showAppSnackBar(
                         context,
                         message: result.reason,
+                        isSuccess: false,
+                      );
+                    } else if (result is PostStockShortage) {
+                      showAppSnackBar(
+                        context,
+                        message: 'عجز في المخزون للمستند',
                         isSuccess: false,
                       );
                     }
@@ -204,19 +211,20 @@ class _StockIssueCard extends ConsumerWidget {
                 icon: const Icon(Icons.undo_rounded, color: Colors.orange),
                 tooltip: 'إلغاء الترحيل',
                 onPressed: () async {
-                  final orchestrator = ref.read(documentPostingOrchestratorProvider);
-                  final result = await orchestrator.unpostIssue(issue: issue);
+                  final coordinator = ref.read(postingCoordinatorPortProvider);
+                  final docRef = issue.toPostingData().toDocumentRef();
+                  final result = await coordinator.unpost(document: docRef);
                   if (context.mounted) {
-                    if (result is OrchestrationSuccess) {
+                    if (result is UnpostSuccess) {
+                      showAppSnackBar(
+                        context,
+                        message: 'تم إلغاء ترحيل أمر الصرف بنجاح',
+                        isSuccess: true,
+                      );
+                    } else if (result is UnpostBlockedByDependencies) {
                       showAppSnackBar(
                         context,
                         message: result.message,
-                        isSuccess: true,
-                      );
-                    } else if (result is OrchestrationFailure) {
-                      showAppSnackBar(
-                        context,
-                        message: result.reason,
                         isSuccess: false,
                       );
                     }

@@ -477,6 +477,31 @@ class ProductRepositoryImpl implements ProductRepository {
     if (existing == null) {
       throw const ProductException(ProductException.notFound);
     }
+
+    // Referential Integrity Guard: Cannot delete product with open cost layers or posted movement lines
+    final openLayers = await (_db.select(_db.inventoryCostLayers)
+          ..where((t) =>
+              t.itemCode.equals(existing.itemCode) &
+              t.closed.equals(0) &
+              t.companyId.equals(_currentCompanyId)))
+        .get();
+    if (openLayers.isNotEmpty) {
+      throw StateError(
+        'Referential Integrity Error: Cannot delete Product (${existing.itemCode}) because ${openLayers.length} open CostLayer(s) exist for this item.',
+      );
+    }
+
+    final postedLines = await (_db.select(_db.stockMovementLines)
+          ..where((t) =>
+              t.itemCode.equals(existing.itemCode) &
+              t.postedAt.isNotNull()))
+        .get();
+    if (postedLines.isNotEmpty) {
+      throw StateError(
+        'Referential Integrity Error: Cannot delete Product (${existing.itemCode}) because ${postedLines.length} posted movement lines exist.',
+      );
+    }
+
     final now = DateTime.now().toUtc();
     final nextVersion = existing.version + 1;
     await (_db.update(_db.products)..where((t) => t.id.equals(id) & _scoped(t))).write(

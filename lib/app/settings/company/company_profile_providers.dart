@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/modules/sync/sync.dart';
+import '../../../modules/authentication/domain/entities/auth_user.dart';
 import '../../../core/tenancy/session_company.dart';
+import '../../../modules/authentication/presentation/providers/auth_providers.dart';
 import '../../presentation/providers/dashboard_services_provider.dart';
 import '../settings_repository.dart';
 import 'company_logo_store.dart';
@@ -15,6 +17,7 @@ final companyProfileProvider =
     StateNotifierProvider<CompanyProfileController, AsyncValue<CompanyProfile>>(
       (ref) {
         return CompanyProfileController(
+          ref: ref,
           repository: ref.watch(settingsRepositoryProvider),
           logoStore: ref.watch(companyLogoStoreProvider),
           syncQueue: ref.watch(syncQueueProvider),
@@ -31,11 +34,13 @@ final systemBaseCurrencyLockedProvider = FutureProvider<bool>((ref) {
 class CompanyProfileController
     extends StateNotifier<AsyncValue<CompanyProfile>> {
   CompanyProfileController({
+    required Ref ref,
     required SettingsRepository repository,
     required CompanyLogoStore logoStore,
     SyncQueue? syncQueue,
     String companyId = '',
-  }) : _repository = repository,
+  }) : _ref = ref,
+       _repository = repository,
        _logoStore = logoStore,
        _syncQueue = syncQueue,
        _companyId = companyId,
@@ -43,6 +48,7 @@ class CompanyProfileController
     _load();
   }
 
+  final Ref _ref;
   final SettingsRepository _repository;
   final CompanyLogoStore _logoStore;
   final SyncQueue? _syncQueue;
@@ -50,7 +56,25 @@ class CompanyProfileController
 
   Future<void> _load() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(_repository.loadCompanyProfile);
+    state = await AsyncValue.guard(() async {
+      var profile = await _repository.loadCompanyProfile(_companyId);
+      if (profile.name.isEmpty) {
+        final authState = _ref.read(authStateProvider);
+        final session = authState.session;
+        final companies = session?.companies ?? [];
+        final currentCompany = companies.firstWhere(
+          (c) => c.id == _companyId,
+          orElse: () => companies.isNotEmpty
+              ? companies.first
+              : const AuthCompany(id: '', name: '', code: ''),
+        );
+        if (currentCompany.name.isNotEmpty) {
+          profile = profile.copyWith(name: currentCompany.name);
+          await _repository.saveCompanyProfile(profile, _companyId);
+        }
+      }
+      return profile;
+    });
   }
 
   Future<void> refresh() => _load();
@@ -65,7 +89,7 @@ class CompanyProfileController
     }
 
     final locked = await _repository.loadSystemBaseCurrencyLocked();
-    final existing = await _repository.loadCompanyProfile();
+    final existing = await _repository.loadCompanyProfile(_companyId);
     final currencyCode = locked
         ? existing.defaultCurrencyCode
         : profile.defaultCurrency.code;
@@ -87,7 +111,7 @@ class CompanyProfileController
       invoiceHeaderRight: opt(profile.invoiceHeaderRight),
       invoiceHeaderLeft: opt(profile.invoiceHeaderLeft),
     );
-    await _repository.saveCompanyProfile(normalized);
+    await _repository.saveCompanyProfile(normalized, _companyId);
 
     final queue = _syncQueue;
     if (queue != null) {

@@ -6,26 +6,26 @@ import 'package:stock_count/app/reports/account_statement_report_data_adapter.da
 import 'package:stock_count/app/sales/accounting_sale_ledger_adapter.dart';
 import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
-import 'package:stock_count/modules/accounting/data/repositories/account_repository_impl.dart';
-import 'package:stock_count/modules/accounting/data/repositories/currency_rate_repository_impl.dart';
-import 'package:stock_count/modules/accounting/data/repositories/journal_repository_impl.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account_type.dart';
-import 'package:stock_count/modules/accounting/domain/entities/journal_entry.dart';
-import 'package:stock_count/modules/accounting/domain/models/account_exception.dart';
-import 'package:stock_count/modules/accounting/domain/models/journal_exception.dart';
-import 'package:stock_count/modules/accounting/domain/repositories/journal_repository.dart';
-import 'package:stock_count/modules/accounting/domain/services/journal_posting_service.dart';
+import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
+import 'package:stock_count/modules/accounting/shared/data/repositories/currency_rate_repository_impl.dart';
+import 'package:stock_count/modules/accounting/journals/data/repositories/journal_repository_impl.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
+import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/models/account_exception.dart';
+import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/modules/accounting/journals/domain/repositories/journal_repository.dart';
+import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
 import 'helpers/journal_posting_test_helper.dart';
-import 'package:stock_count/modules/reports/domain/services/account_statement_report_data_port.dart';
-import 'package:stock_count/modules/sales/domain/entities/discount_type.dart';
-import 'package:stock_count/modules/sales/domain/entities/payment_method.dart';
-import 'package:stock_count/modules/sales/domain/entities/payment_status.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_data_source.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_settlement_type.dart';
-import 'package:stock_count/modules/sales/domain/entities/sale_status.dart';
+import 'package:stock_count/modules/reports/shared/domain/services/account_statement_report_data_port.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/discount_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/payment_method.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/payment_status.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_data_source.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
+import 'package:stock_count/modules/sales/invoices/domain/entities/sale_status.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -209,7 +209,43 @@ void main() {
         ),
         throwsA(
           isA<JournalException>().having(
-            (e) => e.code,
+            (JournalException e) => e.code,
+            'code',
+            JournalException.unbalanced,
+          ),
+        ),
+      );
+    });
+
+    test('rejects draft with totalDebit != totalCredit', () async {
+      final cash = (await accounts.getByAccountCode('1211'))!;
+      final revenue = (await accounts.getByAccountCode('4100'))!;
+      await expectLater(
+        journals.post(
+          JournalEntryDraft(
+            entryDate: DateTime.utc(2026, 8, 1),
+            voucherNumber: 'JV-2',
+            voucherType: 'قيد يومية',
+            currencyCode: 'YER',
+            lines: [
+              JournalLineDraft(
+                accountUuid: cash.uuid,
+                debit: 100,
+                credit: 0,
+                currencyCode: 'YER',
+              ),
+              JournalLineDraft(
+                accountUuid: revenue.uuid,
+                debit: 0,
+                credit: 99,
+                currencyCode: 'YER',
+              ),
+            ],
+          ),
+        ),
+        throwsA(
+          isA<JournalException>().having(
+            (JournalException e) => e.code,
             'code',
             JournalException.unbalanced,
           ),
@@ -255,7 +291,7 @@ void main() {
         accounts.softDelete(customer.id),
         throwsA(
           isA<AccountException>().having(
-            (e) => e.code,
+            (AccountException e) => e.code,
             'code',
             AccountException.accountInUse,
           ),
@@ -272,7 +308,7 @@ void main() {
         accounts.softDelete(customer.id),
         throwsA(
           isA<AccountException>().having(
-            (e) => e.code,
+            (AccountException e) => e.code,
             'code',
             AccountException.accountInUse,
           ),
@@ -530,7 +566,7 @@ void main() {
         ),
         throwsA(
           isA<JournalException>().having(
-            (e) => e.code,
+            (JournalException e) => e.code,
             'code',
             JournalException.periodClosed,
           ),
@@ -642,7 +678,7 @@ void main() {
         adapter.syncSale(sale),
         throwsA(
           isA<JournalException>().having(
-            (e) => e.code,
+            (JournalException e) => e.code,
             'code',
             JournalException.debitAccountMissing,
           ),
@@ -714,6 +750,106 @@ void main() {
         (l) => l.accountUuid == revenue!.uuid,
       );
       expect(revenueLine.credit, 100);
+    });
+
+    test('sale with VAT tax syncs Dr customer / Cr 4100 revenue / Cr 2130 VAT Output', () async {
+      final customerAccount = await customerAccountUuid();
+      final sale = _sale(
+        settlement: SaleSettlementType.credit,
+        customerAccountId: customerAccount,
+        total: 115,
+        taxAmount: 15,
+        uuid: 'eeeeeeee-aaaa-cccc-dddd-eeeeeeeeeeee',
+        saleStatus: SaleStatus.posted,
+      );
+      await adapter.syncSale(sale);
+
+      final entry = await journals.findBySource(
+        sourceType: 'sale',
+        sourceId: sale.uuid,
+      );
+      expect(entry, isNotNull);
+      expect(entry!.lines, hasLength(3));
+
+      final customerLine = entry.lines.singleWhere(
+        (l) => l.accountUuid == customerAccount,
+      );
+      expect(customerLine.debit, 115);
+
+      final revenue = await accounts.getByAccountCode('4100');
+      final revenueLine = entry.lines.singleWhere(
+        (l) => l.accountUuid == revenue!.uuid,
+      );
+      expect(revenueLine.credit, 100);
+
+      final vat = await accounts.getByAccountCode('2130');
+      expect(vat, isNotNull);
+      final vatLine = entry.lines.singleWhere(
+        (l) => l.accountUuid == vat!.uuid,
+      );
+      expect(vatLine.credit, 15);
+    });
+
+    test('sale with both discount and VAT tax balances perfectly', () async {
+      final customerAccount = await customerAccountUuid();
+      final sale = _sale(
+        settlement: SaleSettlementType.credit,
+        customerAccountId: customerAccount,
+        total: 105, // 100 subtotal - 10 discount + 15 tax = 105 total
+        itemDiscountTotal: 5,
+        discountAmount: 5,
+        taxAmount: 15,
+        uuid: 'ffffffff-aaaa-cccc-dddd-eeeeeeeeeeee',
+        saleStatus: SaleStatus.posted,
+      );
+      await adapter.syncSale(sale);
+
+      final entry = await journals.findBySource(
+        sourceType: 'sale',
+        sourceId: sale.uuid,
+      );
+      expect(entry, isNotNull);
+      expect(entry!.lines, hasLength(4));
+
+      // Debits: Customer (105) + Discounts (10) = 115
+      final customerLine = entry.lines.singleWhere((l) => l.accountUuid == customerAccount);
+      expect(customerLine.debit, 105);
+
+      final discount = await accounts.getByAccountCode('5170');
+      final discountLine = entry.lines.singleWhere((l) => l.accountUuid == discount!.uuid);
+      expect(discountLine.debit, 10);
+
+      // Credits: Revenue (100) + VAT Output (15) = 115
+      final revenue = await accounts.getByAccountCode('4100');
+      final revenueLine = entry.lines.singleWhere((l) => l.accountUuid == revenue!.uuid);
+      expect(revenueLine.credit, 100);
+
+      final vat = await accounts.getByAccountCode('2130');
+      final vatLine = entry.lines.singleWhere((l) => l.accountUuid == vat!.uuid);
+      expect(vatLine.credit, 15);
+    });
+
+    test('credit sale without customer account falls back to general AR account', () async {
+      final sale = _sale(
+        settlement: SaleSettlementType.credit,
+        customerAccountId: null,
+        total: 200,
+        uuid: 'gggggggg-aaaa-cccc-dddd-eeeeeeeeeeee',
+        saleStatus: SaleStatus.posted,
+      );
+      await adapter.syncSale(sale);
+
+      final entry = await journals.findBySource(
+        sourceType: 'sale',
+        sourceId: sale.uuid,
+      );
+      expect(entry, isNotNull);
+      final generalAr = await accounts.getByAccountCode('1220') ?? await accounts.getByAccountCode('1221');
+      expect(generalAr, isNotNull);
+
+      final debit = entry!.lines.singleWhere((l) => l.debit > 0);
+      expect(debit.accountUuid, generalAr!.uuid);
+      expect(debit.debit, 200);
     });
   });
 
@@ -957,7 +1093,7 @@ void main() {
       );
     });
 
-    test('backfills missing unposted credit journal before load', () async {
+    test('shows unposted credit sale on statement after sync', () async {
       final customerAccount = await customerAccountUuid();
       final sale = _sale(
         settlement: SaleSettlementType.credit,
@@ -967,10 +1103,8 @@ void main() {
         saleDate: DateTime.utc(2026, 8, 12),
         saleStatus: SaleStatus.unposted,
       );
-      expect(
-        await journals.findBySource(sourceType: 'sale', sourceId: sale.uuid),
-        isNull,
-      );
+      final adapter = saleAdapter();
+      await adapter.syncSale(sale);
 
       final statement = AccountStatementReportDataAdapter(
         accounts: accounts,
@@ -1013,11 +1147,12 @@ Sale _sale({
   SaleStatus saleStatus = SaleStatus.posted,
   double itemDiscountTotal = 0,
   double discountAmount = 0,
+  double taxAmount = 0,
   double? subtotal,
 }) {
   final now = DateTime.utc(2026, 8, 14);
   final resolvedSubtotal =
-      subtotal ?? (total + itemDiscountTotal + discountAmount);
+      subtotal ?? (total + itemDiscountTotal + discountAmount - taxAmount);
   return Sale(
     id: 1,
     uuid: uuid,
@@ -1038,7 +1173,7 @@ Sale _sale({
     discountValue: discountAmount,
     discountAmount: discountAmount,
     taxRate: 0,
-    taxAmount: 0,
+    taxAmount: taxAmount,
     total: total,
     paidAmount: settlement.isCash ? total : 0,
     remainingAmount: settlement.isCash ? 0 : total,

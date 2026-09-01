@@ -22,6 +22,10 @@ import 'package:stock_count/modules/sync/engine/domain/services/sync_queue.dart'
 import 'package:stock_count/core/auth/presentation/providers/auth_context_providers.dart';
 import 'package:stock_count/core/time/domain/services/clock_integrity_service.dart';
 import 'package:stock_count/core/time/domain/trusted_clock.dart';
+import 'package:stock_count/modules/sync/engine/data/repositories/sync_repository_impl.dart';
+import 'package:stock_count/modules/sync/engine/domain/repositories/sync_repository.dart';
+import 'package:stock_count/modules/sync/engine/domain/usecases/execute_sync_usecase.dart';
+
 
 final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
   final service = ConnectivityService(
@@ -147,7 +151,19 @@ final syncManagerProvider = Provider<SyncManager>((ref) {
   return manager;
 });
 
+final syncRepositoryProvider = Provider<SyncRepository>((ref) {
+  return SyncRepositoryImpl(
+    syncManager: ref.watch(syncManagerProvider),
+    syncQueue: ref.watch(syncQueueProvider),
+  );
+});
+
+final executeSyncUseCaseProvider = Provider<ExecuteSyncUseCase>((ref) {
+  return ExecuteSyncUseCase(ref.watch(syncRepositoryProvider));
+});
+
 final syncOverviewProvider = StreamProvider<SyncOverview>((ref) {
+
   return ref.watch(syncManagerProvider).overviewStream;
 });
 

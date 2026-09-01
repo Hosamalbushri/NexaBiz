@@ -1,10 +1,11 @@
+import 'package:stock_count/core/domain/ports/period_validator_port.dart';
 import 'package:stock_count/core/utils/business_date.dart';
-import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/core/errors/journal_exception.dart';
 import '../repositories/fiscal_year_repository.dart';
 import 'fiscal_period_policy.dart';
 
 /// Central gate for accounting dates (journals, sales, R&P via posting service).
-class AccountingPeriodValidator {
+class AccountingPeriodValidator implements PeriodValidatorPort {
   const AccountingPeriodValidator({
     required FiscalYearRepository repository,
     required FiscalPeriodPolicy Function() legacyPolicyReader,

@@ -68,6 +68,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         mode: AuthenticationMode.local,
       );
 
+      final authStore = ref.read(localAuthStoreProvider);
+      final adminEmail = await authStore.getAdminEmail();
+
       if (mounted) {
         setState(() {
           _canCheckBiometrics =
@@ -77,6 +80,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           _hasSavedCredentials = hasSaved;
           if (savedEmail != null && savedEmail.isNotEmpty) {
             _emailController.text = savedEmail;
+          } else if (adminEmail != null && adminEmail.isNotEmpty) {
+            _emailController.text = adminEmail;
           }
         });
 

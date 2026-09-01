@@ -1,10 +1,18 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/core/errors/journal_exception.dart';
 import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
 import 'package:stock_count/modules/sync/sync.dart';
+
+import '../../../shared/data/database/inventory_database.dart';
+import '../../domain/entities/stock_issue.dart';
+import '../../domain/entities/stock_movement_line.dart';
+import '../../domain/entities/stock_receipt.dart';
+import '../../domain/repositories/stock_movements_repository.dart';
+
+import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
 
 import '../../../shared/data/database/inventory_database.dart';
 import '../../domain/entities/stock_issue.dart';
@@ -18,15 +26,18 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
     SyncQueue? syncQueue,
     InventoryAccountingPoster? accountingPoster,
     String Function()? readCompanyId,
+    InitializationGuard? initializationGuard,
   })  : _db = db,
         _syncQueue = syncQueue,
         _accountingPoster = accountingPoster,
-        _readCompanyId = readCompanyId;
+        _readCompanyId = readCompanyId,
+        _initializationGuard = initializationGuard;
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
   final InventoryAccountingPoster? _accountingPoster;
   final String Function()? _readCompanyId;
+  final InitializationGuard? _initializationGuard;
 
   String get _currentCompanyId =>
       _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
@@ -92,6 +103,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
   @override
   Future<void> saveReceipt(StockReceipt receipt) async {
+    await _initializationGuard?.assertInitialized();
     if (receipt.companyId != null &&
         receipt.companyId!.isNotEmpty &&
         receipt.companyId != _currentCompanyId) {
@@ -211,6 +223,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
   @override
   Future<void> deleteReceipt(String id) async {
+    await _initializationGuard?.assertInitialized();
     await _db.transaction(() async {
       final receipt = await getReceiptById(id);
       if (receipt == null) return;
@@ -296,6 +309,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
   @override
   Future<void> saveIssue(StockIssue issue) async {
+    await _initializationGuard?.assertInitialized();
     if (issue.companyId != null &&
         issue.companyId!.isNotEmpty &&
         issue.companyId != _currentCompanyId) {
@@ -420,6 +434,7 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
 
   @override
   Future<void> deleteIssue(String id) async {
+    await _initializationGuard?.assertInitialized();
     await _db.transaction(() async {
       final issue = await getIssueById(id);
       if (issue == null) return;

@@ -4,6 +4,7 @@ import 'package:stock_count/modules/accounting/shared/data/services/account_mapp
 import 'package:stock_count/modules/accounting/shared/data/services/account_validation_service_impl.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_validation_service.dart';
+import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
 
 final accountValidationServiceProvider = Provider<AccountValidationService>((ref) {
   final repo = ref.watch(accountRepositoryProvider);
@@ -13,8 +14,10 @@ final accountValidationServiceProvider = Provider<AccountValidationService>((ref
 final accountMappingResolverProvider = Provider<AccountMappingResolver>((ref) {
   final repo = ref.watch(accountRepositoryProvider);
   final validation = ref.watch(accountValidationServiceProvider);
+  final initRepo = ref.watch(companyInitializationRepositoryProvider);
   return AccountMappingResolverImpl(
     accountRepository: repo,
     validationService: validation,
+    initRepository: initRepo,
   );
 });

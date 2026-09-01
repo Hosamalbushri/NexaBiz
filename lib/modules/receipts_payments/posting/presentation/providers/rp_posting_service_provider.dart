@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/core/utils/business_date.dart';
-import 'package:stock_count/modules/sales/invoices/domain/services/device_sale_number.dart';
+import 'package:stock_count/core/domain/services/device_document_number.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_list_item.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_status.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';

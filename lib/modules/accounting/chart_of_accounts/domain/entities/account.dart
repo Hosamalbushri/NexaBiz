@@ -20,6 +20,7 @@ class Account {
     required this.createdAt,
     required this.updatedAt,
     this.parentId,
+    this.companyId,
     this.description,
     this.syncStatus = SyncStatus.synced,
     this.lastSyncedAt,
@@ -34,6 +35,9 @@ class Account {
 
   /// Parent account UUID; null for root accounts.
   final String? parentId;
+
+  /// Company identity owning this account.
+  final String? companyId;
 
   /// Human / accounting code (e.g. `1111`). Unique among non-deleted rows.
   final String accountCode;
@@ -70,6 +74,7 @@ class Account {
     String? uuid,
     String? parentId,
     bool clearParentId = false,
+    String? companyId,
     String? accountCode,
     String? name,
     String? description,
@@ -93,6 +98,7 @@ class Account {
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
       parentId: clearParentId ? null : (parentId ?? this.parentId),
+      companyId: companyId ?? this.companyId,
       accountCode: accountCode ?? this.accountCode,
       name: name ?? this.name,
       description: clearDescription

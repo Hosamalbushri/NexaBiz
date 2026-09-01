@@ -12,13 +12,16 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/services/po
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/posting_engine.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/stock_validation_service.dart';
 
-import 'package:stock_count/modules/accounting/fiscal_years/domain/services/accounting_period_validator.dart';
-import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
+import 'package:stock_count/core/domain/ports/period_validator_port.dart';
+import 'package:stock_count/core/errors/journal_exception.dart';
+import 'package:stock_count/core/errors/missing_account_exception.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
 
 import 'package:stock_count/core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/inventory/permissions/inventory_permission_package.dart';
+
+import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
 
 class PostingCoordinatorImpl implements PostingCoordinator {
   PostingCoordinatorImpl({
@@ -26,11 +29,12 @@ class PostingCoordinatorImpl implements PostingCoordinator {
     required StockValidationService stockValidationService,
     required InventoryDependencyDetector dependencyDetector,
     required PostingEngine postingEngine,
-    AccountingPeriodValidator? periodValidator,
-    InventoryAccountingPoster? accountingPoster,
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
+    PeriodValidatorPort? periodValidator,
+    required InventoryAccountingPoster accountingPoster,
+    required PermissionGuard permissionGuard,
     String Function()? readCompanyId,
     SyncQueue? syncQueue,
+    InitializationGuard? initializationGuard,
   })  : _db = db,
         _stockValidationService = stockValidationService,
         _dependencyDetector = dependencyDetector,
@@ -39,17 +43,19 @@ class PostingCoordinatorImpl implements PostingCoordinator {
         _accountingPoster = accountingPoster,
         _permissionGuard = permissionGuard,
         _readCompanyId = readCompanyId,
-        _syncQueue = syncQueue;
+        _syncQueue = syncQueue,
+        _initializationGuard = initializationGuard;
 
   final InventoryDatabase _db;
   final StockValidationService _stockValidationService;
   final InventoryDependencyDetector _dependencyDetector;
   final PostingEngine _postingEngine;
-  final AccountingPeriodValidator? _periodValidator;
-  final InventoryAccountingPoster? _accountingPoster;
+  final PeriodValidatorPort? _periodValidator;
+  final InventoryAccountingPoster _accountingPoster;
   final PermissionGuard _permissionGuard;
   final String Function()? _readCompanyId;
   final SyncQueue? _syncQueue;
+  final InitializationGuard? _initializationGuard;
 
 
   String get _currentCompanyId =>
@@ -82,6 +88,8 @@ class PostingCoordinatorImpl implements PostingCoordinator {
     required InventoryDocumentRef document,
     String? userId,
   }) async {
+    await _initializationGuard?.assertInitialized();
+
     final requiredPostPermissions = switch (document.documentType) {
       InventoryDocumentType.stockReceipt => InventoryPermissions.receiptsPost,
       InventoryDocumentType.stockIssue => InventoryPermissions.issuesPost,
@@ -113,273 +121,321 @@ class PostingCoordinatorImpl implements PostingCoordinator {
       }
 
 
-    return await _db.transaction(() async {
-      // 1. Check current persisted status in database for authoritative idempotency & stale UI prevention
-      final currentDbStatus = await _getDatabaseStatus(document);
-      if (currentDbStatus == 'posted') {
-        // Idempotent return: Document is ALREADY posted in the database!
-        final dbLines = await (_db.select(_db.stockMovementLines)
-              ..where((tbl) => tbl.movementUuid.equals(document.documentId)))
-            .get();
-        double value = 0.0;
-        for (final l in dbLines) {
-          value += (l.postedCost ?? l.unitCost) * l.quantity;
-        }
+      bool accountingPosted = false;
+      try {
+        return await _db.transaction(() async {
+          // 1. Check current persisted status in database for authoritative idempotency & stale UI prevention
+          final currentDbStatus = await _getDatabaseStatus(document);
+          if (currentDbStatus == 'posted') {
+            // Idempotent return: Document is ALREADY posted in the database!
+            final dbLines = await (_db.select(_db.stockMovementLines)
+                  ..where((tbl) => tbl.movementUuid.equals(document.documentId)))
+                .get();
+            double value = 0.0;
+            for (final l in dbLines) {
+              value += (l.postedCost ?? l.unitCost) * l.quantity;
+            }
 
-        final updatedDocRef = InventoryDocumentRef(
-          documentId: document.documentId,
-          documentNumber: document.documentNumber,
-          documentType: document.documentType,
-          documentDate: document.documentDate,
-          warehouseId: document.warehouseId,
-          status: InventoryDocumentStatus.posted,
-        );
+            final updatedDocRef = InventoryDocumentRef(
+              documentId: document.documentId,
+              documentNumber: document.documentNumber,
+              documentType: document.documentType,
+              documentDate: document.documentDate,
+              warehouseId: document.warehouseId,
+              status: InventoryDocumentStatus.posted,
+            );
 
-        return PostSuccess(document: updatedDocRef, postedValue: value);
-      }
+            return PostSuccess(document: updatedDocRef, postedValue: value);
+          }
 
-      // 1.5. Validate Accounting Period before performing any inventory cost/stock mutations
-      if (_periodValidator != null) {
-        try {
-          await _periodValidator!.assertEntryAllowed(document.documentDate);
-        } on JournalException catch (e) {
+          if (currentDbStatus == 'cancelled') {
+            return const PostInvalidStatus(reason: 'المستند ملغي ولا يمكن ترحيله');
+          }
+
+          // 1.5. Validate Accounting Period before performing any inventory cost/stock mutations
+          if (_periodValidator != null) {
+            try {
+              await _periodValidator!.assertEntryAllowed(document.documentDate);
+            } on JournalException catch (e) {
+              await _recordAudit(
+                documentId: document.documentId,
+                documentType: document.documentType.storageValue,
+                eventType: 'unauthorized_attempt',
+                userId: userId,
+                notes: 'لا يمكن ترحيل المستند: الفترة المحاسبية مغلقة للمستند بتاريخ ${document.documentDate}. (${e.message})',
+                metadata: {
+                  'operation': 'post',
+                  'errorReason': e.message,
+                  'attemptedDate': document.documentDate.toIso8601String(),
+                },
+              );
+              return PostInvalidStatus(
+                reason: 'لا يمكن ترحيل المستند: الفترة المحاسبية مغلقة للمستند بتاريخ ${document.documentDate}. (${e.message})',
+              );
+            }
+          }
+
+          // 2. Fetch line items
+          final dbLines = await (_db.select(_db.stockMovementLines)
+                ..where((tbl) => tbl.movementUuid.equals(document.documentId)))
+              .get();
+
+          if (dbLines.isEmpty) {
+            return const PostInvalidStatus(reason: 'المستند لا يحتوي على أصناف للترحيل.');
+          }
+
+          // 3. Validate outbound stock if outbound
+          final isOutbound = document.documentType == InventoryDocumentType.stockIssue ||
+              document.documentType == InventoryDocumentType.salesInvoice;
+
+          if (isOutbound) {
+            final outboundRequests = dbLines
+                .map((l) => OutboundLineRequest(
+                      itemCode: l.itemCode,
+                      itemName: l.itemName,
+                      requestedQuantity: l.quantity,
+                    ))
+                .toList();
+
+            final shortages = await _stockValidationService.validateOutboundLines(
+              lines: outboundRequests,
+              warehouseId: document.warehouseId,
+            );
+
+            if (shortages.isNotEmpty) {
+              return PostStockShortage(shortages: shortages);
+            }
+          }
+
+          // 4. Validate unit cost
+          for (final l in dbLines) {
+            if (l.unitCost <= 0 || l.totalCost <= 0) {
+              return PostInvalidStatus(
+                reason: 'لا يمكن ترحيل المستند بتكلفة صفرية للصنف (${l.itemName}). يرجى إدخال التكلفة أولاً.',
+              );
+            }
+          }
+
+          // 5. Execute Posting via PostingEngine
+          double value = 0.0;
+          try {
+            if (document.documentType == InventoryDocumentType.stockReceipt) {
+              final inboundLines = dbLines
+                  .map((l) => InboundLineData(
+                        lineUuid: l.uuid,
+                        itemCode: l.itemCode,
+                        itemName: l.itemName,
+                        quantity: l.quantity,
+                        unitCost: l.unitCost,
+                      ))
+                  .toList();
+
+              value = await _postingEngine.applyInboundPosting(
+                document: document,
+                lines: inboundLines,
+                warehouseId: document.warehouseId,
+                documentDate: document.documentDate,
+              );
+            } else if (document.documentType == InventoryDocumentType.stockIssue ||
+                document.documentType == InventoryDocumentType.salesInvoice) {
+              final outboundLines = dbLines
+                  .map((l) => OutboundLineData(
+                        lineUuid: l.uuid,
+                        itemCode: l.itemCode,
+                        itemName: l.itemName,
+                        quantity: l.quantity,
+                      ))
+                  .toList();
+
+              value = await _postingEngine.applyOutboundPosting(
+                document: document,
+                lines: outboundLines,
+                warehouseId: document.warehouseId,
+                valuationMethod: CostValuationMethod.weightedAverage,
+              );
+            } else if (document.documentType == InventoryDocumentType.stockTransfer) {
+              final transferLines = dbLines
+                  .map((l) => TransferLineData(
+                        lineUuid: l.uuid,
+                        itemCode: l.itemCode,
+                        itemName: l.itemName,
+                        quantity: l.quantity,
+                      ))
+                  .toList();
+
+              final trs = await (_db.select(_db.stockTransfers)
+                    ..where((tbl) => tbl.uuid.equals(document.documentId)))
+                  .get();
+
+              final fromWh = trs.isNotEmpty ? trs.first.fromWarehouseId : document.warehouseId ?? '';
+              final toWh = trs.isNotEmpty ? trs.first.toWarehouseId : '';
+
+              value = await _postingEngine.applyTransferPosting(
+                document: document,
+                lines: transferLines,
+                fromWarehouseId: fromWh,
+                toWarehouseId: toWh,
+                valuationMethod: CostValuationMethod.weightedAverage,
+              );
+            } else if (document.documentType == InventoryDocumentType.stockReturn) {
+              final returns = await (_db.select(_db.stockReturns)
+                    ..where((tbl) => tbl.uuid.equals(document.documentId)))
+                  .get();
+
+              if (returns.isNotEmpty) {
+                final ret = returns.first;
+                final isOutbound = ret.returnType == 'purchase_return' || ret.returnType == 'purchaseReturn';
+                if (isOutbound) {
+                  final outboundLines = dbLines
+                      .map((l) => OutboundLineData(
+                            lineUuid: l.uuid,
+                            itemCode: l.itemCode,
+                            itemName: l.itemName,
+                            quantity: l.quantity,
+                          ))
+                      .toList();
+                  value = await _postingEngine.applyOutboundPosting(
+                    document: document,
+                    lines: outboundLines,
+                    warehouseId: document.warehouseId,
+                    valuationMethod: CostValuationMethod.fifo,
+                  );
+                } else {
+                  final inboundLines = dbLines
+                      .map((l) => InboundLineData(
+                            lineUuid: l.uuid,
+                            itemCode: l.itemCode,
+                            itemName: l.itemName,
+                            quantity: l.quantity,
+                            unitCost: l.unitCost,
+                          ))
+                      .toList();
+                  value = await _postingEngine.applyInboundPosting(
+                    document: document,
+                    lines: inboundLines,
+                    warehouseId: document.warehouseId,
+                    documentDate: document.documentDate,
+                  );
+                }
+              }
+            }
+          } on JournalException catch (e) {
+            if (e.code == JournalException.insufficientStock) {
+              final shortages = dbLines
+                  .map((l) => StockShortageItem(
+                        itemCode: l.itemCode,
+                        itemName: l.itemName,
+                        requested: l.quantity,
+                        available: 0.0,
+                        shortage: l.quantity,
+                      ))
+                  .toList();
+              return PostStockShortage(shortages: shortages);
+            }
+            rethrow;
+          }
+
+          // 5.5. Execute Accounting Posting inside the atomic database transaction
+          final totalAmount = value > 0 ? value : dbLines.fold(0.0, (sum, l) => sum + l.totalCost);
+          final docAccountId = await _resolveDocumentAccountId(document);
+          await _accountingPoster.postAccountingEntry(
+            document: document,
+            totalAmount: totalAmount,
+            accountId: docAccountId,
+            isPosted: true,
+          );
+          accountingPosted = true;
+
+          // 6. Update Document Status in Database to posted for all document types
+          final now = DateTime.now().toUtc();
+          await _updateDocumentStatusInDb(document.documentId, document.documentType, 'posted', now.millisecondsSinceEpoch);
+
+          // 7. Write to InventoryAuditTrail (atomic inside transaction)
           await _recordAudit(
             documentId: document.documentId,
             documentType: document.documentType.storageValue,
-            eventType: 'unauthorized_attempt',
+            eventType: 'post',
             userId: userId,
-            notes: 'لا يمكن ترحيل المستند: الفترة المحاسبية مغلقة للمستند بتاريخ ${document.documentDate}. (${e.message})',
             metadata: {
-              'operation': 'post',
-              'errorReason': e.message,
-              'attemptedDate': document.documentDate.toIso8601String(),
+              'before': {'status': currentDbStatus ?? 'draft'},
+              'after': {'status': 'posted', 'postedValue': value},
+              'postedValue': value,
+              'lineCount': dbLines.length,
             },
           );
-          return PostInvalidStatus(
-            reason: 'لا يمكن ترحيل المستند: الفترة المحاسبية مغلقة للمستند بتاريخ ${document.documentDate}. (${e.message})',
-          );
-        }
-      }
 
-      // 2. Fetch line items
-      final dbLines = await (_db.select(_db.stockMovementLines)
-            ..where((tbl) => tbl.movementUuid.equals(document.documentId)))
-          .get();
-
-      if (dbLines.isEmpty) {
-        return const PostInvalidStatus(reason: 'المستند لا يحتوي على أصناف للترحيل.');
-      }
-
-      // 3. Validate outbound stock if outbound
-      final isOutbound = document.documentType == InventoryDocumentType.stockIssue ||
-          document.documentType == InventoryDocumentType.salesInvoice;
-
-      if (isOutbound) {
-        final outboundRequests = dbLines
-            .map((l) => OutboundLineRequest(
-                  itemCode: l.itemCode,
-                  itemName: l.itemName,
-                  requestedQuantity: l.quantity,
-                ))
-            .toList();
-
-        final shortages = await _stockValidationService.validateOutboundLines(
-          lines: outboundRequests,
-          warehouseId: document.warehouseId,
-        );
-
-        if (shortages.isNotEmpty) {
-          return PostStockShortage(shortages: shortages);
-        }
-      }
-
-      // 4. Validate unit cost
-      for (final l in dbLines) {
-        if (l.unitCost <= 0 || l.totalCost <= 0) {
-          return PostInvalidStatus(
-            reason: 'لا يمكن ترحيل المستند بتكلفة صفرية للصنف (${l.itemName}). يرجى إدخال التكلفة أولاً.',
-          );
-        }
-      }
-
-      // 5. Execute Posting via PostingEngine
-      double value = 0.0;
-      if (document.documentType == InventoryDocumentType.stockReceipt) {
-        final inboundLines = dbLines
-            .map((l) => InboundLineData(
-                  lineUuid: l.uuid,
-                  itemCode: l.itemCode,
-                  itemName: l.itemName,
-                  quantity: l.quantity,
-                  unitCost: l.unitCost,
-                ))
-            .toList();
-
-        value = await _postingEngine.applyInboundPosting(
-          document: document,
-          lines: inboundLines,
-          warehouseId: document.warehouseId,
-          documentDate: document.documentDate,
-        );
-      } else if (document.documentType == InventoryDocumentType.stockIssue ||
-          document.documentType == InventoryDocumentType.salesInvoice) {
-        final outboundLines = dbLines
-            .map((l) => OutboundLineData(
-                  lineUuid: l.uuid,
-                  itemCode: l.itemCode,
-                  itemName: l.itemName,
-                  quantity: l.quantity,
-                ))
-            .toList();
-
-        value = await _postingEngine.applyOutboundPosting(
-          document: document,
-          lines: outboundLines,
-          warehouseId: document.warehouseId,
-          valuationMethod: CostValuationMethod.weightedAverage,
-        );
-      } else if (document.documentType == InventoryDocumentType.stockTransfer) {
-        final transferLines = dbLines
-            .map((l) => TransferLineData(
-                  lineUuid: l.uuid,
-                  itemCode: l.itemCode,
-                  itemName: l.itemName,
-                  quantity: l.quantity,
-                ))
-            .toList();
-
-        final trs = await (_db.select(_db.stockTransfers)
-              ..where((tbl) => tbl.uuid.equals(document.documentId)))
-            .get();
-
-        final fromWh = trs.isNotEmpty ? trs.first.fromWarehouseId : document.warehouseId ?? '';
-        final toWh = trs.isNotEmpty ? trs.first.toWarehouseId : '';
-
-        value = await _postingEngine.applyTransferPosting(
-          document: document,
-          lines: transferLines,
-          fromWarehouseId: fromWh,
-          toWarehouseId: toWh,
-          valuationMethod: CostValuationMethod.weightedAverage,
-        );
-      } else if (document.documentType == InventoryDocumentType.stockReturn) {
-        final returns = await (_db.select(_db.stockReturns)
-              ..where((tbl) => tbl.uuid.equals(document.documentId)))
-            .get();
-
-        if (returns.isNotEmpty) {
-          final ret = returns.first;
-          final isOutbound = ret.returnType == 'purchase_return' || ret.returnType == 'purchaseReturn';
-          if (isOutbound) {
-            final outboundLines = dbLines
-                .map((l) => OutboundLineData(
-                      lineUuid: l.uuid,
-                      itemCode: l.itemCode,
-                      itemName: l.itemName,
-                      quantity: l.quantity,
-                    ))
-                .toList();
-            value = await _postingEngine.applyOutboundPosting(
-              document: document,
-              lines: outboundLines,
-              warehouseId: document.warehouseId,
-              valuationMethod: CostValuationMethod.fifo,
+          // 8. Enqueue Outbox Sync Operation
+          if (_syncQueue != null) {
+            await _syncQueue!.enqueue(
+              SyncOperation.create(
+                entityType: _getSyncEntityType(document.documentType),
+                entityId: document.documentId,
+                type: SyncOperationType.create,
+                companyId: _currentCompanyId,
+                payload: {
+                  'documentId': document.documentId,
+                  'documentNumber': document.documentNumber,
+                  'documentType': document.documentType.storageValue,
+                  'documentDate': document.documentDate.toIso8601String(),
+                  'warehouseId': document.warehouseId,
+                  'status': 'posted',
+                  'companyId': _currentCompanyId,
+                  'postedValue': value,
+                  'lines': dbLines
+                      .map((l) => {
+                            'lineUuid': l.uuid,
+                            'itemCode': l.itemCode,
+                            'itemName': l.itemName,
+                            'quantity': l.quantity,
+                            'unitCost': l.unitCost,
+                            'totalCost': l.totalCost,
+                            'postedCost': l.postedCost,
+                          })
+                      .toList(),
+                },
+              ),
             );
-          } else {
-            final inboundLines = dbLines
-                .map((l) => InboundLineData(
-                      lineUuid: l.uuid,
-                      itemCode: l.itemCode,
-                      itemName: l.itemName,
-                      quantity: l.quantity,
-                      unitCost: l.unitCost,
-                    ))
-                .toList();
-            value = await _postingEngine.applyInboundPosting(
-              document: document,
-              lines: inboundLines,
-              warehouseId: document.warehouseId,
-              documentDate: document.documentDate,
+          }
+
+          final updatedDocRef = InventoryDocumentRef(
+            documentId: document.documentId,
+            documentNumber: document.documentNumber,
+            documentType: document.documentType,
+            documentDate: document.documentDate,
+            warehouseId: document.warehouseId,
+            status: InventoryDocumentStatus.posted,
+          );
+
+          return PostSuccess(document: updatedDocRef, postedValue: value);
+        });
+      } on JournalException catch (e) {
+        return PostInvalidStatus(
+          reason: 'فشل الترحيل المحاسبي: ${e.message}',
+        );
+      } on MissingAccountException catch (e) {
+        return PostInvalidStatus(
+          reason: 'فشل الترحيل المحاسبي: ${e.message}',
+        );
+      } catch (e) {
+        if (accountingPosted) {
+          try {
+            await _accountingPoster.reverseAccountingEntry(document: document);
+          } catch (compErr) {
+            await _recordAudit(
+              documentId: document.documentId,
+              documentType: document.documentType.storageValue,
+              eventType: 'compensation_failure',
+              userId: userId,
+              notes: 'فشل إلغاء القيد المحاسبي أثناء التعويض بعد فشل الترحيل: $compErr',
+              metadata: {
+                'postingError': e.toString(),
+                'compensationError': compErr.toString(),
+              },
             );
           }
         }
+        rethrow;
       }
-
-      // 5.5. Execute Accounting Posting inside the atomic database transaction
-      final poster = _accountingPoster;
-      if (poster != null) {
-        final totalAmount = value > 0 ? value : dbLines.fold(0.0, (sum, l) => sum + l.totalCost);
-        final docAccountId = await _resolveDocumentAccountId(document);
-        await poster.postAccountingEntry(
-          document: document,
-          totalAmount: totalAmount,
-          accountId: docAccountId,
-          isPosted: true,
-        );
-      }
-
-      // 6. Update Document Status in Database to posted for all document types
-      final now = DateTime.now().toUtc();
-      await _updateDocumentStatusInDb(document.documentId, document.documentType, 'posted', now.millisecondsSinceEpoch);
-
-      // 7. Write to InventoryAuditTrail (atomic inside transaction)
-      await _recordAudit(
-        documentId: document.documentId,
-        documentType: document.documentType.storageValue,
-        eventType: 'post',
-        userId: userId,
-        metadata: {
-          'before': {'status': currentDbStatus ?? 'draft'},
-          'after': {'status': 'posted', 'postedValue': value},
-          'postedValue': value,
-          'lineCount': dbLines.length,
-        },
-      );
-
-      // 8. Enqueue Outbox Sync Operation
-      if (_syncQueue != null) {
-        await _syncQueue!.enqueue(
-          SyncOperation.create(
-            entityType: _getSyncEntityType(document.documentType),
-            entityId: document.documentId,
-            type: SyncOperationType.create,
-            companyId: _currentCompanyId,
-            payload: {
-              'documentId': document.documentId,
-              'documentNumber': document.documentNumber,
-              'documentType': document.documentType.storageValue,
-              'documentDate': document.documentDate.toIso8601String(),
-              'warehouseId': document.warehouseId,
-              'status': 'posted',
-              'companyId': _currentCompanyId,
-              'postedValue': value,
-              'lines': dbLines
-                  .map((l) => {
-                        'lineUuid': l.uuid,
-                        'itemCode': l.itemCode,
-                        'itemName': l.itemName,
-                        'quantity': l.quantity,
-                        'unitCost': l.unitCost,
-                        'totalCost': l.totalCost,
-                        'postedCost': l.postedCost,
-                      })
-                  .toList(),
-            },
-          ),
-        );
-      }
-
-      final updatedDocRef = InventoryDocumentRef(
-        documentId: document.documentId,
-        documentNumber: document.documentNumber,
-        documentType: document.documentType,
-        documentDate: document.documentDate,
-        warehouseId: document.warehouseId,
-        status: InventoryDocumentStatus.posted,
-      );
-
-      return PostSuccess(document: updatedDocRef, postedValue: value);
-    });
     });
   }
 
@@ -389,6 +445,8 @@ class PostingCoordinatorImpl implements PostingCoordinator {
     String? requestedBy,
     String? reason,
   }) async {
+    await _initializationGuard?.assertInitialized();
+
     final requiredUnpostPermissions = switch (document.documentType) {
       InventoryDocumentType.stockReceipt => InventoryPermissions.receiptsReverse,
       InventoryDocumentType.stockIssue => InventoryPermissions.issuesReverse,
@@ -469,7 +527,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
 
         // 3. Execute reverse posting via PostingEngine & Accounting Poster
         await _postingEngine.reversePosting(document: document);
-        await _accountingPoster?.reverseAccountingEntry(document: document);
+        await _accountingPoster.reverseAccountingEntry(document: document);
 
         // 4. Update Document Status in Database to draft
         await _updateDocumentStatusInDb(document.documentId, document.documentType, 'draft', null);
@@ -587,7 +645,11 @@ class PostingCoordinatorImpl implements PostingCoordinator {
     final nowEpoch = DateTime.now().toUtc().millisecondsSinceEpoch;
     switch (docType) {
       case InventoryDocumentType.stockReceipt:
-        await (_db.update(_db.stockReceipts)..where((tbl) => tbl.uuid.equals(documentId))).write(
+        await (_db.update(_db.stockReceipts)
+              ..where((tbl) =>
+                  tbl.uuid.equals(documentId) &
+                  tbl.companyId.equals(_currentCompanyId)))
+            .write(
           StockReceiptsCompanion(
             status: Value(status),
             postedAt: Value(postedAtEpoch),
@@ -596,7 +658,11 @@ class PostingCoordinatorImpl implements PostingCoordinator {
         );
         break;
       case InventoryDocumentType.stockIssue:
-        await (_db.update(_db.stockIssues)..where((tbl) => tbl.uuid.equals(documentId))).write(
+        await (_db.update(_db.stockIssues)
+              ..where((tbl) =>
+                  tbl.uuid.equals(documentId) &
+                  tbl.companyId.equals(_currentCompanyId)))
+            .write(
           StockIssuesCompanion(
             status: Value(status),
             postedAt: Value(postedAtEpoch),
@@ -605,7 +671,11 @@ class PostingCoordinatorImpl implements PostingCoordinator {
         );
         break;
       case InventoryDocumentType.stockReturn:
-        await (_db.update(_db.stockReturns)..where((tbl) => tbl.uuid.equals(documentId))).write(
+        await (_db.update(_db.stockReturns)
+              ..where((tbl) =>
+                  tbl.uuid.equals(documentId) &
+                  tbl.companyId.equals(_currentCompanyId)))
+            .write(
           StockReturnsCompanion(
             status: Value(status),
             postedAt: Value(postedAtEpoch),
@@ -614,7 +684,11 @@ class PostingCoordinatorImpl implements PostingCoordinator {
         );
         break;
       case InventoryDocumentType.stockTransfer:
-        await (_db.update(_db.stockTransfers)..where((tbl) => tbl.uuid.equals(documentId))).write(
+        await (_db.update(_db.stockTransfers)
+              ..where((tbl) =>
+                  tbl.uuid.equals(documentId) &
+                  tbl.companyId.equals(_currentCompanyId)))
+            .write(
           StockTransfersCompanion(
             status: Value(status),
             postedAt: Value(postedAtEpoch),

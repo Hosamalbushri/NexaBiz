@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../permissions/permission_defs.dart';
 import 'module_settings_definition.dart';
+import 'module_setup_definition.dart';
 import 'quick_action_definition.dart';
 import 'report_category_definition.dart';
 import 'route_access_rule.dart';
@@ -102,5 +103,10 @@ abstract class AppModule {
 
   /// Invalidate module settings state after a platform settings reset.
   void onSettingsReset(WidgetRef ref) {}
-}
 
+  /// First-run setup steps contributed by this module to the central initialization wizard.
+  List<ModuleSetupStepDefinition> get setupSteps => const [];
+
+  /// Whether [setupSteps] contributes anything.
+  bool get hasSetupSteps => setupSteps.isNotEmpty;
+}

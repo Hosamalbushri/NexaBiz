@@ -1,5 +1,5 @@
 import 'package:stock_count/modules/accounting/journals/domain/repositories/journal_repository.dart';
-import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
+import 'package:stock_count/core/domain/entities/document_ref.dart';
 import 'accounting_entry_builder.dart';
 
 class SyncAuditResult {

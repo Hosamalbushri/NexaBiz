@@ -9,10 +9,17 @@ import '../../domain/models/paged_result.dart';
 import '../../domain/repositories/inventory_repository.dart';
 import 'package:stock_count/modules/inventory/shared/data/inventory_hive.dart';
 
+import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
+
 class InventoryRepositoryImpl implements InventoryRepository {
-  InventoryRepositoryImpl({SyncQueue? syncQueue}) : _syncQueue = syncQueue;
+  InventoryRepositoryImpl({
+    SyncQueue? syncQueue,
+    InitializationGuard? initializationGuard,
+  })  : _syncQueue = syncQueue,
+        _initializationGuard = initializationGuard;
 
   final SyncQueue? _syncQueue;
+  final InitializationGuard? _initializationGuard;
 
   static const entityType = 'inventory_item';
 
@@ -99,6 +106,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
 
   @override
   Future<void> save(InventoryItem item) async {
+    await _initializationGuard?.assertInitialized();
     final box = await _box;
     final existing = box.get(item.itemCode);
     final now = DateTime.now().toUtc();
@@ -125,6 +133,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
     List<InventoryItem> items, {
     void Function(int processed, int total)? onProgress,
   }) async {
+    await _initializationGuard?.assertInitialized();
     final box = await _box;
     await box.clear();
     final now = DateTime.now().toUtc();
@@ -155,6 +164,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
 
   @override
   Future<void> clear() async {
+    await _initializationGuard?.assertInitialized();
     final box = await _box;
     final now = DateTime.now().toUtc();
     for (final item in _snapshotActive(box)) {
