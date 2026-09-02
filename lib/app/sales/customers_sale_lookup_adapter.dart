@@ -12,12 +12,10 @@ import '../settings/settings_repository.dart';
 /// customers auto-link is enabled in settings.
 class CustomersSaleLookupAdapter implements SaleCustomerLookupPort {
   const CustomersSaleLookupAdapter({
-    required CustomerRepository repository,
-    required CustomerAccountLinkPort accountLinkPort,
-    required SettingsRepository settings,
-  }) : _repository = repository,
-       _accountLinkPort = accountLinkPort,
-       _settings = settings;
+    required this._repository,
+    required this._accountLinkPort,
+    required this._settings,
+  });
 
   final CustomerRepository _repository;
   final CustomerAccountLinkPort _accountLinkPort;

@@ -14,7 +14,7 @@ import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
-import 'package:stock_count/core/widgets/stat_card.dart';
+import 'package:stock_count/core/widgets/app_kpi_tile.dart';
 import '../../domain/entities/inventory_item.dart';
 import '../../domain/entities/item_status.dart';
 import '../../domain/entities/report_summary.dart';
@@ -149,41 +149,41 @@ class _InventoryReportsPageState extends ConsumerState<InventoryReportsPage>
                             : 1.05;
                         final colorScheme = Theme.of(context).colorScheme;
                         final cards = [
-                          StatCard(
-                            title: localization.totalItems,
+                          AppKpiTile(
+                            label: localization.totalItems,
                             value: summary.totalItems.toString(),
                             icon: Icons.inventory_2_outlined,
-                            color: colorScheme.primary,
+                            valueColor: colorScheme.primary,
                           ),
-                          StatCard(
-                            title: localization.countedItems,
+                          AppKpiTile(
+                            label: localization.countedItems,
                             value: summary.countedItems.toString(),
                             icon: Icons.fact_check_outlined,
-                            color: colorScheme.tertiary,
+                            valueColor: colorScheme.tertiary,
                           ),
-                          StatCard(
-                            title: localization.remainingItems,
+                          AppKpiTile(
+                            label: localization.remainingItems,
                             value: summary.remainingItems.toString(),
                             icon: Icons.pending_actions_outlined,
-                            color: colorScheme.secondary,
+                            valueColor: colorScheme.secondary,
                           ),
-                          StatCard(
-                            title: localization.matched,
+                          AppKpiTile(
+                            label: localization.matched,
                             value: summary.matched.toString(),
                             icon: Icons.verified_outlined,
-                            color: colorScheme.primary,
+                            valueColor: colorScheme.primary,
                           ),
-                          StatCard(
-                            title: localization.shortage,
+                          AppKpiTile(
+                            label: localization.shortage,
                             value: summary.shortage.toString(),
                             icon: Icons.remove_circle_outline,
-                            color: colorScheme.error,
+                            valueColor: colorScheme.error,
                           ),
-                          StatCard(
-                            title: localization.overage,
+                          AppKpiTile(
+                            label: localization.overage,
                             value: summary.overage.toString(),
                             icon: Icons.add_circle_outline,
-                            color: colorScheme.tertiary,
+                            valueColor: colorScheme.tertiary,
                           ),
                         ];
 

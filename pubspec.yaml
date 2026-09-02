@@ -46,6 +46,7 @@ dependencies:
   local_auth_android: ^2.0.9
   local_auth_darwin: ^2.0.3
   sentry_flutter: ^9.10.0
+  equatable: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

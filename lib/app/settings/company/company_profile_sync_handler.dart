@@ -6,11 +6,10 @@ import 'company_profile.dart';
 /// Company Profile sync adapter for [SyncManager].
 class CompanyProfileSyncHandler implements SyncEntityHandler {
   CompanyProfileSyncHandler({
-    required SettingsRepository repository,
-    required RemoteSyncApi Function() remoteProvider,
+    required this._repository,
+    required this._remoteProvider,
     this.conflictResolver = const ConflictResolver(),
-  }) : _repository = repository,
-       _remoteProvider = remoteProvider;
+  });
 
   static const String entityTypeKey = 'company_profile';
 

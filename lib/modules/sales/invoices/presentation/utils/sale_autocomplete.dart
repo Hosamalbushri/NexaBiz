@@ -5,6 +5,7 @@ import 'package:stock_count/modules/sales/invoices/domain/services/sale_autocomp
 export 'package:stock_count/modules/sales/invoices/domain/services/sale_autocomplete_defaults.dart';
 
 /// Debounced search with generation tokens so stale async results are ignored.
+@Deprecated('Use AsyncSearchToken and AppAsyncAutocompleteField instead')
 final class AutocompleteSearchSession {
   Timer? _debounce;
   var _token = 0;
@@ -36,3 +37,4 @@ final class AutocompleteSearchSession {
     _debounce?.cancel();
   }
 }
+

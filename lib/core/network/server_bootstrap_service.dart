@@ -46,8 +46,7 @@ class ServerBootstrapPage {
 
 /// Network service handling server health check and bootstrap snapshot downloads.
 class ServerBootstrapService {
-  const ServerBootstrapService({http.Client? client})
-      : _client = client;
+  const ServerBootstrapService({this._client});
 
   final http.Client? _client;
 

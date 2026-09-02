@@ -3,19 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
+import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_search_bar.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
 import '../../domain/entities/customer.dart';
@@ -33,26 +27,6 @@ class CustomersListPage extends ConsumerStatefulWidget {
 }
 
 class _CustomersListPageState extends ConsumerState<CustomersListPage> {
-  final _searchController = TextEditingController();
-  Timer? _debounce;
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _onQueryChanged(String value) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {
-      if (!mounted) {
-        return;
-      }
-      ref.read(customerSearchQueryProvider.notifier).state = value.trim();
-    });
-  }
-
   Future<void> _confirmDelete(Customer customer) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showAppDialog(
@@ -85,12 +59,31 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final asyncCustomers = ref.watch(filteredCustomersProvider);
+    final searchQuery = ref.watch(customerSearchQueryProvider);
+    final canImport = ref
+        .read(authStateProvider)
+        .hasAnyPermission(CustomersPermissions.importOp);
+    final canDelete = ref
+        .read(authStateProvider)
+        .hasAnyPermission(CustomersPermissions.delete);
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: l10n.customersListTitle,
-        showBackButton: true,
-      ),
+    return ModuleListScaffold<Customer>(
+      title: l10n.customersListTitle,
+      searchQuery: searchQuery,
+      searchHint: l10n.customersSearchHint,
+      onSearchChanged: (val) {
+        ref.read(customerSearchQueryProvider.notifier).state = val.trim();
+      },
+      isLoading: asyncCustomers.isLoading && !asyncCustomers.hasValue,
+      error: asyncCustomers.error,
+      onRefresh: () async {
+        ref.invalidate(filteredCustomersProvider);
+      },
+      emptyTitle: l10n.customersEmptyTitle,
+      emptyMessage: l10n.customersEmptyMessage,
+      emptyIcon: Icons.people_outline,
+      emptyActionLabel: canImport ? l10n.customersImportTitle : null,
+      onEmptyAction: canImport ? () => CustomersRoutes.pushImport(context) : null,
       floatingActionButton: PermissionGate(
         anyOf: CustomersPermissions.create,
         child: FloatingActionButton(
@@ -98,163 +91,91 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
           child: const Icon(Icons.add),
         ),
       ),
-      body: AppContentConstraint(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppConstants.pagePadding,
-                AppSpacing.md,
-                AppConstants.pagePadding,
-                AppSpacing.sm,
+      items: asyncCustomers.valueOrNull ?? const [],
+      itemBuilder: (context, customer) {
+        return Material(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            onTap: () => CustomersRoutes.pushDetails(context, customer.id),
+            onLongPress: canDelete ? () => _confirmDelete(customer) : null,
+            child: Ink(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
               ),
-              child: AppSearchBar(
-                controller: _searchController,
-                onChanged: _onQueryChanged,
-                hint: l10n.customersSearchHint,
-              ),
-            ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppConstants.pagePadding,
-                0,
-                AppConstants.pagePadding,
-                AppConstants.pagePadding,
-              ),
-              child: asyncCustomers.when(
-                loading: () => const AppLoading(),
-                error: (error, _) => AppErrorState(message: error.toString()),
-                data: (customers) {
-                  if (customers.isEmpty) {
-                    final canImport = ref
-                        .read(authStateProvider)
-                        .hasAnyPermission(CustomersPermissions.importOp);
-                    return AppEmptyState(
-                      title: l10n.customersEmptyTitle,
-                      subtitle: l10n.customersEmptyMessage,
-                      icon: Icons.people_outline,
-                      actionLabel:
-                          canImport ? l10n.customersImportTitle : null,
-                      actionIcon: Icons.upload_file_outlined,
-                      onAction: canImport
-                          ? () => CustomersRoutes.pushImport(context)
-                          : null,
-                    );
-                  }
-                  final canDelete = ref
-                      .read(authStateProvider)
-                      .hasAnyPermission(CustomersPermissions.delete);
-                  return ListView.separated(
-                    itemCount: customers.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.sm),
-                    itemBuilder: (context, index) {
-                      final customer = customers[index];
-                      return Material(
-                        color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                          onTap: () =>
-                              CustomersRoutes.pushDetails(context, customer.id),
-                          onLongPress: canDelete
-                              ? () => _confirmDelete(customer)
-                              : null,
-                          child: Ink(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(AppRadius.md),
-                              border: Border.all(
-                                color: theme.colorScheme.outlineVariant
-                                    .withValues(alpha: 0.5),
-                              ),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(AppSpacing.md),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          customer.name,
-                                          style: theme.textTheme.titleSmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          customer.customerCode,
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurfaceVariant,
-                                              ),
-                                        ),
-                                        if (customer.accountId != null) ...[
-                                          const SizedBox(height: 2),
-                                          _LinkedAccountLine(
-                                            accountId: customer.accountId!,
-                                          ),
-                                        ],
-                                        if (customer.phone != null) ...[
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            customer.phone!,
-                                            style: theme.textTheme.bodySmall,
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      AppStatusBadge(
-                                        label: customer.isActive
-                                            ? l10n.customersStatusActive
-                                            : l10n.customersStatusInactive,
-                                        tone: customer.isActive
-                                            ? AppStatusTone.success
-                                            : AppStatusTone.neutral,
-                                        animate: false,
-                                      ),
-                                      const SizedBox(height: 6),
-                                      AppStatusBadge(
-                                        label:
-                                            customer.dataSource ==
-                                                CustomerDataSource.external
-                                            ? l10n.customersDataSourceExternal
-                                            : l10n.customersDataSourceLocal,
-                                        tone:
-                                            customer.dataSource ==
-                                                CustomerDataSource.external
-                                            ? AppStatusTone.info
-                                            : AppStatusTone.neutral,
-                                        animate: false,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            customer.name,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            customer.customerCode,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          if (customer.accountId != null) ...[
+                            const SizedBox(height: 2),
+                            _LinkedAccountLine(
+                              accountId: customer.accountId!,
+                            ),
+                          ],
+                          if (customer.phone != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              customer.phone!,
+                              style: theme.textTheme.bodySmall,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        AppStatusBadge(
+                          label: customer.isActive
+                              ? l10n.customersStatusActive
+                              : l10n.customersStatusInactive,
+                          tone: customer.isActive
+                              ? AppStatusTone.success
+                              : AppStatusTone.neutral,
+                          animate: false,
                         ),
-                      );
-                    },
-                  );
-                },
+                        const SizedBox(height: 6),
+                        AppStatusBadge(
+                          label: customer.dataSource == CustomerDataSource.external
+                              ? l10n.customersDataSourceExternal
+                              : l10n.customersDataSourceLocal,
+                          tone: customer.dataSource == CustomerDataSource.external
+                              ? AppStatusTone.info
+                              : AppStatusTone.neutral,
+                          animate: false,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ],
-      ),
-    ),
-  );
+        );
+      },
+    );
   }
 }
 

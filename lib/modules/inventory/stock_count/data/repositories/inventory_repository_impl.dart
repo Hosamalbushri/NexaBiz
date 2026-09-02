@@ -13,10 +13,9 @@ import 'package:stock_count/modules/system_setup/domain/services/initialization_
 
 class InventoryRepositoryImpl implements InventoryRepository {
   InventoryRepositoryImpl({
-    SyncQueue? syncQueue,
-    InitializationGuard? initializationGuard,
-  })  : _syncQueue = syncQueue,
-        _initializationGuard = initializationGuard;
+    this._syncQueue,
+    this._initializationGuard,
+  });
 
   final SyncQueue? _syncQueue;
   final InitializationGuard? _initializationGuard;

@@ -21,10 +21,9 @@ class InvalidWarehouseException implements Exception {
 /// Domain service for company default warehouse and inventory operational settings configuration.
 class CompanyWarehouseConfigService {
   CompanyWarehouseConfigService({
-    required SetupWarehouseLookupPort warehouseLookupPort,
-    required CompanyInitializationRepository initRepository,
-  })  : _warehouseLookupPort = warehouseLookupPort,
-        _initRepository = initRepository;
+    required this._warehouseLookupPort,
+    required this._initRepository,
+  });
 
   final SetupWarehouseLookupPort _warehouseLookupPort;
   final CompanyInitializationRepository _initRepository;

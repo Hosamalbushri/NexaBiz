@@ -34,17 +34,12 @@ final systemBaseCurrencyLockedProvider = FutureProvider<bool>((ref) {
 class CompanyProfileController
     extends StateNotifier<AsyncValue<CompanyProfile>> {
   CompanyProfileController({
-    required Ref ref,
-    required SettingsRepository repository,
-    required CompanyLogoStore logoStore,
-    SyncQueue? syncQueue,
-    String companyId = '',
-  }) : _ref = ref,
-       _repository = repository,
-       _logoStore = logoStore,
-       _syncQueue = syncQueue,
-       _companyId = companyId,
-       super(const AsyncValue.loading()) {
+    required this._ref,
+    required this._repository,
+    required this._logoStore,
+    this._syncQueue,
+    this._companyId = '',
+  }) : super(const AsyncValue.loading()) {
     _load();
   }
 

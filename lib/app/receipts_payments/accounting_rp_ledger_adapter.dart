@@ -1,3 +1,4 @@
+import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
 import '../../core/utils/id_generator.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
@@ -14,12 +15,10 @@ import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_
 /// App adapter: receipt/payment/transfer/exchange → local journal.
 class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
   AccountingRpLedgerAdapter({
-    required JournalPostingService posting,
-    required AccountRepository accounts,
-    FiscalYearRepository? fiscalYears,
-  }) : _posting = posting,
-       _accounts = accounts,
-       _fiscalYears = fiscalYears;
+    required this._posting,
+    required this._accounts,
+    this._fiscalYears,
+  });
 
   final JournalPostingService _posting;
   final AccountRepository _accounts;
@@ -96,10 +95,18 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
   }
 
   double _headerRate(FinancialTransaction txn) =>
-      txn.exchangeRate <= 0 ? 1.0 : txn.exchangeRate;
+      ExchangeRateValidator.validate(
+        currencyCode: txn.currencyCode,
+        baseCurrencyCode: txn.baseCurrencyCode,
+        exchangeRate: txn.exchangeRate,
+      );
 
   double _lineRate(FinancialTransaction txn, FinancialTransactionLine line) =>
-      line.exchangeRate <= 0 ? _headerRate(txn) : line.exchangeRate;
+      ExchangeRateValidator.validate(
+        currencyCode: line.currencyCode,
+        baseCurrencyCode: txn.baseCurrencyCode,
+        exchangeRate: line.exchangeRate > 0 ? line.exchangeRate : txn.exchangeRate,
+      );
 
   @override
   Future<void> syncTransaction(FinancialTransaction txn) async {
@@ -347,9 +354,9 @@ class AccountingRpLedgerAdapter implements RpLedgerPostingPort {
     required bool preferFiscalYear,
   }) async {
     if (preferFiscalYear && _fiscalYears != null) {
-      final period = await _fiscalYears!.findPeriodContaining(entryDate);
+      final period = await _fiscalYears.findPeriodContaining(entryDate);
       if (period != null) {
-        final fy = await _fiscalYears!.getByUuid(period.fiscalYearUuid);
+        final fy = await _fiscalYears.getByUuid(period.fiscalYearUuid);
         final gain = fy?.fxGainAccountUuid?.trim() ?? '';
         final loss = fy?.fxLossAccountUuid?.trim() ?? '';
         if (fy != null &&

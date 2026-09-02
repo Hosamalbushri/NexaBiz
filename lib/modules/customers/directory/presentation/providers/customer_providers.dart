@@ -115,14 +115,11 @@ final linkMissingCustomerAccountsProvider =
 
 class LinkMissingCustomerAccounts {
   const LinkMissingCustomerAccounts({
-    required CustomerRepository repository,
-    required EnsureCustomerAccountLinks ensureLinks,
-    required CustomerAccountLinkPort linkPort,
-    required SettingsRepository settings,
-  }) : _repository = repository,
-       _ensureLinks = ensureLinks,
-       _linkPort = linkPort,
-       _settings = settings;
+    required this._repository,
+    required this._ensureLinks,
+    required this._linkPort,
+    required this._settings,
+  });
 
   final CustomerRepository _repository;
   final EnsureCustomerAccountLinks _ensureLinks;
@@ -254,9 +251,8 @@ final customersAutoLinkAccountProvider =
 
 class CustomersAutoLinkAccountController
     extends StateNotifier<AsyncValue<bool>> {
-  CustomersAutoLinkAccountController({required SettingsRepository repository})
-    : _repository = repository,
-      super(const AsyncValue.loading()) {
+  CustomersAutoLinkAccountController({required this._repository})
+    : super(const AsyncValue.loading()) {
     _load();
   }
 
@@ -290,11 +286,9 @@ final customersParentAccountProvider =
 class CustomersParentAccountController
     extends StateNotifier<AsyncValue<LinkedAccountRef?>> {
   CustomersParentAccountController({
-    required SettingsRepository repository,
-    required CustomerAccountLinkPort linkPort,
-  }) : _repository = repository,
-       _linkPort = linkPort,
-       super(const AsyncValue.loading()) {
+    required this._repository,
+    required this._linkPort,
+  }) : super(const AsyncValue.loading()) {
     _load();
   }
 

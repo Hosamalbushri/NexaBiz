@@ -7,12 +7,10 @@ import '../settings/settings_repository.dart';
 /// under this device's customers parent (system chart UUIDs differ per install).
 class CustomerRemoteAccountEnsure {
   CustomerRemoteAccountEnsure({
-    required AccountRepositoryImpl accounts,
-    required CustomerAccountLinkPort accountLink,
-    required SettingsRepository settings,
-  }) : _accounts = accounts,
-       _accountLink = accountLink,
-       _settings = settings;
+    required this._accounts,
+    required this._accountLink,
+    required this._settings,
+  });
 
   final AccountRepositoryImpl _accounts;
   final CustomerAccountLinkPort _accountLink;

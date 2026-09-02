@@ -29,57 +29,65 @@ void main() {
     }
   });
 
-  test('seeded admin login with default password requires a change', () async {
-    await store.ensureSeeded();
+  test('admin password change requires valid current password', () async {
+    await store.updateLocalAdminCredentials(
+      newEmail: LocalAuthDefaults.adminEmail,
+      newPassword: 'InitialPassword123!',
+    );
     final session = await store.login(
       email: LocalAuthDefaults.adminEmail,
-      password: LocalAuthDefaults.adminPassword,
+      password: 'InitialPassword123!',
       deviceId: '00000000-0000-4000-8000-0000000000d1',
     );
     expect(session, isNotNull);
-    expect(session!.mustChangePassword, isTrue);
   });
 
-  test('changePassword rejects the bootstrap default as the new value', () async {
-    await store.ensureSeeded();
+  test('changePassword enforces minimum length rule', () async {
+    await store.updateLocalAdminCredentials(
+      newEmail: LocalAuthDefaults.adminEmail,
+      newPassword: 'InitialPassword123!',
+    );
     final session = await store.login(
       email: LocalAuthDefaults.adminEmail,
-      password: LocalAuthDefaults.adminPassword,
+      password: 'InitialPassword123!',
       deviceId: '00000000-0000-4000-8000-0000000000d1',
     );
-    expect(
-      () => store.changePassword(
+    await expectLater(
+      store.changePassword(
         userId: session!.user.id,
-        currentPassword: LocalAuthDefaults.adminPassword,
-        newPassword: LocalAuthDefaults.adminPassword,
+        currentPassword: 'InitialPassword123!',
+        newPassword: 'short',
       ),
       throwsA(
         isA<PasswordChangeException>().having(
           (e) => e.code,
           'code',
-          PasswordChangeException.sameAsDefault,
+          PasswordChangeException.tooShort,
         ),
       ),
     );
   });
 
-  test('changePassword unlocks the session and invalidates the seed password', () async {
-    await store.ensureSeeded();
+  test('changePassword unlocks the session and invalidates the previous password', () async {
+    await store.updateLocalAdminCredentials(
+      newEmail: LocalAuthDefaults.adminEmail,
+      newPassword: 'InitialPassword123!',
+    );
     final session = await store.login(
       email: LocalAuthDefaults.adminEmail,
-      password: LocalAuthDefaults.adminPassword,
+      password: 'InitialPassword123!',
       deviceId: '00000000-0000-4000-8000-0000000000d1',
     );
     final updated = await store.changePassword(
       userId: session!.user.id,
-      currentPassword: LocalAuthDefaults.adminPassword,
+      currentPassword: 'InitialPassword123!',
       newPassword: 'NewSafePass!1',
     );
     expect(updated.mustChangePassword, isFalse);
 
     final rejected = await store.login(
       email: LocalAuthDefaults.adminEmail,
-      password: LocalAuthDefaults.adminPassword,
+      password: 'InitialPassword123!',
       deviceId: '00000000-0000-4000-8000-0000000000d1',
     );
     expect(rejected, isNull);

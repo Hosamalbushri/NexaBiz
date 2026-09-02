@@ -36,8 +36,8 @@ class ConflictEvaluationResult {
 /// Deterministic conflict policy shared across features.
 class ConflictResolver {
   const ConflictResolver({
-    ThreeWayMerger merger = const ThreeWayMerger(),
-  }) : _merger = merger;
+    this._merger = const ThreeWayMerger(),
+  });
 
   final ThreeWayMerger _merger;
 

@@ -64,18 +64,15 @@ class ReconciliationException implements Exception {
 
   @override
   String toString() =>
-      'ReconciliationException: Found ${report.discrepancies.length} discrepancy(ies) for company ${report.companyId}:\n' +
-      report.discrepancies.map((d) => ' - $d').join('\n');
+      'ReconciliationException: Found ${report.discrepancies.length} discrepancy(ies) for company ${report.companyId}:\n${report.discrepancies.map((d) => ' - $d').join('\n')}';
 }
 
 class InventoryAccountingReconciliationEngine {
   InventoryAccountingReconciliationEngine({
-    required InventorySubledgerQueryPort inventorySubledgerQuery,
-    required AccountingDatabase accountingDb,
-    String Function()? readCompanyId,
-  })  : _inventorySubledgerQuery = inventorySubledgerQuery,
-        _accountingDb = accountingDb,
-        _readCompanyId = readCompanyId;
+    required this._inventorySubledgerQuery,
+    required this._accountingDb,
+    this._readCompanyId,
+  });
 
   final InventorySubledgerQueryPort _inventorySubledgerQuery;
   final AccountingDatabase _accountingDb;
@@ -353,7 +350,7 @@ class InventoryAccountingReconciliationEngine {
           discrepancies.add(
             ReconciliationDiscrepancy(
               documentId: je.sourceId!,
-              documentNumber: je.voucherNumber ?? je.uuid,
+              documentNumber: je.voucherNumber,
               documentType: 'stock_receipt',
               issueType: ReconciliationIssueType.orphanJournalEntry,
               description: 'قيد محاسبي نشط لمستند توريد غير موجود أو غير مرحّل',
@@ -371,7 +368,7 @@ class InventoryAccountingReconciliationEngine {
           discrepancies.add(
             ReconciliationDiscrepancy(
               documentId: je.sourceId!,
-              documentNumber: je.voucherNumber ?? je.uuid,
+              documentNumber: je.voucherNumber,
               documentType: 'stock_issue',
               issueType: ReconciliationIssueType.orphanJournalEntry,
               description: 'قيد محاسبي نشط لمستند صرف غير موجود أو غير مرحّل',
@@ -389,7 +386,7 @@ class InventoryAccountingReconciliationEngine {
           discrepancies.add(
             ReconciliationDiscrepancy(
               documentId: je.sourceId!,
-              documentNumber: je.voucherNumber ?? je.uuid,
+              documentNumber: je.voucherNumber,
               documentType: 'stock_return',
               issueType: ReconciliationIssueType.orphanJournalEntry,
               description: 'قيد محاسبي نشط لمستند مرتجع غير موجود أو غير مرحّل',

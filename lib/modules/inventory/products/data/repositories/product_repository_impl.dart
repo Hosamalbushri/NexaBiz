@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import '../../domain/entities/product.dart';
@@ -14,10 +14,9 @@ import 'package:stock_count/modules/inventory/shared/data/database/inventory_dat
 class ProductRepositoryImpl implements ProductRepository {
   ProductRepositoryImpl(
     this._db, {
-    SyncQueue? syncQueue,
-    String Function()? readCompanyId,
-  }) : _syncQueue = syncQueue,
-       _readCompanyId = readCompanyId;
+    this._syncQueue,
+    this._readCompanyId,
+  });
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
@@ -25,8 +24,15 @@ class ProductRepositoryImpl implements ProductRepository {
 
   static const entityType = 'product';
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call().trim();
+    if (id == null || id.isEmpty) {
+      throw MissingCompanyContextException(
+        'ProductRepository operation failed: missing company context.',
+      );
+    }
+    return id;
+  }
 
   Expression<bool> _tenantScoped($ProductsTable t) =>
       t.companyId.equals(_currentCompanyId);

@@ -9,15 +9,14 @@ import '../../domain/models/fiscal_year_exception.dart';
 import '../../domain/repositories/fiscal_year_repository.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 
 class FiscalYearRepositoryImpl implements FiscalYearRepository {
   FiscalYearRepositoryImpl(
     this._db, {
-    SyncQueue? syncQueue,
-    String Function()? readCompanyId,
-  }) : _syncQueue = syncQueue,
-       _readCompanyId = readCompanyId;
+    this._syncQueue,
+    this._readCompanyId,
+  });
 
   final AccountingDatabase _db;
   final SyncQueue? _syncQueue;
@@ -25,8 +24,15 @@ class FiscalYearRepositoryImpl implements FiscalYearRepository {
 
   static const entityType = 'fiscal_year';
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call().trim();
+    if (id == null || id.isEmpty) {
+      throw MissingCompanyContextException(
+        'FiscalYearRepository operation failed: missing company context.',
+      );
+    }
+    return id;
+  }
 
   Expression<bool> _tenantScoped($FiscalYearsTable t) =>
       t.companyId.equals(_currentCompanyId);

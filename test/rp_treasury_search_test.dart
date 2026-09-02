@@ -4,10 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:stock_count/app/receipts_payments/accounting_rp_treasury_adapter.dart';
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/accounting/data/database/accounting_database.dart';
-import 'package:stock_count/modules/accounting/data/repositories/account_repository_impl.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account.dart';
-import 'package:stock_count/modules/accounting/domain/entities/account_type.dart';
+import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/data/repositories/account_repository_impl.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

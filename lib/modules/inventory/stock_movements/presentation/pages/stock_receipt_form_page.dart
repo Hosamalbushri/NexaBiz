@@ -19,6 +19,7 @@ import 'package:stock_count/app/providers/currency_rate_providers.dart';
 import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
 import 'package:stock_count/modules/inventory/products/presentation/pages/product_barcode_scanner_page.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
+import 'package:stock_count/core/widgets/app_document_line_table_shell.dart';
 import '../../domain/services/inventory_account_port.dart';
 import '../../domain/services/inventory_voucher_book_port.dart';
 import '../providers/stock_movements_providers.dart';
@@ -1017,9 +1018,7 @@ class _StockReceiptProductsTableState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
-    final hasContent = widget.items.isNotEmpty || _draftRowIds.isNotEmpty;
     final viewportWidth = MediaQuery.sizeOf(context).width;
     final tableWidth = math.max(_Cols.width, viewportWidth - 48);
 
@@ -1031,82 +1030,44 @@ class _StockReceiptProductsTableState
           onScanBarcode: widget.onScanBarcode,
         ),
         const SizedBox(height: AppSpacing.md),
-        if (!hasContent)
-          _EmptyAddCard(
-            onAdd: _addDraftRow,
-            addLabel: l10n.stockReceiptAddLineButton,
-            emptyLabel: l10n.stockReceiptNoProductsMessage,
-          )
-        else
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: scheme.surface,
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.5),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: scheme.shadow.withValues(alpha: 0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              child: Column(
-                children: [
-                  Scrollbar(
-                    controller: _horizontalScroll,
-                    thumbVisibility: true,
-                    radius: const Radius.circular(8),
-                    notificationPredicate: (n) =>
-                        n.metrics.axis == Axis.horizontal,
-                    child: SingleChildScrollView(
-                      controller: _horizontalScroll,
-                      scrollDirection: Axis.horizontal,
-                      child: SizedBox(
-                        width: tableWidth,
-                        child: Column(
-                          children: [
-                            _TableHeader(theme: theme),
-                            for (var i = 0; i < widget.items.length; i++)
-                              _FilledRow(
-                                index: i,
-                                item: widget.items[i],
-                                striped: i.isOdd,
-                                onQuantitiesChanged: (main, sub) {
-                                  widget.onQuantitiesChanged(i, main, sub);
-                                },
-                                onUnitCostChanged: (cost) {
-                                  widget.onUnitCostChanged(i, cost);
-                                },
-                                onRemove: () => widget.onRemove(i),
-                              ),
-                            if (widget.items.isNotEmpty)
-                              _TableFooter(items: widget.items, theme: theme),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  for (final draftId in _draftRowIds)
-                    _DraftProductRow(
-                      key: ValueKey('draft-$draftId'),
-                      onProductSelected: (product) {
-                        _onDraftProductSelected(draftId, product);
-                      },
-                      onCancel: () => _removeDraftRow(draftId),
-                    ),
-                  _TableActionsBar(
-                    onAdd: _addDraftRow,
-                    addLabel: l10n.stockReceiptAddLineButton,
-                  ),
-                ],
-              ),
-            ),
+        AppDocumentLineTableShell<StockReceiptLineDraft>(
+          items: widget.items,
+          minContentWidth: tableWidth,
+          emptyText: l10n.stockReceiptNoProductsMessage,
+          emptyAddLabel: l10n.stockReceiptAddLineButton,
+          onAddRow: _addDraftRow,
+          headerBuilder: (ctx) => _TableHeader(theme: theme),
+          rowBuilder: (ctx, i, item) => _FilledRow(
+            index: i,
+            item: item,
+            striped: i.isOdd,
+            onQuantitiesChanged: (main, sub) {
+              widget.onQuantitiesChanged(i, main, sub);
+            },
+            onUnitCostChanged: (cost) {
+              widget.onUnitCostChanged(i, cost);
+            },
+            onRemove: () => widget.onRemove(i),
           ),
+          footerSummaryBuilder: (ctx) => Column(
+            children: [
+              if (widget.items.isNotEmpty)
+                _TableFooter(items: widget.items, theme: theme),
+              for (final draftId in _draftRowIds)
+                _DraftProductRow(
+                  key: ValueKey('draft-$draftId'),
+                  onProductSelected: (product) {
+                    _onDraftProductSelected(draftId, product);
+                  },
+                  onCancel: () => _removeDraftRow(draftId),
+                ),
+              _TableActionsBar(
+                onAdd: _addDraftRow,
+                addLabel: l10n.stockReceiptAddLineButton,
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -1577,43 +1538,7 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
   }
 }
 
-class _EmptyAddCard extends StatelessWidget {
-  const _EmptyAddCard({
-    required this.onAdd,
-    required this.addLabel,
-    required this.emptyLabel,
-  });
 
-  final VoidCallback onAdd;
-  final String addLabel;
-  final String emptyLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Material(
-      color: scheme.surface,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          children: [
-            Icon(Icons.playlist_add_rounded, color: scheme.primary, size: 36),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              emptyLabel,
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            _AddRowButton(label: addLabel, onTap: onAdd),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _TableActionsBar extends StatelessWidget {
   const _TableActionsBar({

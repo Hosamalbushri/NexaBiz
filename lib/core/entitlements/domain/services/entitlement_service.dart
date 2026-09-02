@@ -23,10 +23,9 @@ abstract class EntitlementService {
 
 class EntitlementServiceImpl implements EntitlementService {
   EntitlementServiceImpl({
-    required EntitlementRepository repository,
-    Duration offlineGraceDuration = const Duration(days: 14),
-  })  : _repository = repository,
-        _offlineGraceDuration = offlineGraceDuration;
+    required this._repository,
+    this._offlineGraceDuration = const Duration(days: 14),
+  });
 
   final EntitlementRepository _repository;
   final Duration _offlineGraceDuration;

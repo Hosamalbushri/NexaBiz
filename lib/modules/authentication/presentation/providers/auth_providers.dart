@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -16,7 +17,9 @@ import '../../data/local_auth_store.dart';
 import '../../data/offline_authorization_store.dart';
 import '../../data/secure_token_storage.dart';
 import '../../data/sync_login_credential_store.dart';
+import '../../domain/entities/active_company_context.dart';
 import '../../domain/entities/auth_session.dart';
+import '../../domain/entities/auth_user.dart';
 import '../../domain/entities/offline_authorization_snapshot.dart';
 import '../../domain/repositories/auth_repository.dart';
 
@@ -125,11 +128,14 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 enum AuthStatus {
   unknown,
+  uninitialized,
+  restoring,
   initializing,
   unauthenticated,
   authenticating,
   authenticated,
   biometricAuthenticating,
+  invalidated,
   sessionExpired,
   authenticationFailed,
   needsCompany,
@@ -151,6 +157,7 @@ class AuthState {
   });
 
   const AuthState.unknown() : this(status: AuthStatus.unknown);
+  const AuthState.uninitialized() : this(status: AuthStatus.uninitialized);
 
   final AuthStatus status;
   final AuthSessionSnapshot? session;
@@ -163,9 +170,12 @@ class AuthState {
   bool get isAuthenticated =>
       status == AuthStatus.authenticated || status == AuthStatus.needsCompany;
 
+  bool get hasCompany => session?.hasCompany == true;
+
   bool get isAuthenticating =>
       status == AuthStatus.authenticating ||
       status == AuthStatus.biometricAuthenticating ||
+      status == AuthStatus.restoring ||
       status == AuthStatus.initializing;
 
   bool get mustChangePassword => session?.mustChangePassword == true;
@@ -207,18 +217,37 @@ class AuthState {
 
   bool hasAnyPermission(Iterable<String> codes) =>
       session?.hasAnyPermission(codes) ?? false;
+
+  AuthState copyWith({
+    AuthStatus? status,
+    AuthSessionSnapshot? session,
+    String? errorMessage,
+    AuthBackend? backend,
+    bool? isOfflineAuthorizationRestored,
+    bool? isOfflineAuthorizationUnavailable,
+    OfflineAuthorizationSnapshot? offlineAuthorizationSnapshot,
+  }) {
+    return AuthState(
+      status: status ?? this.status,
+      session: session ?? this.session,
+      errorMessage: errorMessage ?? this.errorMessage,
+      backend: backend ?? this.backend,
+      isOfflineAuthorizationRestored: isOfflineAuthorizationRestored ?? this.isOfflineAuthorizationRestored,
+      isOfflineAuthorizationUnavailable: isOfflineAuthorizationUnavailable ?? this.isOfflineAuthorizationUnavailable,
+      offlineAuthorizationSnapshot: offlineAuthorizationSnapshot ?? this.offlineAuthorizationSnapshot,
+    );
+  }
 }
 
 class AuthController extends StateNotifier<AuthState> {
   AuthController({
-    required LocalAuthRepository local,
-    required AuthRepositoryImpl remote,
-  }) : _local = local,
-       _remote = remote,
-       super(const AuthState.unknown());
+    required this._local,
+    required this._remote,
+  }) : super(const AuthState.uninitialized());
 
   final LocalAuthRepository _local;
   final AuthRepositoryImpl _remote;
+  Completer<AuthSessionSnapshot?>? _restoreCompleter;
 
   void _set(AuthState next) {
     if (!mounted) return;
@@ -228,6 +257,59 @@ class AuthController extends StateNotifier<AuthState> {
   /// Widget-test helper: seed session without Hive/repositories.
   @visibleForTesting
   void replaceStateForTest(AuthState next) => _set(next);
+
+  /// Restores session with single-flight concurrency lock and fail-closed security validation.
+  Future<AuthSessionSnapshot?> restoreSession({bool force = false}) async {
+    if (_restoreCompleter != null) {
+      return _restoreCompleter!.future;
+    }
+
+    _set(state.copyWith(status: AuthStatus.restoring));
+    final completer = Completer<AuthSessionSnapshot?>();
+    _restoreCompleter = completer;
+
+    try {
+      final session = state.isRemoteSession
+          ? await _remote.restoreSession()
+          : await _local.restoreSession();
+
+      if (session == null) {
+        _set(const AuthState(status: AuthStatus.unauthenticated));
+        completer.complete(null);
+      } else if (!session.isValidSecuritySession) {
+        // Fail closed on malformed / security invariant failure
+        await logout();
+        _set(const AuthState(status: AuthStatus.invalidated));
+        _set(const AuthState(status: AuthStatus.unauthenticated));
+        completer.complete(null);
+      } else {
+        final nextState = _stateFor(session, state.backend);
+        _set(nextState);
+        completer.complete(session);
+      }
+    } catch (e) {
+      _set(AuthState(
+        status: AuthStatus.unauthenticated,
+        errorMessage: e.toString(),
+      ));
+      completer.completeError(e);
+    } finally {
+      _restoreCompleter = null;
+    }
+
+    return completer.future;
+  }
+
+  /// Explicitly invalidates current session state.
+  Future<void> invalidateSession() async {
+    _restoreCompleter = null;
+    _set(const AuthState(status: AuthStatus.invalidated));
+    try {
+      await logout();
+    } catch (_) {}
+    _set(const AuthState(status: AuthStatus.unauthenticated));
+  }
+
 
   /// Mandatory authentication on application startup: require sign in on launch.
   Future<void> bootstrap({bool preferRemote = false}) async {
@@ -265,6 +347,28 @@ class AuthController extends StateNotifier<AuthState> {
     _set(_stateFor(session, AuthBackend.local));
   }
 
+  /// Local offline login using an OS-protected biometric token without raw passwords.
+  Future<void> loginWithBiometricToken({
+    required String email,
+    required String biometricToken,
+    String? companyId,
+    required String deviceId,
+    required String deviceName,
+    required String platform,
+    String? appVersion,
+  }) async {
+    final session = await _local.loginWithBiometricToken(
+      email: email,
+      biometricToken: biometricToken,
+      companyId: companyId,
+      deviceId: deviceId,
+      deviceName: deviceName,
+      platform: platform,
+      appVersion: appVersion,
+    );
+    _set(_stateFor(session, AuthBackend.local));
+  }
+
   /// Creates a new company locally and sets it as active company.
   Future<void> createCompany({
     required String name,
@@ -272,6 +376,38 @@ class AuthController extends StateNotifier<AuthState> {
   }) async {
     final session = await _local.createCompany(name: name, code: code);
     _set(_stateFor(session, AuthBackend.local));
+  }
+
+  /// Creates a new company locally with an explicit Admin user credentials.
+  Future<AuthCompany> createCompanyWithAdmin({
+    required String companyName,
+    required String companyCode,
+    required String adminName,
+    required String adminEmail,
+    required String adminPassword,
+    String adminRole = 'Admin',
+    List<String>? adminPermissions,
+  }) async {
+    final company = await _local.createCompanyWithAdmin(
+      companyName: companyName,
+      companyCode: companyCode,
+      adminName: adminName,
+      adminEmail: adminEmail,
+      adminPassword: adminPassword,
+      adminRole: adminRole,
+      adminPermissions: adminPermissions,
+    );
+    final current = state.session;
+    if (current != null) {
+      final hasComp = current.companies.any((c) => c.id == company.id);
+      if (!hasComp) {
+        final updated = current.copyWith(
+          companies: [...current.companies, company],
+        );
+        _set(_stateFor(updated, AuthBackend.local));
+      }
+    }
+    return company;
   }
 
   /// Changes password for the active session.
@@ -354,9 +490,10 @@ class AuthController extends StateNotifier<AuthState> {
     );
   }
 
-  Future<void> switchCompany(String companyId) async {
+  Future<AuthSessionSnapshot?> switchCompany(String companyId) async {
     final session = await _local.switchCompany(companyId);
     _set(_stateFor(session, AuthBackend.local));
+    return session;
   }
 
 
@@ -526,9 +663,15 @@ final currentPermissionsProvider = Provider<Set<String>>((ref) {
   return ref.watch(authStateProvider).session?.permissions ?? {};
 });
 
+/// Exposes the current authoritative [ActiveCompanyContext] for Riverpod consumers.
+final activeCompanyContextProvider = Provider<ActiveCompanyContext?>((ref) {
+  return ref.watch(authStateProvider).session?.companyContext;
+});
+
 /// Domain RBAC gate — use cases must call [PermissionGuard.requireAny].
 final permissionGuardProvider = Provider<PermissionGuard>((ref) {
   return CallbackPermissionGuard((codes) {
     return ref.read(authStateProvider).hasAnyPermission(codes);
   });
 });
+

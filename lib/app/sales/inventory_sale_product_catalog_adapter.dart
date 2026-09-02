@@ -7,10 +7,9 @@ import 'package:stock_count/modules/sales/shared/domain/services/sale_product_ca
 /// App adapter: Sales product catalog → Inventory products + scan resolver.
 class InventorySaleProductCatalogAdapter implements SaleProductCatalogPort {
   InventorySaleProductCatalogAdapter({
-    required ProductRepository repository,
-    required ProductScanResolver scanResolver,
-  }) : _repository = repository,
-       _scanResolver = scanResolver;
+    required this._repository,
+    required this._scanResolver,
+  });
 
   final ProductRepository _repository;
   final ProductScanResolver _scanResolver;

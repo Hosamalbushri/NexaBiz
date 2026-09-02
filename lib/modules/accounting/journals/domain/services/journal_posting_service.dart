@@ -14,14 +14,11 @@ import 'package:stock_count/modules/accounting/permissions/accounting_permission
 /// posted ledgers.
 class JournalPostingService {
   const JournalPostingService({
-    required JournalRepository journals,
-    required AccountingPeriodValidator periodValidator,
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
-    AuditTrailService? auditService,
-  })  : _journals = journals,
-        _periodValidator = periodValidator,
-        _permissionGuard = permissionGuard,
-        _auditService = auditService;
+    required this._journals,
+    required this._periodValidator,
+    this._permissionGuard = const AllowAllPermissionGuard(),
+    this._auditService,
+  });
 
   /// Source type for reversing journals (`sourceId` = original entry UUID).
   static const reverseSourceType = 'journal_reverse';

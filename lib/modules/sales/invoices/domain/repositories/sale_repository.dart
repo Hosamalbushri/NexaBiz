@@ -1,6 +1,7 @@
 import '../entities/sale.dart';
 import '../entities/sale_list_item.dart';
 import '../entities/sale_status.dart';
+import '../models/sale_keyset_paged_result.dart';
 import '../models/sale_list_filter.dart';
 import '../models/sale_paged_result.dart';
 
@@ -24,6 +25,13 @@ abstract class SaleRepository {
   Future<SalePagedResult<SaleListItem>> searchListPaged(
     SaleListFilter filter, {
     int page = 0,
+    int pageSize = 30,
+  });
+
+  /// Header-only keyset-paged list query (`saleDate DESC, id DESC`).
+  Future<SaleKeysetPagedResult<SaleListItem>> searchKeysetPaged(
+    SaleListFilter filter, {
+    SaleCursor? cursor,
     int pageSize = 30,
   });
 

@@ -20,11 +20,10 @@ String _normalizeUuid(String raw) {
 /// Inventory products adapter for the shared SyncManager.
 class ProductSyncHandler implements SyncEntityHandler {
   ProductSyncHandler({
-    required ProductRepositoryImpl repository,
-    required RemoteSyncApi Function() remoteProvider,
+    required this._repository,
+    required this._remoteProvider,
     this.conflictResolver = const ConflictResolver(),
-  })  : _repository = repository,
-        _remoteProvider = remoteProvider;
+  });
 
   final ProductRepositoryImpl _repository;
   final RemoteSyncApi Function() _remoteProvider;
@@ -107,11 +106,10 @@ class ProductSyncHandler implements SyncEntityHandler {
 /// Stock-count lines — divergent quantities are never auto-overwritten.
 class InventoryItemSyncHandler implements SyncEntityHandler {
   InventoryItemSyncHandler({
-    required InventoryRepositoryImpl repository,
-    required RemoteSyncApi Function() remoteProvider,
+    required this._repository,
+    required this._remoteProvider,
     this.conflictResolver = const ConflictResolver(),
-  })  : _repository = repository,
-        _remoteProvider = remoteProvider;
+  });
 
   final InventoryRepositoryImpl _repository;
   final RemoteSyncApi Function() _remoteProvider;
@@ -201,11 +199,10 @@ class InventoryItemSyncHandler implements SyncEntityHandler {
 /// Append-only movement events adapter for the shared SyncManager.
 class InventoryMovementSyncHandler implements SyncEntityHandler {
   InventoryMovementSyncHandler({
-    required InventoryMovementLedger ledger,
-    required RemoteSyncApi Function() remoteProvider,
+    required this._ledger,
+    required this._remoteProvider,
     this.conflictResolver = const ConflictResolver(),
-  })  : _ledger = ledger,
-        _remoteProvider = remoteProvider;
+  });
 
   final InventoryMovementLedger _ledger;
   final RemoteSyncApi Function() _remoteProvider;
@@ -264,18 +261,14 @@ class InventoryMovementSyncHandler implements SyncEntityHandler {
 class InventoryDocumentSyncHandler implements SyncEntityHandler {
   InventoryDocumentSyncHandler({
     required this.entityType,
-    required RemoteSyncApi Function() remoteProvider,
-    InventoryDatabase? db,
-    PostingCoordinator? postingCoordinator,
-    PostingEngine? postingEngine,
-    String Function()? readCompanyId,
+    required this._remoteProvider,
+    this._db,
+    this._postingCoordinator,
+    this._postingEngine,
+    this._readCompanyId,
     this.conflictResolver = const ConflictResolver(),
     this.preferServerWhenLocalSynced = true,
-  })  : _remoteProvider = remoteProvider,
-        _db = db,
-        _postingCoordinator = postingCoordinator,
-        _postingEngine = postingEngine,
-        _readCompanyId = readCompanyId;
+  });
 
   @override
   final String entityType;

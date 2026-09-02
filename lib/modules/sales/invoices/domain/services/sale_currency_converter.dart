@@ -1,3 +1,4 @@
+import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
 import 'sale_money.dart';
 
 /// Converts between company base currency and a sale currency.
@@ -9,16 +10,20 @@ class SaleCurrencyConverter {
 
   /// Base → sale currency (for displaying product prices).
   double baseToSale(double baseAmount, double rateToBase) {
-    if (rateToBase <= 0) {
-      return SaleMoney.round(baseAmount);
+    if (rateToBase <= 0 || rateToBase.isNaN || rateToBase.isInfinite) {
+      throw const InvalidExchangeRateException(
+        'سعر الصرف لتحويل العملة غير صالح. يجب أن يكون رقماً موجباً.',
+      );
     }
     return SaleMoney.round(baseAmount / rateToBase);
   }
 
   /// Sale currency → base (for reporting / future posting).
   double saleToBase(double saleAmount, double rateToBase) {
-    if (rateToBase <= 0) {
-      return SaleMoney.round(saleAmount);
+    if (rateToBase <= 0 || rateToBase.isNaN || rateToBase.isInfinite) {
+      throw const InvalidExchangeRateException(
+        'سعر الصرف لتحويل العملة غير صالح. يجب أن يكون رقماً موجباً.',
+      );
     }
     return SaleMoney.round(saleAmount * rateToBase);
   }

@@ -3,19 +3,83 @@ import '../entities/system_setup_state.dart';
 import '../ports/system_setup_seed_port.dart';
 import '../repositories/system_setup_state_repository.dart';
 
+enum SystemInitializationState {
+  uninitialized,
+  initializing,
+  initialized,
+  initializationFailed,
+}
+
+class SystemAlreadyInitializedException implements Exception {
+  const SystemAlreadyInitializedException();
+
+  @override
+  String toString() => 'System initialization has already been completed.';
+}
+
 /// Determines readiness and advances versioned setup steps.
 class SystemInitializationCoordinator {
   SystemInitializationCoordinator({
-    required SystemSetupStateRepository stateRepository,
-    required SystemSetupSeedPort seedPort,
+    required this._stateRepository,
+    required this._seedPort,
     LocalAuthStore? authStore,
-  })  : _stateRepository = stateRepository,
-        _seedPort = seedPort,
-        _authStore = authStore ?? LocalAuthStore();
+  })  : _authStore = authStore ?? LocalAuthStore();
 
   final SystemSetupStateRepository _stateRepository;
   final SystemSetupSeedPort _seedPort;
   final LocalAuthStore _authStore;
+  SystemInitializationState _initState = SystemInitializationState.uninitialized;
+
+  SystemInitializationState get currentState => _initState;
+
+  Future<SystemInitializationState> getInitializationState() async {
+    final hasAdmin = await _authStore.hasConfiguredAdmin();
+    final progress = await loadProgress();
+    if (hasAdmin || progress.isReady) {
+      _initState = SystemInitializationState.initialized;
+      return SystemInitializationState.initialized;
+    }
+    return _initState;
+  }
+
+  /// Authoritative Phase 4 First-Run System Initialization.
+  ///
+  /// Executes base data seeding and initial System Administrator creation (company-less).
+  /// Enforces idempotency and closed-path security (throws if already initialized).
+  Future<void> initializeSystem({
+    required String adminName,
+    required String adminEmail,
+    required String adminPassword,
+  }) async {
+    final current = await getInitializationState();
+    if (current == SystemInitializationState.initialized) {
+      throw const SystemAlreadyInitializedException();
+    }
+
+    _initState = SystemInitializationState.initializing;
+
+    try {
+      // 1. Base data initialization
+      await _seedPort.ensureLocalDefaults();
+
+      // 2. Initial System Administrator creation (NO company context)
+      await _authStore.createInitialSystemAdmin(
+        name: adminName,
+        email: adminEmail,
+        password: adminPassword,
+      );
+
+      // 3. Complete system initialization
+      var progress = await loadProgress();
+      progress = _maybeMarkReady(progress);
+      await _stateRepository.save(progress);
+
+      _initState = SystemInitializationState.initialized;
+    } catch (e) {
+      _initState = SystemInitializationState.initializationFailed;
+      rethrow;
+    }
+  }
 
   Future<SetupProgress> loadProgress() => _stateRepository.load();
 

@@ -8,12 +8,10 @@ import 'package:stock_count/modules/system_setup/domain/repositories/company_ini
 
 class AccountingEntryBuilder {
   AccountingEntryBuilder({
-    required AccountMappingResolver mappingResolver,
-    required AccountValidationService validationService,
-    CompanyInitializationRepository? initRepository,
-  }) : _mappingResolver = mappingResolver,
-       _validationService = validationService,
-       _initRepository = initRepository;
+    required this._mappingResolver,
+    required this._validationService,
+    this._initRepository,
+  });
 
   final AccountMappingResolver _mappingResolver;
   final AccountValidationService _validationService;

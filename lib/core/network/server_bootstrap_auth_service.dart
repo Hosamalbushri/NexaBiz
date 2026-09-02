@@ -13,10 +13,9 @@ import '../errors/app_error_domain.dart';
 /// Disconnected from application user authorization, RBAC permissions, and [AuthState].
 class ServerBootstrapAuthService {
   ServerBootstrapAuthService({
-    required SecureTokenStorage tokenStorage,
-    http.Client? client,
-  })  : _tokenStorage = tokenStorage,
-        _client = client;
+    required this._tokenStorage,
+    this._client,
+  });
 
   final SecureTokenStorage _tokenStorage;
   final http.Client? _client;

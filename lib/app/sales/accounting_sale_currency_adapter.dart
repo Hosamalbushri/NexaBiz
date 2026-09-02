@@ -4,10 +4,9 @@ import 'package:stock_count/modules/sales/shared/domain/services/sale_currency_p
 /// App adapter: Sales currencies → company base + Accounting rates.
 class AccountingSaleCurrencyAdapter implements SaleCurrencyPort {
   AccountingSaleCurrencyAdapter({
-    required Future<String> Function() baseCurrencyReader,
-    required CurrencyRateRepository rates,
-  }) : _baseCurrencyReader = baseCurrencyReader,
-       _rates = rates;
+    required this._baseCurrencyReader,
+    required this._rates,
+  });
 
   final Future<String> Function() _baseCurrencyReader;
   final CurrencyRateRepository _rates;

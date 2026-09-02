@@ -34,8 +34,6 @@ class AccountingSetupAccountLookupAdapter implements SetupAccountLookupPort {
       case AccountType.expense:
         mappedType = SetupAccountType.expense;
         break;
-      default:
-        mappedType = SetupAccountType.other;
     }
 
     return SetupAccountData(

@@ -31,11 +31,10 @@ class ConnectivityService {
     Connectivity? connectivity,
     Stream<List<ConnectivityResult>>? connectivityStream,
     List<ConnectivityResult>? initialResults,
-    InternetProbe? internetProbe,
+    this._internetProbe,
   }) : _connectivity = connectivity ?? Connectivity(),
        _streamOverride = connectivityStream,
-       _initialOverride = initialResults,
-       _internetProbe = internetProbe;
+       _initialOverride = initialResults;
 
   final Connectivity _connectivity;
   final Stream<List<ConnectivityResult>>? _streamOverride;

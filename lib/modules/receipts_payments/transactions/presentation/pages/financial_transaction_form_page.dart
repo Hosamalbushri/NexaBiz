@@ -11,8 +11,9 @@ import 'package:stock_count/core/widgets/app_amount_field.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
+import 'package:stock_count/core/widgets/app_select_field.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
+import 'package:stock_count/core/widgets/app_text_field.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/core/domain/services/device_document_number.dart';
 import '../../domain/entities/transaction_type.dart';
@@ -654,36 +655,16 @@ class _HeaderCard extends StatelessWidget {
             ),
             if (voucherBooks.isNotEmpty && canChangeBook) ...[
               const SizedBox(height: AppSpacing.md),
-              DropdownButtonFormField<RpVoucherBookRef?>(
+              AppSelectField<RpVoucherBookRef?>(
                 value: bookValue,
-                isExpanded: true,
-                decoration: InputDecoration(labelText: l10n.rpVoucherBook),
+                label: l10n.rpVoucherBook,
                 items: [
-                  ...voucherBooks.map(
-                    (book) => DropdownMenuItem<RpVoucherBookRef?>(
+                  for (final book in voucherBooks)
+                    AppSelectItem(
                       value: book,
-                      enabled: book.canAllocate || !canChangeBook,
-                      child: Text(
-                        '${book.name} (${book.previewNumber})',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      label: '${book.name} (${book.previewNumber})',
                     ),
-                  ),
                 ],
-                selectedItemBuilder: (context) {
-                  return [
-                    for (final book in voucherBooks)
-                      Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Text(
-                          '${book.name} (${book.previewNumber})',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                  ];
-                },
                 onChanged: canChangeBook ? onBookChanged : null,
               ),
             ],
@@ -728,13 +709,10 @@ class _HeaderCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            TextField(
+            AppTextField(
               controller: descriptionController,
-              decoration: InputDecoration(
-                labelText: l10n.rpGeneralDescription,
-                alignLabelWithHint: true,
-                prefixIcon: const Icon(Icons.notes_outlined),
-              ),
+              label: l10n.rpGeneralDescription,
+              prefixIcon: Icons.notes_outlined,
               maxLines: 3,
               onChanged: onDescriptionChanged,
             ),

@@ -1,44 +1,36 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import '../../../../app/settings/company/company_profile.dart';
+import 'package:flutter/widgets.dart';
+
 import '../../../../app/settings/settings_repository.dart';
 import '../../../authentication/data/local_auth_store.dart';
 import '../../domain/ports/system_setup_seed_port.dart';
 import '../../domain/repositories/company_initialization_repository.dart';
 
-/// Payload containing the initial application setup parameters.
+/// Immutable payload for First-Run setup submitted by the user.
+@immutable
 class FirstRunSetupPayload {
   const FirstRunSetupPayload({
     required this.language,
-    required this.companyName,
-    required this.companyCode,
+    this.companyName = '',
+    this.companyCode,
+    this.taxNumber,
+    this.phone,
     required this.adminName,
     required this.adminEmail,
     required this.adminPassword,
-    this.phone,
-    this.taxNumber,
   });
 
   final String language;
   final String companyName;
-  final String companyCode;
+  final String? companyCode;
+  final String? taxNumber;
+  final String? phone;
   final String adminName;
   final String adminEmail;
   final String adminPassword;
-  final String? phone;
-  final String? taxNumber;
 }
 
-class FirstRunAlreadyCompletedException implements Exception {
-  const FirstRunAlreadyCompletedException([
-    this.message = 'First-run application setup has already been completed.',
-  ]);
-  final String message;
-
-  @override
-  String toString() => message;
-}
-
+/// Validation exception thrown when payload input criteria are violated.
 class FirstRunSetupValidationException implements Exception {
   const FirstRunSetupValidationException(this.message);
   final String message;
@@ -47,35 +39,65 @@ class FirstRunSetupValidationException implements Exception {
   String toString() => message;
 }
 
-class FirstRunSetupExecutionException implements Exception {
-  const FirstRunSetupExecutionException(this.message, [this.cause]);
-  final String message;
-  final dynamic cause;
+/// Thrown when setup has already been committed to prevent duplicate executions.
+class FirstRunAlreadyCompletedException implements Exception {
+  const FirstRunAlreadyCompletedException();
 
   @override
-  String toString() => 'FirstRunSetupExecutionException: $message';
+  String toString() =>
+      'First-run application setup has already been completed.';
+}
+
+/// Thrown when an internal step in setup execution fails.
+class FirstRunSetupExecutionException implements Exception {
+  const FirstRunSetupExecutionException(this.message, this.cause);
+  final String message;
+  final Object cause;
+
+  @override
+  String toString() => '$message Cause: $cause';
 }
 
 /// Orchestrates the atomic and idempotent execution of First-Run Application Setup.
 class FirstRunSetupCoordinator {
   FirstRunSetupCoordinator({
-    required SettingsRepository settingsRepository,
-    required LocalAuthStore authStore,
-    SystemSetupSeedPort? seedPort,
-    CompanyInitializationRepository? initRepository,
-  }) : _settingsRepository = settingsRepository,
-       _authStore = authStore,
-       _seedPort = seedPort,
-       _initRepository = initRepository;
+    required this.settingsRepository,
+    required this.authStore,
+    this.seedPort,
+    this.initRepository,
+  });
 
-  final SettingsRepository _settingsRepository;
-  final LocalAuthStore _authStore;
-  final SystemSetupSeedPort? _seedPort;
-  final CompanyInitializationRepository? _initRepository;
+  final SettingsRepository settingsRepository;
+  final LocalAuthStore authStore;
+  final SystemSetupSeedPort? seedPort;
+  final CompanyInitializationRepository? initRepository;
+
+  /// Utility to generate a clean company code from the company name if not explicitly provided.
+  static String generateCompanyCode(
+    String companyName, [
+    String? providedCode,
+  ]) {
+    if (providedCode != null && providedCode.trim().isNotEmpty) {
+      return providedCode.trim().toUpperCase();
+    }
+    final clean = companyName.trim().replaceAll(RegExp(r'[\s\-_]+'), '_');
+    if (clean.isEmpty) return 'COMP_01';
+    final alphanumeric = clean.replaceAll(
+      RegExp(r'[^a-zA-Z0-9_\u0600-\u06FF]'),
+      '',
+    );
+    final code = alphanumeric.length > 10
+        ? alphanumeric.substring(0, 10)
+        : alphanumeric;
+    return (code.isNotEmpty ? code : 'COMP_01').toUpperCase();
+  }
 
   /// Checks if the initial application setup has been completed.
   Future<bool> isFirstRunCompleted() async {
-    return await _settingsRepository.loadOnboardingCompleted();
+    final onboardingDone = await settingsRepository.loadOnboardingCompleted();
+    if (!onboardingDone) return false;
+    final hasAdmin = await authStore.hasConfiguredAdmin();
+    return hasAdmin;
   }
 
   /// Validates payload parameters before executing atomic setup.
@@ -86,12 +108,6 @@ class FirstRunSetupCoordinator {
         'Supported languages are Arabic (ar) and English (en).',
       );
     }
-    if (payload.companyName.trim().isEmpty) {
-      throw const FirstRunSetupValidationException('Company name is required.');
-    }
-    if (payload.companyCode.trim().isEmpty) {
-      throw const FirstRunSetupValidationException('Company code is required.');
-    }
     if (payload.adminName.trim().isEmpty) {
       throw const FirstRunSetupValidationException('Admin name is required.');
     }
@@ -101,13 +117,15 @@ class FirstRunSetupCoordinator {
         'A valid admin email address is required.',
       );
     }
-    final pwd = payload.adminPassword.trim();
+    final pwd = payload.adminPassword;
     if (pwd.length < 8) {
       throw const FirstRunSetupValidationException(
         'Password must be at least 8 characters long.',
       );
     }
-    if (pwd.toLowerCase() == 'admin' || pwd.toLowerCase() == '12345678') {
+    if (pwd.toLowerCase() == 'admin' ||
+        pwd.toLowerCase() == '12345678' ||
+        pwd.toLowerCase() == 'admin123') {
       throw const FirstRunSetupValidationException(
         'Password is too weak or uses a default value.',
       );
@@ -127,40 +145,27 @@ class FirstRunSetupCoordinator {
 
     try {
       // 1. Language persistence
-      await _settingsRepository.saveLocale(Locale(payload.language.trim()));
+      await settingsRepository.saveLocale(Locale(payload.language.trim()));
 
-      // 2. Company basic profile persistence
-      final profile = CompanyProfile(
-        name: payload.companyName.trim(),
-        taxNumber: payload.taxNumber?.trim(),
-        phone: payload.phone?.trim(),
-      );
-      await _settingsRepository.saveCompanyProfile(
-        profile,
-        LocalAuthDefaults.companyId,
+      // 2. Pure System Administrator Identity Creation (0 companies, 0 memberships)
+      await authStore.createInitialSystemAdmin(
+        name: payload.adminName.trim(),
+        email: payload.adminEmail.trim(),
+        password: payload.adminPassword.trim(),
       );
 
-      // 3. Main Admin User Credentials & Seeding
-      await _authStore.updateLocalAdminCredentials(
-        newEmail: payload.adminEmail.trim(),
-        newPassword: payload.adminPassword.trim(),
-        newName: payload.adminName.trim(),
-        companyName: payload.companyName.trim(),
-        companyCode: payload.companyCode.trim(),
-      );
-
-      // 4. Record device initialization mode
-      await _settingsRepository.saveDeviceInitialization(
+      // 3. Record device initialization mode
+      await settingsRepository.saveDeviceInitialization(
         mode: DeviceInitializationMode.local,
         initialized: true,
-        companyId: LocalAuthDefaults.companyId,
+        companyId: '',
         initializedAt: DateTime.now().toUtc(),
       );
 
-      // 5. Seed accounting, warehouse, currency, and system defaults
+      // 4. Seed accounting, warehouse, currency, and system defaults if seedPort available
       try {
-        if (_seedPort != null) {
-          await _seedPort.ensureLocalDefaults(
+        if (seedPort != null) {
+          await seedPort!.ensureLocalDefaults(
             defaultWarehouseName: 'المستودع الرئيسي',
             defaultWarehouseCode: 'WH-01',
           );
@@ -173,12 +178,10 @@ class FirstRunSetupCoordinator {
         }
       }
 
-      if (_initRepository != null) {
-        final state = await _initRepository.getState();
-        await _initRepository.saveState(
+      if (initRepository != null) {
+        final state = await initRepository!.getState();
+        await initRepository!.saveState(
           state.copyWith(
-            companyId: LocalAuthDefaults.companyId,
-            companyCreated: true,
             accountingConfigured: true,
             inventoryCurrencyConfigured: true,
             warehouseConfigured: true,
@@ -188,16 +191,44 @@ class FirstRunSetupCoordinator {
         );
       }
 
+      // 5. Record System Setup versioned steps completion state
+      final now = DateTime.now().toUtc();
+      final systemSetupSteps = <String, Map<String, Object?>>{
+        'local_account': {
+          'id': 'local_account',
+          'status': 'completed',
+          'updated_at': now.toIso8601String(),
+        },
+        'seed_data': {
+          'id': 'seed_data',
+          'status': 'completed',
+          'updated_at': now.toIso8601String(),
+        },
+      };
+      await settingsRepository.saveSystemSetupState(
+        version: 1,
+        status: 'ready',
+        steps: systemSetupSteps,
+        lastUpdated: now,
+      );
+
       // 6. Finalize First-Run Setup completion
-      await _settingsRepository.saveOnboardingCompleted(true);
+      await settingsRepository.saveOnboardingCompleted(true);
     } catch (e, stackTrace) {
       if (kDebugMode) {
         debugPrint('FirstRunSetupCoordinator commit failed: $e\n$stackTrace');
       }
-      // Roll back onboarding flag to ensure non-partially completed state
+      // Transactional compensation rollback: restore non-partially completed state
       try {
-        await _settingsRepository.saveOnboardingCompleted(false);
-      } catch (_) {}
+        await settingsRepository.saveOnboardingCompleted(false);
+        await authStore.clearAuthData();
+      } catch (rollbackErr) {
+        if (kDebugMode) {
+          debugPrint(
+            'FirstRunSetupCoordinator rollback execution error: $rollbackErr',
+          );
+        }
+      }
 
       if (e is FirstRunSetupValidationException ||
           e is FirstRunAlreadyCompletedException) {

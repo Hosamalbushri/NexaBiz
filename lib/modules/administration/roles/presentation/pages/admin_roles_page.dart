@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/sync/sync_enabled_provider.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/errors/app_failure.dart';
+import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
 import 'package:stock_count/modules/administration/shared/data/admin_api_repository.dart';
@@ -27,19 +26,12 @@ class AdminRolesPage extends ConsumerStatefulWidget {
 }
 
 class _AdminRolesPageState extends ConsumerState<AdminRolesPage> {
-  final _search = TextEditingController();
+  String _searchQuery = '';
   _RoleFilter _filter = _RoleFilter.all;
-
-  @override
-  void dispose() {
-    _search.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final syncOn = ref.watch(syncEnabledProvider);
     final auth = ref.watch(authStateProvider);
     final rolesAsync = ref.watch(adminRolesProvider);
@@ -50,10 +42,8 @@ class _AdminRolesPageState extends ConsumerState<AdminRolesPage> {
 
     if (!syncOn || !auth.canUseRemoteSync) {
       return Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.adminRolesTitle,
-          centerTitle: false,
-          showBackButton: true,
+        appBar: AppBar(
+          title: Text(l10n.adminRolesTitle),
         ),
         body: AppEmptyState(
           icon: Icons.cloud_off_outlined,
@@ -67,13 +57,58 @@ class _AdminRolesPageState extends ConsumerState<AdminRolesPage> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: l10n.adminRolesTitle,
-        centerTitle: false,
-        showBackButton: true,
-      ),
+    final roles = rolesAsync.valueOrNull ?? const [];
+    final filtered = roles.where((role) {
+      switch (_filter) {
+        case _RoleFilter.custom:
+          if (role.systemRole) return false;
+        case _RoleFilter.system:
+          if (!role.systemRole) return false;
+        case _RoleFilter.all:
+          break;
+      }
+      if (_searchQuery.isEmpty) return true;
+      return role.name.toLowerCase().contains(_searchQuery) ||
+          (role.description?.toLowerCase().contains(_searchQuery) ?? false);
+    }).toList();
+
+    return ModuleListScaffold<AdminRoleSummary>(
+      title: l10n.adminRolesTitle,
+      searchQuery: _searchQuery,
+      searchHint: l10n.adminRolesSearchHint,
+      onSearchChanged: (val) {
+        setState(() => _searchQuery = val.trim().toLowerCase());
+      },
+      activeFilterCount: _filter != _RoleFilter.all ? 1 : 0,
+      activeFilterChips: [
+        ChoiceChip(
+          label: Text(l10n.adminRolesFilterAll),
+          selected: _filter == _RoleFilter.all,
+          onSelected: (_) => setState(() => _filter = _RoleFilter.all),
+        ),
+        ChoiceChip(
+          label: Text(l10n.adminRolesFilterCustom),
+          selected: _filter == _RoleFilter.custom,
+          onSelected: (_) => setState(() => _filter = _RoleFilter.custom),
+        ),
+        ChoiceChip(
+          label: Text(l10n.adminRolesFilterSystem),
+          selected: _filter == _RoleFilter.system,
+          onSelected: (_) => setState(() => _filter = _RoleFilter.system),
+        ),
+      ],
+      isLoading: rolesAsync.isLoading && !rolesAsync.hasValue,
+      error: rolesAsync.error,
+      onRetry: () => ref.invalidate(adminRolesProvider),
+      onRefresh: () async {
+        ref.invalidate(adminRolesProvider);
+        await ref.read(adminRolesProvider.future);
+      },
+      emptyTitle: l10n.adminRolesEmptyTitle,
+      emptyMessage: l10n.adminRolesEmptyMessage,
+      emptyIcon: Icons.badge_outlined,
+      emptyActionLabel: canCreate ? l10n.adminCreateRole : null,
+      onEmptyAction: canCreate ? () => _openEditor(context) : null,
       floatingActionButton: PermissionGate(
         anyOf: const ['roles.create', 'roles.manage'],
         child: FloatingActionButton.extended(
@@ -82,123 +117,16 @@ class _AdminRolesPageState extends ConsumerState<AdminRolesPage> {
           label: Text(l10n.adminCreateRole),
         ),
       ),
-      body: rolesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => AppEmptyState(
-          icon: Icons.error_outline,
-          title: l10n.adminRolesLoadError,
-          subtitle: e is AppFailure ? e.message : e.toString(),
-        ),
-        data: (roles) {
-          final query = _search.text.trim().toLowerCase();
-          final filtered = roles.where((role) {
-            switch (_filter) {
-              case _RoleFilter.custom:
-                if (role.systemRole) return false;
-              case _RoleFilter.system:
-                if (!role.systemRole) return false;
-              case _RoleFilter.all:
-                break;
-            }
-            if (query.isEmpty) return true;
-            return role.name.toLowerCase().contains(query) ||
-                (role.description?.toLowerCase().contains(query) ?? false);
-          }).toList();
-
-          final customCount = roles.where((r) => !r.systemRole).length;
-          final systemCount = roles.length - customCount;
-
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(adminRolesProvider);
-              await ref.read(adminRolesProvider.future);
-            },
-            child: ListView(
-              padding: AppConstants.pageInsets(context).copyWith(
-                top: AppSpacing.sm,
-                bottom: 100,
-              ),
-              children: [
-                Text(
-                  l10n.adminRolesPageIntro,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                _StatsRow(
-                  total: roles.length,
-                  custom: customCount,
-                  system: systemCount,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: _search,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.search),
-                    hintText: l10n.adminRolesSearchHint,
-                    border: const OutlineInputBorder(),
-                    filled: true,
-                    fillColor: theme.colorScheme.surface,
-                  ),
-                  onChanged: (_) => setState(() {}),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: AppSpacing.xs,
-                  children: [
-                    ChoiceChip(
-                      label: Text(l10n.adminRolesFilterAll),
-                      selected: _filter == _RoleFilter.all,
-                      onSelected: (_) =>
-                          setState(() => _filter = _RoleFilter.all),
-                    ),
-                    ChoiceChip(
-                      label: Text(l10n.adminRolesFilterCustom),
-                      selected: _filter == _RoleFilter.custom,
-                      onSelected: (_) =>
-                          setState(() => _filter = _RoleFilter.custom),
-                    ),
-                    ChoiceChip(
-                      label: Text(l10n.adminRolesFilterSystem),
-                      selected: _filter == _RoleFilter.system,
-                      onSelected: (_) =>
-                          setState(() => _filter = _RoleFilter.system),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                if (filtered.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-                    child: AppEmptyState(
-                      icon: Icons.badge_outlined,
-                      title: l10n.adminRolesEmptyTitle,
-                      subtitle: l10n.adminRolesEmptyMessage,
-                      actionLabel: canCreate ? l10n.adminCreateRole : null,
-                      onAction:
-                          canCreate ? () => _openEditor(context) : null,
-                    ),
-                  )
-                else
-                  ...filtered.map(
-                    (role) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: _RoleCard(
-                        role: role,
-                        onOpen: () => _openEditor(context, existing: role),
-                        onDelete: role.systemRole
-                            ? null
-                            : () => _confirmDelete(context, role),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
-      ),
+      items: filtered,
+      itemBuilder: (context, role) {
+        return _RoleCard(
+          role: role,
+          onOpen: () => _openEditor(context, existing: role),
+          onDelete: role.systemRole
+              ? null
+              : () => _confirmDelete(context, role),
+        );
+      },
     );
   }
 
@@ -254,78 +182,6 @@ class _AdminRolesPageState extends ConsumerState<AdminRolesPage> {
         showAppSnackBar(context, message: e.message, isSuccess: false);
       }
     }
-  }
-}
-
-class _StatsRow extends StatelessWidget {
-  const _StatsRow({
-    required this.total,
-    required this.custom,
-    required this.system,
-  });
-
-  final int total;
-  final int custom;
-  final int system;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Row(
-      children: [
-        Expanded(child: _StatChip(label: l10n.adminRolesStatTotal, value: total)),
-        const SizedBox(width: AppSpacing.xs),
-        Expanded(
-          child: _StatChip(label: l10n.adminRolesFilterCustom, value: custom),
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        Expanded(
-          child: _StatChip(label: l10n.adminRolesFilterSystem, value: system),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  const _StatChip({required this.label, required this.value});
-
-  final String label;
-  final int value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '$value',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

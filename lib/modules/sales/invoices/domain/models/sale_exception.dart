@@ -26,6 +26,7 @@ class SaleException implements Exception {
   static const ledgerPostingFailed = 'ledger_posting_failed';
   static const postingRequiresInventory = 'posting_requires_inventory';
   static const postedImmutable = 'posted_immutable';
+  static const concurrentOperationBlocked = 'concurrent_operation_blocked';
 
   final String code;
   final String? message;

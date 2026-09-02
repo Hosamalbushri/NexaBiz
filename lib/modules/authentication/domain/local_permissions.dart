@@ -2,154 +2,287 @@ import '../../../core/database/tenant_database_name.dart';
 
 /// Permission codes for local offline RBAC (aligned with backend catalog).
 ///
-/// Prefer service-level codes: `module.service.operation`
-/// Legacy flat codes remain for compatibility.
-const List<String> kAllLocalPermissions = [
-  // Platform / admin
-  'platform.companies.manage',
-  'platform.users.manage',
-  'users.view',
-  'users.create',
-  'users.update',
-  'users.delete',
-  'users.manage',
-  'roles.view',
-  'roles.create',
-  'roles.update',
-  'roles.delete',
-  'roles.manage',
-  'permissions.manage',
-  'companies.view',
-  'companies.update',
-  // Inventory — legacy
-  'products.view',
-  'products.create',
-  'products.update',
-  'products.delete',
-  'inventory.view',
-  'inventory.create',
-  'inventory.update',
-  'inventory.delete',
-  'inventory.adjust',
-  // Inventory — stock count
-  'inventory.stock_count.view',
-  'inventory.stock_count.adjust',
-  'inventory.stock_count.import',
-  'inventory.stock_count.export',
-  'inventory.stock_count.clear',
-  // Inventory — products
-  'inventory.products.view',
-  'inventory.products.create',
-  'inventory.products.update',
-  'inventory.products.delete',
-  'inventory.products.import',
-  'inventory.products.barcode',
-  // Customers — legacy + services
-  'customers.view',
-  'customers.create',
-  'customers.update',
-  'customers.delete',
-  'customers.master.view',
-  'customers.master.create',
-  'customers.master.update',
-  'customers.master.delete',
-  'customers.master.import',
-  'customers.accounts.view',
-  'customers.settings.view',
-  'customers.settings.update',
-  // Sales — legacy + documents
-  'sales.view',
-  'sales.create',
-  'sales.update',
-  'sales.delete',
-  'sales.post',
-  'sales.cancel',
-  'sales.documents.view',
-  'sales.documents.create',
-  'sales.documents.update',
-  'sales.documents.delete',
-  'sales.documents.post',
-  'sales.documents.cancel',
-  'sales.documents.duplicate',
-  'sales.documents.export',
-  // Accounting
-  'accounting.view',
-  'accounting.accounts.view',
-  'accounting.accounts.create',
-  'accounting.accounts.update',
-  'accounting.accounts.delete',
-  'accounting.journals.view',
-  'accounting.journals.create',
-  'accounting.journals.update',
-  'accounting.journals.delete',
-  'accounting.currency_rates.view',
-  'accounting.currency_rates.create',
-  'accounting.currency_rates.update',
-  'accounting.currency_rates.delete',
-  'accounting.voucher_books.view',
-  'accounting.voucher_books.create',
-  'accounting.voucher_books.update',
-  'accounting.voucher_books.delete',
-  'accounting.fiscal_years.view',
-  'accounting.fiscal_years.create',
-  'accounting.fiscal_years.update',
-  'accounting.fiscal_years.open_period',
-  'accounting.fiscal_years.close_period',
-  'accounting.fiscal_years.reopen_period',
-  'accounting.fiscal_years.configure_fx',
-  'accounting.reports.view',
+/// Organized by domain and granular business actions:
+/// - view
+/// - create
+/// - edit (update)
+/// - delete
+/// - post
+/// - reverse
+/// - approve
+/// - manage users
+/// - manage company
+/// - manage accounting configuration
+/// - manage system configuration
+class LocalPermissions {
+  LocalPermissions._();
+
+  // --- Granular Action Categories ---
+
+  // Platform & User Management
+  static const platformCompaniesManage = 'platform.companies.manage';
+  static const platformUsersManage = 'platform.users.manage';
+  static const usersView = 'users.view';
+  static const usersCreate = 'users.create';
+  static const usersUpdate = 'users.update';
+  static const usersDelete = 'users.delete';
+  static const usersManage = 'users.manage';
+
+  // Role & Permission Management
+  static const rolesView = 'roles.view';
+  static const rolesCreate = 'roles.create';
+  static const rolesUpdate = 'roles.update';
+  static const rolesDelete = 'roles.delete';
+  static const rolesManage = 'roles.manage';
+  static const permissionsManage = 'permissions.manage';
+
+  // Company Management
+  static const companiesView = 'companies.view';
+  static const companiesUpdate = 'companies.update';
+
+  // Inventory — General & Products
+  static const productsView = 'products.view';
+  static const productsCreate = 'products.create';
+  static const productsUpdate = 'products.update';
+  static const productsDelete = 'products.delete';
+  static const inventoryView = 'inventory.view';
+  static const inventoryCreate = 'inventory.create';
+  static const inventoryUpdate = 'inventory.update';
+  static const inventoryDelete = 'inventory.delete';
+  static const inventoryAdjust = 'inventory.adjust';
+  static const inventoryPost = 'inventory.post';
+
+  // Stock Count
+  static const inventoryStockCountView = 'inventory.stock_count.view';
+  static const inventoryStockCountAdjust = 'inventory.stock_count.adjust';
+  static const inventoryStockCountImport = 'inventory.stock_count.import';
+  static const inventoryStockCountExport = 'inventory.stock_count.export';
+  static const inventoryStockCountClear = 'inventory.stock_count.clear';
+
+  // Customers
+  static const customersView = 'customers.view';
+  static const customersCreate = 'customers.create';
+  static const customersUpdate = 'customers.update';
+  static const customersDelete = 'customers.delete';
+  static const customersMasterView = 'customers.master.view';
+  static const customersMasterCreate = 'customers.master.create';
+  static const customersMasterUpdate = 'customers.master.update';
+  static const customersMasterDelete = 'customers.master.delete';
+
+  // Sales & Documents
+  static const salesView = 'sales.view';
+  static const salesCreate = 'sales.create';
+  static const salesUpdate = 'sales.update';
+  static const salesDelete = 'sales.delete';
+  static const salesPost = 'sales.post';
+  static const salesCancel = 'sales.cancel';
+  static const salesReverse = 'sales.reverse';
+  static const salesApprove = 'sales.approve';
+
+  // Accounting — Accounts & Journals
+  static const accountingView = 'accounting.view';
+  static const accountingAccountsView = 'accounting.accounts.view';
+  static const accountingAccountsCreate = 'accounting.accounts.create';
+  static const accountingAccountsUpdate = 'accounting.accounts.update';
+  static const accountingAccountsDelete = 'accounting.accounts.delete';
+
+  static const accountingJournalsView = 'accounting.journals.view';
+  static const accountingJournalsCreate = 'accounting.journals.create';
+  static const accountingJournalsUpdate = 'accounting.journals.update';
+  static const accountingJournalsDelete = 'accounting.journals.delete';
+  static const accountingJournalsPost = 'accounting.journals.post';
+  static const accountingJournalsReverse = 'accounting.journals.reverse';
+  static const accountingJournalsApprove = 'accounting.journals.approve';
+
+  // Accounting — Configuration & Fiscal Years
+  static const accountingConfigManage = 'accounting.config.manage';
+  static const accountingFiscalYearsView = 'accounting.fiscal_years.view';
+  static const accountingFiscalYearsCreate = 'accounting.fiscal_years.create';
+  static const accountingFiscalYearsUpdate = 'accounting.fiscal_years.update';
+  static const accountingFiscalYearsOpenPeriod = 'accounting.fiscal_years.open_period';
+  static const accountingFiscalYearsClosePeriod = 'accounting.fiscal_years.close_period';
+  static const accountingFiscalYearsReopenPeriod = 'accounting.fiscal_years.reopen_period';
+  static const accountingFiscalYearsConfigureFx = 'accounting.fiscal_years.configure_fx';
+
   // Receipts & Payments
-  'receipts.view',
-  'receipts.create',
-  'receipts.update',
-  'receipts.post',
-  'receipts.cancel',
-  'payments.view',
-  'payments.create',
-  'payments.update',
-  'payments.post',
-  'payments.cancel',
-  'transfers.view',
-  'transfers.create',
-  'transfers.update',
-  'transfers.post',
-  'transfers.cancel',
-  'exchanges.view',
-  'exchanges.create',
-  'exchanges.update',
-  'exchanges.post',
-  'exchanges.cancel',
-  'receipts_payments.reports.view',
-  'receipts_payments.reports.export',
-  'receipts_payments.sync',
+  static const receiptsView = 'receipts.view';
+  static const receiptsCreate = 'receipts.create';
+  static const receiptsUpdate = 'receipts.update';
+  static const receiptsPost = 'receipts.post';
+  static const receiptsCancel = 'receipts.cancel';
+  static const receiptsReverse = 'receipts.reverse';
+
+  static const paymentsView = 'payments.view';
+  static const paymentsCreate = 'payments.create';
+  static const paymentsUpdate = 'payments.update';
+  static const paymentsPost = 'payments.post';
+  static const paymentsCancel = 'payments.cancel';
+  static const paymentsReverse = 'payments.reverse';
+
+  static const transfersView = 'transfers.view';
+  static const transfersCreate = 'transfers.create';
+  static const transfersUpdate = 'transfers.update';
+  static const transfersPost = 'transfers.post';
+  static const transfersCancel = 'transfers.cancel';
+  static const transfersApprove = 'transfers.approve';
+
   // Reports
-  'reports.view',
-  'reports.sales_period.view',
-  'reports.sales_period.export',
-  'reports.account_statement.view',
-  'reports.account_statement.export',
-  'reports.trial_balance.view',
-  'reports.trial_balance.export',
-  'reports.journal_book.view',
-  'reports.journal_book.export',
-  // Settings / sync / devices
-  'settings.view',
-  'settings.update',
-  'sync.view',
-  'sync.execute',
-  'devices.view',
-  'devices.revoke',
+  static const reportsView = 'reports.view';
+  static const reportsSalesPeriodView = 'reports.sales_period.view';
+  static const reportsSalesPeriodExport = 'reports.sales_period.export';
+  static const reportsAccountStatementView = 'reports.account_statement.view';
+  static const reportsAccountStatementExport = 'reports.account_statement.export';
+  static const reportsTrialBalanceView = 'reports.trial_balance.view';
+  static const reportsTrialBalanceExport = 'reports.trial_balance.export';
+  static const reportsJournalBookView = 'reports.journal_book.view';
+  static const reportsJournalBookExport = 'reports.journal_book.export';
+
+  // System & Settings Configuration
+  static const settingsView = 'settings.view';
+  static const settingsUpdate = 'settings.update';
+  static const systemConfigManage = 'system.config.manage';
+  static const syncView = 'sync.view';
+  static const syncExecute = 'sync.execute';
+}
+
+/// Comprehensive catalog of all local permission strings.
+const List<String> kAllLocalPermissions = [
+  LocalPermissions.platformCompaniesManage,
+  LocalPermissions.platformUsersManage,
+  LocalPermissions.usersView,
+  LocalPermissions.usersCreate,
+  LocalPermissions.usersUpdate,
+  LocalPermissions.usersDelete,
+  LocalPermissions.usersManage,
+  LocalPermissions.rolesView,
+  LocalPermissions.rolesCreate,
+  LocalPermissions.rolesUpdate,
+  LocalPermissions.rolesDelete,
+  LocalPermissions.rolesManage,
+  LocalPermissions.permissionsManage,
+  LocalPermissions.companiesView,
+  LocalPermissions.companiesUpdate,
+  LocalPermissions.productsView,
+  LocalPermissions.productsCreate,
+  LocalPermissions.productsUpdate,
+  LocalPermissions.productsDelete,
+  LocalPermissions.inventoryView,
+  LocalPermissions.inventoryCreate,
+  LocalPermissions.inventoryUpdate,
+  LocalPermissions.inventoryDelete,
+  LocalPermissions.inventoryAdjust,
+  LocalPermissions.inventoryPost,
+  LocalPermissions.inventoryStockCountView,
+  LocalPermissions.inventoryStockCountAdjust,
+  LocalPermissions.inventoryStockCountImport,
+  LocalPermissions.inventoryStockCountExport,
+  LocalPermissions.inventoryStockCountClear,
+  LocalPermissions.customersView,
+  LocalPermissions.customersCreate,
+  LocalPermissions.customersUpdate,
+  LocalPermissions.customersDelete,
+  LocalPermissions.customersMasterView,
+  LocalPermissions.customersMasterCreate,
+  LocalPermissions.customersMasterUpdate,
+  LocalPermissions.customersMasterDelete,
+  LocalPermissions.salesView,
+  LocalPermissions.salesCreate,
+  LocalPermissions.salesUpdate,
+  LocalPermissions.salesDelete,
+  LocalPermissions.salesPost,
+  LocalPermissions.salesCancel,
+  LocalPermissions.salesReverse,
+  LocalPermissions.salesApprove,
+  LocalPermissions.accountingView,
+  LocalPermissions.accountingAccountsView,
+  LocalPermissions.accountingAccountsCreate,
+  LocalPermissions.accountingAccountsUpdate,
+  LocalPermissions.accountingAccountsDelete,
+  LocalPermissions.accountingJournalsView,
+  LocalPermissions.accountingJournalsCreate,
+  LocalPermissions.accountingJournalsUpdate,
+  LocalPermissions.accountingJournalsDelete,
+  LocalPermissions.accountingJournalsPost,
+  LocalPermissions.accountingJournalsReverse,
+  LocalPermissions.accountingJournalsApprove,
+  LocalPermissions.accountingConfigManage,
+  LocalPermissions.accountingFiscalYearsView,
+  LocalPermissions.accountingFiscalYearsCreate,
+  LocalPermissions.accountingFiscalYearsUpdate,
+  LocalPermissions.accountingFiscalYearsOpenPeriod,
+  LocalPermissions.accountingFiscalYearsClosePeriod,
+  LocalPermissions.accountingFiscalYearsReopenPeriod,
+  LocalPermissions.accountingFiscalYearsConfigureFx,
+  LocalPermissions.receiptsView,
+  LocalPermissions.receiptsCreate,
+  LocalPermissions.receiptsUpdate,
+  LocalPermissions.receiptsPost,
+  LocalPermissions.receiptsCancel,
+  LocalPermissions.receiptsReverse,
+  LocalPermissions.paymentsView,
+  LocalPermissions.paymentsCreate,
+  LocalPermissions.paymentsUpdate,
+  LocalPermissions.paymentsPost,
+  LocalPermissions.paymentsCancel,
+  LocalPermissions.paymentsReverse,
+  LocalPermissions.transfersView,
+  LocalPermissions.transfersCreate,
+  LocalPermissions.transfersUpdate,
+  LocalPermissions.transfersPost,
+  LocalPermissions.transfersCancel,
+  LocalPermissions.transfersApprove,
+  LocalPermissions.reportsView,
+  LocalPermissions.reportsSalesPeriodView,
+  LocalPermissions.reportsSalesPeriodExport,
+  LocalPermissions.reportsAccountStatementView,
+  LocalPermissions.reportsAccountStatementExport,
+  LocalPermissions.reportsTrialBalanceView,
+  LocalPermissions.reportsTrialBalanceExport,
+  LocalPermissions.reportsJournalBookView,
+  LocalPermissions.reportsJournalBookExport,
+  LocalPermissions.settingsView,
+  LocalPermissions.settingsUpdate,
+  LocalPermissions.systemConfigManage,
+  LocalPermissions.syncView,
+  LocalPermissions.syncExecute,
 ];
 
-/// Default offline admin (created on first launch).
-///
-/// The password is intentionally weak for empty local installs — operators
-/// must change it after first login. The UI never prefills these values.
+/// System-level authority permission codes (belonging strictly to System Scope).
+const Set<String> kSystemLevelPermissions = {
+  LocalPermissions.platformCompaniesManage,
+  LocalPermissions.platformUsersManage,
+  LocalPermissions.usersView,
+  LocalPermissions.usersCreate,
+  LocalPermissions.usersUpdate,
+  LocalPermissions.usersDelete,
+  LocalPermissions.usersManage,
+  LocalPermissions.rolesView,
+  LocalPermissions.rolesCreate,
+  LocalPermissions.rolesUpdate,
+  LocalPermissions.rolesDelete,
+  LocalPermissions.rolesManage,
+  LocalPermissions.permissionsManage,
+  LocalPermissions.companiesView,
+  LocalPermissions.companiesUpdate,
+  LocalPermissions.settingsView,
+  LocalPermissions.settingsUpdate,
+  LocalPermissions.systemConfigManage,
+  LocalPermissions.syncView,
+  LocalPermissions.syncExecute,
+};
+
+/// Helper to test whether a permission code belongs to system scope vs company scope.
+bool isSystemLevelPermission(String code) {
+  return kSystemLevelPermissions.contains(code) ||
+      code.startsWith('platform.') ||
+      code.startsWith('system.');
+}
+
+/// Default offline identity constants.
 class LocalAuthDefaults {
   const LocalAuthDefaults._();
 
   static const adminEmail = 'admin@local';
-  static const adminPassword = 'admin123';
   static const adminName = 'System Admin';
   static const adminUserId = '00000000-0000-4000-8000-0000000000a1';
 
@@ -157,5 +290,6 @@ class LocalAuthDefaults {
   static const companyName = 'Local Company';
   static const companyCode = 'LOCAL';
 
+  static const ownerRole = 'Owner';
   static const adminRole = 'Super Admin';
 }

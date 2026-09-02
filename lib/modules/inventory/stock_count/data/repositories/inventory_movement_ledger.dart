@@ -54,10 +54,9 @@ class InventoryMovementEvent {
 /// Ledger managing append-only inventory movement events and derived stock snapshots.
 class InventoryMovementLedger {
   InventoryMovementLedger({
-    InventoryRepositoryImpl? inventoryRepo,
-    SyncQueue? syncQueue,
-  }) : _inventoryRepo = inventoryRepo,
-       _syncQueue = syncQueue;
+    this._inventoryRepo,
+    this._syncQueue,
+  });
 
   final InventoryRepositoryImpl? _inventoryRepo;
   final SyncQueue? _syncQueue;

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,7 +13,6 @@ import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_responsive.dart';
 import '../../core/widgets/app_snackbar.dart';
 import '../../core/widgets/custom_app_bar.dart';
-import '../../core/widgets/empty_state_widget.dart';
 import '../constants/app_constants.dart';
 import '../localization/app_localizations.dart';
 import '../notifications/presentation/providers/notifications_provider.dart';
@@ -22,7 +20,6 @@ import '../presentation/providers/dashboard_services_provider.dart';
 import '../router/app_routes.dart';
 import '../sync/app_bar_sync_actions.dart';
 import '../sync/sync_enabled_provider.dart';
-import '../theme/app_breakpoints.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
@@ -33,7 +30,6 @@ import 'company/company_profile_providers.dart';
 import 'module_unit_settings_page.dart';
 import 'modules_settings_page.dart';
 import 'settings_repository.dart';
-import 'subscription_packages_page.dart';
 import 'widgets/settings_chrome.dart';
 
 final packageInfoProvider = FutureProvider<PackageInfo>((ref) {

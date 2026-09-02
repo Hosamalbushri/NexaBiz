@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/utils/digit_normalization.dart';
+import 'package:stock_count/core/widgets/app_async_autocomplete_field.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_customer_lookup_port.dart';
 import '../providers/rp_providers.dart';
 
@@ -14,30 +12,7 @@ const _kDebounceMs = 300;
 const _kMinQueryLength = 2;
 const _kResultLimit = 20;
 
-final class _SearchSession {
-  Timer? _debounce;
-  var _token = 0;
-
-  void schedule(void Function(int token) run) {
-    _debounce?.cancel();
-    final token = ++_token;
-    _debounce = Timer(const Duration(milliseconds: _kDebounceMs), () {
-      run(token);
-    });
-  }
-
-  void invalidate() {
-    _debounce?.cancel();
-    _token++;
-  }
-
-  bool isCurrent(int token) => token == _token;
-
-  void dispose() {
-    _debounce?.cancel();
-  }
-}
-
+/// Searchable customer field for R&P transactions, built using [AppAsyncAutocompleteField].
 class RpCustomerSearchField extends ConsumerStatefulWidget {
   const RpCustomerSearchField({
     super.key,
@@ -55,14 +30,10 @@ class RpCustomerSearchField extends ConsumerStatefulWidget {
       _RpCustomerSearchFieldState();
 }
 
-class _RpCustomerSearchFieldState extends ConsumerState<RpCustomerSearchField> {
+class _RpCustomerSearchFieldState
+    extends ConsumerState<RpCustomerSearchField> {
   late final TextEditingController _controller;
   final _focusNode = FocusNode(skipTraversal: true);
-  final _session = _SearchSession();
-  var _loading = false;
-  var _showResults = false;
-  var _searchFailed = false;
-  List<RpCustomerRef> _results = const [];
 
   @override
   void initState() {
@@ -81,187 +52,53 @@ class _RpCustomerSearchFieldState extends ConsumerState<RpCustomerSearchField> {
 
   @override
   void dispose() {
-    _session.dispose();
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
-  String get _normalizedQuery =>
-      normalizeDigitsToWestern(_controller.text).trim();
-
-  void _onChanged(String value) {
-    final query = normalizeDigitsToWestern(value).trim();
-    if (query.length < _kMinQueryLength) {
-      _session.invalidate();
-      setState(() {
-        _results = const [];
-        _loading = false;
-        _showResults = false;
-        _searchFailed = false;
-      });
-      return;
-    }
-    setState(() {
-      _loading = true;
-      _showResults = true;
-      _searchFailed = false;
-    });
-    _session.schedule((token) => _search(query, token));
-  }
-
-  Future<void> _search(String query, int token) async {
-    try {
-      final results = await ref
-          .read(rpCustomerLookupPortProvider)
-          .search(query, limit: _kResultLimit);
-      if (!mounted || !_session.isCurrent(token)) {
-        return;
-      }
-      setState(() {
-        _results = results;
-        _loading = false;
-        _showResults = true;
-        _searchFailed = false;
-      });
-    } catch (_) {
-      if (!mounted || !_session.isCurrent(token)) {
-        return;
-      }
-      setState(() {
-        _results = const [];
-        _loading = false;
-        _showResults = true;
-        _searchFailed = true;
-      });
-    }
-  }
-
-  void _select(RpCustomerRef customer) {
-    widget.onCustomerSelected(customer);
-    _controller.text = customer.name;
-    setState(() {
-      _results = const [];
-      _loading = false;
-      _showResults = false;
-      _searchFailed = false;
-    });
-    _focusNode.unfocus();
+  Future<List<RpCustomerRef>> _search(String query) async {
+    return ref
+        .read(rpCustomerLookupPortProvider)
+        .search(query, limit: _kResultLimit);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final query = _normalizedQuery;
+    final scheme = Theme.of(context).colorScheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          l10n.rpCustomer,
-          style: theme.textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w700,
+    return AppAsyncAutocompleteField<RpCustomerRef>(
+      controller: _controller,
+      focusNode: _focusNode,
+      label: l10n.rpCustomer,
+      showLabelAbove: true,
+      hint: widget.hintText ?? l10n.rpSearchCustomerHint,
+      minQueryLength: _kMinQueryLength,
+      debounceDuration: const Duration(milliseconds: _kDebounceMs),
+      fetchOptions: _search,
+      itemLabelBuilder: (c) => c.name,
+      onSelected: (customer) {
+        if (customer != null) {
+          widget.onCustomerSelected(customer);
+        }
+      },
+      noResultsText: l10n.rpCustomerNotFound,
+      errorText: l10n.rpAutocompleteSearchFailed,
+      itemBuilder: (context, customer) {
+        final phone = customer.phone?.trim();
+        final hasPhone = phone != null && phone.isNotEmpty;
+        return ListTile(
+          dense: true,
+          leading: Icon(
+            Icons.person_outline_rounded,
+            color: scheme.primary,
           ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        TextField(
-          controller: _controller,
-          focusNode: _focusNode,
-          inputFormatters: const [WesternDigitsInputFormatter()],
-          textInputAction: TextInputAction.done,
-          onChanged: _onChanged,
-          decoration: InputDecoration(
-            isDense: true,
-            filled: true,
-            fillColor: scheme.surface,
-            hintText: widget.hintText ?? l10n.rpSearchCustomerHint,
-            prefixIcon: Icon(Icons.search_rounded, color: scheme.primary),
-            suffixIcon: _loading
-                ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                : null,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-            ),
-          ),
-        ),
-        if (_showResults && query.length >= _kMinQueryLength) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Material(
-            color: scheme.surface,
-            elevation: 2,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            clipBehavior: Clip.antiAlias,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 180),
-              child: _loading
-                  ? const Padding(
-                      padding: EdgeInsets.all(AppSpacing.md),
-                      child: Center(
-                        child: SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
-                    )
-                  : _searchFailed
-                  ? Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Text(
-                        l10n.rpAutocompleteSearchFailed,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: scheme.error,
-                        ),
-                      ),
-                    )
-                  : _results.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Text(
-                        l10n.rpCustomerNotFound,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    )
-                  : ListView.separated(
-                      shrinkWrap: true,
-                      itemCount: _results.length,
-                      separatorBuilder: (_, _) => Divider(
-                        height: 1,
-                        color: scheme.outlineVariant.withValues(alpha: 0.35),
-                      ),
-                      itemBuilder: (context, index) {
-                        final customer = _results[index];
-                        return ListTile(
-                          dense: true,
-                          leading: Icon(
-                            Icons.person_outline_rounded,
-                            color: scheme.primary,
-                          ),
-                          title: Text(customer.name),
-                          subtitle: customer.phone?.trim().isNotEmpty ?? false
-                              ? Text(customer.phone!.trim())
-                              : null,
-                          onTap: () => _select(customer),
-                        );
-                      },
-                    ),
-            ),
-          ),
-        ],
-      ],
+          title: Text(customer.name),
+          subtitle: hasPhone ? Text(phone) : null,
+        );
+      },
     );
   }
 }
+

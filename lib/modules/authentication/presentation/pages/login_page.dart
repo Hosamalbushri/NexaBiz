@@ -5,19 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-
 import '../../../../app/localization/app_localizations.dart';
-import '../../../../app/router/app_routes.dart';
 import '../../../../app/sync/sync_enabled_provider.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/errors/app_failure.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../modules/system_setup/presentation/providers/system_setup_providers.dart';
 import '../../domain/entities/authentication_mode.dart';
-import '../../domain/local_permissions.dart';
 import '../providers/auth_providers.dart';
 
 /// Single unified, state-of-the-art sign-in page without mode tabs or extra steps.
@@ -100,12 +95,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     try {
       final store = ref.read(syncLoginCredentialStoreProvider);
       final email = await store.readEmail(mode: AuthenticationMode.local);
-      final password = await store.readPassword(mode: AuthenticationMode.local);
+      final biometricToken = await store.readBiometricToken(mode: AuthenticationMode.local);
 
       if (email == null ||
-          password == null ||
+          biometricToken == null ||
           email.isEmpty ||
-          password.isEmpty) {
+          biometricToken.isEmpty) {
         setState(() {
           _error = l10n.authBiometricRequiredFirst;
         });
@@ -130,9 +125,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
 
       if (authenticated) {
-        _emailController.text = email;
-        _passwordController.text = password;
-        await _submit();
+        setState(() => _loading = true);
+        var deviceId = ref.read(syncApiConfigProvider).deviceId.trim();
+        if (!_uuidPattern.hasMatch(deviceId)) {
+          deviceId = generateUuidV4();
+          ref.read(syncApiConfigProvider.notifier).state = ref
+              .read(syncApiConfigProvider)
+              .copyWith(deviceId: deviceId);
+        }
+        await ref
+            .read(authStateProvider.notifier)
+            .loginWithBiometricToken(
+              email: email,
+              biometricToken: biometricToken,
+              companyId: null,
+              deviceId: deviceId,
+              deviceName: 'local',
+              platform: defaultTargetPlatform.name,
+            );
+        await ref.read(syncEnabledProvider.notifier).disableForLocalLogin();
       } else {
         setState(() {
           _error = l10n.authBiometricFailed;
@@ -143,6 +154,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       setState(() {
         _error = l10n.authBiometricFailed;
       });
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -195,7 +208,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           .loginLocal(
             email: email,
             password: password,
-            companyId: LocalAuthDefaults.companyId,
+            companyId: null,
             deviceId: deviceId,
             deviceName: 'local',
             platform: defaultTargetPlatform.name,
@@ -207,15 +220,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         mode: AuthenticationMode.local,
       );
       if (isBioEnabled) {
-        await credentialStore.saveCredentials(
-          email: email,
-          password: password,
-          mode: AuthenticationMode.local,
-        );
-        if (mounted) {
-          setState(() {
-            _hasSavedCredentials = true;
-          });
+        final bioToken = await ref.read(localAuthStoreProvider).getOrCreateBiometricToken(email);
+        if (bioToken != null) {
+          await credentialStore.saveBiometricCredentials(
+            email: email,
+            biometricToken: bioToken,
+            mode: AuthenticationMode.local,
+          );
+          if (mounted) {
+            setState(() {
+              _hasSavedCredentials = true;
+            });
+          }
         }
       }
     } on AuthenticationFailure {

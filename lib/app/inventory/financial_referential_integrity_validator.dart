@@ -6,12 +6,10 @@ import 'package:stock_count/modules/inventory/shared/data/database/inventory_dat
 /// rules across inventory and accounting tables to prevent orphan financial records.
 class FinancialReferentialIntegrityValidator {
   FinancialReferentialIntegrityValidator({
-    required InventoryDatabase invDb,
-    AccountingDatabase? accDb,
-    String Function()? readCompanyId,
-  })  : _invDb = invDb,
-        _accDb = accDb,
-        _readCompanyId = readCompanyId;
+    required this._invDb,
+    this._accDb,
+    this._readCompanyId,
+  });
 
   final InventoryDatabase _invDb;
   final AccountingDatabase? _accDb;

@@ -13,13 +13,12 @@ import 'package:hive_flutter/hive_flutter.dart';
 class DriftEncryptionKeyStore {
   DriftEncryptionKeyStore({
     FlutterSecureStorage? secureStorage,
-    Uint8List? fixedKeyForTests,
+    this._fixedKeyForTests,
   }) : _secure =
            secureStorage ??
            const FlutterSecureStorage(
              aOptions: AndroidOptions(encryptedSharedPreferences: true),
-           ),
-       _fixedKeyForTests = fixedKeyForTests;
+           );
 
   static const storageKey = 'drift_sqlcipher_key_v1';
   static const _fallbackBoxName = 'hive_key_fallback';

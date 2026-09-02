@@ -86,9 +86,11 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final profile = ref.watch(companyProfileProvider).valueOrNull;
+    final defaultCurrency = ref.watch(
+      companyProfileProvider.select((p) => p.valueOrNull?.defaultCurrencyCode),
+    );
     if (!_hydrated && !widget.isEditing) {
-      _currencyCode = profile?.defaultCurrencyCode ?? _currencyCode;
+      _currencyCode = defaultCurrency ?? _currencyCode;
       _hydrated = true;
     }
 
@@ -104,8 +106,6 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
         }
       });
     }
-
-    final accountsAsync = ref.watch(accountsProvider);
 
     return AppResponsiveScaffold(
       appBar: CustomAppBar(
@@ -183,37 +183,7 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
               onChanged: (value) => setState(() => _isPosted = value),
             ),
             const SizedBox(height: AppSpacing.md),
-            Text(
-              l10n.accountingJournalLines,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            accountsAsync.when(
-              loading: () => const LinearProgressIndicator(),
-              error: (_, _) => Text(l10n.somethingWentWrong),
-              data: (accounts) {
-                final posting = [
-                  for (final a in accounts)
-                    if (a.isPostingAccount && a.isActive && !a.isDeleted) a,
-                ];
-                return Column(
-                  children: [
-                    for (var i = 0; i < _lines.length; i++) ...[
-                      _buildLineEditor(l10n, posting, i),
-                      const SizedBox(height: AppSpacing.sm),
-                    ],
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            OutlinedButton.icon(
-              onPressed: () => setState(() => _lines.add(_LineForm())),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.accountingJournalAddLine),
-            ),
+            _JournalLinesSection(lines: _lines),
             const SizedBox(height: AppSpacing.lg),
           ],
         ),
@@ -224,129 +194,6 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
           expand: true,
           isLoading: _saving,
           onPressed: _saving ? null : _save,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLineEditor(
-    AppLocalizations l10n,
-    List<Account> posting,
-    int index,
-  ) {
-    final line = _lines[index];
-    final mediaWidth = MediaQuery.of(context).size.width;
-    final isCompact = mediaWidth < 500;
-
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    // ignore: deprecated_member_use
-                    value: line.accountUuid,
-                    isExpanded: true,
-                    decoration: InputDecoration(
-                      labelText: l10n.accountingJournalAccount,
-                    ),
-                    items: [
-                      for (final account in posting)
-                        DropdownMenuItem(
-                          value: account.uuid,
-                          child: Text(
-                            '${account.accountCode} — ${AccountLabels.displayName(l10n, account)}',
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                    ],
-                    onChanged: (value) => setState(() => line.accountUuid = value),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.accountingJournalPickAccount;
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                if (_lines.length > 2) ...[
-                  const SizedBox(width: AppSpacing.xs),
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _lines.removeAt(index);
-                      });
-                    },
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    tooltip: 'حذف السطر',
-                  ),
-                ],
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            if (isCompact) ...[
-              AppAmountField(
-                value: line.debit,
-                label: l10n.accountingJournalDebit,
-                emptyWhenZero: true,
-                onChanged: (value) => setState(() {
-                  line.debit = value;
-                  if (value > 0) {
-                    line.credit = 0;
-                  }
-                }),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              AppAmountField(
-                value: line.credit,
-                label: l10n.accountingJournalCredit,
-                emptyWhenZero: true,
-                onChanged: (value) => setState(() {
-                  line.credit = value;
-                  if (value > 0) {
-                    line.debit = 0;
-                  }
-                }),
-              ),
-            ] else ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: AppAmountField(
-                      value: line.debit,
-                      label: l10n.accountingJournalDebit,
-                      emptyWhenZero: true,
-                      onChanged: (value) => setState(() {
-                        line.debit = value;
-                        if (value > 0) {
-                          line.credit = 0;
-                        }
-                      }),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: AppAmountField(
-                      value: line.credit,
-                      label: l10n.accountingJournalCredit,
-                      emptyWhenZero: true,
-                      onChanged: (value) => setState(() {
-                        line.credit = value;
-                        if (value > 0) {
-                          line.debit = 0;
-                        }
-                      }),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ],
         ),
       ),
     );
@@ -443,5 +290,183 @@ class _JournalEntryFormPageState extends ConsumerState<JournalEntryFormPage> {
         setState(() => _saving = false);
       }
     }
+  }
+}
+
+class _JournalLinesSection extends ConsumerStatefulWidget {
+  const _JournalLinesSection({required this.lines});
+
+  final List<_LineForm> lines;
+
+  @override
+  ConsumerState<_JournalLinesSection> createState() =>
+      __JournalLinesSectionState();
+}
+
+class __JournalLinesSectionState extends ConsumerState<_JournalLinesSection> {
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final accountsAsync = ref.watch(accountsProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.accountingJournalLines,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        accountsAsync.when(
+          loading: () => const LinearProgressIndicator(),
+          error: (_, _) => Text(l10n.somethingWentWrong),
+          data: (accounts) {
+            final posting = [
+              for (final a in accounts)
+                if (a.isPostingAccount && a.isActive && !a.isDeleted) a,
+            ];
+            return Column(
+              children: [
+                for (var i = 0; i < widget.lines.length; i++) ...[
+                  _buildLineEditor(l10n, posting, i),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        OutlinedButton.icon(
+          onPressed: () => setState(() => widget.lines.add(_LineForm())),
+          icon: const Icon(Icons.add),
+          label: Text(l10n.accountingJournalAddLine),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLineEditor(
+    AppLocalizations l10n,
+    List<Account> posting,
+    int index,
+  ) {
+    final line = widget.lines[index];
+    final mediaWidth = MediaQuery.of(context).size.width;
+    final isCompact = mediaWidth < 500;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    // ignore: deprecated_member_use
+                    value: line.accountUuid,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: l10n.accountingJournalAccount,
+                    ),
+                    items: [
+                      for (final account in posting)
+                        DropdownMenuItem(
+                          value: account.uuid,
+                          child: Text(
+                            '${account.accountCode} — ${AccountLabels.displayName(l10n, account)}',
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                    onChanged: (value) => setState(() => line.accountUuid = value),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return l10n.accountingJournalPickAccount;
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                if (widget.lines.length > 2) ...[
+                  const SizedBox(width: AppSpacing.xs),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        widget.lines.removeAt(index);
+                      });
+                    },
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    tooltip: 'حذف السطر',
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            if (isCompact) ...[
+              AppAmountField(
+                value: line.debit,
+                label: l10n.accountingJournalDebit,
+                emptyWhenZero: true,
+                onChanged: (value) => setState(() {
+                  line.debit = value;
+                  if (value > 0) {
+                    line.credit = 0;
+                  }
+                }),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              AppAmountField(
+                value: line.credit,
+                label: l10n.accountingJournalCredit,
+                emptyWhenZero: true,
+                onChanged: (value) => setState(() {
+                  line.credit = value;
+                  if (value > 0) {
+                    line.debit = 0;
+                  }
+                }),
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: AppAmountField(
+                      value: line.debit,
+                      label: l10n.accountingJournalDebit,
+                      emptyWhenZero: true,
+                      onChanged: (value) => setState(() {
+                        line.debit = value;
+                        if (value > 0) {
+                          line.credit = 0;
+                        }
+                      }),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: AppAmountField(
+                      value: line.credit,
+                      label: l10n.accountingJournalCredit,
+                      emptyWhenZero: true,
+                      onChanged: (value) => setState(() {
+                        line.credit = value;
+                        if (value > 0) {
+                          line.debit = 0;
+                        }
+                      }),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -35,13 +35,10 @@ final appLockControllerProvider =
 
 class AppLockController extends StateNotifier<AppLockState> {
   AppLockController({
-    required AppLockRepository repository,
-    required AppLockBiometrics biometrics,
-    required VoidCallback onChanged,
-  })  : _repository = repository,
-        _biometrics = biometrics,
-        _onChanged = onChanged,
-        super(AppLockState.initial());
+    required this._repository,
+    required this._biometrics,
+    required this._onChanged,
+  })  : super(AppLockState.initial());
 
   final AppLockRepository _repository;
   final AppLockBiometrics _biometrics;

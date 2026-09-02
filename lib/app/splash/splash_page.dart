@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/di/app_providers.dart';
 import '../../core/widgets/app_error_state.dart';
 import '../../core/auth/presentation/providers/auth_state_core.dart';
-import '../../modules/system_setup/presentation/pages/system_setup_routes.dart';
 import '../bootstrap/app_initialization.dart';
 import '../bootstrap/app_initialization_state.dart';
 import '../localization/app_localizations.dart';
@@ -115,7 +114,6 @@ class SplashPage extends ConsumerWidget {
       context.go(AppRoutes.onboarding);
       return;
     }
-
 
     // 2. Authentication check
     if (!auth.isAuthenticated) {

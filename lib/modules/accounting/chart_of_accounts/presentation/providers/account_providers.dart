@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/core/database/tenant_database_name.dart';
 import 'package:stock_count/modules/sync/sync.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/core/tenancy/session_company.dart';
 import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
@@ -31,7 +32,19 @@ final accountRepositoryImplProvider = Provider<AccountRepositoryImpl>((ref) {
   return AccountRepositoryImpl(
     ref.watch(accountingDatabaseProvider),
     syncQueue: ref.watch(syncQueueProvider),
-    readCompanyId: () => ref.read(currentCompanyIdProvider),
+    readCompanyId: () {
+      final companyId = ref.read(currentCompanyIdProvider);
+      if (companyId.isNotEmpty) return companyId;
+      final session = ref.read(authStateProvider).session;
+      if (session?.currentCompanyId != null &&
+          session!.currentCompanyId!.isNotEmpty) {
+        return session.currentCompanyId!;
+      }
+      if (session?.companies.isNotEmpty == true) {
+        return session!.companies.first.id;
+      }
+      return '';
+    },
   );
 });
 
@@ -95,7 +108,17 @@ final accountTypeFilterProvider = StateProvider.autoDispose<AccountType?>(
 
 /// Ensures default COA exists, then exposes the reactive catalog stream.
 final accountsProvider = StreamProvider<List<Account>>((ref) async* {
-  await ref.watch(ensureDefaultChartUseCaseProvider).call();
+  final companyId = ref.watch(currentCompanyIdProvider);
+  if (companyId.isEmpty) {
+    yield [];
+    return;
+  }
+  try {
+    await ref.watch(ensureDefaultChartUseCaseProvider).call();
+  } on MissingCompanyContextException {
+    yield [];
+    return;
+  }
   final includeInactive = ref.watch(accountsIncludeInactiveProvider);
   yield* ref
       .watch(watchAccountsUseCaseProvider)
@@ -104,7 +127,17 @@ final accountsProvider = StreamProvider<List<Account>>((ref) async* {
 
 /// All accounts in the chart of accounts (including inactive), ensuring full catalog search.
 final allAccountsProvider = StreamProvider<List<Account>>((ref) async* {
-  await ref.watch(ensureDefaultChartUseCaseProvider).call();
+  final companyId = ref.watch(currentCompanyIdProvider);
+  if (companyId.isEmpty) {
+    yield [];
+    return;
+  }
+  try {
+    await ref.watch(ensureDefaultChartUseCaseProvider).call();
+  } on MissingCompanyContextException {
+    yield [];
+    return;
+  }
   yield* ref
       .watch(watchAccountsUseCaseProvider)
       .call(includeInactive: true);

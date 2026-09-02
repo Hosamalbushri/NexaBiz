@@ -5,7 +5,7 @@ import '../../domain/repositories/notification_repository.dart';
 import '../notification_hive.dart';
 
 class NotificationRepositoryImpl implements NotificationRepository {
-  NotificationRepositoryImpl({Box<AppNotification>? box}) : _box = box;
+  NotificationRepositoryImpl({this._box});
 
   Box<AppNotification>? _box;
 

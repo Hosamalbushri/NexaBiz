@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/modules/module_providers.dart';
 import '../../../core/modules/report_category_definition.dart';
-import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_empty_state.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../constants/app_constants.dart';
@@ -220,7 +219,7 @@ class _UnitReportCategorySection extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: reports.length,
-              separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
+              separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
               itemBuilder: (context, index) {
                 return _ReportItemCard(item: reports[index]);
               },

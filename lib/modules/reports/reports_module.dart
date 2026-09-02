@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/localization/app_localizations.dart';
-import '../../app/presentation/providers/dashboard_services_provider.dart';
 import '../../app/reports/reports_app_providers.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
@@ -17,12 +16,10 @@ import 'operational_reports/presentation/pages/product_stock_movement_report_pag
 import 'operational_reports/presentation/pages/rp_transaction_report_page.dart';
 import 'operational_reports/presentation/pages/sales_period_report_page.dart';
 import 'permissions/reports_permission_package.dart';
-import 'shared/domain/services/product_stock_movement_report_data_port.dart';
 import 'shared/domain/services/rp_report_data_port.dart';
 import 'shared/presentation/pages/report_pdf_preview_page.dart';
 import 'shared/presentation/pages/reports_home_page.dart';
 import 'shared/presentation/pages/reports_routes.dart';
-import 'shared/presentation/providers/reports_providers.dart';
 
 
 /// Platform reports module — generic PDF catalog, preview, print/share.

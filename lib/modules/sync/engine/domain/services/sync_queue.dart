@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:hive_flutter/hive_flutter.dart';
 
-import 'package:stock_count/core/auth/domain/services/local_access_policy.dart';
+import 'package:stock_count/core/auth/domain/services/local_authorization_guard.dart';
 import 'package:stock_count/core/database/encrypted_hive_box.dart';
 import 'package:stock_count/core/database/hive_boxes.dart';
 import 'package:stock_count/modules/sync/engine/domain/entities/sync_operation.dart';
@@ -62,9 +62,11 @@ class SyncQueue {
 
     // Verify tenant boundary
     if (companyId != null && operation.companyId != null && operation.companyId != companyId) {
-      throw SecurityException(
-        'Cross-tenant enqueue blocked: Operation belongs to company "${operation.companyId}" '
-        'but the active queue is scoped to company "$companyId".'
+      throw CompanyContextMismatchException(
+        message: 'Cross-tenant enqueue blocked: Operation belongs to company "${operation.companyId}" '
+            'but the active queue is scoped to company "$companyId".',
+        expectedCompanyId: companyId,
+        actualCompanyId: operation.companyId,
       );
     }
 

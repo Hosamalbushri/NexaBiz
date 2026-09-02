@@ -10,7 +10,6 @@ import '../../core/permissions/permission_defs.dart';
 import 'devices/presentation/pages/admin_devices_page.dart';
 import 'permissions_cat/presentation/pages/admin_permissions_catalog_page.dart';
 import 'permissions/administration_permission_package.dart';
-import 'roles/presentation/pages/admin_role_editor_page.dart';
 import 'roles/presentation/pages/admin_roles_page.dart';
 import 'shared/presentation/pages/administration_home_page.dart';
 import 'users/presentation/pages/admin_users_page.dart';

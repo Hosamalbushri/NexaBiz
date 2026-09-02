@@ -14,7 +14,7 @@ import '../../domain/services/journal_base_amount_resolver.dart';
 import '../../domain/services/journal_money.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 
 /// Source type used by reversing journals (`sourceId` = original entry UUID).
 const kJournalReverseSourceType = 'journal_reverse';
@@ -22,16 +22,12 @@ const kJournalReverseSourceType = 'journal_reverse';
 class JournalRepositoryImpl implements JournalRepository {
   JournalRepositoryImpl(
     this._db, {
-    required AccountRepository accounts,
-    required AccountingPeriodValidator periodValidator,
-    CurrencyRateRepository? rates,
-    SyncQueue? syncQueue,
-    String Function()? readCompanyId,
-  }) : _accounts = accounts,
-       _periodValidator = periodValidator,
-       _rates = rates,
-       _syncQueue = syncQueue,
-       _readCompanyId = readCompanyId;
+    required this._accounts,
+    required this._periodValidator,
+    this._rates,
+    this._syncQueue,
+    this._readCompanyId,
+  });
 
   final AccountingDatabase _db;
   final AccountRepository _accounts;
@@ -44,8 +40,15 @@ class JournalRepositoryImpl implements JournalRepository {
   static const sourceSale = 'sale';
   static const reverseSourceType = kJournalReverseSourceType;
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call().trim();
+    if (id == null || id.isEmpty) {
+      throw MissingCompanyContextException(
+        'JournalRepository operation failed: missing company context.',
+      );
+    }
+    return id;
+  }
 
   Expression<bool> _tenantScoped($JournalEntriesTable t) =>
       t.companyId.equals(_currentCompanyId);

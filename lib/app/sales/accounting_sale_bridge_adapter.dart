@@ -8,8 +8,8 @@ import 'package:stock_count/modules/sales/shared/domain/services/sale_accounting
 /// App adapter: optional ERP operational submit (local journals are always on).
 class AccountingSaleBridgeAdapter implements SaleAccountingBridgePort {
   AccountingSaleBridgeAdapter({
-    required AccountingIntegrationPort integration,
-  }) : _integration = integration;
+    required this._integration,
+  });
 
   final AccountingIntegrationPort _integration;
 
@@ -54,7 +54,7 @@ class AccountingSaleBridgeAdapter implements SaleAccountingBridgePort {
         externalDocumentId: externalId,
         externalDocumentNumber: externalDocumentNumber,
         metadata: {
-          if (externalStatus != null) 'externalStatus': externalStatus,
+          'externalStatus': ?externalStatus,
         },
       ),
     );

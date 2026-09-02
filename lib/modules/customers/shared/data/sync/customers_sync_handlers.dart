@@ -5,13 +5,11 @@ import 'package:stock_count/modules/customers/directory/data/repositories/custom
 /// Customers adapter for the shared SyncManager.
 class CustomerSyncHandler implements SyncEntityHandler {
   CustomerSyncHandler({
-    required CustomerRepositoryImpl repository,
-    required RemoteSyncApi Function() remoteProvider,
+    required this._repository,
+    required this._remoteProvider,
     this.conflictResolver = const ConflictResolver(),
-    Future<void> Function(Map<String, dynamic> payload)? ensureLinkedAccount,
-  }) : _repository = repository,
-       _remoteProvider = remoteProvider,
-       _ensureLinkedAccount = ensureLinkedAccount;
+    this._ensureLinkedAccount,
+  });
 
   final CustomerRepositoryImpl _repository;
   final RemoteSyncApi Function() _remoteProvider;

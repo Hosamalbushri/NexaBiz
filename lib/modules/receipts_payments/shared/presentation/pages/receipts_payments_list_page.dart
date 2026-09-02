@@ -2,24 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
+import 'package:stock_count/core/domain/services/device_document_number.dart';
+import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
-import 'package:stock_count/core/domain/services/device_document_number.dart';
+import 'package:stock_count/modules/receipts_payments/permissions/receipts_payments_permission_package.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_list_item.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
-import 'package:stock_count/modules/receipts_payments/permissions/receipts_payments_permission_package.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/presentation/providers/transaction_list_provider.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/presentation/utils/rp_labels.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/presentation/widgets/rp_error_messages.dart';
-import 'package:stock_count/modules/receipts_payments/transactions/presentation/widgets/transaction_filter_bar.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/presentation/widgets/transaction_status_badge.dart';
 import 'receipts_payments_routes.dart';
 
@@ -36,12 +31,9 @@ class ReceiptsPaymentsListPage extends ConsumerStatefulWidget {
 
 class _ReceiptsPaymentsListPageState
     extends ConsumerState<ReceiptsPaymentsListPage> {
-  final _scrollController = ScrollController();
-
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _lockTypeFilter();
@@ -71,26 +63,8 @@ class _ReceiptsPaymentsListPageState
   }
 
   @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients) {
-      return;
-    }
-    final pos = _scrollController.position;
-    if (pos.pixels >= pos.maxScrollExtent - 240) {
-      ref.read(transactionListProvider.notifier).loadMore();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
     final filter = ref.watch(transactionListFilterProvider);
     if (filter.transactionType != widget.transactionType) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -139,12 +113,50 @@ class _ReceiptsPaymentsListPageState
       TransactionType.currencyExchange => Icons.currency_exchange_outlined,
     };
 
-    return Scaffold(
-      backgroundColor: scheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: title,
-        showBackButton: true,
-      ),
+    final listState = asyncList.valueOrNull;
+    final canCreate = ref
+        .read(authStateProvider)
+        .hasAnyPermission(createPermissions);
+
+    return ModuleListScaffold<TransactionListItem>(
+      title: title,
+      searchQuery: filter.query,
+      searchHint: l10n.salesSearchHint,
+      onSearchChanged: (val) {
+        final current = ref.read(transactionListFilterProvider);
+        ref.read(transactionListFilterProvider.notifier).state =
+            current.copyWith(query: val.trim());
+      },
+      isLoading: asyncList.isLoading && !asyncList.hasValue,
+      error: asyncList.error != null ? rpErrorMessage(l10n, asyncList.error!) : null,
+      onRetry: () => ref.read(transactionListProvider.notifier).reload(),
+      onRefresh: () async {
+        await ref.read(transactionListProvider.notifier).reload();
+      },
+      isLoadingMore: listState?.isLoadingMore ?? false,
+      onLoadMore: () {
+        if (listState?.hasMore == true) {
+          ref.read(transactionListProvider.notifier).loadMore();
+        }
+      },
+      emptyTitle: emptyTitle,
+      emptyMessage: emptyMessage,
+      emptyIcon: emptyIcon,
+      emptyActionLabel: canCreate ? actionLabel : null,
+      onEmptyAction: canCreate
+          ? () {
+              switch (type) {
+                case TransactionType.receipt:
+                  ReceiptsPaymentsRoutes.pushCreateReceipt(context);
+                case TransactionType.payment:
+                  ReceiptsPaymentsRoutes.pushCreatePayment(context);
+                case TransactionType.transfer:
+                  ReceiptsPaymentsRoutes.pushCreateTransfer(context);
+                case TransactionType.currencyExchange:
+                  ReceiptsPaymentsRoutes.pushCreateExchange(context);
+              }
+            }
+          : null,
       floatingActionButton: PermissionGate(
         anyOf: createPermissions,
         child: FloatingActionButton.extended(
@@ -164,89 +176,8 @@ class _ReceiptsPaymentsListPageState
           label: Text(actionLabel),
         ),
       ),
-      body: Column(
-        children: [
-          const TransactionFilterBar(),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppConstants.pagePadding,
-                0,
-                AppConstants.pagePadding,
-                AppConstants.pagePadding,
-              ),
-              child: asyncList.when(
-                loading: () => AppLoading(message: l10n.rpLoading),
-                error: (error, _) => AppErrorState(
-                  message: rpErrorMessage(l10n, error),
-                  onRetry: () =>
-                      ref.read(transactionListProvider.notifier).reload(),
-                ),
-                data: (listState) {
-                  final items = listState.items;
-                  if (items.isEmpty) {
-                    final canCreate = ref
-                        .read(authStateProvider)
-                        .hasAnyPermission(createPermissions);
-                    return AppEmptyState(
-                      title: emptyTitle,
-                      subtitle: emptyMessage,
-                      icon: emptyIcon,
-                      actionLabel: canCreate ? actionLabel : null,
-                      onAction: canCreate
-                          ? () {
-                              switch (type) {
-                                case TransactionType.receipt:
-                                  ReceiptsPaymentsRoutes.pushCreateReceipt(
-                                    context,
-                                  );
-                                case TransactionType.payment:
-                                  ReceiptsPaymentsRoutes.pushCreatePayment(
-                                    context,
-                                  );
-                                case TransactionType.transfer:
-                                  ReceiptsPaymentsRoutes.pushCreateTransfer(
-                                    context,
-                                  );
-                                case TransactionType.currencyExchange:
-                                  ReceiptsPaymentsRoutes.pushCreateExchange(
-                                    context,
-                                  );
-                              }
-                            }
-                          : null,
-                    );
-                  }
-                  final footer = listState.hasMore ? 1 : 0;
-                  return ListView.separated(
-                    controller: _scrollController,
-                    itemCount: items.length + footer,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.sm),
-                    itemBuilder: (context, index) {
-                      if (index >= items.length) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: AppSpacing.md,
-                          ),
-                          child: Center(
-                            child: SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          ),
-                        );
-                      }
-                      return _TransactionListTile(item: items[index]);
-                    },
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
+      items: listState?.items ?? const [],
+      itemBuilder: (context, item) => _TransactionListTile(item: item),
     );
   }
 }

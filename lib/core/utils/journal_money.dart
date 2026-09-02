@@ -68,7 +68,11 @@ class JournalMoney {
 
   /// High precision FX rate rounding.
   static double roundFxRate(double rate, {int decimalPlaces = 6}) {
-    if (rate.isNaN || rate.isInfinite || rate <= 0) return 1.0;
+    if (rate.isNaN || rate.isInfinite || rate <= 0) {
+      throw ArgumentError(
+        'Invalid exchange rate: $rate. Exchange rate must be a positive finite number.',
+      );
+    }
     const scale = 1000000;
     return (rate * scale).round() / scale;
   }

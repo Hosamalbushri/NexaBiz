@@ -27,14 +27,11 @@ class FinancialTransactionRepositoryImpl
     implements FinancialTransactionRepository {
   FinancialTransactionRepositoryImpl(
     this._db, {
-    PeriodValidatorPort? periodValidator,
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
-    SyncQueue? syncQueue,
-    String Function()? readCompanyId,
-  }) : _periodValidator = periodValidator,
-       _permissionGuard = permissionGuard,
-       _syncQueue = syncQueue,
-       _readCompanyId = readCompanyId;
+    this._periodValidator,
+    this._permissionGuard = const AllowAllPermissionGuard(),
+    this._syncQueue,
+    this._readCompanyId,
+  });
 
   final ReceiptsPaymentsDatabase _db;
   final PeriodValidatorPort? _periodValidator;

@@ -6,7 +6,7 @@ import '../../../core/entitlements/domain/entities/entitlement.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/network/sync_api_config.dart';
 import '../domain/entities/auth_session.dart';
-import '../domain/local_permissions.dart';
+import '../domain/entities/auth_user.dart';
 import '../domain/repositories/auth_repository.dart';
 import 'local_auth_store.dart';
 import 'offline_authorization_store.dart';
@@ -15,19 +15,15 @@ import 'secure_token_storage.dart';
 /// Fully offline authentication against the local Hive identity store.
 class LocalAuthRepository implements AuthRepository {
   LocalAuthRepository({
-    required LocalAuthStore store,
-    required SecureTokenStorage tokenStorage,
+    required this._store,
+    required this._tokenStorage,
     OfflineAuthorizationStore? offlineAuthStore,
     EntitlementRepository? entitlementRepository,
-    required SyncApiConfig Function() readConfig,
-    void Function(SyncApiConfig config)? onConfigChanged,
-  }) : _store = store,
-       _tokenStorage = tokenStorage,
-       _offlineAuthStore = offlineAuthStore ?? OfflineAuthorizationStore(),
+    required this._readConfig,
+    this._onConfigChanged,
+  }) : _offlineAuthStore = offlineAuthStore ?? OfflineAuthorizationStore(),
        _entitlementRepository =
-           entitlementRepository ?? EntitlementRepositoryImpl(),
-       _readConfig = readConfig,
-       _onConfigChanged = onConfigChanged;
+           entitlementRepository ?? EntitlementRepositoryImpl();
 
   final LocalAuthStore _store;
   final SecureTokenStorage _tokenStorage;
@@ -108,11 +104,8 @@ class LocalAuthRepository implements AuthRepository {
       );
     }
 
-    // Standalone local admin or super admin fallback
-    if (snapshot.user.isSuperAdmin ||
-        snapshot.user.id == LocalAuthDefaults.adminUserId ||
-        snapshot.user.email == LocalAuthDefaults.adminEmail ||
-        config.baseUrl.isEmpty) {
+    // Standalone local mode or super admin account
+    if (snapshot.user.isSuperAdmin || config.baseUrl.isEmpty) {
       return snapshot;
     }
 
@@ -151,13 +144,47 @@ class LocalAuthRepository implements AuthRepository {
       email: email,
       password: password,
       deviceId: deviceId,
-      companyId: companyId ?? LocalAuthDefaults.companyId,
+      companyId: companyId,
     );
     if (loaded == null) {
       throw const AuthenticationFailure('Invalid email or password');
     }
     final snapshot = await _applyOfflineAuthorization(loaded);
     // Local opaque session marker (not a remote JWT).
+    await _tokenStorage.saveTokens(
+      accessToken: 'local:${snapshot.sessionId}',
+      refreshToken: 'local-refresh:${snapshot.sessionId}',
+      expiresInSeconds: 60 * 60 * 24 * 365,
+    );
+    _applyConfig(snapshot);
+    _emit(snapshot);
+    return snapshot;
+  }
+
+  /// Generates or retrieves an OS-protected biometric token for the specified user email.
+  Future<String?> getOrCreateBiometricToken(String email) =>
+      _store.getOrCreateBiometricToken(email);
+
+  /// Authenticates user using an OS-protected biometric token without requiring raw passwords.
+  Future<AuthSessionSnapshot> loginWithBiometricToken({
+    required String email,
+    required String biometricToken,
+    String? companyId,
+    required String deviceId,
+    required String deviceName,
+    required String platform,
+    String? appVersion,
+  }) async {
+    final loaded = await _store.loginWithBiometricToken(
+      email: email,
+      biometricToken: biometricToken,
+      deviceId: deviceId,
+      companyId: companyId,
+    );
+    if (loaded == null) {
+      throw const AuthenticationFailure('Invalid biometric token');
+    }
+    final snapshot = await _applyOfflineAuthorization(loaded);
     await _tokenStorage.saveTokens(
       accessToken: 'local:${snapshot.sessionId}',
       refreshToken: 'local-refresh:${snapshot.sessionId}',
@@ -211,6 +238,40 @@ class LocalAuthRepository implements AuthRepository {
   }) async {
     final company = await _store.createCompany(name: name, code: code);
     return switchCompany(company.id);
+  }
+
+  Future<AuthCompany> createCompanyWithAdmin({
+    required String companyName,
+    required String companyCode,
+    required String adminName,
+    required String adminEmail,
+    required String adminPassword,
+    String adminRole = 'Admin',
+    List<String>? adminPermissions,
+  }) async {
+    final session = _cached;
+    if (session == null) {
+      throw const CompanyCreationException('No active auth session');
+    }
+    final company = await _store.createCompanyWithAdmin(
+      creatorSession: session,
+      companyName: companyName,
+      companyCode: companyCode,
+      adminName: adminName,
+      adminEmail: adminEmail,
+      adminPassword: adminPassword,
+      adminRole: adminRole,
+      adminPermissions: adminPermissions,
+    );
+
+    final hasCompany = session.companies.any((c) => c.id == company.id);
+    if (!hasCompany) {
+      final updated = session.copyWith(
+        companies: [...session.companies, company],
+      );
+      _emit(updated);
+    }
+    return company;
   }
 
   @override

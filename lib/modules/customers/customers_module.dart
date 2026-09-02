@@ -6,7 +6,6 @@ import '../../app/localization/app_localizations.dart';
 import '../../app/presentation/providers/dashboard_services_provider.dart';
 import '../../app/receipts_payments/customers_rp_lookup_adapter.dart';
 import '../../app/sales/customers_sale_lookup_adapter.dart';
-import '../../app/settings/settings_repository.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/module_settings_definition.dart';

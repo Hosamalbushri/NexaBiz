@@ -97,11 +97,20 @@ class AuthorizationContext {
     bool requiresReverification = false,
     bool isTimeTrusted = true,
   }) {
+    final companyContext = session.companyContext;
+    final activeMembership = session.activeMembership;
+
+    final membershipStatus = activeMembership != null
+        ? activeMembership.status
+        : (companyContext != null
+            ? 'active'
+            : (session.user.isSystemAdmin ? 'active' : 'inactive'));
+
     return AuthorizationContext(
       userId: session.user.id,
-      companyId: session.currentCompanyId ?? '',
-      permissions: session.permissions,
-      roleId: session.currentCompany?.role,
+      companyId: companyContext?.companyId ?? session.currentCompanyId ?? '',
+      permissions: companyContext?.companyPermissions ?? session.permissions,
+      roleId: companyContext?.companyRole ?? session.currentCompany?.role,
       entitlement: entitlement,
       authenticationMode: mode,
       offlineSince: offlineSince,
@@ -110,7 +119,7 @@ class AuthorizationContext {
       sessionVersion: session.sessionId ?? '',
       authorizationVersion: authVersion,
       userStatus: session.user.status,
-      companyMembershipStatus: session.currentCompany != null ? 'active' : 'inactive',
+      companyMembershipStatus: membershipStatus,
       temporalTrustState: temporalTrustState,
       isOfflineGraceActive: isOfflineGraceActive,
       requiresReverification: requiresReverification,

@@ -106,7 +106,7 @@ class AppResponsiveScaffold extends StatelessWidget {
                 child: body,
               ),
             ),
-            if (bottomActions != null) bottomActions!,
+            ?bottomActions,
           ],
         ),
       ),

@@ -9,7 +9,11 @@ class HiveInitializer {
   const HiveInitializer._();
 
   static Future<void> initialize() async {
-    await Hive.initFlutter();
+    try {
+      await Hive.initFlutter();
+    } catch (_) {
+      // In headless unit tests without Flutter engine path_provider channel, Hive.init() is used.
+    }
     if (!Hive.isBoxOpen(HiveBoxes.settings)) {
       await Hive.openBox<dynamic>(HiveBoxes.settings);
     }

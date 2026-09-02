@@ -1,9 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../bootstrap/app_bootstrap_coordinator.dart';
 import '../bootstrap/app_initialization.dart';
-import '../bootstrap/app_initialization_state.dart';
-import '../../core/di/app_providers.dart';
 import '../../core/entitlements/domain/entities/entitlement.dart';
 import '../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../../core/modules/module_providers.dart';
@@ -12,6 +11,7 @@ import '../../modules/app_lock/presentation/pages/app_lock_page.dart';
 import '../../modules/app_lock/presentation/pages/app_lock_routes.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import '../../modules/authentication/presentation/pages/change_password_page.dart';
+import '../../modules/authentication/presentation/pages/company_selection_screen.dart';
 import '../../modules/authentication/presentation/pages/login_page.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
 
@@ -23,14 +23,13 @@ import '../notifications/presentation/pages/notification_center_page.dart';
 import '../onboarding/onboarding_page.dart';
 import '../onboarding/setup_choice_page.dart';
 import '../onboarding/server_setup_page.dart';
+import '../presentation/pages/access_denied_page.dart';
 import '../presentation/pages/dashboard_page.dart';
-import '../presentation/pages/module_reports_page.dart';
 import '../presentation/pages/module_unit_reports_page.dart';
 import '../presentation/pages/modules_reports_page.dart';
 import '../presentation/pages/not_found_page.dart';
 import '../presentation/pages/platform_reports_page.dart';
 import '../presentation/pages/service_launcher_page.dart';
-import '../settings/data_sync_settings_page.dart';
 import '../settings/platform_settings_page.dart';
 import '../settings/security_settings_page.dart';
 import '../settings/setup_settings_page.dart';
@@ -49,11 +48,13 @@ bool _isPublicRoute(String path) {
   return path == AppRoutes.splash ||
       path == AppRoutes.login ||
       path == SystemSetupRoutes.firstRun ||
+      path == CompanySelectionScreen.routePath ||
       path == AppRoutes.onboarding ||
       path == AppRoutes.setupChoice ||
       path == AppRoutes.serverSetup ||
       path == AppRoutes.serverBootstrapLogin ||
-      path == AppRoutes.serverBootstrapProgress;
+      path == AppRoutes.serverBootstrapProgress ||
+      path == AppRoutes.accessDenied;
 }
 
 bool _isAppLockExempt(String path) {
@@ -72,18 +73,8 @@ bool _isPermissionExempt(String path) {
       path == AppRoutes.notifications;
 }
 
-/// Composes splash, persistent [AppShell] chrome, shell branches, and modules.
-///
-/// Unauthenticated users are redirected to [AppRoutes.login]. App Lock is a
-/// separate local gate via [appLockControllerProvider]. Module paths are
-/// redirected when the session lacks required permissions.
-///
-/// Important: this provider must not [Ref.watch] anything that changes often.
-/// Recreating [GoRouter] while the old one is still mounted reuses the same
-/// navigator [GlobalKey]s and crashes with "Multiple widgets used the same GlobalKey".
 final appRouterProvider = Provider<GoRouter>((ref) {
   final registry = ref.read(moduleRegistryProvider);
-  // Read (do not watch) — GoRouter listens to value changes itself.
   final refresh = ref.read(appLockRouterRefreshProvider);
   ref.listen(authStateProvider, (_, _) {
     refresh.value++;
@@ -95,6 +86,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refresh.value++;
   });
   ref.listen(appInitializationControllerProvider, (_, _) {
+    refresh.value++;
+  });
+  ref.listen(appBootstrapCoordinatorProvider, (_, _) {
     refresh.value++;
   });
   ref.listen(currentEntitlementProvider, (_, _) {
@@ -111,97 +105,64 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final path = state.uri.path;
       final auth = ref.read(authStateProvider);
-      final initState = ref.read(appInitializationControllerProvider);
+      final bootstrap = ref.read(appBootstrapCoordinatorProvider);
       final isPublic = _isPublicRoute(path);
 
-      final firstRunAsync = ref.read(firstRunCompletedProvider);
-      final isFirstRunDone = firstRunAsync.valueOrNull ?? false;
-
-      // 0. While first run status is loading, keep displaying the splash screen
-      if (firstRunAsync.isLoading &&
-          (path == AppRoutes.splash || path == AppRoutes.root)) {
+      // 0. Initializing or Restoring Session Gate -> Hold on splash
+      if (bootstrap.isInitializing || bootstrap.isRestoringSession) {
+        if (path == AppRoutes.splash) return null;
         return AppRoutes.splash;
       }
 
-      // 0. First-Run Setup Gate: unconfigured applications MUST complete Onboarding & First-Run setup
-      if (!isFirstRunDone) {
-        if (path != AppRoutes.onboarding &&
-            path != SystemSetupRoutes.firstRun &&
+      // 1. First-Run Setup Gate -> Force to setup wizard
+      if (bootstrap.isFirstRunRequired) {
+        if (path != SystemSetupRoutes.firstRun &&
+            path != AppRoutes.onboarding &&
             path != AppRoutes.splash) {
-          return AppRoutes.onboarding;
+          return SystemSetupRoutes.firstRun;
         }
         return null;
       }
 
-
-      // Root path '/' or empty path resolves to login or setup
-      if (path == AppRoutes.root || path.isEmpty) {
-        if (auth.status == AuthStatus.unauthenticated) {
-          return AppRoutes.login;
-        }
-        return AppRoutes.splash;
-      }
-
-      // 1. Initializing / Unknown Auth Status Gate: protect non-public routes during startup
-      if (auth.status == AuthStatus.unknown) {
-        if (isPublic) return null;
-        return AppRoutes.splash;
-      }
-
-      // 2. Mandatory Authentication Gate: ALL non-public routes require active session
-      if (auth.status == AuthStatus.unauthenticated) {
-        if (isPublic) return null;
-        return AppRoutes.login;
-      }
-
-      // 3. Mandatory Password Change Gate: Bypassed per product rules
-      // (User sets local email & password in setup settings)
-
-      // 4. Authenticated Device Initialization & Server Bootstrap Progress Gate
-      final isServerInitializing =
-          initState.operatingMode == ApplicationOperatingMode.server &&
-          (initState.isDownloading ||
-              initState.isWritingDatabase ||
-              initState.isSynchronizing ||
-              initState.isBootstrapCompleted ||
-              initState.isCheckingRemote);
-
-      if (auth.isAuthenticated && isServerInitializing && !initState.isReady) {
-        if (path == AppRoutes.serverBootstrapProgress) {
-          return null;
-        }
-        return AppRoutes.serverBootstrapProgress;
-      }
-
-      // Forward obsolete setup choice & onboarding routes directly to Login or Dashboard
-      if (path == AppRoutes.onboarding ||
-          path == AppRoutes.setupChoice ||
-          path == AppRoutes.serverSetup ||
-          path == AppRoutes.serverBootstrapLogin ||
-          path == AppRoutes.serverBootstrapProgress) {
+      // Block setup routes permanently if setup is already done!
+      if (!bootstrap.isFirstRunRequired &&
+          (path == SystemSetupRoutes.firstRun ||
+              path == SystemSetupRoutes.root ||
+              path == AppRoutes.onboarding ||
+              path == AppRoutes.setupChoice ||
+              path == AppRoutes.serverSetup ||
+              path == AppRoutes.serverBootstrapLogin ||
+              path == AppRoutes.serverBootstrapProgress)) {
         if (auth.isAuthenticated) {
-          return AppRoutes.dashboard;
+          return (auth.hasCompany || bootstrap.isSystemScope)
+              ? AppRoutes.dashboard
+              : CompanySelectionScreen.routePath;
         } else {
           return AppRoutes.login;
         }
       }
 
-      // 5. Mandatory System Setup Readiness Gate:
-      // Setup MUST be completed before accessing dashboard or protected pages.
-      final isSetupReady =
-          ref.read(systemSetupReadyProvider).valueOrNull ?? false;
-      if (!isSetupReady && !auth.isRemoteSession) {
-        if (path != SystemSetupRoutes.root && path != AppRoutes.splash) {
-          return SystemSetupRoutes.root;
-        }
+      // 2. Unauthenticated Gate
+      if (bootstrap.isUnauthenticated || auth.status == AuthStatus.unauthenticated) {
+        if (isPublic) return null;
+        return AppRoutes.login;
       }
 
-      // 6. Authenticated Users on Public Auth Pages: auto-forward to Dashboard
+      // 3. Multi-Company Selection Gate:
+      // Authenticated users with multiple companies but NO active company context MUST be sent to Company Selection
+      if (auth.isAuthenticated && !auth.hasCompany && !bootstrap.isSystemScope) {
+        if (path == CompanySelectionScreen.routePath || path == AppRoutes.login) {
+          return null;
+        }
+        return CompanySelectionScreen.routePath;
+      }
+
+      // 4. Authenticated Users on Public Auth Pages: auto-forward to Dashboard or Company Selection
       if (auth.isAuthenticated &&
-          (path == AppRoutes.login ||
-              path == AppRoutes.splash ||
-              path == AppRoutes.serverBootstrapLogin)) {
-        return isSetupReady ? AppRoutes.dashboard : SystemSetupRoutes.root;
+          (path == AppRoutes.login || path == AppRoutes.splash)) {
+        return (auth.hasCompany || bootstrap.isSystemScope)
+            ? AppRoutes.dashboard
+            : CompanySelectionScreen.routePath;
       }
 
       final lock = ref.read(appLockControllerProvider);
@@ -235,12 +196,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         }
         if (required != null && required.isNotEmpty) {
           if (!auth.hasAnyPermission(required)) {
-            return AppRoutes.dashboard;
+            return AppRoutes.accessDenied;
           }
         }
       }
 
-      // Capability & Entitlement Gate: Protect sync routes from Free / unentitled access
+      // Capability & Entitlement Gate for Data Sync Settings
       if (path == AppRoutes.settingsDataSync ||
           path.startsWith('${AppRoutes.settingsDataSync}/')) {
         final entitlementAsync = ref.read(currentEntitlementProvider);
@@ -266,6 +227,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.login,
         name: 'login',
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: CompanySelectionScreen.routePath,
+        name: CompanySelectionScreen.routeName,
+        builder: (context, state) => const CompanySelectionScreen(),
       ),
       GoRoute(
         path: SystemSetupRoutes.firstRun,
@@ -309,6 +275,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppLockRoutes.root,
         name: 'appLock',
         builder: (context, state) => const AppLockPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.accessDenied,
+        name: 'accessDenied',
+        builder: (context, state) => const AccessDeniedPage(),
       ),
       ShellRoute(
         navigatorKey: appShellNavigatorKey,

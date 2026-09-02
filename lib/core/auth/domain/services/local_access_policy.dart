@@ -1,47 +1,36 @@
 import '../../domain/entities/authorization_context.dart';
 import '../../../entitlements/domain/entities/entitlement.dart';
+import 'local_authorization_guard.dart';
 
-class SecurityException implements Exception {
-  final String message;
-  const SecurityException(this.message);
-  @override
-  String toString() => 'SecurityException: $message';
-}
+/// Legacy alias maintained for compatibility.
+typedef SecurityException = AuthorizationException;
 
-/// Centralized policy to enforce offline database and feature access security boundaries.
+/// Centralized policy enforcing offline database and feature access security boundaries.
 class LocalAccessPolicy {
-  const LocalAccessPolicy();
+  const LocalAccessPolicy([this._guard = const LocalAuthorizationGuard()]);
 
-  /// Enforces authorization checks and throws [SecurityException] if conditions are unmet.
+  final LocalAuthorizationGuard _guard;
+
+  /// Enforces authorization checks and throws [AuthorizationException] if conditions are unmet.
   void requireLocalAccess({
     required AuthorizationContext context,
     required String permission,
     EntitlementCapability? capability,
+    String? targetCompanyId,
   }) {
-    if (context.userId.isEmpty) {
-      throw const SecurityException('User is unauthenticated.');
-    }
-    if (context.companyId.isEmpty) {
-      throw const SecurityException('No active company selected.');
-    }
-
-    // Check permission
-    if (!context.permissions.contains(permission)) {
-      throw SecurityException('Required permission "$permission" not granted.');
-    }
-
-    // Check entitlement capability if requested
     if (capability != null) {
-      if (!context.entitlement.capabilities.contains(capability)) {
-        throw SecurityException('Required capability "${capability.name}" not enabled.');
-      }
-    }
-
-    // Session grace period expiration check:
-    // If authorization context is expired, block protected premium operations,
-    // but keep basic local operations available.
-    if (context.isExpired && capability != null) {
-      throw const SecurityException('Offline grace session has expired. Re-authenticate online.');
+      _guard.requireCapability(
+        context: context,
+        requiredPermission: permission,
+        capability: capability,
+        targetCompanyId: targetCompanyId,
+      );
+    } else {
+      _guard.requirePermission(
+        context: context,
+        requiredPermission: permission,
+        targetCompanyId: targetCompanyId,
+      );
     }
   }
 
@@ -50,15 +39,17 @@ class LocalAccessPolicy {
     required AuthorizationContext context,
     required String permission,
     EntitlementCapability? capability,
+    String? targetCompanyId,
   }) {
     try {
       requireLocalAccess(
         context: context,
         permission: permission,
         capability: capability,
+        targetCompanyId: targetCompanyId,
       );
       return true;
-    } on SecurityException {
+    } on AuthorizationException {
       return false;
     }
   }

@@ -27,12 +27,10 @@ class SyncAuditResult {
 class DocumentEntrySync {
   DocumentEntrySync({
     required JournalRepository journalRepository,
-    required AccountingEntryBuilder entryBuilder,
-  })  : _journalRepository = journalRepository,
-        _entryBuilder = entryBuilder;
+    AccountingEntryBuilder? entryBuilder,
+  }) : _journalRepository = journalRepository;
 
   final JournalRepository _journalRepository;
-  final AccountingEntryBuilder _entryBuilder;
 
   Future<SyncAuditResult> auditDocumentSync({
     required InventoryDocumentRef document,

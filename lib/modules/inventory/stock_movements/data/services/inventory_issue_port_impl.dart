@@ -4,8 +4,7 @@ import '../../domain/repositories/stock_movements_repository.dart';
 import '../../domain/services/inventory_issue_port.dart';
 
 class InventoryIssuePortImpl implements InventoryIssuePort {
-  InventoryIssuePortImpl({required StockMovementsRepository repository})
-      : _repository = repository;
+  InventoryIssuePortImpl({required this._repository});
 
   final StockMovementsRepository _repository;
 

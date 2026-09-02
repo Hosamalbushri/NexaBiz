@@ -1,4 +1,4 @@
-import 'package:stock_count/modules/accounting/shared/domain/entities/currency_rate.dart';
+import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
 import '../entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/shared/domain/repositories/currency_rate_repository.dart';
 import 'journal_money.dart';
@@ -49,7 +49,6 @@ class JournalBaseAmountResolver {
     }
 
     // Enforce base currency debit/credit balancing for foreign currency conversions.
-    // Line-by-line rounding can introduce 1-cent/fils disparities across multi-line vouchers.
     _applyBasePennyBalancing(resolved);
 
     return resolved;
@@ -72,7 +71,6 @@ class JournalBaseAmountResolver {
 
     // Adjust the largest credit line if diff > 0, or largest debit line if diff < 0.
     if (diffCents > 0) {
-      // Base debits exceed base credits by diffCents. Add diffCents to the largest credit line.
       int maxCreditIndex = -1;
       double maxCreditVal = -1;
       for (var i = 0; i < resolved.length; i++) {
@@ -99,7 +97,6 @@ class JournalBaseAmountResolver {
         );
       }
     } else {
-      // Base credits exceed base debits by abs(diffCents). Add abs(diffCents) to the largest debit line.
       final absDiff = diffCents.abs();
       int maxDebitIndex = -1;
       double maxDebitVal = -1;
@@ -135,23 +132,28 @@ class JournalBaseAmountResolver {
     required DateTime entryDate,
     required double? explicit,
   }) async {
+    if (currencyCode == baseCurrencyCode || currencyCode.isEmpty) {
+      return 1.0;
+    }
     if (explicit != null &&
         explicit > 0 &&
         !explicit.isNaN &&
         !explicit.isInfinite) {
       return explicit;
     }
-    if (currencyCode == baseCurrencyCode || currencyCode.isEmpty) {
-      return 1;
-    }
     final dated = await _rates.getRateOn(currencyCode, entryDate);
-    if (dated != null && dated > 0) {
+    if (dated != null && dated > 0 && !dated.isNaN && !dated.isInfinite) {
       return dated;
     }
     final current = await _rates.getByCode(currencyCode);
-    if (current != null && current.rateToBase > 0) {
+    if (current != null &&
+        current.rateToBase > 0 &&
+        !current.rateToBase.isNaN &&
+        !current.rateToBase.isInfinite) {
       return current.rateToBase;
     }
-    return 1;
+    throw InvalidExchangeRateException(
+      'لم يتم العثور على سعر صرف صالح للعملة $currencyCode مقابل العملة الأساسية $baseCurrencyCode.',
+    );
   }
 }

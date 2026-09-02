@@ -62,17 +62,13 @@ class GetTransactionDashboard {
 
 class CreateFinancialTransaction {
   CreateFinancialTransaction({
-    required FinancialTransactionRepository repository,
+    required this._repository,
     required PermissionGuard permissionGuard,
-    RpVoucherBookPort voucherBookPort = const NoOpRpVoucherBookPort(),
-    RpLedgerPostingPort ledgerPosting = const NoOpRpLedgerPostingPort(),
-    FinancialTransactionValidator validator =
+    this._voucherBookPort = const NoOpRpVoucherBookPort(),
+    this._ledgerPosting = const NoOpRpLedgerPostingPort(),
+    this._validator =
         const FinancialTransactionValidator(),
-  }) : _repository = repository,
-       _guard = permissionGuard,
-       _voucherBookPort = voucherBookPort,
-       _ledgerPosting = ledgerPosting,
-       _validator = validator;
+  }) : _guard = permissionGuard;
 
   final FinancialTransactionRepository _repository;
   final PermissionGuard _guard;
@@ -112,16 +108,13 @@ class CreateFinancialTransaction {
 
 class UpdateFinancialTransaction {
   UpdateFinancialTransaction({
-    required FinancialTransactionRepository repository,
-    FinancialTransactionValidator validator =
+    required this._repository,
+    this._validator =
         const FinancialTransactionValidator(),
-    FinancialTransactionWorkflow workflow =
+    this._workflow =
         const FinancialTransactionWorkflow(),
-    RpLedgerPostingPort ledgerPosting = const NoOpRpLedgerPostingPort(),
-  }) : _repository = repository,
-       _validator = validator,
-       _workflow = workflow,
-       _ledgerPosting = ledgerPosting;
+    this._ledgerPosting = const NoOpRpLedgerPostingPort(),
+  });
 
   final FinancialTransactionRepository _repository;
   final FinancialTransactionValidator _validator;
@@ -189,15 +182,12 @@ class UpdateFinancialTransaction {
 
 class PostFinancialTransaction {
   PostFinancialTransaction({
-    required FinancialTransactionRepository repository,
+    required this._repository,
     required PermissionGuard permissionGuard,
-    FinancialTransactionWorkflow workflow =
+    this._workflow =
         const FinancialTransactionWorkflow(),
-    RpLedgerPostingPort ledgerPosting = const NoOpRpLedgerPostingPort(),
-  }) : _repository = repository,
-       _guard = permissionGuard,
-       _workflow = workflow,
-       _ledgerPosting = ledgerPosting;
+    this._ledgerPosting = const NoOpRpLedgerPostingPort(),
+  }) : _guard = permissionGuard;
 
   final FinancialTransactionRepository _repository;
   final PermissionGuard _guard;
@@ -272,13 +262,11 @@ class PostFinancialTransaction {
 
 class UnpostFinancialTransaction {
   UnpostFinancialTransaction({
-    required FinancialTransactionRepository repository,
-    FinancialTransactionWorkflow workflow =
+    required this._repository,
+    this._workflow =
         const FinancialTransactionWorkflow(),
-    RpLedgerPostingPort ledgerPosting = const NoOpRpLedgerPostingPort(),
-  }) : _repository = repository,
-       _workflow = workflow,
-       _ledgerPosting = ledgerPosting;
+    this._ledgerPosting = const NoOpRpLedgerPostingPort(),
+  });
 
   final FinancialTransactionRepository _repository;
   final FinancialTransactionWorkflow _workflow;
@@ -310,15 +298,12 @@ class UnpostFinancialTransaction {
 
 class CancelFinancialTransaction {
   CancelFinancialTransaction({
-    required FinancialTransactionRepository repository,
+    required this._repository,
     required PermissionGuard permissionGuard,
-    FinancialTransactionWorkflow workflow =
+    this._workflow =
         const FinancialTransactionWorkflow(),
-    RpLedgerPostingPort ledgerPosting = const NoOpRpLedgerPostingPort(),
-  }) : _repository = repository,
-       _guard = permissionGuard,
-       _workflow = workflow,
-       _ledgerPosting = ledgerPosting;
+    this._ledgerPosting = const NoOpRpLedgerPostingPort(),
+  }) : _guard = permissionGuard;
 
   final FinancialTransactionRepository _repository;
   final PermissionGuard _guard;

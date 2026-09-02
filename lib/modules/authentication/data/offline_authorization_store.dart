@@ -59,9 +59,6 @@ class OfflineAuthorizationStore {
     required String companyId,
     required String userId,
   }) {
-    final normalizedUrl = serverBaseUrl.trim().toLowerCase();
-    final input = '$normalizedUrl|$companyId|$userId';
-    final hash = sha256.convert(utf8.encode(input)).toString().substring(0, 32);
     final cleanUrl = serverBaseUrl.trim().toLowerCase();
     final urlHash = sha256.convert(utf8.encode(cleanUrl)).toString().substring(0, 16);
     return 'offline_auth_${urlHash}_${companyId.trim()}_${userId.trim()}';
@@ -193,10 +190,14 @@ class OfflineAuthorizationStore {
     if (await _canUseSecure()) {
       await _secure.delete(key: key);
       await _secure.delete(key: legacyKey);
+      await _removeFromUserIndex(userId, key);
+      await _removeFromUserIndex(userId, legacyKey);
     } else {
       final box = await _hiveBox();
       await box.delete(key);
       await box.delete(legacyKey);
+      await _removeFromUserIndexHive(box, userId, key);
+      await _removeFromUserIndexHive(box, userId, legacyKey);
     }
   }
   /// MUST be called on logout to prevent stale authorization state from being

@@ -148,6 +148,7 @@ class AdminApiRepository implements AdminRepository {
 
   final AuthenticatedHttpClient _http;
 
+  @override
   Future<List<AdminUserSummary>> listUsers() async {
     final response = await _http.get('/api/v1/users');
     final data = _http.decodeDataList(response);
@@ -158,6 +159,7 @@ class AdminApiRepository implements AdminRepository {
     ];
   }
 
+  @override
   Future<AdminUserSummary> createUser({
     required String name,
     required String email,
@@ -175,14 +177,15 @@ class AdminApiRepository implements AdminRepository {
         'password': password,
         if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
         'status': status,
-        if (roleId != null) 'role_id': roleId,
-        if (companyId != null) 'company_id': companyId,
+        'role_id': ?roleId,
+        'company_id': ?companyId,
       },
     );
     final data = _http.decodeData(response);
     return AdminUserSummary.fromJson(data);
   }
 
+  @override
   Future<AdminUserSummary> updateUser({
     required String userId,
     String? name,
@@ -195,7 +198,7 @@ class AdminApiRepository implements AdminRepository {
       body: {
         if (name != null) 'name': name.trim(),
         if (phone != null) 'phone': phone.trim(),
-        if (status != null) 'status': status,
+        'status': ?status,
         if (password != null && password.isNotEmpty) 'password': password,
       },
     );
@@ -203,6 +206,7 @@ class AdminApiRepository implements AdminRepository {
     return AdminUserSummary.fromJson(data);
   }
 
+  @override
   Future<void> setUserStatus({
     required String userId,
     required String status,
@@ -210,6 +214,7 @@ class AdminApiRepository implements AdminRepository {
     await updateUser(userId: userId, status: status);
   }
 
+  @override
   Future<void> deactivateUser(String userId) async {
     final response = await _http.delete('/api/v1/users/$userId');
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -217,6 +222,7 @@ class AdminApiRepository implements AdminRepository {
     }
   }
 
+  @override
   Future<List<AdminRoleSummary>> listRoles() async {
     final response = await _http.get('/api/v1/roles');
     final data = _http.decodeDataList(response);
@@ -227,12 +233,14 @@ class AdminApiRepository implements AdminRepository {
     ];
   }
 
+  @override
   Future<AdminRoleSummary> getRole(String roleId) async {
     final response = await _http.get('/api/v1/roles/$roleId');
     final data = _http.decodeData(response);
     return AdminRoleSummary.fromJson(data);
   }
 
+  @override
   Future<AdminRoleSummary> createRole({
     required String name,
     String? description,
@@ -255,6 +263,7 @@ class AdminApiRepository implements AdminRepository {
     });
   }
 
+  @override
   Future<AdminRoleSummary> updateRole({
     required String roleId,
     String? name,
@@ -266,7 +275,7 @@ class AdminApiRepository implements AdminRepository {
       body: {
         if (name != null) 'name': name.trim(),
         if (description != null) 'description': description.trim(),
-        if (permissionCodes != null) 'permission_codes': permissionCodes,
+        'permission_codes': ?permissionCodes,
       },
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -275,6 +284,7 @@ class AdminApiRepository implements AdminRepository {
     return getRole(roleId);
   }
 
+  @override
   Future<void> deleteRole(String roleId) async {
     final response = await _http.delete('/api/v1/roles/$roleId');
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -282,6 +292,7 @@ class AdminApiRepository implements AdminRepository {
     }
   }
 
+  @override
   Future<List<AdminPermissionInfo>> listPermissions() async {
     final response = await _http.get('/api/v1/permissions');
     final data = _http.decodeDataList(response);
@@ -293,11 +304,13 @@ class AdminApiRepository implements AdminRepository {
   }
 
   /// Backward-compatible helper used by older call sites.
+  @override
   Future<List<String>> listPermissionCodes() async {
     final perms = await listPermissions();
     return [for (final p in perms) p.code];
   }
 
+  @override
   Future<List<AdminDeviceSummary>> listDevices() async {
     final response = await _http.get('/api/v1/devices');
     final data = _http.decodeDataList(response);
@@ -308,6 +321,7 @@ class AdminApiRepository implements AdminRepository {
     ];
   }
 
+  @override
   Future<void> revokeDevice(String deviceId) async {
     final response = await _http.post('/api/v1/devices/$deviceId/revoke');
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -315,12 +329,14 @@ class AdminApiRepository implements AdminRepository {
     }
   }
 
+  @override
   Future<SyncDisableRequestSummary> requestSyncDisable() async {
     final response = await _http.post('/api/v1/devices/sync-disable-requests');
     final data = _http.decodeData(response);
     return SyncDisableRequestSummary.fromJson(data);
   }
 
+  @override
   Future<List<SyncDisableRequestSummary>> listSyncDisableRequests({
     String status = 'pending',
   }) async {
@@ -336,6 +352,7 @@ class AdminApiRepository implements AdminRepository {
     ];
   }
 
+  @override
   Future<void> approveSyncDisableRequest(String requestId) async {
     final response = await _http.post(
       '/api/v1/devices/sync-disable-requests/$requestId/approve',
@@ -345,6 +362,7 @@ class AdminApiRepository implements AdminRepository {
     }
   }
 
+  @override
   Future<void> rejectSyncDisableRequest(String requestId) async {
     final response = await _http.post(
       '/api/v1/devices/sync-disable-requests/$requestId/reject',

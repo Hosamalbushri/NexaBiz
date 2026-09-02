@@ -15,27 +15,18 @@ import '../../domain/services/cost_layer_service.dart';
 import '../services/cost_layer_service_impl.dart';
 
 import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
-import '../../domain/entities/stock_movement_line.dart';
-import '../../domain/entities/stock_return.dart';
-import '../../domain/enums/cost_valuation_method.dart';
-import '../../domain/repositories/stock_returns_repository.dart';
-import '../../domain/services/cost_layer_service.dart';
-import '../services/cost_layer_service_impl.dart';
 
 class StockReturnsRepositoryImpl implements StockReturnsRepository {
   StockReturnsRepositoryImpl({
     required InventoryDatabase db,
-    SyncQueue? syncQueue,
+    this._syncQueue,
     CostLayerService? costLayerService,
-    CostValuationMethod valuationMethod = CostValuationMethod.fifo,
+    this._valuationMethod = CostValuationMethod.fifo,
     String Function()? readCompanyId,
-    InitializationGuard? initializationGuard,
+    this._initializationGuard,
   })  : _db = db,
-        _syncQueue = syncQueue,
         _costLayerService = costLayerService ?? CostLayerServiceImpl(db: db, readCompanyId: readCompanyId),
-        _valuationMethod = valuationMethod,
-        _readCompanyId = readCompanyId,
-        _initializationGuard = initializationGuard;
+        _readCompanyId = readCompanyId;
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
@@ -260,7 +251,6 @@ class StockReturnsRepositoryImpl implements StockReturnsRepository {
       }
 
       final now = DateTime.now().toUtc();
-      final returnTypeStr = returnDoc.isPurchaseReturn ? 'purchase_return' : 'sales_return';
 
       // Soft delete header with scoped query
       await (_db.update(_db.stockReturns)..where((tbl) => _scoped(tbl) & tbl.uuid.equals(id))).write(

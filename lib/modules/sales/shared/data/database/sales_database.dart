@@ -17,7 +17,7 @@ class SalesDatabase extends _$SalesDatabase {
   SalesDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -58,6 +58,12 @@ class SalesDatabase extends _$SalesDatabase {
         await m.addColumn(sales, sales.companyId);
         await customStatement(
           "UPDATE sales SET company_id = 'local-company' WHERE company_id IS NULL",
+        );
+      }
+      if (from < 6) {
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_sales_keyset '
+          'ON sales (company_id, sale_date DESC, id DESC) WHERE deleted_at IS NULL',
         );
       }
     },
@@ -107,6 +113,10 @@ class SalesDatabase extends _$SalesDatabase {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_sales_status_date '
       'ON sales (company_id, sale_status, sale_date) WHERE deleted_at IS NULL',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_sales_keyset '
+      'ON sales (company_id, sale_date DESC, id DESC) WHERE deleted_at IS NULL',
     );
   }
 

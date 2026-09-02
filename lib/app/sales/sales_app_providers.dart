@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
-import 'package:stock_count/app/settings/settings_repository.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/providers/document_posting_providers.dart';

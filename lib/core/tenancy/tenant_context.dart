@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../modules/authentication/data/local_auth_store.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
 
 /// Centralized tenancy context representing the active tenant boundary.
@@ -24,12 +23,14 @@ class TenantContext {
   /// Whether the session is standalone local offline mode.
   final bool isStandalone;
 
-  /// Default standalone fallback context.
-  static const fallback = TenantContext(
-    companyId: LocalAuthDefaults.companyId,
-    userId: LocalAuthDefaults.adminUserId,
+  /// Unauthenticated/unassigned tenant context.
+  static const empty = TenantContext(
+    companyId: '',
+    userId: null,
     isStandalone: true,
   );
+
+  bool get hasActiveCompany => companyId.trim().isNotEmpty;
 
   TenantContext copyWith({
     String? companyId,
@@ -67,23 +68,18 @@ class TenantContext {
 final tenantContextProvider = Provider<TenantContext>((ref) {
   final session = ref.watch(authStateProvider).session;
   if (session == null) {
-    return TenantContext.fallback;
+    return TenantContext.empty;
   }
-  final companyId = session.currentCompanyId?.trim();
+  final companyId = session.currentCompanyId?.trim() ?? '';
   return TenantContext(
-    companyId: (companyId != null && companyId.isNotEmpty)
-        ? companyId
-        : LocalAuthDefaults.companyId,
+    companyId: companyId,
     userId: session.user.id,
     deviceId: session.deviceId,
-    isStandalone:
-        session.user.isSuperAdmin ||
-        session.user.email == LocalAuthDefaults.adminEmail ||
-        session.user.id == LocalAuthDefaults.adminUserId,
+    isStandalone: session.user.isSuperAdmin,
   );
 });
 
-/// Provider exposing current active company ID (falling back to 'local-company').
+/// Provider exposing current active company ID.
 final currentCompanyIdProvider = Provider<String>((ref) {
   return ref.watch(tenantContextProvider).companyId;
 });

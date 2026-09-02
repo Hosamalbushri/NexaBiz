@@ -25,8 +25,10 @@ export 'engine/domain/services/sync_conflict_store.dart';
 export 'engine/domain/services/sync_entity_handler.dart';
 export 'engine/domain/services/sync_error_classifier.dart';
 export 'engine/domain/services/sync_manager.dart';
+export 'engine/domain/services/sync_module_registrar.dart';
 export 'engine/domain/services/sync_queue.dart';
 export 'engine/domain/services/sync_queue_recovery_service.dart';
+export 'engine/domain/services/sync_registry_coordinator.dart';
 export 'engine/domain/services/sync_request_context.dart';
 export 'engine/domain/services/three_way_merger.dart';
 

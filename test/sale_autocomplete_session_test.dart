@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stock_count/modules/sales/presentation/utils/sale_autocomplete.dart';
+import 'package:stock_count/modules/sales/invoices/presentation/utils/sale_autocomplete.dart';
 
 void main() {
   test('AutocompleteSearchSession ignores stale tokens', () async {

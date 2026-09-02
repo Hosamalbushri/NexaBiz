@@ -13,8 +13,8 @@ import 'package:stock_count/modules/customers/accounts/domain/services/customer_
 class CustomerCodeGenerator {
   const CustomerCodeGenerator(
     this._repository, {
-    CustomerAccountLinkPort? linkPort,
-  }) : _linkPort = linkPort;
+    this._linkPort,
+  });
 
   final CustomerRepository _repository;
   final CustomerAccountLinkPort? _linkPort;

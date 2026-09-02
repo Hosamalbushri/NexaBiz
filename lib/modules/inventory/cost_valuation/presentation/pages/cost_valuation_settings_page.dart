@@ -130,7 +130,7 @@ class _ValuationMethodCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Material(
-      color: isSelected ? colorScheme.primaryContainer.withOpacity(0.4) : colorScheme.surfaceContainerLow,
+      color: isSelected ? colorScheme.primaryContainer.withValues(alpha: 0.4) : colorScheme.surfaceContainerLow,
       borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
       child: InkWell(

@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:hive/hive.dart';
 
 import '../../app/settings/settings_repository.dart';
 import 'package:stock_count/modules/inventory/shared/data/inventory_hive.dart';
 import 'package:stock_count/modules/inventory/stock_count/domain/entities/inventory_item.dart';
 import '../errors/app_error_domain.dart';
-import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 
 /// Installs server-provided bootstrap snapshot into the local database atomically.
@@ -16,8 +14,8 @@ import 'package:stock_count/modules/sync/sync.dart';
 /// are rolled back or cleared, leaving local storage uncorrupted.
 class AtomicBootstrapInstaller {
   const AtomicBootstrapInstaller({
-    SyncCursorStore? cursorStore,
-  }) : _cursorStore = cursorStore;
+    this._cursorStore,
+  });
 
   final SyncCursorStore? _cursorStore;
 

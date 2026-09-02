@@ -21,10 +21,9 @@ class UninitializedCompanyException implements Exception {
 /// Domain boundary guard operating below UI to enforce company setup completion.
 class InitializationGuard {
   InitializationGuard({
-    required CompanyInitializationRepository initRepository,
-    InitializationValidator validator = const InitializationValidator(),
-  })  : _initRepository = initRepository,
-        _validator = validator;
+    required this._initRepository,
+    this._validator = const InitializationValidator(),
+  });
 
   final CompanyInitializationRepository _initRepository;
   final InitializationValidator _validator;

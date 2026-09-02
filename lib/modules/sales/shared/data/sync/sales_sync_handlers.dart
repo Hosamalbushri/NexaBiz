@@ -5,11 +5,10 @@ import 'package:stock_count/modules/sales/invoices/data/repositories/sale_reposi
 /// Sales adapter for the shared SyncManager.
 class SaleSyncHandler implements SyncEntityHandler {
   SaleSyncHandler({
-    required SaleRepositoryImpl repository,
-    required RemoteSyncApi Function() remoteProvider,
+    required this._repository,
+    required this._remoteProvider,
     this.conflictResolver = const ConflictResolver(),
-  }) : _repository = repository,
-       _remoteProvider = remoteProvider;
+  });
 
   final SaleRepositoryImpl _repository;
   final RemoteSyncApi Function() _remoteProvider;

@@ -7,6 +7,7 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_responsive.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
@@ -214,15 +215,27 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
                           const SizedBox(height: AppSpacing.md),
                           ElevatedButton.icon(
                             onPressed: () async {
-                              final repo = ref.read(accountRepositoryProvider);
-                              await repo.seedDefaultChart();
-                              ref.invalidate(accountsProvider);
-                              if (context.mounted) {
-                                showAppSnackBar(
-                                  context,
-                                  message: l10n.accountingChartSeedSuccess,
-                                  isSuccess: true,
-                                );
+                              try {
+                                final repo = ref.read(accountRepositoryProvider);
+                                await repo.seedDefaultChart();
+                                ref.invalidate(accountsProvider);
+                                if (context.mounted) {
+                                  showAppSnackBar(
+                                    context,
+                                    message: l10n.accountingChartSeedSuccess,
+                                    isSuccess: true,
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  showAppSnackBar(
+                                    context,
+                                    message: e is MissingCompanyContextException
+                                        ? 'يرجى اختيار وتأكيد الشركة أولاً لتوليد شجرة الحسابات'
+                                        : 'فشل توليد شجرة الحسابات: $e',
+                                    isSuccess: false,
+                                  );
+                                }
                               }
                             },
                             icon: const Icon(Icons.account_tree_rounded),

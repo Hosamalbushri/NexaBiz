@@ -62,6 +62,41 @@ class SaleComposerState {
   bool get isCredit => settlementType.isCredit;
   bool get isCash => settlementType.isCash;
 
+  bool get canSave {
+    if (voucherBook == null) {
+      return false;
+    }
+    if (items.isEmpty) {
+      return false;
+    }
+    if (isCredit) {
+      return customer != null && (customer?.hasAccount ?? false);
+    }
+    return cashAccount != null;
+  }
+
+  SaleSummary calculateSummary([
+    SaleCalculationService calculator = const SaleCalculationService(),
+  ]) {
+    final base = calculator.calculate(
+      items: items,
+      saleDiscountType: discountType,
+      saleDiscountValue: discountValue,
+      taxRatePercent: taxRate,
+      paidAmount: 0,
+    );
+    if (isCash) {
+      return calculator.calculate(
+        items: items,
+        saleDiscountType: discountType,
+        saleDiscountValue: discountValue,
+        taxRatePercent: taxRate,
+        paidAmount: base.total,
+      );
+    }
+    return base;
+  }
+
   /// Display / snapshot name: linked customer wins, else walk-in text.
   String? get resolvedCustomerName {
     final linked = customer?.name.trim();
@@ -158,15 +193,12 @@ class SaleComposerState {
 
 class SaleComposerController extends StateNotifier<SaleComposerState> {
   SaleComposerController({
-    required SaleCalculationService calculator,
-    required SaleProductCatalogPort catalog,
-    SaleCurrencyConverter converter = const SaleCurrencyConverter(),
+    required this._calculator,
+    required this._catalog,
+    this._converter = const SaleCurrencyConverter(),
     double defaultTaxRate = 0,
     required String baseCurrencyCode,
-  })  : _calculator = calculator,
-        _catalog = catalog,
-        _converter = converter,
-       super(
+  })  : super(
          SaleComposerState(
            saleDate: DateTime(
              DateTime.now().year,
@@ -184,26 +216,7 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
   final SaleProductCatalogPort _catalog;
   final SaleCurrencyConverter _converter;
 
-  SaleSummary get summary {
-    final base = _calculator.calculate(
-      items: state.items,
-      saleDiscountType: state.discountType,
-      saleDiscountValue: state.discountValue,
-      taxRatePercent: state.taxRate,
-      paidAmount: 0,
-    );
-    // Cash invoices are treated as fully paid (no paid field in the form).
-    if (state.isCash) {
-      return _calculator.calculate(
-        items: state.items,
-        saleDiscountType: state.discountType,
-        saleDiscountValue: state.discountValue,
-        taxRatePercent: state.taxRate,
-        paidAmount: base.total,
-      );
-    }
-    return base;
-  }
+  SaleSummary get summary => state.calculateSummary(_calculator);
 
   SaleDraft buildDraft() {
     final draft = state.toDraft();
@@ -518,18 +531,7 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
     );
   }
 
-  bool get canSave {
-    if (state.voucherBook == null) {
-      return false;
-    }
-    if (state.items.isEmpty) {
-      return false;
-    }
-    if (state.isCredit) {
-      return state.customer != null && (state.customer?.hasAccount ?? false);
-    }
-    return state.cashAccount != null;
-  }
+  bool get canSave => state.canSave;
 
   Future<SaleProductRef?> resolveScan(String raw) {
     return _catalog.resolveScan(raw);

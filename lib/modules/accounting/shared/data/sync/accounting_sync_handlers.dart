@@ -8,11 +8,10 @@ import 'package:stock_count/modules/accounting/journals/data/repositories/journa
 /// Chart of Accounts adapter for the shared SyncManager.
 class AccountSyncHandler implements SyncEntityHandler {
   AccountSyncHandler({
-    required AccountRepositoryImpl repository,
-    required RemoteSyncApi Function() remoteProvider,
+    required this._repository,
+    required this._remoteProvider,
     this.conflictResolver = const ConflictResolver(),
-  }) : _repository = repository,
-       _remoteProvider = remoteProvider;
+  });
 
   final AccountRepositoryImpl _repository;
   final RemoteSyncApi Function() _remoteProvider;
@@ -95,11 +94,10 @@ class AccountSyncHandler implements SyncEntityHandler {
 /// Journal entry adapter — offline-first events (ADR-006 / Phase 5).
 class JournalSyncHandler implements SyncEntityHandler {
   JournalSyncHandler({
-    required JournalRepositoryImpl repository,
-    required RemoteSyncApi Function() remoteProvider,
+    required this._repository,
+    required this._remoteProvider,
     this.conflictResolver = const ConflictResolver(),
-  }) : _repository = repository,
-       _remoteProvider = remoteProvider;
+  });
 
   final JournalRepositoryImpl _repository;
   final RemoteSyncApi Function() _remoteProvider;
@@ -182,11 +180,10 @@ class JournalSyncHandler implements SyncEntityHandler {
 /// Currency rate adapter — FX rates + history (Phase 4).
 class CurrencyRateSyncHandler implements SyncEntityHandler {
   CurrencyRateSyncHandler({
-    required CurrencyRateRepositoryImpl repository,
-    required RemoteSyncApi Function() remoteProvider,
+    required this._repository,
+    required this._remoteProvider,
     this.conflictResolver = const ConflictResolver(),
-  }) : _repository = repository,
-       _remoteProvider = remoteProvider;
+  });
 
   final CurrencyRateRepositoryImpl _repository;
   final RemoteSyncApi Function() _remoteProvider;
@@ -269,11 +266,10 @@ class CurrencyRateSyncHandler implements SyncEntityHandler {
 /// Fiscal year adapter — FY header + nested periods (Phase 4).
 class FiscalYearSyncHandler implements SyncEntityHandler {
   FiscalYearSyncHandler({
-    required FiscalYearRepositoryImpl repository,
-    required RemoteSyncApi Function() remoteProvider,
+    required this._repository,
+    required this._remoteProvider,
     this.conflictResolver = const ConflictResolver(),
-  }) : _repository = repository,
-       _remoteProvider = remoteProvider;
+  });
 
   final FiscalYearRepositoryImpl _repository;
   final RemoteSyncApi Function() _remoteProvider;

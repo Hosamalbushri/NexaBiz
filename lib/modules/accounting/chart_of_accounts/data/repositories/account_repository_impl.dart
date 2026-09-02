@@ -12,33 +12,34 @@ import '../../domain/services/account_validator.dart';
 import '../../domain/services/default_chart_of_accounts.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 
 class AccountRepositoryImpl implements AccountRepository {
   AccountRepositoryImpl(
     this._db, {
-    SyncQueue? syncQueue,
-    AccountValidator validator = const AccountValidator(),
-    Future<void> Function(String oldUuid, String newUuid)? onUuidRemapped,
-    Future<bool> Function()? shouldSuppressLocalChartSeed,
-    String Function()? readCompanyId,
-  }) : _syncQueue = syncQueue,
-       _validator = validator,
-       _onUuidRemapped = onUuidRemapped,
-       _shouldSuppressLocalChartSeed = shouldSuppressLocalChartSeed,
-       _readCompanyId = readCompanyId;
+    this._syncQueue,
+    this._validator = const AccountValidator(),
+    this._onUuidRemapped,
+    this._readCompanyId,
+  });
 
   final AccountingDatabase _db;
   final SyncQueue? _syncQueue;
   final AccountValidator _validator;
   final Future<void> Function(String oldUuid, String newUuid)? _onUuidRemapped;
-  final Future<bool> Function()? _shouldSuppressLocalChartSeed;
   final String Function()? _readCompanyId;
 
   static const entityType = 'account';
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call().trim();
+    if (id == null || id.isEmpty) {
+      throw MissingCompanyContextException(
+        'AccountRepository operation failed: missing company context.',
+      );
+    }
+    return id;
+  }
 
   Expression<bool> _tenantScoped($AccountsTable t) =>
       t.companyId.equals(_currentCompanyId);
@@ -614,6 +615,21 @@ class AccountRepositoryImpl implements AccountRepository {
 
   @override
   Future<void> seedDefaultChart() async {
+    final companyId = _currentCompanyId;
+    if (companyId.isEmpty) {
+      throw const MissingCompanyContextException(
+        'Cannot seed default chart: missing company context.',
+      );
+    }
+
+    final existing = await (_db.select(_db.accounts)
+          ..where(_scoped)
+          ..limit(1))
+        .get();
+    if (existing.isNotEmpty) {
+      return;
+    }
+
     final keyToUuid = <String, String>{};
     final keyToLevel = <String, int>{};
     final nowMs = DateTime.now().toUtc().millisecondsSinceEpoch;
@@ -630,10 +646,8 @@ class AccountRepositoryImpl implements AccountRepository {
         final level = seed.parentKey == null
             ? 0
             : (keyToLevel[seed.parentKey!] ?? 0) + 1;
-        final uuid = systemAccountUuid(seed.systemKey);
-        await _db
-            .into(_db.accounts)
-            .insert(
+        final uuid = systemAccountUuid('${companyId}_${seed.systemKey}');
+        await _db.into(_db.accounts).insert(
               AccountsCompanion.insert(
                 uuid: uuid,
                 parentId: Value(parentUuid),
@@ -650,8 +664,9 @@ class AccountRepositoryImpl implements AccountRepository {
                 updatedAt: nowMs,
                 syncStatus: const Value('pending'),
                 version: const Value(1),
-                companyId: Value(_currentCompanyId),
+                companyId: Value(companyId),
               ),
+              mode: InsertMode.insertOrIgnore,
             );
         keyToUuid[seed.systemKey] = uuid;
         keyToLevel[seed.systemKey] = level;

@@ -18,7 +18,7 @@ abstract class SyncRecoverableEntityHandler implements SyncEntityHandler {
 /// Startup service that audits domain persistence against Hive [SyncQueue]
 /// and deterministically reconstructs missing queue entries for orphaned pending records.
 class SyncQueueRecoveryService {
-  SyncQueueRecoveryService({required SyncQueue queue}) : _queue = queue;
+  SyncQueueRecoveryService({required this._queue});
 
   final SyncQueue _queue;
 

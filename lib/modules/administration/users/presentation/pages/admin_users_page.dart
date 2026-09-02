@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/sync/sync_enabled_provider.dart';
 import 'package:stock_count/core/errors/app_failure.dart';
+import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
 import 'package:stock_count/modules/administration/shared/data/admin_api_repository.dart';
@@ -21,14 +21,7 @@ class AdminUsersPage extends ConsumerStatefulWidget {
 }
 
 class _AdminUsersPageState extends ConsumerState<AdminUsersPage> {
-  final _search = TextEditingController();
   String _query = '';
-
-  @override
-  void dispose() {
-    _search.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,10 +32,8 @@ class _AdminUsersPageState extends ConsumerState<AdminUsersPage> {
 
     if (!syncOn || !auth.canUseRemoteSync) {
       return Scaffold(
-        appBar: CustomAppBar(
-          title: l10n.adminUsersTitle,
-          centerTitle: false,
-          showBackButton: true,
+        appBar: AppBar(
+          title: Text(l10n.adminUsersTitle),
         ),
         body: AppEmptyState(
           icon: Icons.cloud_off_outlined,
@@ -56,117 +47,86 @@ class _AdminUsersPageState extends ConsumerState<AdminUsersPage> {
       );
     }
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: l10n.adminUsersTitle,
-        centerTitle: false,
-        showBackButton: true,
-        actions: [
-          PermissionGate(
-            anyOf: const [
-              'users.create',
-              'users.manage',
-              'platform.users.manage',
+    final usersList = usersAsync.valueOrNull ?? const [];
+    final filteredUsers = usersList.where((u) {
+      if (_query.isEmpty) return true;
+      return u.name.toLowerCase().contains(_query) ||
+          u.email.toLowerCase().contains(_query);
+    }).toList();
+
+    return ModuleListScaffold<AdminUserSummary>(
+      title: l10n.adminUsersTitle,
+      searchQuery: _query,
+      searchHint: l10n.adminUsersSearchHint,
+      onSearchChanged: (val) {
+        setState(() => _query = val.trim().toLowerCase());
+      },
+      isLoading: usersAsync.isLoading && !usersAsync.hasValue,
+      error: usersAsync.error,
+      onRetry: () {
+        ref.invalidate(adminUsersProvider);
+      },
+      onRefresh: () async {
+        ref.invalidate(adminUsersProvider);
+        await ref.read(adminUsersProvider.future);
+      },
+      emptyTitle: l10n.adminUsersEmptyTitle,
+      emptyMessage: l10n.adminUsersEmptyMessage,
+      emptyIcon: Icons.people_outline,
+      actions: [
+        PermissionGate(
+          anyOf: const [
+            'users.create',
+            'users.manage',
+            'platform.users.manage',
+          ],
+          child: IconButton(
+            tooltip: l10n.adminCreateUser,
+            icon: const Icon(Icons.person_add_outlined),
+            onPressed: () => _openCreateSheet(context),
+          ),
+        ),
+      ],
+      items: filteredUsers,
+      itemBuilder: (context, user) {
+        return ListTile(
+          leading: CircleAvatar(
+            child: Text(
+              user.name.isNotEmpty
+                  ? user.name.characters.first.toUpperCase()
+                  : '?',
+            ),
+          ),
+          title: Text(user.name),
+          subtitle: Text(
+            '${user.email} · ${user.status}'
+            '${user.isSuperAdmin ? ' · admin' : ''}',
+          ),
+          trailing: PopupMenuButton<String>(
+            onSelected: (value) => _onUserAction(context, user, value),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'edit',
+                child: Text(l10n.adminEditUser),
+              ),
+              if (user.status == 'active')
+                PopupMenuItem(
+                  value: 'suspend',
+                  child: Text(l10n.adminSuspendUser),
+                )
+              else
+                PopupMenuItem(
+                  value: 'activate',
+                  child: Text(l10n.adminActivateUser),
+                ),
+              PopupMenuItem(
+                value: 'deactivate',
+                child: Text(l10n.adminDeactivateUser),
+              ),
             ],
-            child: IconButton(
-              tooltip: l10n.adminCreateUser,
-              icon: const Icon(Icons.person_add_outlined),
-              onPressed: () => _openCreateSheet(context),
-            ),
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: TextField(
-              controller: _search,
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: l10n.adminUsersSearchHint,
-                border: const OutlineInputBorder(),
-              ),
-              onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
-            ),
-          ),
-          Expanded(
-            child: usersAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => AppEmptyState(
-                icon: Icons.error_outline,
-                title: l10n.adminUsersLoadError,
-                subtitle: e is AppFailure ? e.message : e.toString(),
-              ),
-              data: (users) {
-                final filtered = users.where((u) {
-                  if (_query.isEmpty) return true;
-                  return u.name.toLowerCase().contains(_query) ||
-                      u.email.toLowerCase().contains(_query);
-                }).toList();
-                if (filtered.isEmpty) {
-                  return AppEmptyState(
-                    icon: Icons.people_outline,
-                    title: l10n.adminUsersEmptyTitle,
-                    subtitle: l10n.adminUsersEmptyMessage,
-                  );
-                }
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    ref.invalidate(adminUsersProvider);
-                    await ref.read(adminUsersProvider.future);
-                  },
-                  child: ListView.separated(
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final user = filtered[index];
-                      return ListTile(
-                        leading: CircleAvatar(
-                          child: Text(
-                            user.name.isNotEmpty
-                                ? user.name.characters.first.toUpperCase()
-                                : '?',
-                          ),
-                        ),
-                        title: Text(user.name),
-                        subtitle: Text(
-                          '${user.email} · ${user.status}'
-                          '${user.isSuperAdmin ? ' · admin' : ''}',
-                        ),
-                        trailing: PopupMenuButton<String>(
-                          onSelected: (value) =>
-                              _onUserAction(context, user, value),
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'edit',
-                              child: Text(l10n.adminEditUser),
-                            ),
-                            if (user.status == 'active')
-                              PopupMenuItem(
-                                value: 'suspend',
-                                child: Text(l10n.adminSuspendUser),
-                              )
-                            else
-                              PopupMenuItem(
-                                value: 'activate',
-                                child: Text(l10n.adminActivateUser),
-                              ),
-                            PopupMenuItem(
-                              value: 'deactivate',
-                              child: Text(l10n.adminDeactivateUser),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -372,7 +332,7 @@ class _UserFormSheetState extends ConsumerState<_UserFormSheet> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _status,
+              initialValue: _status,
               decoration: InputDecoration(labelText: l10n.adminUserStatusLabel),
               items: [
                 DropdownMenuItem(value: 'active', child: Text(l10n.adminStatusActive)),
@@ -391,9 +351,9 @@ class _UserFormSheetState extends ConsumerState<_UserFormSheet> {
               const SizedBox(height: 8),
               rolesAsync.when(
                 loading: () => const LinearProgressIndicator(),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
                 data: (roles) => DropdownButtonFormField<String>(
-                  value: _roleId,
+                  initialValue: _roleId,
                   decoration:
                       InputDecoration(labelText: l10n.adminUserRoleLabel),
                   items: [

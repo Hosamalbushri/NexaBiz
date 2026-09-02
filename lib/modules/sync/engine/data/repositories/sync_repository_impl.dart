@@ -7,10 +7,9 @@ import '../../domain/services/sync_queue.dart';
 
 class SyncRepositoryImpl implements SyncRepository {
   const SyncRepositoryImpl({
-    required SyncManager syncManager,
-    required SyncQueue syncQueue,
-  })  : _syncManager = syncManager,
-        _syncQueue = syncQueue;
+    required this._syncManager,
+    required this._syncQueue,
+  });
 
   final SyncManager _syncManager;
   final SyncQueue _syncQueue;

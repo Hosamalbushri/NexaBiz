@@ -8,7 +8,6 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
-import 'package:stock_count/core/utils/grouped_decimal_input.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
@@ -879,9 +878,8 @@ class _MetaTile extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
-    this.secondaryValue,
     this.onTap,
-  });
+  }) : secondaryValue = null;
 
   final IconData icon;
   final String label;

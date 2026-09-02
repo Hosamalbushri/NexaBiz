@@ -1,7 +1,6 @@
 import '../../../../modules/authentication/domain/entities/offline_authorization_snapshot.dart';
 import '../../../entitlements/domain/entities/entitlement.dart';
 import '../../../time/domain/services/clock_integrity_service.dart';
-import '../../../time/domain/trusted_clock.dart';
 import '../entities/authorization_context.dart';
 
 enum OfflineLoginOutcome {

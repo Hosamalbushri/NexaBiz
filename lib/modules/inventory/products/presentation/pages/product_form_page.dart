@@ -430,7 +430,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                     : 'Overrides inherited category/warehouse cost method',
                 icon: Icons.calculate_outlined,
                 initiallyExpanded: _costValuationMethod != null,
-                badgeText: _costValuationMethod != null ? _costValuationMethod!.name.toUpperCase() : null,
+                badgeText: _costValuationMethod?.name.toUpperCase(),
                 child: DropdownButtonFormField<CostValuationMethod?>(
                   initialValue: _costValuationMethod,
                   isExpanded: true,

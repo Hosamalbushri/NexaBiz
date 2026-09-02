@@ -402,7 +402,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   PreferredSizeWidget? _composeBottom() {
     final parts = <PreferredSizeWidget>[
       if (searching && searchBottom != null) searchBottom!,
-      if (bottom != null) bottom!,
+      ?bottom,
     ];
     if (parts.isEmpty) {
       return null;
@@ -660,7 +660,7 @@ class _CustomAppBarSurface extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                if (leading != null) leading!,
+                                ?leading,
                                 const Spacer(),
                                 if (trailing.isNotEmpty)
                                   _CustomAppBarTrailingRow(items: trailing),
@@ -695,7 +695,7 @@ class _CustomAppBarSurface extends StatelessWidget {
                         ),
                 ),
               ),
-              if (bottom != null) bottom!,
+              ?bottom,
             ],
           ),
         ),

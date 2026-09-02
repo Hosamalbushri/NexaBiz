@@ -61,7 +61,7 @@ class InventoryDependencyDialog extends StatelessWidget {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: dependentDocuments.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final doc = dependentDocuments[index];
                     return ListTile(

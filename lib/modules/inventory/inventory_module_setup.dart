@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/modules/module_setup_definition.dart';
 
 final inventorySetupSteps = [

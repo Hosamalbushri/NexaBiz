@@ -9,7 +9,7 @@ enum ClockIntegrityState {
 }
 
 class ClockIntegrityService {
-  ClockIntegrityService({required TrustedClock clock}) : _clock = clock;
+  ClockIntegrityService({required this._clock});
   final TrustedClock _clock;
 
   ClockIntegrityState checkIntegrity() {

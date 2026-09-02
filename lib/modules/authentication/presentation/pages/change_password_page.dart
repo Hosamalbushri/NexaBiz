@@ -139,16 +139,6 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
     }
   }
 
-  String _mapError(AppLocalizations l10n, String code) {
-    return switch (code) {
-      PasswordChangeException.tooShort => l10n.adminPasswordTooShort,
-      PasswordChangeException.wrongCurrent => l10n.authPasswordWrongCurrent,
-      PasswordChangeException.sameAsDefault => l10n.authPasswordSameAsDefault,
-      PasswordChangeException.mismatch => l10n.authPasswordMismatch,
-      _ => l10n.authLoginGenericError,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);

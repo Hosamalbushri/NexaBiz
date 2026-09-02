@@ -4,11 +4,9 @@ import 'package:stock_count/core/domain/entities/account_role.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_card.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
-import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/widgets/account_picker_dropdown.dart';
 
 import '../../../../app/constants/app_constants.dart';
-import '../../../../app/localization/app_localizations.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../domain/entities/company_accounting_config.dart';
 import '../../domain/entities/company_inventory_config.dart';
@@ -200,7 +198,7 @@ class _PackageInitializationSettingsHubState
                       ),
                       const SizedBox(height: AppSpacing.md),
                       DropdownButtonFormField<String>(
-                        value: _costingMethod,
+                        initialValue: _costingMethod,
                         decoration: InputDecoration(
                           labelText: isArabic
                               ? 'طريقة تقييم المخزون'

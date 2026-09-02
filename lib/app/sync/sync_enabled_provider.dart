@@ -77,23 +77,15 @@ final syncSessionStateProvider = Provider<SyncSessionState>((ref) {
 
 class SyncEnabledController extends StateNotifier<bool> {
   SyncEnabledController({
-    required SettingsRepository repository,
-    required SyncManager syncManager,
-    required SyncApiConfig Function() readConfig,
-    required void Function(SyncApiConfig config) writeConfig,
-    required AuthState Function() readAuth,
-    required Future<void> Function() returnToLocalMode,
-    required Future<void> Function() enterOfflineExpiredSession,
-    Future<void> Function()? clearSyncLoginCredentials,
-  }) : _repository = repository,
-       _syncManager = syncManager,
-       _readConfig = readConfig,
-       _writeConfig = writeConfig,
-       _readAuth = readAuth,
-       _returnToLocalMode = returnToLocalMode,
-       _enterOfflineExpiredSession = enterOfflineExpiredSession,
-       _clearSyncLoginCredentials = clearSyncLoginCredentials,
-       super(false);
+    required this._repository,
+    required this._syncManager,
+    required this._readConfig,
+    required this._writeConfig,
+    required this._readAuth,
+    required this._returnToLocalMode,
+    required this._enterOfflineExpiredSession,
+    this._clearSyncLoginCredentials,
+  }) : super(false);
 
   final SettingsRepository _repository;
   final SyncManager _syncManager;

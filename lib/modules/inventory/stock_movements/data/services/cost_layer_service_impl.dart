@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/core/errors/journal_exception.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 
 import '../../../shared/data/database/inventory_database.dart';
 import '../../domain/entities/cost_consumption.dart';
@@ -11,16 +11,22 @@ import '../../domain/services/cost_layer_service.dart';
 
 class CostLayerServiceImpl implements CostLayerService {
   CostLayerServiceImpl({
-    required InventoryDatabase db,
-    String Function()? readCompanyId,
-  })  : _db = db,
-        _readCompanyId = readCompanyId;
+    required this._db,
+    this._readCompanyId,
+  });
 
   final InventoryDatabase _db;
   final String Function()? _readCompanyId;
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+  String get _currentCompanyId {
+    final cid = _readCompanyId?.call().trim();
+    if (cid == null || cid.isEmpty) {
+      throw MissingCompanyContextException(
+        'CostLayerService operation failed: missing company context.',
+      );
+    }
+    return cid;
+  }
 
   @override
   Future<void> createLayer(CostLayer layer) async {

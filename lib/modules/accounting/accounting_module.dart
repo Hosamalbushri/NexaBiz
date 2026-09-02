@@ -14,8 +14,6 @@ import '../../app/sales/accounting_sale_currency_adapter.dart';
 import '../../app/sales/accounting_sale_ledger_adapter.dart';
 import '../../app/sales/accounting_sale_treasury_adapter.dart';
 import '../../app/sales/accounting_sale_voucher_book_adapter.dart';
-import '../../app/settings/settings_repository.dart';
-import '../../app/sync/app_sync_adapters.dart';
 import '../../app/system_setup/accounting_system_setup_seed_adapter.dart';
 import '../../core/modules/app_module.dart';
 import '../../core/modules/module_registry.dart';
@@ -392,9 +390,6 @@ class AccountingModule extends AppModule {
       return AccountRepositoryImpl(
         ref.watch(accountingDatabaseProvider),
         syncQueue: ref.watch(syncQueueProvider),
-        shouldSuppressLocalChartSeed: () => ref
-            .read(settingsRepositoryProvider)
-            .loadChartBootstrapPreferRemote(),
         onUuidRemapped: (oldUuid, newUuid) async {
           await ref
               .read(customerRepositoryImplProvider)

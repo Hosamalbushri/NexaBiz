@@ -52,10 +52,9 @@ class FxRevaluationPlan {
 /// Builds period-end FX revaluation lines in company base currency.
 class FxRevaluationService {
   const FxRevaluationService({
-    required JournalRepository journals,
-    required CurrencyRateRepository rates,
-  }) : _journals = journals,
-       _rates = rates;
+    required this._journals,
+    required this._rates,
+  });
 
   final JournalRepository _journals;
   final CurrencyRateRepository _rates;

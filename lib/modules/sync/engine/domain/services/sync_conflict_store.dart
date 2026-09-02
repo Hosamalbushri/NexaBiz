@@ -6,7 +6,7 @@ import 'package:stock_count/modules/sync/engine/domain/entities/sync_conflict_re
 
 /// Durable store for active and resolved synchronization conflicts.
 class SyncConflictStore {
-  SyncConflictStore({Box<String>? box}) : _box = box;
+  SyncConflictStore({this._box});
 
   final Box<String>? _box;
   final Map<String, SyncConflictRecord> _memoryFallback = {};

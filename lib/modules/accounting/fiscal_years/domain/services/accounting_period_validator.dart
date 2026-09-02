@@ -7,15 +7,15 @@ import 'fiscal_period_policy.dart';
 /// Central gate for accounting dates (journals, sales, R&P via posting service).
 class AccountingPeriodValidator implements PeriodValidatorPort {
   const AccountingPeriodValidator({
-    required FiscalYearRepository repository,
-    required FiscalPeriodPolicy Function() legacyPolicyReader,
-  }) : _repository = repository,
-       _legacyPolicyReader = legacyPolicyReader;
+    required this._repository,
+    required this._legacyPolicyReader,
+  });
 
   final FiscalYearRepository _repository;
   final FiscalPeriodPolicy Function() _legacyPolicyReader;
 
   /// Throws [JournalException] when the entry date is not postable.
+  @override
   Future<void> assertEntryAllowed(DateTime entryDate) async {
     final hasYears = await _repository.hasAnyFiscalYear();
     if (!hasYears) {
@@ -40,6 +40,7 @@ class AccountingPeriodValidator implements PeriodValidatorPort {
   }
 
   /// Validates mutations (edits, backdating, deletions) across target date and original date.
+  @override
   Future<void> assertMutationAllowed({
     required DateTime entryDate,
     DateTime? originalDate,

@@ -37,10 +37,8 @@ class StockMovementReportDataProvider
     final fromDate = context.fromDate;
     final toDate = context.toDate;
 
-    final fromMs = fromDate != null ? fromDate.millisecondsSinceEpoch : null;
-    final toMs = toDate != null
-        ? toDate.add(const Duration(days: 1)).millisecondsSinceEpoch
-        : null;
+    final fromMs = fromDate?.millisecondsSinceEpoch;
+    final toMs = toDate?.add(const Duration(days: 1)).millisecondsSinceEpoch;
 
     if (statementType == 'summary') {
       final subQuery = inventoryDb.selectOnly(inventoryDb.stockMovementLines)
@@ -128,10 +126,8 @@ class StockMovementReportDataProvider
     final fromDate = context.fromDate;
     final toDate = context.toDate;
 
-    final fromMs = fromDate != null ? fromDate.millisecondsSinceEpoch : null;
-    final toMs = toDate != null
-        ? toDate.add(const Duration(days: 1)).millisecondsSinceEpoch
-        : null;
+    final fromMs = fromDate?.millisecondsSinceEpoch;
+    final toMs = toDate?.add(const Duration(days: 1)).millisecondsSinceEpoch;
 
     final dateFormat = DateFormat('yyyy/MM/dd');
     final currencyFormat = NumberFormat('#,##0.00');

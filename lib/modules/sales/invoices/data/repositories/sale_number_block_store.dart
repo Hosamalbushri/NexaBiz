@@ -63,7 +63,7 @@ class SaleNumberBlock {
 
 /// Persists per-book number blocks so each device consumes exclusive ranges.
 class SaleNumberBlockStore {
-  SaleNumberBlockStore({Box<dynamic>? box}) : _box = box;
+  SaleNumberBlockStore({this._box});
 
   Box<dynamic>? _box;
 

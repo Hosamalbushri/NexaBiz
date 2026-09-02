@@ -32,14 +32,11 @@ class OrchestrationFailure extends OrchestrationResult {
 
 class DocumentPostingOrchestrator {
   DocumentPostingOrchestrator({
-    required PostingCoordinatorPort postingCoordinator,
-    required JournalPostingService journalPostingService,
-    required AccountingEntryBuilder entryBuilder,
-    DocumentLockChecker lockChecker = const DocumentLockChecker(),
-  })  : _postingCoordinator = postingCoordinator,
-        _journalPostingService = journalPostingService,
-        _entryBuilder = entryBuilder,
-        _lockChecker = lockChecker;
+    required this._postingCoordinator,
+    required this._journalPostingService,
+    required this._entryBuilder,
+    this._lockChecker = const DocumentLockChecker(),
+  });
 
   final PostingCoordinatorPort _postingCoordinator;
   final JournalPostingService _journalPostingService;

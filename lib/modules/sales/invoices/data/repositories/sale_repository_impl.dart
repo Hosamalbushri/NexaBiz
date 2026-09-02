@@ -14,6 +14,7 @@ import '../../domain/entities/sale_payment.dart';
 import '../../domain/entities/sale_settlement_type.dart';
 import '../../domain/entities/sale_status.dart';
 import '../../domain/models/sale_exception.dart';
+import '../../domain/models/sale_keyset_paged_result.dart';
 import '../../domain/models/sale_list_filter.dart';
 import '../../domain/models/sale_paged_result.dart';
 import '../../domain/repositories/sale_repository.dart';
@@ -29,16 +30,12 @@ import 'package:stock_count/modules/sales/permissions/sales_permission_package.d
 class SaleRepositoryImpl implements SaleRepository {
   SaleRepositoryImpl(
     this._db, {
-    SyncQueue? syncQueue,
-    SaleValidator validator = const SaleValidator(),
-    SaleCalculationService calculator = const SaleCalculationService(),
-    PermissionGuard permissionGuard = const AllowAllPermissionGuard(),
-    String Function()? readCompanyId,
-  }) : _syncQueue = syncQueue,
-       _validator = validator,
-       _calculator = calculator,
-       _permissionGuard = permissionGuard,
-       _readCompanyId = readCompanyId;
+    this._syncQueue,
+    this._validator = const SaleValidator(),
+    this._calculator = const SaleCalculationService(),
+    this._permissionGuard = const AllowAllPermissionGuard(),
+    this._readCompanyId,
+  });
 
   final SalesDatabase _db;
   final SyncQueue? _syncQueue;
@@ -579,7 +576,10 @@ class SaleRepositoryImpl implements SaleRepository {
 
     final select = _db.select(_db.sales)
       ..where((t) => _matchesFilter(t, filter))
-      ..orderBy([(t) => OrderingTerm.desc(t.saleDate)])
+      ..orderBy([
+        (t) => OrderingTerm.desc(t.saleDate),
+        (t) => OrderingTerm.desc(t.id),
+      ])
       ..limit(safeSize, offset: start);
     final rows = await select.get();
     return SalePagedResult<SaleListItem>(
@@ -587,6 +587,51 @@ class SaleRepositoryImpl implements SaleRepository {
       totalCount: totalCount,
       page: safePage,
       pageSize: safeSize,
+    );
+  }
+
+  @override
+  Future<SaleKeysetPagedResult<SaleListItem>> searchKeysetPaged(
+    SaleListFilter filter, {
+    SaleCursor? cursor,
+    int pageSize = 30,
+  }) async {
+    final safeSize = pageSize <= 0 ? 30 : pageSize;
+
+    final select = _db.select(_db.sales)
+      ..where((t) {
+        var expr = _matchesFilter(t, filter);
+        if (cursor != null) {
+          expr = expr &
+              (t.saleDate.isSmallerThanValue(cursor.saleDateMs) |
+                  (t.saleDate.equals(cursor.saleDateMs) &
+                      t.id.isSmallerThanValue(cursor.id)));
+        }
+        return expr;
+      })
+      ..orderBy([
+        (t) => OrderingTerm.desc(t.saleDate),
+        (t) => OrderingTerm.desc(t.id),
+      ])
+      ..limit(safeSize + 1);
+
+    final rows = await select.get();
+    final hasMore = rows.length > safeSize;
+    final pageRows = hasMore ? rows.sublist(0, safeSize) : rows;
+
+    SaleCursor? nextCursor;
+    if (hasMore && pageRows.isNotEmpty) {
+      final last = pageRows.last;
+      final lastDateMs = last.saleDate <= 0
+          ? last.createdAt
+          : last.saleDate;
+      nextCursor = SaleCursor(saleDateMs: lastDateMs, id: last.id);
+    }
+
+    return SaleKeysetPagedResult<SaleListItem>(
+      items: pageRows.map(_mapListItem).toList(growable: false),
+      nextCursor: nextCursor,
+      hasMore: hasMore,
     );
   }
 

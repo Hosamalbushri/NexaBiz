@@ -10,8 +10,7 @@ abstract class SaleNumberAllocatorPort {
 
 /// Sequential local allocator backed by a callback for the next absolute number.
 class LocalSaleNumberAllocator implements SaleNumberAllocatorPort {
-  LocalSaleNumberAllocator({required Future<int> Function() nextSequence})
-    : _nextSequence = nextSequence;
+  LocalSaleNumberAllocator({required this._nextSequence});
 
   final Future<int> Function() _nextSequence;
 

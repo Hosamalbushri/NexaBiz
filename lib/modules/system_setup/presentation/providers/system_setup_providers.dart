@@ -8,7 +8,9 @@ import '../../domain/ports/system_setup_seed_port.dart';
 import '../../domain/repositories/system_setup_state_repository.dart';
 import '../../domain/services/system_initialization_coordinator.dart';
 
+import '../../domain/services/installation_integrity_validator.dart';
 import '../../domain/services/first_run_setup_coordinator.dart';
+import '../../../authentication/data/local_auth_store.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../data/repositories/company_initialization_repository_impl.dart';
 import '../../domain/repositories/company_initialization_repository.dart';
@@ -21,9 +23,23 @@ import '../../domain/entities/company_accounting_config.dart';
 import '../../domain/entities/company_inventory_config.dart';
 import '../../data/services/system_setup_seed_port_impl.dart';
 
+import '../../../../core/tenancy/tenant_context.dart';
+
+final installationIntegrityValidatorProvider =
+    Provider<InstallationIntegrityValidator>((ref) {
+      return InstallationIntegrityValidator(
+        settingsRepository: ref.watch(settingsRepositoryProvider),
+        authStore: ref.watch(localAuthStoreProvider),
+        initRepository: ref.watch(companyInitializationRepositoryProvider),
+      );
+    });
+
 final companyInitializationRepositoryProvider =
     Provider<CompanyInitializationRepository>((ref) {
-      return CompanyInitializationRepositoryImpl(box: null);
+      return CompanyInitializationRepositoryImpl(
+        box: null,
+        readCompanyId: () => ref.read(currentCompanyIdProvider),
+      );
     });
 
 final companyAccountingConfigProvider =
@@ -81,16 +97,29 @@ final firstRunSetupCoordinatorProvider = Provider<FirstRunSetupCoordinator>((
 });
 
 class FirstRunCompletedNotifier extends StateNotifier<AsyncValue<bool>> {
-  FirstRunCompletedNotifier(this._settingsRepository)
-      : super(const AsyncValue.loading()) {
+  FirstRunCompletedNotifier(
+    this._settingsRepository,
+    this._authStore,
+    this._validator,
+  ) : super(const AsyncValue.loading()) {
     _load();
   }
 
   final SettingsRepository _settingsRepository;
+  final LocalAuthStore _authStore;
+  final InstallationIntegrityValidator _validator;
 
   Future<void> _load() async {
-    state =
-        await AsyncValue.guard(_settingsRepository.loadOnboardingCompleted);
+    state = await AsyncValue.guard(() async {
+      final integrity = await _validator.validate();
+      if (integrity.isValid) return true;
+      if (integrity.isCorrupted) return false;
+      final onboardingDone =
+          await _settingsRepository.loadOnboardingCompleted();
+      if (!onboardingDone) return false;
+      final hasAdmin = await _authStore.hasConfiguredAdmin();
+      return hasAdmin;
+    });
   }
 
   void markCompleted() {
@@ -102,7 +131,11 @@ class FirstRunCompletedNotifier extends StateNotifier<AsyncValue<bool>> {
 
 final firstRunCompletedProvider =
     StateNotifierProvider<FirstRunCompletedNotifier, AsyncValue<bool>>((ref) {
-  return FirstRunCompletedNotifier(ref.watch(settingsRepositoryProvider));
+  return FirstRunCompletedNotifier(
+    ref.watch(settingsRepositoryProvider),
+    ref.watch(localAuthStoreProvider),
+    ref.watch(installationIntegrityValidatorProvider),
+  );
 });
 
 class SystemSetupReadyNotifier extends StateNotifier<AsyncValue<bool>> {
@@ -110,22 +143,35 @@ class SystemSetupReadyNotifier extends StateNotifier<AsyncValue<bool>> {
     this._initRepository,
     this._coordinator,
     this._settingsRepository,
-  )   : super(const AsyncValue.loading()) {
+    this._authStore,
+    this._validator,
+  ) : super(const AsyncValue.loading()) {
     _load();
   }
 
   final CompanyInitializationRepository _initRepository;
   final SystemInitializationCoordinator _coordinator;
   final SettingsRepository _settingsRepository;
+  final LocalAuthStore _authStore;
+  final InstallationIntegrityValidator _validator;
 
   Future<void> _load() async {
     state = await AsyncValue.guard(() async {
+      final integrity = await _validator.validate();
+      if (integrity.isValid) return true;
+      if (integrity.isCorrupted) return false;
+
       // 1. Device or onboarding setup completion check
       final onboardingDone =
           await _settingsRepository.loadOnboardingCompleted();
+      final hasAdmin = await _authStore.hasConfiguredAdmin();
+      if (onboardingDone && hasAdmin) {
+        return true;
+      }
+
       final deviceInit =
           await _settingsRepository.loadDeviceInitialization();
-      if (onboardingDone || deviceInit.initialized) {
+      if (deviceInit.initialized) {
         return true;
       }
 
@@ -152,6 +198,8 @@ final systemSetupReadyProvider =
     ref.watch(companyInitializationRepositoryProvider),
     ref.watch(systemInitializationCoordinatorProvider),
     ref.watch(settingsRepositoryProvider),
+    ref.watch(localAuthStoreProvider),
+    ref.watch(installationIntegrityValidatorProvider),
   );
 });
 
@@ -167,4 +215,3 @@ final registeredModuleSetupStepsProvider =
   steps.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
   return steps;
 });
-

@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -13,13 +12,12 @@ import 'package:hive_flutter/hive_flutter.dart';
 class HiveEncryptionKeyStore {
   HiveEncryptionKeyStore({
     FlutterSecureStorage? secureStorage,
-    Uint8List? fixedKeyForTests,
+    this._fixedKeyForTests,
   }) : _secure =
            secureStorage ??
            const FlutterSecureStorage(
              aOptions: AndroidOptions(encryptedSharedPreferences: true),
-           ),
-       _fixedKeyForTests = fixedKeyForTests;
+           );
 
   static const storageKey = 'hive_aes_encryption_key_v1';
   static const _fallbackBoxName = 'hive_key_fallback';

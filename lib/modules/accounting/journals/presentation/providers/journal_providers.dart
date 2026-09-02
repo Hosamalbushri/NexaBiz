@@ -120,21 +120,29 @@ final periodClosingServiceProvider = Provider<PeriodClosingService>((ref) {
 
 final fiscalYearSummariesProvider =
     FutureProvider.autoDispose<List<FiscalYearSummary>>((ref) {
+      final companyId = ref.watch(currentCompanyIdProvider);
+      if (companyId.isEmpty) return [];
       return ref.watch(fiscalYearRepositoryProvider).listSummaries();
     });
 
 final fiscalYearByUuidProvider = FutureProvider.autoDispose
     .family<FiscalYear?, String>((ref, uuid) {
+      final companyId = ref.watch(currentCompanyIdProvider);
+      if (companyId.isEmpty) return null;
       return ref.watch(fiscalYearRepositoryProvider).getByUuid(uuid);
     });
 
 final fiscalYearPeriodsProvider = FutureProvider.autoDispose
     .family<List<AccountingPeriod>, String>((ref, fyUuid) {
+      final companyId = ref.watch(currentCompanyIdProvider);
+      if (companyId.isEmpty) return [];
       return ref.watch(fiscalYearRepositoryProvider).listPeriods(fyUuid);
     });
 
 final fiscalYearClosingsProvider = FutureProvider.autoDispose
     .family<List<PeriodClosingRecord>, String>((ref, fyUuid) {
+      final companyId = ref.watch(currentCompanyIdProvider);
+      if (companyId.isEmpty) return [];
       return ref
           .watch(fiscalYearRepositoryProvider)
           .listClosingsForFiscalYear(fyUuid);
@@ -171,6 +179,8 @@ final journalListQueryProvider = StateProvider.autoDispose<String>((ref) => '');
 
 final journalEntriesProvider =
     FutureProvider.autoDispose<List<JournalEntryHeader>>((ref) async {
+      final companyId = ref.watch(currentCompanyIdProvider);
+      if (companyId.isEmpty) return [];
       final query = ref.watch(journalListQueryProvider);
       return ref
           .watch(listJournalEntryHeadersUseCaseProvider)

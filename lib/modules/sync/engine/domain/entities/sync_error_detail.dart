@@ -15,8 +15,8 @@ class SyncErrorDetail {
     this.entityType,
     this.entityId,
     this.timestamp,
-    bool? isRetryable,
-  }) : _isRetryable = isRetryable;
+    this._isRetryable,
+  });
 
   final SyncErrorCode code;
   final String userMessage;

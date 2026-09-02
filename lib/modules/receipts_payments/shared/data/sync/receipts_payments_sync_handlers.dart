@@ -4,11 +4,10 @@ import 'package:stock_count/modules/receipts_payments/transactions/data/reposito
 
 class FinancialTransactionSyncHandler implements SyncEntityHandler {
   FinancialTransactionSyncHandler({
-    required FinancialTransactionRepositoryImpl repository,
-    required RemoteSyncApi Function() remoteProvider,
+    required this._repository,
+    required this._remoteProvider,
     this.conflictResolver = const ConflictResolver(),
-  }) : _repository = repository,
-       _remoteProvider = remoteProvider;
+  });
 
   final FinancialTransactionRepositoryImpl _repository;
   final RemoteSyncApi Function() _remoteProvider;

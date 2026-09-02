@@ -17,9 +17,6 @@ import '../../modules/authentication/data/local_auth_store.dart';
 import 'company/app_currency.dart';
 import 'company/company_profile.dart';
 import 'company/company_profile_providers.dart';
-import '../../modules/system_setup/domain/entities/system_setup_state.dart';
-import '../../modules/system_setup/presentation/providers/system_setup_providers.dart';
-import '../../modules/system_setup/presentation/widgets/system_settings_hub.dart';
 import '../../modules/system_setup/presentation/widgets/package_initialization_settings_hub.dart';
 
 /// Setup / company configuration settings page.
@@ -453,7 +450,7 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       DropdownButtonFormField<String>(
-                        value: _currencyCode,
+                        initialValue: _currencyCode,
                         decoration: InputDecoration(
                           labelText: l10n.setupDefaultCurrency,
                           helperText: _currencyLocked
@@ -480,7 +477,7 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       DropdownButtonFormField<int>(
-                        value: _fiscalMonth,
+                        initialValue: _fiscalMonth,
                         decoration: InputDecoration(
                           labelText: l10n.setupFiscalYearStart,
                           helperText: l10n.setupFiscalYearStartHelper,

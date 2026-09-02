@@ -234,9 +234,28 @@ class _SyncSettingsSectionState extends ConsumerState<SyncSettingsSection> {
         }
 
         final userEmail = user.email;
-        await store.saveCredentials(
+        final bioToken = await ref
+            .read(localAuthStoreProvider)
+            .getOrCreateBiometricToken(userEmail);
+
+        if (bioToken == null || bioToken.isEmpty) {
+          if (mounted) {
+            showAppSnackBar(
+              context,
+              message: l10n.authBiometricFailed,
+              isSuccess: false,
+            );
+          }
+          await store.setBiometricEnabled(
+            enabled: false,
+            mode: AuthenticationMode.sync,
+          );
+          return;
+        }
+
+        await store.saveBiometricCredentials(
           email: userEmail,
-          password: pwdConfirmed,
+          biometricToken: bioToken,
           mode: AuthenticationMode.sync,
         );
       }

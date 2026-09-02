@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/exit/app_exit_scope.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_breakpoints.dart';
 import 'package:stock_count/app/theme/app_colors.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
@@ -22,6 +21,7 @@ import 'package:stock_count/app/providers/currency_rate_providers.dart';
 import 'package:stock_count/modules/inventory/products/domain/entities/product.dart';
 import 'package:stock_count/modules/inventory/products/presentation/pages/product_barcode_scanner_page.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
+import 'package:stock_count/core/widgets/app_document_line_table_shell.dart';
 import '../../domain/services/inventory_account_port.dart';
 import '../../domain/services/inventory_voucher_book_port.dart';
 import '../providers/stock_issue_composer_provider.dart';
@@ -1020,9 +1020,7 @@ class _StockIssueProductsTableState extends State<StockIssueProductsTable> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
-    final hasContent = widget.items.isNotEmpty || _draftRowIds.isNotEmpty;
     final viewportWidth = MediaQuery.sizeOf(context).width;
     final tableWidth = math.max(_Cols.width, viewportWidth - 48);
 
@@ -1034,99 +1032,44 @@ class _StockIssueProductsTableState extends State<StockIssueProductsTable> {
           onScanBarcode: widget.onScanBarcode,
         ),
         const SizedBox(height: AppSpacing.md),
-        if (!hasContent)
-          _EmptyAddCard(
-            onAdd: _addDraftRow,
-            addLabel: l10n.stockIssueAddLineButton,
-            emptyLabel: l10n.stockIssueEmptyItemsMessage,
-          )
-        else
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: scheme.surface,
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.5),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: scheme.shadow.withValues(alpha: 0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              child: Column(
-                children: [
-                  if (AppBreakpoints.isMobile(MediaQuery.sizeOf(context).width))
-                    Column(
-                      children: [
-                        for (var i = 0; i < widget.items.length; i++)
-                          _MobileIssueItemCard(
-                            index: i,
-                            item: widget.items[i],
-                            onQuantitiesChanged: (main, sub) {
-                              widget.onQuantitiesChanged(i, main, sub);
-                            },
-                            onUnitCostChanged: (cost) {
-                              widget.onUnitCostChanged(i, cost);
-                            },
-                            onRemove: () => widget.onRemove(i),
-                          ),
-                      ],
-                    )
-                  else
-                    Scrollbar(
-                      controller: _horizontalScroll,
-                      thumbVisibility: true,
-                      radius: const Radius.circular(8),
-                      notificationPredicate: (n) => n.metrics.axis == Axis.horizontal,
-                      child: SingleChildScrollView(
-                        controller: _horizontalScroll,
-                        scrollDirection: Axis.horizontal,
-                        child: SizedBox(
-                          width: tableWidth,
-                          child: Column(
-                            children: [
-                              _TableHeader(theme: theme),
-                              for (var i = 0; i < widget.items.length; i++)
-                                _FilledRow(
-                                  index: i,
-                                  item: widget.items[i],
-                                  striped: i.isOdd,
-                                  onQuantitiesChanged: (main, sub) {
-                                    widget.onQuantitiesChanged(i, main, sub);
-                                  },
-                                  onUnitCostChanged: (cost) {
-                                    widget.onUnitCostChanged(i, cost);
-                                  },
-                                  onRemove: () => widget.onRemove(i),
-                                ),
-                              if (widget.items.isNotEmpty)
-                                _TableFooter(items: widget.items, theme: theme),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  for (final draftId in _draftRowIds)
-                    _DraftProductRow(
-                      key: ValueKey('draft-$draftId'),
-                      onProductSelected: (product) {
-                        _onDraftProductSelected(draftId, product);
-                      },
-                      onCancel: () => _removeDraftRow(draftId),
-                    ),
-                  _TableActionsBar(
-                    onAdd: _addDraftRow,
-                    addLabel: l10n.stockIssueAddLineButton,
-                  ),
-                ],
-              ),
-            ),
+        AppDocumentLineTableShell<StockIssueLineDraft>(
+          items: widget.items,
+          minContentWidth: tableWidth,
+          emptyText: l10n.stockIssueEmptyItemsMessage,
+          emptyAddLabel: l10n.stockIssueAddLineButton,
+          onAddRow: _addDraftRow,
+          headerBuilder: (ctx) => _TableHeader(theme: theme),
+          rowBuilder: (ctx, i, item) => _FilledRow(
+            index: i,
+            item: item,
+            striped: i.isOdd,
+            onQuantitiesChanged: (main, sub) {
+              widget.onQuantitiesChanged(i, main, sub);
+            },
+            onUnitCostChanged: (cost) {
+              widget.onUnitCostChanged(i, cost);
+            },
+            onRemove: () => widget.onRemove(i),
           ),
+          footerSummaryBuilder: (ctx) => Column(
+            children: [
+              if (widget.items.isNotEmpty)
+                _TableFooter(items: widget.items, theme: theme),
+              for (final draftId in _draftRowIds)
+                _DraftProductRow(
+                  key: ValueKey('draft-$draftId'),
+                  onProductSelected: (product) {
+                    _onDraftProductSelected(draftId, product);
+                  },
+                  onCancel: () => _removeDraftRow(draftId),
+                ),
+              _TableActionsBar(
+                onAdd: _addDraftRow,
+                addLabel: l10n.stockIssueAddLineButton,
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -1494,130 +1437,8 @@ class _FilledRow extends StatelessWidget {
   }
 }
 
-class _MobileIssueItemCard extends StatelessWidget {
-  const _MobileIssueItemCard({
-    required this.index,
-    required this.item,
-    required this.onQuantitiesChanged,
-    required this.onUnitCostChanged,
-    required this.onRemove,
-  });
 
-  final int index;
-  final StockIssueLineDraft item;
-  final void Function(double main, double sub) onQuantitiesChanged;
-  final void Function(double cost) onUnitCostChanged;
-  final VoidCallback onRemove;
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-    final totalCost = item.totalQuantity * item.unitCost;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.xs,
-      ),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: scheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppRadius.xs),
-                ),
-                child: Text(
-                  '#${index + 1}',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: scheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  item.productName,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.delete_outline_rounded,
-                  color: scheme.error,
-                  size: 20,
-                ),
-                onPressed: onRemove,
-                visualDensity: VisualDensity.compact,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              Expanded(
-                child: AppAmountField(
-                  label: l10n.localeName == 'ar' ? 'الكمية الأساسية' : 'Main Qty',
-                  value: item.mainQuantity,
-                  decimalPlaces: 3,
-                  trimTrailingZeros: true,
-                  variant: AppAmountFieldVariant.compact,
-                  onChanged: (main) => onQuantitiesChanged(main, item.subQuantity),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: AppAmountField(
-                  label: l10n.localeName == 'ar' ? 'الكمية الفرعية' : 'Sub Qty',
-                  value: item.subQuantity,
-                  decimalPlaces: 3,
-                  trimTrailingZeros: true,
-                  variant: AppAmountFieldVariant.compact,
-                  onChanged: (sub) => onQuantitiesChanged(item.mainQuantity, sub),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${l10n.localeName == "ar" ? "التكلفة" : "Unit Cost"}: ${item.unitCost.toStringAsFixed(2)}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-              Text(
-                '${l10n.localeName == "ar" ? "الإجمالي" : "Total"}: ${totalCost.toStringAsFixed(2)}',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: scheme.primary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _DraftProductRow extends ConsumerStatefulWidget {
   const _DraftProductRow({
@@ -1716,44 +1537,6 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
           },
           loading: () => const CircularProgressIndicator(),
           error: (err, _) => Text('خطأ: $err'),
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyAddCard extends StatelessWidget {
-  const _EmptyAddCard({
-    required this.onAdd,
-    required this.addLabel,
-    required this.emptyLabel,
-  });
-
-  final VoidCallback onAdd;
-  final String addLabel;
-  final String emptyLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Material(
-      color: scheme.surface,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          children: [
-            Icon(Icons.playlist_add_rounded, color: scheme.primary, size: 36),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              emptyLabel,
-              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            _AddRowButton(label: addLabel, onTap: onAdd),
-          ],
         ),
       ),
     );

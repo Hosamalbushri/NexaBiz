@@ -7,15 +7,14 @@ import '../../domain/entities/currency_rate.dart';
 import '../../domain/repositories/currency_rate_repository.dart';
 import '../database/accounting_database.dart';
 
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 
 class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
   CurrencyRateRepositoryImpl(
     this._db, {
-    SyncQueue? syncQueue,
-    String Function()? readCompanyId,
-  }) : _syncQueue = syncQueue,
-       _readCompanyId = readCompanyId;
+    this._syncQueue,
+    this._readCompanyId,
+  });
 
   final AccountingDatabase _db;
   final SyncQueue? _syncQueue;
@@ -23,8 +22,15 @@ class CurrencyRateRepositoryImpl implements CurrencyRateRepository {
 
   static const entityType = 'currency_rate';
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call().trim();
+    if (id == null || id.isEmpty) {
+      throw MissingCompanyContextException(
+        'CurrencyRateRepository operation failed: missing company context.',
+      );
+    }
+    return id;
+  }
 
   Expression<bool> _tenantScoped($CurrencyRatesTable t) =>
       t.companyId.equals(_currentCompanyId);

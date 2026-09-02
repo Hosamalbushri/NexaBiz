@@ -58,13 +58,16 @@ class SystemSettingsHub extends ConsumerWidget {
           subtitle: l10n.setupSettingsCardSubtitle,
           initiallyExpanded: true,
           children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.business_outlined),
-              title: Text(l10n.systemSetupEditCompany),
-              subtitle: Text(l10n.setupSettingsSubtitle),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(AppRoutes.settingsSetup),
+            Material(
+              color: Colors.transparent,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.business_outlined),
+                title: Text(l10n.systemSetupEditCompany),
+                subtitle: Text(l10n.setupSettingsSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.settingsSetup),
+              ),
             ),
           ],
         ),

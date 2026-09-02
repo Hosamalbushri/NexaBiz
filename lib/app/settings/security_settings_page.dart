@@ -217,9 +217,23 @@ class _SecuritySettingsPageState extends ConsumerState<SecuritySettingsPage> {
         }
 
         final userEmail = user.email;
-        await store.saveCredentials(
+        final bioToken = await ref
+            .read(localAuthStoreProvider)
+            .getOrCreateBiometricToken(userEmail);
+
+        if (bioToken == null || bioToken.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.authBiometricFailed)),
+            );
+          }
+          await store.setBiometricEnabled(enabled: false, mode: mode);
+          return;
+        }
+
+        await store.saveBiometricCredentials(
           email: userEmail,
-          password: pwdConfirmed,
+          biometricToken: bioToken,
           mode: mode,
         );
       }

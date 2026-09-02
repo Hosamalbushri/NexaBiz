@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/utils/digit_normalization.dart';
+import 'package:stock_count/core/widgets/app_async_autocomplete_field.dart';
 import '../../domain/entities/account.dart';
 import '../../domain/services/account_labels.dart';
 
 const _kResultLimit = 50;
 
-/// Searchable account picker (code / name), similar to R&P counter search.
+/// Searchable account picker (code / name), built using [AppAsyncAutocompleteField].
 class AccountSearchField extends StatefulWidget {
   const AccountSearchField({
     super.key,
@@ -33,19 +31,11 @@ class AccountSearchField extends StatefulWidget {
 class _AccountSearchFieldState extends State<AccountSearchField> {
   late final TextEditingController _controller;
   final _focusNode = FocusNode(skipTraversal: true);
-  var _showResults = false;
-  List<Account> _results = const [];
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-      _syncControllerFromSelection();
-    });
+    _controller = TextEditingController(text: _display(_selectedAccount()));
   }
 
   @override
@@ -54,15 +44,11 @@ class _AccountSearchFieldState extends State<AccountSearchField> {
     if (widget.selectedUuid != oldWidget.selectedUuid ||
         widget.accounts != oldWidget.accounts) {
       if (!_focusNode.hasFocus) {
-        _syncControllerFromSelection();
+        final text = _display(_selectedAccount());
+        if (_controller.text != text) {
+          _controller.text = text;
+        }
       }
-    }
-  }
-
-  void _syncControllerFromSelection() {
-    final next = _display(_selectedAccount());
-    if (_controller.text != next) {
-      _controller.text = next;
     }
   }
 
@@ -94,17 +80,11 @@ class _AccountSearchFieldState extends State<AccountSearchField> {
     super.dispose();
   }
 
-  void _onChanged(String value) {
-    widget.onSelected(null);
-    final query = normalizeDigitsToWestern(value).trim();
-    final l10n = AppLocalizations.of(context);
+  List<Account> _fetchOptions(String query) {
     if (query.isEmpty) {
-      setState(() {
-        _results = const [];
-        _showResults = false;
-      });
-      return;
+      return const [];
     }
+    final l10n = AppLocalizations.of(context);
     final matches = <Account>[];
     for (final account in widget.accounts) {
       if (!AccountLabels.matchesQuery(l10n, account, query)) {
@@ -115,125 +95,60 @@ class _AccountSearchFieldState extends State<AccountSearchField> {
         break;
       }
     }
-    setState(() {
-      _results = matches;
-      _showResults = true;
-    });
-  }
-
-  void _select(Account account) {
-    widget.onSelected(account);
-    _controller.text = _display(account);
-    setState(() {
-      _results = const [];
-      _showResults = false;
-    });
-    _focusNode.unfocus();
+    return matches;
   }
 
   void _clear() {
     widget.onSelected(null);
     _controller.clear();
-    setState(() {
-      _results = const [];
-      _showResults = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
     final hasSelection = widget.selectedUuid != null;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          widget.label,
-          style: theme.textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        TextField(
-          controller: _controller,
-          focusNode: _focusNode,
-          inputFormatters: const [WesternDigitsInputFormatter()],
-          decoration: InputDecoration(
-            isDense: true,
-            filled: true,
-            fillColor: scheme.surface,
-            hintText: widget.hintText ?? l10n.accountingSearchHint,
-            prefixIcon: Icon(
-              Icons.search,
-              color: scheme.primary,
-            ),
-            suffixIcon: hasSelection || _controller.text.isNotEmpty
-                ? IconButton(
-                    tooltip:
-                        MaterialLocalizations.of(context).deleteButtonTooltip,
-                    onPressed: _clear,
-                    icon: const Icon(Icons.clear),
-                  )
-                : null,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-            ),
-          ),
-          onChanged: _onChanged,
-          onTap: () {
-            if (_controller.text.trim().isNotEmpty &&
-                widget.selectedUuid == null) {
-              _onChanged(_controller.text);
-            }
-          },
-        ),
-        if (_showResults) ...[
-          const SizedBox(height: AppSpacing.xs),
-          if (_results.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: Text(
-                l10n.accountingNoSearchResults,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
+    return AppAsyncAutocompleteField<Account>(
+      controller: _controller,
+      focusNode: _focusNode,
+      label: widget.label,
+      showLabelAbove: true,
+      hint: widget.hintText ?? l10n.accountingSearchHint,
+      minQueryLength: 1,
+      debounceDuration: Duration.zero,
+      fetchOptions: (query) => _fetchOptions(query),
+      itemLabelBuilder: (account) => _display(account),
+      onSelected: (account) {
+        if (account == null) {
+          widget.onSelected(null);
+        } else {
+          widget.onSelected(account);
+        }
+      },
+      onQueryChanged: (raw) {
+        if (raw.isEmpty) {
+          widget.onSelected(null);
+        }
+      },
+      suffixIcon: hasSelection || _controller.text.isNotEmpty
+          ? IconButton(
+              tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+              onPressed: _clear,
+              icon: const Icon(Icons.clear),
             )
-          else
-            Material(
-              color: scheme.surface,
-              elevation: 2,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              clipBehavior: Clip.antiAlias,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 180),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: _results.length,
-                  separatorBuilder: (_, _) => Divider(
-                    height: 1,
-                    color: scheme.outlineVariant.withValues(alpha: 0.35),
-                  ),
-                  itemBuilder: (context, index) {
-                    final account = _results[index];
-                    return ListTile(
-                      dense: true,
-                      title: Text(
-                        _display(account),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      onTap: () => _select(account),
-                    );
-                  },
-                ),
-              ),
-            ),
-        ],
-      ],
+          : null,
+      noResultsText: l10n.accountingNoSearchResults,
+      itemBuilder: (context, account) {
+        return ListTile(
+          dense: true,
+          title: Text(
+            _display(account),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+      },
     );
   }
 }
+

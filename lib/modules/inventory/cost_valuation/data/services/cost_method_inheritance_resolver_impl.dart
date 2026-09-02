@@ -6,10 +6,9 @@ import '../../domain/services/cost_method_inheritance_resolver.dart';
 class CostMethodInheritanceResolverImpl
     implements CostMethodInheritanceResolver {
   CostMethodInheritanceResolverImpl({
-    required InventoryDatabase db,
-    CostValuationMethod systemDefaultMethod = CostValuationMethod.fifo,
-  })  : _db = db,
-        _systemDefaultMethod = systemDefaultMethod;
+    required this._db,
+    this._systemDefaultMethod = CostValuationMethod.fifo,
+  });
 
   final InventoryDatabase _db;
   final CostValuationMethod _systemDefaultMethod;

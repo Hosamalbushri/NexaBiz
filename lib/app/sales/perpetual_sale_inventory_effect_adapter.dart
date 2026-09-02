@@ -2,7 +2,6 @@ import 'package:stock_count/core/domain/ports/posting_port.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/document_posting_orchestrator.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
-import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_issue.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_movement_line.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/repositories/stock_movements_repository.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale.dart';
@@ -20,10 +19,9 @@ abstract class SaleCogsEffectPort {
 /// Perpetual inventory: orchestrates stock issue, FIFO cost layers, and dual journal entries on post.
 class PerpetualSaleInventoryEffectAdapter implements SaleInventoryEffectPort {
   PerpetualSaleInventoryEffectAdapter({
-    required DocumentPostingOrchestrator orchestrator,
-    required StockMovementsRepository stockMovementsRepository,
-  })  : _orchestrator = orchestrator,
-        _stockMovementsRepository = stockMovementsRepository;
+    required this._orchestrator,
+    required this._stockMovementsRepository,
+  });
 
   final DocumentPostingOrchestrator _orchestrator;
   final StockMovementsRepository _stockMovementsRepository;

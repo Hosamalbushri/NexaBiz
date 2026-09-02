@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/core/errors/journal_exception.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
@@ -14,24 +14,15 @@ import '../../domain/repositories/stock_movements_repository.dart';
 
 import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
 
-import '../../../shared/data/database/inventory_database.dart';
-import '../../domain/entities/stock_issue.dart';
-import '../../domain/entities/stock_movement_line.dart';
-import '../../domain/entities/stock_receipt.dart';
-import '../../domain/repositories/stock_movements_repository.dart';
 
 class StockMovementsRepositoryImpl implements StockMovementsRepository {
   StockMovementsRepositoryImpl({
-    required InventoryDatabase db,
-    SyncQueue? syncQueue,
-    InventoryAccountingPoster? accountingPoster,
-    String Function()? readCompanyId,
-    InitializationGuard? initializationGuard,
-  })  : _db = db,
-        _syncQueue = syncQueue,
-        _accountingPoster = accountingPoster,
-        _readCompanyId = readCompanyId,
-        _initializationGuard = initializationGuard;
+    required this._db,
+    this._syncQueue,
+    this._accountingPoster,
+    this._readCompanyId,
+    this._initializationGuard,
+  });
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
@@ -39,8 +30,15 @@ class StockMovementsRepositoryImpl implements StockMovementsRepository {
   final String Function()? _readCompanyId;
   final InitializationGuard? _initializationGuard;
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+  String get _currentCompanyId {
+    final cid = _readCompanyId?.call().trim();
+    if (cid == null || cid.isEmpty) {
+      throw MissingCompanyContextException(
+        'StockMovementsRepository operation failed: missing company context.',
+      );
+    }
+    return cid;
+  }
 
   Expression<bool> _tenantScopedReceipt($StockReceiptsTable tbl) =>
       tbl.companyId.equals(_currentCompanyId);

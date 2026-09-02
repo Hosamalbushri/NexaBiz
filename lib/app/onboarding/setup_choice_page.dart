@@ -100,7 +100,7 @@ class _SetupChoicePageState extends ConsumerState<SetupChoicePage> {
                             icon: Icons.phone_android_outlined,
                             title: l10n.setupChoiceLocalTitle,
                             subtitle: l10n.setupChoiceLocalSubtitle,
-                            onTap: () => context.go(AppRoutes.login),
+                            onTap: () => context.go(SystemSetupRoutes.firstRun),
                           ),
                           const Spacer(flex: 2),
                         ],

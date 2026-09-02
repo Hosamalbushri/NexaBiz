@@ -11,12 +11,10 @@ import '../entities/audit_trail_entry.dart';
 /// update interfaces exist.
 class AuditTrailService {
   AuditTrailService({
-    required InventoryDatabase db,
-    SyncQueue? syncQueue,
-    String Function()? readCompanyId,
-  })  : _db = db,
-        _syncQueue = syncQueue,
-        _readCompanyId = readCompanyId;
+    required this._db,
+    this._syncQueue,
+    this._readCompanyId,
+  });
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
@@ -67,7 +65,7 @@ class AuditTrailService {
         );
 
     if (_syncQueue != null) {
-      await _syncQueue!.enqueue(
+      await _syncQueue.enqueue(
         SyncOperation.create(
           entityType: 'audit_event',
           entityId: eventUuid,

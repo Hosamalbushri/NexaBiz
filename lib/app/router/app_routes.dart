@@ -54,4 +54,7 @@ class AppRoutes {
 
   /// Legacy alias used by older call sites; prefer [dashboard].
   static const String home = dashboard;
+
+  /// Access denied error page path.
+  static const String accessDenied = '/access-denied';
 }

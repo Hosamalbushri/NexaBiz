@@ -17,17 +17,13 @@ import 'token_store.dart';
 /// expire the session (offline work keeps the local permission snapshot).
 class AuthenticatedHttpClient {
   AuthenticatedHttpClient({
-    required SyncApiConfig config,
-    required TokenStore tokenStore,
+    required this._config,
+    required this._tokenStore,
     http.Client? client,
-    Future<TokenRefreshOutcome> Function()? onRefresh,
-    void Function()? onSessionExpired,
-  }) : _config = config,
-       _tokenStore = tokenStore,
-       _client = client ?? http.Client(),
-       _ownsClient = client == null,
-       _onRefresh = onRefresh,
-       _onSessionExpired = onSessionExpired;
+    this._onRefresh,
+    this._onSessionExpired,
+  }) : _client = client ?? http.Client(),
+       _ownsClient = client == null;
 
   SyncApiConfig _config;
   final TokenStore _tokenStore;

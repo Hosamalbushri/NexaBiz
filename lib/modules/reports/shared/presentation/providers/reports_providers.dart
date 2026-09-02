@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:stock_count/core/report_engine/report_engine.dart';
 import 'package:stock_count/core/reporting/report_file_actions.dart';
 import '../../domain/entities/report_descriptor.dart';
 import '../../domain/services/account_statement_report_data_port.dart';
@@ -83,6 +84,14 @@ final journalBookReportDataPortProvider =
 final rpReportDataPortProvider = Provider<RpReportDataPort>((ref) {
   return const NoOpRpReportDataPort();
 });
+
+/// Override in App with SalesPeriodReportDataProvider instance.
+final salesPeriodReportEngineDataProvider =
+    Provider<ReportDataProvider?>((ref) => null);
+
+/// Override in App with StockMovementReportDataProvider instance.
+final stockMovementReportEngineDataProvider =
+    Provider<ReportDataProvider?>((ref) => null);
 
 final reportCatalogProvider = Provider<List<ReportDescriptor>>((ref) {
   return const [

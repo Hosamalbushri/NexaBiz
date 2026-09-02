@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/core/errors/journal_exception.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/shared/domain/enums/inventory_document_status.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
@@ -13,33 +13,34 @@ import '../../domain/repositories/stock_transfer_repository.dart';
 
 import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
 
-import '../../domain/entities/stock_transfer.dart';
-import '../../domain/repositories/stock_transfer_repository.dart';
-
 class StockTransferRepositoryImpl implements StockTransferRepository {
   StockTransferRepositoryImpl({
     required InventoryDatabase db,
-    SyncQueue? syncQueue,
+    this._syncQueue,
     CostLayerService? costLayerService,
-    CostValuationMethod valuationMethod = CostValuationMethod.fifo,
+    CostValuationMethod? valuationMethod,
     String Function()? readCompanyId,
-    InitializationGuard? initializationGuard,
+    this._initializationGuard,
   })  : _db = db,
-        _syncQueue = syncQueue,
         _costLayerService = costLayerService ?? CostLayerServiceImpl(db: db, readCompanyId: readCompanyId),
-        _valuationMethod = valuationMethod,
-        _readCompanyId = readCompanyId,
-        _initializationGuard = initializationGuard;
+        _readCompanyId = readCompanyId;
 
   final InventoryDatabase _db;
   final SyncQueue? _syncQueue;
   final CostLayerService _costLayerService;
-  final CostValuationMethod _valuationMethod;
   final String Function()? _readCompanyId;
   final InitializationGuard? _initializationGuard;
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+  String get _currentCompanyId {
+    final raw = _readCompanyId?.call();
+    final cid = raw?.trim();
+    if (cid == null || cid.isEmpty) {
+      throw MissingCompanyContextException(
+        'StockTransferRepository operation failed: missing company context.',
+      );
+    }
+    return cid;
+  }
 
   Expression<bool> _scoped($StockTransfersTable tbl) {
     return tbl.companyId.equals(_currentCompanyId);

@@ -1,4 +1,3 @@
-import '../entities/account_role.dart';
 
 enum SetupAccountType { asset, liability, equity, revenue, expense, other }
 

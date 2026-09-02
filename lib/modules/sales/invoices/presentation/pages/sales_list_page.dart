@@ -1,20 +1,12 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/services/loading_providers.dart';
-import 'package:stock_count/core/widgets/app_empty_state.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
+import 'package:stock_count/core/presentation/scaffolds/module_list_scaffold.dart';
 import 'package:stock_count/core/widgets/app_filter_sheet.dart';
-import 'package:stock_count/core/widgets/app_responsive.dart';
-import 'package:stock_count/core/widgets/app_search_bar.dart';
-import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
 import '../../domain/entities/payment_method.dart';
@@ -28,7 +20,6 @@ import '../providers/sales_list_provider.dart';
 import '../widgets/sale_error_messages.dart';
 import '../widgets/sale_number_text.dart';
 import '../widgets/sale_status_badge.dart';
-import '../widgets/sales_page_loader.dart';
 import 'package:stock_count/modules/sales/shared/presentation/pages/sales_routes.dart';
 
 class SalesListPage extends ConsumerStatefulWidget {
@@ -39,68 +30,6 @@ class SalesListPage extends ConsumerStatefulWidget {
 }
 
 class _SalesListPageState extends ConsumerState<SalesListPage> {
-  final _searchController = TextEditingController();
-  final _scrollController = ScrollController();
-  final _loader = SalesPageLoaderBinding();
-  bool? _lastLoading;
-  Timer? _debounce;
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    _loader.dispose();
-    _debounce?.cancel();
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients) {
-      return;
-    }
-    final pos = _scrollController.position;
-    if (pos.pixels >= pos.maxScrollExtent - 240) {
-      ref.read(salesListProvider.notifier).loadMore();
-    }
-  }
-
-  void _syncLoader(bool isLoading, String message) {
-    if (_lastLoading == isLoading) {
-      return;
-    }
-    _lastLoading = isLoading;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-      _loader.sync(
-        ref.read(loadingControllerProvider),
-        isLoading: isLoading,
-        message: message,
-      );
-    });
-  }
-
-  void _onQueryChanged(String value) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {
-      if (!mounted) {
-        return;
-      }
-      final current = ref.read(saleListFilterProvider);
-      ref.read(saleListFilterProvider.notifier).state = current.copyWith(
-        query: value.trim(),
-      );
-    });
-  }
-
   Future<void> _openFilters() async {
     final l10n = AppLocalizations.of(context);
     final current = ref.read(saleListFilterProvider);
@@ -177,43 +106,52 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
     );
 
     if (resultFilter != null && mounted) {
-      ref.read(saleListFilterProvider.notifier).state = resultFilter!.copyWith(
-        query: _searchController.text.trim(),
-      );
+      ref.read(saleListFilterProvider.notifier).state = resultFilter!;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final asyncList = ref.watch(salesListProvider);
     final filter = ref.watch(saleListFilterProvider);
     final hasFilters =
         filter.saleStatus != null || filter.paymentMethod != null;
+    final canCreate = ref
+        .read(authStateProvider)
+        .hasAnyPermission(SalesPermissions.create);
 
-    _syncLoader(
-      asyncList.isLoading && !asyncList.hasValue,
-      l10n.salesLoadingInvoice,
-    );
+    final listState = asyncList.valueOrNull;
 
-    return Scaffold(
-      backgroundColor: scheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: l10n.salesListTitle,
-        showBackButton: true,
-        actions: [
-          CustomAppBarAction(
-            icon: hasFilters
-                ? Icons.filter_alt_rounded
-                : Icons.filter_list_rounded,
-            tooltip: l10n.salesFiltersTitle,
-            onPressed: _openFilters,
-            accentColor: hasFilters ? scheme.tertiary : null,
-          ),
-        ],
-      ),
+    return ModuleListScaffold<SaleListItem>(
+      title: l10n.salesListTitle,
+      searchQuery: filter.query,
+      searchHint: l10n.salesSearchHint,
+      onSearchChanged: (val) {
+        final current = ref.read(saleListFilterProvider);
+        ref.read(saleListFilterProvider.notifier).state = current.copyWith(
+          query: val.trim(),
+        );
+      },
+      onFilterTap: _openFilters,
+      activeFilterCount: hasFilters ? 1 : 0,
+      isLoading: asyncList.isLoading && !asyncList.hasValue,
+      error: asyncList.error != null ? saleErrorMessage(l10n, asyncList.error!) : null,
+      onRetry: () => ref.read(salesListProvider.notifier).reload(),
+      onRefresh: () async {
+        await ref.read(salesListProvider.notifier).reload();
+      },
+      isLoadingMore: listState?.isLoadingMore ?? false,
+      onLoadMore: () {
+        if (listState?.hasMore == true) {
+          ref.read(salesListProvider.notifier).loadMore();
+        }
+      },
+      emptyTitle: l10n.salesEmptyTitle,
+      emptyMessage: l10n.salesEmptyMessage,
+      emptyIcon: Icons.receipt_long_outlined,
+      emptyActionLabel: canCreate ? l10n.salesCreateTitle : null,
+      onEmptyAction: canCreate ? () => SalesRoutes.pushCreate(context) : null,
       floatingActionButton: PermissionGate(
         anyOf: SalesPermissions.create,
         child: FloatingActionButton.extended(
@@ -222,84 +160,8 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
           label: Text(l10n.salesCreateTitle),
         ),
       ),
-      body: AppContentConstraint(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppConstants.pagePadding,
-                AppSpacing.md,
-                AppConstants.pagePadding,
-                AppSpacing.sm,
-              ),
-              child: AppSearchBar(
-                controller: _searchController,
-                hint: l10n.salesSearchHint,
-                onChanged: (val) {
-                  setState(() {});
-                  _onQueryChanged(val);
-                },
-              ),
-            ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppConstants.pagePadding,
-                0,
-                AppConstants.pagePadding,
-                AppConstants.pagePadding,
-              ),
-              child: asyncList.when(
-                loading: () => const SizedBox.expand(),
-                error: (error, _) => AppErrorState(
-                  message: saleErrorMessage(l10n, error),
-                  onRetry: () => ref.read(salesListProvider.notifier).reload(),
-                ),
-                data: (listState) {
-                  final sales = listState.items;
-                  if (sales.isEmpty) {
-                    final canCreate = ref
-                        .read(authStateProvider)
-                        .hasAnyPermission(SalesPermissions.create);
-                    return AppEmptyState(
-                      title: l10n.salesEmptyTitle,
-                      subtitle: l10n.salesEmptyMessage,
-                      icon: Icons.receipt_long_outlined,
-                      actionLabel: canCreate ? l10n.salesCreateTitle : null,
-                      onAction: canCreate
-                          ? () => SalesRoutes.pushCreate(context)
-                          : null,
-                    );
-                  }
-                  final footer = listState.hasMore ? 1 : 0;
-                  return ListView.separated(
-                    controller: _scrollController,
-                    itemCount: sales.length + footer,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(height: AppSpacing.sm),
-                    itemBuilder: (context, index) {
-                      if (index >= sales.length) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-                          child: Center(
-                            child: SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          ),
-                        );
-                      }
-                      return _SaleListTile(sale: sales[index]);
-                    },
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    ),
+      items: listState?.items ?? const [],
+      itemBuilder: (context, sale) => _SaleListTile(sale: sale),
     );
   }
 }

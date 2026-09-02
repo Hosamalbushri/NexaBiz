@@ -10,17 +10,13 @@ import '../../modules/system_setup/domain/ports/system_setup_seed_port.dart';
 /// App adapter: System Setup → Accounting defaults (local seed or remote pull).
 class AccountingSystemSetupSeedAdapter implements SystemSetupSeedPort {
   AccountingSystemSetupSeedAdapter({
-    required AccountRepository accounts,
-    required VoucherBookRepository voucherBooks,
+    AccountRepository? accounts,
+    VoucherBookRepository? voucherBooks,
     required SyncManager syncManager,
     required SettingsRepository settings,
-  }) : _accounts = accounts,
-       _voucherBooks = voucherBooks,
-       _syncManager = syncManager,
-       _settings = settings;
+  })  : _syncManager = syncManager,
+        _settings = settings;
 
-  final AccountRepository _accounts;
-  final VoucherBookRepository _voucherBooks;
   final SyncManager _syncManager;
   final SettingsRepository _settings;
 

@@ -17,14 +17,11 @@ import 'package:stock_count/modules/accounting/journals/domain/services/journal_
 /// Creates fiscal years with generated closed periods.
 class CreateFiscalYear {
   CreateFiscalYear({
-    required FiscalYearRepository repository,
-    required AccountRepository accounts,
+    required this._repository,
+    required this._accounts,
     required PermissionGuard permissionGuard,
-    AccountingPeriodGenerator generator = const AccountingPeriodGenerator(),
-  }) : _repository = repository,
-       _accounts = accounts,
-       _guard = permissionGuard,
-       _generator = generator;
+    this._generator = const AccountingPeriodGenerator(),
+  }) : _guard = permissionGuard;
 
   final FiscalYearRepository _repository;
   final AccountRepository _accounts;
@@ -114,16 +111,12 @@ class ReopenAccountingPeriod {
 /// Validates and closes an accounting period (idempotent).
 class PeriodClosingService {
   PeriodClosingService({
-    required FiscalYearRepository repository,
-    required CurrencyRateRepository rates,
-    required JournalPostingService posting,
-    required JournalRepository journals,
+    required this._repository,
+    required this._rates,
+    required this._posting,
+    required this._journals,
     required PermissionGuard permissionGuard,
-  }) : _repository = repository,
-       _rates = rates,
-       _posting = posting,
-       _journals = journals,
-       _guard = permissionGuard;
+  }) : _guard = permissionGuard;
 
   final FiscalYearRepository _repository;
   final CurrencyRateRepository _rates;

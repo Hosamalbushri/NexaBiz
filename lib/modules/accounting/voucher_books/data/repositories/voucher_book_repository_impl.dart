@@ -9,22 +9,28 @@ import 'package:stock_count/modules/accounting/voucher_books/domain/repositories
 import 'package:stock_count/modules/accounting/voucher_books/domain/services/default_voucher_books.dart';
 import 'package:stock_count/modules/accounting/voucher_books/domain/services/voucher_book_validator.dart';
 
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 
 class VoucherBookRepositoryImpl implements VoucherBookRepository {
   VoucherBookRepositoryImpl(
     this._db, {
     VoucherBookValidator? validator,
-    String Function()? readCompanyId,
-  }) : _validator = validator ?? const VoucherBookValidator(),
-       _readCompanyId = readCompanyId;
+    this._readCompanyId,
+  }) : _validator = validator ?? const VoucherBookValidator();
 
   final AccountingDatabase _db;
   final VoucherBookValidator _validator;
   final String Function()? _readCompanyId;
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call().trim();
+    if (id == null || id.isEmpty) {
+      throw MissingCompanyContextException(
+        'VoucherBookRepository operation failed: missing company context.',
+      );
+    }
+    return id;
+  }
 
   Expression<bool> _tenantScoped($VoucherBooksTable t) =>
       t.companyId.equals(_currentCompanyId);

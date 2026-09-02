@@ -7,21 +7,21 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/utils/digit_normalization.dart';
-import 'package:stock_count/core/widgets/app_amount_field.dart';
+import 'package:stock_count/core/widgets/app_widgets.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_currency_port.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_treasury_account_port.dart';
 import '../providers/rp_providers.dart';
 import '../providers/transaction_composer_provider.dart';
 
-/// Fixed multi-column widths — matched to [SaleProductsTable] proportions.
+/// Fixed multi-column widths — optimized for spacious, professional layout.
 class _Cols {
-  static const index = 44.0;
-  static const account = 168.0;
-  static const amount = 148.0;
-  static const currency = 88.0;
-  static const rate = 96.0;
-  static const narrative = 220.0;
-  static const actions = 48.0;
+  static const index = 40.0;
+  static const account = 184.0;
+  static const amount = 152.0;
+  static const currency = 96.0;
+  static const rate = 104.0;
+  static const narrative = 240.0;
+  static const actions = 44.0;
 
   /// Matches horizontal padding on header / filled rows.
   static const hPad = AppSpacing.sm;
@@ -94,12 +94,10 @@ class _RpEntryLinesTableState extends ConsumerState<RpEntryLinesTable> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final filled = [
       for (final line in widget.lines)
         if (line.account != null) line,
     ];
-    final hasContent = filled.isNotEmpty || _draftRowIds.isNotEmpty;
     final viewportWidth = MediaQuery.sizeOf(context).width;
     final tableWidth = math.max(_Cols.width, viewportWidth - 48);
 
@@ -108,88 +106,49 @@ class _RpEntryLinesTableState extends ConsumerState<RpEntryLinesTable> {
       children: [
         _SectionHeader(title: l10n.rpFormSectionLines),
         const SizedBox(height: AppSpacing.md),
-        if (!hasContent)
-          _EmptyAddCard(
-            onAdd: _addDraftRow,
-            addLabel: l10n.rpAddAccountLine,
-            emptyLabel: l10n.rpLinesEmpty,
-          )
-        else
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: scheme.surface,
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.5),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: scheme.shadow.withValues(alpha: 0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              child: Column(
-                children: [
-                  Scrollbar(
-                    controller: _horizontalScroll,
-                    thumbVisibility: true,
-                    radius: const Radius.circular(8),
-                    notificationPredicate: (n) =>
-                        n.metrics.axis == Axis.horizontal,
-                    child: SingleChildScrollView(
-                      controller: _horizontalScroll,
-                      scrollDirection: Axis.horizontal,
-                      child: SizedBox(
-                        width: tableWidth,
-                        child: Column(
-                          children: [
-                            _TableHeader(
-                              theme: theme,
-                              l10n: l10n,
-                              amountColumnLabel: widget.amountColumnLabel,
-                            ),
-                            for (var i = 0; i < filled.length; i++)
-                              _FilledLineRow(
-                                index: i,
-                                line: filled[i],
-                                striped: i.isOdd,
-                                cashCurrencyCode: widget.cashCurrencyCode,
-                                currencies: widget.currencies,
-                                onAmountChanged: (amount) =>
-                                    widget.onAmountChanged(i, amount),
-                                onCrossRateChanged: (rate) =>
-                                    widget.onCrossRateChanged(i, rate),
-                                onCurrencyChanged: (code, rate) =>
-                                    widget.onCurrencyChanged(i, code, rate),
-                                onLineDescriptionChanged: (value) =>
-                                    widget.onLineDescriptionChanged(i, value),
-                                onRemove: () => widget.onRemoveLine(i),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  for (final draftId in _draftRowIds)
-                    _DraftAccountRow(
-                      key: ValueKey('draft-$draftId'),
-                      onAccountSelected: (account) {
-                        _onDraftAccountSelected(draftId, account);
-                      },
-                      onCancel: () => _removeDraftRow(draftId),
-                    ),
-                  _TableActionsBar(
-                    onAdd: _addDraftRow,
-                    addLabel: l10n.rpAddAnotherAccountLine,
-                  ),
-                ],
-              ),
-            ),
+        AppDocumentLineTableShell<ComposerEntryLine>(
+          items: filled,
+          minContentWidth: tableWidth,
+          showIndexColumn: false,
+          emptyText: l10n.rpLinesEmpty,
+          emptyAddLabel: l10n.rpAddAccountLine,
+          onAddRow: _addDraftRow,
+          headerBuilder: (ctx) => _TableHeader(
+            theme: theme,
+            l10n: l10n,
+            amountColumnLabel: widget.amountColumnLabel,
           ),
+          rowBuilder: (ctx, i, line) => _FilledLineRow(
+            index: i,
+            line: line,
+            striped: i.isOdd,
+            cashCurrencyCode: widget.cashCurrencyCode,
+            currencies: widget.currencies,
+            onAmountChanged: (amount) => widget.onAmountChanged(i, amount),
+            onCrossRateChanged: (rate) => widget.onCrossRateChanged(i, rate),
+            onCurrencyChanged: (code, rate) =>
+                widget.onCurrencyChanged(i, code, rate),
+            onLineDescriptionChanged: (value) =>
+                widget.onLineDescriptionChanged(i, value),
+            onRemove: () => widget.onRemoveLine(i),
+          ),
+          footerSummaryBuilder: (ctx) => Column(
+            children: [
+              for (final draftId in _draftRowIds)
+                _DraftAccountRow(
+                  key: ValueKey('draft-$draftId'),
+                  onAccountSelected: (account) {
+                    _onDraftAccountSelected(draftId, account);
+                  },
+                  onCancel: () => _removeDraftRow(draftId),
+                ),
+              _TableActionsBar(
+                onAdd: _addDraftRow,
+                addLabel: l10n.rpAddAnotherAccountLine,
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -274,12 +233,12 @@ class _TableActionsBar extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _AddRowButton(label: addLabel, onTap: onAdd),
-          ),
-        ],
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: SizedBox(
+          width: 240,
+          child: _AddRowButton(label: addLabel, onTap: onAdd),
+        ),
       ),
     );
   }
@@ -358,120 +317,7 @@ class _AddRowButton extends StatelessWidget {
   }
 }
 
-class _EmptyAddCard extends StatelessWidget {
-  const _EmptyAddCard({
-    required this.onAdd,
-    required this.addLabel,
-    required this.emptyLabel,
-  });
 
-  final VoidCallback onAdd;
-  final String addLabel;
-  final String emptyLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Material(
-      color: scheme.surface,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      clipBehavior: Clip.antiAlias,
-      child: CustomPaint(
-        painter: _DashedBorderPainter(
-          color: scheme.outlineVariant.withValues(alpha: 0.75),
-          radius: AppRadius.lg,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.xl,
-            AppSpacing.lg,
-            AppSpacing.lg,
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      scheme.primary.withValues(alpha: 0.16),
-                      scheme.primary.withValues(alpha: 0.06),
-                    ],
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.playlist_add_rounded,
-                  color: scheme.primary,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                emptyLabel,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Row(
-                children: [
-                  Expanded(
-                    child: _AddRowButton(label: addLabel, onTap: onAdd),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DashedBorderPainter extends CustomPainter {
-  _DashedBorderPainter({required this.color, required this.radius});
-
-  final Color color;
-  final double radius;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius)),
-      );
-    const dashWidth = 6.0;
-    const dashSpace = 4.0;
-    for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final next = distance + dashWidth;
-        canvas.drawPath(
-          metric.extractPath(distance, next.clamp(0, metric.length)),
-          paint,
-        );
-        distance = next + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
-    return oldDelegate.color != color || oldDelegate.radius != radius;
-  }
-}
 
 class _TableHeader extends StatelessWidget {
   const _TableHeader({
@@ -507,8 +353,10 @@ class _TableHeader extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
-        children: [
+      child: SizedBox(
+        width: _Cols.contentWidth,
+        child: Row(
+          children: [
           SizedBox(
             width: _Cols.index,
             child: Text('#', style: style, textAlign: TextAlign.center),
@@ -551,6 +399,7 @@ class _TableHeader extends StatelessWidget {
           const SizedBox(width: _Cols.actions),
         ],
       ),
+    ),
     );
   }
 }
@@ -607,9 +456,11 @@ class _FilledLineRowState extends State<_FilledLineRow> {
           horizontal: AppSpacing.sm,
           vertical: AppSpacing.md + 4,
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: SizedBox(
+          width: _Cols.contentWidth,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             SizedBox(
               width: _Cols.index,
               child: Padding(
@@ -721,6 +572,7 @@ class _FilledLineRowState extends State<_FilledLineRow> {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -846,64 +698,70 @@ class _DraftAccountRowState extends ConsumerState<_DraftAccountRow> {
         children: [
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
-            child: TextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              inputFormatters: const [WesternDigitsInputFormatter()],
-              textInputAction: TextInputAction.done,
-              onChanged: _onChanged,
-              onEditingComplete: () => _focusNode.unfocus(),
-              onSubmitted: (_) => _focusNode.unfocus(),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-              decoration: InputDecoration(
-                isDense: true,
-                filled: true,
-                fillColor: scheme.surface,
-                hintText: l10n.rpSearchAccountHint,
-                prefixIcon: Icon(
-                  Icons.search_rounded,
-                  color: scheme.primary,
-                ),
-                suffixIcon: _loading
-                    ? const Padding(
-                        padding: EdgeInsets.all(12),
-                        child: SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                    : IconButton(
-                        tooltip: MaterialLocalizations.of(context)
-                            .cancelButtonLabel,
-                        onPressed: widget.onCancel,
-                        icon: Icon(
-                          Icons.close_rounded,
-                          color: scheme.onSurfaceVariant,
-                        ),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 380),
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  inputFormatters: const [WesternDigitsInputFormatter()],
+                  textInputAction: TextInputAction.done,
+                  onChanged: _onChanged,
+                  onEditingComplete: () => _focusNode.unfocus(),
+                  onSubmitted: (_) => _focusNode.unfocus(),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    filled: true,
+                    fillColor: scheme.surface,
+                    hintText: l10n.rpSearchAccountHint,
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      color: scheme.primary,
+                    ),
+                    suffixIcon: _loading
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : IconButton(
+                            tooltip: MaterialLocalizations.of(context)
+                                .cancelButtonLabel,
+                            onPressed: widget.onCancel,
+                            icon: Icon(
+                              Icons.close_rounded,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      borderSide: BorderSide.none,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      borderSide: BorderSide(
+                        color: scheme.outlineVariant.withValues(alpha: 0.4),
                       ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                  borderSide: BorderSide(
-                    color: scheme.outlineVariant.withValues(alpha: 0.4),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      borderSide: BorderSide(
+                        color: scheme.primary,
+                        width: 1.4,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: 14,
+                    ),
                   ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                  borderSide: BorderSide(
-                    color: scheme.primary,
-                    width: 1.4,
-                  ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: 14,
                 ),
               ),
             ),
@@ -916,106 +774,103 @@ class _DraftAccountRowState extends ConsumerState<_DraftAccountRow> {
                 AppSpacing.md,
                 AppSpacing.md,
               ),
-              child: Material(
-                color: scheme.surface,
-                elevation: 2,
-                shadowColor: scheme.shadow.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                clipBehavior: Clip.antiAlias,
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 180),
-                  child: _loading
-                      ? const Padding(
-                          padding: EdgeInsets.all(AppSpacing.md),
-                          child: Center(
-                            child: SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          ),
-                        )
-                      : _searchFailed
-                          ? Padding(
-                              padding: const EdgeInsets.all(AppSpacing.md),
-                              child: Text(
-                                l10n.somethingWentWrong,
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: scheme.error,
+                  constraints: const BoxConstraints(maxWidth: 380),
+                  child: Material(
+                    color: scheme.surface,
+                    elevation: 2,
+                    shadowColor: scheme.shadow.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    clipBehavior: Clip.antiAlias,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 180),
+                      child: _loading
+                          ? const Padding(
+                              padding: EdgeInsets.all(AppSpacing.md),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
                                 ),
                               ),
                             )
-                          : _results.isEmpty
+                          : _searchFailed
                               ? Padding(
                                   padding: const EdgeInsets.all(AppSpacing.md),
                                   child: Text(
-                                    l10n.rpLinesEmpty,
+                                    l10n.somethingWentWrong,
                                     textAlign: TextAlign.center,
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: scheme.onSurfaceVariant,
+                                      color: scheme.error,
                                     ),
                                   ),
                                 )
-                              : ListView.separated(
-                                  shrinkWrap: true,
-                                  itemCount: _results.length,
-                                  separatorBuilder: (_, _) => Divider(
-                                    height: 1,
-                                    color: scheme.outlineVariant.withValues(
-                                      alpha: 0.35,
-                                    ),
-                                  ),
-                                  itemBuilder: (context, index) {
-                                    final account = _results[index];
-                                    final code = account.code.trim();
-                                    return InkWell(
-                                      onTap: () {
-                                        _focusNode.unfocus();
-                                        FocusManager.instance.primaryFocus
-                                            ?.unfocus();
-                                        widget.onAccountSelected(account);
-                                      },
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: AppSpacing.md,
-                                          vertical: AppSpacing.sm + 2,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    account.name,
-                                                    style: theme
-                                                        .textTheme.bodyMedium
-                                                        ?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
-                                                  ),
-                                                  if (code.isNotEmpty)
-                                                    Text(
-                                                      code,
-                                                      style: theme
-                                                          .textTheme.labelSmall
-                                                          ?.copyWith(
-                                                        color: scheme
-                                                            .onSurfaceVariant,
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
+                              : _results.isEmpty
+                                  ? Padding(
+                                      padding: const EdgeInsets.all(AppSpacing.md),
+                                      child: Text(
+                                        l10n.rpLinesEmpty,
+                                        textAlign: TextAlign.center,
+                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                          color: scheme.onSurfaceVariant,
                                         ),
                                       ),
-                                    );
-                                  },
-                                ),
+                                    )
+                                  : ListView.builder(
+                                      shrinkWrap: true,
+                                      padding: EdgeInsets.zero,
+                                      itemCount: _results.length,
+                                      itemBuilder: (ctx, idx) {
+                                        final account = _results[idx];
+                                        final code = account.code.trim();
+                                        return InkWell(
+                                          onTap: () =>
+                                              widget.onAccountSelected(account),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: AppSpacing.md,
+                                              vertical: AppSpacing.sm + 2,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        account.name,
+                                                        style: theme
+                                                            .textTheme.bodyMedium
+                                                            ?.copyWith(
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
+                                                      ),
+                                                      if (code.isNotEmpty)
+                                                        Text(
+                                                          code,
+                                                          style: theme
+                                                              .textTheme.labelSmall
+                                                              ?.copyWith(
+                                                            color: scheme
+                                                                .onSurfaceVariant,
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -1,3 +1,4 @@
+import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
 import '../entities/financial_transaction.dart';
 import '../entities/financial_transaction_line.dart';
 import '../entities/transaction_source.dart';
@@ -15,12 +16,25 @@ class FinancialTransactionValidator {
         FinancialTransactionException.amountMustBePositive,
       );
     }
-    final currency = draft.currencyCode.trim();
+    final currency = draft.currencyCode.trim().toUpperCase();
+    final baseCurrency = draft.baseCurrencyCode.trim().toUpperCase();
     if (currency.isEmpty) {
       throw const FinancialTransactionException(
         FinancialTransactionException.currencyRequired,
       );
     }
+
+    // Validate header exchange rate
+    if (currency != baseCurrency && baseCurrency.isNotEmpty) {
+      if (draft.exchangeRate <= 0 ||
+          draft.exchangeRate.isNaN ||
+          draft.exchangeRate.isInfinite) {
+        throw const FinancialTransactionException(
+          FinancialTransactionException.currencyRequired,
+        );
+      }
+    }
+
     final cashId = draft.cashAccountId.trim();
     if (cashId.isEmpty) {
       throw const FinancialTransactionException(
@@ -57,13 +71,13 @@ class FinancialTransactionValidator {
           FinancialTransactionException.counterAmountMustBePositive,
         );
       }
-      final lineCurrency = lines.first.currencyCode.trim();
+      final lineCurrency = lines.first.currencyCode.trim().toUpperCase();
       if (lineCurrency.isEmpty) {
         throw const FinancialTransactionException(
           FinancialTransactionException.currencyRequired,
         );
       }
-      if (lineCurrency.toUpperCase() != currency.toUpperCase()) {
+      if (lineCurrency != currency) {
         throw const FinancialTransactionException(
           FinancialTransactionException.unbalanced,
         );
@@ -90,13 +104,13 @@ class FinancialTransactionValidator {
           FinancialTransactionException.cashAccountRequired,
         );
       }
-      final toCurrency = lines.first.currencyCode.trim();
+      final toCurrency = lines.first.currencyCode.trim().toUpperCase();
       if (toCurrency.isEmpty) {
         throw const FinancialTransactionException(
           FinancialTransactionException.currencyRequired,
         );
       }
-      if (toCurrency.toUpperCase() == currency.toUpperCase()) {
+      if (toCurrency == currency) {
         throw const FinancialTransactionException(
           FinancialTransactionException.currenciesMustDiffer,
         );
@@ -106,10 +120,20 @@ class FinancialTransactionValidator {
           FinancialTransactionException.counterAmountMustBePositive,
         );
       }
-      final fromRate = draft.exchangeRate <= 0 ? 1.0 : draft.exchangeRate;
-      final toRate =
-          lines.first.exchangeRate <= 0 ? 1.0 : lines.first.exchangeRate;
-      // Base equivalents may differ; ledger posts the difference to FX P&L.
+      final fromRate = currency == baseCurrency
+          ? 1.0
+          : ExchangeRateValidator.validate(
+              currencyCode: currency,
+              baseCurrencyCode: baseCurrency,
+              exchangeRate: draft.exchangeRate,
+            );
+      final toRate = toCurrency == baseCurrency
+          ? 1.0
+          : ExchangeRateValidator.validate(
+              currencyCode: toCurrency,
+              baseCurrencyCode: baseCurrency,
+              exchangeRate: lines.first.exchangeRate,
+            );
       if (fromRate <= 0 || toRate <= 0) {
         throw const FinancialTransactionException(
           FinancialTransactionException.unbalanced,
@@ -130,10 +154,20 @@ class FinancialTransactionValidator {
           FinancialTransactionException.counterAmountMustBePositive,
         );
       }
-      if (line.currencyCode.trim().isEmpty) {
+      final lineCurrency = line.currencyCode.trim().toUpperCase();
+      if (lineCurrency.isEmpty) {
         throw const FinancialTransactionException(
           FinancialTransactionException.currencyRequired,
         );
+      }
+      if (lineCurrency != baseCurrency && baseCurrency.isNotEmpty) {
+        if (line.exchangeRate <= 0 ||
+            line.exchangeRate.isNaN ||
+            line.exchangeRate.isInfinite) {
+          throw const FinancialTransactionException(
+            FinancialTransactionException.currencyRequired,
+          );
+        }
       }
       if (accountId == cashId) {
         throw const FinancialTransactionException(
@@ -142,11 +176,24 @@ class FinancialTransactionValidator {
       }
     }
 
-    final cashRate = draft.exchangeRate <= 0 ? 1.0 : draft.exchangeRate;
+    final cashRate = currency == baseCurrency
+        ? 1.0
+        : ExchangeRateValidator.validate(
+            currencyCode: currency,
+            baseCurrencyCode: baseCurrency,
+            exchangeRate: draft.exchangeRate,
+          );
     final cashBase = RpMoney.round(draft.amount * cashRate);
     var counterBase = 0.0;
     for (final line in lines) {
-      final rate = line.exchangeRate <= 0 ? cashRate : line.exchangeRate;
+      final lineCurrency = line.currencyCode.trim().toUpperCase();
+      final rate = lineCurrency == baseCurrency
+          ? 1.0
+          : ExchangeRateValidator.validate(
+              currencyCode: lineCurrency,
+              baseCurrencyCode: baseCurrency,
+              exchangeRate: line.exchangeRate > 0 ? line.exchangeRate : cashRate,
+            );
       counterBase += line.amount * rate;
     }
     counterBase = RpMoney.round(counterBase);
@@ -172,23 +219,38 @@ FinancialTransactionDraft normalizeFinancialTransactionDraft(
   FinancialTransactionDraft draft,
 ) {
   final cashCurrency = draft.currencyCode.trim().toUpperCase();
-  final cashRate = draft.exchangeRate <= 0 ? 1.0 : draft.exchangeRate;
+  final baseCurrency = draft.baseCurrencyCode.trim().toUpperCase();
+  final cashRate = cashCurrency == baseCurrency || baseCurrency.isEmpty
+      ? 1.0
+      : (draft.exchangeRate > 0 &&
+              !draft.exchangeRate.isNaN &&
+              !draft.exchangeRate.isInfinite
+          ? draft.exchangeRate
+          : 1.0);
   final rawLines = draft.resolvedLines;
   final lines = <FinancialTransactionLine>[];
   for (var i = 0; i < rawLines.length; i++) {
     final line = rawLines[i];
     final accountId = line.accountId.trim();
     if (accountId.isEmpty) continue;
+    final lineCurrency = line.currencyCode.trim().isEmpty
+        ? cashCurrency
+        : line.currencyCode.trim().toUpperCase();
+    final lineRate = lineCurrency == baseCurrency || baseCurrency.isEmpty
+        ? 1.0
+        : (line.exchangeRate > 0 &&
+                !line.exchangeRate.isNaN &&
+                !line.exchangeRate.isInfinite
+            ? line.exchangeRate
+            : cashRate);
     lines.add(
       FinancialTransactionLine(
         accountId: accountId,
         accountCode: line.accountCode?.trim(),
         accountName: line.accountName?.trim(),
         amount: RpMoney.round(line.amount),
-        currencyCode: line.currencyCode.trim().isEmpty
-            ? cashCurrency
-            : line.currencyCode.trim().toUpperCase(),
-        exchangeRate: line.exchangeRate <= 0 ? cashRate : line.exchangeRate,
+        currencyCode: lineCurrency,
+        exchangeRate: lineRate,
         description: line.description?.trim(),
         lineOrder: i,
       ),
@@ -205,13 +267,12 @@ FinancialTransactionDraft normalizeFinancialTransactionDraft(
     transactionDate: draft.transactionDate,
     amount: RpMoney.round(draft.amount),
     currencyCode: cashCurrency,
-    baseCurrencyCode: draft.baseCurrencyCode.trim().toUpperCase(),
+    baseCurrencyCode: baseCurrency,
     exchangeRate: cashRate,
     counterAmount: rollupAmount,
     counterCurrencyCode:
         (first?.currencyCode ?? draft.counterCurrencyCode).trim().toUpperCase(),
-    counterExchangeRate: first?.exchangeRate ??
-        (draft.counterExchangeRate <= 0 ? cashRate : draft.counterExchangeRate),
+    counterExchangeRate: first?.exchangeRate ?? cashRate,
     voucherBookId: draft.voucherBookId,
     cashAccountId: draft.cashAccountId.trim(),
     cashAccountCode: draft.cashAccountCode?.trim(),

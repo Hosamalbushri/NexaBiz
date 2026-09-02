@@ -11,7 +11,7 @@ import '../domain/repositories/app_lock_repository.dart';
 
 /// Hive-backed App Lock store. Persists only salt + PIN hash (never raw PIN).
 class AppLockRepositoryImpl implements AppLockRepository {
-  AppLockRepositoryImpl({Box<dynamic>? box}) : _box = box;
+  AppLockRepositoryImpl({this._box});
 
   Box<dynamic>? _box;
 

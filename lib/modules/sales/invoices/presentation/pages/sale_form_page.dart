@@ -12,6 +12,7 @@ import 'package:stock_count/core/widgets/app_amount_field.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
+import '../../domain/entities/sale_item.dart';
 import '../../domain/entities/sale_settlement_type.dart';
 import '../../domain/services/device_sale_number.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_currency_port.dart';
@@ -129,6 +130,9 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
             _customerNameController.text = sale.customerName ?? '';
             if (sale.cashAccountId != null) {
               final cash = await treasury.findById(sale.cashAccountId!);
+              if (!mounted) {
+                return;
+              }
               if (cash != null) {
                 composer.setCashAccount(cash);
               }
@@ -137,6 +141,9 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
               final book = await ref
                   .read(saleVoucherBookPortProvider)
                   .findById(sale.voucherBookId!);
+              if (!mounted) {
+                return;
+              }
               if (book != null) {
                 composer.setVoucherBook(book);
               } else if (books.isNotEmpty) {
@@ -199,7 +206,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
-    if (picked != null) {
+    if (picked != null && mounted) {
       ref.read(saleComposerProvider.notifier).setSaleDate(picked);
       setState(() => _dirty = true);
     }
@@ -284,6 +291,8 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
       );
       return;
     }
+    final composer = ref.read(saleComposerProvider.notifier);
+    final draft = composer.buildDraft();
     final state = ref.read(saleComposerProvider);
     final loading = ref.read(loadingControllerProvider);
 
@@ -292,7 +301,6 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
       message: l10n.salesSaving,
       action: () async {
         try {
-          final draft = ref.read(saleComposerProvider.notifier).buildDraft();
           var sale = state.editingSaleId != null
               ? await ref
                     .read(updateSaleUseCaseProvider)
@@ -350,10 +358,8 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(saleComposerProvider);
     final l10n = AppLocalizations.of(context);
-    // Keep composer alive while the global loader is showing; otherwise
-    // autoDispose resets voucher book / preview invoice number set during load.
-    final state = ref.watch(saleComposerProvider);
     final composer = ref.read(saleComposerProvider.notifier);
 
     if (_loading) {
@@ -369,18 +375,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
       );
     }
 
-    final summary = composer.summary;
-
-    final summaryCard = SaleStickySummary(
-      summary: summary,
-      currencyCode: state.currencyCode,
-      canSave: composer.canSave,
-      onSave: () => _save(),
-      onSaveAndConfirm: () => _save(confirmAfter: true),
-    );
-
     final header = _InvoiceHeaderCard(
-      state: state,
       customerNameController: _customerNameController,
       onPickDate: _pickDate,
       onCustomerSelected: _onCustomerSelected,
@@ -396,7 +391,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
         final l10n = AppLocalizations.of(context);
         try {
           final book = await showSaleVoucherBookSelector(context);
-          if (book != null) {
+          if (book != null && mounted) {
             composer.setVoucherBook(book);
             setState(() => _dirty = true);
           }
@@ -415,7 +410,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
         final l10n = AppLocalizations.of(context);
         try {
           final account = await showSaleCashAccountSelector(context);
-          if (account != null) {
+          if (account != null && mounted) {
             composer.setCashAccount(account);
             setState(() => _dirty = true);
           }
@@ -435,16 +430,16 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
         setState(() => _dirty = true);
       },
       onDiscountChanged: (value) {
+        final discountType = ref.read(saleComposerProvider).discountType;
         composer.setDiscount(
-          type: state.discountType,
+          type: discountType,
           value: value,
         );
         setState(() => _dirty = true);
       },
     );
 
-    final products = SaleProductsTable(
-      items: state.items,
+    final products = _SaleProductsSection(
       onProductSelected: _onProductSelected,
       onScan: _scanProduct,
       onQuantitiesChanged: (i, main, sub) {
@@ -474,6 +469,11 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
       },
     );
 
+    final summaryCard = _SaleStickySummarySection(
+      onSave: () => _save(),
+      onSaveAndConfirm: () => _save(confirmAfter: true),
+    );
+
     final body = ListView(
       padding: AppConstants.pageInsets(context),
       children: [
@@ -495,6 +495,73 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
         ),
       ],
       body: body,
+    );
+  }
+}
+
+class _SaleProductsSection extends ConsumerWidget {
+  const _SaleProductsSection({
+    required this.onProductSelected,
+    required this.onScan,
+    required this.onQuantitiesChanged,
+    required this.onUnitPriceChanged,
+    required this.minUnitPriceOf,
+    required this.onUnitPriceBelowMin,
+    required this.onRemove,
+  });
+
+  final ValueChanged<SaleProductRef> onProductSelected;
+  final VoidCallback onScan;
+  final void Function(int index, double mainQuantity, double subQuantity)
+      onQuantitiesChanged;
+  final bool Function(int index, double unitPrice) onUnitPriceChanged;
+  final double Function(SaleItemDraft item) minUnitPriceOf;
+  final VoidCallback onUnitPriceBelowMin;
+  final ValueChanged<int> onRemove;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = ref.watch(saleComposerProvider.select((s) => s.items));
+    return SaleProductsTable(
+      items: items,
+      onProductSelected: onProductSelected,
+      onScan: onScan,
+      onQuantitiesChanged: onQuantitiesChanged,
+      onUnitPriceChanged: onUnitPriceChanged,
+      minUnitPriceOf: minUnitPriceOf,
+      onUnitPriceBelowMin: onUnitPriceBelowMin,
+      onRemove: onRemove,
+    );
+  }
+}
+
+class _SaleStickySummarySection extends ConsumerWidget {
+  const _SaleStickySummarySection({
+    required this.onSave,
+    this.onSaveAndConfirm,
+  });
+
+  final VoidCallback onSave;
+  final VoidCallback? onSaveAndConfirm;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final summary = ref.watch(
+      saleComposerProvider.select((s) => s.calculateSummary()),
+    );
+    final currencyCode = ref.watch(
+      saleComposerProvider.select((s) => s.currencyCode),
+    );
+    final canSave = ref.watch(
+      saleComposerProvider.select((s) => s.canSave),
+    );
+
+    return SaleStickySummary(
+      summary: summary,
+      currencyCode: currencyCode,
+      canSave: canSave,
+      onSave: onSave,
+      onSaveAndConfirm: onSaveAndConfirm,
     );
   }
 }
@@ -669,26 +736,24 @@ class _InvoiceMetaChip extends StatelessWidget {
   }
 }
 
-class _CustomerPartyCard extends StatefulWidget {
+class _CustomerPartyCard extends ConsumerStatefulWidget {
   const _CustomerPartyCard({
-    required this.state,
     required this.customerNameController,
     required this.onCustomerSelected,
     required this.onClearCustomer,
     required this.onWalkInCustomerNameChanged,
   });
 
-  final SaleComposerState state;
   final TextEditingController customerNameController;
   final ValueChanged<SaleCustomerRef> onCustomerSelected;
   final VoidCallback onClearCustomer;
   final ValueChanged<String> onWalkInCustomerNameChanged;
 
   @override
-  State<_CustomerPartyCard> createState() => _CustomerPartyCardState();
+  ConsumerState<_CustomerPartyCard> createState() => _CustomerPartyCardState();
 }
 
-class _CustomerPartyCardState extends State<_CustomerPartyCard> {
+class _CustomerPartyCardState extends ConsumerState<_CustomerPartyCard> {
   var _searching = false;
 
   void _openSearch() => setState(() => _searching = true);
@@ -710,8 +775,8 @@ class _CustomerPartyCardState extends State<_CustomerPartyCard> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final state = widget.state;
-    final customer = state.customer;
+    final customer = ref.watch(saleComposerProvider.select((s) => s.customer));
+    final isCash = ref.watch(saleComposerProvider.select((s) => s.isCash));
     final phone = customer?.phone?.trim();
     final hasPhone = phone != null && phone.isNotEmpty;
     final hasValue = customer != null ||
@@ -730,16 +795,16 @@ class _CustomerPartyCardState extends State<_CustomerPartyCard> {
         ),
         child: _searching
             ? SaleCustomerSearchField(
-                key: ValueKey('customer-search-${state.isCash}'),
+                key: ValueKey('customer-search-$isCash'),
                 autofocus: true,
                 initialQuery:
-                    state.isCash ? widget.customerNameController.text : '',
-                hintText: state.isCash
+                    isCash ? widget.customerNameController.text : '',
+                hintText: isCash
                     ? l10n.salesCashCustomerHint
                     : l10n.salesSearchCustomerHint,
                 onCustomerSelected: _onSelected,
                 onCancel: _closeSearch,
-                onQueryChanged: state.isCash
+                onQueryChanged: isCash
                     ? (value) {
                         widget.customerNameController.text = value;
                         widget.onWalkInCustomerNameChanged(value);
@@ -764,7 +829,7 @@ class _CustomerPartyCardState extends State<_CustomerPartyCard> {
                   ),
                   const SizedBox(width: AppSpacing.sm + 2),
                   Expanded(
-                    child: state.isCash
+                    child: isCash
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -888,9 +953,8 @@ class _CustomerPartyCardState extends State<_CustomerPartyCard> {
   }
 }
 
-class _InvoiceHeaderCard extends StatelessWidget {
+class _InvoiceHeaderCard extends ConsumerWidget {
   const _InvoiceHeaderCard({
-    required this.state,
     required this.customerNameController,
     required this.onPickDate,
     required this.onCustomerSelected,
@@ -905,7 +969,6 @@ class _InvoiceHeaderCard extends StatelessWidget {
     required this.onDiscountChanged,
   });
 
-  final SaleComposerState state;
   final TextEditingController customerNameController;
   final VoidCallback onPickDate;
   final ValueChanged<SaleCustomerRef> onCustomerSelected;
@@ -920,13 +983,39 @@ class _InvoiceHeaderCard extends StatelessWidget {
   final ValueChanged<double> onDiscountChanged;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final dateLabel = DateFormat('d/M/yyyy').format(state.saleDate);
-    final numberRaw =
-        state.previewSaleNumber ?? state.voucherBook?.previewNumber ?? '—';
+    final saleDate = ref.watch(saleComposerProvider.select((s) => s.saleDate));
+    final dateLabel = DateFormat('d/M/yyyy').format(saleDate);
+    final numberRaw = ref.watch(
+      saleComposerProvider.select(
+        (s) => s.previewSaleNumber ?? s.voucherBook?.previewNumber ?? '—',
+      ),
+    );
     final numberView = saleNumberView(numberRaw);
+
+    final settlementType = ref.watch(
+      saleComposerProvider.select((s) => s.settlementType),
+    );
+    final showCustomerAccountError = ref.watch(
+      saleComposerProvider.select(
+        (s) => s.isCredit && s.customer != null && !s.customer!.hasAccount,
+      ),
+    );
+    final isCash = ref.watch(saleComposerProvider.select((s) => s.isCash));
+    final cashAccount = ref.watch(
+      saleComposerProvider.select((s) => s.cashAccount),
+    );
+    final voucherBookName = ref.watch(
+      saleComposerProvider.select((s) => s.voucherBook?.name),
+    );
+    final currencyCode = ref.watch(
+      saleComposerProvider.select((s) => s.currencyCode),
+    );
+    final discountValue = ref.watch(
+      saleComposerProvider.select((s) => s.discountValue),
+    );
 
     return Material(
       color: theme.colorScheme.surface,
@@ -952,20 +1041,17 @@ class _InvoiceHeaderCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             SaleSettlementTypeSelector(
-              value: state.settlementType,
+              value: settlementType,
               onChanged: onSettlementChanged,
             ),
             const SizedBox(height: AppSpacing.md),
             _CustomerPartyCard(
-              state: state,
               customerNameController: customerNameController,
               onCustomerSelected: onCustomerSelected,
               onClearCustomer: onClearCustomer,
               onWalkInCustomerNameChanged: onWalkInCustomerNameChanged,
             ),
-            if (state.isCredit &&
-                state.customer != null &&
-                !state.customer!.hasAccount)
+            if (showCustomerAccountError)
               Padding(
                 padding: const EdgeInsets.only(top: AppSpacing.sm),
                 child: Text(
@@ -975,7 +1061,7 @@ class _InvoiceHeaderCard extends StatelessWidget {
                   ),
                 ),
               ),
-            if (state.isCash) ...[
+            if (isCash) ...[
               const SizedBox(height: AppSpacing.sm),
               Material(
                 color: theme.colorScheme.surfaceContainerHighest.withValues(
@@ -995,7 +1081,7 @@ class _InvoiceHeaderCard extends StatelessWidget {
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
-                          child: state.cashAccount == null
+                          child: cashAccount == null
                               ? Text(
                                   l10n.salesSelectCashAccount,
                                   style: theme.textTheme.bodyLarge?.copyWith(
@@ -1016,7 +1102,7 @@ class _InvoiceHeaderCard extends StatelessWidget {
                                     Text(
                                       SaleAccountLabels.displayName(
                                         l10n,
-                                        state.cashAccount!,
+                                        cashAccount,
                                       ),
                                       style: theme.textTheme.titleSmall
                                           ?.copyWith(
@@ -1043,7 +1129,7 @@ class _InvoiceHeaderCard extends StatelessWidget {
                   child: _InvoiceOptionCard(
                     icon: Icons.menu_book_outlined,
                     label: l10n.salesVoucherBook,
-                    value: state.voucherBook?.name,
+                    value: voucherBookName,
                     placeholder: l10n.salesSelectVoucherBook,
                     onTap: canSelectVoucherBook ? onPickBook : null,
                   ),
@@ -1053,7 +1139,7 @@ class _InvoiceHeaderCard extends StatelessWidget {
                   child: _InvoiceOptionCard(
                     icon: Icons.payments_outlined,
                     label: l10n.salesCurrency,
-                    value: state.currencyCode,
+                    value: currencyCode,
                     placeholder: l10n.salesCurrency,
                     onTap: () async {
                       if (currencies.isEmpty) {
@@ -1081,10 +1167,10 @@ class _InvoiceHeaderCard extends StatelessWidget {
                                 for (final c in currencies)
                                   ListTile(
                                     leading: Icon(
-                                      c.code == state.currencyCode
+                                      c.code == currencyCode
                                           ? Icons.check_circle
                                           : Icons.circle_outlined,
-                                      color: c.code == state.currencyCode
+                                      color: c.code == currencyCode
                                           ? theme.colorScheme.primary
                                           : theme.colorScheme.onSurfaceVariant,
                                     ),
@@ -1150,7 +1236,7 @@ class _InvoiceHeaderCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           AppAmountField(
-                            value: state.discountValue,
+                            value: discountValue,
                             onChanged: onDiscountChanged,
                             decimalPlaces: 2,
                             emptyWhenZero: false,
@@ -1178,7 +1264,7 @@ class _InvoiceHeaderCard extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        state.currencyCode,
+                        currencyCode,
                         style: theme.textTheme.labelLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: theme.colorScheme.onSurfaceVariant,

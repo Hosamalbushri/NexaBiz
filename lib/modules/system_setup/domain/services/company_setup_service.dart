@@ -16,10 +16,9 @@ class CompanySetupException implements Exception {
 /// Enforces authentication, authorization, company context isolation, and duplicate protection.
 class CompanySetupService {
   CompanySetupService({
-    required SettingsRepository settingsRepository,
-    required CompanyInitializationRepository initRepository,
-  })  : _settingsRepository = settingsRepository,
-        _initRepository = initRepository;
+    required this._settingsRepository,
+    required this._initRepository,
+  });
 
   final SettingsRepository _settingsRepository;
   final CompanyInitializationRepository _initRepository;

@@ -15,17 +15,15 @@ import '../time/domain/trusted_clock.dart';
 /// Pull cursors are persisted via [SyncCursorStore] so restarts resume cleanly.
 class HttpRemoteSyncApi implements RemoteSyncApi {
   HttpRemoteSyncApi({
-    required SyncApiConfig config,
+    required this._config,
     AuthenticatedHttpClient? authenticatedClient,
     http.Client? client,
     SyncCursorStore? cursorStore,
-    TrustedClock? clock,
-  }) : _config = config,
-       _authClient = authenticatedClient,
+    this._clock,
+  }) : _authClient = authenticatedClient,
        _client = client ?? http.Client(),
        _ownsClient = authenticatedClient == null && client == null,
-       _cursors = cursorStore ?? SyncCursorStore(),
-       _clock = clock;
+       _cursors = cursorStore ?? SyncCursorStore();
 
   final TrustedClock? _clock;
 

@@ -161,7 +161,7 @@ class _StockTransferFormPageState extends ConsumerState<StockTransferFormPage> {
                       );
                     },
                     loading: () => const CircularProgressIndicator(),
-                    error: (_, __) => Text(l10n.localeName == 'ar' ? 'خطأ في تحميل المستودعات' : 'Error loading warehouses'),
+                    error: (_, _) => Text(l10n.localeName == 'ar' ? 'خطأ في تحميل المستودعات' : 'Error loading warehouses'),
                   ),
                 ],
               ),

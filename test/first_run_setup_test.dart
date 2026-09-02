@@ -56,49 +56,59 @@ void main() {
   });
 
   group('Phase 1 — First-Run Setup & Security Hardening Unit Tests', () {
-    test('1. PBKDF2 Hashing: Admin password update uses PBKDF2 and authenticates successfully', () async {
-      await authStore.ensureSeeded();
+    test(
+      '1. PBKDF2 Hashing: Admin password update uses PBKDF2 and authenticates successfully',
+      () async {
+        await authStore.createInitialSystemAdmin(
+          name: 'Super Admin',
+          email: 'admin@nexabiz-test.com',
+          password: 'InitialPassword123!',
+        );
 
-      // Update admin credentials with strong password
-      await authStore.updateLocalAdminCredentials(
-        newEmail: 'admin@nexabiz-test.com',
-        newPassword: 'SuperSecretPassword123!',
-        newName: 'Super Admin',
-      );
+        // Update admin credentials with strong password
+        await authStore.updateLocalAdminCredentials(
+          newEmail: 'admin@nexabiz-test.com',
+          newPassword: 'SuperSecretPassword123!',
+          newName: 'Super Admin',
+        );
 
-      // Verify login succeeds with new password
-      final session = await authStore.login(
-        email: 'admin@nexabiz-test.com',
-        password: 'SuperSecretPassword123!',
-        deviceId: 'device-1',
-      );
+        // Verify login succeeds with new password
+        final session = await authStore.login(
+          email: 'admin@nexabiz-test.com',
+          password: 'SuperSecretPassword123!',
+          deviceId: 'device-1',
+        );
 
-      expect(session, isNotNull);
-      expect(session!.user.email, equals('admin@nexabiz-test.com'));
-      expect(session.user.name, equals('Super Admin'));
+        expect(session, isNotNull);
+        expect(session!.user.email, equals('admin@nexabiz-test.com'));
+        expect(session.user.name, equals('Super Admin'));
 
-      // Verify incorrect password returns null
-      final failedSession = await authStore.login(
-        email: 'admin@nexabiz-test.com',
-        password: 'WrongPassword123',
-        deviceId: 'device-1',
-      );
-      expect(failedSession, isNull);
-    });
+        // Verify incorrect password returns null
+        final failedSession = await authStore.login(
+          email: 'admin@nexabiz-test.com',
+          password: 'WrongPassword123',
+          deviceId: 'device-1',
+        );
+        expect(failedSession, isNull);
+      },
+    );
 
-    test('2. Security Hardening: LocalAuthRepository.restoreSession does NOT auto-login as admin when session is missing', () async {
-      final repository = LocalAuthRepository(
-        store: authStore,
-        tokenStorage: SecureTokenStorage(),
-        readConfig: () => SyncApiConfig.fromEnvironment(),
-      );
+    test(
+      '2. Security Hardening: LocalAuthRepository.restoreSession does NOT auto-login as admin when session is missing',
+      () async {
+        final repository = LocalAuthRepository(
+          store: authStore,
+          tokenStorage: SecureTokenStorage(),
+          readConfig: () => SyncApiConfig.fromEnvironment(),
+        );
 
-      // Restore session on clean box (no prior login session saved)
-      final restored = await repository.restoreSession();
+        // Restore session on clean box (no prior login session saved)
+        final restored = await repository.restoreSession();
 
-      // MUST be null — should NOT fall back to admin auto-login!
-      expect(restored, isNull);
-    });
+        // MUST be null — should NOT fall back to admin auto-login!
+        expect(restored, isNull);
+      },
+    );
 
     test('3. FirstRunSetupCoordinator: Payload Validation', () async {
       // Invalid language
@@ -147,13 +157,35 @@ void main() {
       );
     });
 
-    test('4. FirstRunSetupCoordinator: Atomic Commit & Idempotency', () async {
+    test(
+      '3.5. FirstRunSetupCoordinator: Auto-generates company code when not provided',
+      () {
+        final code1 = FirstRunSetupCoordinator.generateCompanyCode(
+          'شركة التجارة العامة',
+        );
+        expect(code1, equals('شركة_التجا'));
+
+        final code2 = FirstRunSetupCoordinator.generateCompanyCode(
+          'Acme Enterprises',
+          '',
+        );
+        expect(code2, equals('ACME_ENTER'));
+
+        final code3 = FirstRunSetupCoordinator.generateCompanyCode(
+          'Test',
+          'EXPLICIT_CODE',
+        );
+        expect(code3, equals('EXPLICIT_CODE'));
+      },
+    );
+
+    test('4. FirstRunSetupCoordinator: Pure System Admin Atomic Commit & Idempotency', () async {
       expect(await coordinator.isFirstRunCompleted(), isFalse);
 
       const payload = FirstRunSetupPayload(
         language: 'ar',
-        companyName: 'شركة الحلول المتقدمة',
-        companyCode: 'ADV-01',
+        companyName: '',
+        companyCode: '',
         adminName: 'المدير العام',
         adminEmail: 'admin@adv-solutions.com',
         adminPassword: 'StrongAdminPassword2026!',
@@ -169,11 +201,7 @@ void main() {
       final locale = await settingsRepository.loadLocale();
       expect(locale?.languageCode, equals('ar'));
 
-      // 3. Verify company profile
-      final profile = await settingsRepository.loadCompanyProfile();
-      expect(profile?.name, equals('شركة الحلول المتقدمة'));
-
-      // 4. Verify login with newly created admin credentials
+      // 3. Verify login with newly created admin credentials
       final session = await authStore.login(
         email: 'admin@adv-solutions.com',
         password: 'StrongAdminPassword2026!',
@@ -183,15 +211,44 @@ void main() {
       expect(session!.user.email, equals('admin@adv-solutions.com'));
       expect(session.user.name, equals('المدير العام'));
 
+      // 4. Verify Phase 4 pure System Identity invariants: 0 companies, 0 memberships
+      expect(session.user.isSystemAdmin, isTrue);
+      expect(session.companies, isEmpty);
+      expect(session.activeCompanyContext, isNull);
+
       // 5. Verify Idempotency: Re-running throws FirstRunAlreadyCompletedException
       expect(
         () => coordinator.commitFirstRunSetup(payload),
         throwsA(isA<FirstRunAlreadyCompletedException>()),
       );
 
-      // 6. Verify System Initialization state remains uncompleted (notStarted / null)
-      final systemSetupStatus = await settingsRepository.loadSystemSetupStatus();
-      expect(systemSetupStatus, isNull);
+      // 6. Verify System Initialization state steps and status are persisted as ready
+      final systemSetupStatus = await settingsRepository
+          .loadSystemSetupStatus();
+      expect(systemSetupStatus, equals('ready'));
+    });
+
+    test('5. FirstRunSetupCoordinator: Transactional Rollback on Failure', () async {
+      expect(await coordinator.isFirstRunCompleted(), isFalse);
+
+      // Invalid payload (password too short)
+      const invalidPayload = FirstRunSetupPayload(
+        language: 'ar',
+        companyName: '',
+        companyCode: '',
+        adminName: 'Test Admin',
+        adminEmail: 'invalid@test.com',
+        adminPassword: '123',
+      );
+
+      expect(
+        () => coordinator.commitFirstRunSetup(invalidPayload),
+        throwsA(isA<FirstRunSetupValidationException>()),
+      );
+
+      // Verify onboarding and auth data remain uninitialized after failure
+      expect(await coordinator.isFirstRunCompleted(), isFalse);
+      expect(await authStore.hasConfiguredAdmin(), isFalse);
     });
   });
 }

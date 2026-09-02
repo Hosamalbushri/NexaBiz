@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
+import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/core/errors/journal_exception.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
@@ -9,16 +9,18 @@ import '../../domain/repositories/category_repository.dart';
 class CategoryRepositoryImpl implements CategoryRepository {
   CategoryRepositoryImpl(
     this._db, {
-    String Function()? readCompanyId,
-  }) : _readCompanyId = readCompanyId;
+    this._readCompanyId,
+  });
 
   final InventoryDatabase _db;
   final String Function()? _readCompanyId;
 
   String get _currentCompanyId {
-    final cid = _readCompanyId?.call();
-    if (cid == null || cid.trim().isEmpty) {
-      return LocalAuthDefaults.companyId;
+    final cid = _readCompanyId?.call().trim();
+    if (cid == null || cid.isEmpty) {
+      throw MissingCompanyContextException(
+        'CategoryRepository operation failed: missing company context.',
+      );
     }
     return cid;
   }

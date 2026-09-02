@@ -25,26 +25,17 @@ import 'package:stock_count/modules/system_setup/domain/services/initialization_
 
 class PostingCoordinatorImpl implements PostingCoordinator {
   PostingCoordinatorImpl({
-    required InventoryDatabase db,
-    required StockValidationService stockValidationService,
-    required InventoryDependencyDetector dependencyDetector,
-    required PostingEngine postingEngine,
-    PeriodValidatorPort? periodValidator,
-    required InventoryAccountingPoster accountingPoster,
-    required PermissionGuard permissionGuard,
-    String Function()? readCompanyId,
-    SyncQueue? syncQueue,
-    InitializationGuard? initializationGuard,
-  })  : _db = db,
-        _stockValidationService = stockValidationService,
-        _dependencyDetector = dependencyDetector,
-        _postingEngine = postingEngine,
-        _periodValidator = periodValidator,
-        _accountingPoster = accountingPoster,
-        _permissionGuard = permissionGuard,
-        _readCompanyId = readCompanyId,
-        _syncQueue = syncQueue,
-        _initializationGuard = initializationGuard;
+    required this._db,
+    required this._stockValidationService,
+    required this._dependencyDetector,
+    required this._postingEngine,
+    this._periodValidator,
+    required this._accountingPoster,
+    required this._permissionGuard,
+    this._readCompanyId,
+    this._syncQueue,
+    this._initializationGuard,
+  });
 
   final InventoryDatabase _db;
   final StockValidationService _stockValidationService;
@@ -155,7 +146,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
           // 1.5. Validate Accounting Period before performing any inventory cost/stock mutations
           if (_periodValidator != null) {
             try {
-              await _periodValidator!.assertEntryAllowed(document.documentDate);
+              await _periodValidator.assertEntryAllowed(document.documentDate);
             } on JournalException catch (e) {
               await _recordAudit(
                 documentId: document.documentId,
@@ -366,7 +357,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
 
           // 8. Enqueue Outbox Sync Operation
           if (_syncQueue != null) {
-            await _syncQueue!.enqueue(
+            await _syncQueue.enqueue(
               SyncOperation.create(
                 entityType: _getSyncEntityType(document.documentType),
                 entityId: document.documentId,
@@ -492,7 +483,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
         // 1.5. Validate Accounting Period before performing unpost reversal
         if (_periodValidator != null) {
           try {
-            await _periodValidator!.assertEntryAllowed(document.documentDate);
+            await _periodValidator.assertEntryAllowed(document.documentDate);
           } on JournalException catch (e) {
             await _recordAudit(
               documentId: document.documentId,
@@ -541,14 +532,14 @@ class PostingCoordinatorImpl implements PostingCoordinator {
           notes: reason,
           metadata: {
             'reason': reason,
-            'before': {'status': currentDbStatus ?? 'posted'},
+            'before': {'status': currentDbStatus},
             'after': {'status': 'draft'},
           },
         );
 
         // 6. Enqueue Outbox Reversal Sync Operation
         if (_syncQueue != null) {
-          await _syncQueue!.enqueue(
+          await _syncQueue.enqueue(
             SyncOperation.create(
               entityType: 'inventory_reversal',
               entityId: document.documentId,
@@ -754,7 +745,7 @@ class PostingCoordinatorImpl implements PostingCoordinator {
         );
 
     if (_syncQueue != null) {
-      await _syncQueue!.enqueue(
+      await _syncQueue.enqueue(
         SyncOperation.create(
           entityType: 'audit_event',
           entityId: eventUuid,

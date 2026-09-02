@@ -218,7 +218,7 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
         'X-Company-Id': companyId,
-        if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey,
+        'Idempotency-Key': ?idempotencyKey,
       },
       body: jsonEncode({
         'plan_id': planId,

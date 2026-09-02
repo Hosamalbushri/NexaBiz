@@ -10,15 +10,16 @@ import '../../core/logging/app_error_log.dart';
 import '../../core/network/sync_api_config.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import '../../core/tenancy/tenant_context.dart';
-import 'package:stock_count/modules/accounting/shared/data/sync/accounting_sync_bootstrap.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import '../../modules/app_lock/presentation/providers/app_lock_providers.dart';
 import '../../modules/authentication/presentation/providers/auth_providers.dart';
-import 'package:stock_count/modules/customers/shared/data/sync/customers_sync_bootstrap.dart';
 import 'package:stock_count/modules/customers/directory/presentation/providers/customer_providers.dart';
-import 'package:stock_count/modules/inventory/shared/data/sync/inventory_sync_bootstrap.dart';
-import 'package:stock_count/modules/receipts_payments/shared/data/sync/receipts_payments_sync_bootstrap.dart';
-import 'package:stock_count/modules/sales/shared/data/sync/sales_sync_bootstrap.dart';
+import '../settings/company/company_profile_sync_registrar.dart';
+import 'package:stock_count/modules/inventory/shared/data/sync/inventory_sync_registrar.dart';
+import 'package:stock_count/modules/accounting/shared/data/sync/accounting_sync_registrar.dart';
+import 'package:stock_count/modules/customers/shared/data/sync/customers_sync_registrar.dart';
+import 'package:stock_count/modules/sales/shared/data/sync/sales_sync_registrar.dart';
+import 'package:stock_count/modules/receipts_payments/shared/data/sync/receipts_payments_sync_registrar.dart';
 import '../customers/customer_remote_account_ensure.dart';
 import '../notifications/data/notification_hive.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
@@ -93,22 +94,39 @@ class AppBootstrap {
     }
   }
 
+  /// Default registrars instance for ERP sync registration.
+  static const defaultCoordinator = SyncRegistryCoordinator(
+    registrars: [
+      CompanyProfileSyncRegistrar(),
+      InventorySyncRegistrar(),
+      AccountingSyncRegistrar(),
+      SalesSyncRegistrar(),
+      ReceiptsPaymentsSyncRegistrar(),
+    ],
+  );
+
   /// Stage F: Synchronization Wiring & Scheduler
   static Future<void> bootstrapSync(dynamic ref) async {
-    registerCompanyProfileSyncHandlers(ref);
-    registerInventorySyncHandlers(ref);
-    registerAccountingSyncHandlers(ref);
     final customerAccountEnsure = CustomerRemoteAccountEnsure(
       accounts: ref.read(accountRepositoryImplProvider),
       accountLink: ref.read(customerAccountLinkPortProvider),
       settings: ref.read(settingsRepositoryProvider),
     );
-    registerCustomersSyncHandlers(
-      ref,
-      ensureLinkedAccount: customerAccountEnsure.ensureFromCustomerPayload,
+
+    final coordinator = SyncRegistryCoordinator(
+      registrars: [
+        const CompanyProfileSyncRegistrar(),
+        const InventorySyncRegistrar(),
+        const AccountingSyncRegistrar(),
+        CustomersSyncRegistrar(
+          ensureLinkedAccount: customerAccountEnsure.ensureFromCustomerPayload,
+        ),
+        const SalesSyncRegistrar(),
+        const ReceiptsPaymentsSyncRegistrar(),
+      ],
     );
-    registerSalesSyncHandlers(ref);
-    registerReceiptsPaymentsSyncHandlers(ref);
+
+    coordinator.synchronizeRegistration(ref);
 
     final currentCompanyId = ref.read(currentCompanyIdProvider);
     final cloudState = await SettingsRepository().loadCompanyCloudState(currentCompanyId);

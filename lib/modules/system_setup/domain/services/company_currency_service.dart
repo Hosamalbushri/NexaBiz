@@ -15,10 +15,9 @@ class CompanyCurrencyException implements Exception {
 /// independent document currency conversions, and transaction immutability checks.
 class CompanyCurrencyService {
   CompanyCurrencyService({
-    required CompanyInitializationRepository initRepository,
-    Future<bool> Function(String companyId)? transactionChecker,
-  })  : _initRepository = initRepository,
-        _transactionChecker = transactionChecker;
+    required this._initRepository,
+    this._transactionChecker,
+  });
 
   final CompanyInitializationRepository _initRepository;
   final Future<bool> Function(String companyId)? _transactionChecker;

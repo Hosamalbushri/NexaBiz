@@ -62,7 +62,7 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: widget.items.length,
-            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.xs),
+            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.xs),
             itemBuilder: (context, index) {
               final item = widget.items[index];
               final isExpanded = _expandedIndices.contains(index);

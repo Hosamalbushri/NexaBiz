@@ -343,7 +343,7 @@ class _CloudProvisioningFlowDialogState
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: isSelected
-              ? colorScheme.primaryContainer.withOpacity(0.3)
+              ? colorScheme.primaryContainer.withValues(alpha: 0.3)
               : colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(

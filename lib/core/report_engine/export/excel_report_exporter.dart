@@ -44,16 +44,16 @@ class ExcelReportExporter {
     rowIndex++;
 
     sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
-      ..value = TextCellValue('الشركة: ${dataset.metadata.companyName}');
+      .value = TextCellValue('الشركة: ${dataset.metadata.companyName}');
     rowIndex++;
 
     sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
-      ..value = TextCellValue('تاريخ التوليد: ${DateFormat('yyyy/MM/dd HH:mm').format(dataset.metadata.generatedAt)}');
+      .value = TextCellValue('تاريخ التوليد: ${DateFormat('yyyy/MM/dd HH:mm').format(dataset.metadata.generatedAt)}');
     rowIndex++;
 
     if (dataset.metadata.activeFiltersSummary.isNotEmpty) {
       sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
-        ..value = TextCellValue('معايير التصفية: ${dataset.metadata.activeFiltersSummary}');
+        .value = TextCellValue('معايير التصفية: ${dataset.metadata.activeFiltersSummary}');
       rowIndex++;
     }
 

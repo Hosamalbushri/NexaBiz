@@ -26,9 +26,8 @@ final syncAutoPreferencesProvider =
 class SyncAutoPreferencesController
     extends StateNotifier<SyncAutoPreferences> {
   SyncAutoPreferencesController({
-    required SettingsRepository repository,
-  })  : _repository = repository,
-        super(SyncAutoPreferences.defaults);
+    required this._repository,
+  })  : super(SyncAutoPreferences.defaults);
 
   final SettingsRepository _repository;
 
@@ -87,16 +86,16 @@ final syncBackgroundSchedulerProvider = Provider<SyncBackgroundScheduler>((ref) 
     });
   }
 
-  ref.listen<SyncAutoPreferences>(syncAutoPreferencesProvider, (_, __) {
+  ref.listen<SyncAutoPreferences>(syncAutoPreferencesProvider, (_, _) {
     safeReconfigure();
   });
-  ref.listen<bool>(syncEnabledProvider, (_, __) {
+  ref.listen<bool>(syncEnabledProvider, (_, _) {
     safeReconfigure();
   });
-  ref.listen<AuthState>(authStateProvider, (_, __) {
+  ref.listen<AuthState>(authStateProvider, (_, _) {
     safeReconfigure();
   });
-  ref.listen(currentEntitlementProvider, (_, __) {
+  ref.listen(currentEntitlementProvider, (_, _) {
     safeReconfigure();
   });
   ref.onDispose(scheduler.dispose);
@@ -105,18 +104,13 @@ final syncBackgroundSchedulerProvider = Provider<SyncBackgroundScheduler>((ref) 
 
 class SyncBackgroundScheduler with WidgetsBindingObserver {
   SyncBackgroundScheduler({
-    required SyncManager syncManager,
-    required SyncQueue queue,
-    required ConnectivityService connectivity,
-    required SyncOsBackgroundBridge osBridge,
-    required SyncAutoPreferences Function() readPrefs,
-    required bool Function() canRun,
-  })  : _syncManager = syncManager,
-        _queue = queue,
-        _connectivity = connectivity,
-        _osBridge = osBridge,
-        _readPrefs = readPrefs,
-        _canRun = canRun;
+    required this._syncManager,
+    required this._queue,
+    required this._connectivity,
+    required this._osBridge,
+    required this._readPrefs,
+    required this._canRun,
+  });
 
   final SyncManager _syncManager;
   final SyncQueue _queue;

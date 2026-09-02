@@ -5,15 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_breakpoints.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_collection_view.dart';
 import 'package:stock_count/core/widgets/app_dialog.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/app_pagination_bar.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
+import 'package:stock_count/core/widgets/app_view_mode_toggle.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import '../../domain/entities/product.dart';
@@ -360,41 +361,45 @@ class _ProductsResultsState extends State<_ProductsResults> {
     return Column(
       children: [
         Expanded(
-          child: widget.viewMode == ProductsViewMode.grid
-              ? _ProductsGrid(
-                  products: widget.products,
-                  controller: _scrollController,
-                  onEdit: widget.onEdit,
-                  onDelete: widget.onDelete,
-                )
-              : ListView.builder(
-                  controller: _scrollController,
-                  physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics(),
-                  ),
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  itemCount: widget.products.length,
-                  itemBuilder: (context, index) {
-                    final product = widget.products[index];
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        bottom: index == widget.products.length - 1
-                            ? 0
-                            : AppSpacing.sm,
-                      ),
-                      child: _ProductListCard(
-                        key: ValueKey(product.id),
-                        product: product,
-                        onEdit: widget.onEdit == null
-                            ? null
-                            : () => widget.onEdit!(product),
-                        onDelete: widget.onDelete == null
-                            ? null
-                            : () => widget.onDelete!(product),
-                      ),
-                    );
-                  },
+          child: AppCollectionView<Product>(
+            scrollController: _scrollController,
+            items: widget.products,
+            viewMode: widget.viewMode == ProductsViewMode.grid
+                ? AppCollectionViewMode.grid
+                : AppCollectionViewMode.list,
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            itemBuilder: (context, product, index) {
+              if (widget.viewMode == ProductsViewMode.grid) {
+                return _ProductGridCard(
+                  key: ValueKey(product.id),
+                  product: product,
+                  onEdit: widget.onEdit == null
+                      ? null
+                      : () => widget.onEdit!(product),
+                  onDelete: widget.onDelete == null
+                      ? null
+                      : () => widget.onDelete!(product),
+                );
+              }
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: index == widget.products.length - 1
+                      ? 0
+                      : AppSpacing.sm,
                 ),
+                child: _ProductListCard(
+                  key: ValueKey(product.id),
+                  product: product,
+                  onEdit: widget.onEdit == null
+                      ? null
+                      : () => widget.onEdit!(product),
+                  onDelete: widget.onDelete == null
+                      ? null
+                      : () => widget.onDelete!(product),
+                ),
+              );
+            },
+          ),
         ),
         Padding(
           padding: const EdgeInsets.only(top: AppSpacing.xs),
@@ -447,7 +452,22 @@ class _ProductsToolbar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _ViewModeToggle(viewMode: viewMode, onChanged: onViewModeChanged),
+            AppViewModeToggle<ProductsViewMode>(
+              selected: viewMode,
+              options: [
+                AppViewModeOption(
+                  value: ProductsViewMode.list,
+                  icon: Icons.view_list_rounded,
+                  tooltip: l10n.productsViewList,
+                ),
+                AppViewModeOption(
+                  value: ProductsViewMode.grid,
+                  icon: Icons.grid_view_rounded,
+                  tooltip: l10n.productsViewGrid,
+                ),
+              ],
+              onChanged: onViewModeChanged,
+            ),
             const Spacer(),
             Tooltip(
               message: l10n.productsScanBarcode,
@@ -513,142 +533,6 @@ class _ProductsToolbar extends StatelessWidget {
   }
 }
 
-class _ViewModeToggle extends StatelessWidget {
-  const _ViewModeToggle({required this.viewMode, required this.onChanged});
-
-  final ProductsViewMode viewMode;
-  final ValueChanged<ProductsViewMode> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _ViewModeIconButton(
-            selected: viewMode == ProductsViewMode.list,
-            tooltip: l10n.productsViewList,
-            icon: Icons.view_list_rounded,
-            onTap: () => onChanged(ProductsViewMode.list),
-          ),
-          _ViewModeIconButton(
-            selected: viewMode == ProductsViewMode.grid,
-            tooltip: l10n.productsViewGrid,
-            icon: Icons.grid_view_rounded,
-            onTap: () => onChanged(ProductsViewMode.grid),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ViewModeIconButton extends StatelessWidget {
-  const _ViewModeIconButton({
-    required this.selected,
-    required this.tooltip,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final bool selected;
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: selected
-            ? colorScheme.primary.withValues(alpha: 0.14)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadius.sm - 2),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.sm - 2),
-          child: SizedBox(
-            width: 40,
-            height: 36,
-            child: Icon(
-              icon,
-              size: 20,
-              color: selected
-                  ? colorScheme.primary
-                  : colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ProductsGrid extends StatelessWidget {
-  const _ProductsGrid({
-    required this.products,
-    this.onEdit,
-    this.onDelete,
-    this.controller,
-  });
-
-  final List<Product> products;
-  final ValueChanged<Product>? onEdit;
-  final ValueChanged<Product>? onDelete;
-  final ScrollController? controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final crossAxisCount = AppBreakpoints.isDesktop(width)
-            ? 4
-            : AppBreakpoints.isTablet(width)
-            ? 3
-            : 2;
-        final aspectRatio = AppBreakpoints.isMobile(width) ? 0.78 : 0.9;
-
-        return GridView.builder(
-          controller: controller,
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-          itemCount: products.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: AppSpacing.sm,
-            mainAxisSpacing: AppSpacing.sm,
-            childAspectRatio: aspectRatio,
-          ),
-          itemBuilder: (context, index) {
-            final product = products[index];
-            return _ProductGridCard(
-              key: ValueKey(product.id),
-              product: product,
-              onEdit: onEdit == null ? null : () => onEdit!(product),
-              onDelete: onDelete == null ? null : () => onDelete!(product),
-            );
-          },
-        );
-      },
-    );
-  }
-}
 
 String _formatPrice(double price) {
   if (price == price.roundToDouble()) {

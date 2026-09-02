@@ -1,3 +1,4 @@
+import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/journal_exception.dart';
@@ -17,10 +18,9 @@ import 'package:stock_count/modules/sales/shared/domain/services/sale_ledger_pos
 /// - Discount (item + sale): Dr 5170 / extra Cr 4100 so revenue is gross
 class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
   AccountingSaleLedgerAdapter({
-    required JournalPostingService posting,
-    required AccountRepository accounts,
-  })  : _posting = posting,
-        _accounts = accounts;
+    required this._posting,
+    required this._accounts,
+  });
 
   final JournalPostingService _posting;
   final AccountRepository _accounts;
@@ -100,7 +100,11 @@ class AccountingSaleLedgerAdapter implements SaleLedgerPostingPort {
     final baseCurrency = sale.baseCurrencyCode.trim().toUpperCase().isEmpty
         ? currency
         : sale.baseCurrencyCode.trim().toUpperCase();
-    final rate = sale.exchangeRate <= 0 ? 1.0 : sale.exchangeRate;
+    final rate = ExchangeRateValidator.validate(
+      currencyCode: currency,
+      baseCurrencyCode: baseCurrency,
+      exchangeRate: sale.exchangeRate,
+    );
     final customerLabel = sale.customerName?.trim() ?? '';
     final isCredit = sale.settlementType == SaleSettlementType.credit;
     final voucherType = isCredit ? voucherTypeCreditSale : voucherTypeCashSale;

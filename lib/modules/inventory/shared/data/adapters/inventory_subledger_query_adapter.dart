@@ -4,8 +4,8 @@ import 'package:stock_count/modules/inventory/shared/data/database/inventory_dat
 
 class InventorySubledgerQueryAdapter implements InventorySubledgerQueryPort {
   InventorySubledgerQueryAdapter({
-    required InventoryDatabase inventoryDb,
-  }) : _inventoryDb = inventoryDb;
+    required this._inventoryDb,
+  });
 
   final InventoryDatabase _inventoryDb;
 

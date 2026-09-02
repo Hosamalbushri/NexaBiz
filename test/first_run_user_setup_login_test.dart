@@ -72,8 +72,6 @@ void main() {
     // 1. Commit First Run Setup
     const payload = FirstRunSetupPayload(
       language: 'ar',
-      companyName: 'شركة النجاح',
-      companyCode: 'SUCC-01',
       adminName: customName,
       adminEmail: customEmail,
       adminPassword: customPassword,
@@ -100,8 +98,8 @@ void main() {
     expect(session.user.email, customEmail);
     expect(session.user.name, customName);
     expect(session.user.isSuperAdmin, isTrue);
-    expect(session.roles, contains(LocalAuthDefaults.adminRole));
-    expect(session.permissions, containsAll(kAllLocalPermissions));
+    expect(session.user.isSystemAdmin, isTrue);
+    expect(session.roles, isEmpty);
 
     // 4. Case-insensitive email login
     final upperEmailSession = await localAuthRepo.login(
@@ -129,7 +127,7 @@ void main() {
     expect(
       () => localAuthRepo.login(
         email: customEmail,
-        password: LocalAuthDefaults.adminPassword,
+        password: 'UnconfiguredPassword123!',
         deviceId: '00000000-0000-4000-8000-000000000001',
         deviceName: 'local_device',
         platform: 'linux',

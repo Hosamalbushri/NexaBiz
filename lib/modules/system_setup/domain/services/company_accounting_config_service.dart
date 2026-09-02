@@ -23,10 +23,9 @@ class InvalidCompanyAccountException implements Exception {
 /// Service managing company-scoped accounting configuration and account validation.
 class CompanyAccountingConfigService {
   CompanyAccountingConfigService({
-    required SetupAccountLookupPort accountLookupPort,
-    required CompanyInitializationRepository initRepository,
-  })  : _accountLookupPort = accountLookupPort,
-        _initRepository = initRepository;
+    required this._accountLookupPort,
+    required this._initRepository,
+  });
 
   final SetupAccountLookupPort _accountLookupPort;
   final CompanyInitializationRepository _initRepository;

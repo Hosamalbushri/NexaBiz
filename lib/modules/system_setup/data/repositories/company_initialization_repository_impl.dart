@@ -14,16 +14,18 @@ import '../../domain/services/initialization_validator.dart';
 class CompanyInitializationRepositoryImpl
     implements CompanyInitializationRepository {
   CompanyInitializationRepositoryImpl({
-    Box<dynamic>? box,
-    String Function()? readCompanyId,
-  })  : _box = box,
-        _readCompanyId = readCompanyId;
+    this._box,
+    this._readCompanyId,
+  });
 
   Box<dynamic>? _box;
   final String Function()? _readCompanyId;
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call().trim();
+    if (id != null && id.isNotEmpty) return id;
+    return LocalAuthDefaults.companyId;
+  }
 
   Future<Box<dynamic>> get _initBox async {
     if (_box != null && _box!.isOpen) {
@@ -42,7 +44,12 @@ class CompanyInitializationRepositoryImpl
   Future<CompanyInitializationState> getState() async {
     final companyId = _currentCompanyId;
     final box = await _initBox;
-    final raw = box.get(_stateKey(companyId));
+    var raw = box.get(_stateKey(companyId));
+
+    // Fallback for primary company if scoped key not found in storage
+    if (raw == null && companyId == LocalAuthDefaults.companyId) {
+      raw = box.get('init_state_') ?? box.get('init_state_comp_main_01');
+    }
 
     if (raw is Map) {
       return CompanyInitializationState.fromJson(

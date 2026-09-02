@@ -44,10 +44,9 @@ class MigrationProgress {
 class InitialCloudSyncScanner {
   InitialCloudSyncScanner(
     this._ref, {
-    RemoteSyncApi Function()? remoteProvider,
-    List<InitialCloudEntityScanner>? scanners,
-  })  : _remoteProvider = remoteProvider,
-        _scanners = scanners;
+    this._remoteProvider,
+    this._scanners,
+  });
 
   final Ref _ref;
   final RemoteSyncApi Function()? _remoteProvider;

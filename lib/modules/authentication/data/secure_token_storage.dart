@@ -50,10 +50,16 @@ class SecureTokenStorage implements TokenStore {
   }
 
   Future<bool> _hiveFallbackExists() async {
-    return Hive.isBoxOpen(HiveBoxes.authTokenStoreEncrypted) ||
-        await Hive.boxExists(HiveBoxes.authTokenStoreEncrypted) ||
-        Hive.isBoxOpen(HiveBoxes.authTokenStore) ||
-        await Hive.boxExists(HiveBoxes.authTokenStore);
+    if (Hive.isBoxOpen(HiveBoxes.authTokenStoreEncrypted) ||
+        Hive.isBoxOpen(HiveBoxes.authTokenStore)) {
+      return true;
+    }
+    try {
+      return await Hive.boxExists(HiveBoxes.authTokenStoreEncrypted) ||
+          await Hive.boxExists(HiveBoxes.authTokenStore);
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -136,18 +142,21 @@ class SecureTokenStorage implements TokenStore {
 
   @override
   Future<void> clear() async {
-    if (await _canUseSecure()) {
+    try {
       await _secure.delete(key: _accessKey);
       await _secure.delete(key: _refreshKey);
       await _secure.delete(key: _expiresAtKey);
       await _secure.delete(key: _bootstrapKey);
-    }
+    } catch (_) {}
+
     if (await _hiveFallbackExists()) {
-      final box = await _hiveBox();
-      await box.delete(_accessKey);
-      await box.delete(_refreshKey);
-      await box.delete(_expiresAtKey);
-      await box.delete(_bootstrapKey);
+      try {
+        final box = await _hiveBox();
+        await box.delete(_accessKey);
+        await box.delete(_refreshKey);
+        await box.delete(_expiresAtKey);
+        await box.delete(_bootstrapKey);
+      } catch (_) {}
     }
   }
 }

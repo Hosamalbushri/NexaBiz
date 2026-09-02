@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:stock_count/core/presentation/providers/core_providers.dart';
 import 'package:stock_count/core/domain/services/inventory_subledger_port.dart';
 import 'package:stock_count/modules/inventory/shared/data/adapters/inventory_subledger_query_adapter.dart';
 import '../../../products/presentation/providers/product_providers.dart';
@@ -14,7 +13,6 @@ import 'package:stock_count/core/tenancy/tenant_context.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/cost_layer_service.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/cost_layer_service_impl.dart';
-import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_accounting_poster_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/inventory_dependency_detector_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_coordinator_impl.dart';
 import 'package:stock_count/modules/inventory/stock_movements/data/services/posting_engine_impl.dart';

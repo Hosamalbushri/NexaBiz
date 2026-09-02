@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-
-import 'package:stock_count/app/theme/app_radius.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
+import 'package:stock_count/core/widgets/app_status_badge.dart';
 import '../../domain/entities/sale_status.dart';
 
 class SaleStatusBadge extends StatelessWidget {
@@ -13,44 +11,12 @@ class SaleStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final (Color bg, Color fg) = switch (status) {
-      SaleStatus.unposted => (scheme.surfaceContainerHighest, scheme.onSurface),
-      SaleStatus.posted => (
-        scheme.primaryContainer,
-        scheme.onPrimaryContainer,
-      ),
-    };
-    return _Badge(label: label, background: bg, foreground: fg);
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const _Badge({
-    required this.label,
-    required this.background,
-    required this.foreground,
-  });
-
-  final String label;
-  final Color background;
-  final Color foreground;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: foreground,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+    return AppStatusBadge(
+      label: label,
+      tone: switch (status) {
+        SaleStatus.unposted => AppStatusTone.neutral,
+        SaleStatus.posted => AppStatusTone.success,
+      },
     );
   }
 }
@@ -71,5 +37,3 @@ class SaleMoneyText extends StatelessWidget {
     return AppAmountText(value, style: style, textAlign: textAlign);
   }
 }
-
-Widget saleSectionGap() => const SizedBox(height: AppSpacing.md);

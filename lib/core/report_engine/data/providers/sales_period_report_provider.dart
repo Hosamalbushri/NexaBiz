@@ -33,10 +33,8 @@ class SalesPeriodReportDataProvider
     final toDate = context.toDate;
     final customerId = context.filters['customer'] as String?;
 
-    final fromMs = fromDate != null ? fromDate.millisecondsSinceEpoch : null;
-    final toMs = toDate != null
-        ? toDate.add(const Duration(days: 1)).millisecondsSinceEpoch
-        : null;
+    final fromMs = fromDate?.millisecondsSinceEpoch;
+    final toMs = toDate?.add(const Duration(days: 1)).millisecondsSinceEpoch;
 
     final query = salesDb.selectOnly(salesDb.sales)
       ..addColumns([
@@ -85,10 +83,8 @@ class SalesPeriodReportDataProvider
     final toDate = context.toDate;
     final customerId = context.filters['customer'] as String?;
 
-    final fromMs = fromDate != null ? fromDate.millisecondsSinceEpoch : null;
-    final toMs = toDate != null
-        ? toDate.add(const Duration(days: 1)).millisecondsSinceEpoch
-        : null;
+    final fromMs = fromDate?.millisecondsSinceEpoch;
+    final toMs = toDate?.add(const Duration(days: 1)).millisecondsSinceEpoch;
 
     final query = salesDb.select(salesDb.sales)
       ..where((tbl) => tbl.deletedAt.isNull());

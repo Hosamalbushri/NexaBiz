@@ -136,9 +136,9 @@ class ProductStockMovementReportDefinition
                               mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
                               children: [
                                 _boxHeaderValue(labels.cartonLabel, '${op.cartons}'),
-                                _boxHeaderValue(labels.pieceLabel, '${op.pieces.toStringAsFixed(0)}'),
-                                _boxHeaderValue(labels.finalQtyLabel, '${op.totalQty.toStringAsFixed(0)}'),
-                                _boxHeaderValue(labels.costLabel, '${op.totalCost.toStringAsFixed(0)}'),
+                                _boxHeaderValue(labels.pieceLabel, op.pieces.toStringAsFixed(0)),
+                                _boxHeaderValue(labels.finalQtyLabel, op.totalQty.toStringAsFixed(0)),
+                                _boxHeaderValue(labels.costLabel, op.totalCost.toStringAsFixed(0)),
                               ],
                             ),
                           ],
@@ -271,21 +271,21 @@ class ProductStockMovementReportDefinition
 
                         // Inward
                         _cellText('${row.inCartons}'),
-                        _cellText('${row.inPieces.toStringAsFixed(0)}'),
-                        _cellText('${row.inTotalQty.toStringAsFixed(0)}'),
+                        _cellText(row.inPieces.toStringAsFixed(0)),
+                        _cellText(row.inTotalQty.toStringAsFixed(0)),
                         _cellText(row.inCost > 0 ? row.unitCost.toStringAsFixed(0) : '0', isBold: row.inCost > 0),
 
                         // Outward
                         _cellText('${row.outCartons}'),
-                        _cellText('${row.outPieces.toStringAsFixed(0)}'),
-                        _cellText('${row.outTotalQty.toStringAsFixed(0)}'),
+                        _cellText(row.outPieces.toStringAsFixed(0)),
+                        _cellText(row.outTotalQty.toStringAsFixed(0)),
                         _cellText(row.outCost > 0 ? row.unitCost.toStringAsFixed(0) : '0', isBold: row.outCost > 0),
 
                         // Ending Balance
                         _cellText('${row.balanceCartons}'),
-                        _cellText('${row.balancePieces.toStringAsFixed(0)}'),
-                        _cellText('${row.balanceTotalQty.toStringAsFixed(0)}'),
-                        _cellText('${row.unitCost.toStringAsFixed(0)}', isBold: true),
+                        _cellText(row.balancePieces.toStringAsFixed(0)),
+                        _cellText(row.balanceTotalQty.toStringAsFixed(0)),
+                        _cellText(row.unitCost.toStringAsFixed(0), isBold: true),
                       ],
                     ),
                 ],

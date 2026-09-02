@@ -25,42 +25,23 @@ import 'package:stock_count/core/logging/security_logger.dart';
 /// an OS background wake that drains into [syncNow] (Phase 6).
 class SyncManager {
   SyncManager({
-    required SyncQueue queue,
-    required ConnectivityService connectivity,
-    ConflictResolver conflictResolver = const ConflictResolver(),
-    RemoteSyncApi Function()? remoteProvider,
-    SyncMetricsStore? metricsStore,
-    SyncConflictStore? conflictStore,
-    void Function(SyncPassResult result)? onMeaningfulPass,
+    required this._queue,
+    required this._connectivity,
+    this._conflictResolver = const ConflictResolver(),
+    this._remoteProvider,
+    this._metricsStore,
+    this._conflictStore,
+    this._onMeaningfulPass,
     DateTime Function()? clock,
-    /// Returns true when the company entitlement grants sync capability.
-    bool Function()? hasSyncCapability,
-    /// Returns true when the current user holds the required sync permission.
-    ///
-    /// G5 fix: SyncManager must check BOTH permission AND entitlement.
-    /// Unknown authorization state (null callback) is treated as denied.
-    bool Function()? hasSyncPermission,
-    String Function()? readCompanyId,
-    ClockIntegrityState Function()? readClockState,
-    bool Function()? isTimeTrusted,
-    bool Function()? requiresReverification,
-    bool Function()? isOfflineGraceActive,
+    this._hasSyncCapability,
+    this._hasSyncPermission,
+    this._readCompanyId,
+    this._readClockState,
+    this._isTimeTrusted,
+    this._requiresReverification,
+    this._isOfflineGraceActive,
     this.batchChunkSize = 50,
-  }) : _queue = queue,
-       _connectivity = connectivity,
-       _conflictResolver = conflictResolver,
-       _remoteProvider = remoteProvider,
-       _metricsStore = metricsStore,
-       _conflictStore = conflictStore,
-       _onMeaningfulPass = onMeaningfulPass,
-       _clock = clock ?? _defaultClock,
-       _hasSyncCapability = hasSyncCapability,
-       _hasSyncPermission = hasSyncPermission,
-       _readCompanyId = readCompanyId,
-       _readClockState = readClockState,
-       _isTimeTrusted = isTimeTrusted,
-       _requiresReverification = requiresReverification,
-       _isOfflineGraceActive = isOfflineGraceActive;
+  }) : _clock = clock ?? _defaultClock;
 
   static DateTime _defaultClock() => DateTime.now().toUtc();
 
@@ -133,6 +114,16 @@ class SyncManager {
   void registerHandler(SyncEntityHandler handler) {
     _handlers[handler.entityType] = handler;
   }
+
+  void unregisterHandler(String entityType) {
+    _handlers.remove(entityType);
+  }
+
+  void clearHandlers() {
+    _handlers.clear();
+  }
+
+  List<String> get registeredEntityTypes => _handlers.keys.toList();
 
   SyncEntityHandler? getHandler(String entityType) => _handlers[entityType];
 
@@ -256,28 +247,28 @@ class SyncManager {
       correlationId: correlationId,
       trigger: trigger,
       body: () async {
-        if (_readClockState != null && _readClockState!() == ClockIntegrityState.tampered) {
+        if (_readClockState != null && _readClockState() == ClockIntegrityState.tampered) {
           SecurityLogger.logEvent('clock_integrity_tampered', metadata: {'company_id': _readCompanyId?.call()});
           await _refreshOverview();
           return annotate(
             const SyncPassResult(outcome: SyncPassOutcome.clockTampered),
           );
         }
-        if (_isTimeTrusted != null && !_isTimeTrusted!()) {
+        if (_isTimeTrusted != null && !_isTimeTrusted()) {
           SecurityLogger.logEvent('temporal_authorization_denied', metadata: {'company_id': _readCompanyId?.call()});
           await _refreshOverview();
           return annotate(
             const SyncPassResult(outcome: SyncPassOutcome.temporalAuthorizationFailed),
           );
         }
-        if (_requiresReverification != null && _requiresReverification!()) {
+        if (_requiresReverification != null && _requiresReverification()) {
           SecurityLogger.logEvent('temporal_reverification_required', metadata: {'company_id': _readCompanyId?.call()});
           await _refreshOverview();
           return annotate(
             const SyncPassResult(outcome: SyncPassOutcome.reverificationRequired),
           );
         }
-        if (_isOfflineGraceActive != null && !_isOfflineGraceActive!()) {
+        if (_isOfflineGraceActive != null && !_isOfflineGraceActive()) {
           SecurityLogger.logEvent('offline_grace_expired', metadata: {'company_id': _readCompanyId?.call()});
           await _refreshOverview();
           return annotate(
@@ -285,7 +276,7 @@ class SyncManager {
           );
         }
 
-        if (!_enabled || (_hasSyncCapability != null && !_hasSyncCapability!())) {
+        if (!_enabled || (_hasSyncCapability != null && !_hasSyncCapability())) {
           await _refreshOverview();
           return annotate(
             const SyncPassResult(outcome: SyncPassOutcome.skippedDisabled),
@@ -293,7 +284,17 @@ class SyncManager {
         }
         // G5 fix: require BOTH sync permission AND sync entitlement.
         // Unknown permission state (null callback) fails closed.
-        if (_hasSyncPermission != null && !_hasSyncPermission!()) {
+        if (_hasSyncPermission != null && !_hasSyncPermission()) {
+          await _refreshOverview();
+          return annotate(
+            const SyncPassResult(outcome: SyncPassOutcome.skippedDisabled),
+          );
+        }
+
+        // Fail-closed boundary: Business synchronization cannot execute in System Scope
+        // (activeCompanyContext == null or companyId is empty).
+        final currentCompanyId = _readCompanyId?.call();
+        if (currentCompanyId == null || currentCompanyId.trim().isEmpty) {
           await _refreshOverview();
           return annotate(
             const SyncPassResult(outcome: SyncPassOutcome.skippedDisabled),
@@ -693,7 +694,7 @@ class SyncManager {
               mergeStatus: 'requires_user_resolution',
               createdAt: _clock(),
             );
-            await _conflictStore!.save(conflictRec);
+            await _conflictStore.save(conflictRec);
           }
           await handler.markLocalConflict(
             entityId: op.entityId,

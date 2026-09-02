@@ -10,7 +10,6 @@ import '../../modules/authentication/presentation/providers/auth_providers.dart'
 import '../localization/app_localizations.dart';
 import '../router/app_routes.dart';
 import 'sync_enabled_provider.dart';
-import 'sync_session_state.dart';
 
 /// App-bar sync actions — hidden entirely when sync is disabled.
 ///
@@ -30,7 +29,6 @@ class AppBarSyncActions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final syncEnabled = ref.watch(syncEnabledProvider);
-    final session = ref.watch(syncSessionStateProvider);
     if (!syncEnabled) {
       return const SizedBox.shrink();
     }
@@ -39,9 +37,7 @@ class AppBarSyncActions extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final overview =
         ref.watch(syncOverviewProvider).asData?.value ?? SyncOverview.initial();
-    final online = overview.isOnline;
     final showSync = hasActiveSync(overview);
-    final needsReauth = session.phase == SyncSessionPhase.sessionExpired;
 
     return Row(
       mainAxisSize: MainAxisSize.min,

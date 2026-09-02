@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../app/bootstrap/app_bootstrap.dart';
 import '../../../../app/localization/app_localizations.dart';
@@ -10,6 +11,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/auth/presentation/providers/auth_context_providers.dart';
 import '../../../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import 'package:stock_count/modules/sync/sync.dart';
+import 'company_details_sheet.dart';
 import '../providers/auth_providers.dart';
 
 /// Interactive modal sheet to switch active company context.
@@ -96,7 +98,10 @@ class CompanySelectionSheet extends ConsumerWidget {
               ),
             )
           else
-            Flexible(
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.5,
+              ),
               child: ListView.separated(
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
@@ -116,19 +121,21 @@ class CompanySelectionSheet extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(AppRadius.md),
                       onTap: () async {
                         if (isSelected) {
-                          Navigator.of(context).pop();
+                          if (context.mounted && Navigator.of(context).canPop()) {
+                            Navigator.of(context).pop();
+                          }
                           return;
                         }
 
-                        // Stop active sync for current tenant before switching
+                        final router = GoRouter.of(context);
+                        final nav = Navigator.of(context);
+
                         await AppBootstrap.stopSync(ref);
 
-                        // Perform company switch
-                        await ref
+                        final switchedSession = await ref
                             .read(authStateProvider.notifier)
                             .switchCompany(company.id);
 
-                        // Invalidate tenant, authorization, and dashboard providers
                         ref.invalidate(currentEntitlementProvider);
                         ref.invalidate(currentPermissionsProvider);
                         ref.invalidate(authorizationContextProvider);
@@ -136,8 +143,18 @@ class CompanySelectionSheet extends ConsumerWidget {
                         ref.invalidate(dashboardServicesProvider);
                         ref.invalidate(syncOverviewProvider);
 
-                        // Re-evaluate entitlement capability & sync manager wiring for new company
                         await AppBootstrap.bootstrapSync(ref);
+
+                        if (nav.canPop()) {
+                          nav.pop();
+                        }
+
+                        if (switchedSession != null) {
+                          router.go('/dashboard');
+                        } else {
+                          await ref.read(authStateProvider.notifier).logout();
+                          router.go('/login');
+                        }
                       },
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -197,6 +214,15 @@ class CompanySelectionSheet extends ConsumerWidget {
                                 ],
                               ),
                             ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.info_outline_rounded,
+                                color: colorScheme.primary,
+                                size: 22,
+                              ),
+                              tooltip: 'بيانات الشركة',
+                              onPressed: () => CompanyDetailsSheet.show(context, company),
+                            ),
                             if (isSelected)
                               Icon(
                                 Icons.check_circle_rounded,
@@ -213,19 +239,52 @@ class CompanySelectionSheet extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           Divider(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
           const SizedBox(height: AppSpacing.xs),
-          OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadius.md),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
+                  ),
+                  icon: const Icon(Icons.add_business_rounded),
+                  label: const Text(
+                    'إضافة شركة',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  onPressed: () => _showAddCompanyDialog(context, ref),
+                ),
               ),
-            ),
-            icon: const Icon(Icons.add_business_rounded),
-            label: const Text(
-              'إضافة شركة جديدة',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            onPressed: () => _showAddCompanyDialog(context, ref),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colorScheme.error,
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
+                  ),
+                  icon: const Icon(Icons.logout_rounded),
+                  label: const Text(
+                    'تسجيل الخروج',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  onPressed: () async {
+                    final router = GoRouter.of(context);
+                    final nav = Navigator.of(context);
+                    if (nav.canPop()) {
+                      nav.pop();
+                    }
+                    await AppBootstrap.stopSync(ref);
+                    await ref.read(authStateProvider.notifier).logout();
+                    router.go('/login');
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -243,6 +302,9 @@ class CompanySelectionSheet extends ConsumerWidget {
       text:
           'CMP-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
     );
+    final adminNameController = TextEditingController();
+    final adminEmailController = TextEditingController();
+    final adminPasswordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     await showDialog(
@@ -258,37 +320,107 @@ class CompanySelectionSheet extends ConsumerWidget {
             const Text('إضافة شركة جديدة'),
           ],
         ),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'اسم الشركة *',
-                  hintText: 'مثال: شركة التجارة المتقدمة',
-                  prefixIcon: Icon(Icons.business_rounded),
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'اسم الشركة *',
+                    hintText: 'مثال: شركة التجارة المتقدمة',
+                    prefixIcon: Icon(Icons.business_rounded),
+                  ),
+                  validator: (val) =>
+                      val == null || val.trim().isEmpty
+                          ? 'يرجى إدخال اسم الشركة'
+                          : null,
                 ),
-                validator: (val) =>
-                    val == null || val.trim().isEmpty
-                        ? 'يرجى إدخال اسم الشركة'
-                        : null,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: codeController,
-                decoration: const InputDecoration(
-                  labelText: 'كود الشركة *',
-                  hintText: 'مثال: CMP-02',
-                  prefixIcon: Icon(Icons.numbers_rounded),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: codeController,
+                  decoration: const InputDecoration(
+                    labelText: 'كود الشركة *',
+                    hintText: 'مثال: CMP-02',
+                    prefixIcon: Icon(Icons.numbers_rounded),
+                  ),
+                  validator: (val) =>
+                      val == null || val.trim().isEmpty
+                          ? 'يرجى إدخال كود الشركة'
+                          : null,
                 ),
-                validator: (val) =>
-                    val == null || val.trim().isEmpty
-                        ? 'يرجى إدخال كود الشركة'
-                        : null,
-              ),
-            ],
+                const SizedBox(height: AppSpacing.md),
+                const Divider(),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'بيانات مدير الشركة (المستخدم الأول)',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                TextFormField(
+                  controller: adminNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'اسم المدير *',
+                    hintText: 'مثال: أحمد المحاسب',
+                    prefixIcon: Icon(Icons.person_outline),
+                  ),
+                  validator: (val) =>
+                      val == null || val.trim().isEmpty
+                          ? 'يرجى إدخال اسم المدير'
+                          : null,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: adminEmailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'البريد الإلكتروني للمدير *',
+                    hintText: 'admin@company.com',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                  validator: (val) {
+                    if (val == null || val.trim().isEmpty) {
+                      return 'يرجى إدخال البريد الإلكتروني';
+                    }
+                    if (!val.contains('@')) {
+                      return 'بريد إلكتروني غير صالحة';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: adminPasswordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'كلمة المرور للمدير *',
+                    helperText: '8 أحرف على الأقل وغير افتراضية',
+                    prefixIcon: Icon(Icons.lock_outline),
+                  ),
+                  validator: (val) {
+                    if (val == null || val.trim().isEmpty) {
+                      return 'يرجى إدخال كلمة المرور';
+                    }
+                    if (val.trim().length < 8) {
+                      return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+                    }
+                    final lower = val.trim().toLowerCase();
+                    if (lower == 'admin123' ||
+                        lower == 'password123' ||
+                        lower == '12345678') {
+                      return 'كلمة المرور سهلة جداً وغير مسموح بها';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -305,16 +437,26 @@ class CompanySelectionSheet extends ConsumerWidget {
               if (!formKey.currentState!.validate()) return;
               final name = nameController.text.trim();
               final code = codeController.text.trim();
+              final adminName = adminNameController.text.trim();
+              final adminEmail = adminEmailController.text.trim();
+              final adminPassword = adminPasswordController.text.trim();
+
               Navigator.of(dialogContext).pop();
 
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop();
-              }
-
               await AppBootstrap.stopSync(ref);
+              final newCompany = await ref
+                  .read(authStateProvider.notifier)
+                  .createCompanyWithAdmin(
+                    companyName: name,
+                    companyCode: code,
+                    adminName: adminName,
+                    adminEmail: adminEmail,
+                    adminPassword: adminPassword,
+                  );
+
               await ref
                   .read(authStateProvider.notifier)
-                  .createCompany(name: name, code: code);
+                  .switchCompany(newCompany.id);
 
               ref.invalidate(currentEntitlementProvider);
               ref.invalidate(currentPermissionsProvider);

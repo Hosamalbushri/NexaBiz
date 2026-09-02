@@ -5,8 +5,7 @@ import '../../domain/entities/currency.dart';
 import '../../domain/repositories/currency_repository.dart';
 
 class CurrencyRepositoryImpl implements CurrencyRepository {
-  CurrencyRepositoryImpl(this._db, {required String Function() readCompanyId})
-      : _readCompanyId = readCompanyId;
+  CurrencyRepositoryImpl(this._db, {required this._readCompanyId});
 
   final AccountingDatabase _db;
   final String Function() _readCompanyId;

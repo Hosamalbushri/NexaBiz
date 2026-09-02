@@ -9,23 +9,18 @@ import '../../../core/network/authenticated_http_client.dart';
 import '../../../core/network/sync_api_config.dart';
 import '../domain/entities/auth_session.dart';
 import '../domain/entities/auth_user.dart';
-import '../domain/entities/offline_authorization_snapshot.dart';
 import '../domain/repositories/auth_repository.dart';
 import 'offline_authorization_store.dart';
 import 'secure_token_storage.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
-    required AuthenticatedHttpClient http,
-    required SecureTokenStorage tokenStorage,
+    required this._http,
+    required this._tokenStorage,
     OfflineAuthorizationStore? offlineAuthStore,
-    required SyncApiConfig Function() readConfig,
-    void Function(SyncApiConfig config)? onConfigChanged,
-  }) : _http = http,
-       _tokenStorage = tokenStorage,
-       _offlineAuthStore = offlineAuthStore ?? OfflineAuthorizationStore(),
-       _readConfig = readConfig,
-       _onConfigChanged = onConfigChanged;
+    required this._readConfig,
+    this._onConfigChanged,
+  }) : _offlineAuthStore = offlineAuthStore ?? OfflineAuthorizationStore();
 
   static const _snapshotKey = 'auth_session_snapshot';
 
@@ -188,7 +183,7 @@ class AuthRepositoryImpl implements AuthRepository {
         if (_isUuid(deviceId)) 'device_id': deviceId,
         'device_name': deviceName,
         'platform': platform,
-        if (appVersion != null) 'app_version': appVersion,
+        'app_version': ?appVersion,
       },
     );
     final data = _http.decodeData(response);
@@ -365,7 +360,7 @@ class AuthRepositoryImpl implements AuthRepository {
         'device_id': deviceId,
         'device_name': deviceName,
         'platform': platform,
-        if (appVersion != null) 'app_version': appVersion,
+        'app_version': ?appVersion,
       },
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {

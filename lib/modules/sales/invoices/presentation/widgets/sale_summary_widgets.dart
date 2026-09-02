@@ -7,6 +7,122 @@ import 'package:stock_count/core/widgets/app_meta_info_chip.dart';
 import '../../domain/entities/sale_summary.dart';
 import 'sale_status_badge.dart';
 
+/// Single amount key-value row for summary panels.
+class _SummaryAmountRow extends StatelessWidget {
+  const _SummaryAmountRow({
+    required this.label,
+    required this.value,
+    this.negative = false,
+  });
+
+  final String label;
+  final double value;
+  final bool negative;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final labelStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: scheme.onSurfaceVariant,
+      fontWeight: FontWeight.w600,
+    );
+    final valueStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: negative ? scheme.error : scheme.onSurface,
+      fontWeight: FontWeight.w700,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label, style: labelStyle),
+          ),
+          SaleMoneyText(value, style: valueStyle),
+        ],
+      ),
+    );
+  }
+}
+
+/// Standardized total breakdown lines (subtotal, discount, tax, total).
+class _SummaryLines extends StatelessWidget {
+  const _SummaryLines({
+    required this.summary,
+  });
+
+  final SaleSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final discountTotal = summary.itemDiscountTotal + summary.saleDiscount;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SummaryAmountRow(
+          label: l10n.salesSubtotal,
+          value: summary.subtotal,
+        ),
+        if (discountTotal > 0)
+          _SummaryAmountRow(
+            label: l10n.salesDiscount,
+            value: -discountTotal,
+            negative: true,
+          ),
+        if (summary.tax > 0)
+          _SummaryAmountRow(
+            label: l10n.salesTax,
+            value: summary.tax,
+          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          child: Divider(
+            height: 1,
+            color: scheme.outlineVariant.withValues(alpha: 0.45),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm + 2,
+          ),
+          decoration: BoxDecoration(
+            color: scheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.salesTotal,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: scheme.primary,
+                  ),
+                ),
+              ),
+              SaleMoneyText(
+                summary.total,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: scheme.primary,
+                  letterSpacing: -0.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Invoice totals and save actions (scrolls with the form content).
 class SaleStickySummary extends StatelessWidget {
   const SaleStickySummary({
@@ -29,33 +145,6 @@ class SaleStickySummary extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final discountTotal = summary.itemDiscountTotal + summary.saleDiscount;
-
-    Widget amountRow(
-      String label,
-      double value, {
-      bool negative = false,
-    }) {
-      final labelStyle = theme.textTheme.bodyMedium?.copyWith(
-        color: scheme.onSurfaceVariant,
-        fontWeight: FontWeight.w600,
-      );
-      final valueStyle = theme.textTheme.bodyMedium?.copyWith(
-        color: negative ? scheme.error : scheme.onSurface,
-        fontWeight: FontWeight.w700,
-      );
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(label, style: labelStyle),
-            ),
-            SaleMoneyText(value, style: valueStyle),
-          ],
-        ),
-      );
-    }
 
     return Material(
       color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
@@ -121,48 +210,7 @@ class SaleStickySummary extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            amountRow(l10n.salesSubtotal, summary.subtotal),
-            if (discountTotal > 0)
-              amountRow(l10n.salesDiscount, -discountTotal, negative: true),
-            if (summary.tax > 0) amountRow(l10n.salesTax, summary.tax),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: Divider(
-                height: 1,
-                color: scheme.outlineVariant.withValues(alpha: 0.45),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm + 2,
-              ),
-              decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.salesTotal,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: scheme.primary,
-                      ),
-                    ),
-                  ),
-                  SaleMoneyText(
-                    summary.total,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: scheme.primary,
-                      letterSpacing: -0.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _SummaryLines(summary: summary),
             if (summary.paidAmount > 0) ...[
               const SizedBox(height: AppSpacing.sm),
               AppMetaInfoChip(
@@ -198,58 +246,6 @@ class SaleStickySummary extends StatelessWidget {
   }
 }
 
-class _SummaryMetaChip extends StatelessWidget {
-  const _SummaryMetaChip({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.45),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// Read-only totals panel for details screens.
 class SaleSummaryPanel extends StatelessWidget {
   const SaleSummaryPanel({
@@ -266,27 +262,6 @@ class SaleSummaryPanel extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final discountTotal = summary.itemDiscountTotal + summary.saleDiscount;
-
-    Widget amountRow(String label, double value, {bool negative = false}) {
-      final labelStyle = theme.textTheme.bodyMedium?.copyWith(
-        color: scheme.onSurfaceVariant,
-        fontWeight: FontWeight.w600,
-      );
-      final valueStyle = theme.textTheme.bodyMedium?.copyWith(
-        color: negative ? scheme.error : scheme.onSurface,
-        fontWeight: FontWeight.w700,
-      );
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: Row(
-          children: [
-            Expanded(child: Text(label, style: labelStyle)),
-            SaleMoneyText(value, style: valueStyle),
-          ],
-        ),
-      );
-    }
 
     return Material(
       color: scheme.surface,
@@ -353,48 +328,7 @@ class SaleSummaryPanel extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            amountRow(l10n.salesSubtotal, summary.subtotal),
-            if (discountTotal > 0)
-              amountRow(l10n.salesDiscount, -discountTotal, negative: true),
-            if (summary.tax > 0) amountRow(l10n.salesTax, summary.tax),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: Divider(
-                height: 1,
-                color: scheme.outlineVariant.withValues(alpha: 0.45),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm + 2,
-              ),
-              decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.salesTotal,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: scheme.primary,
-                      ),
-                    ),
-                  ),
-                  SaleMoneyText(
-                    summary.total,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: scheme.primary,
-                      letterSpacing: -0.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _SummaryLines(summary: summary),
           ],
         ),
       ),

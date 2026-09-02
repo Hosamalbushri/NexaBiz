@@ -36,23 +36,16 @@ class GetSaleById {
 
 class CreateSale {
   CreateSale({
-    required SaleRepository repository,
-    required SaleNumberAllocatorPort numberAllocator,
+    required this._repository,
+    required this._numberAllocator,
     required PermissionGuard permissionGuard,
-    SaleVoucherBookPort voucherBookPort = const NoOpSaleVoucherBookPort(),
-    SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
-    SaleAccountingBridgePort accountingBridge =
+    this._voucherBookPort = const NoOpSaleVoucherBookPort(),
+    this._ledgerPosting = const NoOpSaleLedgerPostingPort(),
+    this._accountingBridge =
         const NoOpSaleAccountingBridgePort(),
-    SaleValidator validator = const SaleValidator(),
-    SaleCalculationService calculator = const SaleCalculationService(),
-  }) : _repository = repository,
-       _numberAllocator = numberAllocator,
-       _guard = permissionGuard,
-       _voucherBookPort = voucherBookPort,
-       _ledgerPosting = ledgerPosting,
-       _accountingBridge = accountingBridge,
-       _validator = validator,
-       _calculator = calculator;
+    this._validator = const SaleValidator(),
+    this._calculator = const SaleCalculationService(),
+  }) : _guard = permissionGuard;
 
   final SaleRepository _repository;
   final SaleNumberAllocatorPort _numberAllocator;
@@ -63,40 +56,50 @@ class CreateSale {
   final SaleValidator _validator;
   final SaleCalculationService _calculator;
 
-  Future<Sale> call(SaleDraft draft) async {
-    _guard.requireAny(SalesPermissions.create);
-    final merged = _normalize(draft);
-    _validator.validate(merged);
-    final summary = _calculator.calculate(
-      items: merged.items,
-      saleDiscountType: merged.discountType,
-      saleDiscountValue: merged.discountValue,
-      taxRatePercent: merged.taxRate,
-      paidAmount: merged.paidAmount,
-    );
-    _validator.assertPaidNotOverTotal(
-      total: summary.total,
-      paidAmount: merged.paidAmount,
-    );
-    final bookId = merged.voucherBookId?.trim();
-    final saleNumber = (bookId != null && bookId.isNotEmpty)
-        ? await _voucherBookPort.allocateSaleNumber(bookId)
-        : await _numberAllocator.allocateNext();
-    final sale = await _repository.insert(merged, saleNumber: saleNumber);
+  bool _isExecuting = false;
 
-    final integrated = await _accountingBridge.isIntegratedMode;
-    if (!integrated) {
-      try {
-        await _ledgerPosting.syncSale(sale);
-      } on JournalException {
-        await _repository.softDelete(sale.id);
-        rethrow;
-      } catch (_) {
-        await _repository.softDelete(sale.id);
-        throw const SaleException(SaleException.ledgerPostingFailed);
-      }
+  Future<Sale> call(SaleDraft draft) async {
+    if (_isExecuting) {
+      throw const SaleException(SaleException.concurrentOperationBlocked);
     }
-    return sale;
+    _isExecuting = true;
+    try {
+      _guard.requireAny(SalesPermissions.create);
+      final merged = _normalize(draft);
+      _validator.validate(merged);
+      final summary = _calculator.calculate(
+        items: merged.items,
+        saleDiscountType: merged.discountType,
+        saleDiscountValue: merged.discountValue,
+        taxRatePercent: merged.taxRate,
+        paidAmount: merged.paidAmount,
+      );
+      _validator.assertPaidNotOverTotal(
+        total: summary.total,
+        paidAmount: merged.paidAmount,
+      );
+      final bookId = merged.voucherBookId?.trim();
+      final saleNumber = (bookId != null && bookId.isNotEmpty)
+          ? await _voucherBookPort.allocateSaleNumber(bookId)
+          : await _numberAllocator.allocateNext();
+      final sale = await _repository.insert(merged, saleNumber: saleNumber);
+
+      final integrated = await _accountingBridge.isIntegratedMode;
+      if (!integrated) {
+        try {
+          await _ledgerPosting.syncSale(sale);
+        } on JournalException {
+          await _repository.softDelete(sale.id);
+          rethrow;
+        } catch (_) {
+          await _repository.softDelete(sale.id);
+          throw const SaleException(SaleException.ledgerPostingFailed);
+        }
+      }
+      return sale;
+    } finally {
+      _isExecuting = false;
+    }
   }
 
   SaleDraft _normalize(SaleDraft draft) {
@@ -133,19 +136,14 @@ class CreateSale {
 
 class UpdateSale {
   UpdateSale({
-    required SaleRepository repository,
-    SaleValidator validator = const SaleValidator(),
-    SaleCalculationService calculator = const SaleCalculationService(),
-    SaleWorkflowService workflow = const SaleWorkflowService(),
-    SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
-    SaleAccountingBridgePort accountingBridge =
+    required this._repository,
+    this._validator = const SaleValidator(),
+    this._calculator = const SaleCalculationService(),
+    this._workflow = const SaleWorkflowService(),
+    this._ledgerPosting = const NoOpSaleLedgerPostingPort(),
+    this._accountingBridge =
         const NoOpSaleAccountingBridgePort(),
-  }) : _repository = repository,
-       _validator = validator,
-       _calculator = calculator,
-       _workflow = workflow,
-       _ledgerPosting = ledgerPosting,
-       _accountingBridge = accountingBridge;
+  });
 
   final SaleRepository _repository;
   final SaleValidator _validator;
@@ -154,77 +152,82 @@ class UpdateSale {
   final SaleLedgerPostingPort _ledgerPosting;
   final SaleAccountingBridgePort _accountingBridge;
 
-  Future<Sale> call(int id, SaleDraft draft) async {
-    final existing = await _repository.getById(id);
-    if (existing == null) {
-      throw const SaleException(SaleException.notFound);
-    }
-    _workflow.assertCanEdit(existing);
-    final merged = SaleDraft(
-      saleDate: draft.saleDate,
-      settlementType: draft.settlementType,
-      voucherBookId: draft.voucherBookId,
-      customerId: draft.customerId,
-      customerCode: draft.customerCode,
-      customerName: draft.customerName,
-      customerAccountId: draft.customerAccountId,
-      cashAccountId: draft.cashAccountId,
-      currencyCode: draft.currencyCode,
-      baseCurrencyCode: draft.baseCurrencyCode,
-      exchangeRate: draft.exchangeRate,
-      items: [
-        for (final item in draft.items) item.withNormalizedQuantities(),
-      ],
-      discountType: draft.discountType,
-      discountValue: draft.discountValue,
-      taxRate: draft.taxRate,
-      paidAmount: draft.paidAmount,
-      paymentMethod: draft.paymentMethod,
-      notes: draft.notes,
-      saleStatus: existing.saleStatus,
-      dataSource: draft.dataSource,
-      externalId: draft.externalId,
-      externalDocumentNumber: draft.externalDocumentNumber,
-      externalStatus: draft.externalStatus,
-      payments: draft.payments,
-    );
-    _validator.validate(merged);
-    final summary = _calculator.calculate(
-      items: merged.items,
-      saleDiscountType: merged.discountType,
-      saleDiscountValue: merged.discountValue,
-      taxRatePercent: merged.taxRate,
-      paidAmount: merged.paidAmount,
-    );
-    _validator.assertPaidNotOverTotal(
-      total: summary.total,
-      paidAmount: merged.paidAmount,
-    );
-    final updated = await _repository.update(id, merged);
+  bool _isExecuting = false;
 
-    final integrated = await _accountingBridge.isIntegratedMode;
-    if (!integrated) {
-      await _ledgerPosting.syncSale(updated);
+  Future<Sale> call(int id, SaleDraft draft) async {
+    if (_isExecuting) {
+      throw const SaleException(SaleException.concurrentOperationBlocked);
     }
-    return updated;
+    _isExecuting = true;
+    try {
+      final existing = await _repository.getById(id);
+      if (existing == null) {
+        throw const SaleException(SaleException.notFound);
+      }
+      _workflow.assertCanEdit(existing);
+      final merged = SaleDraft(
+        saleDate: draft.saleDate,
+        settlementType: draft.settlementType,
+        voucherBookId: draft.voucherBookId,
+        customerId: draft.customerId,
+        customerCode: draft.customerCode,
+        customerName: draft.customerName,
+        customerAccountId: draft.customerAccountId,
+        cashAccountId: draft.cashAccountId,
+        currencyCode: draft.currencyCode,
+        baseCurrencyCode: draft.baseCurrencyCode,
+        exchangeRate: draft.exchangeRate,
+        items: [
+          for (final item in draft.items) item.withNormalizedQuantities(),
+        ],
+        discountType: draft.discountType,
+        discountValue: draft.discountValue,
+        taxRate: draft.taxRate,
+        paidAmount: draft.paidAmount,
+        paymentMethod: draft.paymentMethod,
+        notes: draft.notes,
+        saleStatus: existing.saleStatus,
+        dataSource: draft.dataSource,
+        externalId: draft.externalId,
+        externalDocumentNumber: draft.externalDocumentNumber,
+        externalStatus: draft.externalStatus,
+        payments: draft.payments,
+      );
+      _validator.validate(merged);
+      final summary = _calculator.calculate(
+        items: merged.items,
+        saleDiscountType: merged.discountType,
+        saleDiscountValue: merged.discountValue,
+        taxRatePercent: merged.taxRate,
+        paidAmount: merged.paidAmount,
+      );
+      _validator.assertPaidNotOverTotal(
+        total: summary.total,
+        paidAmount: merged.paidAmount,
+      );
+      final updated = await _repository.update(id, merged);
+
+      final integrated = await _accountingBridge.isIntegratedMode;
+      if (!integrated) {
+        await _ledgerPosting.syncSale(updated);
+      }
+      return updated;
+    } finally {
+      _isExecuting = false;
+    }
   }
 }
 
 /// Posts an unposted sale (UI label: Post / ترحيل).
 class ConfirmSale {
   ConfirmSale({
-    required SaleRepository repository,
-    required SaleAccountingBridgePort accountingBridge,
-    required SaleInventoryEffectPort inventoryEffect,
+    required this._repository,
+    required this._accountingBridge,
+    required this._inventoryEffect,
     required PermissionGuard permissionGuard,
-    SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
-    SaleWorkflowService workflow = const SaleWorkflowService(),
-  }) : _repository = repository,
-       _accountingBridge = accountingBridge,
-       _inventoryEffect = inventoryEffect,
-       _guard = permissionGuard,
-       _ledgerPosting = ledgerPosting,
-       _workflow = workflow;
+    this._ledgerPosting = const NoOpSaleLedgerPostingPort(),
+    this._workflow = const SaleWorkflowService(),
+  }) : _guard = permissionGuard;
 
   final SaleRepository _repository;
   final SaleAccountingBridgePort _accountingBridge;
@@ -233,65 +236,55 @@ class ConfirmSale {
   final SaleLedgerPostingPort _ledgerPosting;
   final SaleWorkflowService _workflow;
 
+  bool _isExecuting = false;
+
   Future<Sale> call(int id) async {
-    _guard.requireAny(SalesPermissions.post);
-    if (!isSalePostingEnabled(_inventoryEffect)) {
-      throw const SaleException(SaleException.postingRequiresInventory);
+    if (_isExecuting) {
+      throw const SaleException(SaleException.concurrentOperationBlocked);
     }
-    final sale = await _repository.getById(id);
-    if (sale == null) {
-      throw const SaleException(SaleException.notFound);
-    }
-    _workflow.assertCanPost(sale);
-    final integrated = await _accountingBridge.isIntegratedMode;
-    final next = _workflow.nextOnPost(integratedMode: integrated);
-    final now = DateTime.now().toUtc();
-
-    // Submit accounting against the projected post document first so a
-    // bridge failure leaves the sale editable (still unposted).
-    if (integrated) {
-      final projected = sale.copyWith(
-        saleStatus: next,
-        confirmedAt: now,
-        submittedAt: now,
-      );
-      try {
-        await _accountingBridge.submitOperationalSale(projected);
-      } catch (_) {
-        throw const SaleException(SaleException.externalIntegrationFailed);
-      }
-    }
-
-    final updated = await _repository.updateStatus(
-      id,
-      SaleStatusUpdate(
-        saleStatus: next,
-        confirmedAt: now,
-        submittedAt: integrated ? now : null,
-      ),
-    );
-
+    _isExecuting = true;
     try {
-      await _inventoryEffect.onConfirmed(updated);
-    } catch (_) {
-      // Roll back post so the document stays editable if stock effect fails.
-      await _repository.updateStatus(
+      _guard.requireAny(SalesPermissions.post);
+      if (!isSalePostingEnabled(_inventoryEffect)) {
+        throw const SaleException(SaleException.postingRequiresInventory);
+      }
+      final sale = await _repository.getById(id);
+      if (sale == null) {
+        throw const SaleException(SaleException.notFound);
+      }
+      _workflow.assertCanPost(sale);
+      final integrated = await _accountingBridge.isIntegratedMode;
+      final next = _workflow.nextOnPost(integratedMode: integrated);
+      final now = DateTime.now().toUtc();
+
+      // Submit accounting against the projected post document first so a
+      // bridge failure leaves the sale editable (still unposted).
+      if (integrated) {
+        final projected = sale.copyWith(
+          saleStatus: next,
+          confirmedAt: now,
+          submittedAt: now,
+        );
+        try {
+          await _accountingBridge.submitOperationalSale(projected);
+        } catch (_) {
+          throw const SaleException(SaleException.externalIntegrationFailed);
+        }
+      }
+
+      final updated = await _repository.updateStatus(
         id,
         SaleStatusUpdate(
-          saleStatus: sale.saleStatus,
-          clearConfirmedAt: true,
-          clearSubmittedAt: true,
+          saleStatus: next,
+          confirmedAt: now,
+          submittedAt: integrated ? now : null,
         ),
       );
-      rethrow;
-    }
 
-    // Standalone sales upsert local journal as posted.
-    // When perpetual inventory posting is enabled, DocumentPostingOrchestrator handles all journal posting (Revenue + COGS).
-    if (!integrated && !isSalePostingEnabled(_inventoryEffect)) {
       try {
-        await _ledgerPosting.syncSale(updated);
-      } catch (e) {
+        await _inventoryEffect.onConfirmed(updated);
+      } catch (_) {
+        // Roll back post so the document stays editable if stock effect fails.
         await _repository.updateStatus(
           id,
           SaleStatusUpdate(
@@ -300,33 +293,49 @@ class ConfirmSale {
             clearSubmittedAt: true,
           ),
         );
-        try {
-          await _inventoryEffect.onCancelled(updated);
-        } catch (_) {
-          // Best-effort reverse; surface ledger failure to the caller.
-        }
-        if (e is JournalException) {
-          rethrow;
-        }
-        throw const SaleException(SaleException.ledgerPostingFailed);
+        rethrow;
       }
+
+      // Standalone sales upsert local journal as posted.
+      // When perpetual inventory posting is enabled, DocumentPostingOrchestrator handles all journal posting (Revenue + COGS).
+      if (!integrated && !isSalePostingEnabled(_inventoryEffect)) {
+        try {
+          await _ledgerPosting.syncSale(updated);
+        } catch (e) {
+          await _repository.updateStatus(
+            id,
+            SaleStatusUpdate(
+              saleStatus: sale.saleStatus,
+              clearConfirmedAt: true,
+              clearSubmittedAt: true,
+            ),
+          );
+          try {
+            await _inventoryEffect.onCancelled(updated);
+          } catch (_) {
+            // Best-effort reverse; surface ledger failure to the caller.
+          }
+          if (e is JournalException) {
+            rethrow;
+          }
+          throw const SaleException(SaleException.ledgerPostingFailed);
+        }
+      }
+      return updated;
+    } finally {
+      _isExecuting = false;
     }
-    return updated;
   }
 }
 
 class CancelSale {
   CancelSale({
-    required SaleRepository repository,
-    required SaleInventoryEffectPort inventoryEffect,
+    required this._repository,
+    required this._inventoryEffect,
     required PermissionGuard permissionGuard,
-    SaleLedgerPostingPort ledgerPosting = const NoOpSaleLedgerPostingPort(),
-    SaleWorkflowService workflow = const SaleWorkflowService(),
-  }) : _repository = repository,
-       _inventoryEffect = inventoryEffect,
-       _guard = permissionGuard,
-       _ledgerPosting = ledgerPosting,
-       _workflow = workflow;
+    this._ledgerPosting = const NoOpSaleLedgerPostingPort(),
+    this._workflow = const SaleWorkflowService(),
+  }) : _guard = permissionGuard;
 
   final SaleRepository _repository;
   final SaleInventoryEffectPort _inventoryEffect;
@@ -357,7 +366,7 @@ class CancelSale {
 
 /// Complete is removed from the unposted/posted lifecycle.
 class CompleteSale {
-  CompleteSale({required SaleRepository repository}) : _repository = repository;
+  CompleteSale({required this._repository});
 
   // Kept so existing providers/tests can construct the use case.
   // ignore: unused_field
@@ -370,10 +379,9 @@ class CompleteSale {
 
 class DuplicateSale {
   DuplicateSale({
-    required SaleRepository repository,
-    required CreateSale createSale,
-  }) : _repository = repository,
-       _createSale = createSale;
+    required this._repository,
+    required this._createSale,
+  });
 
   final SaleRepository _repository;
   final CreateSale _createSale;

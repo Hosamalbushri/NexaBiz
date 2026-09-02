@@ -4,7 +4,6 @@ import 'package:stock_count/core/errors/missing_account_exception.dart';
 import 'package:stock_count/core/errors/journal_exception.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
-import 'package:stock_count/modules/authentication/data/local_auth_store.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/inventory_accounting_poster.dart';
 import 'package:stock_count/modules/system_setup/domain/repositories/company_initialization_repository.dart';
@@ -12,25 +11,41 @@ import 'package:stock_count/modules/system_setup/domain/services/initialization_
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
 
+class MissingCompanyContextException implements Exception {
+  const MissingCompanyContextException([this.message = 'مطلوب سياق شركة صالح لتنفيذ العملية المحاسبية.']);
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
   InventoryAccountingPosterAdapter(
-    this._accountingDb, {
-    JournalPostingService? journalPostingService,
+    AccountingDatabase? accountingDb, {
+    this._journalPostingService,
     this._readCompanyId,
-    CompanyInitializationRepository? initRepository,
-    InitializationGuard? initializationGuard,
-  }) : _journalPostingService = journalPostingService,
-       _initRepository = initRepository,
-       _initializationGuard = initializationGuard;
+    this._initRepository,
+    this._initializationGuard,
+  })  : _accountingDb = accountingDb;
 
-  final AccountingDatabase _accountingDb;
+  final AccountingDatabase? _accountingDb;
   final JournalPostingService? _journalPostingService;
   final String Function()? _readCompanyId;
   final CompanyInitializationRepository? _initRepository;
   final InitializationGuard? _initializationGuard;
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
+  String get _currentCompanyId {
+    final id = _readCompanyId?.call();
+    if (id != null && id.trim().isNotEmpty) return id.trim();
+    throw const MissingCompanyContextException();
+  }
+
+  AccountingDatabase get db {
+    if (_accountingDb == null) {
+      throw StateError('AccountingDatabase unavailable');
+    }
+    return _accountingDb;
+  }
 
   Future<String> _resolveCompanyAccount({
     required AccountRole role,
@@ -42,7 +57,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     if (explicitAccountId != null && explicitAccountId.trim().isNotEmpty) {
       final target = explicitAccountId.trim();
       final byUuidOrCode =
-          await (_accountingDb.select(_accountingDb.accounts)..where(
+          await (db.select(db.accounts)..where(
                 (tbl) =>
                     (tbl.uuid.equals(target) | tbl.accountCode.equals(target)) &
                     tbl.companyId.equals(companyId) &
@@ -67,7 +82,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
 
     if (configuredKey != null && configuredKey.isNotEmpty) {
       final acc =
-          await (_accountingDb.select(_accountingDb.accounts)..where(
+          await (db.select(db.accounts)..where(
                 (tbl) =>
                     (tbl.uuid.equals(configuredKey) |
                         tbl.accountCode.equals(configuredKey) |
@@ -92,7 +107,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     final defaultCode = defaultCodes[role] ?? '';
 
     final fallbackAcc =
-        await (_accountingDb.select(_accountingDb.accounts)..where(
+        await (db.select(db.accounts)..where(
               (tbl) =>
                   (tbl.accountCode.equals(defaultCode) |
                       tbl.description.equals('system:${role.name}') |
@@ -232,9 +247,9 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
 
     final now = DateTime.now().toUtc();
 
-    await _accountingDb.transaction(() async {
+    await db.transaction(() async {
       final existingEntry =
-          await (_accountingDb.select(_accountingDb.journalEntries)..where(
+          await (db.select(db.journalEntries)..where(
                 (tbl) =>
                     tbl.sourceType.equals(sourceType) &
                     tbl.sourceId.equals(sourceId) &
@@ -250,7 +265,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
           return;
         }
         entryUuid = existingEntry.uuid;
-        await (_accountingDb.update(_accountingDb.journalEntries)..where(
+        await (db.update(db.journalEntries)..where(
               (tbl) =>
                   tbl.uuid.equals(entryUuid) &
                   tbl.companyId.equals(_currentCompanyId),
@@ -271,13 +286,13 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
               ),
             );
 
-        await (_accountingDb.delete(
-          _accountingDb.journalLines,
+        await (db.delete(
+          db.journalLines,
         )..where((tbl) => tbl.entryUuid.equals(entryUuid))).go();
       } else {
         entryUuid = generateUuidV4();
-        await _accountingDb
-            .into(_accountingDb.journalEntries)
+        await db
+            .into(db.journalEntries)
             .insert(
               JournalEntriesCompanion(
                 uuid: Value(entryUuid),
@@ -298,8 +313,8 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
             );
       }
 
-      await _accountingDb
-          .into(_accountingDb.journalLines)
+      await db
+          .into(db.journalLines)
           .insert(
             JournalLinesCompanion(
               uuid: Value(generateUuidV4()),
@@ -317,8 +332,8 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
             ),
           );
 
-      await _accountingDb
-          .into(_accountingDb.journalLines)
+      await db
+          .into(db.journalLines)
           .insert(
             JournalLinesCompanion(
               uuid: Value(generateUuidV4()),
@@ -346,7 +361,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     final now = DateTime.now().toUtc();
 
     final existing =
-        await (_accountingDb.select(_accountingDb.journalEntries)..where(
+        await (db.select(db.journalEntries)..where(
               (tbl) =>
                   tbl.sourceType.equals(document.documentType.storageValue) &
                   tbl.sourceId.equals(document.documentId) &
@@ -359,7 +374,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       throw const JournalException(JournalException.postedImmutable);
     }
 
-    await (_accountingDb.update(_accountingDb.journalEntries)..where(
+    await (db.update(db.journalEntries)..where(
           (tbl) =>
               tbl.sourceType.equals(document.documentType.storageValue) &
               tbl.sourceId.equals(document.documentId) &
@@ -392,7 +407,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     final now = DateTime.now().toUtc();
 
     final existing =
-        await (_accountingDb.select(_accountingDb.journalEntries)..where(
+        await (db.select(db.journalEntries)..where(
               (tbl) =>
                   tbl.sourceType.equals(sourceType) &
                   tbl.sourceId.equals(sourceId) &
@@ -402,13 +417,13 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
             .getSingleOrNull();
 
     if (existing != null && existing.isPosted) {
-      final existingLines = await (_accountingDb.select(
-        _accountingDb.journalLines,
+      final existingLines = await (db.select(
+        db.journalLines,
       )..where((tbl) => tbl.entryUuid.equals(existing.uuid))).get();
 
       final reverseUuid = generateUuidV4();
-      await _accountingDb
-          .into(_accountingDb.journalEntries)
+      await db
+          .into(db.journalEntries)
           .insert(
             JournalEntriesCompanion(
               uuid: Value(reverseUuid),
@@ -429,8 +444,8 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
           );
 
       for (final line in existingLines) {
-        await _accountingDb
-            .into(_accountingDb.journalLines)
+        await db
+            .into(db.journalLines)
             .insert(
               JournalLinesCompanion(
                 uuid: Value(generateUuidV4()),
@@ -450,7 +465,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       return;
     }
 
-    await (_accountingDb.update(_accountingDb.journalEntries)..where(
+    await (db.update(db.journalEntries)..where(
           (tbl) =>
               tbl.sourceType.equals(sourceType) &
               tbl.sourceId.equals(sourceId) &

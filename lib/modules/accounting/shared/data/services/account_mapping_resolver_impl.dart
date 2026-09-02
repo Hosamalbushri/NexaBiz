@@ -9,12 +9,10 @@ import 'package:stock_count/modules/system_setup/domain/repositories/company_ini
 
 class AccountMappingResolverImpl implements AccountMappingResolver {
   const AccountMappingResolverImpl({
-    required AccountRepository accountRepository,
-    required AccountValidationService validationService,
-    CompanyInitializationRepository? initRepository,
-  })  : _accountRepository = accountRepository,
-        _validationService = validationService,
-        _initRepository = initRepository;
+    required this._accountRepository,
+    required this._validationService,
+    this._initRepository,
+  });
 
   final AccountRepository _accountRepository;
   final AccountValidationService _validationService;

@@ -4,10 +4,9 @@ import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_
 /// App adapter: R&P currencies → company base + Accounting rates.
 class AccountingRpCurrencyAdapter implements RpCurrencyPort {
   AccountingRpCurrencyAdapter({
-    required Future<String> Function() baseCurrencyReader,
-    required CurrencyRateRepository rates,
-  }) : _baseCurrencyReader = baseCurrencyReader,
-       _rates = rates;
+    required this._baseCurrencyReader,
+    required this._rates,
+  });
 
   final Future<String> Function() _baseCurrencyReader;
   final CurrencyRateRepository _rates;

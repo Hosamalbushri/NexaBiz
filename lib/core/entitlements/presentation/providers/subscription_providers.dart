@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../tenancy/tenant_context.dart';
 import '../../data/subscription_repository.dart';
 
 final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
