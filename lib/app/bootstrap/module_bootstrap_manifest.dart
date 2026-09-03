@@ -1,3 +1,4 @@
+import '../../core/import_engine/import_engine_module.dart';
 import '../../modules/accounting/accounting_module.dart';
 import '../../modules/administration/administration_module.dart';
 import '../../modules/customers/customers_module.dart';
@@ -16,6 +17,7 @@ void initializeModuleCatalog() {
   AccountingModule.register();
   AdministrationModule.register();
   CustomersModule.register();
+  ImportEngineModule.register();
   InventoryModule.register();
   ReceiptsPaymentsModule.register();
   ReportsModule.register();

@@ -140,6 +140,9 @@ class _ProductsListPageState extends ConsumerState<ProductsListPage> {
                   ref.read(productsViewModeProvider.notifier).setMode(mode);
                 },
                 onScan: () => _scanAndOpenProduct(context),
+                onImport: auth.hasAnyPermission(InventoryPermissions.productsImport)
+                    ? () => InventoryRoutes.pushProductsImport(context)
+                    : null,
                 onAdd: canCreate
                     ? () => InventoryRoutes.pushProductsNew(context)
                     : null,
@@ -423,12 +426,14 @@ class _ProductsToolbar extends StatelessWidget {
     required this.viewMode,
     required this.onViewModeChanged,
     required this.onScan,
+    this.onImport,
     this.onAdd,
   });
 
   final ProductsViewMode viewMode;
   final ValueChanged<ProductsViewMode> onViewModeChanged;
   final VoidCallback onScan;
+  final VoidCallback? onImport;
   final VoidCallback? onAdd;
 
   @override
@@ -488,6 +493,28 @@ class _ProductsToolbar extends StatelessWidget {
                 ),
               ),
             ),
+            if (onImport != null) ...[
+              const SizedBox(width: AppSpacing.xs),
+              Tooltip(
+                message: l10n.productsImportTitle,
+                child: Material(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  child: InkWell(
+                    onTap: onImport,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    child: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Icon(
+                        Icons.upload_file_outlined,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
             if (onAdd != null) ...[
               const SizedBox(width: AppSpacing.sm),
               Material(

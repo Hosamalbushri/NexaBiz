@@ -33,6 +33,9 @@ import 'accounting_module_quick_actions.dart';
 import 'accounting_module_settings.dart';
 import 'accounting_module_setup.dart';
 import 'chart_of_accounts/data/repositories/account_repository_impl.dart';
+import '../../core/import_engine/presentation/pages/universal_import_wizard_page.dart';
+import '../authentication/presentation/providers/auth_providers.dart';
+import 'chart_of_accounts/import/account_import_profile.dart';
 import 'chart_of_accounts/presentation/pages/account_details_page.dart';
 import 'chart_of_accounts/presentation/pages/account_form_page.dart';
 import 'chart_of_accounts/presentation/pages/accounts_opening_setup_page.dart';
@@ -349,7 +352,18 @@ class AccountingModule extends AppModule {
             GoRoute(
               path: 'import',
               name: 'accountingAccountsImport',
-              redirect: (context, state) => AccountingRoutes.openingSetup,
+              builder: (context, state) => Consumer(
+                builder: (context, ref, child) {
+                  final companyId = ref.watch(currentCompanyIdProvider);
+                  final auth = ref.watch(authStateProvider);
+                  final userId = auth.session?.user.id ?? 'SYSTEM_USER';
+                  return UniversalImportWizardPage(
+                    companyId: companyId,
+                    userId: userId,
+                    registeredProfiles: [AccountImportProfile.createProfile()],
+                  );
+                },
+              ),
             ),
             GoRoute(
               path: ':id',

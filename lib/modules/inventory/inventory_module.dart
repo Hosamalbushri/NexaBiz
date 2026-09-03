@@ -18,12 +18,15 @@ import '../../core/setup/setup.dart';
 import 'inventory_module_quick_actions.dart';
 import 'inventory_module_settings.dart';
 import 'inventory_module_setup.dart';
+import '../../core/import_engine/presentation/pages/universal_import_wizard_page.dart';
+import '../../core/tenancy/tenant_context.dart';
+import '../authentication/presentation/providers/auth_providers.dart';
 import 'permissions/inventory_permission_package.dart';
+import 'products/import/product_import_profile.dart';
 import 'products/presentation/pages/product_barcode_scanner_page.dart';
 import 'products/presentation/pages/product_form_page.dart';
 import 'products/presentation/pages/products_barcode_page.dart';
 import 'products/presentation/pages/products_home_page.dart';
-import 'products/presentation/pages/products_import_page.dart';
 import 'products/presentation/pages/products_list_page.dart';
 import 'products/presentation/pages/products_settings_page.dart';
 import 'products/presentation/providers/product_providers.dart';
@@ -356,7 +359,18 @@ class InventoryModule extends AppModule {
             GoRoute(
               path: 'import',
               name: 'inventoryProductsImport',
-              builder: (context, state) => const ProductsImportPage(),
+              builder: (context, state) => Consumer(
+                builder: (context, ref, child) {
+                  final companyId = ref.watch(currentCompanyIdProvider);
+                  final auth = ref.watch(authStateProvider);
+                  final userId = auth.session?.user.id ?? 'SYSTEM_USER';
+                  return UniversalImportWizardPage(
+                    companyId: companyId,
+                    userId: userId,
+                    registeredProfiles: [ProductImportProfile.createProfile()],
+                  );
+                },
+              ),
             ),
             GoRoute(
               path: 'barcode',

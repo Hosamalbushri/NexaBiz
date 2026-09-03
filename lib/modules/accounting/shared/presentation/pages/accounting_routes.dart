@@ -134,7 +134,7 @@ class AccountingRoutes {
   }
 
   static void pushAccountsImport(BuildContext context) =>
-      context.push(openingSetup);
+      context.push(accountsImport);
 
   static void pushOpeningSetup(BuildContext context) =>
       context.push(openingSetup);
