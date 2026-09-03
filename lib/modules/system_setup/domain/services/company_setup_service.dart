@@ -1,6 +1,7 @@
 import '../../../../app/settings/company/company_profile.dart';
 import '../../../../app/settings/settings_repository.dart';
 import '../../../authentication/domain/entities/auth_session.dart';
+import '../../../authentication/domain/local_permissions.dart';
 import '../repositories/company_initialization_repository.dart';
 
 /// Exceptions thrown during Company Setup orchestration.
@@ -56,12 +57,13 @@ class CompanySetupService {
     }
 
     // 3. Company Scoping & Existing Company Lookup
-    final companyId = session.currentCompanyId?.trim();
-    if (companyId == null || companyId.isEmpty) {
-      throw const CompanySetupException(
-        'Invalid session context: Active company ID is missing.',
-      );
-    }
+    final companyId = (session.currentCompanyId?.trim().isNotEmpty == true)
+        ? session.currentCompanyId!.trim()
+        : (session.activeCompanyId?.trim().isNotEmpty == true
+            ? session.activeCompanyId!.trim()
+            : (session.companies.isNotEmpty
+                ? session.companies.first.id.trim()
+                : LocalAuthDefaults.companyId));
 
     // 4. Input Validation
     final trimmedName = profile.name.trim();

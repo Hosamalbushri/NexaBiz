@@ -10,6 +10,8 @@ import '../../../../core/network/token_refresh_outcome.dart';
 import '../../../../core/permissions/permission_guard.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import '../../../../core/tenancy/session_company.dart';
+import '../../../../core/tenancy/tenant_lifecycle.dart';
+export '../../../../core/tenancy/tenant_lifecycle.dart';
 import '../../../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../../data/auth_repository_impl.dart';
 import '../../data/local_auth_repository.dart';
@@ -76,9 +78,7 @@ final authSyncHttpOverride = syncAuthenticatedHttpClientProvider.overrideWith(
 );
 
 final sessionCompanyIdOverride = sessionCompanyIdProvider.overrideWith((ref) {
-  return ref.watch(
-    authStateProvider.select((s) => s.session?.currentCompanyId),
-  );
+  return ref.watch(authStateProvider).session?.currentCompanyId;
 });
 
 List<Override> authenticationOverrides() => [
@@ -397,16 +397,7 @@ class AuthController extends StateNotifier<AuthState> {
       adminRole: adminRole,
       adminPermissions: adminPermissions,
     );
-    final current = state.session;
-    if (current != null) {
-      final hasComp = current.companies.any((c) => c.id == company.id);
-      if (!hasComp) {
-        final updated = current.copyWith(
-          companies: [...current.companies, company],
-        );
-        _set(_stateFor(updated, AuthBackend.local));
-      }
-    }
+    await switchCompany(company.id);
     return company;
   }
 
@@ -490,10 +481,100 @@ class AuthController extends StateNotifier<AuthState> {
     );
   }
 
-  Future<AuthSessionSnapshot?> switchCompany(String companyId) async {
-    final session = await _local.switchCompany(companyId);
+  int _companySwitchSequence = 0;
+
+  Future<CompanySwitchResult> switchCompany(String companyId) async {
+    final sequence = ++_companySwitchSequence;
+    final currentSession = state.session;
+
+    if (currentSession == null) {
+      return CompanySwitchResult.failure('No active session to switch company from');
+    }
+
+    final previousCompanyId = currentSession.currentCompanyId ?? '';
+
+    // Rule 11: Idempotency check for same-company switch
+    if (previousCompanyId == companyId) {
+      return CompanySwitchResult.success(
+        companyId: companyId,
+        previousCompanyId: previousCompanyId,
+        session: currentSession,
+        isNoOp: true,
+      );
+    }
+
+    // Attempt atomic switch in store
+    AuthSessionSnapshot? nextSession;
+    try {
+      nextSession = await _local.switchCompany(companyId);
+    } catch (_) {
+      return CompanySwitchResult.failure(
+        'Switch failed: user does not have active membership in target company',
+      );
+    }
+
+    // Rule 10: Race safety check
+    if (sequence != _companySwitchSequence) {
+      return CompanySwitchResult.failure(
+        'Company switch operation superseded by newer switch request',
+      );
+    }
+
+    _set(_stateFor(nextSession, AuthBackend.local));
+    return CompanySwitchResult.success(
+      companyId: companyId,
+      previousCompanyId: previousCompanyId,
+      session: nextSession,
+    );
+  }
+
+  /// Switches active company after validating target company email and password credentials.
+  Future<CompanySwitchResult> switchCompanyWithCredentials({
+    required String companyId,
+    required String email,
+    required String password,
+  }) async {
+    final sequence = ++_companySwitchSequence;
+    final currentSession = state.session;
+
+    if (currentSession == null) {
+      return CompanySwitchResult.failure(
+        'لا توجد جلسة نشطة للانتقال من خلالها',
+      );
+    }
+
+    final previousCompanyId = currentSession.currentCompanyId ?? '';
+
+    // Validate email & password credentials against local auth store for the target company context
+    AuthSessionSnapshot session;
+    try {
+      session = await _local.login(
+        email: email,
+        password: password,
+        deviceId: currentSession.deviceId ?? 'device_local',
+        deviceName: 'Local Device',
+        platform: 'flutter',
+        companyId: companyId,
+      );
+    } catch (_) {
+      return CompanySwitchResult.failure(
+        'البريد الإلكتروني أو كلمة المرور غير صحيحة، أو ليس لديك صلاحية لهذه الشركة',
+      );
+    }
+
+    // Race safety check
+    if (sequence != _companySwitchSequence) {
+      return CompanySwitchResult.failure(
+        'تم تجاوز طلب الانتقال بواسطة طلب أحدث',
+      );
+    }
+
     _set(_stateFor(session, AuthBackend.local));
-    return session;
+    return CompanySwitchResult.success(
+      companyId: companyId,
+      previousCompanyId: previousCompanyId,
+      session: session,
+    );
   }
 
 

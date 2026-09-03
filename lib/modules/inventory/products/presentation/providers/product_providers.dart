@@ -34,7 +34,6 @@ final inventoryDatabaseProvider = Provider<InventoryDatabase>((ref) {
     ),
   );
   ref.onDispose(db.close);
-  ref.keepAlive();
   return db;
 });
 
@@ -130,7 +129,9 @@ final productExcelImportDatasourceProvider =
 
 /// Lightweight invalidation token — avoids reloading the full catalog stream
 /// on every products list rebuild / scroll frame.
-final productsRevisionProvider = StateProvider<int>((ref) => 0);
+final productsRevisionProvider = StateProvider.autoDispose<int>(
+  (ref) => 0,
+);
 
 void bumpProductsRevision(Ref ref) {
   ref.read(productsRevisionProvider.notifier).state++;
@@ -196,33 +197,38 @@ final productByIdProvider = FutureProvider.autoDispose.family<Product?, int>((
 });
 
 final productsViewModeProvider =
-    StateNotifierProvider<
+    StateNotifierProvider.autoDispose<
       ProductsViewModeController,
       AsyncValue<ProductsViewMode>
     >((ref) {
       return ProductsViewModeController(
         repository: ref.watch(settingsRepositoryProvider),
+        companyId: ref.watch(sessionCompanyIdProvider),
       );
     });
 
 class ProductsViewModeController
     extends StateNotifier<AsyncValue<ProductsViewMode>> {
-  ProductsViewModeController({required this._repository})
-    : super(const AsyncValue.loading()) {
+  ProductsViewModeController({
+    required SettingsRepository repository,
+    this.companyId,
+  })  : _repository = repository,
+        super(const AsyncValue.loading()) {
     _load();
   }
 
   final SettingsRepository _repository;
+  final String? companyId;
 
   Future<void> _load() async {
     state = await AsyncValue.guard(() async {
-      final stored = await _repository.loadProductsViewMode();
+      final stored = await _repository.loadProductsViewMode(companyId);
       return ProductsViewMode.fromStorage(stored);
     });
   }
 
   Future<void> setMode(ProductsViewMode mode) async {
     state = AsyncValue.data(mode);
-    await _repository.saveProductsViewMode(mode.storageValue);
+    await _repository.saveProductsViewMode(mode.storageValue, companyId);
   }
 }

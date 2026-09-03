@@ -7,12 +7,14 @@ import '../../core/modules/module_registry.dart';
 import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
 import '../../core/modules/route_access_rule.dart';
-import 'receipts_payments_module_quick_actions.dart';
-import 'receipts_payments_module_settings.dart';
 import '../../core/permissions/permission_defs.dart';
+import '../../core/setup/setup.dart';
 import 'exchanges/presentation/pages/currency_exchange_form_page.dart';
 import 'permissions/receipts_payments_permission_package.dart';
 import 'posting/presentation/pages/rp_posting_service_page.dart';
+import 'receipts_payments_module_quick_actions.dart';
+import 'receipts_payments_module_settings.dart';
+import 'receipts_payments_module_setup.dart';
 import 'shared/presentation/pages/receipts_payments_home_page.dart';
 import 'shared/presentation/pages/receipts_payments_list_page.dart';
 import 'shared/presentation/pages/receipts_payments_routes.dart';
@@ -27,8 +29,12 @@ class ReceiptsPaymentsModule extends AppModule {
   static const String moduleId = 'receipts_payments';
 
   /// Self-registers ReceiptsPaymentsModule into the global ModuleRegistry via injection.
-  static void register() {
+  /// Optionally registers receipts_payments setup definition if [setupRegistry] is provided.
+  static void register({CentralSetupRegistry? setupRegistry}) {
     ModuleRegistry.register(const ReceiptsPaymentsModule());
+    if (setupRegistry != null) {
+      registerReceiptsPaymentsSetup(setupRegistry);
+    }
   }
 
   /// Self-unregisters ReceiptsPaymentsModule from the global ModuleRegistry.

@@ -4,14 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/bootstrap/app_bootstrap.dart';
 import '../../../../app/localization/app_localizations.dart';
-import '../../../../app/presentation/providers/dashboard_services_provider.dart';
-import '../../../../app/settings/company/company_profile_providers.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/auth/presentation/providers/auth_context_providers.dart';
-import '../../../../core/entitlements/presentation/providers/entitlement_providers.dart';
-import 'package:stock_count/modules/sync/sync.dart';
 import 'company_details_sheet.dart';
+import 'company_switch_confirmation_dialog.dart';
 import '../providers/auth_providers.dart';
 
 /// Interactive modal sheet to switch active company context.
@@ -127,33 +123,16 @@ class CompanySelectionSheet extends ConsumerWidget {
                           return;
                         }
 
-                        final router = GoRouter.of(context);
                         final nav = Navigator.of(context);
 
-                        await AppBootstrap.stopSync(ref);
+                        final success = await showCompanySwitchConfirmationFlow(
+                          context,
+                          ref,
+                          company,
+                        );
 
-                        final switchedSession = await ref
-                            .read(authStateProvider.notifier)
-                            .switchCompany(company.id);
-
-                        ref.invalidate(currentEntitlementProvider);
-                        ref.invalidate(currentPermissionsProvider);
-                        ref.invalidate(authorizationContextProvider);
-                        ref.invalidate(companyProfileProvider);
-                        ref.invalidate(dashboardServicesProvider);
-                        ref.invalidate(syncOverviewProvider);
-
-                        await AppBootstrap.bootstrapSync(ref);
-
-                        if (nav.canPop()) {
+                        if (context.mounted && success && nav.canPop()) {
                           nav.pop();
-                        }
-
-                        if (switchedSession != null) {
-                          router.go('/dashboard');
-                        } else {
-                          await ref.read(authStateProvider.notifier).logout();
-                          router.go('/login');
                         }
                       },
                       child: Padding(
@@ -457,13 +436,6 @@ class CompanySelectionSheet extends ConsumerWidget {
               await ref
                   .read(authStateProvider.notifier)
                   .switchCompany(newCompany.id);
-
-              ref.invalidate(currentEntitlementProvider);
-              ref.invalidate(currentPermissionsProvider);
-              ref.invalidate(authorizationContextProvider);
-              ref.invalidate(companyProfileProvider);
-              ref.invalidate(dashboardServicesProvider);
-              ref.invalidate(syncOverviewProvider);
 
               await AppBootstrap.bootstrapSync(ref);
             },

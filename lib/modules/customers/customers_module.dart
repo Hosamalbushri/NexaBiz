@@ -14,9 +14,11 @@ import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
 import '../receipts_payments/transactions/presentation/providers/rp_providers.dart';
 import '../sales/invoices/presentation/providers/sale_providers.dart';
+import '../../core/setup/setup.dart';
 import 'accounts/presentation/pages/customers_accounts_page.dart';
 import 'customers_module_quick_actions.dart';
 import 'customers_module_settings.dart';
+import 'customers_module_setup.dart';
 import 'directory/presentation/pages/customer_details_page.dart';
 import 'directory/presentation/pages/customer_form_page.dart';
 import 'directory/presentation/pages/customers_home_page.dart';
@@ -38,8 +40,12 @@ class CustomersModule extends AppModule {
   static const String moduleId = 'customers';
 
   /// Self-registers CustomersModule into the global ModuleRegistry via injection.
-  static void register() {
+  /// Optionally registers customers setup definition if [setupRegistry] is provided.
+  static void register({CentralSetupRegistry? setupRegistry}) {
     ModuleRegistry.register(const CustomersModule());
+    if (setupRegistry != null) {
+      registerCustomersSetup(setupRegistry);
+    }
   }
 
   /// Self-unregisters CustomersModule from the global ModuleRegistry.

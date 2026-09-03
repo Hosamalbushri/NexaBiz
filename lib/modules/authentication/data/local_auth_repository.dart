@@ -264,13 +264,7 @@ class LocalAuthRepository implements AuthRepository {
       adminPermissions: adminPermissions,
     );
 
-    final hasCompany = session.companies.any((c) => c.id == company.id);
-    if (!hasCompany) {
-      final updated = session.copyWith(
-        companies: [...session.companies, company],
-      );
-      _emit(updated);
-    }
+    await switchCompany(company.id);
     return company;
   }
 
@@ -280,7 +274,7 @@ class LocalAuthRepository implements AuthRepository {
     // This prevents stale authorization state from being reused by a subsequent user.
     final userId = _cached?.user.id;
     await _tokenStorage.clear();
-    await _store.saveSession(null);
+    await _store.logout(_cached);
     if (userId != null && userId.isNotEmpty) {
       try {
         await _offlineAuthStore.deleteAllSnapshotsForUser(userId);

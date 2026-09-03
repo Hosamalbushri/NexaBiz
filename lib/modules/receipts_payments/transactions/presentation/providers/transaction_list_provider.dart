@@ -9,9 +9,10 @@ import 'rp_providers.dart';
 
 const kTransactionListPageSize = 30;
 
-final transactionListFilterProvider = StateProvider<TransactionListFilter>(
-  (ref) => const TransactionListFilter(),
-);
+final transactionListFilterProvider =
+    StateProvider.autoDispose<TransactionListFilter>(
+      (ref) => const TransactionListFilter(),
+    );
 
 class TransactionListState {
   const TransactionListState({

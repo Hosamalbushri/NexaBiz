@@ -19,6 +19,7 @@ import 'invoices/presentation/pages/sales_home_page.dart';
 import 'invoices/presentation/pages/sales_list_page.dart';
 import 'invoices/presentation/providers/sale_providers.dart';
 import '../../core/modules/module_setup_definition.dart';
+import '../../core/setup/setup.dart';
 import 'permissions/sales_permission_package.dart';
 import 'sales_module_quick_actions.dart';
 import 'sales_module_settings.dart';
@@ -34,8 +35,12 @@ class SalesModule extends AppModule {
   static const String moduleId = 'sales';
 
   /// Self-registers SalesModule into the global ModuleRegistry via injection.
-  static void register() {
+  /// Optionally registers sales setup definition if [setupRegistry] is provided.
+  static void register({CentralSetupRegistry? setupRegistry}) {
     ModuleRegistry.register(const SalesModule());
+    if (setupRegistry != null) {
+      registerSalesSetup(setupRegistry);
+    }
   }
 
   /// Self-unregisters SalesModule from the global ModuleRegistry.

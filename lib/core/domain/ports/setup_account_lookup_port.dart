@@ -25,6 +25,8 @@ class SetupAccountData {
 
 abstract class SetupAccountLookupPort {
   Future<SetupAccountData?> findAccount(String codeOrUuidOrId);
+  Future<List<SetupAccountData>> getChildren(String parentUuid, {String? companyId});
+  Future<List<SetupAccountData>> getDescendants(String parentUuid, {String? companyId});
 }
 
 class NoOpSetupAccountLookupPort implements SetupAccountLookupPort {
@@ -32,4 +34,11 @@ class NoOpSetupAccountLookupPort implements SetupAccountLookupPort {
 
   @override
   Future<SetupAccountData?> findAccount(String codeOrUuidOrId) async => null;
+
+  @override
+  Future<List<SetupAccountData>> getChildren(String parentUuid, {String? companyId}) async => const [];
+
+  @override
+  Future<List<SetupAccountData>> getDescendants(String parentUuid, {String? companyId}) async => const [];
 }
+

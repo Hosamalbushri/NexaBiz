@@ -14,6 +14,7 @@ import '../../core/reporting/pdf_document_preview_page.dart';
 import '../sales/invoices/presentation/providers/sale_barcode_capture_provider.dart';
 import '../sales/invoices/presentation/providers/sale_providers.dart';
 import '../../core/modules/module_setup_definition.dart';
+import '../../core/setup/setup.dart';
 import 'inventory_module_quick_actions.dart';
 import 'inventory_module_settings.dart';
 import 'inventory_module_setup.dart';
@@ -55,8 +56,12 @@ class InventoryModule extends AppModule {
   static const String moduleId = 'inventory';
 
   /// Self-registers InventoryModule into the global ModuleRegistry via injection.
-  static void register() {
+  /// Optionally registers inventory setup definition if [setupRegistry] is provided.
+  static void register({CentralSetupRegistry? setupRegistry}) {
     ModuleRegistry.register(const InventoryModule());
+    if (setupRegistry != null) {
+      registerInventorySetup(setupRegistry);
+    }
   }
 
   /// Self-unregisters InventoryModule from the global ModuleRegistry.

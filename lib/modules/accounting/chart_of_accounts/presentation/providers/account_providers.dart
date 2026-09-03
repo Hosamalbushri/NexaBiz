@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/core/database/tenant_database_name.dart';
+import 'package:stock_count/modules/authentication/domain/local_permissions.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/core/tenancy/session_company.dart';
@@ -24,7 +25,6 @@ final accountingDatabaseProvider = Provider<AccountingDatabase>((ref) {
     ),
   );
   ref.onDispose(db.close);
-  ref.keepAlive();
   return db;
 });
 
@@ -32,19 +32,7 @@ final accountRepositoryImplProvider = Provider<AccountRepositoryImpl>((ref) {
   return AccountRepositoryImpl(
     ref.watch(accountingDatabaseProvider),
     syncQueue: ref.watch(syncQueueProvider),
-    readCompanyId: () {
-      final companyId = ref.read(currentCompanyIdProvider);
-      if (companyId.isNotEmpty) return companyId;
-      final session = ref.read(authStateProvider).session;
-      if (session?.currentCompanyId != null &&
-          session!.currentCompanyId!.isNotEmpty) {
-        return session.currentCompanyId!;
-      }
-      if (session?.companies.isNotEmpty == true) {
-        return session!.companies.first.id;
-      }
-      return '';
-    },
+    readCompanyId: () => ref.read(currentCompanyIdProvider),
   );
 });
 
@@ -100,7 +88,9 @@ final ensureDefaultChartUseCaseProvider =
       return EnsureDefaultChartOfAccounts(ref.watch(accountRepositoryProvider));
     });
 
-final accountsIncludeInactiveProvider = StateProvider<bool>((ref) => false);
+final accountsIncludeInactiveProvider = StateProvider.autoDispose<bool>(
+  (ref) => false,
+);
 
 final accountTypeFilterProvider = StateProvider.autoDispose<AccountType?>(
   (ref) => null,

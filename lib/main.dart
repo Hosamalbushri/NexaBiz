@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -25,6 +26,7 @@ Future<void> main() async {
   // Flutter's "Zone mismatch" assertion.
   Future<void> startApp() async {
     WidgetsFlutterBinding.ensureInitialized();
+    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     await TrustedRootCertificates.install();
     installAppErrorLogging();
 

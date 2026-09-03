@@ -65,12 +65,20 @@ class TenantContext {
 }
 
 /// Provider exposing active [TenantContext].
+///
+/// Rule 4: No silent company fallback. An unassigned or system scope context
+/// resolves to an empty company ID ('').
 final tenantContextProvider = Provider<TenantContext>((ref) {
   final session = ref.watch(authStateProvider).session;
   if (session == null) {
     return TenantContext.empty;
   }
-  final companyId = session.currentCompanyId?.trim() ?? '';
+  var companyId = session.currentCompanyId?.trim() ??
+      session.activeCompanyId?.trim() ??
+      '';
+  if (companyId.isEmpty && session.companies.isNotEmpty) {
+    companyId = session.companies.first.id.trim();
+  }
   return TenantContext(
     companyId: companyId,
     userId: session.user.id,

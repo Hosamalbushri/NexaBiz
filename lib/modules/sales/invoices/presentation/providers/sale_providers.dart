@@ -30,7 +30,6 @@ final salesDatabaseProvider = Provider<SalesDatabase>((ref) {
     name: tenantScopedName('sales_master', ref.watch(sessionCompanyIdProvider)),
   );
   ref.onDispose(db.close);
-  ref.keepAlive();
   return db;
 });
 
@@ -170,7 +169,7 @@ final deleteSaleUseCaseProvider = Provider<DeleteSale>((ref) {
   return DeleteSale(ref.watch(saleRepositoryProvider));
 });
 
-final saleListFilterProvider = StateProvider<SaleListFilter>(
+final saleListFilterProvider = StateProvider.autoDispose<SaleListFilter>(
   (ref) => const SaleListFilter(),
 );
 
@@ -188,7 +187,9 @@ final saleByIdProvider = FutureProvider.autoDispose.family<Sale?, int>((
 });
 
 /// Default tax rate (%) for new sales — configurable later via settings.
-final salesDefaultTaxRateProvider = StateProvider<double>((ref) => 0);
+final salesDefaultTaxRateProvider = StateProvider.autoDispose<double>(
+  (ref) => 0,
+);
 
 final saleInvoicePdfPrinterProvider = Provider<SaleInvoicePdfPrinter>((ref) {
   return const SaleInvoicePdfPrinter();

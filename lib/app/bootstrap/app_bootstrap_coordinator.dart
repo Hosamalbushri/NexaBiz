@@ -252,7 +252,7 @@ class AppBootstrapCoordinator extends StateNotifier<AppBootstrapState> {
           ? AppBootstrapStatus.authenticatedCompanyScope
           : (isSystemAdmin
               ? AppBootstrapStatus.authenticatedSystemScope
-              : AppBootstrapStatus.unauthenticated);
+              : AppBootstrapStatus.ready);
 
       state = AppBootstrapState(
         status: status,
@@ -265,6 +265,11 @@ class AppBootstrapCoordinator extends StateNotifier<AppBootstrapState> {
                 : 'Company selection required'),
       );
     }
+  }
+
+  @visibleForTesting
+  void syncWithAuthStateForTest(AuthState authState) {
+    _syncWithAuthState(authState);
   }
 }
 

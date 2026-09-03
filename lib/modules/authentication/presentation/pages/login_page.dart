@@ -58,13 +58,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           await _localAuth.isDeviceSupported();
       final store = ref.read(syncLoginCredentialStoreProvider);
       final hasSaved = await store.hasSavedCredentials(mode: AuthenticationMode.local);
-      final savedEmail = await store.readEmail(mode: AuthenticationMode.local);
       final isBioEnabled = await store.isBiometricLoginEnabled(
         mode: AuthenticationMode.local,
       );
-
-      final authStore = ref.read(localAuthStoreProvider);
-      final adminEmail = await authStore.getAdminEmail();
 
       if (mounted) {
         setState(() {
@@ -73,11 +69,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               kDebugMode ||
               defaultTargetPlatform == TargetPlatform.linux;
           _hasSavedCredentials = hasSaved;
-          if (savedEmail != null && savedEmail.isNotEmpty) {
-            _emailController.text = savedEmail;
-          } else if (adminEmail != null && adminEmail.isNotEmpty) {
-            _emailController.text = adminEmail;
-          }
         });
 
         if (_canCheckBiometrics && hasSaved && isBioEnabled && !_biometricPrompted) {

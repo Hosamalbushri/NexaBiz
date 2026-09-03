@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_initializing_formals
+
 import 'package:stock_count/modules/accounting/journals/domain/repositories/journal_repository.dart';
 import 'package:stock_count/core/domain/entities/document_ref.dart';
 import 'accounting_entry_builder.dart';

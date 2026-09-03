@@ -132,8 +132,9 @@ class AuthSessionSnapshot {
     if (isSystemLevelPermission(code)) {
       return user.isSystemAdmin || permissions.contains(code);
     }
-    if (activeCompanyContext == null) return false;
-    return activeCompanyContext!.hasPermission(code);
+    final ctx = companyContext;
+    if (ctx == null) return false;
+    return ctx.hasPermission(code);
   }
 
   bool hasAnyPermission(Iterable<String> codes) =>

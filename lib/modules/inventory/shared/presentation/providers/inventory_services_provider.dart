@@ -2,36 +2,46 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
 import 'package:stock_count/app/settings/settings_repository.dart';
+import 'package:stock_count/core/tenancy/session_company.dart';
 import '../models/inventory_service_definition.dart';
 
 /// Ordered inventory service ids pinned on the Inventory hub.
 ///
 /// Defaults to the full catalog until the user customizes the list.
 final inventoryServicesProvider =
-    StateNotifierProvider<
+    StateNotifierProvider.autoDispose<
       InventoryServicesController,
       AsyncValue<List<String>>
     >((ref) {
       return InventoryServicesController(
         repository: ref.watch(settingsRepositoryProvider),
+        companyId: ref.watch(sessionCompanyIdProvider) ?? '',
       );
     });
 
 class InventoryServicesController
     extends StateNotifier<AsyncValue<List<String>>> {
-  InventoryServicesController({required this._repository})
-    : super(const AsyncValue.loading()) {
+  InventoryServicesController({
+    required SettingsRepository repository,
+    String companyId = '',
+  })  : _repository = repository,
+        _companyId = companyId,
+        super(AsyncValue.data(_defaultCatalogIds())) {
     _load();
   }
 
   final SettingsRepository _repository;
+  final String _companyId;
+
+  static List<String> _defaultCatalogIds() {
+    return [for (final service in inventoryServiceCatalog()) service.id];
+  }
 
   Future<void> _load() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      final saved = await _repository.loadInventoryServiceIds();
-      return _sanitize(saved ?? _defaultIds());
-    });
+    final saved = await _repository.loadInventoryServiceIds(_companyId);
+    if (saved != null) {
+      state = AsyncValue.data(_sanitize(saved));
+    }
   }
 
   List<String> _defaultIds() {
@@ -65,7 +75,7 @@ class InventoryServicesController
   Future<void> save(List<String> ids) async {
     final sanitized = _sanitize(ids);
     state = AsyncValue.data(sanitized);
-    await _repository.saveInventoryServiceIds(sanitized);
+    await _repository.saveInventoryServiceIds(sanitized, _companyId);
   }
 
   /// Persists a new order for the currently visible services.

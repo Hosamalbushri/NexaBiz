@@ -6,6 +6,7 @@ import '../../../../app/settings/company/company_profile.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../domain/entities/auth_user.dart';
+import '../providers/auth_providers.dart';
 
 /// Modal bottom sheet to view detailed company profile and ownership data.
 class CompanyDetailsSheet extends ConsumerStatefulWidget {
@@ -175,9 +176,96 @@ class _CompanyDetailsSheetState extends ConsumerState<CompanyDetailsSheet> {
                   }
 
                   final profile = snapshot.data ?? const CompanyProfile();
+                  final session = ref.watch(authStateProvider).session;
+                  final isCurrentlyActive = session?.currentCompanyId == company.id;
+                  final activeContext = session?.activeCompanyContext;
 
                   return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Tenancy Context Card
+                      Container(
+                        margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: isCurrentlyActive
+                              ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+                              : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(
+                            color: isCurrentlyActive
+                                ? colorScheme.primary.withValues(alpha: 0.4)
+                                : colorScheme.outlineVariant.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  isCurrentlyActive
+                                      ? Icons.check_circle_rounded
+                                      : Icons.tag_rounded,
+                                  size: 18,
+                                  color: isCurrentlyActive
+                                      ? colorScheme.primary
+                                      : colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: AppSpacing.xs),
+                                Text(
+                                  'سياق التشغيل والعزل (Tenancy Context)',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: isCurrentlyActive
+                                        ? colorScheme.primary
+                                        : colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.xs + 2),
+                            _buildContextText(
+                              context,
+                              label: 'حالة السياق النشط:',
+                              value: isCurrentlyActive
+                                  ? 'نشط حالياً في الجلسة (Active Context)'
+                                  : 'غير نشط حالياً (Inactive Context)',
+                            ),
+                            _buildContextText(
+                              context,
+                              label: 'معرّف الشركة (Company ID):',
+                              value: company.id,
+                            ),
+                            _buildContextText(
+                              context,
+                              label: 'رمز الشركة (Code):',
+                              value: company.code.isNotEmpty ? company.code : 'غير محدد',
+                            ),
+                            _buildContextText(
+                              context,
+                              label: 'الدور في السياق (Role):',
+                              value: company.role ??
+                                  (session?.user.isSuperAdmin == true
+                                      ? 'Owner (SuperAdmin)'
+                                      : 'Member'),
+                            ),
+                            if (activeContext != null && isCurrentlyActive)
+                              _buildContextText(
+                                context,
+                                label: 'معرّف السياق المعزول (Context ID):',
+                                value: activeContext.companyId,
+                              ),
+                            if (session?.sessionId != null)
+                              _buildContextText(
+                                context,
+                                label: 'معرّف الجلسة (Session ID):',
+                                value: session!.sessionId!,
+                              ),
+                          ],
+                        ),
+                      ),
+
                       _buildDetailTile(
                         context,
                         icon: Icons.fingerprint_rounded,
@@ -311,6 +399,41 @@ class _CompanyDetailsSheetState extends ConsumerState<CompanyDetailsSheet> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContextText(
+    BuildContext context, {
+    required String label,
+    required String value,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: SelectableText(
+              value,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
             ),
           ),
         ],

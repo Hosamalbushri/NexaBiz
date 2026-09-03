@@ -44,7 +44,7 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
   final _adminEmailController = TextEditingController();
   final _adminPasswordController = TextEditingController();
 
-  var _hydrated = false;
+  CompanyProfile? _hydratedProfile;
   var _saving = false;
   var _logoBusy = false;
   var _currencyLocked = false;
@@ -65,6 +65,7 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
     _cityController.dispose();
     _countryController.dispose();
     _websiteController.dispose();
+    _invoiceHeaderRightController.text = '';
     _invoiceHeaderRightController.dispose();
     _invoiceHeaderLeftController.dispose();
     _adminEmailController.dispose();
@@ -73,10 +74,10 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
   }
 
   void _hydrate(CompanyProfile profile) {
-    if (_hydrated) {
+    if (_hydratedProfile == profile) {
       return;
     }
-    _hydrated = true;
+    _hydratedProfile = profile;
     _nameController.text = profile.name;
     _legalNameController.text = profile.legalName ?? '';
     _taxController.text = profile.taxNumber ?? '';

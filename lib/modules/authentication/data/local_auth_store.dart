@@ -245,8 +245,7 @@ class LocalAuthStore {
         return null;
       }
     } else {
-      if (companies.length == 1 &&
-          authorizedCompanyIds.contains(companies.first.id)) {
+      if (companies.isNotEmpty) {
         selectedId = companies.first.id;
       } else {
         selectedId = null;
@@ -489,7 +488,7 @@ class LocalAuthStore {
             activeMembership.companyId == selectedId &&
             activeMembership.status == 'active')
         ? ActiveCompanyContext.fromMembership(
-            membership: activeMembership,
+            membership: activeMembership.copyWith(permissions: permissions.toList()),
             authenticatedUserId: matched.id,
             companyName: companies
                 .cast<AuthCompany?>()
@@ -557,17 +556,57 @@ class LocalAuthStore {
           snapshot.roles.contains(LocalAuthDefaults.ownerRole);
       final allCompanies = _readCompanies(box);
       bool dirty = false;
-      List<AuthCompany> updatedCompanies = snapshot.companies;
+      List<AuthCompany> updatedCompanies = _readAuthorizedCompanies(box, snapshot.user);
 
-      if (snapshot.user.isSuperAdmin && allCompanies.length != snapshot.companies.length) {
-        updatedCompanies = allCompanies.map((c) {
-          final existing = snapshot.companies.cast<AuthCompany?>().firstWhere(
-                (sc) => sc?.id == c.id,
-                orElse: () => null,
-              );
-          return existing ?? AuthCompany(id: c.id, name: c.name, code: c.code, role: 'Owner');
-        }).toList();
+      if (updatedCompanies.length != snapshot.companies.length) {
         dirty = true;
+      }
+
+      if ((snapshot.currentCompanyId == null || snapshot.currentCompanyId!.isEmpty) &&
+          updatedCompanies.isNotEmpty) {
+        final firstCid = updatedCompanies.first.id;
+        final memberships = _readMemberships(box);
+        final m = memberships.firstWhere(
+          (mem) => mem.userId == snapshot.user.id && mem.companyId == firstCid && mem.isActive,
+          orElse: () => UserCompanyMembership(
+            userId: snapshot.user.id,
+            companyId: firstCid,
+            role: snapshot.user.isSuperAdmin ? 'Owner' : 'Member',
+            status: 'active',
+            permissions: snapshot.user.isSuperAdmin ? kAllLocalPermissions.toList() : const [],
+          ),
+        );
+        final activeContext = ActiveCompanyContext.fromMembership(
+          membership: m,
+          authenticatedUserId: snapshot.user.id,
+          companyName: updatedCompanies.first.name,
+          companyCode: updatedCompanies.first.code,
+        );
+        snapshot = snapshot.copyWith(
+          currentCompanyId: firstCid,
+          activeMembership: m,
+          activeCompanyContext: activeContext,
+          roles: [m.role],
+          permissions: Set<String>.from(m.permissions.isNotEmpty
+              ? m.permissions
+              : (snapshot.user.isSuperAdmin ? kAllLocalPermissions : const [])),
+        );
+        dirty = true;
+      } else if (snapshot.currentCompanyId != null) {
+        final cid = snapshot.currentCompanyId!;
+        final companyExists = allCompanies.any((c) => c.id == cid);
+        final memberships = _readMemberships(box);
+        final hasActiveMembership = snapshot.user.isSuperAdmin ||
+            memberships.any((m) => m.userId == snapshot.user.id && m.companyId == cid && m.isActive);
+
+        if (!companyExists || !hasActiveMembership) {
+          snapshot = snapshot.copyWith(
+            clearCompany: true,
+            roles: const [],
+            permissions: snapshot.user.isSuperAdmin ? kAllLocalPermissions.toSet() : const {},
+          );
+          dirty = true;
+        }
       }
 
       if (isOwnerOrAdmin && snapshot.currentCompanyId != null) {
@@ -643,16 +682,11 @@ class LocalAuthStore {
     if (session.currentCompanyId == null ||
         session.currentCompanyId!.isEmpty ||
         session.activeMembership == null) {
-      await saveSession(null);
-      return null;
+      return session;
     }
 
     final companies = _readCompanies(box);
     final companyExists = companies.any((c) => c.id == session.currentCompanyId);
-    if (!companyExists) {
-      await saveSession(null);
-      return null;
-    }
 
     final memberships = _readMemberships(box);
     final membership = memberships.firstWhere(
@@ -662,11 +696,18 @@ class LocalAuthStore {
           m.isActive,
       orElse: () => const UserCompanyMembership(userId: '', companyId: '', role: '', status: 'inactive'),
     );
-    if (!membership.isActive) {
-      await saveSession(null);
-      return null;
+
+    if (!companyExists || (!membership.isActive && !session.user.isSuperAdmin)) {
+      final safeSnapshot = session.copyWith(
+        clearCompany: true,
+        roles: const [],
+        permissions: session.user.isSuperAdmin ? kAllLocalPermissions.toSet() : const {},
+      );
+      await saveSession(safeSnapshot);
+      return safeSnapshot;
     }
 
+    return session;
     return session;
   }
 
@@ -674,15 +715,15 @@ class LocalAuthStore {
     required AuthSessionSnapshot current,
     required String companyId,
   }) async {
-    // 1. HARD TERMINATE Session A (S1)
-    if (current.sessionId != null && current.sessionId!.isNotEmpty) {
-      _terminatedSessionIds.add(current.sessionId!);
+    // 0. Idempotency Check: Same-company switch returns current snapshot (Rule 11)
+    if (current.currentCompanyId == companyId) {
+      return current;
     }
 
     await ensureSeeded();
     final box = await _box();
 
-    // 2. Validate Membership in Company B
+    // 1. Validate Membership in Target Company (Rule 3)
     final memberships = _readMemberships(box);
     var membership = memberships.firstWhere(
       (m) => m.userId == current.user.id && m.companyId == companyId && m.isActive,
@@ -700,12 +741,11 @@ class LocalAuthStore {
     }
 
     if (!membership.isActive || membership.companyId != companyId) {
-      // FAIL CLOSED: No Session B created! System left with NO active company session.
-      await saveSession(null);
+      // Rule 12: Preserve current session context on failure (no saveSession(null))
       return null;
     }
 
-    // 3. Validate Company Exists
+    // 2. Validate Company Exists
     AuthCompany? company;
     for (final c in _readCompanies(box)) {
       if (c.id == companyId) {
@@ -714,11 +754,11 @@ class LocalAuthStore {
       }
     }
     if (company == null) {
-      await saveSession(null);
+      // Rule 12: Preserve current session context on failure
       return null;
     }
 
-    // 4. Validate User Status
+    // 3. Validate User Status
     final users = _readUsers(box);
     _LocalUserRecord? user;
     for (final u in users) {
@@ -728,11 +768,11 @@ class LocalAuthStore {
       }
     }
     if (user == null) {
-      await saveSession(null);
+      // Rule 12: Preserve current session context on failure
       return null;
     }
 
-    // 5. Build Company B permissions ONLY
+    // 4. Build Target Company permissions
     final stored = user.permissionsByCompany[companyId];
     final isOwnerOrAdmin = membership.role == 'Owner' ||
         membership.role == LocalAuthDefaults.adminRole;
@@ -745,15 +785,33 @@ class LocalAuthStore {
               : (stored ?? const <String>[])),
     );
 
-    final nextSessionId = generateUuidV4();
+    // Rules 1 & 2: Preserve existing session identity — sessionIdBefore == sessionIdAfter
+    final stableSessionId = (current.sessionId != null && current.sessionId!.isNotEmpty)
+        ? current.sessionId!
+        : generateUuidV4();
+
+    final updatedMembership = membership.copyWith(
+      permissions: permissions.toList(),
+    );
+
+    final activeCompanyContext = ActiveCompanyContext.fromMembership(
+      membership: updatedMembership,
+      authenticatedUserId: current.user.id,
+      companyName: company.name,
+      companyCode: company.code,
+    );
+
+    final authorizedCompanies = _readAuthorizedCompanies(box, current.user);
+
     final next = current.copyWith(
       currentCompanyId: companyId,
-      activeMembership: membership,
+      activeMembership: updatedMembership,
+      activeCompanyContext: activeCompanyContext,
       permissions: permissions,
       roles: [membership.role],
-      companies: current.companies,
+      companies: authorizedCompanies,
       capturedAt: DateTime.now().toUtc(),
-      sessionId: nextSessionId,
+      sessionId: stableSessionId,
     );
 
     await saveSession(next);
@@ -1033,10 +1091,19 @@ class LocalAuthStore {
 
       final currentSession = await loadSession();
       if (currentSession != null) {
-        final hasComp = currentSession.companies.any((c) => c.id == newCompany.id);
-        if (!hasComp) {
+        final isCreatorAdmin = (currentSession.user.id == adminUserId);
+        if (isCreatorAdmin) {
+          final hasComp = currentSession.companies.any((c) => c.id == newCompany.id);
+          final updatedCompanies = hasComp
+              ? currentSession.companies
+              : [...currentSession.companies, newCompany];
+          final activeId = (currentSession.currentCompanyId != null &&
+                  currentSession.currentCompanyId!.isNotEmpty)
+              ? currentSession.currentCompanyId
+              : newCompany.id;
           final updatedSession = currentSession.copyWith(
-            companies: [...currentSession.companies, newCompany],
+            companies: updatedCompanies,
+            currentCompanyId: activeId,
           );
           await saveSession(updatedSession);
         }
@@ -1439,6 +1506,37 @@ class LocalAuthStore {
       for (final item in raw)
         if (item is Map) AuthCompany.fromJson(Map<String, dynamic>.from(item)),
     ];
+  }
+
+  List<AuthCompany> _readAuthorizedCompanies(Box<dynamic> box, AuthUser user) {
+    final allCompanies = _readCompanies(box);
+    final memberships = _readMemberships(box);
+    final userMemberships = memberships
+        .where((m) => m.userId == user.id && m.isActive)
+        .toList();
+    final authorizedCompanyIds = userMemberships.map((m) => m.companyId).toSet();
+
+    return allCompanies
+        .where((c) => user.isSuperAdmin || authorizedCompanyIds.contains(c.id))
+        .map((c) {
+          final m = userMemberships.firstWhere(
+            (mem) => mem.companyId == c.id,
+            orElse: () => UserCompanyMembership(
+              userId: user.id,
+              companyId: c.id,
+              role: user.isSuperAdmin ? 'Owner' : 'Member',
+              status: 'active',
+              permissions: const [],
+            ),
+          );
+          return AuthCompany(
+            id: c.id,
+            name: c.name,
+            code: c.code,
+            role: m.role,
+          );
+        })
+        .toList();
   }
 
   static String hashPassword(String password, String salt) {

@@ -28,7 +28,6 @@ final receiptsPaymentsDatabaseProvider = Provider<ReceiptsPaymentsDatabase>((
     ),
   );
   ref.onDispose(db.close);
-  ref.keepAlive();
   return db;
 });
 
@@ -138,8 +137,8 @@ final cancelFinancialTransactionProvider = Provider<CancelFinancialTransaction>(
   },
 );
 
-final financialTransactionByIdProvider =
-    FutureProvider.family<FinancialTransaction?, int>((ref, id) {
+final financialTransactionByIdProvider = FutureProvider.autoDispose
+    .family<FinancialTransaction?, int>((ref, id) {
       return ref.watch(getFinancialTransactionByIdProvider)(id);
     });
 

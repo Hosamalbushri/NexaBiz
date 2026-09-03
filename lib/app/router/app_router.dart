@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../bootstrap/app_bootstrap_coordinator.dart';
 import '../bootstrap/app_initialization.dart';
 import '../../core/entitlements/domain/entities/entitlement.dart';
+import '../../core/entitlements/domain/services/entitlement_service.dart';
 import '../../core/entitlements/presentation/providers/entitlement_providers.dart';
 import '../../core/modules/module_providers.dart';
+import '../../core/modules/module_registry.dart';
 import '../../modules/app_lock/domain/entities/app_lock_state.dart';
 import '../../modules/app_lock/presentation/pages/app_lock_page.dart';
 import '../../modules/app_lock/presentation/pages/app_lock_routes.dart';
@@ -76,8 +78,13 @@ bool _isPermissionExempt(String path) {
 final appRouterProvider = Provider<GoRouter>((ref) {
   final registry = ref.read(moduleRegistryProvider);
   final refresh = ref.read(appLockRouterRefreshProvider);
-  ref.listen(authStateProvider, (_, _) {
-    refresh.value++;
+  ref.listen(authStateProvider, (previous, next) {
+    final statusChanged = previous?.status != next.status;
+    final companyChanged =
+        previous?.session?.currentCompanyId != next.session?.currentCompanyId;
+    if (statusChanged || companyChanged) {
+      refresh.value++;
+    }
   });
   ref.listen(syncEnabledProvider, (_, _) {
     refresh.value++;
@@ -88,8 +95,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.listen(appInitializationControllerProvider, (_, _) {
     refresh.value++;
   });
-  ref.listen(appBootstrapCoordinatorProvider, (_, _) {
-    refresh.value++;
+  ref.listen(appBootstrapCoordinatorProvider, (previous, next) {
+    if (previous?.status != next.status) {
+      refresh.value++;
+    }
   });
   ref.listen(currentEntitlementProvider, (_, _) {
     refresh.value++;
@@ -103,118 +112,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.splash,
     refreshListenable: refresh,
     redirect: (context, state) {
-      final path = state.uri.path;
-      final auth = ref.read(authStateProvider);
-      final bootstrap = ref.read(appBootstrapCoordinatorProvider);
-      final isPublic = _isPublicRoute(path);
-
-      // 0. Initializing or Restoring Session Gate -> Hold on splash
-      if (bootstrap.isInitializing || bootstrap.isRestoringSession) {
-        if (path == AppRoutes.splash) return null;
-        return AppRoutes.splash;
-      }
-
-      // 1. First-Run Setup Gate -> Force to setup wizard
-      if (bootstrap.isFirstRunRequired) {
-        if (path != SystemSetupRoutes.firstRun &&
-            path != AppRoutes.onboarding &&
-            path != AppRoutes.splash) {
-          return SystemSetupRoutes.firstRun;
-        }
-        return null;
-      }
-
-      // Block setup routes permanently if setup is already done!
-      if (!bootstrap.isFirstRunRequired &&
-          (path == SystemSetupRoutes.firstRun ||
-              path == SystemSetupRoutes.root ||
-              path == AppRoutes.onboarding ||
-              path == AppRoutes.setupChoice ||
-              path == AppRoutes.serverSetup ||
-              path == AppRoutes.serverBootstrapLogin ||
-              path == AppRoutes.serverBootstrapProgress)) {
-        if (auth.isAuthenticated) {
-          return (auth.hasCompany || bootstrap.isSystemScope)
-              ? AppRoutes.dashboard
-              : CompanySelectionScreen.routePath;
-        } else {
-          return AppRoutes.login;
-        }
-      }
-
-      // 2. Unauthenticated Gate
-      if (bootstrap.isUnauthenticated || auth.status == AuthStatus.unauthenticated) {
-        if (isPublic) return null;
-        return AppRoutes.login;
-      }
-
-      // 3. Multi-Company Selection Gate:
-      // Authenticated users with multiple companies but NO active company context MUST be sent to Company Selection
-      if (auth.isAuthenticated && !auth.hasCompany && !bootstrap.isSystemScope) {
-        if (path == CompanySelectionScreen.routePath || path == AppRoutes.login) {
-          return null;
-        }
-        return CompanySelectionScreen.routePath;
-      }
-
-      // 4. Authenticated Users on Public Auth Pages: auto-forward to Dashboard or Company Selection
-      if (auth.isAuthenticated &&
-          (path == AppRoutes.login || path == AppRoutes.splash)) {
-        return (auth.hasCompany || bootstrap.isSystemScope)
-            ? AppRoutes.dashboard
-            : CompanySelectionScreen.routePath;
-      }
-
-      final lock = ref.read(appLockControllerProvider);
-      if (lock.gate == AppLockGate.locked) {
-        if (_isAppLockExempt(path)) {
-          return null;
-        }
-        final controller = ref.read(appLockControllerProvider.notifier);
-        controller.returnToLocation ??= path;
-        return AppLockRoutes.root;
-      }
-
-      if (path == AppLockRoutes.root && lock.gate != AppLockGate.locked) {
-        final controller = ref.read(appLockControllerProvider.notifier);
-        final returnTo = controller.returnToLocation;
-        controller.returnToLocation = null;
-        if (returnTo != null &&
-            returnTo.isNotEmpty &&
-            returnTo != AppLockRoutes.root) {
-          return returnTo;
-        }
-        return AppRoutes.dashboard;
-      }
-
-      if (!_isPermissionExempt(path)) {
-        var required = registry.requiredPermissionsForPath(path);
-        if ((required == null || required.isEmpty) &&
-            (path == AppRoutes.reports ||
-                path.startsWith('${AppRoutes.reports}/'))) {
-          required = ['reports.view'];
-        }
-        if (required != null && required.isNotEmpty) {
-          if (!auth.hasAnyPermission(required)) {
-            return AppRoutes.accessDenied;
-          }
-        }
-      }
-
-      // Capability & Entitlement Gate for Data Sync Settings
-      if (path == AppRoutes.settingsDataSync ||
-          path.startsWith('${AppRoutes.settingsDataSync}/')) {
-        final entitlementAsync = ref.read(currentEntitlementProvider);
-        final entitlementService = ref.read(entitlementServiceProvider);
-        final currentEntitlement =
-            entitlementAsync.valueOrNull ??
-            entitlementService.currentEntitlement;
-        if (!currentEntitlement.hasCapability(EntitlementCapability.sync)) {
-          return AppRoutes.settingsSubscription;
-        }
-      }
-
-      return null;
+      return evaluateAppRouteRedirect(
+        path: state.uri.path,
+        auth: ref.read(authStateProvider),
+        bootstrap: ref.read(appBootstrapCoordinatorProvider),
+        registry: registry,
+        lock: ref.read(appLockControllerProvider),
+        lockControllerNotifier: ref.read(appLockControllerProvider.notifier),
+        entitlementAsync: ref.read(currentEntitlementProvider),
+        entitlementService: ref.read(entitlementServiceProvider),
+      );
     },
     errorBuilder: (context, state) => const NotFoundPage(),
     routes: [
@@ -394,3 +301,125 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.onDispose(router.dispose);
   return router;
 });
+
+String? evaluateAppRouteRedirect({
+  required String path,
+  required AuthState auth,
+  required AppBootstrapState bootstrap,
+  required ModuleRegistry registry,
+  AppLockState? lock,
+  AppLockController? lockControllerNotifier,
+  AsyncValue<Entitlement>? entitlementAsync,
+  EntitlementService? entitlementService,
+}) {
+  final isPublic = _isPublicRoute(path);
+
+  // 0. Initializing or Restoring Session Gate -> Hold on splash
+  if (bootstrap.isInitializing || bootstrap.isRestoringSession) {
+    if (path == AppRoutes.splash) return null;
+    return AppRoutes.splash;
+  }
+
+  // 1. First-Run Setup Gate -> Force to setup wizard
+  if (bootstrap.isFirstRunRequired) {
+    if (path != SystemSetupRoutes.firstRun &&
+        path != AppRoutes.onboarding &&
+        path != AppRoutes.splash) {
+      return SystemSetupRoutes.firstRun;
+    }
+    return null;
+  }
+
+  // Block setup routes permanently if setup is already done!
+  if (!bootstrap.isFirstRunRequired &&
+      (path == SystemSetupRoutes.firstRun ||
+          path == SystemSetupRoutes.root ||
+          path == AppRoutes.onboarding ||
+          path == AppRoutes.setupChoice ||
+          path == AppRoutes.serverSetup ||
+          path == AppRoutes.serverBootstrapLogin ||
+          path == AppRoutes.serverBootstrapProgress)) {
+    if (auth.isAuthenticated) {
+      return (auth.hasCompany || bootstrap.isSystemScope)
+          ? AppRoutes.dashboard
+          : CompanySelectionScreen.routePath;
+    } else {
+      return AppRoutes.login;
+    }
+  }
+
+  // 2. Unauthenticated Gate
+  if (bootstrap.isUnauthenticated || auth.status == AuthStatus.unauthenticated) {
+    if (isPublic) return null;
+    return AppRoutes.login;
+  }
+
+  // 3. Multi-Company Selection Gate:
+  // Authenticated users with multiple companies but NO active company context MUST be sent to Company Selection
+  if (auth.isAuthenticated && !auth.hasCompany && !bootstrap.isSystemScope) {
+    if (path == CompanySelectionScreen.routePath || path == AppRoutes.login) {
+      return null;
+    }
+    return CompanySelectionScreen.routePath;
+  }
+
+  // 4. Authenticated Users on Public Auth Pages: auto-forward to Dashboard or Company Selection
+  if (auth.isAuthenticated &&
+      (path == AppRoutes.login || path == AppRoutes.splash)) {
+    return (auth.hasCompany || bootstrap.isSystemScope)
+        ? AppRoutes.dashboard
+        : CompanySelectionScreen.routePath;
+  }
+
+  if (lock != null && lock.gate == AppLockGate.locked) {
+    if (_isAppLockExempt(path)) {
+      return null;
+    }
+    if (lockControllerNotifier != null) {
+      lockControllerNotifier.returnToLocation ??= path;
+    }
+    return AppLockRoutes.root;
+  }
+
+  if (lock != null && path == AppLockRoutes.root && lock.gate != AppLockGate.locked) {
+    String? returnTo;
+    if (lockControllerNotifier != null) {
+      returnTo = lockControllerNotifier.returnToLocation;
+      lockControllerNotifier.returnToLocation = null;
+    }
+    if (returnTo != null &&
+        returnTo.isNotEmpty &&
+        returnTo != AppLockRoutes.root) {
+      return returnTo;
+    }
+    return AppRoutes.dashboard;
+  }
+
+  if (!_isPermissionExempt(path)) {
+    var required = registry.requiredPermissionsForPath(path);
+    if ((required == null || required.isEmpty) &&
+        (path == AppRoutes.reports ||
+            path.startsWith('${AppRoutes.reports}/'))) {
+      required = ['reports.view'];
+    }
+    if (required != null && required.isNotEmpty) {
+      if (!auth.hasAnyPermission(required)) {
+        return AppRoutes.accessDenied;
+      }
+    }
+  }
+
+  // Capability & Entitlement Gate for Data Sync Settings
+  if (path == AppRoutes.settingsDataSync ||
+      path.startsWith('${AppRoutes.settingsDataSync}/')) {
+    final currentEntitlement =
+        entitlementAsync?.valueOrNull ??
+        entitlementService?.currentEntitlement;
+    if (currentEntitlement != null &&
+        !currentEntitlement.hasCapability(EntitlementCapability.sync)) {
+      return AppRoutes.settingsSubscription;
+    }
+  }
+
+  return null;
+}

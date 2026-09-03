@@ -2,14 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../app/bootstrap/app_bootstrap.dart';
-import '../../../../app/presentation/providers/dashboard_services_provider.dart';
-import '../../../../app/settings/company/company_profile_providers.dart';
-import '../../../../core/auth/presentation/providers/auth_context_providers.dart';
-import '../../../../core/entitlements/presentation/providers/entitlement_providers.dart';
-import 'package:stock_count/modules/sync/sync.dart';
 import '../providers/auth_providers.dart';
 import '../widgets/company_details_sheet.dart';
+import '../widgets/company_switch_confirmation_dialog.dart';
 
 class CompanySelectionScreen extends ConsumerWidget {
   const CompanySelectionScreen({super.key});
@@ -119,32 +114,23 @@ class CompanySelectionScreen extends ConsumerWidget {
                                   ElevatedButton(
                                     onPressed: () async {
                                       if (isSelected) {
-                                        context.go('/dashboard');
+                                        if (context.mounted && context.canPop()) {
+                                          context.pop();
+                                        }
                                         return;
                                       }
-                                      final router = GoRouter.of(context);
-                                      await AppBootstrap.stopSync(ref);
 
-                                      final switchedSession = await ref
-                                          .read(authStateProvider.notifier)
-                                          .switchCompany(company.id);
+                                      final success =
+                                          await showCompanySwitchConfirmationFlow(
+                                        context,
+                                        ref,
+                                        company,
+                                      );
 
-                                      ref.invalidate(currentEntitlementProvider);
-                                      ref.invalidate(currentPermissionsProvider);
-                                      ref.invalidate(authorizationContextProvider);
-                                      ref.invalidate(companyProfileProvider);
-                                      ref.invalidate(dashboardServicesProvider);
-                                      ref.invalidate(syncOverviewProvider);
-
-                                      await AppBootstrap.bootstrapSync(ref);
-
-                                      if (switchedSession != null) {
-                                        router.go('/dashboard');
-                                      } else {
-                                        await ref
-                                            .read(authStateProvider.notifier)
-                                            .logout();
-                                        router.go('/login');
+                                      if (context.mounted &&
+                                          success &&
+                                          context.canPop()) {
+                                        context.pop();
                                       }
                                     },
                                     child: Text(isSelected ? 'دخول' : 'تغيير وتأكيد'),

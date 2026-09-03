@@ -24,7 +24,6 @@ final customersDatabaseProvider = Provider<CustomersDatabase>((ref) {
     ),
   );
   ref.onDispose(db.close);
-  ref.keepAlive();
   return db;
 });
 
@@ -193,7 +192,9 @@ final customersProvider = StreamProvider<List<Customer>>((ref) {
   return ref.watch(watchCustomersUseCaseProvider).call(includeInactive: true);
 });
 
-final customerSearchQueryProvider = StateProvider<String>((ref) => '');
+final customerSearchQueryProvider = StateProvider.autoDispose<String>(
+  (ref) => '',
+);
 
 final filteredCustomersProvider = Provider<AsyncValue<List<Customer>>>((ref) {
   final query = ref.watch(customerSearchQueryProvider).trim().toLowerCase();
@@ -214,15 +215,15 @@ final filteredCustomersProvider = Provider<AsyncValue<List<Customer>>>((ref) {
   });
 });
 
-final customerByIdProvider = FutureProvider.family<Customer?, int>((
+final customerByIdProvider = FutureProvider.autoDispose.family<Customer?, int>((
   ref,
   id,
 ) async {
   return ref.watch(getCustomerByIdUseCaseProvider).call(id);
 });
 
-final linkedAccountByIdProvider =
-    FutureProvider.family<LinkedAccountRef?, String>((ref, accountId) async {
+final linkedAccountByIdProvider = FutureProvider.autoDispose
+    .family<LinkedAccountRef?, String>((ref, accountId) async {
       return ref.watch(customerAccountLinkPortProvider).findById(accountId);
     });
 
@@ -241,64 +242,76 @@ final customerAccountsUnderParentProvider =
 
 /// Whether customer save auto-creates a CoA posting account when none is set.
 final customersAutoLinkAccountProvider =
-    StateNotifierProvider<CustomersAutoLinkAccountController, AsyncValue<bool>>(
+    StateNotifierProvider.autoDispose<CustomersAutoLinkAccountController, AsyncValue<bool>>(
       (ref) {
         return CustomersAutoLinkAccountController(
           repository: ref.watch(settingsRepositoryProvider),
+          companyId: ref.watch(sessionCompanyIdProvider),
         );
       },
     );
 
 class CustomersAutoLinkAccountController
     extends StateNotifier<AsyncValue<bool>> {
-  CustomersAutoLinkAccountController({required this._repository})
-    : super(const AsyncValue.loading()) {
+  CustomersAutoLinkAccountController({
+    required SettingsRepository repository,
+    this.companyId,
+  })  : _repository = repository,
+        super(const AsyncValue.loading()) {
     _load();
   }
 
   final SettingsRepository _repository;
+  final String? companyId;
 
   Future<void> _load() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(_repository.loadCustomersAutoLinkAccount);
+    state = await AsyncValue.guard(
+      () => _repository.loadCustomersAutoLinkAccount(companyId),
+    );
   }
 
   Future<void> refresh() => _load();
 
   Future<void> setEnabled(bool enabled) async {
-    await _repository.saveCustomersAutoLinkAccount(enabled);
+    await _repository.saveCustomersAutoLinkAccount(enabled, companyId);
     state = AsyncValue.data(enabled);
   }
 }
 
 /// Chart of Accounts group under which customer accounts nest.
 final customersParentAccountProvider =
-    StateNotifierProvider<
+    StateNotifierProvider.autoDispose<
       CustomersParentAccountController,
       AsyncValue<LinkedAccountRef?>
     >((ref) {
       return CustomersParentAccountController(
         repository: ref.watch(settingsRepositoryProvider),
         linkPort: ref.watch(customerAccountLinkPortProvider),
+        companyId: ref.watch(sessionCompanyIdProvider),
       );
     });
 
 class CustomersParentAccountController
     extends StateNotifier<AsyncValue<LinkedAccountRef?>> {
   CustomersParentAccountController({
-    required this._repository,
-    required this._linkPort,
-  }) : super(const AsyncValue.loading()) {
+    required SettingsRepository repository,
+    required CustomerAccountLinkPort linkPort,
+    this.companyId,
+  })  : _repository = repository,
+        _linkPort = linkPort,
+        super(const AsyncValue.loading()) {
     _load();
   }
 
   final SettingsRepository _repository;
   final CustomerAccountLinkPort _linkPort;
+  final String? companyId;
 
   Future<void> _load() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      final savedId = await _repository.loadCustomersParentAccountId();
+      final savedId = await _repository.loadCustomersParentAccountId(companyId);
       if (savedId != null) {
         final linked = await _linkPort.findById(savedId);
         if (linked != null) {
@@ -307,7 +320,10 @@ class CustomersParentAccountController
       }
       final systemParent = await _linkPort.findSystemCustomersParent();
       if (systemParent != null) {
-        await _repository.saveCustomersParentAccountId(systemParent.accountId);
+        await _repository.saveCustomersParentAccountId(
+          systemParent.accountId,
+          companyId,
+        );
       }
       return systemParent;
     });
@@ -320,7 +336,7 @@ class CustomersParentAccountController
     if (linked == null) {
       return false;
     }
-    await _repository.saveCustomersParentAccountId(linked.accountId);
+    await _repository.saveCustomersParentAccountId(linked.accountId, companyId);
     state = AsyncValue.data(linked);
     return true;
   }
@@ -328,11 +344,14 @@ class CustomersParentAccountController
   Future<void> useSystemDefault() async {
     final systemParent = await _linkPort.findSystemCustomersParent();
     if (systemParent == null) {
-      await _repository.saveCustomersParentAccountId(null);
+      await _repository.saveCustomersParentAccountId(null, companyId);
       state = const AsyncValue.data(null);
       return;
     }
-    await _repository.saveCustomersParentAccountId(systemParent.accountId);
+    await _repository.saveCustomersParentAccountId(
+      systemParent.accountId,
+      companyId,
+    );
     state = AsyncValue.data(systemParent);
   }
 }

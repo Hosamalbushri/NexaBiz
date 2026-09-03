@@ -6,6 +6,7 @@ import 'package:stock_count/app/notifications/presentation/providers/notificatio
 import 'package:stock_count/app/presentation/providers/dashboard_services_provider.dart';
 import 'package:stock_count/core/di/app_providers.dart';
 import 'package:stock_count/core/notifications/notification_type.dart';
+import 'package:stock_count/core/tenancy/session_company.dart';
 import '../../data/datasources/customer_excel_import_isolate.dart';
 import '../../domain/models/customer_exception.dart';
 import '../../domain/models/import_session.dart';
@@ -127,9 +128,10 @@ class CustomerImportNotifier extends StateNotifier<CustomerImportUiState> {
       );
 
       var drafts = imported.drafts;
+      final companyId = _ref.read(sessionCompanyIdProvider);
       final autoLink = await _ref
           .read(settingsRepositoryProvider)
-          .loadCustomersAutoLinkAccount();
+          .loadCustomersAutoLinkAccount(companyId);
       if (autoLink) {
         final parent = await _ref
             .read(linkMissingCustomerAccountsProvider)

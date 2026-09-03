@@ -71,7 +71,9 @@ final replaceInventoryItemsProvider = Provider<ReplaceInventoryItems>((ref) {
 
 /// Lightweight invalidation for count/search/reports pages — avoids rebuilding
 /// from a full Hive `watchAll()` stream on every mutation.
-final inventoryRevisionProvider = StateProvider<int>((ref) => 0);
+final inventoryRevisionProvider = StateProvider.autoDispose<int>(
+  (ref) => 0,
+);
 
 void bumpInventoryRevision(Ref ref) {
   ref.read(inventoryRevisionProvider.notifier).state++;

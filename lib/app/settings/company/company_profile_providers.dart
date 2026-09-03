@@ -14,7 +14,7 @@ final companyLogoStoreProvider = Provider<CompanyLogoStore>((ref) {
 });
 
 final companyProfileProvider =
-    StateNotifierProvider<CompanyProfileController, AsyncValue<CompanyProfile>>(
+    StateNotifierProvider.autoDispose<CompanyProfileController, AsyncValue<CompanyProfile>>(
       (ref) {
         return CompanyProfileController(
           ref: ref,
@@ -27,8 +27,9 @@ final companyProfileProvider =
     );
 
 /// Whether the system base currency was locked during System Setup.
-final systemBaseCurrencyLockedProvider = FutureProvider<bool>((ref) {
-  return ref.watch(settingsRepositoryProvider).loadSystemBaseCurrencyLocked();
+final systemBaseCurrencyLockedProvider = FutureProvider.autoDispose<bool>((ref) {
+  final companyId = ref.watch(sessionCompanyIdProvider);
+  return ref.watch(settingsRepositoryProvider).loadSystemBaseCurrencyLocked(companyId);
 });
 
 class CompanyProfileController
@@ -53,20 +54,17 @@ class CompanyProfileController
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       var profile = await _repository.loadCompanyProfile(_companyId);
-      if (profile.name.isEmpty) {
-        final authState = _ref.read(authStateProvider);
-        final session = authState.session;
-        final companies = session?.companies ?? [];
-        final currentCompany = companies.firstWhere(
-          (c) => c.id == _companyId,
-          orElse: () => companies.isNotEmpty
-              ? companies.first
-              : const AuthCompany(id: '', name: '', code: ''),
-        );
-        if (currentCompany.name.isNotEmpty) {
-          profile = profile.copyWith(name: currentCompany.name);
-          await _repository.saveCompanyProfile(profile, _companyId);
-        }
+      final authState = _ref.read(authStateProvider);
+      final session = authState.session;
+      final companies = session?.companies ?? [];
+      final currentCompany = companies.firstWhere(
+        (c) => c.id == _companyId,
+        orElse: () => const AuthCompany(id: '', name: '', code: ''),
+      );
+      if (currentCompany.name.isNotEmpty &&
+          (profile.name.isEmpty || profile.name != currentCompany.name)) {
+        profile = profile.copyWith(name: currentCompany.name);
+        await _repository.saveCompanyProfile(profile, _companyId);
       }
       return profile;
     });

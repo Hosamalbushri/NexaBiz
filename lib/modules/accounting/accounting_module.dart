@@ -16,11 +16,13 @@ import '../../app/sales/accounting_sale_treasury_adapter.dart';
 import '../../app/sales/accounting_sale_voucher_book_adapter.dart';
 import '../../app/system_setup/accounting_system_setup_seed_adapter.dart';
 import '../../core/modules/app_module.dart';
+import '../../core/setup/setup.dart';
 import '../../core/modules/module_registry.dart';
 import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
+import '../../core/tenancy/tenant_context.dart';
 import '../customers/directory/presentation/providers/customer_providers.dart';
 import '../receipts_payments/transactions/presentation/providers/rp_providers.dart';
 import '../sales/invoices/presentation/providers/sale_providers.dart';
@@ -64,8 +66,11 @@ class AccountingModule extends AppModule {
   static const String moduleId = 'accounting';
 
   /// Self-registers AccountingModule into the global ModuleRegistry via injection.
-  static void register() {
+  static void register({CentralSetupRegistry? setupRegistry}) {
     ModuleRegistry.register(const AccountingModule());
+    if (setupRegistry != null) {
+      registerAccountingSetup(setupRegistry);
+    }
   }
 
   /// Self-unregisters AccountingModule from the global ModuleRegistry.
@@ -390,6 +395,7 @@ class AccountingModule extends AppModule {
       return AccountRepositoryImpl(
         ref.watch(accountingDatabaseProvider),
         syncQueue: ref.watch(syncQueueProvider),
+        readCompanyId: () => ref.read(currentCompanyIdProvider),
         onUuidRemapped: (oldUuid, newUuid) async {
           await ref
               .read(customerRepositoryImplProvider)

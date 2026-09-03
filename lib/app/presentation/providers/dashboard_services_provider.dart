@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/modules/app_module.dart';
 import '../../../core/modules/module_providers.dart';
 import '../../../core/modules/module_registry.dart';
+import '../../../core/tenancy/session_company.dart';
 import '../../settings/settings_repository.dart';
+
+import '../../../core/tenancy/tenant_context.dart';
 
 /// Maximum service shortcuts shown on the dashboard grid.
 const int kMaxDashboardServices = 6;
@@ -17,34 +20,45 @@ final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
 /// Defaults to the first [kMaxDashboardServices] enabled modules until the
 /// user customizes the list.
 final dashboardServicesProvider =
-    StateNotifierProvider<
+    StateNotifierProvider.autoDispose<
       DashboardServicesController,
       AsyncValue<List<String>>
     >((ref) {
       return DashboardServicesController(
         repository: ref.watch(settingsRepositoryProvider),
         registry: ref.watch(moduleRegistryProvider),
+        companyId: ref.watch(sessionCompanyIdProvider) ?? '',
       );
     });
 
 class DashboardServicesController
     extends StateNotifier<AsyncValue<List<String>>> {
   DashboardServicesController({
-    required this._repository,
-    required this._registry,
-  }) : super(const AsyncValue.loading()) {
+    required SettingsRepository repository,
+    required ModuleRegistry registry,
+    String companyId = '',
+  })  : _repository = repository,
+        _registry = registry,
+        _companyId = companyId,
+        super(AsyncValue.data(_defaultIdsForRegistry(registry))) {
     _load();
   }
 
   final SettingsRepository _repository;
   final ModuleRegistry _registry;
+  final String _companyId;
+
+  static List<String> _defaultIdsForRegistry(ModuleRegistry registry) {
+    return [
+      for (final module in registry.enabledModules) module.id,
+    ].take(kMaxDashboardServices).toList(growable: false);
+  }
 
   Future<void> _load() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      final saved = await _repository.loadDashboardServiceIds();
-      return _sanitize(saved ?? _defaultIds());
-    });
+    final saved = await _repository.loadDashboardServiceIds(_companyId);
+    if (saved != null) {
+      state = AsyncValue.data(_sanitize(saved));
+    }
   }
 
   List<String> _defaultIds() {
@@ -95,7 +109,7 @@ class DashboardServicesController
   Future<void> save(List<String> ids) async {
     final sanitized = _sanitize(ids);
     state = AsyncValue.data(sanitized);
-    await _repository.saveDashboardServiceIds(sanitized);
+    await _repository.saveDashboardServiceIds(sanitized, _companyId);
   }
 
   Future<void> reload() => _load();
