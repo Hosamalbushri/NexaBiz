@@ -22,6 +22,7 @@ import '../../core/modules/module_settings_definition.dart';
 import '../../core/modules/quick_action_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
+import '../../core/presentation/providers/core_providers.dart';
 import '../../core/tenancy/tenant_context.dart';
 import '../customers/directory/presentation/providers/customer_providers.dart';
 import '../receipts_payments/transactions/presentation/providers/rp_providers.dart';
@@ -397,6 +398,9 @@ class AccountingModule extends AppModule {
 
   @override
   List<Override> get providerOverrides => [
+    periodValidatorPortProvider.overrideWith((ref) {
+      return ref.watch(accountingPeriodValidatorProvider);
+    }),
     systemSetupSeedPortProvider.overrideWith((ref) {
       return AccountingSystemSetupSeedAdapter(
         accounts: ref.watch(accountRepositoryProvider),
@@ -423,6 +427,7 @@ class AccountingModule extends AppModule {
     customerAccountLinkPortProvider.overrideWith((ref) {
       return AccountingCustomerAccountLinkAdapter(
         ref.watch(accountRepositoryProvider),
+        initRepository: ref.watch(companyInitializationRepositoryProvider),
       );
     }),
     saleAccountingBridgePortProvider.overrideWith((ref) {
@@ -434,6 +439,7 @@ class AccountingModule extends AppModule {
       return AccountingSaleLedgerAdapter(
         posting: ref.watch(journalPostingServiceProvider),
         accounts: ref.watch(accountRepositoryProvider),
+        initRepository: ref.watch(companyInitializationRepositoryProvider),
       );
     }),
     saleVoucherBookPortProvider.overrideWith((ref) {
@@ -456,6 +462,7 @@ class AccountingModule extends AppModule {
     saleTreasuryAccountPortProvider.overrideWith((ref) {
       return AccountingSaleTreasuryAdapter(
         ref.watch(accountRepositoryProvider),
+        initRepository: ref.watch(companyInitializationRepositoryProvider),
       );
     }),
     rpLedgerPostingPortProvider.overrideWith((ref) {
@@ -472,7 +479,10 @@ class AccountingModule extends AppModule {
       );
     }),
     rpTreasuryAccountPortProvider.overrideWith((ref) {
-      return AccountingRpTreasuryAdapter(ref.watch(accountRepositoryProvider));
+      return AccountingRpTreasuryAdapter(
+        ref.watch(accountRepositoryProvider),
+        initRepository: ref.watch(companyInitializationRepositoryProvider),
+      );
     }),
     rpCurrencyPortProvider.overrideWith((ref) {
       return AccountingRpCurrencyAdapter(

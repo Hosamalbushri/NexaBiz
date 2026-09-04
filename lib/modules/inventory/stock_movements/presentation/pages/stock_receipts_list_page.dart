@@ -19,6 +19,7 @@ import 'package:stock_count/core/domain/ports/posting_port.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import '../../domain/entities/stock_receipt.dart';
 import '../providers/stock_movements_providers.dart';
+import '../widgets/stock_posting_error_dialog.dart';
 
 class StockReceiptsListPage extends ConsumerWidget {
   const StockReceiptsListPage({
@@ -190,25 +191,55 @@ class _StockReceiptCard extends ConsumerWidget {
                         onPressed: () async {
                           final coordinator = ref.read(postingCoordinatorPortProvider);
                           final docRef = receipt.toPostingData().toDocumentRef();
-                          final result = await coordinator.post(document: docRef);
-                          if (context.mounted) {
-                            if (result is PostSuccess) {
-                              showAppSnackBar(
-                                context,
-                                message: 'تم ترحيل أمر التوريد بنجاح',
-                                isSuccess: true,
+                          try {
+                            final result = await coordinator.post(document: docRef);
+                            if (context.mounted) {
+                              if (result is PostSuccess) {
+                                showAppSnackBar(
+                                  context,
+                                  message: 'تم ترحيل أمر التوريد بنجاح',
+                                  isSuccess: true,
+                                );
+                              } else if (result is PostInvalidStatus) {
+                                final details = StockPostingErrorDetails.fromReason(
+                                  context: context,
+                                  reason: result.reason,
+                                  onEditRequested: () => InventoryRoutes.pushStockReceiptDetails(context, receipt.id),
+                                );
+                                await showStockPostingErrorDialog(
+                                  context,
+                                  title: details.title,
+                                  message: details.message,
+                                  subtitle: details.subtitle,
+                                  category: details.category,
+                                  actionLabel: details.actionLabel,
+                                  onAction: details.onAction,
+                                );
+                              } else if (result is PostStockShortage) {
+                                await showStockPostingErrorDialog(
+                                  context,
+                                  title: 'عجز في رصيد المخزون',
+                                  message: 'لا يوجد رصيد كافٍ في المستودع لبعض أصناف المستند.',
+                                  category: StockPostingErrorCategory.shortage,
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              final errorMsg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+                              final details = StockPostingErrorDetails.fromReason(
+                                context: context,
+                                reason: errorMsg,
+                                onEditRequested: () => InventoryRoutes.pushStockReceiptDetails(context, receipt.id),
                               );
-                            } else if (result is PostInvalidStatus) {
-                              showAppSnackBar(
+                              await showStockPostingErrorDialog(
                                 context,
-                                message: result.reason,
-                                isSuccess: false,
-                              );
-                            } else if (result is PostStockShortage) {
-                              showAppSnackBar(
-                                context,
-                                message: 'عجز في المخزون للمستند',
-                                isSuccess: false,
+                                title: details.title,
+                                message: details.message,
+                                subtitle: details.subtitle,
+                                category: details.category,
+                                actionLabel: details.actionLabel,
+                                onAction: details.onAction,
                               );
                             }
                           }

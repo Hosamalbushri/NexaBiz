@@ -17,6 +17,8 @@ class PackageSetupView extends StatelessWidget {
     this.availableAccounts = const [],
     this.accountRoles = const {},
     this.accountBindingModes = const {},
+    this.onSavePackage,
+    this.isSaving = false,
   });
 
   final PackageSetupDefinition definition;
@@ -27,6 +29,8 @@ class PackageSetupView extends StatelessWidget {
   final List<SetupAccountOption> availableAccounts;
   final Map<String, AccountRole> accountRoles;
   final Map<String, AccountBindingMode> accountBindingModes;
+  final VoidCallback? onSavePackage;
+  final bool isSaving;
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +95,32 @@ class PackageSetupView extends StatelessWidget {
               ),
             );
           }),
+        if (onSavePackage != null) ...[
+          const SizedBox(height: AppSpacing.md),
+          ElevatedButton.icon(
+            onPressed: isSaving ? null : onSavePackage,
+            icon: isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.save_outlined),
+            label: Text(
+              isArabic
+                  ? 'حفظ إعدادات $packageName فقط'
+                  : 'Save $packageName Settings Only',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+        ],
       ],
     );
   }
@@ -105,13 +135,13 @@ class PackageSetupView extends StatelessWidget {
       case SetupStatus.configured:
         bg = Colors.green.shade100;
         fg = Colors.green.shade900;
-        label = isArabic ? 'جاهز للعمل' : 'Configured';
+        label = isArabic ? 'مهيأ' : 'Configured';
         icon = Icons.check_circle_outline;
         break;
       case SetupStatus.partiallyConfigured:
         bg = Colors.amber.shade100;
         fg = Colors.amber.shade900;
-        label = isArabic ? 'تهيئة جزئية' : 'Partially Configured';
+        label = isArabic ? 'مهيأ جزئياً' : 'Partially Configured';
         icon = Icons.warning_amber_rounded;
         break;
       case SetupStatus.invalid:

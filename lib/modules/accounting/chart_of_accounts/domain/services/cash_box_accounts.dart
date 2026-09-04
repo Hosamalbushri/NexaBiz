@@ -9,9 +9,9 @@ class CashBoxAccounts {
   const CashBoxAccounts._();
 
   static const systemKey = 'cash_boxes';
-  static const fallbackCode = '1210';
 
   /// Returns posting accounts whose parent chain reaches the cash-boxes group.
+
   static List<Account> postingUnderCashBoxes(List<Account> all) {
     final root = _findCashBoxesRoot(all);
     if (root == null) {
@@ -54,13 +54,9 @@ class CashBoxAccounts {
         return account;
       }
     }
-    for (final account in all) {
-      if (account.accountCode.trim() == fallbackCode) {
-        return account;
-      }
-    }
     return null;
   }
+
 
   static bool _isDescendantOf(
     Account account, {

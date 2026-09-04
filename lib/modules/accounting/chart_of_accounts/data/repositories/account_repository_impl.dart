@@ -608,8 +608,6 @@ class AccountRepositoryImpl implements AccountRepository {
       await _insertMissingSystemAccounts();
       await _alignSystemAccountParents();
       await _enqueueUnpushedAccounts();
-    } else {
-      await seedDefaultChart();
     }
   }
 

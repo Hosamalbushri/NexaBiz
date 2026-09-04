@@ -79,7 +79,39 @@ class PostingCoordinatorImpl implements PostingCoordinator {
     required InventoryDocumentRef document,
     String? userId,
   }) async {
-    await _initializationGuard?.assertInitialized();
+    try {
+      await _initializationGuard?.assertInitialized();
+    } on UninitializedCompanyException catch (e) {
+      final mappedRequirements = e.missingRequirements.map((req) {
+        if (req.contains('Company profile has not been created')) {
+          return 'لم يتم إنشاء ملف بيانات الشركة';
+        }
+        if (req.contains('Default primary warehouse is not configured')) {
+          return 'لم يتم تهيئة المستودع الرئيسي';
+        }
+        if (req.contains('Initialization completion flag is not finalized')) {
+          return 'لم يتم إنهاء واعتمد التهيئة الأولية';
+        }
+        if (req.contains('Inventory base currency is not configured')) {
+          return 'لم يتم تحديد العملة الأساسية للمخزون';
+        }
+        if (req.contains('System chart of accounts mappings are incomplete')) {
+          return 'إعدادات وربط الحسابات غير مكتملة';
+        }
+        if (req.contains('Inventory operational settings are not configured')) {
+          return 'لم يتم ضبط إعدادات المخزون التشغيلية';
+        }
+        return req;
+      }).toList();
+
+      final primaryMissing = mappedRequirements.isNotEmpty
+          ? mappedRequirements.first
+          : 'التهيئة الأولية للنظام غير مكتملة';
+
+      return PostInvalidStatus(
+        reason: 'فشل الترحيل: $primaryMissing. يرجى إكمال إعدادات التهيئة أولاً.',
+      );
+    }
 
     final requiredPostPermissions = switch (document.documentType) {
       InventoryDocumentType.stockReceipt => InventoryPermissions.receiptsPost,

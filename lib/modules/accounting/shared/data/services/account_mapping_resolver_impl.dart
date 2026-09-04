@@ -28,26 +28,6 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
     );
   }
 
-  Future<Account?> _findAccountByCodeOrKey(String code, String systemKey) async {
-    final all = await _accountRepository.getAll();
-
-    // 1. By exact code
-    for (final acc in all) {
-      if (acc.accountCode == code && !acc.isGroup && acc.canPost && acc.isActive) {
-        return acc;
-      }
-    }
-
-    // 2. By system key
-    for (final acc in all) {
-      if (AccountLabels.systemKeyOf(acc) == systemKey && !acc.isGroup && acc.canPost && acc.isActive) {
-        return acc;
-      }
-    }
-
-    return null;
-  }
-
   @override
   Future<AccountMapping> resolveForDocument({
     required String documentType,
@@ -61,20 +41,10 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
     final companyConfig = await _initRepository?.getAccountingConfig();
     final companyMappings = companyConfig?.accountMappings;
 
-    final defaultSpecs = <AccountRole, MapEntry<String, String>>{
-      AccountRole.inventory: const MapEntry('1230', 'inventory'),
-      AccountRole.cogs: const MapEntry('5100', 'cost_of_goods'),
-      AccountRole.revenue: const MapEntry('4100', 'sales_revenue'),
-      AccountRole.receivable: const MapEntry('1120', 'accounts_receivable'),
-      AccountRole.payable: const MapEntry('2110', 'accounts_payable'),
-      AccountRole.cash: const MapEntry('1110', 'main_cash'),
-      AccountRole.adjustment: const MapEntry('5200', 'inventory_adjustment'),
-      AccountRole.fxGainLoss: const MapEntry('7100', 'fx_gain_loss'),
-    };
-
     for (final role in AccountRole.values) {
       Account? resolvedAcc;
-      final configuredKey = companyMappings?[role]?.trim();
+      final target = companyConfig?.bindingTargets[role];
+      final configuredKey = target?.activeUuid ?? companyMappings?[role]?.trim();
 
       if (configuredKey != null && configuredKey.isNotEmpty) {
         resolvedAcc = await _accountRepository.getByUuid(configuredKey) ??
@@ -84,15 +54,12 @@ class AccountMappingResolverImpl implements AccountMappingResolver {
                 : null);
       }
 
-      if (resolvedAcc == null && defaultSpecs.containsKey(role)) {
-        final spec = defaultSpecs[role]!;
-        resolvedAcc = await _findAccountByCodeOrKey(spec.key, spec.value);
-      }
-
       if (resolvedAcc != null) {
         mapped[role] = _toRoleRef(role, resolvedAcc);
       }
     }
+
+
 
 
     // Process overrides & validate

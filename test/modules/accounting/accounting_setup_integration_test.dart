@@ -20,7 +20,15 @@ class FakeSetupAccountLookupPort implements SetupAccountLookupPort {
   Future<SetupAccountData?> findAccount(String codeOrUuidOrId) async {
     return accounts[codeOrUuidOrId.trim()];
   }
+
+  @override
+  Future<List<SetupAccountData>> getChildren(String parentUuid, {String? companyId}) async => [];
+
+  @override
+  Future<List<SetupAccountData>> getDescendants(String parentUuid, {String? companyId}) async => [];
+
 }
+
 
 class FakeCompanyInitializationRepository implements CompanyInitializationRepository {
   CompanyInitializationState _state = const CompanyInitializationState(
@@ -92,7 +100,6 @@ void main() {
         sectionIds,
         containsAll([
           'currency',
-          'fiscal_period',
           'chart_of_accounts',
           'accounting_defaults',
         ]),

@@ -8,6 +8,7 @@ import '../../presentation/providers/dashboard_services_provider.dart';
 import '../settings_repository.dart';
 import 'company_logo_store.dart';
 import 'company_profile.dart';
+import '../../../modules/system_setup/presentation/providers/system_setup_providers.dart';
 
 final companyLogoStoreProvider = Provider<CompanyLogoStore>((ref) {
   return const CompanyLogoStore();
@@ -105,6 +106,18 @@ class CompanyProfileController
       invoiceHeaderLeft: opt(profile.invoiceHeaderLeft),
     );
     await _repository.saveCompanyProfile(normalized, _companyId);
+
+    try {
+      final initRepo = _ref.read(companyInitializationRepositoryProvider);
+      final initState = await initRepo.getState();
+      await initRepo.saveState(
+        initState.copyWith(
+          companyId: _companyId.isNotEmpty ? _companyId : initState.companyId,
+          companyCreated: true,
+          updatedAt: DateTime.now().toUtc(),
+        ),
+      );
+    } catch (_) {}
 
     final queue = _syncQueue;
     if (queue != null) {

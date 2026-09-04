@@ -1,18 +1,20 @@
+import 'package:stock_count/core/domain/entities/account_role.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/models/account_exception.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
+import 'package:stock_count/modules/accounting/shared/domain/services/accounting_scope_resolver.dart';
 import 'package:stock_count/modules/customers/accounts/domain/services/customer_account_link_port.dart';
+import 'package:stock_count/modules/system_setup/domain/repositories/company_initialization_repository.dart';
 
-/// App-layer bridge: Customers → Accounting accounts without module coupling.
-///
-/// Customers stores opaque [LinkedAccountRef.accountId] (= Account.uuid).
-/// May create posting accounts under the configured customers parent group.
+/// App-layer bridge: Customers → Accounting accounts with strict scope gating.
 class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
-  const AccountingCustomerAccountLinkAdapter(this._accounts);
+  const AccountingCustomerAccountLinkAdapter(
+    this._accounts, {
+    this.initRepository,
+  });
 
   final AccountRepository _accounts;
-
-  static const String systemCustomersKey = 'customers';
+  final CompanyInitializationRepository? initRepository;
 
   LinkedAccountRef? _map(
     Account? account, {
@@ -37,7 +39,18 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     );
   }
 
-  Future<void> _ensureChart() => _accounts.ensureDefaultChartSeeded();
+  Future<AccountingScopeResult> _resolveReceivableScope() async {
+    final state = await initRepository?.getState();
+    final companyId = state?.companyId ?? '';
+    final resolver = AccountingScopeResolver(
+      accountRepository: _accounts,
+      initRepository: initRepository,
+    );
+    return resolver.resolveScope(
+      companyId: companyId,
+      role: AccountRole.receivable,
+    );
+  }
 
   @override
   Future<LinkedAccountRef?> findById(String accountId) async {
@@ -45,7 +58,18 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     if (trimmed.isEmpty) {
       return null;
     }
+    final scope = await _resolveReceivableScope();
+    if (!scope.isReady) {
+      return null;
+    }
     final account = await _accounts.getByUuid(trimmed);
+    if (account == null) return null;
+
+    final isScoped = scope.accounts.any((a) => a.uuid == account.uuid) ||
+        (scope.parentAccount != null && scope.parentAccount!.uuid == account.uuid);
+    if (!isScoped) {
+      return null;
+    }
     return _map(account, requirePosting: false, requireGroup: false);
   }
 
@@ -55,16 +79,42 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     if (trimmed.isEmpty) {
       return null;
     }
+    final scope = await _resolveReceivableScope();
+    if (!scope.isReady) {
+      return null;
+    }
+
     var account = await _accounts.getByUuid(trimmed);
     account ??= await _accounts.getByAccountCode(trimmed);
+    if (account == null) return null;
+    final nonNullAccount = account;
+    final isScoped = scope.accounts.any((a) => a.uuid == nonNullAccount.uuid);
+    if (!isScoped) {
+      return null;
+    }
     return _map(account, requirePosting: true, requireGroup: false);
   }
 
   @override
   Future<List<LinkedAccountRef>> search(String query, {int limit = 20}) async {
-    final results = await _accounts.search(query);
-    return results
-        .where((a) => a.canPost)
+    final scope = await _resolveReceivableScope();
+    if (!scope.isReady) {
+      return const [];
+    }
+
+    final normalized = query.trim().toLowerCase();
+    final scopedAccounts = scope.accounts;
+    final matched = normalized.isEmpty
+        ? scopedAccounts
+        : scopedAccounts
+            .where(
+              (a) =>
+                  a.accountCode.toLowerCase().contains(normalized) ||
+                  a.name.toLowerCase().contains(normalized),
+            )
+            .toList();
+
+    return matched
         .take(limit)
         .map(
           (a) => LinkedAccountRef(
@@ -80,28 +130,24 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
 
   @override
   Future<LinkedAccountRef?> findSystemCustomersParent() async {
-    await _ensureChart();
-    final accounts = await _accounts.getAll();
-    for (final account in accounts) {
-      final description = account.description;
-      if (description == 'system:$systemCustomersKey') {
-        return _map(account, requirePosting: false, requireGroup: false);
-      }
+    final scope = await _resolveReceivableScope();
+    if (!scope.isReady || scope.parentAccount == null) {
+      return null;
     }
-    final byCode = await _accounts.getByAccountCode('1221');
-    return _map(byCode, requirePosting: false, requireGroup: false);
+    return _map(scope.parentAccount, requirePosting: false, requireGroup: true);
   }
 
   @override
   Future<LinkedAccountRef?> resolveParent(String input) async {
-    await _ensureChart();
-    final trimmed = input.trim();
-    if (trimmed.isEmpty) {
+    final scope = await _resolveReceivableScope();
+    if (!scope.isReady || scope.parentAccount == null) {
       return null;
     }
-    var account = await _accounts.getByUuid(trimmed);
-    account ??= await _accounts.getByAccountCode(trimmed);
-    return _map(account, requirePosting: false, requireGroup: true);
+    final trimmed = input.trim();
+    if (trimmed == scope.parentAccount!.uuid || trimmed == scope.parentAccount!.accountCode) {
+      return _map(scope.parentAccount, requirePosting: false, requireGroup: true);
+    }
+    return null;
   }
 
   @override
@@ -109,21 +155,17 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     String query, {
     int limit = 20,
   }) async {
-    await _ensureChart();
-    final results = await _accounts.search(query);
-    return results
-        .where((a) => a.isGroup && a.isActive && !a.isDeleted)
-        .take(limit)
-        .map(
-          (a) => LinkedAccountRef(
-            accountId: a.uuid,
-            code: a.accountCode,
-            name: a.name,
-            isPosting: false,
-            isGroup: true,
-          ),
-        )
-        .toList(growable: false);
+    final parentRef = await findSystemCustomersParent();
+    if (parentRef == null) {
+      return const [];
+    }
+    final normalized = query.trim().toLowerCase();
+    if (normalized.isEmpty ||
+        parentRef.code.toLowerCase().contains(normalized) ||
+        parentRef.name.toLowerCase().contains(normalized)) {
+      return [parentRef];
+    }
+    return const [];
   }
 
   @override
@@ -156,7 +198,14 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     required String accountCode,
     required String name,
   }) async {
-    await _ensureChart();
+    final scope = await _resolveReceivableScope();
+    if (!scope.isReady || scope.parentAccount == null) {
+      return null;
+    }
+    if (parentId.trim() != scope.parentAccount!.uuid) {
+      return null;
+    }
+
     final code = accountCode.trim();
     final displayName = name.trim();
     final parentUuid = parentId.trim();
@@ -215,12 +264,15 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
 
   @override
   Future<List<LinkedAccountRef>> listUnderParent(String parentId) async {
-    await _ensureChart();
-    final trimmed = parentId.trim();
-    if (trimmed.isEmpty) {
+    final scope = await _resolveReceivableScope();
+    if (!scope.isReady || scope.parentAccount == null) {
       return const [];
     }
-    final children = await _accounts.getChildren(trimmed);
+    if (parentId.trim() != scope.parentAccount!.uuid) {
+      return const [];
+    }
+
+    final children = await _accounts.getChildren(parentId.trim());
     final refs = <LinkedAccountRef>[];
     for (final account in children) {
       if (account.isDeleted || !account.isActive) {

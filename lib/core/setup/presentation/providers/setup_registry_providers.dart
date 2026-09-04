@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../modules/accounting/accounting_module_setup.dart';
 import '../../../../modules/customers/customers_module_setup.dart';
 import '../../../../modules/inventory/inventory_module_setup.dart';
+import '../../../../modules/purchases/purchases_module_setup.dart';
 import '../../../../modules/receipts_payments/receipts_payments_module_setup.dart';
 import '../../../../modules/sales/sales_module_setup.dart';
 import '../../domain/entities/package_setup_definition.dart';
@@ -17,11 +18,13 @@ final centralSetupRegistryProvider = Provider<CentralSetupRegistry>((ref) {
   registerAccountingSetup(registry);
   registerInventorySetup(registry);
   registerSalesSetup(registry);
+  registerPurchasesSetup(registry);
   registerCustomersSetup(registry);
   registerReceiptsPaymentsSetup(registry);
 
   return registry;
 });
+
 
 /// Provider exposing all registered package setup definitions, sorted by sortOrder.
 final registeredPackageSetupsProvider =

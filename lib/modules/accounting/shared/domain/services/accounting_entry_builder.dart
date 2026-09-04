@@ -192,7 +192,7 @@ class AccountingEntryBuilder {
       }
 
       if (discountAmount > 0) {
-        final discountRef = mapping.getRole(AccountRole.cogs);
+        final discountRef = mapping.getRole(AccountRole.discount);
         if (discountRef != null) {
           lines.add(
             JournalLineDraft(
@@ -207,6 +207,7 @@ class AccountingEntryBuilder {
           );
         }
       }
+
 
       final grossRevenue =
           netAmount + (discountAmount > 0 ? discountAmount : 0.0);

@@ -35,7 +35,18 @@ class _AccountSearchFieldState extends State<AccountSearchField> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: _display(_selectedAccount()));
+    _controller = TextEditingController();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_focusNode.hasFocus) {
+      final text = _display(_selectedAccount());
+      if (_controller.text != text) {
+        _controller.text = text;
+      }
+    }
   }
 
   @override

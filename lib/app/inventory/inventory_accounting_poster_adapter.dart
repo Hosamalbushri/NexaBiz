@@ -85,8 +85,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
           await (db.select(db.accounts)..where(
                 (tbl) =>
                     (tbl.uuid.equals(configuredKey) |
-                        tbl.accountCode.equals(configuredKey) |
-                        tbl.description.equals('system:${role.name}')) &
+                        tbl.accountCode.equals(configuredKey)) &
                     tbl.companyId.equals(companyId) &
                     tbl.deletedAt.isNull() &
                     tbl.isGroup.equals(false) &
@@ -96,58 +95,23 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       if (acc != null) return acc.uuid;
     }
 
-    final defaultCodes = {
-      AccountRole.inventory: '1230',
-      AccountRole.cogs: '5100',
-      AccountRole.adjustment: '5200',
-      AccountRole.payable: '2110',
-      AccountRole.revenue: '4100',
-      AccountRole.cash: '1110',
+    final roleNameAr = switch (role) {
+      AccountRole.inventory => 'أصل المخزون',
+      AccountRole.payable => 'الموردين / الحسابات الدائنة',
+      AccountRole.cogs => 'تكلفة البضاعة المباعة',
+      AccountRole.revenue => 'إيرادات المبيعات',
+      AccountRole.receivable => 'العملاء / الحسابات المدينة',
+      AccountRole.cash => 'الصندوق / النقدية',
+      _ => role.name,
     };
-    final defaultCode = defaultCodes[role] ?? '';
-
-    final fallbackAcc =
-        await (db.select(db.accounts)..where(
-              (tbl) =>
-                  (tbl.accountCode.equals(defaultCode) |
-                      tbl.description.equals('system:${role.name}') |
-                      tbl.description.equals(
-                        'system:${_roleToSystemKey(role)}',
-                      )) &
-                  tbl.companyId.equals(companyId) &
-                  tbl.deletedAt.isNull() &
-                  tbl.isGroup.equals(false) &
-                  tbl.isActive.equals(true),
-            ))
-            .getSingleOrNull();
-    if (fallbackAcc != null) return fallbackAcc.uuid;
 
     throw MissingAccountException(
       accountRole: role.name,
-      expectedCode: configuredKey ?? defaultCode,
+      expectedCode: configuredKey ?? role.name,
       systemKey: role.name,
       message:
-          'خطأ محاسبي: لم يتم إعداد حساب (${role.name}) لتهيئة الشركة ($companyId). يرجى ربط الحسابات المحاسبية أولاً.',
+          'خطأ محاسبي: لم يتم إعداد حساب ($roleNameAr) لتهيئة الشركة ($companyId). يرجى ربط الحسابات المحاسبية من التهيئة المحاسبية أولاً.',
     );
-  }
-
-  String _roleToSystemKey(AccountRole role) {
-    switch (role) {
-      case AccountRole.inventory:
-        return 'inventory';
-      case AccountRole.cogs:
-        return 'cost_of_goods';
-      case AccountRole.adjustment:
-        return 'inventory_adjustment';
-      case AccountRole.payable:
-        return 'accounts_payable';
-      case AccountRole.revenue:
-        return 'sales_revenue';
-      case AccountRole.cash:
-        return 'main_cash';
-      default:
-        return role.name;
-    }
   }
 
   Future<String> _resolveCompanyBaseCurrency() async {

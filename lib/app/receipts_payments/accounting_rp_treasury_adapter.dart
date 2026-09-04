@@ -1,19 +1,23 @@
+import 'package:stock_count/core/domain/entities/account_role.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_labels.dart';
-import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/cash_box_accounts.dart';
+import 'package:stock_count/modules/accounting/shared/domain/services/accounting_scope_resolver.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_treasury_account_port.dart';
+import 'package:stock_count/modules/system_setup/domain/repositories/company_initialization_repository.dart';
 import '../localization/app_localizations.dart';
 import '../localization/app_localizations_ar.dart';
 import '../localization/app_localizations_en.dart';
 
-/// App adapter: R&P treasury / posting accounts → Chart of Accounts.
+/// App adapter: R&P treasury / posting accounts → Chart of Accounts with strict scope gating.
 class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
-  const AccountingRpTreasuryAdapter(this._repository);
+  const AccountingRpTreasuryAdapter(
+    this._repository, {
+    this.initRepository,
+  });
 
   final AccountRepository _repository;
-
-  static const _systemCash = 'system:cash';
+  final CompanyInitializationRepository? initRepository;
 
   AppLocalizations _l10n(String? languageCode) {
     final code = (languageCode ?? 'ar').trim().toLowerCase();
@@ -32,10 +36,21 @@ class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
     );
   }
 
-  Future<List<Account>> _cashLikeAccounts() async {
-    await _repository.ensureDefaultChartSeeded();
-    final all = await _repository.getAll();
-    return CashBoxAccounts.postingUnderCashBoxes(all);
+  Future<List<Account>> _scopedCashAccounts() async {
+    final state = await initRepository?.getState();
+    final companyId = state?.companyId ?? '';
+    final resolver = AccountingScopeResolver(
+      accountRepository: _repository,
+      initRepository: initRepository,
+    );
+    final scope = await resolver.resolveScope(
+      companyId: companyId,
+      role: AccountRole.cash,
+    );
+    if (!scope.isReady) {
+      return const [];
+    }
+    return scope.accounts;
   }
 
   @override
@@ -43,7 +58,7 @@ class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
     String? languageCode,
   }) async {
     final l10n = _l10n(languageCode);
-    final accounts = await _cashLikeAccounts();
+    final accounts = await _scopedCashAccounts();
     return accounts.map((a) => _map(a, l10n)).toList(growable: false);
   }
 
@@ -53,19 +68,17 @@ class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
     int limit = 40,
     String? languageCode,
   }) async {
-    await _repository.ensureDefaultChartSeeded();
     final l10n = _l10n(languageCode);
-    final normalized = query.trim().toLowerCase();
-    final all = await _repository.getAll();
-    final posting = <Account>[
-      for (final account in all)
-        if (account.canPost) account,
-    ];
+    final scopedAccounts = await _scopedCashAccounts();
+    if (scopedAccounts.isEmpty) {
+      return const [];
+    }
 
+    final normalized = query.trim().toLowerCase();
     final matched = normalized.isEmpty
-        ? posting
+        ? scopedAccounts
         : [
-            for (final account in posting)
+            for (final account in scopedAccounts)
               if (AccountLabels.matchesQuery(l10n, account, normalized))
                 account,
           ];
@@ -100,11 +113,13 @@ class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
     String accountId, {
     String? languageCode,
   }) async {
-    final account = await _repository.getByUuid(accountId);
-    if (account == null || !account.canPost) {
-      return null;
+    final accounts = await _scopedCashAccounts();
+    for (final acc in accounts) {
+      if (acc.uuid == accountId) {
+        return _map(acc, _l10n(languageCode));
+      }
     }
-    return _map(account, _l10n(languageCode));
+    return null;
   }
 
   @override
@@ -112,12 +127,7 @@ class AccountingRpTreasuryAdapter implements RpTreasuryAccountPort {
     String? languageCode,
   }) async {
     final l10n = _l10n(languageCode);
-    final accounts = await _cashLikeAccounts();
-    for (final account in accounts) {
-      if (account.description?.trim() == _systemCash) {
-        return _map(account, l10n);
-      }
-    }
+    final accounts = await _scopedCashAccounts();
     return accounts.isEmpty ? null : _map(accounts.first, l10n);
   }
 }

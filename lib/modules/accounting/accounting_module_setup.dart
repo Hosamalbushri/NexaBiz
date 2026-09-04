@@ -35,26 +35,6 @@ const accountingPackageSetupDefinition = PackageSetupDefinition(
       ],
     ),
     SetupSection(
-      id: 'fiscal_period',
-      packageId: 'accounting',
-      titleAr: 'السنة المالية والافتتاح',
-      titleEn: 'Fiscal Year & Period Opening',
-      descriptionAr: 'تحديد الفترة المالية المغلقة وتاريخ الافتتاح',
-      descriptionEn: 'Configure closed fiscal period date and opening setup',
-      sortOrder: 20,
-      fields: [
-        SetupField(
-          id: 'fiscal_closed_through',
-          sectionId: 'fiscal_period',
-          key: 'fiscalClosedThrough',
-          labelAr: 'مغلق حتى تاريخ',
-          labelEn: 'Closed Through Date',
-          fieldType: SetupFieldType.text,
-          isRequired: false,
-        ),
-      ],
-    ),
-    SetupSection(
       id: 'chart_of_accounts',
       packageId: 'accounting',
       titleAr: 'ربط الحسابات الافتراضية',

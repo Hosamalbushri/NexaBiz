@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/constants/app_constants.dart';
@@ -8,21 +9,27 @@ import '../../../../core/widgets/app_snackbar.dart';
 import '../../../domain/entities/account_role.dart';
 import '../../setup.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
+import 'package:stock_count/modules/accounting/shared/domain/services/account_binding_safety_gate.dart';
+import 'package:stock_count/modules/accounting/shared/presentation/providers/account_mapping_providers.dart';
 import 'package:stock_count/modules/system_setup/presentation/providers/system_setup_providers.dart';
 import 'package:stock_count/modules/system_setup/domain/entities/company_accounting_config.dart';
+import 'package:stock_count/modules/system_setup/domain/entities/company_initialization_state.dart';
 import 'package:stock_count/modules/system_setup/domain/entities/company_inventory_config.dart';
 
 import 'package:stock_count/core/setup/presentation/widgets/package_setup_view.dart';
 import 'package:stock_count/core/setup/presentation/widgets/setup_field_renderer.dart';
+
 
 /// Central Setup Center master widget for rendering and orchestrating setup definitions.
 class CentralSetupCenterWidget extends ConsumerStatefulWidget {
   const CentralSetupCenterWidget({
     super.key,
     this.onSaved,
+    this.filterPackageId,
   });
 
   final VoidCallback? onSaved;
+  final String? filterPackageId;
 
   @override
   ConsumerState<CentralSetupCenterWidget> createState() => _CentralSetupCenterWidgetState();
@@ -34,15 +41,24 @@ class _CentralSetupCenterWidgetState extends ConsumerState<CentralSetupCenterWid
   bool _saving = false;
   bool _initialized = false;
 
+
   final Map<String, AccountRole> _knownAccountRoles = {
     // Inventory
     'inventory_account': AccountRole.inventory,
+    'inventory_asset_account': AccountRole.inventory,
     'cogs_account': AccountRole.cogs,
     'inventory_adjustment_account': AccountRole.adjustment,
+    'inventory_variance_account': AccountRole.adjustment,
     // Sales
     'sales_account': AccountRole.revenue,
     'sales_discount_account': AccountRole.discount,
     'sales_cash_account': AccountRole.cash,
+    // Purchases
+    'payable_account': AccountRole.payable,
+    'purchase_inventory_account': AccountRole.inventory,
+    'purchase_discount_account': AccountRole.discount,
+    'purchase_cash_account': AccountRole.cash,
+    'purchase_bank_account': AccountRole.cash,
     // Customers
     'ar_account': AccountRole.receivable,
     // Receipts & Payments
@@ -53,6 +69,112 @@ class _CentralSetupCenterWidgetState extends ConsumerState<CentralSetupCenterWid
     'default_receivable_account': AccountRole.receivable,
     'default_payable_account': AccountRole.payable,
   };
+
+
+  bool _dataLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedData();
+  }
+
+  Future<void> _loadSavedData() async {
+    runZonedGuarded(() async {
+      final repo = ref.read(companyInitializationRepositoryProvider);
+      
+      CompanyInitializationState? state;
+      try {
+        state = await repo.getState();
+      } catch (_) {}
+      final companyId = state?.companyId ?? '';
+
+      CompanyAccountingConfig? accountingConfig;
+      try {
+        accountingConfig = await repo.getAccountingConfig();
+      } catch (_) {}
+
+      CompanyInventoryConfig? inventoryConfig;
+      try {
+        inventoryConfig = await repo.getInventoryConfig();
+      } catch (_) {}
+
+      AccountBindingRepository? bindingRepo;
+      try {
+        bindingRepo = ref.read(accountBindingRepositoryProvider);
+      } catch (_) {}
+
+      final rawSetups = ref.read(registeredPackageSetupsProvider);
+
+      for (final pkg in rawSetups) {
+        final fieldMap = _packageFieldValues.putIfAbsent(pkg.packageId, () => {});
+
+        List<AccountBinding> packageBindings = [];
+        if (bindingRepo != null) {
+          try {
+            packageBindings = await bindingRepo.getBindingsForPackage(
+              companyId: companyId,
+              packageId: pkg.packageId,
+            );
+          } catch (_) {}
+        }
+
+        for (final section in pkg.sections) {
+          for (final field in section.fields) {
+            // 1. Known account roles mapping
+            if (_knownAccountRoles.containsKey(field.key)) {
+              final role = _knownAccountRoles[field.key]!;
+              final savedUuid = accountingConfig?.accountMappings[role];
+              if (savedUuid != null && savedUuid.isNotEmpty) {
+                fieldMap[field.key] = savedUuid;
+                continue;
+              }
+            }
+
+            // 2. Declarative bindings check
+            AccountBinding? matchingBinding;
+            for (final b in packageBindings) {
+              if (b.requirementKey == field.key || b.requirementKey == field.id) {
+                matchingBinding = b;
+                break;
+              }
+            }
+            if (matchingBinding != null && matchingBinding.accountUuid.isNotEmpty) {
+              fieldMap[field.key] = matchingBinding.accountUuid;
+              continue;
+            }
+
+            // 3. Inventory config settings
+            if (pkg.packageId == 'inventory' && inventoryConfig != null) {
+              if (field.key == 'costing_method') {
+                fieldMap[field.key] = inventoryConfig.defaultCostingMethod;
+                continue;
+              }
+              if (field.key == 'allow_negative_stock') {
+                fieldMap[field.key] = inventoryConfig.allowNegativeStock;
+                continue;
+              }
+              if (field.key == 'inventoryValuationCurrencyId') {
+                fieldMap[field.key] = inventoryConfig.inventoryBaseCurrencyId;
+                continue;
+              }
+            }
+
+            // 4. Default fallback
+            fieldMap.putIfAbsent(field.key, () => field.defaultValue);
+          }
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _dataLoaded = true;
+        });
+      }
+    }, (error, stack) {
+      // Gracefully swallow unhandled repository errors (e.g. uninitialized Hive in widget tests)
+    });
+  }
 
   void _hydrateDefaults(List<PackageSetupDefinition> setups) {
     if (_initialized) return;
@@ -70,26 +192,43 @@ class _CentralSetupCenterWidgetState extends ConsumerState<CentralSetupCenterWid
     }
   }
 
-  Future<void> _saveAll(List<PackageSetupDefinition> setups) async {
+  Future<void> _savePackage(PackageSetupDefinition pkg) async {
     setState(() => _saving = true);
     try {
       final repo = ref.read(companyInitializationRepositoryProvider);
       final state = await repo.getState();
       final companyId = state.companyId;
 
-      // Extract account role mappings from field values
+      final fields = _packageFieldValues[pkg.packageId] ?? {};
+
+      // 1. Extract account role mappings for this package
       final Map<AccountRole, String> accountMappings = {};
-      _packageFieldValues.forEach((pkgId, fields) {
-        fields.forEach((key, val) {
-          if (val is String && val.isNotEmpty && _knownAccountRoles.containsKey(key)) {
-            accountMappings[_knownAccountRoles[key]!] = val;
-          }
-        });
+      fields.forEach((key, val) {
+        if (val is String && val.isNotEmpty && _knownAccountRoles.containsKey(key)) {
+          accountMappings[_knownAccountRoles[key]!] = val;
+        }
       });
 
       if (accountMappings.isNotEmpty) {
         final existingAccounting = await repo.getAccountingConfig();
-        final updatedAccountMappings = Map<AccountRole, String>.from(existingAccounting?.accountMappings ?? {})
+        final existingMappings = existingAccounting?.accountMappings ?? {};
+
+        // Atomic Safety Gate Pre-Validation
+        final safetyGate = ref.read(accountBindingSafetyGateProvider);
+        for (final entry in accountMappings.entries) {
+          final role = entry.key;
+          final candidateUuid = entry.value;
+          final currentUuid = existingMappings[role];
+
+          await safetyGate.validateBindingChange(
+            companyId: companyId,
+            role: role,
+            currentAccountUuid: currentUuid,
+            candidateAccountUuid: candidateUuid,
+          );
+        }
+
+        final updatedAccountMappings = Map<AccountRole, String>.from(existingMappings)
           ..addAll(accountMappings);
         await repo.saveAccountingConfig(CompanyAccountingConfig(
           companyId: companyId,
@@ -98,21 +237,39 @@ class _CentralSetupCenterWidgetState extends ConsumerState<CentralSetupCenterWid
         ));
       }
 
-      // Extract inventory config
-      final invFields = _packageFieldValues['inventory'] ?? {};
-      final existingInv = await repo.getInventoryConfig();
-      final costingMethod = invFields['costing_method']?.toString() ?? existingInv?.defaultCostingMethod ?? 'FIFO';
-      final allowNegative = (invFields['allow_negative_stock'] as bool?) ?? existingInv?.allowNegativeStock ?? false;
-      final baseCurrency = invFields['inventoryValuationCurrencyId']?.toString() ?? existingInv?.inventoryBaseCurrencyId ?? 'YER';
+      // 2. Persist declarative bindings for package requirements into AccountBindingRepository
+      final bindingRepo = ref.read(accountBindingRepositoryProvider);
+      for (final entry in fields.entries) {
+        final fieldKey = entry.key;
+        final val = entry.value;
+        if (val is String && val.isNotEmpty) {
+          await bindingRepo.saveBinding(AccountBinding(
+            companyId: companyId,
+            packageId: pkg.packageId,
+            requirementKey: fieldKey,
+            accountUuid: val,
+            status: AccountBindingStatus.bound,
+            boundAt: DateTime.now().toUtc(),
+          ));
+        }
+      }
 
-      await repo.saveInventoryConfig(CompanyInventoryConfig(
-        companyId: companyId,
-        inventoryBaseCurrencyId: baseCurrency,
-        defaultCostingMethod: costingMethod,
-        allowNegativeStock: allowNegative,
-        autoPostAccountingEntries: true,
-        updatedAt: DateTime.now().toUtc(),
-      ));
+      // 3. Extract inventory config if saving inventory package
+      if (pkg.packageId == 'inventory') {
+        final existingInv = await repo.getInventoryConfig();
+        final costingMethod = fields['costing_method']?.toString() ?? existingInv?.defaultCostingMethod ?? 'FIFO';
+        final allowNegative = (fields['allow_negative_stock'] as bool?) ?? existingInv?.allowNegativeStock ?? false;
+        final baseCurrency = fields['inventoryValuationCurrencyId']?.toString() ?? existingInv?.inventoryBaseCurrencyId ?? 'YER';
+
+        await repo.saveInventoryConfig(CompanyInventoryConfig(
+          companyId: companyId,
+          inventoryBaseCurrencyId: baseCurrency,
+          defaultCostingMethod: costingMethod,
+          allowNegativeStock: allowNegative,
+          autoPostAccountingEntries: true,
+          updatedAt: DateTime.now().toUtc(),
+        ));
+      }
 
       ref.invalidate(companyAccountingConfigProvider);
       ref.invalidate(companyInventoryConfigProvider);
@@ -122,9 +279,11 @@ class _CentralSetupCenterWidgetState extends ConsumerState<CentralSetupCenterWid
       }
 
       if (mounted) {
+        final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+        final pkgName = pkg.displayName(isArabic ? 'ar' : 'en');
         showAppSnackBar(
           context,
-          message: 'تم حفظ كافة إعدادات التهيئة بنجاح',
+          message: isArabic ? 'تم حفظ إعدادات حزمة ($pkgName) بنجاح' : 'Package ($pkgName) saved successfully',
           isSuccess: true,
         );
       }
@@ -143,11 +302,20 @@ class _CentralSetupCenterWidgetState extends ConsumerState<CentralSetupCenterWid
     }
   }
 
+  Future<void> _saveAll(List<PackageSetupDefinition> setups) async {
+    for (final pkg in setups) {
+      await _savePackage(pkg);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final registeredSetups = ref.watch(registeredPackageSetupsProvider);
+    final rawSetups = ref.watch(registeredPackageSetupsProvider);
+    final registeredSetups = widget.filterPackageId != null
+        ? rawSetups.where((s) => s.packageId == widget.filterPackageId).toList()
+        : rawSetups;
     final accountsAsync = ref.watch(accountsProvider);
 
     _hydrateDefaults(registeredSetups);
@@ -201,19 +369,70 @@ class _CentralSetupCenterWidgetState extends ConsumerState<CentralSetupCenterWid
 
     return Column(
       children: [
+        // Show package tabs header if displaying all packages
+        if (widget.filterPackageId == null && registeredSetups.length > 1) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+            color: theme.colorScheme.surface,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: registeredSetups.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final pkg = entry.value;
+                  final isSelected = idx == safeIndex;
+                  final pkgName = pkg.displayName(isArabic ? 'ar' : 'en');
+                  final icon = _getPackageIcon(pkg.packageId);
+
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: ChoiceChip(
+                      selected: isSelected,
+                      avatar: CircleAvatar(
+                        backgroundColor: isSelected ? theme.colorScheme.primaryContainer : theme.colorScheme.surfaceContainerHighest,
+                        child: Icon(
+                          icon,
+                          size: 16,
+                          color: isSelected ? theme.colorScheme.onPrimaryContainer : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      label: Text(
+                        pkgName,
+                        style: TextStyle(
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      selectedColor: theme.colorScheme.primaryContainer,
+                      onSelected: (_) {
+                        setState(() => _selectedPackageIndex = idx);
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+        ],
+
         Expanded(
-          child: isWideScreen
-              ? _buildDesktopLayout(
-                  context,
-                  theme,
-                  isArabic,
-                  registeredSetups,
-                  safeIndex,
-                  currentPackage,
-                  currentPackageFields,
-                  availableAccounts,
+          child: (widget.filterPackageId != null || !isWideScreen)
+              ? PackageSetupView(
+                  definition: currentPackage,
+                  fieldValues: currentPackageFields,
+                  isArabic: isArabic,
+                  availableAccounts: availableAccounts,
+                  accountRoles: _knownAccountRoles,
+                  status: _calculatePackageStatus(currentPackage, currentPackageFields),
+                  onFieldValueChanged: (key, val) {
+                    setState(() {
+                      currentPackageFields[key] = val;
+                    });
+                  },
+                  onSavePackage: () => _savePackage(currentPackage),
+                  isSaving: _saving,
                 )
-              : _buildMobileLayout(
+              : _buildDesktopLayout(
                   context,
                   theme,
                   isArabic,
@@ -224,6 +443,7 @@ class _CentralSetupCenterWidgetState extends ConsumerState<CentralSetupCenterWid
                   availableAccounts,
                 ),
         ),
+
 
         // Global Action Footer
         Container(
@@ -256,6 +476,29 @@ class _CentralSetupCenterWidgetState extends ConsumerState<CentralSetupCenterWid
     );
   }
 
+  SetupStatus _calculatePackageStatus(PackageSetupDefinition pkg, Map<String, dynamic> fieldValues) {
+    final fields = pkg.sections.expand((s) => s.fields).toList();
+    if (fields.isEmpty) return SetupStatus.configured;
+
+    int totalCount = fields.length;
+    int populatedCount = 0;
+
+    for (final field in fields) {
+      final val = fieldValues[field.key];
+      if (val != null && val.toString().trim().isNotEmpty) {
+        populatedCount++;
+      }
+    }
+
+    if (populatedCount == 0) {
+      return SetupStatus.notConfigured;
+    } else if (populatedCount >= totalCount) {
+      return SetupStatus.configured;
+    } else {
+      return SetupStatus.partiallyConfigured;
+    }
+  }
+
   Widget _buildDesktopLayout(
     BuildContext context,
     ThemeData theme,
@@ -281,6 +524,8 @@ class _CentralSetupCenterWidgetState extends ConsumerState<CentralSetupCenterWid
                 final pkg = setups[idx];
                 final isSelected = idx == activeIndex;
                 final pkgName = pkg.displayName(isArabic ? 'ar' : 'en');
+                final pkgFields = _packageFieldValues[pkg.packageId] ?? {};
+                final pkgStatus = _calculatePackageStatus(pkg, pkgFields);
 
                 return ListTile(
                   selected: isSelected,
@@ -297,6 +542,16 @@ class _CentralSetupCenterWidgetState extends ConsumerState<CentralSetupCenterWid
                   subtitle: Text(
                     pkg.packageId,
                     style: theme.textTheme.bodySmall,
+                  ),
+                  trailing: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: pkgStatus == SetupStatus.configured
+                          ? Colors.green
+                          : (pkgStatus == SetupStatus.partiallyConfigured ? Colors.amber : Colors.grey.shade400),
+                    ),
                   ),
                   onTap: () {
                     setState(() => _selectedPackageIndex = idx);
@@ -315,11 +570,14 @@ class _CentralSetupCenterWidgetState extends ConsumerState<CentralSetupCenterWid
             isArabic: isArabic,
             availableAccounts: availableAccounts,
             accountRoles: _knownAccountRoles,
+            status: _calculatePackageStatus(activePackage, activePackageFields),
             onFieldValueChanged: (key, val) {
               setState(() {
                 activePackageFields[key] = val;
               });
             },
+            onSavePackage: () => _savePackage(activePackage),
+            isSaving: _saving,
           ),
         ),
       ],
@@ -373,11 +631,14 @@ class _CentralSetupCenterWidgetState extends ConsumerState<CentralSetupCenterWid
             isArabic: isArabic,
             availableAccounts: availableAccounts,
             accountRoles: _knownAccountRoles,
+            status: _calculatePackageStatus(activePackage, activePackageFields),
             onFieldValueChanged: (key, val) {
               setState(() {
                 activePackageFields[key] = val;
               });
             },
+            onSavePackage: () => _savePackage(activePackage),
+            isSaving: _saving,
           ),
         ),
       ],

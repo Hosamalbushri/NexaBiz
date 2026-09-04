@@ -22,6 +22,8 @@ import '../../core/import_engine/presentation/pages/universal_import_wizard_page
 import '../../core/tenancy/tenant_context.dart';
 import '../authentication/presentation/providers/auth_providers.dart';
 import 'permissions/inventory_permission_package.dart';
+import '../../core/presentation/providers/core_providers.dart';
+import 'stock_movements/presentation/providers/stock_movements_providers.dart';
 import 'products/import/product_import_profile.dart';
 import 'products/presentation/pages/product_barcode_scanner_page.dart';
 import 'products/presentation/pages/product_form_page.dart';
@@ -431,6 +433,12 @@ class InventoryModule extends AppModule {
 
   @override
   List<Override> get providerOverrides => [
+    postingCoordinatorPortProvider.overrideWith((ref) {
+      return ref.watch(postingCoordinatorProvider);
+    }),
+    inventorySubledgerQueryPortProvider.overrideWith((ref) {
+      return ref.watch(inventorySubledgerQueryPortProviderImpl);
+    }),
     saleProductCatalogPortProvider.overrideWith((ref) {
       return InventorySaleProductCatalogAdapter(
         repository: ref.watch(productRepositoryProvider),

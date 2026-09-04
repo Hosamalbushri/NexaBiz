@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
+import 'package:stock_count/app/router/app_routes.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_treasury_account_port.dart';
 import '../providers/sale_providers.dart';
@@ -66,20 +68,56 @@ class _CashAccountSheetState extends ConsumerState<_CashAccountSheet> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _accounts.isEmpty
-                ? Center(child: Text(l10n.salesCashAccountEmpty))
-                : ListView.separated(
-                    itemCount: _accounts.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final account = _accounts[index];
-                      return ListTile(
-                        title: Text(
-                          SaleAccountLabels.displayName(l10n, account),
+                    ? Padding(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.account_balance_wallet_outlined,
+                              size: 48,
+                              color: Colors.orange,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            const Text(
+                              'إعدادات الحسابات النقدية غير مكتملة',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            const Text(
+                              'يجب ربط الحساب النقدي أولاً قبل تحديد الصندوق/الحساب النقدي.',
+                              style: TextStyle(color: Colors.grey),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                context.push(AppRoutes.settingsSetup);
+                              },
+                              icon: const Icon(Icons.settings),
+                              label: const Text('إعداد الحسابات / Configure Accounting'),
+                            ),
+                          ],
                         ),
-                        onTap: () => Navigator.of(context).pop(account),
-                      );
-                    },
-                  ),
+                      )
+                    : ListView.separated(
+                        itemCount: _accounts.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final account = _accounts[index];
+                          return ListTile(
+                            title: Text(
+                              SaleAccountLabels.displayName(l10n, account),
+                            ),
+                            onTap: () => Navigator.of(context).pop(account),
+                          );
+                        },
+                      ),
           ),
         ],
       ),

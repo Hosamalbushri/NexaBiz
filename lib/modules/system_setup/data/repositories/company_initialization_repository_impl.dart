@@ -51,23 +51,40 @@ class CompanyInitializationRepositoryImpl
       raw = box.get('init_state_') ?? box.get('init_state_comp_main_01');
     }
 
+    CompanyInitializationState state;
     if (raw is Map) {
-      return CompanyInitializationState.fromJson(
+      state = CompanyInitializationState.fromJson(
         Map<dynamic, dynamic>.from(raw),
       );
-    }
-    if (raw is String && raw.isNotEmpty) {
+    } else if (raw is String && raw.isNotEmpty) {
       try {
         final decoded = jsonDecode(raw);
         if (decoded is Map) {
-          return CompanyInitializationState.fromJson(
+          state = CompanyInitializationState.fromJson(
             Map<dynamic, dynamic>.from(decoded),
           );
+        } else {
+          state = CompanyInitializationState(companyId: companyId);
         }
-      } catch (_) {}
+      } catch (_) {
+        state = CompanyInitializationState(companyId: companyId);
+      }
+    } else {
+      state = CompanyInitializationState(companyId: companyId);
     }
 
-    return CompanyInitializationState(companyId: companyId);
+    // Auto-heal companyCreated flag if valid company profile exists in settings box
+    if (!state.companyCreated) {
+      final profileRaw = box.get('company_profile_$companyId') ??
+          box.get('company_profile');
+      if (profileRaw is Map &&
+          (profileRaw['name'] as String?)?.trim().isNotEmpty == true) {
+        state = state.copyWith(companyCreated: true);
+        await box.put(_stateKey(companyId), state.toJson());
+      }
+    }
+
+    return state;
   }
 
   @override

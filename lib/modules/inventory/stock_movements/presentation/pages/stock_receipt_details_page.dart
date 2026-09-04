@@ -16,6 +16,7 @@ import 'package:stock_count/modules/inventory/shared/presentation/widgets/invent
 import 'package:stock_count/modules/inventory/stock_movements/domain/entities/stock_receipt.dart';
 import 'package:stock_count/core/domain/services/device_document_number.dart';
 import '../providers/stock_movements_providers.dart';
+import '../widgets/stock_posting_error_dialog.dart';
 
 class StockReceiptDetailsPage extends ConsumerStatefulWidget {
   const StockReceiptDetailsPage({
@@ -52,18 +53,44 @@ class _StockReceiptDetailsPageState extends ConsumerState<StockReceiptDetailsPag
         ref.invalidate(stockReceiptByIdProvider(widget.receiptId));
         ref.invalidate(stockReceiptsStreamProvider);
       } else if (result is PostInvalidStatus) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.reason), backgroundColor: Colors.red),
+        final details = StockPostingErrorDetails.fromReason(
+          context: context,
+          reason: result.reason,
+          onEditRequested: () => _handleEdit(receipt),
+        );
+        await showStockPostingErrorDialog(
+          context,
+          title: details.title,
+          message: details.message,
+          subtitle: details.subtitle,
+          category: details.category,
+          actionLabel: details.actionLabel,
+          onAction: details.onAction,
         );
       } else if (result is PostStockShortage) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('عجز في المخزون للمستند'), backgroundColor: Colors.red),
+        await showStockPostingErrorDialog(
+          context,
+          title: 'عجز في رصيد المخزون',
+          message: 'لا يوجد رصيد كافٍ في المستودع لبعض أصناف المستند.',
+          category: StockPostingErrorCategory.shortage,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ أثناء الترحيل: $e'), backgroundColor: Colors.red),
+        final errorMsg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+        final details = StockPostingErrorDetails.fromReason(
+          context: context,
+          reason: errorMsg,
+          onEditRequested: () => _handleEdit(receipt),
+        );
+        await showStockPostingErrorDialog(
+          context,
+          title: details.title,
+          message: details.message,
+          subtitle: details.subtitle,
+          category: details.category,
+          actionLabel: details.actionLabel,
+          onAction: details.onAction,
         );
       }
     } finally {

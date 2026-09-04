@@ -24,7 +24,8 @@ final appInventoryVoucherBookPortProvider = Provider<InventoryVoucherBookPort>((
 /// App-level provider that bridges InventoryAccountPort to Accounting implementation.
 final appInventoryAccountPortProvider = Provider<InventoryAccountPort>((ref) {
   final repo = ref.watch(accountRepositoryProvider);
-  return AccountingInventoryAccountAdapter(repo);
+  final initRepo = ref.watch(companyInitializationRepositoryProvider);
+  return AccountingInventoryAccountAdapter(repo, initRepository: initRepo);
 });
 
 /// App-level provider that bridges InventoryAccountingPoster to Accounting implementation.

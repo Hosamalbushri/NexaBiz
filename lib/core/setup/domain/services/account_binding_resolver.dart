@@ -79,6 +79,17 @@ class AccountBindingResolver {
       }
     }
 
+    // 4. Role-Type Compatibility Validation
+    if (requirement.expectedAccountType != null &&
+        account.accountType != requirement.expectedAccountType) {
+      throw AccountBindingException(
+        packageId: requirement.packageId,
+        requirementKey: requirement.requirementKey,
+        message: 'Account type "${account.accountType.name}" is incompatible with expected type "${requirement.expectedAccountType!.name}".',
+      );
+    }
+
+
     final binding = AccountBinding(
       companyId: trimmedCompanyId,
       packageId: requirement.packageId,

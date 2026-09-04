@@ -1,10 +1,20 @@
-/// Defines whether an account requirement expects an exact transaction account
-/// or a parent root account whose descendants will be dynamically resolved.
+/// Defines how an account requirement binds to the Chart of Accounts.
 enum AccountBindingMode {
-  /// The bound account itself is directly consumed by the business feature.
+  /// Single concrete posting account.
+  singleAccount,
+
+  /// Parent root account whose descendants will be dynamically resolved.
+  parentAccountWithDescendants,
+
+  /// Explicit set of allowed accounts.
+  accountSet,
+
+  /// Legacy alias for singleAccount.
   exact,
 
-  /// The bound account acts as a hierarchy root; its direct children or recursive
-  /// descendants will be resolved at runtime.
-  parent,
+  /// Legacy alias for parentAccountWithDescendants.
+  parent;
+
+  String get storageValue => name;
 }
+
