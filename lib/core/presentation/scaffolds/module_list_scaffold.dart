@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/app_state_feedback.dart';
-import '../widgets/search_filter_bar.dart';
+import '../patterns/app_list_page_pattern.dart';
 
 /// Reusable ERP Module List Page Scaffold.
 ///
-/// Standardizes app bar, search bar, list/grid items, loading/empty/error feedback states,
-/// pagination, and floating action buttons across business modules.
+/// Delegates to canonical [AppListPagePattern] while maintaining backwards compatibility
+/// for legacy list screen invocations.
 class ModuleListScaffold<T> extends StatelessWidget {
   const ModuleListScaffold({
     super.key,
@@ -69,116 +68,82 @@ class ModuleListScaffold<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showSearch = onSearchChanged != null || onFilterTap != null;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-        actions: actions,
-      ),
+    return AppListPagePattern<T>(
+      title: title,
+      headerActions: actions,
+      items: items,
+      isLoading: isLoading,
+      errorText: error?.toString(),
+      onRetry: onRetry ?? (onRefresh != null ? () => onRefresh!() : null),
+      onSearchChanged: onSearchChanged,
+      searchHint: searchHint,
+      onFilterTap: onFilterTap,
+      activeFilterCount: activeFilterCount,
+      emptyTitle: emptyTitle,
+      emptySubtitle: emptyMessage,
+      onEmptyAction: onEmptyAction,
+      emptyActionLabel: emptyActionLabel,
       floatingActionButton: floatingActionButton,
-      body: SafeArea(
-        child: Column(
-          children: [
-            if (showSearch)
-              SearchFilterBar(
-                searchQuery: searchQuery,
-                onSearchChanged: onSearchChanged,
-                searchHint: searchHint,
-                onFilterTap: onFilterTap,
-                activeFilterCount: activeFilterCount,
-                activeFilterChips: activeFilterChips,
-              ),
-            Expanded(
-              child: _buildContent(context),
-            ),
-          ],
-        ),
-      ),
+      contentBuilder: (ctx, itemList) {
+        if (gridDelegate != null) {
+          return GridView.builder(
+            padding: const EdgeInsets.all(12.0),
+            gridDelegate: gridDelegate!,
+            itemCount: itemList.length + (isLoadingMore ? 1 : 0),
+            itemBuilder: (c, index) {
+              if (index >= itemList.length) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+              return itemBuilder(c, itemList[index]);
+            },
+          );
+        }
+
+        Widget content = ListView.separated(
+          padding: const EdgeInsets.all(12.0),
+          itemCount: itemList.length + (isLoadingMore ? 1 : 0),
+          separatorBuilder: (_, __) => const SizedBox(height: 8.0),
+          itemBuilder: (c, index) {
+            if (index >= itemList.length) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+            return itemBuilder(c, itemList[index]);
+          },
+        );
+
+        if (onLoadMore != null) {
+          content = NotificationListener<ScrollNotification>(
+            onNotification: (scrollInfo) {
+              if (!isLoadingMore &&
+                  scrollInfo.metrics.pixels >=
+                      scrollInfo.metrics.maxScrollExtent - 200) {
+                onLoadMore!();
+              }
+              return false;
+            },
+            child: content,
+          );
+        }
+
+        if (onRefresh != null) {
+          content = RefreshIndicator(
+            onRefresh: onRefresh!,
+            child: content,
+          );
+        }
+
+        return content;
+      },
     );
-  }
-
-  Widget _buildContent(BuildContext context) {
-    if (isLoading && items.isEmpty) {
-      return const AppLoadingState();
-    }
-
-    if (error != null && items.isEmpty) {
-      return AppErrorState(
-        error: error,
-        onRetry: onRetry ?? onRefresh,
-      );
-    }
-
-    if (items.isEmpty) {
-      return AppEmptyState(
-        title: emptyTitle,
-        message: emptyMessage,
-        icon: emptyIcon,
-        actionLabel: emptyActionLabel,
-        onAction: onEmptyAction,
-      );
-    }
-
-    Widget contentWidget;
-
-    if (gridDelegate != null) {
-      contentWidget = GridView.builder(
-        padding: const EdgeInsets.all(12.0),
-        gridDelegate: gridDelegate!,
-        itemCount: items.length + (isLoadingMore ? 1 : 0),
-        itemBuilder: (ctx, index) {
-          if (index >= items.length) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: CircularProgressIndicator(),
-              ),
-            );
-          }
-          return itemBuilder(ctx, items[index]);
-        },
-      );
-    } else {
-      contentWidget = ListView.separated(
-        padding: const EdgeInsets.all(12.0),
-        itemCount: items.length + (isLoadingMore ? 1 : 0),
-        separatorBuilder: (context, index) => const SizedBox(height: 8.0),
-        itemBuilder: (ctx, index) {
-          if (index >= items.length) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: CircularProgressIndicator(),
-              ),
-            );
-          }
-          return itemBuilder(ctx, items[index]);
-        },
-      );
-    }
-
-    if (onLoadMore != null) {
-      contentWidget = NotificationListener<ScrollNotification>(
-        onNotification: (scrollInfo) {
-          if (!isLoadingMore &&
-              scrollInfo.metrics.pixels >=
-                  scrollInfo.metrics.maxScrollExtent - 200) {
-            onLoadMore!();
-          }
-          return false;
-        },
-        child: contentWidget,
-      );
-    }
-
-    if (onRefresh != null) {
-      contentWidget = RefreshIndicator(
-        onRefresh: onRefresh!,
-        child: contentWidget,
-      );
-    }
-
-    return contentWidget;
   }
 }

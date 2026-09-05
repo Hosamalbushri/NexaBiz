@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
+import 'package:stock_count/core/widgets/app_money_text.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
 import '../../domain/entities/transaction_status.dart';
 
@@ -38,11 +39,10 @@ class RpMoneyText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppAmountText(
+    return AppMoneyText(
       value,
-      decimalPlaces: 0,
+      decimalDigits: 0,
       style: style,
-      textAlign: textAlign,
     );
   }
 }

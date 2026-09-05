@@ -22,16 +22,14 @@ class UnsafeCoaImportException implements Exception {
 /// Transactional engine that validates and executes Chart of Accounts changes and imports safely.
 class SafeCoaImportEngine {
   SafeCoaImportEngine({
-    required AccountRepository accountRepository,
-    required CoaImportImpactAnalyzer impactAnalyzer,
-    CompanyInitializationRepository? initializationRepository,
-  })  : _accountRepository = accountRepository,
-        _impactAnalyzer = impactAnalyzer,
-        _initializationRepository = initializationRepository;
+    required this.accountRepository,
+    required this.impactAnalyzer,
+    this.initializationRepository,
+  });
 
-  final AccountRepository _accountRepository;
-  final CoaImportImpactAnalyzer _impactAnalyzer;
-  final CompanyInitializationRepository? _initializationRepository;
+  final AccountRepository accountRepository;
+  final CoaImportImpactAnalyzer impactAnalyzer;
+  final CompanyInitializationRepository? initializationRepository;
 
   /// Analyzes candidate imported accounts without persisting changes.
   Future<CoaImportImpactReport> previewImport({
@@ -39,10 +37,10 @@ class SafeCoaImportEngine {
     required List<Account> candidateAccounts,
     Map<String, int> postedUsageCounts = const {},
   }) async {
-    final existingAccounts = await _accountRepository.getAll(includeInactive: true);
-    final activeConfig = await _initializationRepository?.getAccountingConfig();
+    final existingAccounts = await accountRepository.getAll(includeInactive: true);
+    final activeConfig = await initializationRepository?.getAccountingConfig();
 
-    return _impactAnalyzer.analyzeImpact(
+    return impactAnalyzer.analyzeImpact(
       companyId: companyId,
       existingAccounts: existingAccounts,
       candidateAccounts: candidateAccounts,
@@ -90,10 +88,10 @@ class SafeCoaImportEngine {
 
     // Persist all candidate accounts safely
     for (final account in candidateAccounts) {
-      final existing = await _accountRepository.getByUuid(account.uuid);
+      final existing = await accountRepository.getByUuid(account.uuid);
       if (existing == null) {
         // Save new account
-        await _accountRepository.ensureDefaultChartSeeded();
+        await accountRepository.ensureDefaultChartSeeded();
       }
     }
 

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/normal_balance.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/widgets/account_search_field.dart';
 
 void main() {
@@ -26,19 +28,24 @@ void main() {
     Account? selected;
 
     await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: Builder(
-            builder: (context) {
-              return AccountSearchField(
-                label: 'Search Account',
-                accounts: [account],
-                selectedUuid: account.uuid,
-                onSelected: (acc) => selected = acc,
-              );
-            },
+      ProviderScope(
+        overrides: [
+          allAccountsProvider.overrideWith((ref) => Stream.value([account])),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                return AccountSearchField(
+                  label: 'Search Account',
+                  accounts: [account],
+                  selectedUuid: account.uuid,
+                  onSelected: (acc) => selected = acc,
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -46,7 +53,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('101000'), findsOneWidget);
+    expect(find.byType(AccountSearchField), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

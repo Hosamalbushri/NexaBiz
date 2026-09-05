@@ -10,12 +10,10 @@ import 'package:stock_count/app/settings/company/app_currency.dart';
 import 'package:stock_count/app/settings/company/company_profile_providers.dart';
 import 'package:stock_count/core/reporting/pdf_document_preview_page.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
-import 'package:stock_count/core/widgets/app_dialog.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_expandable_text.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
+import 'package:stock_count/core/widgets/app_widgets.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
+
 import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/sale.dart';
 import '../../domain/entities/sale_settlement_type.dart';
@@ -460,7 +458,7 @@ class _SaleDetailsBody extends ConsumerWidget {
             value: _paymentMethodLabel(l10n, sale.paymentMethod),
           ),
           const SizedBox(height: AppSpacing.md),
-          _SurfaceCard(
+          AppDetailSurfaceCard(
             child: Row(
               children: [
                 Container(
@@ -528,7 +526,7 @@ class _SaleDetailsBody extends ConsumerWidget {
           ),
           if (sale.notes != null && sale.notes!.trim().isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),
-            _SurfaceCard(
+            AppDetailSurfaceCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -551,16 +549,16 @@ class _SaleDetailsBody extends ConsumerWidget {
           if (sale.externalId != null ||
               sale.externalDocumentNumber != null) ...[
             const SizedBox(height: AppSpacing.md),
-            _SurfaceCard(
+            AppDetailSurfaceCard(
               child: Column(
                 children: [
                   if (sale.externalId != null)
-                    _InfoRow(
+                    AppDetailInfoRow(
                       label: l10n.salesExternalId,
                       value: sale.externalId!,
                     ),
                   if (sale.externalDocumentNumber != null)
-                    _InfoRow(
+                    AppDetailInfoRow(
                       label: l10n.salesExternalNumber,
                       value: sale.externalDocumentNumber!,
                     ),
@@ -836,34 +834,6 @@ class _InvoiceHero extends StatelessWidget {
   }
 }
 
-class _SurfaceCard extends StatelessWidget {
-  const _SurfaceCard({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: scheme.surface,
-      elevation: 0,
-      shadowColor: Colors.transparent,
-      borderRadius: BorderRadius.circular(AppRadius.md),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.4),
-          ),
-        ),
-        child: child,
-      ),
-    );
-  }
-}
-
 class _MetaTile extends StatelessWidget {
   const _MetaTile({
     required this.icon,
@@ -955,45 +925,6 @@ class _MetaTile extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
             ),
           ),
         ],

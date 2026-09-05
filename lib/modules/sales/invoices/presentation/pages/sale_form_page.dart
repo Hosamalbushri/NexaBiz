@@ -9,6 +9,8 @@ import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
+import 'package:stock_count/core/widgets/app_document_meta_chip.dart';
+import 'package:stock_count/core/widgets/app_document_option_card.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
@@ -388,17 +390,15 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
       currencies: _currencies,
       canSelectVoucherBook: _canSelectVoucherBook,
       onPickBook: () async {
-        final l10n = AppLocalizations.of(context);
         try {
           final book = await showSaleVoucherBookSelector(context);
-          if (book != null && mounted) {
+          if (book != null && context.mounted) {
             composer.setVoucherBook(book);
             setState(() => _dirty = true);
           }
         } catch (e) {
-          if (!mounted) {
-            return;
-          }
+          if (!context.mounted) return;
+          final l10n = AppLocalizations.of(context);
           showAppSnackBar(
             context,
             message: saleErrorMessage(l10n, e),
@@ -407,17 +407,15 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
         }
       },
       onPickCash: () async {
-        final l10n = AppLocalizations.of(context);
         try {
           final account = await showSaleCashAccountSelector(context);
-          if (account != null && mounted) {
+          if (account != null && context.mounted) {
             composer.setCashAccount(account);
             setState(() => _dirty = true);
           }
         } catch (e) {
-          if (!mounted) {
-            return;
-          }
+          if (!context.mounted) return;
+          final l10n = AppLocalizations.of(context);
           showAppSnackBar(
             context,
             message: saleErrorMessage(l10n, e),
@@ -586,7 +584,7 @@ class _InvoiceMetaRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _InvoiceMetaChip(
+          child: AppDocumentMetaChip(
             label: l10n.salesInvoiceNumber,
             value: invoiceNumber,
             secondaryValue: invoiceReference == null
@@ -598,7 +596,7 @@ class _InvoiceMetaRow extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: _InvoiceMetaChip(
+          child: AppDocumentMetaChip(
             label: l10n.salesDate,
             value: dateLabel,
             icon: Icons.calendar_month_rounded,
@@ -610,131 +608,7 @@ class _InvoiceMetaRow extends StatelessWidget {
   }
 }
 
-class _InvoiceMetaChip extends StatelessWidget {
-  const _InvoiceMetaChip({
-    required this.label,
-    required this.value,
-    required this.icon,
-    this.secondaryValue,
-    this.onTap,
-    this.emphasized = false,
-  });
 
-  final String label;
-  final String value;
-  final String? secondaryValue;
-  final IconData icon;
-  final VoidCallback? onTap;
-  final bool emphasized;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final bg = emphasized
-        ? scheme.primaryContainer.withValues(alpha: 0.45)
-        : scheme.surfaceContainerHighest.withValues(alpha: 0.55);
-    final iconBg = emphasized
-        ? scheme.primary.withValues(alpha: 0.14)
-        : scheme.onSurface.withValues(alpha: 0.06);
-    final iconColor = emphasized ? scheme.primary : scheme.onSurfaceVariant;
-    final valueColor = emphasized ? scheme.primary : scheme.onSurface;
-
-    return Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(AppRadius.sm),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            border: Border.all(
-              color: emphasized
-                  ? scheme.primary.withValues(alpha: 0.18)
-                  : scheme.outlineVariant.withValues(alpha: 0.45),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, size: 16, color: iconColor),
-              ),
-              const SizedBox(width: AppSpacing.xs + 2),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 10,
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        value,
-                        maxLines: 1,
-                        softWrap: false,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: valueColor,
-                          letterSpacing: -0.15,
-                          height: 1.15,
-                        ),
-                      ),
-                    ),
-                    if (secondaryValue != null) ...[
-                      const SizedBox(height: 1),
-                      Text(
-                        secondaryValue!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 9,
-                          height: 1.1,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              if (onTap != null) ...[
-                const SizedBox(width: 2),
-                Icon(
-                  Icons.edit_calendar_outlined,
-                  size: 15,
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.65),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _CustomerPartyCard extends ConsumerStatefulWidget {
   const _CustomerPartyCard({
@@ -1126,7 +1000,7 @@ class _InvoiceHeaderCard extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: _InvoiceOptionCard(
+                  child: AppDocumentOptionCard(
                     icon: Icons.menu_book_outlined,
                     label: l10n.salesVoucherBook,
                     value: voucherBookName,
@@ -1136,7 +1010,7 @@ class _InvoiceHeaderCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: _InvoiceOptionCard(
+                  child: AppDocumentOptionCard(
                     icon: Icons.payments_outlined,
                     label: l10n.salesCurrency,
                     value: currencyCode,
@@ -1282,78 +1156,7 @@ class _InvoiceHeaderCard extends ConsumerWidget {
   }
 }
 
-class _InvoiceOptionCard extends StatelessWidget {
-  const _InvoiceOptionCard({
-    required this.icon,
-    required this.label,
-    required this.placeholder,
-    this.onTap,
-    this.value,
-  });
 
-  final IconData icon;
-  final String label;
-  final String? value;
-  final String placeholder;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final hasValue = value != null && value!.trim().isNotEmpty;
-
-    return Material(
-      color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
-      borderRadius: BorderRadius.circular(AppRadius.md),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.md,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.45),
-            ),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: scheme.primary, size: 22),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                hasValue ? value! : placeholder,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: hasValue
-                      ? scheme.onSurface
-                      : scheme.onSurface.withValues(alpha: 0.55),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _SaleLoadNotFound implements Exception {
   const _SaleLoadNotFound();

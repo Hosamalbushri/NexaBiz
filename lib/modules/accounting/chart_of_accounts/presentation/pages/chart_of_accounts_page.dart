@@ -9,6 +9,7 @@ import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/core/widgets/app_empty_state.dart';
+import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
@@ -91,21 +92,11 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final accountsAsync = ref.watch(accountsProvider);
+    final forestAsync = ref.watch(accountForestProvider);
     final expandedIds = ref.watch(accountTreeExpandedIdsProvider);
     final includeInactive = ref.watch(accountsIncludeInactiveProvider);
     final query = ref.watch(accountSearchQueryProvider);
     final typeFilter = ref.watch(accountTypeFilterProvider);
-
-    final forestAsync = accountsAsync.whenData((accounts) {
-      final filtered = [
-        for (final account in accounts)
-          if ((typeFilter == null || account.accountType == typeFilter) &&
-              AccountLabels.matchesQuery(l10n, account, query))
-            account,
-      ];
-      return AccountTreeNode.buildForest(filtered);
-    });
 
     final visibleCount = forestAsync.maybeWhen(
       data: (roots) => _countAccounts(roots),
@@ -190,11 +181,9 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
             Expanded(
               child: forestAsync.when(
                 loading: () => const AppLoading(),
-                error: (error, _) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    child: Text(l10n.somethingWentWrong),
-                  ),
+                error: (error, _) => AppErrorState(
+                  message: error.toString(),
+                  onRetry: () => ref.invalidate(accountsProvider),
                 ),
                 data: (roots) {
                   if (roots.isEmpty) {
@@ -216,8 +205,9 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
                           ElevatedButton.icon(
                             onPressed: () async {
                               try {
-                                final repo = ref.read(accountRepositoryProvider);
-                                await repo.seedDefaultChart();
+                                await ref
+                                    .read(ensureDefaultChartUseCaseProvider)
+                                    .call();
                                 ref.invalidate(accountsProvider);
                                 if (context.mounted) {
                                   showAppSnackBar(
@@ -231,8 +221,8 @@ class _ChartOfAccountsPageState extends ConsumerState<ChartOfAccountsPage> {
                                   showAppSnackBar(
                                     context,
                                     message: e is MissingCompanyContextException
-                                        ? 'يرجى اختيار وتأكيد الشركة أولاً لتوليد شجرة الحسابات'
-                                        : 'فشل توليد شجرة الحسابات: $e',
+                                        ? l10n.somethingWentWrong
+                                        : e.toString(),
                                     isSuccess: false,
                                   );
                                 }

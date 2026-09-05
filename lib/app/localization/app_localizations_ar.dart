@@ -6631,4 +6631,194 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get accountSearchNoResultsSubtitle =>
       'لم يتم العثور على حسابات تطابق معايير البحث';
+
+  @override
+  String get accountingUnspecified => 'غير محدد';
+
+  @override
+  String get accountingModuleRuleLabel => 'الوحدة / القاعدة:';
+
+  @override
+  String get accountingRequiredAccountType => 'نوع الحساب المطلوب:';
+
+  @override
+  String get accountingCurrentAccountType => 'نوع الحساب المحدد حالياً:';
+
+  @override
+  String get accountingFixSetupAction => 'إصلاح التجهيز المحاسبي';
+
+  @override
+  String get accountingBindEntityAccountAction => 'تعيين حساب المنشأة';
+
+  @override
+  String get accountingReviewSettingsAction => 'مراجعة إعدادات الحسابات';
+
+  @override
+  String get accountingSetupAction => 'تجهيز المحاسبة';
+
+  @override
+  String get cashRegisterConfigTitle => 'تهيئة حسابات صناديق النقدية';
+
+  @override
+  String get cashRegisterAddTitle => 'إضافة صندوق نقد جديد';
+
+  @override
+  String get cashRegisterNameLabel => 'اسم الصندوق';
+
+  @override
+  String get cashRegisterNameHint => 'مثال: الصندوق الرئيسي / الكاشير';
+
+  @override
+  String get cashRegisterCodeLabel => 'رمز / معرف الصندوق';
+
+  @override
+  String get cashRegisterCodeHint => 'مثال: CR-01';
+
+  @override
+  String get cashRegisterCreateSuccessNotLinked =>
+      'تم إنشاء الصندوق بنجاح (حالة: غير مربوط محاسبياً)';
+
+  @override
+  String cashRegisterLinkSuccess(String code, String name) {
+    return 'تم ربط الصندوق بالحساب المحاسبي ($code - $name) بنجاح';
+  }
+
+  @override
+  String cashRegisterLinkFailed(String error) {
+    return 'فشل الربط: $error';
+  }
+
+  @override
+  String get cashRegisterAccountTypeMismatch =>
+      'هذا الحساب غير متوافق مع الصندوق النقدي (يجب أن يكون حساب أصول/نقدية)';
+
+  @override
+  String get cashRegisterUnlinkTitle => 'إلغاء ربط الحساب المحاسبي';
+
+  @override
+  String cashRegisterUnlinkConfirm(String name) {
+    return 'هل أنت تأكد من إلغاء ربط الصندوق \"$name\" بالحساب المحاسبي؟ سيصبح الصندوق غير متاح للمبيعات والنقدية فوراً.';
+  }
+
+  @override
+  String get cashRegisterUnlinkConfirmAction => 'تأكيد الفك';
+
+  @override
+  String get cashRegisterUnlinkSuccess => 'تم إلغاء ربط الصندوق بنجاح';
+
+  @override
+  String get cashRegisterDefaultTitle => 'الصندوق الافتراضي للمستندات الجديدة';
+
+  @override
+  String get cashRegisterDefaultSubtitle =>
+      'سيتم تحديد هذا الصندوق تلقائياً عند إنشاء مستند مبيعات أو مقبوضات/مدفوعات جديدة';
+
+  @override
+  String get cashRegisterDefaultReady => 'جاهز كافتراضي';
+
+  @override
+  String get cashRegisterDefaultNotConfigured =>
+      'غير محدد (لا يوجد صندوق افتراضي)';
+
+  @override
+  String get cashRegisterDefaultNotConfiguredHint =>
+      'اضغط على \"تحديد افتراضي\" لاختيار صندوق من الصناديق المربوطة';
+
+  @override
+  String get cashRegisterDefaultInvalid =>
+      'الصندوق الافتراضي غير صالح (DEFAULT_CASH_REGISTER_INVALID)';
+
+  @override
+  String cashRegisterDefaultSetSuccess(String name) {
+    return 'تم تحديد الصندوق \"$name\" كصندوق افتراضي للمستندات الجديدة';
+  }
+
+  @override
+  String get cashRegisterDefaultClearSuccess =>
+      'تم إلغاء تعيين الصندوق الافتراضي';
+
+  @override
+  String get cashRegisterSetDefaultAction => 'تحديد افتراضي';
+
+  @override
+  String get cashRegisterClearDefaultAction => 'إلغاء الافتراضي';
+
+  @override
+  String get cashRegisterRepairConfigAction => 'إصلاح التكوين';
+
+  @override
+  String get cashRegisterReadinessTitle => 'حالة تهيئة الصناديق والمحاسبة';
+
+  @override
+  String get cashRegisterTotalRegisters => 'إجمالي الصناديق';
+
+  @override
+  String get cashRegisterLinkedAndReady => 'مربوطة وجاهزة';
+
+  @override
+  String get cashRegisterNotLinked => 'غير مربوطة';
+
+  @override
+  String get cashRegisterInvalidLink => 'غير صالحة';
+
+  @override
+  String get cashRegisterCompanyRegisters => 'قائمة صناديق النقدية بالشركة';
+
+  @override
+  String get cashRegisterAddAction => 'إضافة صندوق';
+
+  @override
+  String get cashRegisterEmptyTitle => 'لا توجد صناديق نقدية مسجلة';
+
+  @override
+  String get cashRegisterEmptySubtitle =>
+      'اضغط على \"إضافة صندوق\" لإنشاء صندوق جديد ثم ربطه بالحساب المحاسبي';
+
+  @override
+  String get cashRegisterStatusReady => 'جاهز ومربوط';
+
+  @override
+  String get cashRegisterStatusInvalid => 'غير صالح';
+
+  @override
+  String get cashRegisterStatusNotLinked => 'غير مربوط';
+
+  @override
+  String get cashRegisterNoAccountLinked =>
+      'لم يتم ربط حساب من دليل الحسابات بعد';
+
+  @override
+  String get cashRegisterInvalidReason =>
+      'سبب عدم الصلاحية: الحساب المرتبط محذوف أو معطل أو لا ينتمي لحسابات الأصول النقدية.';
+
+  @override
+  String get cashRegisterChangeAccountAction => 'تغيير الحساب';
+
+  @override
+  String get cashRegisterLinkAccountAction => 'ربط بحساب محاسبي';
+
+  @override
+  String cashRegisterSelectAccountTitle(String name) {
+    return 'اختر حساب نقدية من دليل الحسابات لـ ($name)';
+  }
+
+  @override
+  String get cashRegisterSelectAccountHint =>
+      'يُشترط أن يكون الحساب نشطاً وقابلاً للترحيل ومن نوع أصول نقدية';
+
+  @override
+  String get cashRegisterNoCompatibleAccounts =>
+      'لا توجد حسابات نقدية صالحة بالدليل';
+
+  @override
+  String get cashRegisterSelectDefaultTitle =>
+      'اختر الصندوق الافتراضي للمستندات الجديدة';
+
+  @override
+  String get cashRegisterSelectDefaultHint =>
+      'يتم عرض الصناديق المربوطة محاسبياً والجاهزة فقط';
+
+  @override
+  String get cashRegisterNoReadyRegisters =>
+      'لا توجد صناديق جاهزة ومربوطة محاسبياً. يرجى ربط صندوق بحساب محاسبي أولاً.';
 }

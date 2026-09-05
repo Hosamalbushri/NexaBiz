@@ -8,6 +8,8 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_card.dart';
+import 'package:stock_count/core/widgets/app_empty_state.dart';
+import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
@@ -43,7 +45,10 @@ class AccountDetailsPage extends ConsumerWidget {
           title: l10n.accountingAccountDetails,
           showBackButton: true,
         ),
-        body: Center(child: Text(l10n.somethingWentWrong)),
+        body: AppErrorState(
+          message: error.toString(),
+          onRetry: () => ref.invalidate(accountByIdProvider(accountId)),
+        ),
       ),
       data: (account) {
         if (account == null) {
@@ -52,7 +57,10 @@ class AccountDetailsPage extends ConsumerWidget {
               title: l10n.accountingAccountDetails,
               showBackButton: true,
             ),
-            body: Center(child: Text(l10n.accountingAccountNotFound)),
+            body: AppEmptyState(
+              title: l10n.accountingAccountNotFound,
+              icon: Icons.account_tree_outlined,
+            ),
           );
         }
 

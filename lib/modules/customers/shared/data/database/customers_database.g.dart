@@ -118,6 +118,49 @@ class $CustomersTable extends Customers
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('active'),
+  );
+  static const VerificationMeta _creditLimitMeta = const VerificationMeta(
+    'creditLimit',
+  );
+  @override
+  late final GeneratedColumn<double> creditLimit = GeneratedColumn<double>(
+    'credit_limit',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _taxNumberMeta = const VerificationMeta(
+    'taxNumber',
+  );
+  @override
+  late final GeneratedColumn<String> taxNumber = GeneratedColumn<String>(
+    'tax_number',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _accountIdMeta = const VerificationMeta(
     'accountId',
   );
@@ -242,6 +285,10 @@ class $CustomersTable extends Customers
     address,
     notes,
     isActive,
+    status,
+    creditLimit,
+    currencyCode,
+    taxNumber,
     accountId,
     externalId,
     dataSource,
@@ -323,6 +370,36 @@ class $CustomersTable extends Customers
       context.handle(
         _isActiveMeta,
         isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('credit_limit')) {
+      context.handle(
+        _creditLimitMeta,
+        creditLimit.isAcceptableOrUnknown(
+          data['credit_limit']!,
+          _creditLimitMeta,
+        ),
+      );
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('tax_number')) {
+      context.handle(
+        _taxNumberMeta,
+        taxNumber.isAcceptableOrUnknown(data['tax_number']!, _taxNumberMeta),
       );
     }
     if (data.containsKey('account_id')) {
@@ -436,7 +513,23 @@ class $CustomersTable extends Customers
       isActive: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
-      )!,
+      ) ?? true,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      ) ?? 'active',
+      creditLimit: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}credit_limit'],
+      ),
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      ),
+      taxNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tax_number'],
+      ),
       accountId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}account_id'],
@@ -448,19 +541,19 @@ class $CustomersTable extends Customers
       dataSource: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}data_source'],
-      )!,
+      ) ?? 'local',
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
-      )!,
+      ) ?? 0,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
-      )!,
+      ) ?? 0,
       syncStatus: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}sync_status'],
-      )!,
+      ) ?? 'synced',
       lastSyncedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}last_synced_at'],
@@ -468,7 +561,7 @@ class $CustomersTable extends Customers
       version: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}version'],
-      )!,
+      ) ?? 1,
       companyId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}company_id'],
@@ -501,6 +594,18 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
   final String? notes;
   final bool isActive;
 
+  /// [CustomerStatus.storageValue] string ('active', 'inactive', 'blocked').
+  final String status;
+
+  /// Maximum permitted credit limit balance. Null = unlimited / no limit set.
+  final double? creditLimit;
+
+  /// 3-letter ISO currency code override (e.g. 'SAR', 'USD'). Null = default company currency.
+  final String? currencyCode;
+
+  /// Tax Registration Number (TRN / VAT number).
+  final String? taxNumber;
+
   /// Opaque Account.uuid (Accounting module). Null when unlinked.
   final String? accountId;
 
@@ -532,6 +637,10 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     this.address,
     this.notes,
     required this.isActive,
+    required this.status,
+    this.creditLimit,
+    this.currencyCode,
+    this.taxNumber,
     this.accountId,
     this.externalId,
     required this.dataSource,
@@ -563,6 +672,16 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       map['notes'] = Variable<String>(notes);
     }
     map['is_active'] = Variable<bool>(isActive);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || creditLimit != null) {
+      map['credit_limit'] = Variable<double>(creditLimit);
+    }
+    if (!nullToAbsent || currencyCode != null) {
+      map['currency_code'] = Variable<String>(currencyCode);
+    }
+    if (!nullToAbsent || taxNumber != null) {
+      map['tax_number'] = Variable<String>(taxNumber);
+    }
     if (!nullToAbsent || accountId != null) {
       map['account_id'] = Variable<String>(accountId);
     }
@@ -605,6 +724,16 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
           ? const Value.absent()
           : Value(notes),
       isActive: Value(isActive),
+      status: Value(status),
+      creditLimit: creditLimit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(creditLimit),
+      currencyCode: currencyCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(currencyCode),
+      taxNumber: taxNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(taxNumber),
       accountId: accountId == null && nullToAbsent
           ? const Value.absent()
           : Value(accountId),
@@ -643,6 +772,10 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       address: serializer.fromJson<String?>(json['address']),
       notes: serializer.fromJson<String?>(json['notes']),
       isActive: serializer.fromJson<bool>(json['isActive']),
+      status: serializer.fromJson<String>(json['status']),
+      creditLimit: serializer.fromJson<double?>(json['creditLimit']),
+      currencyCode: serializer.fromJson<String?>(json['currencyCode']),
+      taxNumber: serializer.fromJson<String?>(json['taxNumber']),
       accountId: serializer.fromJson<String?>(json['accountId']),
       externalId: serializer.fromJson<String?>(json['externalId']),
       dataSource: serializer.fromJson<String>(json['dataSource']),
@@ -668,6 +801,10 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       'address': serializer.toJson<String?>(address),
       'notes': serializer.toJson<String?>(notes),
       'isActive': serializer.toJson<bool>(isActive),
+      'status': serializer.toJson<String>(status),
+      'creditLimit': serializer.toJson<double?>(creditLimit),
+      'currencyCode': serializer.toJson<String?>(currencyCode),
+      'taxNumber': serializer.toJson<String?>(taxNumber),
       'accountId': serializer.toJson<String?>(accountId),
       'externalId': serializer.toJson<String?>(externalId),
       'dataSource': serializer.toJson<String>(dataSource),
@@ -691,6 +828,10 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     Value<String?> address = const Value.absent(),
     Value<String?> notes = const Value.absent(),
     bool? isActive,
+    String? status,
+    Value<double?> creditLimit = const Value.absent(),
+    Value<String?> currencyCode = const Value.absent(),
+    Value<String?> taxNumber = const Value.absent(),
     Value<String?> accountId = const Value.absent(),
     Value<String?> externalId = const Value.absent(),
     String? dataSource,
@@ -711,6 +852,10 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     address: address.present ? address.value : this.address,
     notes: notes.present ? notes.value : this.notes,
     isActive: isActive ?? this.isActive,
+    status: status ?? this.status,
+    creditLimit: creditLimit.present ? creditLimit.value : this.creditLimit,
+    currencyCode: currencyCode.present ? currencyCode.value : this.currencyCode,
+    taxNumber: taxNumber.present ? taxNumber.value : this.taxNumber,
     accountId: accountId.present ? accountId.value : this.accountId,
     externalId: externalId.present ? externalId.value : this.externalId,
     dataSource: dataSource ?? this.dataSource,
@@ -735,6 +880,14 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
       address: data.address.present ? data.address.value : this.address,
       notes: data.notes.present ? data.notes.value : this.notes,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      status: data.status.present ? data.status.value : this.status,
+      creditLimit: data.creditLimit.present
+          ? data.creditLimit.value
+          : this.creditLimit,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
+      taxNumber: data.taxNumber.present ? data.taxNumber.value : this.taxNumber,
       accountId: data.accountId.present ? data.accountId.value : this.accountId,
       externalId: data.externalId.present
           ? data.externalId.value
@@ -768,6 +921,10 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
           ..write('address: $address, ')
           ..write('notes: $notes, ')
           ..write('isActive: $isActive, ')
+          ..write('status: $status, ')
+          ..write('creditLimit: $creditLimit, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('taxNumber: $taxNumber, ')
           ..write('accountId: $accountId, ')
           ..write('externalId: $externalId, ')
           ..write('dataSource: $dataSource, ')
@@ -783,7 +940,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     uuid,
     customerCode,
@@ -793,6 +950,10 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     address,
     notes,
     isActive,
+    status,
+    creditLimit,
+    currencyCode,
+    taxNumber,
     accountId,
     externalId,
     dataSource,
@@ -803,7 +964,7 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
     version,
     companyId,
     deletedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -817,6 +978,10 @@ class CustomerRow extends DataClass implements Insertable<CustomerRow> {
           other.address == this.address &&
           other.notes == this.notes &&
           other.isActive == this.isActive &&
+          other.status == this.status &&
+          other.creditLimit == this.creditLimit &&
+          other.currencyCode == this.currencyCode &&
+          other.taxNumber == this.taxNumber &&
           other.accountId == this.accountId &&
           other.externalId == this.externalId &&
           other.dataSource == this.dataSource &&
@@ -839,6 +1004,10 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
   final Value<String?> address;
   final Value<String?> notes;
   final Value<bool> isActive;
+  final Value<String> status;
+  final Value<double?> creditLimit;
+  final Value<String?> currencyCode;
+  final Value<String?> taxNumber;
   final Value<String?> accountId;
   final Value<String?> externalId;
   final Value<String> dataSource;
@@ -859,6 +1028,10 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     this.address = const Value.absent(),
     this.notes = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.status = const Value.absent(),
+    this.creditLimit = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.taxNumber = const Value.absent(),
     this.accountId = const Value.absent(),
     this.externalId = const Value.absent(),
     this.dataSource = const Value.absent(),
@@ -880,6 +1053,10 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     this.address = const Value.absent(),
     this.notes = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.status = const Value.absent(),
+    this.creditLimit = const Value.absent(),
+    this.currencyCode = const Value.absent(),
+    this.taxNumber = const Value.absent(),
     this.accountId = const Value.absent(),
     this.externalId = const Value.absent(),
     this.dataSource = const Value.absent(),
@@ -905,6 +1082,10 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     Expression<String>? address,
     Expression<String>? notes,
     Expression<bool>? isActive,
+    Expression<String>? status,
+    Expression<double>? creditLimit,
+    Expression<String>? currencyCode,
+    Expression<String>? taxNumber,
     Expression<String>? accountId,
     Expression<String>? externalId,
     Expression<String>? dataSource,
@@ -926,6 +1107,10 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
       if (address != null) 'address': address,
       if (notes != null) 'notes': notes,
       if (isActive != null) 'is_active': isActive,
+      if (status != null) 'status': status,
+      if (creditLimit != null) 'credit_limit': creditLimit,
+      if (currencyCode != null) 'currency_code': currencyCode,
+      if (taxNumber != null) 'tax_number': taxNumber,
       if (accountId != null) 'account_id': accountId,
       if (externalId != null) 'external_id': externalId,
       if (dataSource != null) 'data_source': dataSource,
@@ -949,6 +1134,10 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     Value<String?>? address,
     Value<String?>? notes,
     Value<bool>? isActive,
+    Value<String>? status,
+    Value<double?>? creditLimit,
+    Value<String?>? currencyCode,
+    Value<String?>? taxNumber,
     Value<String?>? accountId,
     Value<String?>? externalId,
     Value<String>? dataSource,
@@ -970,6 +1159,10 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
       address: address ?? this.address,
       notes: notes ?? this.notes,
       isActive: isActive ?? this.isActive,
+      status: status ?? this.status,
+      creditLimit: creditLimit ?? this.creditLimit,
+      currencyCode: currencyCode ?? this.currencyCode,
+      taxNumber: taxNumber ?? this.taxNumber,
       accountId: accountId ?? this.accountId,
       externalId: externalId ?? this.externalId,
       dataSource: dataSource ?? this.dataSource,
@@ -1012,6 +1205,18 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
     }
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (creditLimit.present) {
+      map['credit_limit'] = Variable<double>(creditLimit.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
+    if (taxNumber.present) {
+      map['tax_number'] = Variable<String>(taxNumber.value);
     }
     if (accountId.present) {
       map['account_id'] = Variable<String>(accountId.value);
@@ -1058,6 +1263,10 @@ class CustomersCompanion extends UpdateCompanion<CustomerRow> {
           ..write('address: $address, ')
           ..write('notes: $notes, ')
           ..write('isActive: $isActive, ')
+          ..write('status: $status, ')
+          ..write('creditLimit: $creditLimit, ')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('taxNumber: $taxNumber, ')
           ..write('accountId: $accountId, ')
           ..write('externalId: $externalId, ')
           ..write('dataSource: $dataSource, ')
@@ -1095,6 +1304,10 @@ typedef $$CustomersTableCreateCompanionBuilder =
       Value<String?> address,
       Value<String?> notes,
       Value<bool> isActive,
+      Value<String> status,
+      Value<double?> creditLimit,
+      Value<String?> currencyCode,
+      Value<String?> taxNumber,
       Value<String?> accountId,
       Value<String?> externalId,
       Value<String> dataSource,
@@ -1117,6 +1330,10 @@ typedef $$CustomersTableUpdateCompanionBuilder =
       Value<String?> address,
       Value<String?> notes,
       Value<bool> isActive,
+      Value<String> status,
+      Value<double?> creditLimit,
+      Value<String?> currencyCode,
+      Value<String?> taxNumber,
       Value<String?> accountId,
       Value<String?> externalId,
       Value<String> dataSource,
@@ -1180,6 +1397,26 @@ class $$CustomersTableFilterComposer
 
   ColumnFilters<bool> get isActive => $composableBuilder(
     column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get creditLimit => $composableBuilder(
+    column: $table.creditLimit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get taxNumber => $composableBuilder(
+    column: $table.taxNumber,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1288,6 +1525,26 @@ class $$CustomersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get creditLimit => $composableBuilder(
+    column: $table.creditLimit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get taxNumber => $composableBuilder(
+    column: $table.taxNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get accountId => $composableBuilder(
     column: $table.accountId,
     builder: (column) => ColumnOrderings(column),
@@ -1377,6 +1634,22 @@ class $$CustomersTableAnnotationComposer
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
 
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<double> get creditLimit => $composableBuilder(
+    column: $table.creditLimit,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get taxNumber =>
+      $composableBuilder(column: $table.taxNumber, builder: (column) => column);
+
   GeneratedColumn<String> get accountId =>
       $composableBuilder(column: $table.accountId, builder: (column) => column);
 
@@ -1456,6 +1729,10 @@ class $$CustomersTableTableManager
                 Value<String?> address = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<double?> creditLimit = const Value.absent(),
+                Value<String?> currencyCode = const Value.absent(),
+                Value<String?> taxNumber = const Value.absent(),
                 Value<String?> accountId = const Value.absent(),
                 Value<String?> externalId = const Value.absent(),
                 Value<String> dataSource = const Value.absent(),
@@ -1476,6 +1753,10 @@ class $$CustomersTableTableManager
                 address: address,
                 notes: notes,
                 isActive: isActive,
+                status: status,
+                creditLimit: creditLimit,
+                currencyCode: currencyCode,
+                taxNumber: taxNumber,
                 accountId: accountId,
                 externalId: externalId,
                 dataSource: dataSource,
@@ -1498,6 +1779,10 @@ class $$CustomersTableTableManager
                 Value<String?> address = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<double?> creditLimit = const Value.absent(),
+                Value<String?> currencyCode = const Value.absent(),
+                Value<String?> taxNumber = const Value.absent(),
                 Value<String?> accountId = const Value.absent(),
                 Value<String?> externalId = const Value.absent(),
                 Value<String> dataSource = const Value.absent(),
@@ -1518,6 +1803,10 @@ class $$CustomersTableTableManager
                 address: address,
                 notes: notes,
                 isActive: isActive,
+                status: status,
+                creditLimit: creditLimit,
+                currencyCode: currencyCode,
+                taxNumber: taxNumber,
                 accountId: accountId,
                 externalId: externalId,
                 dataSource: dataSource,

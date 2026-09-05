@@ -8,6 +8,8 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_card.dart';
+import 'package:stock_count/core/widgets/app_empty_state.dart';
+import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
@@ -41,12 +43,15 @@ class JournalEntryDetailsPage extends ConsumerWidget {
         ),
         body: const AppLoading(),
       ),
-      error: (_, _) => Scaffold(
+      error: (e, _) => Scaffold(
         appBar: CustomAppBar(
           title: l10n.accountingJournalDetails,
           showBackButton: true,
         ),
-        body: Center(child: Text(l10n.somethingWentWrong)),
+        body: AppErrorState(
+          message: e.toString(),
+          onRetry: () => ref.invalidate(journalEntryByUuidProvider(entryUuid)),
+        ),
       ),
       data: (entry) {
         if (entry == null) {
@@ -55,7 +60,10 @@ class JournalEntryDetailsPage extends ConsumerWidget {
               title: l10n.accountingJournalDetails,
               showBackButton: true,
             ),
-            body: Center(child: Text(l10n.accountingJournalNotFound)),
+            body: AppEmptyState(
+              title: l10n.accountingJournalNotFound,
+              icon: Icons.search_off_rounded,
+            ),
           );
         }
 

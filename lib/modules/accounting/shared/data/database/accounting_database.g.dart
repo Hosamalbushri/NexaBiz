@@ -1097,6 +1097,884 @@ class AccountsCompanion extends UpdateCompanion<AccountRow> {
   }
 }
 
+class $CashRegistersTable extends CashRegisters
+    with TableInfo<$CashRegistersTable, CashRegisterRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CashRegistersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 512,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _accountingAccountIdMeta =
+      const VerificationMeta('accountingAccountId');
+  @override
+  late final GeneratedColumn<String> accountingAccountId =
+      GeneratedColumn<String>(
+        'accounting_account_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _accountingLinkStatusMeta =
+      const VerificationMeta('accountingLinkStatus');
+  @override
+  late final GeneratedColumn<String> accountingLinkStatus =
+      GeneratedColumn<String>(
+        'accounting_link_status',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('ACCOUNTING_NOT_LINKED'),
+      );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('synced'),
+  );
+  static const VerificationMeta _lastSyncedAtMeta = const VerificationMeta(
+    'lastSyncedAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastSyncedAt = GeneratedColumn<int>(
+    'last_synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    uuid,
+    companyId,
+    name,
+    code,
+    description,
+    accountingAccountId,
+    accountingLinkStatus,
+    isActive,
+    createdAt,
+    updatedAt,
+    syncStatus,
+    lastSyncedAt,
+    version,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cash_registers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CashRegisterRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+        _codeMeta,
+        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('accounting_account_id')) {
+      context.handle(
+        _accountingAccountIdMeta,
+        accountingAccountId.isAcceptableOrUnknown(
+          data['accounting_account_id']!,
+          _accountingAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('accounting_link_status')) {
+      context.handle(
+        _accountingLinkStatusMeta,
+        accountingLinkStatus.isAcceptableOrUnknown(
+          data['accounting_link_status']!,
+          _accountingLinkStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+        _lastSyncedAtMeta,
+        lastSyncedAt.isAcceptableOrUnknown(
+          data['last_synced_at']!,
+          _lastSyncedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CashRegisterRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CashRegisterRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      accountingAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}accounting_account_id'],
+      ),
+      accountingLinkStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}accounting_link_status'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_synced_at'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $CashRegistersTable createAlias(String alias) {
+    return $CashRegistersTable(attachedDatabase, alias);
+  }
+}
+
+class CashRegisterRow extends DataClass implements Insertable<CashRegisterRow> {
+  final int id;
+  final String uuid;
+  final String companyId;
+  final String name;
+  final String code;
+  final String? description;
+  final String? accountingAccountId;
+  final String accountingLinkStatus;
+  final bool isActive;
+  final int createdAt;
+  final int updatedAt;
+  final String syncStatus;
+  final int? lastSyncedAt;
+  final int version;
+  final int? deletedAt;
+  const CashRegisterRow({
+    required this.id,
+    required this.uuid,
+    required this.companyId,
+    required this.name,
+    required this.code,
+    this.description,
+    this.accountingAccountId,
+    required this.accountingLinkStatus,
+    required this.isActive,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.syncStatus,
+    this.lastSyncedAt,
+    required this.version,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
+    map['company_id'] = Variable<String>(companyId);
+    map['name'] = Variable<String>(name);
+    map['code'] = Variable<String>(code);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || accountingAccountId != null) {
+      map['accounting_account_id'] = Variable<String>(accountingAccountId);
+    }
+    map['accounting_link_status'] = Variable<String>(accountingLinkStatus);
+    map['is_active'] = Variable<bool>(isActive);
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<int>(lastSyncedAt);
+    }
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
+    return map;
+  }
+
+  CashRegistersCompanion toCompanion(bool nullToAbsent) {
+    return CashRegistersCompanion(
+      id: Value(id),
+      uuid: Value(uuid),
+      companyId: Value(companyId),
+      name: Value(name),
+      code: Value(code),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      accountingAccountId: accountingAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountingAccountId),
+      accountingLinkStatus: Value(accountingLinkStatus),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      syncStatus: Value(syncStatus),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+      version: Value(version),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory CashRegisterRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CashRegisterRow(
+      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      name: serializer.fromJson<String>(json['name']),
+      code: serializer.fromJson<String>(json['code']),
+      description: serializer.fromJson<String?>(json['description']),
+      accountingAccountId: serializer.fromJson<String?>(
+        json['accountingAccountId'],
+      ),
+      accountingLinkStatus: serializer.fromJson<String>(
+        json['accountingLinkStatus'],
+      ),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
+      version: serializer.fromJson<int>(json['version']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
+      'companyId': serializer.toJson<String>(companyId),
+      'name': serializer.toJson<String>(name),
+      'code': serializer.toJson<String>(code),
+      'description': serializer.toJson<String?>(description),
+      'accountingAccountId': serializer.toJson<String?>(accountingAccountId),
+      'accountingLinkStatus': serializer.toJson<String>(accountingLinkStatus),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
+      'version': serializer.toJson<int>(version),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
+    };
+  }
+
+  CashRegisterRow copyWith({
+    int? id,
+    String? uuid,
+    String? companyId,
+    String? name,
+    String? code,
+    Value<String?> description = const Value.absent(),
+    Value<String?> accountingAccountId = const Value.absent(),
+    String? accountingLinkStatus,
+    bool? isActive,
+    int? createdAt,
+    int? updatedAt,
+    String? syncStatus,
+    Value<int?> lastSyncedAt = const Value.absent(),
+    int? version,
+    Value<int?> deletedAt = const Value.absent(),
+  }) => CashRegisterRow(
+    id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
+    companyId: companyId ?? this.companyId,
+    name: name ?? this.name,
+    code: code ?? this.code,
+    description: description.present ? description.value : this.description,
+    accountingAccountId: accountingAccountId.present
+        ? accountingAccountId.value
+        : this.accountingAccountId,
+    accountingLinkStatus: accountingLinkStatus ?? this.accountingLinkStatus,
+    isActive: isActive ?? this.isActive,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+    version: version ?? this.version,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  CashRegisterRow copyWithCompanion(CashRegistersCompanion data) {
+    return CashRegisterRow(
+      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      name: data.name.present ? data.name.value : this.name,
+      code: data.code.present ? data.code.value : this.code,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      accountingAccountId: data.accountingAccountId.present
+          ? data.accountingAccountId.value
+          : this.accountingAccountId,
+      accountingLinkStatus: data.accountingLinkStatus.present
+          ? data.accountingLinkStatus.value
+          : this.accountingLinkStatus,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+      version: data.version.present ? data.version.value : this.version,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CashRegisterRow(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('companyId: $companyId, ')
+          ..write('name: $name, ')
+          ..write('code: $code, ')
+          ..write('description: $description, ')
+          ..write('accountingAccountId: $accountingAccountId, ')
+          ..write('accountingLinkStatus: $accountingLinkStatus, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('version: $version, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    uuid,
+    companyId,
+    name,
+    code,
+    description,
+    accountingAccountId,
+    accountingLinkStatus,
+    isActive,
+    createdAt,
+    updatedAt,
+    syncStatus,
+    lastSyncedAt,
+    version,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CashRegisterRow &&
+          other.id == this.id &&
+          other.uuid == this.uuid &&
+          other.companyId == this.companyId &&
+          other.name == this.name &&
+          other.code == this.code &&
+          other.description == this.description &&
+          other.accountingAccountId == this.accountingAccountId &&
+          other.accountingLinkStatus == this.accountingLinkStatus &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.version == this.version &&
+          other.deletedAt == this.deletedAt);
+}
+
+class CashRegistersCompanion extends UpdateCompanion<CashRegisterRow> {
+  final Value<int> id;
+  final Value<String> uuid;
+  final Value<String> companyId;
+  final Value<String> name;
+  final Value<String> code;
+  final Value<String?> description;
+  final Value<String?> accountingAccountId;
+  final Value<String> accountingLinkStatus;
+  final Value<bool> isActive;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<String> syncStatus;
+  final Value<int?> lastSyncedAt;
+  final Value<int> version;
+  final Value<int?> deletedAt;
+  const CashRegistersCompanion({
+    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.code = const Value.absent(),
+    this.description = const Value.absent(),
+    this.accountingAccountId = const Value.absent(),
+    this.accountingLinkStatus = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+  });
+  CashRegistersCompanion.insert({
+    this.id = const Value.absent(),
+    required String uuid,
+    required String companyId,
+    required String name,
+    required String code,
+    this.description = const Value.absent(),
+    this.accountingAccountId = const Value.absent(),
+    this.accountingLinkStatus = const Value.absent(),
+    this.isActive = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+  }) : uuid = Value(uuid),
+       companyId = Value(companyId),
+       name = Value(name),
+       code = Value(code),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<CashRegisterRow> custom({
+    Expression<int>? id,
+    Expression<String>? uuid,
+    Expression<String>? companyId,
+    Expression<String>? name,
+    Expression<String>? code,
+    Expression<String>? description,
+    Expression<String>? accountingAccountId,
+    Expression<String>? accountingLinkStatus,
+    Expression<bool>? isActive,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<String>? syncStatus,
+    Expression<int>? lastSyncedAt,
+    Expression<int>? version,
+    Expression<int>? deletedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
+      if (companyId != null) 'company_id': companyId,
+      if (name != null) 'name': name,
+      if (code != null) 'code': code,
+      if (description != null) 'description': description,
+      if (accountingAccountId != null)
+        'accounting_account_id': accountingAccountId,
+      if (accountingLinkStatus != null)
+        'accounting_link_status': accountingLinkStatus,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (version != null) 'version': version,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+    });
+  }
+
+  CashRegistersCompanion copyWith({
+    Value<int>? id,
+    Value<String>? uuid,
+    Value<String>? companyId,
+    Value<String>? name,
+    Value<String>? code,
+    Value<String?>? description,
+    Value<String?>? accountingAccountId,
+    Value<String>? accountingLinkStatus,
+    Value<bool>? isActive,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+    Value<String>? syncStatus,
+    Value<int?>? lastSyncedAt,
+    Value<int>? version,
+    Value<int?>? deletedAt,
+  }) {
+    return CashRegistersCompanion(
+      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
+      companyId: companyId ?? this.companyId,
+      name: name ?? this.name,
+      code: code ?? this.code,
+      description: description ?? this.description,
+      accountingAccountId: accountingAccountId ?? this.accountingAccountId,
+      accountingLinkStatus: accountingLinkStatus ?? this.accountingLinkStatus,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      version: version ?? this.version,
+      deletedAt: deletedAt ?? this.deletedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (accountingAccountId.present) {
+      map['accounting_account_id'] = Variable<String>(
+        accountingAccountId.value,
+      );
+    }
+    if (accountingLinkStatus.present) {
+      map['accounting_link_status'] = Variable<String>(
+        accountingLinkStatus.value,
+      );
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<int>(lastSyncedAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CashRegistersCompanion(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('companyId: $companyId, ')
+          ..write('name: $name, ')
+          ..write('code: $code, ')
+          ..write('description: $description, ')
+          ..write('accountingAccountId: $accountingAccountId, ')
+          ..write('accountingLinkStatus: $accountingLinkStatus, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('version: $version, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CurrencyRatesTable extends CurrencyRates
     with TableInfo<$CurrencyRatesTable, CurrencyRateRow> {
   @override
@@ -7724,6 +8602,7 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
   _$AccountingDatabase(QueryExecutor e) : super(e);
   $AccountingDatabaseManager get managers => $AccountingDatabaseManager(this);
   late final $AccountsTable accounts = $AccountsTable(this);
+  late final $CashRegistersTable cashRegisters = $CashRegistersTable(this);
   late final $CurrencyRatesTable currencyRates = $CurrencyRatesTable(this);
   late final $CurrencyRateHistoryTable currencyRateHistory =
       $CurrencyRateHistoryTable(this);
@@ -7741,6 +8620,7 @@ abstract class _$AccountingDatabase extends GeneratedDatabase {
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     accounts,
+    cashRegisters,
     currencyRates,
     currencyRateHistory,
     voucherBooks,
@@ -8224,6 +9104,410 @@ typedef $$AccountsTableProcessedTableManager =
         BaseReferences<_$AccountingDatabase, $AccountsTable, AccountRow>,
       ),
       AccountRow,
+      PrefetchHooks Function()
+    >;
+typedef $$CashRegistersTableCreateCompanionBuilder =
+    CashRegistersCompanion Function({
+      Value<int> id,
+      required String uuid,
+      required String companyId,
+      required String name,
+      required String code,
+      Value<String?> description,
+      Value<String?> accountingAccountId,
+      Value<String> accountingLinkStatus,
+      Value<bool> isActive,
+      required int createdAt,
+      required int updatedAt,
+      Value<String> syncStatus,
+      Value<int?> lastSyncedAt,
+      Value<int> version,
+      Value<int?> deletedAt,
+    });
+typedef $$CashRegistersTableUpdateCompanionBuilder =
+    CashRegistersCompanion Function({
+      Value<int> id,
+      Value<String> uuid,
+      Value<String> companyId,
+      Value<String> name,
+      Value<String> code,
+      Value<String?> description,
+      Value<String?> accountingAccountId,
+      Value<String> accountingLinkStatus,
+      Value<bool> isActive,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+      Value<String> syncStatus,
+      Value<int?> lastSyncedAt,
+      Value<int> version,
+      Value<int?> deletedAt,
+    });
+
+class $$CashRegistersTableFilterComposer
+    extends Composer<_$AccountingDatabase, $CashRegistersTable> {
+  $$CashRegistersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountingAccountId => $composableBuilder(
+    column: $table.accountingAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountingLinkStatus => $composableBuilder(
+    column: $table.accountingLinkStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CashRegistersTableOrderingComposer
+    extends Composer<_$AccountingDatabase, $CashRegistersTable> {
+  $$CashRegistersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountingAccountId => $composableBuilder(
+    column: $table.accountingAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get accountingLinkStatus => $composableBuilder(
+    column: $table.accountingLinkStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CashRegistersTableAnnotationComposer
+    extends Composer<_$AccountingDatabase, $CashRegistersTable> {
+  $$CashRegistersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get accountingAccountId => $composableBuilder(
+    column: $table.accountingAccountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get accountingLinkStatus => $composableBuilder(
+    column: $table.accountingLinkStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$CashRegistersTableTableManager
+    extends
+        RootTableManager<
+          _$AccountingDatabase,
+          $CashRegistersTable,
+          CashRegisterRow,
+          $$CashRegistersTableFilterComposer,
+          $$CashRegistersTableOrderingComposer,
+          $$CashRegistersTableAnnotationComposer,
+          $$CashRegistersTableCreateCompanionBuilder,
+          $$CashRegistersTableUpdateCompanionBuilder,
+          (
+            CashRegisterRow,
+            BaseReferences<
+              _$AccountingDatabase,
+              $CashRegistersTable,
+              CashRegisterRow
+            >,
+          ),
+          CashRegisterRow,
+          PrefetchHooks Function()
+        > {
+  $$CashRegistersTableTableManager(
+    _$AccountingDatabase db,
+    $CashRegistersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CashRegistersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CashRegistersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CashRegistersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> code = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String?> accountingAccountId = const Value.absent(),
+                Value<String> accountingLinkStatus = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
+              }) => CashRegistersCompanion(
+                id: id,
+                uuid: uuid,
+                companyId: companyId,
+                name: name,
+                code: code,
+                description: description,
+                accountingAccountId: accountingAccountId,
+                accountingLinkStatus: accountingLinkStatus,
+                isActive: isActive,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncedAt: lastSyncedAt,
+                version: version,
+                deletedAt: deletedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String uuid,
+                required String companyId,
+                required String name,
+                required String code,
+                Value<String?> description = const Value.absent(),
+                Value<String?> accountingAccountId = const Value.absent(),
+                Value<String> accountingLinkStatus = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+                Value<String> syncStatus = const Value.absent(),
+                Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
+              }) => CashRegistersCompanion.insert(
+                id: id,
+                uuid: uuid,
+                companyId: companyId,
+                name: name,
+                code: code,
+                description: description,
+                accountingAccountId: accountingAccountId,
+                accountingLinkStatus: accountingLinkStatus,
+                isActive: isActive,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                lastSyncedAt: lastSyncedAt,
+                version: version,
+                deletedAt: deletedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CashRegistersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AccountingDatabase,
+      $CashRegistersTable,
+      CashRegisterRow,
+      $$CashRegistersTableFilterComposer,
+      $$CashRegistersTableOrderingComposer,
+      $$CashRegistersTableAnnotationComposer,
+      $$CashRegistersTableCreateCompanionBuilder,
+      $$CashRegistersTableUpdateCompanionBuilder,
+      (
+        CashRegisterRow,
+        BaseReferences<
+          _$AccountingDatabase,
+          $CashRegistersTable,
+          CashRegisterRow
+        >,
+      ),
+      CashRegisterRow,
       PrefetchHooks Function()
     >;
 typedef $$CurrencyRatesTableCreateCompanionBuilder =
@@ -11304,6 +12588,8 @@ class $AccountingDatabaseManager {
   $AccountingDatabaseManager(this._db);
   $$AccountsTableTableManager get accounts =>
       $$AccountsTableTableManager(_db, _db.accounts);
+  $$CashRegistersTableTableManager get cashRegisters =>
+      $$CashRegistersTableTableManager(_db, _db.cashRegisters);
   $$CurrencyRatesTableTableManager get currencyRates =>
       $$CurrencyRatesTableTableManager(_db, _db.currencyRates);
   $$CurrencyRateHistoryTableTableManager get currencyRateHistory =>

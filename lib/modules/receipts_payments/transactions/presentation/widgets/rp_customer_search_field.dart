@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/core/widgets/app_async_autocomplete_field.dart';
+import 'package:stock_count/core/widgets/app_customer_search_field.dart';
 import 'package:stock_count/modules/receipts_payments/shared/domain/services/rp_customer_lookup_port.dart';
 import '../providers/rp_providers.dart';
 
@@ -68,7 +69,7 @@ class _RpCustomerSearchFieldState
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
 
-    return AppAsyncAutocompleteField<RpCustomerRef>(
+    return AppCustomerSearchField<RpCustomerRef>(
       controller: _controller,
       focusNode: _focusNode,
       label: l10n.rpCustomer,

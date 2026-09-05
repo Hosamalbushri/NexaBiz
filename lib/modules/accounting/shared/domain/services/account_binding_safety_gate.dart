@@ -1,5 +1,4 @@
 import '../../../../../core/domain/entities/account_role.dart';
-import '../../../../../core/setup/setup.dart';
 import '../../../../system_setup/domain/entities/company_accounting_config.dart';
 import '../../../chart_of_accounts/domain/entities/account.dart';
 import '../../../chart_of_accounts/domain/entities/account_type.dart';
@@ -43,13 +42,12 @@ class AccountBindingValidationException implements Exception {
 /// around Accounting Configuration account bindings.
 class AccountBindingSafetyGate {
   AccountBindingSafetyGate({
-    required AccountRepository accountRepository,
-    required AccountUsageAnalyzer usageAnalyzer,
-  })  : _accountRepository = accountRepository,
-        _usageAnalyzer = usageAnalyzer;
+    required this.accountRepository,
+    required this.usageAnalyzer,
+  });
 
-  final AccountRepository _accountRepository;
-  final AccountUsageAnalyzer _usageAnalyzer;
+  final AccountRepository accountRepository;
+  final AccountUsageAnalyzer usageAnalyzer;
 
   /// Validates a proposed binding change for [role] from [currentAccountUuid] to [candidateAccountUuid].
   ///
@@ -72,7 +70,7 @@ class AccountBindingSafetyGate {
 
     // Rule 2: Usage Check on Current Account
     if (currentAccountUuid != null && currentAccountUuid.isNotEmpty) {
-      final usage = await _usageAnalyzer.analyzeAccountUsage(
+      final usage = await usageAnalyzer.analyzeAccountUsage(
         companyId: companyId,
         accountUuid: currentAccountUuid,
       );
@@ -90,7 +88,7 @@ class AccountBindingSafetyGate {
     }
 
     // Rule 3: Candidate Account Suitability Checks
-    final candidate = await _accountRepository.getByUuid(candidateAccountUuid);
+    final candidate = await accountRepository.getByUuid(candidateAccountUuid);
     if (candidate == null) {
       throw const AccountBindingValidationException('الحساب المحدد غير موجود في دليل الحسابات.');
     }
@@ -125,7 +123,7 @@ class AccountBindingSafetyGate {
       case AccountBindingMode.exact:
         final uuid = target.primaryUuid;
         if (uuid == null || uuid.isEmpty) return;
-        final account = await _accountRepository.getByUuid(uuid);
+        final account = await accountRepository.getByUuid(uuid);
         _assertAccountEligible(account: account, companyId: companyId, requirePosting: true);
         _validateClassification(role: role, candidate: account!);
         break;
@@ -133,7 +131,7 @@ class AccountBindingSafetyGate {
       case AccountBindingMode.parent:
         final parentUuid = target.parentUuid ?? target.primaryUuid;
         if (parentUuid == null || parentUuid.isEmpty) return;
-        final parent = await _accountRepository.getByUuid(parentUuid);
+        final parent = await accountRepository.getByUuid(parentUuid);
         _assertAccountEligible(account: parent, companyId: companyId, requirePosting: false);
         if (parent != null && !parent.isGroup) {
           throw const AccountBindingValidationException('خطأ: ربط مجموعة الحسابات يتطلب اختيار حساب رئيسي (مجموعة).');
@@ -144,7 +142,7 @@ class AccountBindingSafetyGate {
         break;
       case AccountBindingMode.accountSet:
         for (final uuid in target.setUuids) {
-          final account = await _accountRepository.getByUuid(uuid);
+          final account = await accountRepository.getByUuid(uuid);
           _assertAccountEligible(account: account, companyId: companyId, requirePosting: true);
           if (account != null) {
             _validateClassification(role: role, candidate: account);

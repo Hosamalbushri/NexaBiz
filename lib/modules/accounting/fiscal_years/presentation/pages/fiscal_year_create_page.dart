@@ -9,6 +9,7 @@ import 'package:stock_count/app/settings/company/company_profile_providers.dart'
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/permissions/permission_error_messages.dart';
 import 'package:stock_count/core/utils/business_date.dart';
+import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_form_section.dart';
 import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
@@ -313,7 +314,10 @@ class _FiscalYearCreatePageState extends ConsumerState<FiscalYearCreatePage> {
             if (_fxEnabled)
               accountsAsync.when(
                 loading: () => const LinearProgressIndicator(),
-                error: (e, _) => Text(e.toString()),
+                error: (e, _) => AppErrorState(
+                  message: e.toString(),
+                  onRetry: () => ref.invalidate(accountsProvider),
+                ),
                 data: (accounts) {
                   final posting = accounts
                       .where((a) => a.canPost)

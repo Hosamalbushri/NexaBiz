@@ -18,6 +18,7 @@ import 'company/app_currency.dart';
 import 'company/company_profile.dart';
 import 'company/company_profile_providers.dart';
 import '../../modules/system_setup/presentation/widgets/package_initialization_settings_hub.dart';
+import '../../modules/cash_registers/presentation/pages/cash_register_accounting_config_page.dart';
 
 /// Setup / company configuration settings page.
 class SetupSettingsPage extends ConsumerStatefulWidget {
@@ -247,6 +248,8 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
               return isArabic ? 'تهيئة وإعدادات المشتريات' : 'Purchases Setup';
             case 'receipts_payments':
               return isArabic ? 'تهيئة المقبوضات والمصروفات والخزينة' : 'Receipts & Payments Setup';
+            case 'cash_registers':
+              return isArabic ? 'تهيئة الحسابات النقدية وصناديق النقدية' : 'Cash Register Accounting Configuration';
             default:
               return l10n.setupSettingsTitle;
           }
@@ -265,7 +268,9 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
               ? _buildMenuHub(context, theme, isArabic)
               : _activeSubSection == 'company'
                   ? _buildCompanyForm(context, theme, l10n)
-                  : PackageInitializationSettingsHub(packageId: _activeSubSection),
+                  : _activeSubSection == 'cash_registers'
+                      ? const CashRegisterAccountingConfigPage()
+                      : PackageInitializationSettingsHub(packageId: _activeSubSection),
         );
       },
     );
@@ -281,6 +286,15 @@ class _SetupSettingsPageState extends ConsumerState<SetupSettingsPage> {
         subtitle: isArabic
             ? 'الاسم التجاري، الشعار، الرقم الضريبي، العملة الأساسية، بداية السنة المالية، وسجل مسؤول النظام'
             : 'Company legal name, logo, tax ID, base currency, fiscal start month, and local admin account',
+      ),
+      _SetupMenuItem(
+        id: 'cash_registers',
+        icon: Icons.point_of_sale_outlined,
+        iconColor: Colors.deepOrange,
+        title: isArabic ? 'تهيئة وإعدادات صناديق النقدية' : 'Cash Register Accounting Configuration',
+        subtitle: isArabic
+            ? 'ربط صناديق النقدية بالحسابات المحاسبية في دليل الحسابات وتحديد حالة الجاهزية'
+            : 'Explicitly link cash registers to Chart of Accounts accounts & manage readiness status',
       ),
       _SetupMenuItem(
         id: 'accounting',

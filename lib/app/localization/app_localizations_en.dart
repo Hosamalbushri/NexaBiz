@@ -6706,4 +6706,196 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get accountSearchNoResultsSubtitle =>
       'No accounts matched your search criteria';
+
+  @override
+  String get accountingUnspecified => 'Unspecified';
+
+  @override
+  String get accountingModuleRuleLabel => 'Module / Rule:';
+
+  @override
+  String get accountingRequiredAccountType => 'Required Account Type:';
+
+  @override
+  String get accountingCurrentAccountType => 'Currently Selected Account Type:';
+
+  @override
+  String get accountingFixSetupAction => 'Fix Accounting Setup';
+
+  @override
+  String get accountingBindEntityAccountAction => 'Bind Entity Account';
+
+  @override
+  String get accountingReviewSettingsAction => 'Review Account Settings';
+
+  @override
+  String get accountingSetupAction => 'Accounting Setup';
+
+  @override
+  String get cashRegisterConfigTitle =>
+      'Cash Register Accounting Configuration';
+
+  @override
+  String get cashRegisterAddTitle => 'Add New Cash Register';
+
+  @override
+  String get cashRegisterNameLabel => 'Register Name';
+
+  @override
+  String get cashRegisterNameHint => 'e.g. Main Cash';
+
+  @override
+  String get cashRegisterCodeLabel => 'Register Code';
+
+  @override
+  String get cashRegisterCodeHint => 'e.g. CR-01';
+
+  @override
+  String get cashRegisterCreateSuccessNotLinked =>
+      'Cash Register created (Status: Not Linked)';
+
+  @override
+  String cashRegisterLinkSuccess(String code, String name) {
+    return 'Linked cash register to account ($code - $name)';
+  }
+
+  @override
+  String cashRegisterLinkFailed(String error) {
+    return 'Linking failed: $error';
+  }
+
+  @override
+  String get cashRegisterAccountTypeMismatch =>
+      'This account cannot be linked to a cash register because its account type is not compatible with cash.';
+
+  @override
+  String get cashRegisterUnlinkTitle => 'Unlink Accounting Account';
+
+  @override
+  String cashRegisterUnlinkConfirm(String name) {
+    return 'Are you sure you want to unlink cash register \"$name\"? It will immediately become unavailable for accounting transactions.';
+  }
+
+  @override
+  String get cashRegisterUnlinkConfirmAction => 'Unlink';
+
+  @override
+  String get cashRegisterUnlinkSuccess => 'Unlinked cash register successfully';
+
+  @override
+  String get cashRegisterDefaultTitle =>
+      'Default Cash Register for New Documents';
+
+  @override
+  String get cashRegisterDefaultSubtitle =>
+      'This Cash Register will be selected automatically when creating a new cash-related document.';
+
+  @override
+  String get cashRegisterDefaultReady => 'Default Ready';
+
+  @override
+  String get cashRegisterDefaultNotConfigured =>
+      'No Default Cash Register Configured';
+
+  @override
+  String get cashRegisterDefaultNotConfiguredHint =>
+      'Click \"Set Default\" to assign an accounting-ready register.';
+
+  @override
+  String get cashRegisterDefaultInvalid =>
+      'Default Cash Register Invalid (DEFAULT_CASH_REGISTER_INVALID)';
+
+  @override
+  String cashRegisterDefaultSetSuccess(String name) {
+    return 'Set \"$name\" as default Cash Register for new documents';
+  }
+
+  @override
+  String get cashRegisterDefaultClearSuccess => 'Cleared default cash register';
+
+  @override
+  String get cashRegisterSetDefaultAction => 'Set Default';
+
+  @override
+  String get cashRegisterClearDefaultAction => 'Clear';
+
+  @override
+  String get cashRegisterRepairConfigAction => 'Repair Configuration';
+
+  @override
+  String get cashRegisterReadinessTitle =>
+      'Cash Registers Accounting Readiness';
+
+  @override
+  String get cashRegisterTotalRegisters => 'Total Registers';
+
+  @override
+  String get cashRegisterLinkedAndReady => 'Linked & Ready';
+
+  @override
+  String get cashRegisterNotLinked => 'Not Linked';
+
+  @override
+  String get cashRegisterInvalidLink => 'Invalid Link';
+
+  @override
+  String get cashRegisterCompanyRegisters => 'Company Cash Registers';
+
+  @override
+  String get cashRegisterAddAction => 'Add Register';
+
+  @override
+  String get cashRegisterEmptyTitle => 'No Cash Registers configured.';
+
+  @override
+  String get cashRegisterEmptySubtitle =>
+      'Click \"Add Register\" to create a cash register and link it to Chart of Accounts.';
+
+  @override
+  String get cashRegisterStatusReady => 'Accounting: Ready';
+
+  @override
+  String get cashRegisterStatusInvalid => 'Accounting: Invalid';
+
+  @override
+  String get cashRegisterStatusNotLinked => 'Accounting: Not Linked';
+
+  @override
+  String get cashRegisterNoAccountLinked =>
+      'No Chart of Accounts account linked.';
+
+  @override
+  String get cashRegisterInvalidReason =>
+      'Invalid reason: Linked account is inactive, deleted, or incompatible with cash.';
+
+  @override
+  String get cashRegisterChangeAccountAction => 'Change Account';
+
+  @override
+  String get cashRegisterLinkAccountAction => 'Link Account';
+
+  @override
+  String cashRegisterSelectAccountTitle(String name) {
+    return 'Select Cash Account for ($name)';
+  }
+
+  @override
+  String get cashRegisterSelectAccountHint =>
+      'Must be an active, posting-eligible Asset/Cash account.';
+
+  @override
+  String get cashRegisterNoCompatibleAccounts =>
+      'No compatible accounts found in Chart of Accounts.';
+
+  @override
+  String get cashRegisterSelectDefaultTitle =>
+      'Select Default Cash Register for New Documents';
+
+  @override
+  String get cashRegisterSelectDefaultHint =>
+      'Only accounting-ready cash registers are shown.';
+
+  @override
+  String get cashRegisterNoReadyRegisters =>
+      'No accounting-ready cash registers available. Please link a register first.';
 }

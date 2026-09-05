@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/core/database/tenant_database_name.dart';
-import 'package:stock_count/modules/authentication/domain/local_permissions.dart';
 import 'package:stock_count/modules/sync/sync.dart';
 import 'package:stock_count/core/tenancy/company_context_resolver.dart';
 import 'package:stock_count/core/tenancy/session_company.dart';
@@ -88,6 +87,12 @@ final ensureDefaultChartUseCaseProvider =
       return EnsureDefaultChartOfAccounts(ref.watch(accountRepositoryProvider));
     });
 
+final seedDefaultChartUseCaseProvider =
+    Provider<SeedDefaultChartOfAccounts>((ref) {
+      return SeedDefaultChartOfAccounts(ref.watch(accountRepositoryProvider));
+    });
+
+
 final accountsIncludeInactiveProvider = StateProvider.autoDispose<bool>(
   (ref) => false,
 );
@@ -144,14 +149,17 @@ final accountTreeExpandedIdsProvider = StateProvider.autoDispose<Set<String>>(
 final filteredAccountsProvider = Provider<AsyncValue<List<Account>>>((ref) {
   final accountsAsync = ref.watch(accountsProvider);
   final query = ref.watch(accountSearchQueryProvider).trim().toLowerCase();
+  final typeFilter = ref.watch(accountTypeFilterProvider);
   return accountsAsync.whenData((accounts) {
-    if (query.isEmpty) {
+    if (query.isEmpty && typeFilter == null) {
       return accounts;
     }
     return [
       for (final a in accounts)
-        if (a.accountCode.toLowerCase().contains(query) ||
-            a.name.toLowerCase().contains(query))
+        if ((typeFilter == null || a.accountType == typeFilter) &&
+            (query.isEmpty ||
+                a.accountCode.toLowerCase().contains(query) ||
+                a.name.toLowerCase().contains(query)))
           a,
     ];
   });

@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_form_section.dart';
+import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
@@ -183,14 +185,17 @@ class _VoucherBookFormPageState extends ConsumerState<VoucherBookFormPage> {
             title: l10n.accountingVoucherBooksEdit,
             showBackButton: true,
           ),
-          body: const Center(child: CircularProgressIndicator()),
+          body: const AppLoading(),
         ),
         error: (e, _) => Scaffold(
           appBar: CustomAppBar(
             title: l10n.accountingVoucherBooksEdit,
             showBackButton: true,
           ),
-          body: Center(child: Text(e.toString())),
+          body: AppErrorState(
+            message: e.toString(),
+            onRetry: () => ref.invalidate(voucherBookByIdProvider(widget.bookId!)),
+          ),
         ),
         data: (book) {
           if (book == null || book.isGroup) {
@@ -209,14 +214,17 @@ class _VoucherBookFormPageState extends ConsumerState<VoucherBookFormPage> {
                 title: l10n.accountingVoucherBooksEdit,
                 showBackButton: true,
               ),
-              body: const Center(child: CircularProgressIndicator()),
+              body: const AppLoading(),
             ),
             error: (e, _) => Scaffold(
               appBar: CustomAppBar(
                 title: l10n.accountingVoucherBooksEdit,
                 showBackButton: true,
               ),
-              body: Center(child: Text(e.toString())),
+              body: AppErrorState(
+                message: e.toString(),
+                onRetry: () => ref.invalidate(voucherBookSectionsProvider),
+              ),
             ),
             data: (sections) =>
                 _buildForm(l10n, theme, sections, effectiveParentId: _parentId),
@@ -231,14 +239,17 @@ class _VoucherBookFormPageState extends ConsumerState<VoucherBookFormPage> {
           title: l10n.accountingVoucherBooksAdd,
           showBackButton: true,
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const AppLoading(),
       ),
       error: (e, _) => Scaffold(
         appBar: CustomAppBar(
           title: l10n.accountingVoucherBooksAdd,
           showBackButton: true,
         ),
-        body: Center(child: Text(e.toString())),
+        body: AppErrorState(
+          message: e.toString(),
+          onRetry: () => ref.invalidate(voucherBookSectionsProvider),
+        ),
       ),
       data: (sections) {
         final effectiveParentId =

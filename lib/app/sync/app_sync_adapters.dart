@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
 import 'package:stock_count/modules/accounting/journals/presentation/providers/journal_providers.dart';
+import 'package:stock_count/modules/cash_registers/presentation/providers/cash_register_providers.dart';
 import 'package:stock_count/modules/customers/directory/presentation/providers/customer_providers.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/presentation/providers/rp_providers.dart';
@@ -492,6 +493,50 @@ class JournalEntryInitialCloudScanner implements InitialCloudEntityScanner {
             'deletedAt': entry.deletedAt?.toUtc().millisecondsSinceEpoch,
           },
           baseVersion: entry.version,
+          companyId: companyId,
+          deviceId: deviceId,
+        ));
+      }
+    }
+    return ops;
+  }
+}
+
+class CashRegisterInitialCloudScanner implements InitialCloudEntityScanner {
+  @override
+  String get entityType => 'cash_register';
+  @override
+  int get priorityOrder => 2;
+
+  @override
+  Future<List<SyncOperation>> scanInitialOperations({
+    required Ref ref,
+    required String companyId,
+    required String deviceId,
+  }) async {
+    final db = ref.read(accountingDatabaseProvider);
+    final rows = await (db.select(db.cashRegisters)..where((t) => t.companyId.equals(companyId))).get();
+    final ops = <SyncOperation>[];
+    final repo = ref.read(cashRegisterRepositoryProvider);
+
+    for (final row in rows) {
+      final reg = await repo.getCashRegisterById(row.uuid, companyId: companyId);
+      if (reg != null) {
+        ops.add(SyncOperation.create(
+          entityType: 'cash_register',
+          entityId: reg.id,
+          type: SyncOperationType.create,
+          payload: {
+            'uuid': reg.id,
+            'companyId': reg.companyId,
+            'name': reg.name,
+            'code': reg.code,
+            'isActive': reg.isActive,
+            'accountingAccountId': reg.accountingAccountId,
+            'updatedAt': reg.updatedAt.toUtc().millisecondsSinceEpoch,
+            'createdAt': reg.createdAt.toUtc().millisecondsSinceEpoch,
+          },
+          baseVersion: 1,
           companyId: companyId,
           deviceId: deviceId,
         ));

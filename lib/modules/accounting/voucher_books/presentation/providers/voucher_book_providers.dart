@@ -32,3 +32,8 @@ final voucherBookByIdProvider = FutureProvider.autoDispose
     .family<VoucherBook?, int>((ref, id) {
       return ref.watch(voucherBookRepositoryProvider).getById(id);
     });
+
+final seedDefaultVoucherBooksProvider = Provider<Future<void> Function()>((ref) {
+  return () => ref.watch(voucherBookRepositoryProvider).seedDefaultBooks();
+});
+

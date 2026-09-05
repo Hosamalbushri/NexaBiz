@@ -43,18 +43,24 @@ class CustomerRepositoryImpl implements CustomerRepository {
       t.deletedAt.isNull() & _tenantScoped(t);
 
   Customer _map(CustomerRow row) {
+    final lastSyncedAt = row.lastSyncedAt;
+    final deletedAt = row.deletedAt;
     return Customer(
       id: row.id,
       uuid: row.uuid,
+      companyId: row.companyId ?? _currentCompanyId,
       customerCode: row.customerCode,
       name: row.name,
+      status: CustomerStatus.fromStorage(row.status),
       phone: row.phone,
       email: row.email,
       address: row.address,
       notes: row.notes,
-      isActive: row.isActive,
       accountId: row.accountId,
       externalId: row.externalId,
+      creditLimit: row.creditLimit,
+      currencyCode: row.currencyCode,
+      taxNumber: row.taxNumber,
       dataSource: CustomerDataSourceX.fromStorage(row.dataSource),
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         row.createdAt,
@@ -65,13 +71,13 @@ class CustomerRepositoryImpl implements CustomerRepository {
         isUtc: true,
       ),
       syncStatus: SyncStatusX.fromStorage(row.syncStatus),
-      lastSyncedAt: row.lastSyncedAt == null
+      lastSyncedAt: lastSyncedAt == null
           ? null
-          : DateTime.fromMillisecondsSinceEpoch(row.lastSyncedAt!, isUtc: true),
+          : DateTime.fromMillisecondsSinceEpoch(lastSyncedAt, isUtc: true),
       version: row.version,
-      deletedAt: row.deletedAt == null
+      deletedAt: deletedAt == null
           ? null
-          : DateTime.fromMillisecondsSinceEpoch(row.deletedAt!, isUtc: true),
+          : DateTime.fromMillisecondsSinceEpoch(deletedAt, isUtc: true),
     );
   }
 
@@ -133,8 +139,10 @@ class CustomerRepositoryImpl implements CustomerRepository {
         baseVersion: customer.version,
         payload: {
           'uuid': customer.uuid,
+          'companyId': customer.companyId,
           'customerCode': customer.customerCode,
           'name': customer.name,
+          'status': customer.status.storageValue,
           'phone': customer.phone,
           'email': customer.email,
           'address': customer.address,
@@ -142,6 +150,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
           'isActive': customer.isActive,
           'accountId': customer.accountId,
           'externalId': customer.externalId,
+          'creditLimit': customer.creditLimit,
+          'currencyCode': customer.currencyCode,
+          'taxNumber': customer.taxNumber,
           'dataSource': customer.dataSource.storageValue,
           'version': customer.version,
           'updatedAt': customer.updatedAt.toUtc().millisecondsSinceEpoch,
@@ -223,6 +234,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
         t.name.collate(Collate.noCase).like(contains) |
         t.phone.collate(Collate.noCase).like(contains) |
         t.email.collate(Collate.noCase).like(contains) |
+        t.taxNumber.collate(Collate.noCase).like(contains) |
         t.externalId.collate(Collate.noCase).like(contains);
   }
 
@@ -289,9 +301,11 @@ class CustomerRepositoryImpl implements CustomerRepository {
   CustomerDraft _normalizedDraft(CustomerDraft draft) {
     final externalId = _normalizeOptional(draft.externalId);
     final dataSource = draft.dataSource;
+    final currency = _normalizeOptional(draft.currencyCode)?.toUpperCase();
     return CustomerDraft(
       customerCode: _normalizeCode(draft.customerCode),
       name: _normalizeName(draft.name),
+      status: draft.status,
       phone: _normalizeOptional(draft.phone),
       email: _normalizeOptional(draft.email)?.toLowerCase(),
       address: _normalizeOptional(draft.address),
@@ -299,6 +313,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
       isActive: draft.isActive,
       accountId: _normalizeOptional(draft.accountId),
       externalId: dataSource == CustomerDataSource.local ? null : externalId,
+      creditLimit: draft.creditLimit,
+      currencyCode: currency,
+      taxNumber: _normalizeOptional(draft.taxNumber),
       dataSource: dataSource,
     );
   }
@@ -320,6 +337,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
             uuid: uuid,
             customerCode: normalized.customerCode,
             name: normalized.name,
+            status: Value(normalized.status.storageValue),
             phone: Value(normalized.phone),
             email: Value(normalized.email),
             address: Value(normalized.address),
@@ -327,6 +345,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
             isActive: Value(normalized.isActive),
             accountId: Value(normalized.accountId),
             externalId: Value(normalized.externalId),
+            creditLimit: Value(normalized.creditLimit),
+            currencyCode: Value(normalized.currencyCode),
+            taxNumber: Value(normalized.taxNumber),
             dataSource: Value(normalized.dataSource.storageValue),
             createdAt: nowMs,
             updatedAt: nowMs,
@@ -367,6 +388,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
       CustomersCompanion(
         customerCode: Value(normalized.customerCode),
         name: Value(normalized.name),
+        status: Value(normalized.status.storageValue),
         phone: Value(normalized.phone),
         email: Value(normalized.email),
         address: Value(normalized.address),
@@ -374,6 +396,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
         isActive: Value(normalized.isActive),
         accountId: Value(normalized.accountId),
         externalId: Value(normalized.externalId),
+        creditLimit: Value(normalized.creditLimit),
+        currencyCode: Value(normalized.currencyCode),
+        taxNumber: Value(normalized.taxNumber),
         dataSource: Value(normalized.dataSource.storageValue),
         updatedAt: Value(now.millisecondsSinceEpoch),
         syncStatus: const Value('pending'),
@@ -416,6 +441,40 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
+  Future<Customer> restore(int id) async {
+    final row = await (_db.select(_db.customers)
+          ..where((t) => t.id.equals(id) & _tenantScoped(t)))
+        .getSingleOrNull();
+    if (row == null) {
+      throw const CustomerException(CustomerException.notFound);
+    }
+    final existing = _map(row);
+    if (existing.deletedAt == null) {
+      return existing;
+    }
+    final now = DateTime.now().toUtc();
+    final nextVersion = existing.version + 1;
+    await (_db.update(_db.customers)
+          ..where((t) => t.id.equals(id) & _tenantScoped(t)))
+        .write(
+      CustomersCompanion(
+        deletedAt: const Value(null),
+        updatedAt: Value(now.millisecondsSinceEpoch),
+        syncStatus: const Value('pending'),
+        version: Value(nextVersion),
+      ),
+    );
+    final restored = existing.copyWith(
+      clearDeletedAt: true,
+      updatedAt: now,
+      syncStatus: SyncStatus.pending,
+      version: nextVersion,
+    );
+    await _enqueue(restored, SyncOperationType.update);
+    return restored;
+  }
+
+  @override
   Future<Customer> upsertFromExternal(CustomerDraft draft) async {
     final withExternal = CustomerDraft(
       customerCode: draft.customerCode,
@@ -431,7 +490,11 @@ class CustomerRepositoryImpl implements CustomerRepository {
     );
     _validator.validate(withExternal);
     final normalized = _normalizedDraft(withExternal);
-    final existing = await getByExternalId(normalized.externalId!);
+    final extId = normalized.externalId;
+    if (extId == null || extId.isEmpty) {
+      throw const CustomerException('External ID is required for external customer');
+    }
+    final existing = await getByExternalId(extId);
     if (existing != null) {
       return update(existing.id, normalized);
     }
@@ -480,9 +543,10 @@ class CustomerRepositoryImpl implements CustomerRepository {
           _validator.validate(draft);
           final normalized = _normalizedDraft(draft);
 
+          final extId = normalized.externalId;
           Customer? existing;
-          if (normalized.externalId != null) {
-            existing = byExternalId[normalized.externalId!];
+          if (extId != null) {
+            existing = byExternalId[extId];
           }
           existing ??= byCode[normalized.customerCode];
 
@@ -493,8 +557,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
                 CustomerException.duplicateCustomerCode,
               );
             }
-            if (normalized.externalId != null &&
-                byExternalId.containsKey(normalized.externalId!)) {
+            if (extId != null && byExternalId.containsKey(extId)) {
               throw const CustomerException(
                 CustomerException.duplicateExternalId,
               );
@@ -526,15 +589,19 @@ class CustomerRepositoryImpl implements CustomerRepository {
             final created = Customer(
               id: id,
               uuid: uuid,
+              companyId: _currentCompanyId,
               customerCode: normalized.customerCode,
               name: normalized.name,
+              status: normalized.status,
               phone: normalized.phone,
               email: normalized.email,
               address: normalized.address,
               notes: normalized.notes,
-              isActive: normalized.isActive,
               accountId: normalized.accountId,
               externalId: normalized.externalId,
+              creditLimit: normalized.creditLimit,
+              currencyCode: normalized.currencyCode,
+              taxNumber: normalized.taxNumber,
               dataSource: normalized.dataSource,
               createdAt: now,
               updatedAt: now,
@@ -543,8 +610,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
             );
             touched.add(created);
             byCode[created.customerCode] = created;
-            if (created.externalId != null) {
-              byExternalId[created.externalId!] = created;
+            final createdExtId = created.externalId;
+            if (createdExtId != null) {
+              byExternalId[createdExtId] = created;
             }
             inserted++;
           } else {
@@ -554,8 +622,8 @@ class CustomerRepositoryImpl implements CustomerRepository {
                 CustomerException.duplicateCustomerCode,
               );
             }
-            if (normalized.externalId != null) {
-              final extOwner = byExternalId[normalized.externalId!];
+            if (extId != null) {
+              final extOwner = byExternalId[extId];
               if (extOwner != null && extOwner.id != existing.id) {
                 throw const CustomerException(
                   CustomerException.duplicateExternalId,
@@ -563,16 +631,18 @@ class CustomerRepositoryImpl implements CustomerRepository {
               }
             }
 
-            final nextVersion = existing.version + 1;
-            final nextAccountId = normalized.accountId ?? existing.accountId;
+            final existingCustomer = existing;
+            final nextVersion = existingCustomer.version + 1;
+            final nextAccountId = normalized.accountId ?? existingCustomer.accountId;
             final nextExternalId =
-                normalized.externalId ?? existing.externalId;
+                normalized.externalId ?? existingCustomer.externalId;
             await (_db.update(
               _db.customers,
-            )..where((t) => t.id.equals(existing!.id))).write(
+            )..where((t) => t.id.equals(existingCustomer.id))).write(
               CustomersCompanion(
                 customerCode: Value(normalized.customerCode),
                 name: Value(normalized.name),
+                status: Value(normalized.status.storageValue),
                 phone: Value(normalized.phone),
                 email: Value(normalized.email),
                 address: Value(normalized.address),
@@ -581,6 +651,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
                 // Preserve linked CoA account unless the draft explicitly sets one.
                 accountId: Value(nextAccountId),
                 externalId: Value(nextExternalId),
+                creditLimit: Value(normalized.creditLimit),
+                currencyCode: Value(normalized.currencyCode),
+                taxNumber: Value(normalized.taxNumber),
                 dataSource: Value(normalized.dataSource.storageValue),
                 updatedAt: Value(nowMs),
                 syncStatus: const Value('pending'),
@@ -590,6 +663,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
             final updatedRow = existing.copyWith(
               customerCode: normalized.customerCode,
               name: normalized.name,
+              status: normalized.status,
               phone: normalized.phone,
               clearPhone: normalized.phone == null,
               email: normalized.email,
@@ -598,11 +672,16 @@ class CustomerRepositoryImpl implements CustomerRepository {
               clearAddress: normalized.address == null,
               notes: normalized.notes,
               clearNotes: normalized.notes == null,
-              isActive: normalized.isActive,
               accountId: nextAccountId,
               clearAccountId: nextAccountId == null,
               externalId: nextExternalId,
               clearExternalId: nextExternalId == null,
+              creditLimit: normalized.creditLimit,
+              clearCreditLimit: normalized.creditLimit == null,
+              currencyCode: normalized.currencyCode,
+              clearCurrencyCode: normalized.currencyCode == null,
+              taxNumber: normalized.taxNumber,
+              clearTaxNumber: normalized.taxNumber == null,
               dataSource: normalized.dataSource,
               updatedAt: now,
               syncStatus: SyncStatus.pending,
@@ -617,8 +696,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
               byExternalId.remove(oldExternal);
             }
             byCode[updatedRow.customerCode] = updatedRow;
-            if (updatedRow.externalId != null) {
-              byExternalId[updatedRow.externalId!] = updatedRow;
+            final updatedExtId = updatedRow.externalId;
+            if (updatedExtId != null) {
+              byExternalId[updatedExtId] = updatedRow;
             }
             touched.add(updatedRow);
             updated++;
@@ -768,6 +848,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
               uuid: uuid,
               customerCode: code,
               name: payload['name']?.toString() ?? '',
+              status: Value(payload['status']?.toString() ?? 'active'),
               phone: Value(payload['phone']?.toString()),
               email: Value(payload['email']?.toString()),
               address: Value(payload['address']?.toString()),
@@ -775,6 +856,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
               isActive: Value(payload['isActive'] as bool? ?? true),
               accountId: Value(payload['accountId']?.toString()),
               externalId: Value(payload['externalId']?.toString()),
+              creditLimit: Value((payload['creditLimit'] as num?)?.toDouble()),
+              currencyCode: Value(payload['currencyCode']?.toString()),
+              taxNumber: Value(payload['taxNumber']?.toString()),
               dataSource: Value(dataSource.storageValue),
               createdAt: (payload['createdAt'] as num?)?.toInt() ?? updatedAt,
               updatedAt: updatedAt,
@@ -791,6 +875,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
       CustomersCompanion(
         customerCode: Value(code),
         name: Value(payload['name']?.toString() ?? existingByUuid.name),
+        status: Value(payload['status']?.toString() ?? existingByUuid.status.storageValue),
         phone: Value(payload['phone']?.toString()),
         email: Value(payload['email']?.toString()),
         address: Value(payload['address']?.toString()),
@@ -800,6 +885,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
         ),
         accountId: Value(payload['accountId']?.toString()),
         externalId: Value(payload['externalId']?.toString()),
+        creditLimit: Value((payload['creditLimit'] as num?)?.toDouble() ?? existingByUuid.creditLimit),
+        currencyCode: Value(payload['currencyCode']?.toString() ?? existingByUuid.currencyCode),
+        taxNumber: Value(payload['taxNumber']?.toString() ?? existingByUuid.taxNumber),
         dataSource: Value(dataSource.storageValue),
         updatedAt: Value(updatedAt),
         syncStatus: const Value('synced'),

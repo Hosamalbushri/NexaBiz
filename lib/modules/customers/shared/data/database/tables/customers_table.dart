@@ -23,6 +23,18 @@ class Customers extends Table {
 
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
 
+  /// [CustomerStatus.storageValue] string ('active', 'inactive', 'blocked').
+  TextColumn get status => text().withDefault(const Constant('active'))();
+
+  /// Maximum permitted credit limit balance. Null = unlimited / no limit set.
+  RealColumn get creditLimit => real().nullable()();
+
+  /// 3-letter ISO currency code override (e.g. 'SAR', 'USD'). Null = default company currency.
+  TextColumn get currencyCode => text().nullable()();
+
+  /// Tax Registration Number (TRN / VAT number).
+  TextColumn get taxNumber => text().nullable()();
+
   /// Opaque Account.uuid (Accounting module). Null when unlinked.
   TextColumn get accountId => text().nullable()();
 

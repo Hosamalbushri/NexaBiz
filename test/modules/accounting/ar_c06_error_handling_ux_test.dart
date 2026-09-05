@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/core/domain/entities/account_role.dart';
 import 'package:stock_count/core/domain/ports/setup_account_lookup_port.dart';
 import 'package:stock_count/core/setup/domain/entities/account_binding.dart';
@@ -529,6 +530,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: AccountingConfigurationErrorCard(
               error: ex,
@@ -541,9 +544,9 @@ void main() {
       );
 
       expect(find.text('تجهيز المحاسبة مطلوب'), findsOneWidget);
-      expect(find.text('تجهيز المحاسبة'), findsOneWidget);
+      expect(find.byType(ElevatedButton), findsOneWidget);
 
-      await tester.tap(find.text('تجهيز المحاسبة'));
+      await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
 
       expect(navTriggered, isTrue);

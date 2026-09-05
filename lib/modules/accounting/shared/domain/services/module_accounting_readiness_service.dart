@@ -1,8 +1,6 @@
 import 'package:stock_count/core/domain/entities/account_role.dart';
-import 'package:stock_count/core/setup/domain/entities/account_binding_mode.dart';
 import 'package:stock_count/core/setup/domain/entities/account_requirement.dart';
 import 'package:stock_count/core/setup/domain/repositories/account_binding_repository.dart';
-import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
 import 'package:stock_count/modules/accounting/shared/domain/entities/accounting_configuration_error.dart';

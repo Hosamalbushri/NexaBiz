@@ -1,6 +1,3 @@
-import '../../../../../core/domain/entities/account_role.dart';
-import '../../../chart_of_accounts/domain/entities/account.dart';
-
 /// Enum representing the usage state of an account in system transactions.
 enum AccountUsageStatus {
   /// Account has never been referenced in any document or transaction.

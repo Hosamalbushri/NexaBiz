@@ -7,10 +7,7 @@ import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/services/loading_providers.dart';
-import 'package:stock_count/core/widgets/app_dialog.dart';
-import 'package:stock_count/core/widgets/app_error_state.dart';
-import 'package:stock_count/core/widgets/app_loading.dart';
-import 'package:stock_count/core/widgets/app_snackbar.dart';
+import 'package:stock_count/core/widgets/app_widgets.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/providers/auth_providers.dart';
 import 'package:stock_count/core/domain/services/device_document_number.dart';
@@ -380,17 +377,17 @@ class _TransactionDetailsBody extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             _MetaCard(
               children: [
-                _InfoRow(label: l10n.rpDate, value: dateLabel),
-                _InfoRow(
+                AppDetailInfoRow(label: l10n.rpDate, value: dateLabel),
+                AppDetailInfoRow(
                   label: l10n.rpSource,
                   value: rpTransactionSourceLabel(l10n, transaction.source),
                 ),
-                _InfoRow(
+                AppDetailInfoRow(
                   label: l10n.rpPaymentMethod,
                   value: rpPaymentMethodLabel(l10n, transaction.paymentMethod),
                 ),
                 if (transaction.cashAccountName != null)
-                  _InfoRow(
+                  AppDetailInfoRow(
                     label: transaction.transactionType.isTransfer
                         ? l10n.rpTransferFromAccount
                         : (transaction.transactionType.isCurrencyExchange
@@ -405,7 +402,7 @@ class _TransactionDetailsBody extends ConsumerWidget {
                 if (transaction.transactionType.isTransfer &&
                     (transaction.counterAccountName?.trim().isNotEmpty ??
                         false))
-                  _InfoRow(
+                  AppDetailInfoRow(
                     label: l10n.rpTransferToAccount,
                     value: [
                       if ((transaction.counterAccountCode ?? '')
@@ -416,33 +413,33 @@ class _TransactionDetailsBody extends ConsumerWidget {
                     ].join(' — '),
                   ),
                 if (transaction.transactionType.isCurrencyExchange) ...[
-                  _InfoRow(
+                  AppDetailInfoRow(
                     label: l10n.rpExchangeFromCurrency,
                     value: transaction.currencyCode,
                   ),
                   if (transaction.counterCurrencyCode.trim().isNotEmpty)
-                    _InfoRow(
+                    AppDetailInfoRow(
                       label: l10n.rpExchangeToCurrency,
                       value: transaction.counterCurrencyCode,
                     ),
                 ] else
-                  _InfoRow(
+                  AppDetailInfoRow(
                     label: l10n.rpCurrency,
                     value: transaction.currencyCode,
                   ),
                 if (transaction.exchangeRate > 0 &&
                     transaction.exchangeRate != 1)
-                  _InfoRow(
+                  AppDetailInfoRow(
                     label: l10n.rpExchangeRate,
                     value: transaction.exchangeRate.toStringAsFixed(4),
                   ),
                 if (transaction.reference?.trim().isNotEmpty ?? false)
-                  _InfoRow(
+                  AppDetailInfoRow(
                     label: l10n.rpReference,
                     value: transaction.reference!,
                   ),
                 if (transaction.description?.trim().isNotEmpty ?? false)
-                  _InfoRow(
+                  AppDetailInfoRow(
                     label: l10n.rpDescription,
                     value: transaction.description!,
                   ),
@@ -677,44 +674,4 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
 
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

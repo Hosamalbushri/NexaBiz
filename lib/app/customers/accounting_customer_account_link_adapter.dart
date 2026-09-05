@@ -65,8 +65,9 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     final account = await _accounts.getByUuid(trimmed);
     if (account == null) return null;
 
+    final parentAccount = scope.parentAccount;
     final isScoped = scope.accounts.any((a) => a.uuid == account.uuid) ||
-        (scope.parentAccount != null && scope.parentAccount!.uuid == account.uuid);
+        (parentAccount != null && parentAccount.uuid == account.uuid);
     if (!isScoped) {
       return null;
     }
@@ -140,12 +141,13 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
   @override
   Future<LinkedAccountRef?> resolveParent(String input) async {
     final scope = await _resolveReceivableScope();
-    if (!scope.isReady || scope.parentAccount == null) {
+    final parentAccount = scope.parentAccount;
+    if (!scope.isReady || parentAccount == null) {
       return null;
     }
     final trimmed = input.trim();
-    if (trimmed == scope.parentAccount!.uuid || trimmed == scope.parentAccount!.accountCode) {
-      return _map(scope.parentAccount, requirePosting: false, requireGroup: true);
+    if (trimmed == parentAccount.uuid || trimmed == parentAccount.accountCode) {
+      return _map(parentAccount, requirePosting: false, requireGroup: true);
     }
     return null;
   }
@@ -199,10 +201,11 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
     required String name,
   }) async {
     final scope = await _resolveReceivableScope();
-    if (!scope.isReady || scope.parentAccount == null) {
+    final parentAccount = scope.parentAccount;
+    if (!scope.isReady || parentAccount == null) {
       return null;
     }
-    if (parentId.trim() != scope.parentAccount!.uuid) {
+    if (parentId.trim() != parentAccount.uuid) {
       return null;
     }
 
@@ -265,10 +268,11 @@ class AccountingCustomerAccountLinkAdapter implements CustomerAccountLinkPort {
   @override
   Future<List<LinkedAccountRef>> listUnderParent(String parentId) async {
     final scope = await _resolveReceivableScope();
-    if (!scope.isReady || scope.parentAccount == null) {
+    final parentAccount = scope.parentAccount;
+    if (!scope.isReady || parentAccount == null) {
       return const [];
     }
-    if (parentId.trim() != scope.parentAccount!.uuid) {
+    if (parentId.trim() != parentAccount.uuid) {
       return const [];
     }
 

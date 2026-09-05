@@ -34,6 +34,47 @@ class CustomersDatabase extends _$CustomersDatabase {
         );
       }
     },
+    beforeOpen: (details) async {
+      try {
+        final rows = await customSelect('PRAGMA table_info(customers)').get();
+        final existingColumns = rows.map((r) => r.read<String>('name')).toSet();
+
+        if (!existingColumns.contains('company_id')) {
+          await customStatement("ALTER TABLE customers ADD COLUMN company_id TEXT;");
+        }
+        if (!existingColumns.contains('status')) {
+          await customStatement("ALTER TABLE customers ADD COLUMN status TEXT DEFAULT 'active';");
+        }
+        if (!existingColumns.contains('is_active')) {
+          await customStatement("ALTER TABLE customers ADD COLUMN is_active INTEGER DEFAULT 1;");
+        }
+        if (!existingColumns.contains('data_source')) {
+          await customStatement("ALTER TABLE customers ADD COLUMN data_source TEXT DEFAULT 'local';");
+        }
+        if (!existingColumns.contains('sync_status')) {
+          await customStatement("ALTER TABLE customers ADD COLUMN sync_status TEXT DEFAULT 'synced';");
+        }
+        if (!existingColumns.contains('version')) {
+          await customStatement("ALTER TABLE customers ADD COLUMN version INTEGER DEFAULT 1;");
+        }
+        if (!existingColumns.contains('deleted_at')) {
+          await customStatement("ALTER TABLE customers ADD COLUMN deleted_at INTEGER;");
+        }
+        if (!existingColumns.contains('last_synced_at')) {
+          await customStatement("ALTER TABLE customers ADD COLUMN last_synced_at INTEGER;");
+        }
+
+        // Sanitize any null values on guaranteed existing columns
+        await customStatement("UPDATE customers SET status = 'active' WHERE status IS NULL;");
+        await customStatement("UPDATE customers SET is_active = 1 WHERE is_active IS NULL;");
+        await customStatement("UPDATE customers SET data_source = 'local' WHERE data_source IS NULL;");
+        await customStatement("UPDATE customers SET sync_status = 'synced' WHERE sync_status IS NULL;");
+        await customStatement("UPDATE customers SET version = 1 WHERE version IS NULL;");
+        await customStatement("UPDATE customers SET company_id = 'default' WHERE company_id IS NULL;");
+      } catch (_) {
+        // Fallback for safety during initial creation or memory DBs
+      }
+    },
   );
 
   Future<void> _createIndexes() async {

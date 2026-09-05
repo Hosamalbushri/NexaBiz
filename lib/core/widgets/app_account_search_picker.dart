@@ -12,8 +12,11 @@ import 'package:stock_count/core/widgets/app_loading.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_labels.dart';
-import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/providers/account_providers.dart'
+    hide filteredAccountsProvider;
 import 'package:stock_count/modules/accounting/chart_of_accounts/presentation/widgets/account_type_style.dart';
+import 'package:stock_count/modules/accounting/shared/domain/services/account_selection_contract.dart';
+import 'package:stock_count/modules/accounting/shared/presentation/providers/account_selection_providers.dart';
 
 /// Shows the global [AppAccountSearchPickerSheet] as a bottom sheet.
 Future<Account?> showAppAccountPicker(
@@ -22,7 +25,15 @@ Future<Account?> showAppAccountPicker(
   AccountType? initialTypeFilter,
   bool postingOnlyDefault = true,
   String? selectedUuid,
+  AccountSelectionContract? contract,
 }) {
+  final effectiveContract = contract ??
+      AccountSelectionContract(
+        postingOnly: postingOnlyDefault,
+        initialTypeFilter: initialTypeFilter,
+        selectedUuid: selectedUuid,
+      );
+
   return showModalBottomSheet<Account>(
     context: context,
     isScrollControlled: true,
@@ -30,24 +41,24 @@ Future<Account?> showAppAccountPicker(
     backgroundColor: Colors.transparent,
     builder: (ctx) => AppAccountSearchPickerSheet(
       title: title,
-      initialTypeFilter: initialTypeFilter,
-      postingOnlyDefault: postingOnlyDefault,
-      selectedUuid: selectedUuid,
+      contract: effectiveContract,
     ),
   );
 }
 
-/// Global Core Bottom Sheet for Chart of Accounts search & selection.
+/// Canonical Bottom Sheet presentation surface for Chart of Accounts search & selection.
 class AppAccountSearchPickerSheet extends StatelessWidget {
   const AppAccountSearchPickerSheet({
     super.key,
     this.title,
+    this.contract,
     this.initialTypeFilter,
     this.postingOnlyDefault = true,
     this.selectedUuid,
   });
 
   final String? title;
+  final AccountSelectionContract? contract;
   final AccountType? initialTypeFilter;
   final bool postingOnlyDefault;
   final String? selectedUuid;
@@ -57,6 +68,13 @@ class AppAccountSearchPickerSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final height = MediaQuery.sizeOf(context).height * 0.85;
+
+    final effectiveContract = contract ??
+        AccountSelectionContract(
+          postingOnly: postingOnlyDefault,
+          initialTypeFilter: initialTypeFilter,
+          selectedUuid: selectedUuid,
+        );
 
     return Container(
       height: height,
@@ -126,9 +144,7 @@ class AppAccountSearchPickerSheet extends StatelessWidget {
           const Divider(height: 1),
           Expanded(
             child: AppAccountSearchPicker(
-              initialTypeFilter: initialTypeFilter,
-              postingOnlyDefault: postingOnlyDefault,
-              selectedUuid: selectedUuid,
+              contract: effectiveContract,
               onAccountSelected: (account) {
                 Navigator.of(context).pop(account);
               },
@@ -140,19 +156,18 @@ class AppAccountSearchPickerSheet extends StatelessWidget {
   }
 }
 
-/// Global Core Chart of Accounts Search & Presentation Widget.
-///
-/// Automatically validates Accounting Module availability. If the module is
-/// uninitialized or disabled, it displays a non-breaking friendly fallback view.
+/// Canonical Chart of Accounts Search & Presentation Widget.
 class AppAccountSearchPicker extends ConsumerStatefulWidget {
   const AppAccountSearchPicker({
     super.key,
+    this.contract,
     this.initialTypeFilter,
     this.postingOnlyDefault = false,
     this.selectedUuid,
     this.onAccountSelected,
   });
 
+  final AccountSelectionContract? contract;
   final AccountType? initialTypeFilter;
   final bool postingOnlyDefault;
   final String? selectedUuid;
@@ -174,13 +189,20 @@ class _AppAccountSearchPickerState
   String _searchQuery = '';
   AccountType? _selectedType;
   late bool _postingOnly;
+  late AccountSelectionContract _contract;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    _selectedType = widget.initialTypeFilter;
-    _postingOnly = widget.postingOnlyDefault;
+    _contract = widget.contract ??
+        AccountSelectionContract(
+          postingOnly: widget.postingOnlyDefault,
+          initialTypeFilter: widget.initialTypeFilter,
+          selectedUuid: widget.selectedUuid,
+        );
+    _selectedType = _contract.initialTypeFilter;
+    _postingOnly = _contract.postingOnly;
   }
 
   @override
@@ -212,7 +234,15 @@ class _AppAccountSearchPickerState
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
-    final accountsAsync = ref.watch(allAccountsProvider);
+
+    final accountsAsync = ref.watch(filteredAccountsProvider((
+      contract: _contract,
+      query: _searchQuery,
+      activeTypeFilter: _selectedType,
+      activePostingOnly: _postingOnly,
+    )));
+
+    final allAccountsAsync = ref.watch(allAccountsProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -350,7 +380,7 @@ class _AppAccountSearchPickerState
           ),
         ),
 
-        // Accounts List View or Module Unavailable Fallback
+        // Accounts List View Section
         Expanded(
           child: accountsAsync.when(
             loading: () => const AppLoading(),
@@ -385,8 +415,8 @@ class _AppAccountSearchPickerState
                 ),
               ),
             ),
-            data: (allAccounts) {
-              if (allAccounts.isEmpty) {
+            data: (filteredAccounts) {
+              if (allAccountsAsync.valueOrNull?.isEmpty ?? false) {
                 return AppEmptyState(
                   title: l10n.accountSearchEmptyTreeTitle,
                   subtitle: l10n.accountSearchEmptyTreeSubtitle,
@@ -394,42 +424,7 @@ class _AppAccountSearchPickerState
                 );
               }
 
-              if (_searchQuery.trim().isNotEmpty && _searchQuery.trim().length < 2) {
-                return const AppEmptyState(
-                  title: 'أدخل حرفين على الأقل للبحث',
-                  subtitle: 'يرجى كتابة حرفين أو أكثر لبدء البحث عن الحساب',
-                  icon: Icons.search_rounded,
-                );
-              }
-
-              final filtered = allAccounts.where((account) {
-                if (account.isDeleted) return false;
-                if (_postingOnly && !account.isPostingAccount) return false;
-                if (_selectedType != null &&
-                    account.accountType != _selectedType) {
-                  return false;
-                }
-                if (_searchQuery.isNotEmpty) {
-                  final codeMatch = account.accountCode
-                      .toLowerCase()
-                      .contains(_searchQuery.toLowerCase());
-                  final nameMatch = AccountLabels.matchesQuery(
-                    l10n,
-                    account,
-                    _searchQuery,
-                  );
-                  final descMatch = account.description != null &&
-                      account.description!
-                          .toLowerCase()
-                          .contains(_searchQuery.toLowerCase());
-                  if (!codeMatch && !nameMatch && !descMatch) {
-                    return false;
-                  }
-                }
-                return true;
-              }).toList();
-
-              if (filtered.isEmpty) {
+              if (filteredAccounts.isEmpty) {
                 return AppEmptyState(
                   title: l10n.accountingNoSearchResults,
                   subtitle: l10n.accountSearchNoResultsSubtitle,
@@ -437,17 +432,19 @@ class _AppAccountSearchPickerState
                 );
               }
 
+              final selectedUuid = widget.selectedUuid ?? _contract.selectedUuid;
+
               return ListView.separated(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
                   vertical: AppSpacing.md,
                 ),
-                itemCount: filtered.length,
+                itemCount: filteredAccounts.length,
                 separatorBuilder: (_, _) =>
                     const SizedBox(height: AppSpacing.xs + 2),
                 itemBuilder: (context, index) {
-                  final account = filtered[index];
-                  final isSelected = account.uuid == widget.selectedUuid;
+                  final account = filteredAccounts[index];
+                  final isSelected = account.uuid == selectedUuid;
 
                   return _AccountResultCard(
                     account: account,
@@ -605,6 +602,7 @@ class AppAccountInlineSearchField extends ConsumerStatefulWidget {
   const AppAccountInlineSearchField({
     super.key,
     required this.onAccountSelected,
+    this.contract,
     this.onCancel,
     this.onBrowseFullTree,
     this.initialQuery = '',
@@ -614,6 +612,7 @@ class AppAccountInlineSearchField extends ConsumerStatefulWidget {
   });
 
   final ValueChanged<Account> onAccountSelected;
+  final AccountSelectionContract? contract;
   final VoidCallback? onCancel;
   final VoidCallback? onBrowseFullTree;
   final String initialQuery;
@@ -636,12 +635,16 @@ class _AppAccountInlineSearchFieldState
 
   String _searchQuery = '';
   var _showResults = false;
+  late AccountSelectionContract _contract;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialQuery);
     _searchQuery = normalizeDigitsToWestern(widget.initialQuery).trim();
+    _contract = widget.contract ??
+        AccountSelectionContract(postingOnly: widget.postingOnly);
+
     if (widget.autofocus) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _focusNode.requestFocus();
@@ -691,7 +694,13 @@ class _AppAccountInlineSearchFieldState
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
-    final accountsAsync = ref.watch(allAccountsProvider);
+
+    final accountsAsync = ref.watch(filteredAccountsProvider((
+      contract: _contract,
+      query: _searchQuery,
+      activeTypeFilter: null,
+      activePostingOnly: null,
+    )));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -796,155 +805,38 @@ class _AppAccountInlineSearchFieldState
                     ),
                   ),
                 ),
-                data: (allAccounts) {
-                  final queryTrimmed = _searchQuery.trim();
-                  final isQueryEmpty = queryTrimmed.isEmpty;
-                  final isQueryTooShort = !isQueryEmpty && queryTrimmed.length < 2;
+                data: (filteredAccounts) {
+                  if (filteredAccounts.isEmpty) {
+                    return Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Text(
+                        l10n.accountingNoSearchResults,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    );
+                  }
 
-                  final filtered = (isQueryEmpty || isQueryTooShort)
-                      ? <Account>[]
-                      : allAccounts.where((account) {
-                          if (account.isDeleted) return false;
-                          if (widget.postingOnly && !account.isPostingAccount) {
-                            return false;
-                          }
-                          final codeMatch = account.accountCode
-                              .toLowerCase()
-                              .contains(queryTrimmed.toLowerCase());
-                          final nameMatch = AccountLabels.matchesQuery(
-                            l10n,
-                            account,
-                            queryTrimmed,
-                          );
-                          return codeMatch || nameMatch;
-                        }).toList();
-
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (widget.onBrowseFullTree != null)
-                        InkWell(
-                          onTap: () {
-                            setState(() => _showResults = false);
-                            widget.onBrowseFullTree!();
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md,
-                              vertical: 10,
-                            ),
-                            color: scheme.primary.withValues(alpha: 0.08),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.account_tree_rounded,
-                                  size: 16,
-                                  color: scheme.primary,
-                                ),
-                                const SizedBox(width: AppSpacing.xs),
-                                Expanded(
-                                  child: Text(
-                                    l10n.accountInlineBrowseTree,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: scheme.primary,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.chevron_right,
-                                  size: 16,
-                                  color: scheme.primary,
-                                ),
-                              ],
-                            ),
+                  return ListView.separated(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    itemCount: filteredAccounts.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final account = filteredAccounts[index];
+                      return ListTile(
+                        dense: true,
+                        title: Text(
+                          '${account.accountCode} — ${AccountLabels.displayName(l10n, account)}',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                      if (filtered.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          child: Text(
-                            isQueryEmpty
-                                ? l10n.accountSearchHint
-                                : (isQueryTooShort
-                                    ? 'أدخل حرفين على الأقل للبحث'
-                                    : l10n.accountSearchNoResultsSubtitle),
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        )
-                      else
-                        Flexible(
-                          child: ListView.separated(
-                            shrinkWrap: true,
-                            itemCount: filtered.length,
-                            separatorBuilder: (_, _) => Divider(
-                              height: 1,
-                              color: scheme.outlineVariant.withValues(alpha: 0.35),
-                            ),
-                            itemBuilder: (context, index) {
-                              final account = filtered[index];
-                              final typeColor = accountTypeColor(
-                                scheme,
-                                account.accountType,
-                              );
-
-                              return InkWell(
-                                onTap: () => _select(account),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.md,
-                                    vertical: AppSpacing.sm + 2,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: typeColor.withValues(alpha: 0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(AppRadius.xs),
-                                            ),
-                                            child: Text(
-                                              account.accountCode,
-                                              style: theme.textTheme.labelMedium
-                                                  ?.copyWith(
-                                                color: typeColor,
-                                                fontWeight: FontWeight.w900,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        AccountLabels.displayName(
-                                          l10n,
-                                          account,
-                                        ),
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                    ],
+                        onTap: () => _select(account),
+                      );
+                    },
                   );
                 },
               ),

@@ -1,3 +1,4 @@
+import 'package:stock_count/modules/customers/accounts/domain/services/customer_account_link_port.dart';
 import '../entities/customer.dart';
 import '../entities/customer_data_source.dart';
 import '../models/customer_exception.dart';
@@ -7,6 +8,7 @@ class CustomerValidator {
   const CustomerValidator();
 
   static final RegExp _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+  static final RegExp _currencyPattern = RegExp(r'^[A-Z]{3}$');
 
   void validate(CustomerDraft draft) {
     final code = draft.customerCode.trim();
@@ -29,5 +31,33 @@ class CustomerValidator {
         throw const CustomerException(CustomerException.externalIdRequired);
       }
     }
+
+    if (draft.creditLimit != null && draft.creditLimit! < 0) {
+      throw const CustomerException(CustomerException.invalidCreditLimit);
+    }
+
+    final currency = draft.currencyCode?.trim().toUpperCase();
+    if (currency != null &&
+        currency.isNotEmpty &&
+        !_currencyPattern.hasMatch(currency)) {
+      throw const CustomerException(CustomerException.invalidCurrencyCode);
+    }
+  }
+
+  void validateAccountLink(
+    LinkedAccountRef? account, {
+    required String customerCompanyId,
+  }) {
+    if (account == null) return;
+    if (account.companyId != null && account.companyId != customerCompanyId) {
+      throw const CustomerException(CustomerException.accountCompanyMismatch);
+    }
+    if (!account.isActive) {
+      throw const CustomerException(CustomerException.accountInactive);
+    }
+    if (!account.isPosting) {
+      throw const CustomerException(CustomerException.accountNotPosting);
+    }
   }
 }
+

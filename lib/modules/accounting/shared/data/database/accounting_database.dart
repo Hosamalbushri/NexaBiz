@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:stock_count/core/database/encrypted_drift_connection.dart';
 
+import 'package:stock_count/modules/cash_registers/data/tables/cash_registers_table.dart';
 import 'tables/accounting_periods_table.dart';
 import 'tables/accounts_table.dart';
 import 'tables/currency_rate_history_table.dart';
@@ -17,6 +18,7 @@ part 'accounting_database.g.dart';
 @DriftDatabase(
   tables: [
     Accounts,
+    CashRegisters,
     CurrencyRates,
     CurrencyRateHistory,
     VoucherBooks,
@@ -35,7 +37,7 @@ class AccountingDatabase extends _$AccountingDatabase {
   AccountingDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -198,6 +200,9 @@ class AccountingDatabase extends _$AccountingDatabase {
       }
       if (from < 15) {
         await _createCurrenciesTable();
+      }
+      if (from < 16) {
+        await m.createTable(cashRegisters);
       }
     },
   );

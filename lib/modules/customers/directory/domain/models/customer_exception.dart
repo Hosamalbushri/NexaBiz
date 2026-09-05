@@ -10,6 +10,12 @@ class CustomerException implements Exception {
   static const String invalidEmail = 'invalid_email';
   static const String invalidAccountLink = 'invalid_account_link';
   static const String externalIdRequired = 'external_id_required';
+  static const String invalidCreditLimit = 'invalid_credit_limit';
+  static const String invalidCurrencyCode = 'invalid_currency_code';
+  static const String accountCompanyMismatch = 'account_company_mismatch';
+  static const String accountInactive = 'account_inactive';
+  static const String accountNotPosting = 'account_not_posting';
+  static const String creditLimitExceeded = 'credit_limit_exceeded';
 
   final String code;
   final String? message;
@@ -18,3 +24,4 @@ class CustomerException implements Exception {
   String toString() =>
       'CustomerException($code${message == null ? '' : ': $message'})';
 }
+

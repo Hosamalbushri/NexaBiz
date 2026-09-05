@@ -598,61 +598,67 @@ class _CustomerFormPageState extends ConsumerState<CustomerFormPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        l10n.customersFieldActive,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                    Material(
+                      color: Colors.transparent,
+                      child: SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          l10n.customersFieldActive,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        value: _isActive,
+                        onChanged: (value) => setState(() => _isActive = value),
                       ),
-                      value: _isActive,
-                      onChanged: (value) => setState(() => _isActive = value),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.4),
+                    Material(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.4),
+                          ),
                         ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: AppSpacing.md, right: AppSpacing.md, top: AppSpacing.md, bottom: AppSpacing.xs),
-                            child: Text(
-                              l10n.customersFieldDataSource,
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(left: AppSpacing.md, right: AppSpacing.md, top: AppSpacing.md, bottom: AppSpacing.xs),
+                              child: Text(
+                                l10n.customersFieldDataSource,
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
-                          ),
-                          RadioListTile<CustomerDataSource>(
-                            title: Text(l10n.customersDataSourceLocal),
-                            subtitle: Text(l10n.customersDataSourceLocalHint),
-                            value: CustomerDataSource.local,
-                            groupValue: _dataSource,
-                            onChanged: (value) {
-                              if (value == null) {
-                                return;
-                              }
-                              setState(() => _dataSource = value);
-                            },
-                          ),
-                          RadioListTile<CustomerDataSource>(
-                            title: Text(l10n.customersDataSourceExternal),
-                            subtitle: Text(l10n.customersDataSourceExternalHint),
-                            value: CustomerDataSource.external,
-                            groupValue: _dataSource,
-                            onChanged: (value) {
-                              if (value == null) {
-                                return;
-                              }
-                              setState(() => _dataSource = value);
-                            },
-                          ),
-                        ],
+                            RadioListTile<CustomerDataSource>(
+                              title: Text(l10n.customersDataSourceLocal),
+                              subtitle: Text(l10n.customersDataSourceLocalHint),
+                              value: CustomerDataSource.local,
+                              groupValue: _dataSource,
+                              onChanged: (value) {
+                                if (value == null) {
+                                  return;
+                                }
+                                setState(() => _dataSource = value);
+                              },
+                            ),
+                            RadioListTile<CustomerDataSource>(
+                              title: Text(l10n.customersDataSourceExternal),
+                              subtitle: Text(l10n.customersDataSourceExternalHint),
+                              value: CustomerDataSource.external,
+                              groupValue: _dataSource,
+                              onChanged: (value) {
+                                if (value == null) {
+                                  return;
+                                }
+                                setState(() => _dataSource = value);
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     if (_dataSource == CustomerDataSource.external) ...[

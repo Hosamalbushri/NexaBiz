@@ -12157,6 +12157,336 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No accounts matched your search criteria'**
   String get accountSearchNoResultsSubtitle;
+
+  /// No description provided for @accountingUnspecified.
+  ///
+  /// In en, this message translates to:
+  /// **'Unspecified'**
+  String get accountingUnspecified;
+
+  /// No description provided for @accountingModuleRuleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Module / Rule:'**
+  String get accountingModuleRuleLabel;
+
+  /// No description provided for @accountingRequiredAccountType.
+  ///
+  /// In en, this message translates to:
+  /// **'Required Account Type:'**
+  String get accountingRequiredAccountType;
+
+  /// No description provided for @accountingCurrentAccountType.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently Selected Account Type:'**
+  String get accountingCurrentAccountType;
+
+  /// No description provided for @accountingFixSetupAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix Accounting Setup'**
+  String get accountingFixSetupAction;
+
+  /// No description provided for @accountingBindEntityAccountAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Bind Entity Account'**
+  String get accountingBindEntityAccountAction;
+
+  /// No description provided for @accountingReviewSettingsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Review Account Settings'**
+  String get accountingReviewSettingsAction;
+
+  /// No description provided for @accountingSetupAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounting Setup'**
+  String get accountingSetupAction;
+
+  /// No description provided for @cashRegisterConfigTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Register Accounting Configuration'**
+  String get cashRegisterConfigTitle;
+
+  /// No description provided for @cashRegisterAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Cash Register'**
+  String get cashRegisterAddTitle;
+
+  /// No description provided for @cashRegisterNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Register Name'**
+  String get cashRegisterNameLabel;
+
+  /// No description provided for @cashRegisterNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Main Cash'**
+  String get cashRegisterNameHint;
+
+  /// No description provided for @cashRegisterCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Register Code'**
+  String get cashRegisterCodeLabel;
+
+  /// No description provided for @cashRegisterCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. CR-01'**
+  String get cashRegisterCodeHint;
+
+  /// No description provided for @cashRegisterCreateSuccessNotLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Register created (Status: Not Linked)'**
+  String get cashRegisterCreateSuccessNotLinked;
+
+  /// No description provided for @cashRegisterLinkSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked cash register to account ({code} - {name})'**
+  String cashRegisterLinkSuccess(String code, String name);
+
+  /// No description provided for @cashRegisterLinkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Linking failed: {error}'**
+  String cashRegisterLinkFailed(String error);
+
+  /// No description provided for @cashRegisterAccountTypeMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This account cannot be linked to a cash register because its account type is not compatible with cash.'**
+  String get cashRegisterAccountTypeMismatch;
+
+  /// No description provided for @cashRegisterUnlinkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink Accounting Account'**
+  String get cashRegisterUnlinkTitle;
+
+  /// No description provided for @cashRegisterUnlinkConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to unlink cash register \"{name}\"? It will immediately become unavailable for accounting transactions.'**
+  String cashRegisterUnlinkConfirm(String name);
+
+  /// No description provided for @cashRegisterUnlinkConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink'**
+  String get cashRegisterUnlinkConfirmAction;
+
+  /// No description provided for @cashRegisterUnlinkSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlinked cash register successfully'**
+  String get cashRegisterUnlinkSuccess;
+
+  /// No description provided for @cashRegisterDefaultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Cash Register for New Documents'**
+  String get cashRegisterDefaultTitle;
+
+  /// No description provided for @cashRegisterDefaultSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This Cash Register will be selected automatically when creating a new cash-related document.'**
+  String get cashRegisterDefaultSubtitle;
+
+  /// No description provided for @cashRegisterDefaultReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Ready'**
+  String get cashRegisterDefaultReady;
+
+  /// No description provided for @cashRegisterDefaultNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'No Default Cash Register Configured'**
+  String get cashRegisterDefaultNotConfigured;
+
+  /// No description provided for @cashRegisterDefaultNotConfiguredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Click \"Set Default\" to assign an accounting-ready register.'**
+  String get cashRegisterDefaultNotConfiguredHint;
+
+  /// No description provided for @cashRegisterDefaultInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Default Cash Register Invalid (DEFAULT_CASH_REGISTER_INVALID)'**
+  String get cashRegisterDefaultInvalid;
+
+  /// No description provided for @cashRegisterDefaultSetSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Set \"{name}\" as default Cash Register for new documents'**
+  String cashRegisterDefaultSetSuccess(String name);
+
+  /// No description provided for @cashRegisterDefaultClearSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleared default cash register'**
+  String get cashRegisterDefaultClearSuccess;
+
+  /// No description provided for @cashRegisterSetDefaultAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Default'**
+  String get cashRegisterSetDefaultAction;
+
+  /// No description provided for @cashRegisterClearDefaultAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get cashRegisterClearDefaultAction;
+
+  /// No description provided for @cashRegisterRepairConfigAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Repair Configuration'**
+  String get cashRegisterRepairConfigAction;
+
+  /// No description provided for @cashRegisterReadinessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash Registers Accounting Readiness'**
+  String get cashRegisterReadinessTitle;
+
+  /// No description provided for @cashRegisterTotalRegisters.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Registers'**
+  String get cashRegisterTotalRegisters;
+
+  /// No description provided for @cashRegisterLinkedAndReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Linked & Ready'**
+  String get cashRegisterLinkedAndReady;
+
+  /// No description provided for @cashRegisterNotLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Linked'**
+  String get cashRegisterNotLinked;
+
+  /// No description provided for @cashRegisterInvalidLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Link'**
+  String get cashRegisterInvalidLink;
+
+  /// No description provided for @cashRegisterCompanyRegisters.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Cash Registers'**
+  String get cashRegisterCompanyRegisters;
+
+  /// No description provided for @cashRegisterAddAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Register'**
+  String get cashRegisterAddAction;
+
+  /// No description provided for @cashRegisterEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Cash Registers configured.'**
+  String get cashRegisterEmptyTitle;
+
+  /// No description provided for @cashRegisterEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Click \"Add Register\" to create a cash register and link it to Chart of Accounts.'**
+  String get cashRegisterEmptySubtitle;
+
+  /// No description provided for @cashRegisterStatusReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounting: Ready'**
+  String get cashRegisterStatusReady;
+
+  /// No description provided for @cashRegisterStatusInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounting: Invalid'**
+  String get cashRegisterStatusInvalid;
+
+  /// No description provided for @cashRegisterStatusNotLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounting: Not Linked'**
+  String get cashRegisterStatusNotLinked;
+
+  /// No description provided for @cashRegisterNoAccountLinked.
+  ///
+  /// In en, this message translates to:
+  /// **'No Chart of Accounts account linked.'**
+  String get cashRegisterNoAccountLinked;
+
+  /// No description provided for @cashRegisterInvalidReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid reason: Linked account is inactive, deleted, or incompatible with cash.'**
+  String get cashRegisterInvalidReason;
+
+  /// No description provided for @cashRegisterChangeAccountAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Account'**
+  String get cashRegisterChangeAccountAction;
+
+  /// No description provided for @cashRegisterLinkAccountAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Account'**
+  String get cashRegisterLinkAccountAction;
+
+  /// No description provided for @cashRegisterSelectAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Cash Account for ({name})'**
+  String cashRegisterSelectAccountTitle(String name);
+
+  /// No description provided for @cashRegisterSelectAccountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be an active, posting-eligible Asset/Cash account.'**
+  String get cashRegisterSelectAccountHint;
+
+  /// No description provided for @cashRegisterNoCompatibleAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'No compatible accounts found in Chart of Accounts.'**
+  String get cashRegisterNoCompatibleAccounts;
+
+  /// No description provided for @cashRegisterSelectDefaultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Default Cash Register for New Documents'**
+  String get cashRegisterSelectDefaultTitle;
+
+  /// No description provided for @cashRegisterSelectDefaultHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only accounting-ready cash registers are shown.'**
+  String get cashRegisterSelectDefaultHint;
+
+  /// No description provided for @cashRegisterNoReadyRegisters.
+  ///
+  /// In en, this message translates to:
+  /// **'No accounting-ready cash registers available. Please link a register first.'**
+  String get cashRegisterNoReadyRegisters;
 }
 
 class _AppLocalizationsDelegate

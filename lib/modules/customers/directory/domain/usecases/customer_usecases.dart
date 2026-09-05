@@ -75,6 +75,21 @@ class DeleteCustomer {
   }
 }
 
+class RestoreCustomer {
+  const RestoreCustomer(
+    this._repository, {
+    required PermissionGuard permissionGuard,
+  }) : _guard = permissionGuard;
+
+  final CustomerRepository _repository;
+  final PermissionGuard _guard;
+
+  Future<Customer> call(int id) async {
+    _guard.requireAny(CustomersPermissions.update);
+    return _repository.restore(id);
+  }
+}
+
 class UpsertCustomerFromExternal {
   const UpsertCustomerFromExternal(
     this._repository, {

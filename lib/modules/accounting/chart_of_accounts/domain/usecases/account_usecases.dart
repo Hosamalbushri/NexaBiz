@@ -88,6 +88,15 @@ class EnsureDefaultChartOfAccounts {
   Future<void> call() => _repository.ensureDefaultChartSeeded();
 }
 
+class SeedDefaultChartOfAccounts {
+  const SeedDefaultChartOfAccounts(this._repository);
+
+  final AccountRepository _repository;
+
+  Future<void> call() => _repository.seedDefaultChart();
+}
+
+
 class GetAccountsByType {
   const GetAccountsByType(this._repository);
 

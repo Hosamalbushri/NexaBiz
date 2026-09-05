@@ -6,12 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
-import 'package:stock_count/core/widgets/app_async_autocomplete_field.dart';
+import 'package:stock_count/core/widgets/app_customer_search_field.dart';
 import 'package:stock_count/modules/sales/shared/domain/services/sale_customer_lookup_port.dart';
 import '../providers/sale_providers.dart';
 import '../../domain/services/sale_autocomplete_defaults.dart';
 
-/// Inline customer search with live results, built using [AppAsyncAutocompleteField].
+/// Inline customer search with live results, built using [AppCustomerSearchField].
 class SaleCustomerSearchField extends ConsumerStatefulWidget {
   const SaleCustomerSearchField({
     super.key,
@@ -128,11 +128,11 @@ class _SaleCustomerSearchFieldState
       ),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
-        vertical: 12,
+        vertical: AppSpacing.sm,
       ),
     );
 
-    return AppAsyncAutocompleteField<SaleCustomerRef>(
+    return AppCustomerSearchField<SaleCustomerRef>(
       controller: _controller,
       focusNode: _focusNode,
       autofocus: widget.autofocus,
@@ -164,7 +164,7 @@ class _SaleCustomerSearchFieldState
         return Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm + 2,
+            vertical: AppSpacing.sm,
           ),
           child: Row(
             children: [

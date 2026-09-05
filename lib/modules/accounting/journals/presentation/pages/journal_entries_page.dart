@@ -17,6 +17,7 @@ import 'package:stock_count/core/widgets/app_status_badge.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/accounting/shared/presentation/pages/accounting_routes.dart';
 import '../../domain/entities/journal_entry.dart';
+import '../../domain/services/journal_source_category_resolver.dart';
 import '../providers/journal_providers.dart';
 
 enum AutomatedSourceCategory {
@@ -27,16 +28,16 @@ enum AutomatedSourceCategory {
 }
 
 extension AutomatedSourceCategoryX on AutomatedSourceCategory {
-  String label(bool isAr) {
+  String label(AppLocalizations l10n) {
     switch (this) {
       case AutomatedSourceCategory.all:
-        return isAr ? 'جميع القيود الآلية' : 'All Automated';
+        return l10n.localeName == 'ar' ? 'جميع القيود الآلية' : 'All Automated';
       case AutomatedSourceCategory.sales:
-        return isAr ? 'المبيعات' : 'Sales';
+        return l10n.moduleSales;
       case AutomatedSourceCategory.inventory:
-        return isAr ? 'المخزون والتوريد/الصرف' : 'Inventory';
+        return l10n.moduleInventory;
       case AutomatedSourceCategory.receiptsPayments:
-        return isAr ? 'المقبوضات والمصروفات' : 'Receipts & Payments';
+        return l10n.moduleReceiptsPayments;
     }
   }
 
@@ -53,44 +54,45 @@ extension AutomatedSourceCategoryX on AutomatedSourceCategory {
     }
   }
 
+  AppStatusTone tone(ColorScheme scheme) {
+    switch (this) {
+      case AutomatedSourceCategory.all:
+        return AppStatusTone.neutral;
+      case AutomatedSourceCategory.sales:
+        return AppStatusTone.success;
+      case AutomatedSourceCategory.inventory:
+        return AppStatusTone.warning;
+      case AutomatedSourceCategory.receiptsPayments:
+        return AppStatusTone.info;
+    }
+  }
+
   Color color(ColorScheme scheme) {
     switch (this) {
       case AutomatedSourceCategory.all:
         return scheme.primary;
       case AutomatedSourceCategory.sales:
-        return const Color(0xFF2E7D32);
+        return scheme.tertiary;
       case AutomatedSourceCategory.inventory:
-        return const Color(0xFFE65100);
+        return scheme.secondary;
       case AutomatedSourceCategory.receiptsPayments:
-        return const Color(0xFF0288D1);
+        return scheme.primary;
     }
   }
 }
 
 bool isManualJournalEntry(JournalEntryHeader entry) {
-  final type = (entry.sourceType ?? '').trim().toLowerCase();
-  final vType = entry.voucherType.trim().toLowerCase();
-
-  if (type.isEmpty || type == 'manual' || type == 'journal_manual' || vType.contains('يدوي') || vType.contains('عام') || vType.contains('manual')) {
-    return true;
-  }
-  return false;
+  return JournalSourceCategoryResolver.isManual(entry);
 }
 
 AutomatedSourceCategory resolveAutomatedCategory(JournalEntryHeader entry) {
-  final type = (entry.sourceType ?? '').toLowerCase();
-  final vType = entry.voucherType.toLowerCase();
-
-  if (type.contains('sale') || vType.contains('مبيعات') || vType.contains('مردود بيع')) {
-    return AutomatedSourceCategory.sales;
-  }
-  if (type.contains('stock') || type.contains('inventory') || vType.contains('توريد') || vType.contains('صرف') || vType.contains('مخزون')) {
-    return AutomatedSourceCategory.inventory;
-  }
-  if (type.contains('receipt') || type.contains('payment') || type.contains('rp') || vType.contains('قبض') || vType.contains('صرف نقد') || vType.contains('سند')) {
-    return AutomatedSourceCategory.receiptsPayments;
-  }
-  return AutomatedSourceCategory.all;
+  final category = JournalSourceCategoryResolver.resolve(entry);
+  return switch (category) {
+    JournalSourceCategory.sales => AutomatedSourceCategory.sales,
+    JournalSourceCategory.inventory => AutomatedSourceCategory.inventory,
+    JournalSourceCategory.receiptsPayments => AutomatedSourceCategory.receiptsPayments,
+    _ => AutomatedSourceCategory.all,
+  };
 }
 
 /// Paginated-friendly journal entries page separated into Automated System Journals and Manual Journals.
@@ -224,6 +226,7 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
     required bool isAr,
     required DateFormat dateFormat,
   }) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -279,7 +282,7 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
                             backgroundColor: isSelected ? Colors.white.withValues(alpha: 0.2) : color.withValues(alpha: 0.15),
                             child: Icon(cat.icon, size: 14, color: isSelected ? Colors.white : color),
                           ),
-                          label: Text('${cat.label(isAr)} ($count)'),
+                          label: Text('${cat.label(l10n)} ($count)'),
                           labelStyle: TextStyle(
                             fontSize: 12,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -334,6 +337,7 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
     required bool isAr,
     required DateFormat dateFormat,
   }) {
+    final l10n = AppLocalizations.of(context);
     final filtered = _selectedAutoCategory == AutomatedSourceCategory.all
         ? autoEntries
         : (groupedAuto[_selectedAutoCategory] ?? []);
@@ -342,8 +346,8 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
       return AppEmptyState(
         title: isAr ? 'لا توجد قيود' : 'No entries',
         subtitle: isAr
-            ? 'لا توجد قيود آلية ضمن تصنيف ${_selectedAutoCategory.label(isAr)}'
-            : 'No automated entries under ${_selectedAutoCategory.label(isAr)}',
+            ? 'لا توجد قيود آلية ضمن تصنيف ${_selectedAutoCategory.label(l10n)}'
+            : 'No automated entries under ${_selectedAutoCategory.label(l10n)}',
         icon: _selectedAutoCategory.icon,
       );
     }
@@ -375,6 +379,7 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
     required bool isAr,
     required DateFormat dateFormat,
   }) {
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final activeCategories = AutomatedSourceCategory.values
@@ -424,7 +429,7 @@ class _JournalEntriesPageState extends ConsumerState<JournalEntriesPage> {
                     children: [
                       Flexible(
                         child: Text(
-                          cat.label(isAr),
+                          cat.label(l10n),
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
@@ -587,122 +592,131 @@ class _JournalHeaderTile extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Material(
-      color: colorScheme.surface,
-      borderRadius: BorderRadius.circular(AppRadius.md),
-      child: InkWell(
+    return Semantics(
+      label:
+          '${entry.voucherNumber}, ${entry.voucherType}, $dateLabel, ${l10n.accountingJournalDebit}: ${entry.totalDebit.toStringAsFixed(2)}, ${l10n.accountingJournalCredit}: ${entry.totalCredit.toStringAsFixed(2)}',
+      hint: l10n.accountingJournalDetails,
+      button: true,
+      child: Material(
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        onTap: onTap,
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          onTap: onTap,
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: badgeColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(AppRadius.xs),
-                      ),
-                      child: Icon(icon, size: 16, color: badgeColor),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: Text(
-                        entry.voucherNumber,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    AppStatusBadge(
-                      label: entry.isPosted
-                          ? l10n.accountingJournalPosted
-                          : l10n.accountingJournalUnposted,
-                      tone: entry.isPosted
-                          ? AppStatusTone.success
-                          : AppStatusTone.warning,
-                      animate: false,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Flexible(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: badgeColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
+                          color: badgeColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(AppRadius.xs),
                         ),
+                        child: Icon(icon, size: 16, color: badgeColor),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
                         child: Text(
-                          entry.voucherType,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: badgeColor,
+                          entry.voucherNumber,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '·  $dateLabel',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
+                      AppStatusBadge(
+                        label: entry.isPosted
+                            ? l10n.accountingJournalPosted
+                            : l10n.accountingJournalUnposted,
+                        tone: entry.isPosted
+                            ? AppStatusTone.success
+                            : AppStatusTone.warning,
+                        animate: false,
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: badgeColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            entry.voucherType,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: badgeColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '·  $dateLabel',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (entry.description != null &&
+                      entry.description!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      entry.description!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium,
                     ),
                   ],
-                ),
-                if (entry.description != null &&
-                    entry.description!.trim().isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    entry.description!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium,
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: 4,
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        '${l10n.accountingJournalDebit}: ${entry.totalDebit.toStringAsFixed(2)}',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        '${l10n.accountingJournalCredit}: ${entry.totalCredit.toStringAsFixed(2)}',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        entry.currencyCode,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-                const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: 4,
-                  alignment: WrapAlignment.spaceBetween,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text(
-                      '${l10n.accountingJournalDebit}: ${entry.totalDebit.toStringAsFixed(2)}',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      '${l10n.accountingJournalCredit}: ${entry.totalCredit.toStringAsFixed(2)}',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      entry.currencyCode,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
           ),
         ),

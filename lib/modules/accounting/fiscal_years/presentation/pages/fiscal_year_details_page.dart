@@ -448,60 +448,63 @@ class _PeriodTile extends StatelessWidget {
       AccountingPeriodStatus.closed => AppStatusTone.neutral,
     };
 
-    return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(AppRadius.md),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  '${period.periodNumber}. ${period.name}',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
+    return Semantics(
+      label: '${period.periodNumber}. ${period.name}, $statusLabel',
+      child: Material(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    '${period.periodNumber}. ${period.name}',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const Spacer(),
-                AppStatusBadge(label: statusLabel, tone: tone, animate: false),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${dateFmt.format(period.startDate.toLocal())}'
-              ' – ${dateFmt.format(period.endDate.toLocal())}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+                  const Spacer(),
+                  AppStatusBadge(label: statusLabel, tone: tone, animate: false),
+                ],
               ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(
-              spacing: AppSpacing.sm,
-              children: [
-                if (period.status == AccountingPeriodStatus.closed && canOpen)
-                  AppButton(
-                    label: l10n.accountingPeriodOpen,
-                    onPressed: onOpen,
-                    variant: AppButtonVariant.tonal,
-                  ),
-                if (period.allowsPosting && canClose)
-                  AppButton(
-                    label: l10n.accountingPeriodClose,
-                    onPressed: onClose,
-                    variant: AppButtonVariant.outlined,
-                  ),
-                if (period.status == AccountingPeriodStatus.closed &&
-                    canReopen)
-                  AppButton(
-                    label: l10n.accountingPeriodReopen,
-                    onPressed: onReopen,
-                    variant: AppButtonVariant.text,
-                  ),
-              ],
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                '${dateFmt.format(period.startDate.toLocal())}'
+                ' – ${dateFmt.format(period.endDate.toLocal())}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                children: [
+                  if (period.status == AccountingPeriodStatus.closed && canOpen)
+                    AppButton(
+                      label: l10n.accountingPeriodOpen,
+                      onPressed: onOpen,
+                      variant: AppButtonVariant.tonal,
+                    ),
+                  if (period.allowsPosting && canClose)
+                    AppButton(
+                      label: l10n.accountingPeriodClose,
+                      onPressed: onClose,
+                      variant: AppButtonVariant.outlined,
+                    ),
+                  if (period.status == AccountingPeriodStatus.closed &&
+                      canReopen)
+                    AppButton(
+                      label: l10n.accountingPeriodReopen,
+                      onPressed: onReopen,
+                      variant: AppButtonVariant.text,
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

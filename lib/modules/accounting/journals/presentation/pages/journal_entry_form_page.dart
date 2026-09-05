@@ -8,6 +8,7 @@ import 'package:stock_count/app/settings/company/company_profile_providers.dart'
 import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
 import 'package:stock_count/core/widgets/app_button.dart';
+import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_responsive.dart';
 import 'package:stock_count/core/widgets/app_responsive_scaffold.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
@@ -321,7 +322,10 @@ class __JournalLinesSectionState extends ConsumerState<_JournalLinesSection> {
         const SizedBox(height: AppSpacing.sm),
         accountsAsync.when(
           loading: () => const LinearProgressIndicator(),
-          error: (_, _) => Text(l10n.somethingWentWrong),
+          error: (e, _) => AppErrorState(
+            message: e.toString(),
+            onRetry: () => ref.invalidate(accountsProvider),
+          ),
           data: (accounts) {
             final posting = [
               for (final a in accounts)
@@ -401,7 +405,7 @@ class __JournalLinesSectionState extends ConsumerState<_JournalLinesSection> {
                       });
                     },
                     icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    tooltip: 'حذف السطر',
+                    tooltip: l10n.localeName == 'ar' ? 'حذف السطر' : 'Delete line',
                   ),
                 ],
               ],

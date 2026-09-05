@@ -119,135 +119,142 @@ class _AccountRootCard extends StatelessWidget {
     final node = entry.node;
     final typeColor = accountTypeColor(theme.colorScheme, account.accountType);
     final expanded = entry.isExpanded;
+    final displayName = AccountLabels.displayName(l10n, account);
+    final typeLabel = AccountLabels.typeLabel(l10n, account.accountType);
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.55),
+    return Semantics(
+      label: '$displayName, $typeLabel, ${l10n.accountingFieldCode}: ${account.accountCode}',
+      hint: node.hasChildren
+          ? (expanded ? l10n.accountingCollapseAll : l10n.accountingExpandAll)
+          : l10n.accountingAccountDetails,
+      expanded: node.hasChildren ? expanded : null,
+      button: true,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.55),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.shadow.withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        child: Material(
-          color: typeColor.withValues(
-            alpha: theme.brightness == Brightness.dark ? 0.22 : 0.10,
-          ),
-          child: InkWell(
-            onTap: node.hasChildren
-                ? onToggleExpand
-                : () => onOpenDetails?.call(account),
-            onLongPress: onOpenDetails == null
-                ? null
-                : () => onOpenDetails!(account),
-            child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.sm,
-                AppSpacing.md,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: typeColor,
-                      borderRadius: BorderRadius.circular(4),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          child: Material(
+            color: typeColor.withValues(
+              alpha: theme.brightness == Brightness.dark ? 0.22 : 0.10,
+            ),
+            child: InkWell(
+              onTap: node.hasChildren
+                  ? onToggleExpand
+                  : () => onOpenDetails?.call(account),
+              onLongPress: onOpenDetails == null
+                  ? null
+                  : () => onOpenDetails!(account),
+              child: Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                  AppSpacing.md,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: typeColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  _TypeAvatar(type: account.accountType, color: typeColor),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AccountLabels.displayName(l10n, account),
-                          maxLines: 2,
-                          softWrap: true,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.2,
+                    const SizedBox(width: AppSpacing.sm),
+                    _TypeAvatar(type: account.accountType, color: typeColor),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            displayName,
+                            maxLines: 2,
+                            softWrap: true,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  typeLabel,
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: typeColor,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              if (node.hasChildren) ...[
+                                Text(
+                                  ' • ',
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                Text(
+                                  l10n.accountingSectionChildrenCount(
+                                    node.descendantCount,
+                                  ),
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    _TrailingCode(
+                      code: account.accountCode,
+                      emphasis: true,
+                      color: typeColor,
+                    ),
+                    if (node.hasChildren)
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(
+                          start: AppSpacing.xs,
+                        ),
+                        child: AnimatedRotation(
+                          turns: expanded ? 0.5 : 0,
+                          duration: const Duration(milliseconds: 180),
+                          child: Icon(
+                            Icons.expand_more_rounded,
+                            color: typeColor,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                AccountLabels.typeLabel(
-                                  l10n,
-                                  account.accountType,
-                                ),
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  color: typeColor,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                            if (node.hasChildren) ...[
-                              Text(
-                                ' · ',
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              Text(
-                                l10n.accountingSectionChildrenCount(
-                                  node.descendantCount,
-                                ),
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  _TrailingCode(
-                    code: account.accountCode,
-                    emphasis: true,
-                    color: typeColor,
-                  ),
-                  if (node.hasChildren)
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(
-                        start: AppSpacing.xs,
-                      ),
-                      child: AnimatedRotation(
-                        turns: expanded ? 0.5 : 0,
-                        duration: const Duration(milliseconds: 180),
-                        child: Icon(
-                          Icons.expand_more_rounded,
-                          color: typeColor,
+                      )
+                    else if (onOpenDetails != null)
+                      IconButton(
+                        tooltip: l10n.accountingAccountDetails,
+                        onPressed: () => onOpenDetails!(account),
+                        icon: Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                    )
-                  else if (onOpenDetails != null)
-                    IconButton(
-                      tooltip: l10n.accountingAccountDetails,
-                      onPressed: () => onOpenDetails!(account),
-                      icon: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 16,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -281,50 +288,73 @@ class _AccountChildRow extends StatelessWidget {
     final depthInset = (entry.depth * 12.0);
     final selected = entry.isSelected;
 
-    return Material(
-      color: selected
-          ? theme.colorScheme.primaryContainer.withValues(alpha: 0.4)
-          : Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          if (entry.node.hasChildren && onToggleExpand != null) {
-            onToggleExpand!();
-          } else {
-            (onSelect ?? onOpenDetails)?.call();
-          }
-        },
-        onLongPress: onOpenDetails,
-        child: Padding(
-          padding: EdgeInsetsDirectional.only(
-            start: AppSpacing.sm + depthInset,
-            end: AppSpacing.sm,
-            top: AppSpacing.sm,
-            bottom: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 28,
-                child: entry.node.hasChildren
-                    ? InkWell(
-                        onTap: onToggleExpand,
-                        borderRadius: BorderRadius.circular(AppRadius.xs),
-                        child: AnimatedRotation(
-                          turns: entry.isExpanded ? 0.5 : 0,
-                          duration: const Duration(milliseconds: 160),
+    return Semantics(
+      label: '$displayName, ${l10n.accountingFieldCode}: ${account.accountCode}',
+      hint: entry.node.hasChildren
+          ? (entry.isExpanded
+              ? l10n.accountingCollapseAll
+              : l10n.accountingExpandAll)
+          : l10n.accountingAccountDetails,
+      expanded: entry.node.hasChildren ? entry.isExpanded : null,
+      selected: selected,
+      button: true,
+      child: Material(
+        color: selected
+            ? theme.colorScheme.primaryContainer.withValues(alpha: 0.4)
+            : Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            if (entry.node.hasChildren && onToggleExpand != null) {
+              onToggleExpand!();
+            } else {
+              (onSelect ?? onOpenDetails)?.call();
+            }
+          },
+          onLongPress: onOpenDetails,
+          child: Padding(
+            padding: EdgeInsetsDirectional.only(
+              start: AppSpacing.sm + depthInset,
+              end: AppSpacing.sm,
+              top: AppSpacing.sm,
+              bottom: AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: entry.node.hasChildren
+                      ? IconButton(
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                          tooltip: entry.isExpanded
+                              ? l10n.accountingCollapseAll
+                              : l10n.accountingExpandAll,
+                          onPressed: onToggleExpand,
+                          icon: AnimatedRotation(
+                            turns: entry.isExpanded ? 0.5 : 0,
+                            duration: const Duration(milliseconds: 160),
+                            child: Icon(
+                              Icons.expand_more_rounded,
+                              size: 22,
+                              color: typeColor.withValues(alpha: 0.9),
+                            ),
+                          ),
+                        )
+                      : Center(
                           child: Icon(
-                            Icons.expand_more_rounded,
-                            size: 22,
-                            color: typeColor.withValues(alpha: 0.9),
+                            account.isGroup
+                                ? Icons.folder_outlined
+                                : Icons.circle,
+                            size: account.isGroup ? 16 : 7,
+                            color: typeColor.withValues(alpha: 0.75),
                           ),
                         ),
-                      )
-                    : Icon(
-                        account.isGroup ? Icons.folder_outlined : Icons.circle,
-                        size: account.isGroup ? 16 : 7,
-                        color: typeColor.withValues(alpha: 0.75),
-                      ),
-              ),
+                ),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Column(
@@ -394,8 +424,9 @@ class _AccountChildRow extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _TypeAvatar extends StatelessWidget {

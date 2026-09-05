@@ -6,6 +6,8 @@ class LinkedAccountRef {
     required this.accountId,
     required this.code,
     required this.name,
+    this.companyId,
+    this.isActive = true,
     this.isPosting = true,
     this.isGroup = false,
   });
@@ -13,6 +15,8 @@ class LinkedAccountRef {
   final String accountId;
   final String code;
   final String name;
+  final String? companyId;
+  final bool isActive;
   final bool isPosting;
   final bool isGroup;
 }

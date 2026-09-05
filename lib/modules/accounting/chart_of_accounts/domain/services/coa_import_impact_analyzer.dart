@@ -1,7 +1,6 @@
 import '../../../../../core/domain/entities/account_role.dart';
 import '../../../../system_setup/domain/entities/company_accounting_config.dart';
 import '../entities/account.dart';
-import 'account_labels.dart';
 
 /// Comprehensive pre-import impact analysis report for Chart of Accounts (COA) operations.
 class CoaImportImpactReport {
@@ -56,9 +55,6 @@ class CoaImportImpactAnalyzer {
     };
     final Map<String, Account> existingByCode = {
       for (final a in existingAccounts) a.accountCode: a
-    };
-    final Map<String, Account> candidateByCode = {
-      for (final a in candidateAccounts) a.accountCode: a
     };
 
     final List<Account> accountsAdded = [];

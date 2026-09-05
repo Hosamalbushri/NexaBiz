@@ -30,6 +30,7 @@ import '../sales/invoices/presentation/providers/sale_providers.dart';
 import '../sync/sync.dart';
 import '../../core/modules/module_setup_definition.dart';
 import '../system_setup/presentation/providers/system_setup_providers.dart';
+import '../cash_registers/presentation/providers/cash_register_providers.dart';
 import 'accounting_module_quick_actions.dart';
 import 'accounting_module_settings.dart';
 import 'accounting_module_setup.dart';
@@ -462,6 +463,7 @@ class AccountingModule extends AppModule {
     saleTreasuryAccountPortProvider.overrideWith((ref) {
       return AccountingSaleTreasuryAdapter(
         ref.watch(accountRepositoryProvider),
+        cashRegisterRepository: ref.watch(cashRegisterRepositoryProvider),
         initRepository: ref.watch(companyInitializationRepositoryProvider),
       );
     }),
@@ -481,6 +483,7 @@ class AccountingModule extends AppModule {
     rpTreasuryAccountPortProvider.overrideWith((ref) {
       return AccountingRpTreasuryAdapter(
         ref.watch(accountRepositoryProvider),
+        cashRegisterRepository: ref.watch(cashRegisterRepositoryProvider),
         initRepository: ref.watch(companyInitializationRepositoryProvider),
       );
     }),

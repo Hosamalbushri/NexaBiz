@@ -4,10 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 
 import 'package:stock_count/modules/sync/sync.dart';
-import 'package:stock_count/modules/customers/data/database/customers_database.dart';
-import 'package:stock_count/modules/customers/data/repositories/customer_repository_impl.dart';
-import 'package:stock_count/modules/customers/domain/entities/customer.dart';
-import 'package:stock_count/modules/customers/domain/entities/customer_data_source.dart';
+import 'package:stock_count/modules/customers/shared/data/database/customers_database.dart';
+import 'package:stock_count/modules/customers/directory/data/repositories/customer_repository_impl.dart';
+import 'package:stock_count/modules/customers/directory/domain/entities/customer.dart';
+import 'package:stock_count/modules/customers/directory/domain/entities/customer_data_source.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -27,7 +27,11 @@ void main() {
     final box = await Hive.openBox<SyncOperation>('sync_queue');
     queue = SyncQueue(box: box);
     db = CustomersDatabase.memory();
-    repo = CustomerRepositoryImpl(db, syncQueue: queue);
+    repo = CustomerRepositoryImpl(
+      db,
+      syncQueue: queue,
+      readCompanyId: () => 'comp_test',
+    );
   });
 
   tearDown(() async {

@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
-import 'package:stock_count/app/theme/app_radius.dart';
 import 'package:stock_count/app/theme/app_spacing.dart';
+import 'package:stock_count/core/widgets/app_widgets.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/authentication/presentation/widgets/permission_gate.dart';
 import 'package:stock_count/modules/receipts_payments/permissions/receipts_payments_permission_package.dart';
@@ -47,7 +47,7 @@ class ReceiptsPaymentsHomePage extends ConsumerWidget {
             const SizedBox(height: AppSpacing.lg),
             PermissionGate(
               anyOf: ReceiptsPaymentsPermissions.receiptsView,
-              child: _HubCard(
+              child: AppModuleHubCard(
                     icon: Icons.call_received_outlined,
                     title: l10n.rpServiceReceiptsTitle,
                     subtitle: l10n.rpServiceReceiptsSubtitle,
@@ -60,7 +60,7 @@ class ReceiptsPaymentsHomePage extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             PermissionGate(
               anyOf: ReceiptsPaymentsPermissions.paymentsView,
-              child: _HubCard(
+              child: AppModuleHubCard(
                     icon: Icons.call_made_outlined,
                     title: l10n.rpServicePaymentsTitle,
                     subtitle: l10n.rpServicePaymentsSubtitle,
@@ -78,7 +78,7 @@ class ReceiptsPaymentsHomePage extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             PermissionGate(
               anyOf: ReceiptsPaymentsPermissions.transfersView,
-              child: _HubCard(
+              child: AppModuleHubCard(
                     icon: Icons.swap_horiz_outlined,
                     title: l10n.rpServiceTransfersTitle,
                     subtitle: l10n.rpServiceTransfersSubtitle,
@@ -97,7 +97,7 @@ class ReceiptsPaymentsHomePage extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             PermissionGate(
               anyOf: ReceiptsPaymentsPermissions.exchangesView,
-              child: _HubCard(
+              child: AppModuleHubCard(
                     icon: Icons.currency_exchange_outlined,
                     title: l10n.rpServiceExchangesTitle,
                     subtitle: l10n.rpServiceExchangesSubtitle,
@@ -116,7 +116,7 @@ class ReceiptsPaymentsHomePage extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             PermissionGate(
               anyOf: ReceiptsPaymentsPermissions.anyPost,
-              child: _HubCard(
+              child: AppModuleHubCard(
                     icon: Icons.fact_check_outlined,
                     title: l10n.rpPostingServiceTitle,
                     subtitle: l10n.rpPostingServiceHubSubtitle,
@@ -138,81 +138,3 @@ class ReceiptsPaymentsHomePage extends ConsumerWidget {
   }
 }
 
-class _HubCard extends StatelessWidget {
-  const _HubCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Material(
-      color: theme.colorScheme.surface,
-      elevation: 0,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.55),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Row(
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                  ),
-                  child: Icon(icon, color: theme.colorScheme.primary),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

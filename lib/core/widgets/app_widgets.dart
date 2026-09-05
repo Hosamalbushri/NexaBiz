@@ -24,6 +24,8 @@ export 'app_status_badge.dart';
 export 'app_text_field.dart';
 export 'app_view_mode_toggle.dart';
 export 'app_async_autocomplete_field.dart';
+export 'app_customer_search_field.dart';
+export 'app_expandable_search_bar.dart';
 export 'app_currency_selector.dart';
 export 'app_document_line_table_shell.dart';
 export 'app_rate_field.dart';
@@ -31,4 +33,7 @@ export 'loading_overlay.dart';
 export 'notification_badge.dart';
 export 'notification_banner.dart';
 export 'notification_tile.dart';
-
+export 'app_module_hub_card.dart';
+export 'app_detail_info_row.dart';
+export 'app_detail_surface_card.dart';
+export 'app_money_text.dart';

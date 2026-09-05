@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
+import 'package:stock_count/core/widgets/app_money_text.dart';
 import 'package:stock_count/core/widgets/app_status_badge.dart';
 import '../../domain/entities/sale_status.dart';
 
@@ -34,6 +35,6 @@ class SaleMoneyText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppAmountText(value, style: style, textAlign: textAlign);
+    return AppMoneyText(value, style: style);
   }
 }

@@ -2661,5 +2661,86 @@
   "accountSearchDisabledSubtitle": "Please ensure the Accounting module is enabled in system settings",
   "accountSearchEmptyTreeTitle": "Chart of accounts is empty",
   "accountSearchEmptyTreeSubtitle": "The default chart of accounts has not been created or generated yet",
-  "accountSearchNoResultsSubtitle": "No accounts matched your search criteria"
+  "accountSearchNoResultsSubtitle": "No accounts matched your search criteria",
+  "accountingUnspecified": "Unspecified",
+  "accountingModuleRuleLabel": "Module / Rule:",
+  "accountingRequiredAccountType": "Required Account Type:",
+  "accountingCurrentAccountType": "Currently Selected Account Type:",
+  "accountingFixSetupAction": "Fix Accounting Setup",
+  "accountingBindEntityAccountAction": "Bind Entity Account",
+  "accountingReviewSettingsAction": "Review Account Settings",
+  "accountingSetupAction": "Accounting Setup",
+  "cashRegisterConfigTitle": "Cash Register Accounting Configuration",
+  "cashRegisterAddTitle": "Add New Cash Register",
+  "cashRegisterNameLabel": "Register Name",
+  "cashRegisterNameHint": "e.g. Main Cash",
+  "cashRegisterCodeLabel": "Register Code",
+  "cashRegisterCodeHint": "e.g. CR-01",
+  "cashRegisterCreateSuccessNotLinked": "Cash Register created (Status: Not Linked)",
+  "cashRegisterLinkSuccess": "Linked cash register to account ({code} - {name})",
+  "@cashRegisterLinkSuccess": {
+    "placeholders": {
+      "code": { "type": "String" },
+      "name": { "type": "String" }
+    }
+  },
+  "cashRegisterLinkFailed": "Linking failed: {error}",
+  "@cashRegisterLinkFailed": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "cashRegisterAccountTypeMismatch": "This account cannot be linked to a cash register because its account type is not compatible with cash.",
+  "cashRegisterUnlinkTitle": "Unlink Accounting Account",
+  "cashRegisterUnlinkConfirm": "Are you sure you want to unlink cash register \"{name}\"? It will immediately become unavailable for accounting transactions.",
+  "@cashRegisterUnlinkConfirm": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "cashRegisterUnlinkConfirmAction": "Unlink",
+  "cashRegisterUnlinkSuccess": "Unlinked cash register successfully",
+  "cashRegisterDefaultTitle": "Default Cash Register for New Documents",
+  "cashRegisterDefaultSubtitle": "This Cash Register will be selected automatically when creating a new cash-related document.",
+  "cashRegisterDefaultReady": "Default Ready",
+  "cashRegisterDefaultNotConfigured": "No Default Cash Register Configured",
+  "cashRegisterDefaultNotConfiguredHint": "Click \"Set Default\" to assign an accounting-ready register.",
+  "cashRegisterDefaultInvalid": "Default Cash Register Invalid (DEFAULT_CASH_REGISTER_INVALID)",
+  "cashRegisterDefaultSetSuccess": "Set \"{name}\" as default Cash Register for new documents",
+  "@cashRegisterDefaultSetSuccess": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "cashRegisterDefaultClearSuccess": "Cleared default cash register",
+  "cashRegisterSetDefaultAction": "Set Default",
+  "cashRegisterClearDefaultAction": "Clear",
+  "cashRegisterRepairConfigAction": "Repair Configuration",
+  "cashRegisterReadinessTitle": "Cash Registers Accounting Readiness",
+  "cashRegisterTotalRegisters": "Total Registers",
+  "cashRegisterLinkedAndReady": "Linked & Ready",
+  "cashRegisterNotLinked": "Not Linked",
+  "cashRegisterInvalidLink": "Invalid Link",
+  "cashRegisterCompanyRegisters": "Company Cash Registers",
+  "cashRegisterAddAction": "Add Register",
+  "cashRegisterEmptyTitle": "No Cash Registers configured.",
+  "cashRegisterEmptySubtitle": "Click \"Add Register\" to create a cash register and link it to Chart of Accounts.",
+  "cashRegisterStatusReady": "Accounting: Ready",
+  "cashRegisterStatusInvalid": "Accounting: Invalid",
+  "cashRegisterStatusNotLinked": "Accounting: Not Linked",
+  "cashRegisterNoAccountLinked": "No Chart of Accounts account linked.",
+  "cashRegisterInvalidReason": "Invalid reason: Linked account is inactive, deleted, or incompatible with cash.",
+  "cashRegisterChangeAccountAction": "Change Account",
+  "cashRegisterLinkAccountAction": "Link Account",
+  "cashRegisterSelectAccountTitle": "Select Cash Account for ({name})",
+  "@cashRegisterSelectAccountTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "cashRegisterSelectAccountHint": "Must be an active, posting-eligible Asset/Cash account.",
+  "cashRegisterNoCompatibleAccounts": "No compatible accounts found in Chart of Accounts.",
+  "cashRegisterSelectDefaultTitle": "Select Default Cash Register for New Documents",
+  "cashRegisterSelectDefaultHint": "Only accounting-ready cash registers are shown.",
+  "cashRegisterNoReadyRegisters": "No accounting-ready cash registers available. Please link a register first."
 }

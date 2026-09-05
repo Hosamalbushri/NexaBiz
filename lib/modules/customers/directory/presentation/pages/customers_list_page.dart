@@ -86,9 +86,10 @@ class _CustomersListPageState extends ConsumerState<CustomersListPage> {
       onEmptyAction: canImport ? () => CustomersRoutes.pushImport(context) : null,
       floatingActionButton: PermissionGate(
         anyOf: CustomersPermissions.create,
-        child: FloatingActionButton(
+        child: FloatingActionButton.extended(
           onPressed: () => CustomersRoutes.pushCreate(context),
-          child: const Icon(Icons.add),
+          icon: const Icon(Icons.add),
+          label: Text(l10n.customersCreateTitle),
         ),
       ),
       items: asyncCustomers.valueOrNull ?? const [],

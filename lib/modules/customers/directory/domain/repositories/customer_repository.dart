@@ -30,6 +30,9 @@ abstract class CustomerRepository {
   /// Soft-delete tombstone (sync delete).
   Future<void> softDelete(int id);
 
+  /// Restores a previously soft-deleted customer.
+  Future<Customer> restore(int id);
+
   /// Insert or update by [CustomerDraft.externalId] (external imports).
   Future<Customer> upsertFromExternal(CustomerDraft draft);
 

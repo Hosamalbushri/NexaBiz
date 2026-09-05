@@ -86,6 +86,13 @@ final deleteCustomerUseCaseProvider = Provider<DeleteCustomer>((ref) {
   );
 });
 
+final restoreCustomerUseCaseProvider = Provider<RestoreCustomer>((ref) {
+  return RestoreCustomer(
+    ref.watch(customerRepositoryProvider),
+    permissionGuard: ref.watch(permissionGuardProvider),
+  );
+});
+
 final upsertCustomersUseCaseProvider = Provider<UpsertCustomers>((ref) {
   return UpsertCustomers(
     ref.watch(customerRepositoryProvider),

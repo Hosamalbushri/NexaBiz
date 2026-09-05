@@ -58,15 +58,21 @@ class FiscalYearsPage extends ConsumerWidget {
             itemBuilder: (context, index) {
               final item = items[index];
               final fy = item.fiscalYear;
-              return Material(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                child: InkWell(
+              final statusStr = fy.status == FiscalYearStatus.open
+                  ? l10n.accountingPeriodStatusOpen
+                  : l10n.accountingPeriodStatusClosed;
+              return Semantics(
+                label: '${fy.name}, ${fy.code}, $statusStr',
+                button: true,
+                child: Material(
+                  color: theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(AppRadius.lg),
-                  onTap: () =>
-                      AccountingRoutes.pushFiscalYearDetails(context, fy.uuid),
-                  child: Ink(
-                    padding: const EdgeInsets.all(AppSpacing.md),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    onTap: () =>
+                        AccountingRoutes.pushFiscalYearDetails(context, fy.uuid),
+                    child: Ink(
+                      padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(AppRadius.lg),
                       border: Border.all(
@@ -134,8 +140,9 @@ class FiscalYearsPage extends ConsumerWidget {
                     ),
                   ),
                 ),
-              );
-            },
+              ),
+            );
+          },
           );
         },
       ),

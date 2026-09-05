@@ -44,8 +44,8 @@ class AccountingSettingsPanel extends ConsumerWidget {
                   onPressed: accountsAsync.isLoading
                       ? null
                       : () async {
-                          final repo = ref.read(accountRepositoryProvider);
-                          await repo.seedDefaultChart();
+                          final seeder = ref.read(seedDefaultChartUseCaseProvider);
+                          await seeder();
                           ref.invalidate(accountsProvider);
                           if (context.mounted) {
                             showAppSnackBar(
@@ -92,8 +92,8 @@ class AccountingSettingsPanel extends ConsumerWidget {
                   onPressed: sectionsAsync.isLoading
                       ? null
                       : () async {
-                          final repo = ref.read(voucherBookRepositoryProvider);
-                          await repo.seedDefaultBooks();
+                          final seeder = ref.read(seedDefaultVoucherBooksProvider);
+                          await seeder();
                           ref.invalidate(voucherBookSectionsProvider);
                           if (context.mounted) {
                             showAppSnackBar(

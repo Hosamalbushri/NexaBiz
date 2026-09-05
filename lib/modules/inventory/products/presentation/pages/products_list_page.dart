@@ -589,13 +589,13 @@ class _ProductListCard extends StatelessWidget {
     return RepaintBoundary(
       child: Material(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         child: InkWell(
           onTap: onEdit,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           child: Ink(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(
                 color: colorScheme.outlineVariant.withValues(alpha: 0.55),
               ),
@@ -687,13 +687,13 @@ class _ProductGridCard extends StatelessWidget {
     return RepaintBoundary(
       child: Material(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         child: InkWell(
           onTap: onEdit,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           child: Ink(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
+              borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(
                 color: colorScheme.outlineVariant.withValues(alpha: 0.55),
               ),

@@ -1,6 +1,5 @@
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account.dart';
 import 'package:stock_count/modules/accounting/chart_of_accounts/domain/repositories/account_repository.dart';
-import 'package:stock_count/modules/accounting/chart_of_accounts/domain/services/account_labels.dart';
 import 'package:stock_count/modules/accounting/journals/domain/models/missing_account_exception.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_validation_service.dart';

@@ -12,6 +12,10 @@ import 'package:stock_count/core/services/loading_providers.dart';
 import 'package:stock_count/core/utils/digit_normalization.dart';
 import 'package:stock_count/core/widgets/app_account_search_picker.dart';
 import 'package:stock_count/core/widgets/app_amount_field.dart';
+import 'package:stock_count/core/widgets/app_document_locked_banner.dart';
+import 'package:stock_count/core/widgets/app_document_meta_chip.dart';
+import 'package:stock_count/core/widgets/app_document_option_card.dart';
+import 'package:stock_count/core/widgets/app_document_sticky_summary.dart';
 import 'package:stock_count/core/widgets/app_error_state.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
@@ -321,8 +325,13 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
       onScanBarcode: _scanProduct,
     );
 
-    final summaryCard = _StockReceiptStickySummary(
-      state: state,
+    final summaryCard = AppDocumentStickySummary(
+      itemsCountTitle: l10n.stockReceiptItemsHeader(state.items.length),
+      totalAmount: state.totalCost,
+      currencyCode: state.currencyCode,
+      totalLabel: l10n.stockReceiptUnitCostLabel,
+      saveLabel: l10n.stockReceiptSaveButton,
+      canSave: state.items.isNotEmpty,
       onSave: _save,
     );
 
@@ -330,29 +339,10 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
       padding: AppConstants.pageInsets(context),
       children: [
         if (_isPostedLocked) ...[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: Colors.amber.shade50,
-              borderRadius: BorderRadius.circular(AppRadius.md),
-              border: Border.all(color: Colors.amber.shade400),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.lock_rounded, color: Colors.amber.shade900),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    'هذا المستند مرحّل ولا يمكن حفظ أي تعديل عليه إلا بعد إلغاء الترحيل.',
-                    style: TextStyle(
-                      color: Colors.amber.shade900,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          AppDocumentLockedBanner(
+            message: l10n.localeName == 'ar'
+                ? 'هذا المستند مرحّل ولا يمكن حفظ أي تعديل عليه إلا بعد إلغاء الترحيل.'
+                : 'This document is posted and locked. Unpost to edit.',
           ),
           const SizedBox(height: AppSpacing.md),
         ],
@@ -443,7 +433,7 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: _MetaChip(
+                  child: AppDocumentMetaChip(
                     label: numberLabel,
                     value: numberValue,
                     icon: Icons.tag_rounded,
@@ -452,7 +442,7 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: _MetaChip(
+                  child: AppDocumentMetaChip(
                     label: l10n.stockReceiptDateLabel,
                     value: dateValue,
                     icon: Icons.calendar_today_outlined,
@@ -473,7 +463,7 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: _OptionCard(
+                  child: AppDocumentOptionCard(
                     icon: Icons.menu_book_outlined,
                     label: l10n.stockIssueVoucherBookLabel,
                     value: state.voucherBook?.name,
@@ -523,7 +513,7 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: _OptionCard(
+                  child: AppDocumentOptionCard(
                     icon: Icons.payments_outlined,
                     label: l10n.salesCurrency,
                     value: state.currencyCode,
@@ -606,116 +596,6 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
               onChanged: onNotesChanged,
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MetaChip extends StatelessWidget {
-  const _MetaChip({
-    required this.label,
-    required this.value,
-    required this.icon,
-    this.onTap,
-    this.emphasized = false,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-  final VoidCallback? onTap;
-  final bool emphasized;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final bg = emphasized
-        ? scheme.primaryContainer.withValues(alpha: 0.45)
-        : scheme.surfaceContainerHighest.withValues(alpha: 0.55);
-    final iconBg = emphasized
-        ? scheme.primary.withValues(alpha: 0.14)
-        : scheme.onSurface.withValues(alpha: 0.06);
-    final iconColor = emphasized ? scheme.primary : scheme.onSurfaceVariant;
-    final valueColor = emphasized ? scheme.primary : scheme.onSurface;
-
-    return Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(AppRadius.sm),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-            border: Border.all(
-              color: emphasized
-                  ? scheme.primary.withValues(alpha: 0.18)
-                  : scheme.outlineVariant.withValues(alpha: 0.45),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, size: 16, color: iconColor),
-              ),
-              const SizedBox(width: AppSpacing.xs + 2),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 10,
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        value,
-                        maxLines: 1,
-                        softWrap: false,
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: valueColor,
-                          letterSpacing: -0.15,
-                          height: 1.15,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (onTap != null) ...[
-                const SizedBox(width: 2),
-                Icon(
-                  Icons.edit_calendar_outlined,
-                  size: 15,
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.65),
-                ),
-              ],
-            ],
-          ),
         ),
       ),
     );
@@ -894,76 +774,7 @@ class _AccountSelectorCardState extends State<_AccountSelectorCard> {
   }
 }
 
-class _OptionCard extends StatelessWidget {
-  const _OptionCard({
-    required this.icon,
-    required this.label,
-    required this.placeholder,
-    this.onTap,
-    this.value,
-  });
 
-  final IconData icon;
-  final String label;
-  final String? value;
-  final String placeholder;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final hasValue = value != null && value!.trim().isNotEmpty;
-
-    return Material(
-      color: scheme.surfaceContainerHighest.withValues(alpha: 0.35),
-      borderRadius: BorderRadius.circular(AppRadius.md),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.md,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.45),
-            ),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: scheme.primary, size: 22),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                hasValue ? value! : placeholder,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: hasValue ? FontWeight.bold : FontWeight.normal,
-                  color: hasValue ? scheme.onSurface : scheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// Multi-column spreadsheet editor matching SaleProductsTable.
 class StockReceiptProductsTable extends StatefulWidget {
@@ -1606,82 +1417,4 @@ class _AddRowButton extends StatelessWidget {
   }
 }
 
-class _StockReceiptStickySummary extends StatelessWidget {
-  const _StockReceiptStickySummary({
-    required this.state,
-    required this.onSave,
-  });
 
-  final StockReceiptComposerState state;
-  final VoidCallback onSave;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final l10n = AppLocalizations.of(context);
-
-    return Material(
-      color: scheme.surface,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          border: Border.all(
-            color: scheme.outlineVariant.withValues(alpha: 0.5),
-          ),
-        ),
-        child: Column(
-          children: [
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              children: [
-                Text(
-                  l10n.stockReceiptItemsHeader(state.items.length),
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${l10n.stockReceiptUnitCostLabel}: ',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      '${state.totalCost.toStringAsFixed(2)} ${state.currencyCode}',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: scheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: onSave,
-                icon: const Icon(Icons.check),
-                label: Text(
-                  l10n.stockReceiptSaveButton,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -17,9 +17,12 @@ String voucherBookTypeLabel(AppLocalizations l10n, VoucherBookType type) {
     VoucherBookType.journal => l10n.accountingVoucherBookTypeJournal,
     VoucherBookType.receiptsPayments =>
       l10n.accountingVoucherBookTypeReceiptsPayments,
-    VoucherBookType.stockReceipts => 'إيصالات الاستلام (مخزون)',
-    VoucherBookType.stockIssues => 'أوامر الصرف (مخزون)',
-    VoucherBookType.inventory => 'دفاتر المخزون',
+    VoucherBookType.stockReceipts =>
+      l10n.localeName == 'ar' ? 'إيصالات الاستلام (مخزون)' : 'Stock Receipts',
+    VoucherBookType.stockIssues =>
+      l10n.localeName == 'ar' ? 'أوامر الصرف (مخزون)' : 'Stock Issues',
+    VoucherBookType.inventory =>
+      l10n.localeName == 'ar' ? 'دفاتر المخزون' : 'Inventory Books',
   };
 }
 
