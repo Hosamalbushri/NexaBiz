@@ -90,9 +90,11 @@ final inventoryDependencyDetectorProvider = Provider<InventoryDependencyDetector
 
 final costLayerServiceProvider = Provider<CostLayerService>((ref) {
   final db = ref.watch(inventoryDatabaseProvider);
+  final initRepo = ref.watch(companyInitializationRepositoryProvider);
   return CostLayerServiceImpl(
     db: db,
     readCompanyId: () => ref.read(currentCompanyIdProvider),
+    initRepository: initRepo,
   );
 });
 

@@ -24,6 +24,8 @@ import 'package:stock_count/modules/inventory/products/domain/entities/product.d
 import 'package:stock_count/modules/inventory/products/presentation/pages/product_barcode_scanner_page.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
 import 'package:stock_count/core/widgets/app_document_line_table_shell.dart';
+import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
+import 'package:stock_count/modules/inventory/warehouses/presentation/providers/warehouse_providers.dart';
 import '../../domain/services/inventory_account_port.dart';
 import '../../domain/services/inventory_voucher_book_port.dart';
 import '../providers/stock_movements_providers.dart';
@@ -66,6 +68,7 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
   String? _loadError;
   List<InventoryVoucherBookRef> _voucherBooks = const [];
   List<InventoryAccountRef> _accounts = const [];
+  List<Warehouse> _warehouses = const [];
 
   bool get _isEdit => widget.receiptId != null;
   bool get _canSelectVoucherBook => _voucherBooks.length > 1;
@@ -108,13 +111,16 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
         action: () async {
           final bookPort = ref.read(inventoryVoucherBookPortProvider);
           final accountPort = ref.read(inventoryAccountPortProvider);
+          final warehouseRepo = ref.read(warehouseRepositoryProvider);
 
           final books = await bookPort.listActiveReceiptBooks();
           final accounts = await accountPort.listPostingAccounts();
+          final warehouses = await warehouseRepo.getAllWarehouses();
 
           if (!mounted) return;
           _voucherBooks = books;
           _accounts = accounts;
+          _warehouses = warehouses;
 
           final composer = ref.read(stockReceiptComposerProvider.notifier);
 
@@ -131,6 +137,7 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
             final baseCurrency = ref.read(accountingBaseCurrencyProvider).code;
             composer.reset(baseCurrency);
             if (books.isNotEmpty) composer.setVoucherBook(books.first);
+            if (warehouses.isNotEmpty) composer.setWarehouse(warehouses.first.id);
           }
         },
       );
@@ -298,6 +305,7 @@ class _StockReceiptFormPageState extends ConsumerState<StockReceiptFormPage> {
       state: state,
       accounts: _accounts,
       voucherBooks: _voucherBooks,
+      warehouses: _warehouses,
       canSelectVoucherBook: _canSelectVoucherBook,
       notesController: _notesController,
       warehouseController: _warehouseController,
@@ -373,6 +381,7 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
     required this.state,
     required this.accounts,
     required this.voucherBooks,
+    required this.warehouses,
     required this.canSelectVoucherBook,
     required this.notesController,
     required this.warehouseController,
@@ -387,6 +396,7 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
   final StockReceiptComposerState state;
   final List<InventoryAccountRef> accounts;
   final List<InventoryVoucherBookRef> voucherBooks;
+  final List<Warehouse> warehouses;
   final bool canSelectVoucherBook;
   final TextEditingController notesController;
   final TextEditingController warehouseController;
@@ -408,6 +418,20 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
     final numberLabel = state.voucherBook?.name ?? l10n.stockReceiptNumberLabel;
     final numberValue = state.previewReceiptNumber ?? '---';
     final dateValue = df.format(state.receiptDate);
+
+    final selectedWarehouse = warehouses.firstWhere(
+      (w) => w.id == state.warehouse,
+      orElse: () => Warehouse(
+        id: state.warehouse ?? '',
+        code: '',
+        name: (state.warehouse != null && state.warehouse!.isNotEmpty)
+            ? state.warehouse!
+            : 'اختر المستودع',
+      ),
+    );
+    final warehouseDisplay = (state.warehouse != null && state.warehouse!.isNotEmpty)
+        ? selectedWarehouse.name
+        : null;
 
     return Material(
       color: scheme.surface,
@@ -509,6 +533,68 @@ class _StockReceiptHeaderCard extends ConsumerWidget {
                             if (selected != null) onVoucherBookSelected(selected);
                           }
                         : null,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: AppDocumentOptionCard(
+                    icon: Icons.store_outlined,
+                    label: 'المستودع',
+                    value: warehouseDisplay,
+                    placeholder: 'اختر المستودع',
+                    onTap: () async {
+                      final selected = await showModalBottomSheet<Warehouse>(
+                        context: context,
+                        useSafeArea: true,
+                        builder: (ctx) {
+                          return SafeArea(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  child: Text(
+                                    'المستودعات',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                                if (warehouses.isNotEmpty)
+                                  for (final w in warehouses)
+                                    ListTile(
+                                      leading: Icon(
+                                        w.id == state.warehouse
+                                            ? Icons.check_circle
+                                            : Icons.store_outlined,
+                                        color: w.id == state.warehouse
+                                            ? theme.colorScheme.primary
+                                            : theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                      title: Text(w.name),
+                                      subtitle: Text('كود المستودع: ${w.code}'),
+                                      onTap: () => Navigator.of(ctx).pop(w),
+                                    )
+                                else
+                                  Padding(
+                                    padding: const EdgeInsets.all(AppSpacing.md),
+                                    child: Text(
+                                      'لا توجد مستودعات متاحة',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(height: AppSpacing.sm),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                      if (selected != null) {
+                        onWarehouseChanged(selected.id);
+                      }
+                    },
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),

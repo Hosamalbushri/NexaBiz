@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/core/errors/missing_account_exception.dart';
 import 'package:stock_count/core/errors/journal_exception.dart';
+import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
 import 'package:stock_count/modules/accounting/shared/data/database/accounting_database.dart';
 import 'package:stock_count/modules/accounting/shared/domain/services/account_mapping_resolver.dart';
 import 'package:stock_count/modules/inventory/shared/domain/entities/inventory_document_ref.dart';
@@ -10,6 +11,8 @@ import 'package:stock_count/modules/system_setup/domain/repositories/company_ini
 import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/modules/accounting/journals/domain/services/journal_posting_service.dart';
+import 'package:stock_count/modules/inventory/warehouses/domain/repositories/warehouse_accounting_binding_repository.dart';
+import 'package:stock_count/modules/inventory/warehouses/domain/services/warehouse_accounting_validation_service.dart';
 
 class MissingCompanyContextException implements Exception {
   const MissingCompanyContextException([this.message = 'مطلوب سياق شركة صالح لتنفيذ العملية المحاسبية.']);
@@ -26,6 +29,8 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     this._readCompanyId,
     this._initRepository,
     this._initializationGuard,
+    this.bindingRepo,
+    this.validationService,
   })  : _accountingDb = accountingDb;
 
   final AccountingDatabase? _accountingDb;
@@ -33,6 +38,8 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
   final String Function()? _readCompanyId;
   final CompanyInitializationRepository? _initRepository;
   final InitializationGuard? _initializationGuard;
+  final WarehouseAccountingBindingRepository? bindingRepo;
+  final WarehouseAccountingValidationService? validationService;
 
   String get _currentCompanyId {
     final id = _readCompanyId?.call();
@@ -50,22 +57,41 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
   Future<String> _resolveCompanyAccount({
     required AccountRole role,
     String? explicitAccountId,
+    String? warehouseId,
     required String voucherTypeStr,
   }) async {
     final companyId = _currentCompanyId;
 
+    // Precedence Level 1: Explicit account ID provided
     if (explicitAccountId != null && explicitAccountId.trim().isNotEmpty) {
       final target = explicitAccountId.trim();
-      final byUuidOrCode =
-          await (db.select(db.accounts)..where(
-                (tbl) =>
-                    (tbl.uuid.equals(target) | tbl.accountCode.equals(target)) &
-                    tbl.companyId.equals(companyId) &
-                    tbl.deletedAt.isNull() &
-                    tbl.isGroup.equals(false) &
-                    tbl.isActive.equals(true),
-              ))
-              .getSingleOrNull();
+      if (validationService != null) {
+        final valRes = await validationService!.validateAccount(
+          accountIdOrCode: target,
+          role: role,
+          companyId: companyId,
+        );
+        if (valRes is WarehouseAccountingValidationSuccess) {
+          return valRes.accountUuid;
+        } else if (valRes is WarehouseAccountingValidationFailure) {
+          throw MissingAccountException(
+            accountRole: role.name,
+            expectedCode: target,
+            systemKey: target,
+            message: valRes.reason,
+          );
+        }
+      }
+
+      final byUuidOrCode = await (db.select(db.accounts)..where(
+            (tbl) =>
+                (tbl.uuid.equals(target) | tbl.accountCode.equals(target)) &
+                tbl.companyId.equals(companyId) &
+                tbl.deletedAt.isNull() &
+                tbl.isGroup.equals(false) &
+                tbl.isActive.equals(true),
+          ))
+          .getSingleOrNull();
       if (byUuidOrCode != null) return byUuidOrCode.uuid;
 
       throw MissingAccountException(
@@ -77,21 +103,87 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       );
     }
 
-    final companyConfig = await _initRepository?.getAccountingConfig();
-    final configuredKey = companyConfig?.accountMappings[role]?.trim();
+    // Precedence Level 2: Warehouse-specific binding
+    if (warehouseId != null && warehouseId.trim().isNotEmpty && bindingRepo != null) {
+      final binding = await bindingRepo!.getBindingForWarehouse(warehouseId.trim());
+      if (binding != null) {
+        final candidateId = switch (role) {
+          AccountRole.inventory => binding.inventoryAssetAccountId,
+          AccountRole.cogs => binding.cogsAccountId,
+          AccountRole.payable => binding.inventoryAdjustmentAccountId ?? binding.inventoryAssetAccountId,
+          AccountRole.receivable => binding.inventoryAssetAccountId,
+          AccountRole.revenue => binding.cogsAccountId,
+          _ => null,
+        };
 
-    if (configuredKey != null && configuredKey.isNotEmpty) {
-      final acc =
-          await (db.select(db.accounts)..where(
+        if (candidateId != null && candidateId.trim().isNotEmpty) {
+          final targetCandidate = candidateId.trim();
+          if (validationService != null) {
+            final valRes = await validationService!.validateAccount(
+              accountIdOrCode: targetCandidate,
+              role: role,
+              companyId: companyId,
+            );
+            if (valRes is WarehouseAccountingValidationSuccess) {
+              return valRes.accountUuid;
+            } else if (valRes is WarehouseAccountingValidationFailure) {
+              throw MissingAccountException(
+                accountRole: role.name,
+                expectedCode: targetCandidate,
+                systemKey: targetCandidate,
+                message: valRes.reason,
+              );
+            }
+          }
+
+          final acc = await (db.select(db.accounts)..where(
                 (tbl) =>
-                    (tbl.uuid.equals(configuredKey) |
-                        tbl.accountCode.equals(configuredKey)) &
+                    (tbl.uuid.equals(targetCandidate) |
+                        tbl.accountCode.equals(targetCandidate)) &
                     tbl.companyId.equals(companyId) &
                     tbl.deletedAt.isNull() &
                     tbl.isGroup.equals(false) &
                     tbl.isActive.equals(true),
               ))
               .getSingleOrNull();
+          if (acc != null) return acc.uuid;
+        }
+      }
+    }
+
+    // Precedence Level 3: Company Fallback
+    final companyConfig = await _initRepository?.getAccountingConfig();
+    final configuredKey = companyConfig?.accountMappings[role]?.trim();
+
+    if (configuredKey != null && configuredKey.isNotEmpty) {
+      if (validationService != null) {
+        final valRes = await validationService!.validateAccount(
+          accountIdOrCode: configuredKey,
+          role: role,
+          companyId: companyId,
+        );
+        if (valRes is WarehouseAccountingValidationSuccess) {
+          return valRes.accountUuid;
+        } else if (valRes is WarehouseAccountingValidationFailure) {
+          throw MissingAccountException(
+            accountRole: role.name,
+            expectedCode: configuredKey,
+            systemKey: configuredKey,
+            message: valRes.reason,
+          );
+        }
+      }
+
+      final acc = await (db.select(db.accounts)..where(
+            (tbl) =>
+                (tbl.uuid.equals(configuredKey) |
+                    tbl.accountCode.equals(configuredKey)) &
+                tbl.companyId.equals(companyId) &
+                tbl.deletedAt.isNull() &
+                tbl.isGroup.equals(false) &
+                tbl.isActive.equals(true),
+          ))
+          .getSingleOrNull();
       if (acc != null) return acc.uuid;
     }
 
@@ -102,6 +194,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       AccountRole.revenue => 'إيرادات المبيعات',
       AccountRole.receivable => 'العملاء / الحسابات المدينة',
       AccountRole.cash => 'الصندوق / النقدية',
+      AccountRole.adjustment => 'تسويات وانحرافات المخزون',
       _ => role.name,
     };
 
@@ -110,7 +203,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       expectedCode: configuredKey ?? role.name,
       systemKey: role.name,
       message:
-          'خطأ محاسبي: لم يتم إعداد حساب ($roleNameAr) لتهيئة الشركة ($companyId). يرجى ربط الحسابات المحاسبية من التهيئة المحاسبية أولاً.',
+          'خطأ محاسبي: لم يتم إعداد حساب ($roleNameAr) للمستودع المحدد أو لتهيئة الشركة ($companyId). يرجى ربط الحسابات المحاسبية أولاً.',
     );
   }
 
@@ -136,17 +229,103 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       await reverseAccountingEntry(document: document);
       return;
     }
-    if (document.documentType == InventoryDocumentType.salesInvoice ||
-        document.documentType == InventoryDocumentType.stockTransfer) {
+
+    // Skip invoices handled by Sales module
+    if (document.documentType == InventoryDocumentType.salesInvoice) {
+      return;
+    }
+
+    final sourceType = document.documentType.storageValue;
+    final sourceId = document.documentId;
+    final baseCurrency = await _resolveCompanyBaseCurrency();
+
+    // Handle Stock Transfer: Value-Neutral transfer between Warehouse A and Warehouse B
+    if (document.documentType == InventoryDocumentType.stockTransfer) {
+      final voucherTypeStr = 'أمر تحويل مخزني';
+      final sourceWarehouseId = document.warehouseId;
+      final destWarehouseId = document.destinationWarehouseId;
+
+      final sourceAssetAccount = await _resolveCompanyAccount(
+        role: AccountRole.inventory,
+        warehouseId: sourceWarehouseId,
+        voucherTypeStr: voucherTypeStr,
+      );
+
+      final destAssetAccount = await _resolveCompanyAccount(
+        role: AccountRole.inventory,
+        warehouseId: destWarehouseId ?? sourceWarehouseId,
+        voucherTypeStr: voucherTypeStr,
+      );
+
+      // If source and destination use same account, no artificial journal shift or profit/loss created!
+      final debitAccount = destAssetAccount;
+      final creditAccount = sourceAssetAccount;
+
+      if (_journalPostingService != null) {
+        final draft = JournalEntryDraft(
+          entryDate: document.documentDate,
+          voucherNumber: document.documentNumber,
+          voucherType: voucherTypeStr,
+          currencyCode: baseCurrency,
+          description:
+              'قيد نقل مخزني محايد قيمياً للمستند: ${document.documentNumber}',
+          isPosted: isPosted,
+          sourceType: sourceType,
+          sourceId: sourceId,
+          lines: [
+            JournalLineDraft(
+              accountUuid: debitAccount,
+              debit: totalAmount,
+              credit: 0.0,
+              currencyCode: baseCurrency,
+              exchangeRateToBase: 1.0,
+              lineDescription: 'تحويل مخزني (إلى) - ${document.documentNumber}',
+              sortOrder: 1,
+            ),
+            JournalLineDraft(
+              accountUuid: creditAccount,
+              debit: 0.0,
+              credit: totalAmount,
+              currencyCode: baseCurrency,
+              exchangeRateToBase: 1.0,
+              lineDescription: 'تحويل مخزني (من) - ${document.documentNumber}',
+              sortOrder: 2,
+            ),
+          ],
+        );
+        await _journalPostingService.post(draft);
+        return;
+      }
+
+      await _writeJournalDirectly(
+        document: document,
+        voucherTypeStr: voucherTypeStr,
+        sourceType: sourceType,
+        sourceId: sourceId,
+        resolvedInventory: destAssetAccount,
+        resolvedOffset: sourceAssetAccount,
+        isReceipt: true,
+        totalAmount: totalAmount,
+        docCurrency: baseCurrency,
+        docRate: 1.0,
+        baseCurrency: baseCurrency,
+        calculatedBaseDebit: totalAmount,
+        isPosted: isPosted,
+      );
       return;
     }
 
     final isReceipt =
         document.documentType == InventoryDocumentType.stockReceipt;
-    final voucherTypeStr = isReceipt ? 'أمر توريد' : 'أمر صرف';
+    final isAdjustment =
+        document.documentType == InventoryDocumentType.stockAdjustment;
+    final voucherTypeStr = isReceipt
+        ? 'أمر توريد'
+        : (isAdjustment ? 'تسوية مخزنية' : 'أمر صرف');
 
     final resolvedInventory = await _resolveCompanyAccount(
       role: AccountRole.inventory,
+      warehouseId: document.warehouseId,
       voucherTypeStr: voucherTypeStr,
     );
 
@@ -154,73 +333,103 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
     final resolvedOffset = await _resolveCompanyAccount(
       role: offsetRole,
       explicitAccountId: accountId,
+      warehouseId: document.warehouseId,
       voucherTypeStr: voucherTypeStr,
     );
 
-    final sourceType = document.documentType.storageValue;
-    final sourceId = document.documentId;
-
-    final baseCurrency = await _resolveCompanyBaseCurrency();
-    final String entryCurrency = isReceipt
-        ? (document.currencyCode.trim().isNotEmpty
-              ? document.currencyCode.trim().toUpperCase()
-              : baseCurrency)
+    final String docCurrency = document.currencyCode.trim().isNotEmpty
+        ? document.currencyCode.trim().toUpperCase()
         : baseCurrency;
-    final double entryRate = isReceipt
-        ? (document.exchangeRate > 0 ? document.exchangeRate : 1.0)
-        : 1.0;
-    final double calculatedBaseDebit = isReceipt
-        ? (totalAmount * entryRate)
-        : totalAmount;
+    final double docRate = ExchangeRateValidator.validate(
+      currencyCode: docCurrency,
+      baseCurrencyCode: baseCurrency,
+      exchangeRate: document.exchangeRate,
+    );
+    final double calculatedBaseDebit = totalAmount * docRate;
 
     if (_journalPostingService != null) {
+      final inventoryLine = JournalLineDraft(
+        accountUuid: resolvedInventory,
+        debit: isReceipt ? calculatedBaseDebit : 0.0,
+        credit: isReceipt ? 0.0 : calculatedBaseDebit,
+        currencyCode: baseCurrency,
+        exchangeRateToBase: 1.0,
+        lineDescription: 'مخزون - ${document.documentNumber}',
+        sortOrder: isReceipt ? 1 : 2,
+      );
+
+      final offsetLine = JournalLineDraft(
+        accountUuid: resolvedOffset,
+        debit: isReceipt ? 0.0 : totalAmount,
+        credit: isReceipt ? totalAmount : 0.0,
+        currencyCode: docCurrency,
+        exchangeRateToBase: docRate,
+        lineDescription: 'مخزون - ${document.documentNumber}',
+        sortOrder: isReceipt ? 2 : 1,
+      );
+
       final draft = JournalEntryDraft(
         entryDate: document.documentDate,
         voucherNumber: document.documentNumber,
         voucherType: voucherTypeStr,
-        currencyCode: entryCurrency,
+        currencyCode: docCurrency,
+        baseCurrencyCode: baseCurrency,
         description:
             'قيد تلقائي للمستند $voucherTypeStr: ${document.documentNumber}',
         isPosted: isPosted,
         sourceType: sourceType,
         sourceId: sourceId,
-        lines: [
-          JournalLineDraft(
-            accountUuid: isReceipt ? resolvedInventory : resolvedOffset,
-            debit: totalAmount,
-            credit: 0.0,
-            currencyCode: entryCurrency,
-            exchangeRateToBase: entryRate,
-            lineDescription: 'مخزون - ${document.documentNumber}',
-            sortOrder: 1,
-          ),
-          JournalLineDraft(
-            accountUuid: isReceipt ? resolvedOffset : resolvedInventory,
-            debit: 0.0,
-            credit: totalAmount,
-            currencyCode: entryCurrency,
-            exchangeRateToBase: entryRate,
-            lineDescription: 'مخزون - ${document.documentNumber}',
-            sortOrder: 2,
-          ),
-        ],
+        lines: isReceipt
+            ? [inventoryLine, offsetLine]
+            : [offsetLine, inventoryLine],
       );
       await _journalPostingService.post(draft);
       return;
     }
 
+    await _writeJournalDirectly(
+      document: document,
+      voucherTypeStr: voucherTypeStr,
+      sourceType: sourceType,
+      sourceId: sourceId,
+      resolvedInventory: resolvedInventory,
+      resolvedOffset: resolvedOffset,
+      isReceipt: isReceipt,
+      totalAmount: totalAmount,
+      docCurrency: docCurrency,
+      docRate: docRate,
+      baseCurrency: baseCurrency,
+      calculatedBaseDebit: calculatedBaseDebit,
+      isPosted: isPosted,
+    );
+  }
+
+  Future<void> _writeJournalDirectly({
+    required InventoryDocumentRef document,
+    required String voucherTypeStr,
+    required String sourceType,
+    required String sourceId,
+    required String resolvedInventory,
+    required String resolvedOffset,
+    required bool isReceipt,
+    required double totalAmount,
+    required String docCurrency,
+    required double docRate,
+    required String baseCurrency,
+    required double calculatedBaseDebit,
+    required bool isPosted,
+  }) async {
     final now = DateTime.now().toUtc();
 
     await db.transaction(() async {
-      final existingEntry =
-          await (db.select(db.journalEntries)..where(
-                (tbl) =>
-                    tbl.sourceType.equals(sourceType) &
-                    tbl.sourceId.equals(sourceId) &
-                    tbl.companyId.equals(_currentCompanyId) &
-                    tbl.deletedAt.isNull(),
-              ))
-              .getSingleOrNull();
+      final existingEntry = await (db.select(db.journalEntries)..where(
+            (tbl) =>
+                tbl.sourceType.equals(sourceType) &
+                tbl.sourceId.equals(sourceId) &
+                tbl.companyId.equals(_currentCompanyId) &
+                tbl.deletedAt.isNull(),
+          ))
+          .getSingleOrNull();
 
       final String entryUuid;
 
@@ -242,7 +451,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
                 description: Value(
                   'قيد تلقائي للمستند $voucherTypeStr: ${document.documentNumber}',
                 ),
-                currencyCode: Value(entryCurrency),
+                currencyCode: Value(docCurrency),
                 isPosted: Value(isPosted),
                 companyId: Value(_currentCompanyId),
                 deletedAt: const Value(null),
@@ -255,9 +464,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
         )..where((tbl) => tbl.entryUuid.equals(entryUuid))).go();
       } else {
         entryUuid = generateUuidV4();
-        await db
-            .into(db.journalEntries)
-            .insert(
+        await db.into(db.journalEntries).insert(
               JournalEntriesCompanion(
                 uuid: Value(entryUuid),
                 voucherNumber: Value(document.documentNumber),
@@ -266,7 +473,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
                 description: Value(
                   'قيد تلقائي للمستند $voucherTypeStr: ${document.documentNumber}',
                 ),
-                currencyCode: Value(entryCurrency),
+                currencyCode: Value(docCurrency),
                 isPosted: Value(isPosted),
                 sourceType: Value(sourceType),
                 sourceId: Value(sourceId),
@@ -277,40 +484,34 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
             );
       }
 
-      await db
-          .into(db.journalLines)
-          .insert(
+      // 1. Inventory Account Line (in Inventory Base Currency, e.g. YER)
+      await db.into(db.journalLines).insert(
             JournalLinesCompanion(
               uuid: Value(generateUuidV4()),
               entryUuid: Value(entryUuid),
-              accountUuid: Value(
-                isReceipt ? resolvedInventory : resolvedOffset,
-              ),
-              debit: Value(totalAmount),
-              credit: const Value(0.0),
-              baseDebit: Value(calculatedBaseDebit),
-              baseCredit: const Value(0.0),
-              currencyCode: Value(entryCurrency),
-              exchangeRateToBase: Value(entryRate),
+              accountUuid: Value(resolvedInventory),
+              debit: Value(isReceipt ? calculatedBaseDebit : 0.0),
+              credit: Value(isReceipt ? 0.0 : calculatedBaseDebit),
+              baseDebit: Value(isReceipt ? calculatedBaseDebit : 0.0),
+              baseCredit: Value(isReceipt ? 0.0 : calculatedBaseDebit),
+              currencyCode: Value(baseCurrency),
+              exchangeRateToBase: const Value(1.0),
               lineDescription: Value('مخزون - ${document.documentNumber}'),
             ),
           );
 
-      await db
-          .into(db.journalLines)
-          .insert(
+      // 2. Offset Account Line (in Document Currency, e.g. SAR/USD)
+      await db.into(db.journalLines).insert(
             JournalLinesCompanion(
               uuid: Value(generateUuidV4()),
               entryUuid: Value(entryUuid),
-              accountUuid: Value(
-                isReceipt ? resolvedOffset : resolvedInventory,
-              ),
-              debit: const Value(0.0),
-              credit: Value(totalAmount),
-              baseDebit: const Value(0.0),
-              baseCredit: Value(calculatedBaseDebit),
-              currencyCode: Value(entryCurrency),
-              exchangeRateToBase: Value(entryRate),
+              accountUuid: Value(resolvedOffset),
+              debit: Value(isReceipt ? 0.0 : totalAmount),
+              credit: Value(isReceipt ? totalAmount : 0.0),
+              baseDebit: Value(isReceipt ? 0.0 : calculatedBaseDebit),
+              baseCredit: Value(isReceipt ? calculatedBaseDebit : 0.0),
+              currencyCode: Value(docCurrency),
+              exchangeRateToBase: Value(docRate),
               lineDescription: Value('مخزون - ${document.documentNumber}'),
             ),
           );
@@ -324,15 +525,14 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
   }) async {
     final now = DateTime.now().toUtc();
 
-    final existing =
-        await (db.select(db.journalEntries)..where(
-              (tbl) =>
-                  tbl.sourceType.equals(document.documentType.storageValue) &
-                  tbl.sourceId.equals(document.documentId) &
-                  tbl.companyId.equals(_currentCompanyId) &
-                  tbl.deletedAt.isNull(),
-            ))
-            .getSingleOrNull();
+    final existing = await (db.select(db.journalEntries)..where(
+          (tbl) =>
+              tbl.sourceType.equals(document.documentType.storageValue) &
+              tbl.sourceId.equals(document.documentId) &
+              tbl.companyId.equals(_currentCompanyId) &
+              tbl.deletedAt.isNull(),
+        ))
+        .getSingleOrNull();
 
     if (existing != null && existing.isPosted && !isPosted) {
       throw const JournalException(JournalException.postedImmutable);
@@ -370,15 +570,14 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
 
     final now = DateTime.now().toUtc();
 
-    final existing =
-        await (db.select(db.journalEntries)..where(
-              (tbl) =>
-                  tbl.sourceType.equals(sourceType) &
-                  tbl.sourceId.equals(sourceId) &
-                  tbl.companyId.equals(_currentCompanyId) &
-                  tbl.deletedAt.isNull(),
-            ))
-            .getSingleOrNull();
+    final existing = await (db.select(db.journalEntries)..where(
+          (tbl) =>
+              tbl.sourceType.equals(sourceType) &
+              tbl.sourceId.equals(sourceId) &
+              tbl.companyId.equals(_currentCompanyId) &
+              tbl.deletedAt.isNull(),
+        ))
+        .getSingleOrNull();
 
     if (existing != null && existing.isPosted) {
       final existingLines = await (db.select(
@@ -386,9 +585,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
       )..where((tbl) => tbl.entryUuid.equals(existing.uuid))).get();
 
       final reverseUuid = generateUuidV4();
-      await db
-          .into(db.journalEntries)
-          .insert(
+      await db.into(db.journalEntries).insert(
             JournalEntriesCompanion(
               uuid: Value(reverseUuid),
               voucherNumber: Value('${existing.voucherNumber}-R'),
@@ -408,9 +605,7 @@ class InventoryAccountingPosterAdapter implements InventoryAccountingPoster {
           );
 
       for (final line in existingLines) {
-        await db
-            .into(db.journalLines)
-            .insert(
+        await db.into(db.journalLines).insert(
               JournalLinesCompanion(
                 uuid: Value(generateUuidV4()),
                 entryUuid: Value(reverseUuid),

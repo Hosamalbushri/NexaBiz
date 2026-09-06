@@ -2,6 +2,9 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_
 
 /// Source level where the cost valuation method setting was resolved.
 enum CostMethodSource {
+  /// Specific Product + Warehouse override (highest priority).
+  productWarehouse,
+
   /// Overridden directly on the Product master catalog.
   product,
 
@@ -16,6 +19,8 @@ enum CostMethodSource {
 
   String get displayName {
     switch (this) {
+      case CostMethodSource.productWarehouse:
+        return 'إعداد خاص بالمنتج في المستودع (Product + Warehouse Override)';
       case CostMethodSource.product:
         return 'إعداد خاص بالمنتج (Product Override)';
       case CostMethodSource.category:
@@ -48,22 +53,26 @@ class EffectiveCostMethodResult {
 }
 
 /// Service governing resolution of effective inventory cost valuation method
-/// across the inheritance cascade: Product -> Category -> Warehouse -> System Default.
+/// across the inheritance cascade:
+/// Product+Warehouse -> Product -> Category -> Warehouse -> System Default.
 abstract class CostMethodInheritanceResolver {
   /// Resolves effective cost valuation method for a specific [itemCode] within a [warehouseId].
   Future<EffectiveCostMethodResult> resolveForProduct({
     required String itemCode,
     required String? warehouseId,
+    String? companyId,
   });
 
   /// Resolves effective cost valuation method for a category hierarchy starting at [categoryId].
   Future<EffectiveCostMethodResult> resolveForCategory({
     required String categoryId,
+    String? companyId,
   });
 
   /// Resolves effective cost valuation method for a warehouse [warehouseId].
   Future<EffectiveCostMethodResult> resolveForWarehouse({
     required String warehouseId,
+    String? companyId,
   });
 
   /// Returns system default cost valuation method.

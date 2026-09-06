@@ -81,8 +81,13 @@ void main() {
         () => activeCompanyId,
       );
 
-      final whA = await whRepoA.ensureDefaultWarehouse();
-      expect(whA.code, 'WH-MAIN');
+      final whA = Warehouse(
+        id: 'wh_main_a',
+        code: 'WH-MAIN',
+        name: 'المستودع الرئيسي',
+        companyId: 'company_A',
+      );
+      await whRepoA.saveWarehouse(whA);
 
       // Switch to Company B
       activeCompanyId = 'company_B';

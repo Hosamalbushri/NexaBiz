@@ -1,6 +1,7 @@
 import 'package:stock_count/modules/accounting/journals/domain/entities/journal_entry.dart';
 import 'package:stock_count/core/domain/entities/document_ref.dart';
 import 'package:stock_count/core/domain/ports/posting_port.dart';
+import 'package:stock_count/core/errors/invalid_exchange_rate_exception.dart';
 import 'account_mapping_resolver.dart';
 import 'account_validation_service.dart';
 
@@ -80,43 +81,52 @@ class AccountingEntryBuilder {
         ? companyInventoryConfig!.inventoryBaseCurrencyId.trim().toUpperCase()
         : 'YER';
 
-    final String effectiveCurrency = useBaseCurrencyForCogs
-        ? baseCurrency
-        : document.currencyCode;
-    final double effectiveRate = useBaseCurrencyForCogs
-        ? 1.0
-        : document.exchangeRate;
+    final String docCurrency = document.currencyCode.trim().isNotEmpty
+        ? document.currencyCode.trim().toUpperCase()
+        : baseCurrency;
+    final double docRate = ExchangeRateValidator.validate(
+      currencyCode: docCurrency,
+      baseCurrencyCode: baseCurrency,
+      exchangeRate: document.exchangeRate,
+    );
+    final double baseAmount = totalAmount * docRate;
+
+    // 1. Inventory Account Line (always in Inventory Base Currency)
+    final inventoryLine = JournalLineDraft(
+      accountUuid: inventoryRef.accountUuid,
+      debit: isReceipt ? baseAmount : 0.0,
+      credit: isReceipt ? 0.0 : baseAmount,
+      currencyCode: baseCurrency,
+      exchangeRateToBase: 1.0,
+      lineDescription: 'مخزون - ${document.documentNumber}',
+      sortOrder: isReceipt ? 1 : 2,
+    );
+
+    // 2. Offset Account Line (Vendor/Payable/COGS/Cash - in Document Currency)
+    final offsetLine = JournalLineDraft(
+      accountUuid: offsetRef.accountUuid,
+      debit: isReceipt ? 0.0 : totalAmount,
+      credit: isReceipt ? totalAmount : 0.0,
+      currencyCode: docCurrency,
+      exchangeRateToBase: docRate,
+      lineDescription: 'مخزون - ${document.documentNumber}',
+      sortOrder: isReceipt ? 2 : 1,
+    );
 
     return JournalEntryDraft(
       entryDate: document.documentDate,
       voucherNumber: document.documentNumber,
       voucherType: voucherTypeStr,
-      currencyCode: effectiveCurrency,
+      currencyCode: docCurrency,
+      baseCurrencyCode: baseCurrency,
       description:
           'قيد تلقائي للمستند $voucherTypeStr: ${document.documentNumber}',
       isPosted: isPosted,
       sourceType: document.documentType.storageValue,
       sourceId: document.documentId,
-      lines: [
-        JournalLineDraft(
-          accountUuid: debitUuid,
-          debit: totalAmount,
-          credit: 0.0,
-          currencyCode: effectiveCurrency,
-          exchangeRateToBase: effectiveRate,
-          lineDescription: 'مخزون - ${document.documentNumber}',
-          sortOrder: 1,
-        ),
-        JournalLineDraft(
-          accountUuid: creditUuid,
-          debit: 0.0,
-          credit: totalAmount,
-          currencyCode: effectiveCurrency,
-          exchangeRateToBase: effectiveRate,
-          lineDescription: 'مخزون - ${document.documentNumber}',
-          sortOrder: 2,
-        ),
-      ],
+      lines: isReceipt
+          ? [inventoryLine, offsetLine]
+          : [offsetLine, inventoryLine],
     );
   }
 

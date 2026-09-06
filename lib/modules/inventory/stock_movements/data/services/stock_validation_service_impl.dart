@@ -81,4 +81,34 @@ class StockValidationServiceImpl implements StockValidationService {
 
     return shortages;
   }
+
+  @override
+  Future<void> validateWarehouseAccess({
+    required String? warehouseId,
+    String? companyId,
+  }) async {
+    if (warehouseId == null || warehouseId.trim().isEmpty) {
+      throw StateError('Warehouse selection is mandatory for inventory transaction');
+    }
+
+    final targetCompanyId = companyId ?? _currentCompanyId;
+
+    final warehouse = await (_db.select(_db.warehouses)
+          ..where((tbl) => tbl.uuid.equals(warehouseId) & tbl.deletedAt.isNull()))
+        .getSingleOrNull();
+
+    if (warehouse == null) {
+      throw StateError('Warehouse with ID ($warehouseId) does not exist');
+    }
+
+    if (warehouse.companyId != targetCompanyId) {
+      throw StateError(
+        'Cross-tenant warehouse access denied for warehouse ($warehouseId). Expected company: $targetCompanyId, actual: ${warehouse.companyId}',
+      );
+    }
+
+    if (!warehouse.isActive) {
+      throw StateError('Warehouse (${warehouse.name}) is inactive and cannot be used for transactions');
+    }
+  }
 }

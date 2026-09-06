@@ -372,6 +372,7 @@ class StockReceiptComposerNotifier
         accountName: state.account?.name ?? state.supplier,
         currencyCode: state.currencyCode,
         exchangeRate: state.exchangeRate,
+        warehouse: state.warehouse,
         notes: state.notes,
         lines: state.lines.map((l) {
           return StockMovementLine(

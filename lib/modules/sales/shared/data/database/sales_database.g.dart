@@ -85,6 +85,17 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _warehouseIdMeta = const VerificationMeta(
+    'warehouseId',
+  );
+  @override
+  late final GeneratedColumn<String> warehouseId = GeneratedColumn<String>(
+    'warehouse_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _customerIdMeta = const VerificationMeta(
     'customerId',
   );
@@ -514,6 +525,7 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
     saleDate,
     settlementType,
     voucherBookId,
+    warehouseId,
     customerId,
     customerCode,
     customerName,
@@ -604,6 +616,15 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
         voucherBookId.isAcceptableOrUnknown(
           data['voucher_book_id']!,
           _voucherBookIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('warehouse_id')) {
+      context.handle(
+        _warehouseIdMeta,
+        warehouseId.isAcceptableOrUnknown(
+          data['warehouse_id']!,
+          _warehouseIdMeta,
         ),
       );
     }
@@ -935,6 +956,10 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, SaleRow> {
         DriftSqlType.string,
         data['${effectivePrefix}voucher_book_id'],
       ),
+      warehouseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}warehouse_id'],
+      ),
       customerId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}customer_id'],
@@ -1106,6 +1131,9 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
   /// VoucherBook.uuid used for numbering.
   final String? voucherBookId;
 
+  /// Warehouse.uuid source warehouse context for inventory deduction.
+  final String? warehouseId;
+
   /// Customer.uuid — opaque FK.
   final String? customerId;
   final String? customerCode;
@@ -1159,6 +1187,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     required this.saleDate,
     required this.settlementType,
     this.voucherBookId,
+    this.warehouseId,
     this.customerId,
     this.customerCode,
     this.customerName,
@@ -1207,6 +1236,9 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     map['settlement_type'] = Variable<String>(settlementType);
     if (!nullToAbsent || voucherBookId != null) {
       map['voucher_book_id'] = Variable<String>(voucherBookId);
+    }
+    if (!nullToAbsent || warehouseId != null) {
+      map['warehouse_id'] = Variable<String>(warehouseId);
     }
     if (!nullToAbsent || customerId != null) {
       map['customer_id'] = Variable<String>(customerId);
@@ -1292,6 +1324,9 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
       voucherBookId: voucherBookId == null && nullToAbsent
           ? const Value.absent()
           : Value(voucherBookId),
+      warehouseId: warehouseId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(warehouseId),
       customerId: customerId == null && nullToAbsent
           ? const Value.absent()
           : Value(customerId),
@@ -1376,6 +1411,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
       saleDate: serializer.fromJson<int>(json['saleDate']),
       settlementType: serializer.fromJson<String>(json['settlementType']),
       voucherBookId: serializer.fromJson<String?>(json['voucherBookId']),
+      warehouseId: serializer.fromJson<String?>(json['warehouseId']),
       customerId: serializer.fromJson<String?>(json['customerId']),
       customerCode: serializer.fromJson<String?>(json['customerCode']),
       customerName: serializer.fromJson<String?>(json['customerName']),
@@ -1429,6 +1465,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
       'saleDate': serializer.toJson<int>(saleDate),
       'settlementType': serializer.toJson<String>(settlementType),
       'voucherBookId': serializer.toJson<String?>(voucherBookId),
+      'warehouseId': serializer.toJson<String?>(warehouseId),
       'customerId': serializer.toJson<String?>(customerId),
       'customerCode': serializer.toJson<String?>(customerCode),
       'customerName': serializer.toJson<String?>(customerName),
@@ -1478,6 +1515,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     int? saleDate,
     String? settlementType,
     Value<String?> voucherBookId = const Value.absent(),
+    Value<String?> warehouseId = const Value.absent(),
     Value<String?> customerId = const Value.absent(),
     Value<String?> customerCode = const Value.absent(),
     Value<String?> customerName = const Value.absent(),
@@ -1524,6 +1562,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     voucherBookId: voucherBookId.present
         ? voucherBookId.value
         : this.voucherBookId,
+    warehouseId: warehouseId.present ? warehouseId.value : this.warehouseId,
     customerId: customerId.present ? customerId.value : this.customerId,
     customerCode: customerCode.present ? customerCode.value : this.customerCode,
     customerName: customerName.present ? customerName.value : this.customerName,
@@ -1584,6 +1623,9 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
       voucherBookId: data.voucherBookId.present
           ? data.voucherBookId.value
           : this.voucherBookId,
+      warehouseId: data.warehouseId.present
+          ? data.warehouseId.value
+          : this.warehouseId,
       customerId: data.customerId.present
           ? data.customerId.value
           : this.customerId,
@@ -1687,6 +1729,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
           ..write('saleDate: $saleDate, ')
           ..write('settlementType: $settlementType, ')
           ..write('voucherBookId: $voucherBookId, ')
+          ..write('warehouseId: $warehouseId, ')
           ..write('customerId: $customerId, ')
           ..write('customerCode: $customerCode, ')
           ..write('customerName: $customerName, ')
@@ -1736,6 +1779,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
     saleDate,
     settlementType,
     voucherBookId,
+    warehouseId,
     customerId,
     customerCode,
     customerName,
@@ -1784,6 +1828,7 @@ class SaleRow extends DataClass implements Insertable<SaleRow> {
           other.saleDate == this.saleDate &&
           other.settlementType == this.settlementType &&
           other.voucherBookId == this.voucherBookId &&
+          other.warehouseId == this.warehouseId &&
           other.customerId == this.customerId &&
           other.customerCode == this.customerCode &&
           other.customerName == this.customerName &&
@@ -1830,6 +1875,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
   final Value<int> saleDate;
   final Value<String> settlementType;
   final Value<String?> voucherBookId;
+  final Value<String?> warehouseId;
   final Value<String?> customerId;
   final Value<String?> customerCode;
   final Value<String?> customerName;
@@ -1874,6 +1920,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     this.saleDate = const Value.absent(),
     this.settlementType = const Value.absent(),
     this.voucherBookId = const Value.absent(),
+    this.warehouseId = const Value.absent(),
     this.customerId = const Value.absent(),
     this.customerCode = const Value.absent(),
     this.customerName = const Value.absent(),
@@ -1919,6 +1966,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     this.saleDate = const Value.absent(),
     this.settlementType = const Value.absent(),
     this.voucherBookId = const Value.absent(),
+    this.warehouseId = const Value.absent(),
     this.customerId = const Value.absent(),
     this.customerCode = const Value.absent(),
     this.customerName = const Value.absent(),
@@ -1970,6 +2018,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     Expression<int>? saleDate,
     Expression<String>? settlementType,
     Expression<String>? voucherBookId,
+    Expression<String>? warehouseId,
     Expression<String>? customerId,
     Expression<String>? customerCode,
     Expression<String>? customerName,
@@ -2015,6 +2064,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
       if (saleDate != null) 'sale_date': saleDate,
       if (settlementType != null) 'settlement_type': settlementType,
       if (voucherBookId != null) 'voucher_book_id': voucherBookId,
+      if (warehouseId != null) 'warehouse_id': warehouseId,
       if (customerId != null) 'customer_id': customerId,
       if (customerCode != null) 'customer_code': customerCode,
       if (customerName != null) 'customer_name': customerName,
@@ -2063,6 +2113,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     Value<int>? saleDate,
     Value<String>? settlementType,
     Value<String?>? voucherBookId,
+    Value<String?>? warehouseId,
     Value<String?>? customerId,
     Value<String?>? customerCode,
     Value<String?>? customerName,
@@ -2108,6 +2159,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
       saleDate: saleDate ?? this.saleDate,
       settlementType: settlementType ?? this.settlementType,
       voucherBookId: voucherBookId ?? this.voucherBookId,
+      warehouseId: warehouseId ?? this.warehouseId,
       customerId: customerId ?? this.customerId,
       customerCode: customerCode ?? this.customerCode,
       customerName: customerName ?? this.customerName,
@@ -2169,6 +2221,9 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
     }
     if (voucherBookId.present) {
       map['voucher_book_id'] = Variable<String>(voucherBookId.value);
+    }
+    if (warehouseId.present) {
+      map['warehouse_id'] = Variable<String>(warehouseId.value);
     }
     if (customerId.present) {
       map['customer_id'] = Variable<String>(customerId.value);
@@ -2295,6 +2350,7 @@ class SalesCompanion extends UpdateCompanion<SaleRow> {
           ..write('saleDate: $saleDate, ')
           ..write('settlementType: $settlementType, ')
           ..write('voucherBookId: $voucherBookId, ')
+          ..write('warehouseId: $warehouseId, ')
           ..write('customerId: $customerId, ')
           ..write('customerCode: $customerCode, ')
           ..write('customerName: $customerName, ')
@@ -4039,6 +4095,7 @@ typedef $$SalesTableCreateCompanionBuilder =
       Value<int> saleDate,
       Value<String> settlementType,
       Value<String?> voucherBookId,
+      Value<String?> warehouseId,
       Value<String?> customerId,
       Value<String?> customerCode,
       Value<String?> customerName,
@@ -4085,6 +4142,7 @@ typedef $$SalesTableUpdateCompanionBuilder =
       Value<int> saleDate,
       Value<String> settlementType,
       Value<String?> voucherBookId,
+      Value<String?> warehouseId,
       Value<String?> customerId,
       Value<String?> customerCode,
       Value<String?> customerName,
@@ -4160,6 +4218,11 @@ class $$SalesTableFilterComposer
 
   ColumnFilters<String> get voucherBookId => $composableBuilder(
     column: $table.voucherBookId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get warehouseId => $composableBuilder(
+    column: $table.warehouseId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4388,6 +4451,11 @@ class $$SalesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get warehouseId => $composableBuilder(
+    column: $table.warehouseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get customerId => $composableBuilder(
     column: $table.customerId,
     builder: (column) => ColumnOrderings(column),
@@ -4607,6 +4675,11 @@ class $$SalesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get warehouseId => $composableBuilder(
+    column: $table.warehouseId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get customerId => $composableBuilder(
     column: $table.customerId,
     builder: (column) => column,
@@ -4807,6 +4880,7 @@ class $$SalesTableTableManager
                 Value<int> saleDate = const Value.absent(),
                 Value<String> settlementType = const Value.absent(),
                 Value<String?> voucherBookId = const Value.absent(),
+                Value<String?> warehouseId = const Value.absent(),
                 Value<String?> customerId = const Value.absent(),
                 Value<String?> customerCode = const Value.absent(),
                 Value<String?> customerName = const Value.absent(),
@@ -4851,6 +4925,7 @@ class $$SalesTableTableManager
                 saleDate: saleDate,
                 settlementType: settlementType,
                 voucherBookId: voucherBookId,
+                warehouseId: warehouseId,
                 customerId: customerId,
                 customerCode: customerCode,
                 customerName: customerName,
@@ -4897,6 +4972,7 @@ class $$SalesTableTableManager
                 Value<int> saleDate = const Value.absent(),
                 Value<String> settlementType = const Value.absent(),
                 Value<String?> voucherBookId = const Value.absent(),
+                Value<String?> warehouseId = const Value.absent(),
                 Value<String?> customerId = const Value.absent(),
                 Value<String?> customerCode = const Value.absent(),
                 Value<String?> customerName = const Value.absent(),
@@ -4941,6 +5017,7 @@ class $$SalesTableTableManager
                 saleDate: saleDate,
                 settlementType: settlementType,
                 voucherBookId: voucherBookId,
+                warehouseId: warehouseId,
                 customerId: customerId,
                 customerCode: customerCode,
                 customerName: customerName,

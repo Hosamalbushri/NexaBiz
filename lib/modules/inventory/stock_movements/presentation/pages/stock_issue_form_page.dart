@@ -25,6 +25,8 @@ import 'package:stock_count/modules/inventory/products/domain/entities/product.d
 import 'package:stock_count/modules/inventory/products/presentation/pages/product_barcode_scanner_page.dart';
 import 'package:stock_count/modules/inventory/products/presentation/providers/product_providers.dart';
 import 'package:stock_count/core/widgets/app_document_line_table_shell.dart';
+import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
+import 'package:stock_count/modules/inventory/warehouses/presentation/providers/warehouse_providers.dart';
 import '../../domain/services/inventory_account_port.dart';
 import '../../domain/services/inventory_voucher_book_port.dart';
 import '../providers/stock_issue_composer_provider.dart';
@@ -66,6 +68,7 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
   String? _loadError;
   List<InventoryVoucherBookRef> _voucherBooks = const [];
   List<InventoryAccountRef> _accounts = const [];
+  List<Warehouse> _warehouses = const [];
 
   bool get _isEdit => widget.issueId != null;
   bool get _canSelectVoucherBook => _voucherBooks.length > 1;
@@ -106,14 +109,17 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
         action: () async {
           final bookPort = ref.read(inventoryVoucherBookPortProvider);
           final accountPort = ref.read(inventoryAccountPortProvider);
+          final warehouseRepo = ref.read(warehouseRepositoryProvider);
 
           final books = await bookPort.listActiveIssueBooks();
           final accounts = await accountPort.listPostingAccounts();
           final defaultAccount = await accountPort.findDefaultExpenseOrCostAccount();
+          final warehouses = await warehouseRepo.getAllWarehouses();
 
           if (!mounted) return;
           _voucherBooks = books;
           _accounts = accounts;
+          _warehouses = warehouses;
 
           final composer = ref.read(stockIssueComposerProvider.notifier);
 
@@ -132,6 +138,7 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
             composer.reset(baseCurrency);
             if (books.isNotEmpty) composer.setVoucherBook(books.first);
             if (defaultAccount != null) composer.setAccount(defaultAccount);
+            if (warehouses.isNotEmpty) composer.setWarehouse(warehouses.first.id);
           }
         },
       );
@@ -298,6 +305,7 @@ class _StockIssueFormPageState extends ConsumerState<StockIssueFormPage> {
       state: state,
       accounts: _accounts,
       voucherBooks: _voucherBooks,
+      warehouses: _warehouses,
       canSelectVoucherBook: _canSelectVoucherBook,
       notesController: _notesController,
       warehouseController: _warehouseController,
@@ -373,6 +381,7 @@ class _StockIssueHeaderCard extends ConsumerWidget {
     required this.state,
     required this.accounts,
     required this.voucherBooks,
+    required this.warehouses,
     required this.canSelectVoucherBook,
     required this.notesController,
     required this.warehouseController,
@@ -387,6 +396,7 @@ class _StockIssueHeaderCard extends ConsumerWidget {
   final StockIssueComposerState state;
   final List<InventoryAccountRef> accounts;
   final List<InventoryVoucherBookRef> voucherBooks;
+  final List<Warehouse> warehouses;
   final bool canSelectVoucherBook;
   final TextEditingController notesController;
   final TextEditingController warehouseController;
@@ -394,7 +404,7 @@ class _StockIssueHeaderCard extends ConsumerWidget {
   final ValueChanged<InventoryAccountRef?> onAccountSelected;
   final ValueChanged<InventoryVoucherBookRef?> onVoucherBookSelected;
   final void Function(String code, double rate) onCurrencyChanged;
-  final ValueChanged<String> onWarehouseChanged;
+  final ValueChanged<String?> onWarehouseChanged;
   final ValueChanged<String> onNotesChanged;
 
   @override
@@ -410,6 +420,20 @@ class _StockIssueHeaderCard extends ConsumerWidget {
         : rawNumber;
 
     final currencyItemsAsync = ref.watch(currencyRateListProvider);
+
+    final selectedWarehouse = warehouses.firstWhere(
+      (w) => w.id == state.warehouse,
+      orElse: () => Warehouse(
+        id: state.warehouse ?? '',
+        code: '',
+        name: (state.warehouse != null && state.warehouse!.isNotEmpty)
+            ? state.warehouse!
+            : 'اختر المستودع',
+      ),
+    );
+    final warehouseDisplay = (state.warehouse != null && state.warehouse!.isNotEmpty)
+        ? selectedWarehouse.name
+        : null;
 
     return Material(
       color: theme.colorScheme.surface,
@@ -458,7 +482,7 @@ class _StockIssueHeaderCard extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
 
-            // Option Cards: Voucher Book & Currency
+            // Option Cards: Voucher Book, Warehouse & Currency
             Row(
               children: [
                 Expanded(
@@ -497,6 +521,57 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                             if (chosenBook != null) onVoucherBookSelected(chosenBook!);
                           }
                         : null,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: AppDocumentOptionCard(
+                    icon: Icons.store_outlined,
+                    label: 'المستودع',
+                    value: warehouseDisplay,
+                    placeholder: 'اختر المستودع',
+                    onTap: () async {
+                      Warehouse? chosenWarehouse;
+                      await AppFilterSheet.show<void>(
+                        context: context,
+                        title: 'المستودعات',
+                        applyLabel: l10n.stockIssueSaveButton,
+                        onApply: () {},
+                        children: [
+                          if (warehouses.isNotEmpty)
+                            for (final w in warehouses)
+                              ListTile(
+                                leading: Icon(
+                                  w.id == state.warehouse
+                                      ? Icons.check_circle
+                                      : Icons.store_outlined,
+                                  color: w.id == state.warehouse
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.onSurfaceVariant,
+                                ),
+                                title: Text(w.name),
+                                subtitle: Text('كود المستودع: ${w.code}'),
+                                onTap: () {
+                                  chosenWarehouse = w;
+                                  Navigator.of(context).pop();
+                                },
+                              )
+                          else
+                            Padding(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              child: Text(
+                                'لا توجد مستودعات متاحة',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                      if (chosenWarehouse != null) {
+                        onWarehouseChanged(chosenWarehouse!.id);
+                      }
+                    },
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -559,22 +634,6 @@ class _StockIssueHeaderCard extends ConsumerWidget {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-
-            // Warehouse Field (Full Row)
-            TextField(
-              controller: warehouseController,
-              onChanged: onWarehouseChanged,
-              decoration: InputDecoration(
-                labelText: l10n.stockIssueWarehouseLabel,
-                hintText: l10n.stockIssueWarehouseLabel,
-                prefixIcon: const Icon(Icons.warehouse_outlined),
-                isDense: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-              ),
             ),
             const SizedBox(height: AppSpacing.sm),
 

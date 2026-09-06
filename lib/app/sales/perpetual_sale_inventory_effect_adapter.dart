@@ -39,8 +39,8 @@ class PerpetualSaleInventoryEffectAdapter implements SaleInventoryEffectPort {
             mainQuantity: item.mainQuantity,
             subQuantity: item.subQuantity,
             quantity: item.quantity,
-            unitCost: item.unitPrice,
-            totalCost: item.total,
+            unitCost: 0.0, // Inventory cost is calculated by domain costing engine, NOT sales price
+            totalCost: 0.0,
           ),
     ];
 
@@ -57,6 +57,7 @@ class PerpetualSaleInventoryEffectAdapter implements SaleInventoryEffectPort {
       documentNumber: sale.saleNumber,
       documentType: InventoryDocumentType.salesInvoice,
       documentDate: sale.saleDate,
+      warehouseId: sale.warehouseId,
       status: InventoryDocumentStatus.draft,
     );
 

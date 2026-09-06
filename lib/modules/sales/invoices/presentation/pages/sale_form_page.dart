@@ -34,6 +34,8 @@ import '../widgets/sale_products_table.dart';
 import '../widgets/sale_settlement_type_selector.dart';
 import '../widgets/voucher_book_selector.dart';
 import 'package:stock_count/modules/sales/shared/presentation/pages/sales_routes.dart';
+import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
+import 'package:stock_count/modules/inventory/warehouses/presentation/providers/warehouse_providers.dart';
 
 /// POS-style create / edit sales invoice.
 class SaleFormPage extends ConsumerStatefulWidget {
@@ -53,6 +55,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
   String? _loadError;
   List<SaleCurrencyRef> _currencies = const [];
   List<SaleVoucherBookRef> _voucherBooks = const [];
+  List<Warehouse> _warehouses = const [];
 
   bool get _isEdit => widget.saleId != null;
   bool get _canSelectVoucherBook => _voucherBooks.length > 1;
@@ -113,10 +116,13 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
           final books = await ref
               .read(saleVoucherBookPortProvider)
               .listActiveSalesBooks();
+          final warehouseRepo = ref.read(warehouseRepositoryProvider);
+          final warehouses = await warehouseRepo.getAllWarehouses();
           if (!mounted) {
             return;
           }
           _voucherBooks = books;
+          _warehouses = warehouses;
 
           if (_isEdit) {
             final sale = await ref
@@ -165,6 +171,13 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
             }
             if (books.isNotEmpty) {
               composer.setVoucherBook(books.first);
+            }
+            if (warehouses.isNotEmpty) {
+              final defaultWh = warehouses.firstWhere(
+                (w) => w.isDefault,
+                orElse: () => warehouses.first,
+              );
+              composer.setWarehouse(defaultWh.id);
             }
           }
         },
@@ -388,7 +401,12 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
         setState(() => _dirty = true);
       },
       currencies: _currencies,
+      warehouses: _warehouses,
       canSelectVoucherBook: _canSelectVoucherBook,
+      onWarehouseChanged: (warehouseId) {
+        composer.setWarehouse(warehouseId);
+        setState(() => _dirty = true);
+      },
       onPickBook: () async {
         try {
           final book = await showSaleVoucherBookSelector(context);
@@ -836,7 +854,9 @@ class _InvoiceHeaderCard extends ConsumerWidget {
     required this.onWalkInCustomerNameChanged,
     required this.onSettlementChanged,
     required this.currencies,
+    required this.warehouses,
     required this.canSelectVoucherBook,
+    required this.onWarehouseChanged,
     required this.onPickBook,
     required this.onPickCash,
     required this.onCurrencyChanged,
@@ -850,7 +870,9 @@ class _InvoiceHeaderCard extends ConsumerWidget {
   final ValueChanged<String> onWalkInCustomerNameChanged;
   final ValueChanged<SaleSettlementType> onSettlementChanged;
   final List<SaleCurrencyRef> currencies;
+  final List<Warehouse> warehouses;
   final bool canSelectVoucherBook;
+  final ValueChanged<String> onWarehouseChanged;
   final VoidCallback onPickBook;
   final VoidCallback onPickCash;
   final void Function(String code, double rate) onCurrencyChanged;
@@ -884,6 +906,13 @@ class _InvoiceHeaderCard extends ConsumerWidget {
     final voucherBookName = ref.watch(
       saleComposerProvider.select((s) => s.voucherBook?.name),
     );
+    final warehouseId = ref.watch(
+      saleComposerProvider.select((s) => s.warehouseId),
+    );
+    final warehouseMatch = warehouses.where((w) => w.id == warehouseId);
+    final warehouseDisplay = warehouseMatch.isNotEmpty
+        ? warehouseMatch.first.name
+        : (warehouseId ?? '');
     final currencyCode = ref.watch(
       saleComposerProvider.select((s) => s.currencyCode),
     );
@@ -1006,6 +1035,68 @@ class _InvoiceHeaderCard extends ConsumerWidget {
                     value: voucherBookName,
                     placeholder: l10n.salesSelectVoucherBook,
                     onTap: canSelectVoucherBook ? onPickBook : null,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: AppDocumentOptionCard(
+                    icon: Icons.store_outlined,
+                    label: 'المستودع',
+                    value: warehouseDisplay.isNotEmpty ? warehouseDisplay : null,
+                    placeholder: 'اختر المستودع',
+                    onTap: () async {
+                      final selected = await showModalBottomSheet<Warehouse>(
+                        context: context,
+                        useSafeArea: true,
+                        builder: (ctx) {
+                          return SafeArea(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  child: Text(
+                                    'اختر المستودع',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                                if (warehouses.isNotEmpty)
+                                  for (final w in warehouses)
+                                    ListTile(
+                                      leading: Icon(
+                                        w.id == warehouseId
+                                            ? Icons.check_circle
+                                            : Icons.store_outlined,
+                                        color: w.id == warehouseId
+                                            ? theme.colorScheme.primary
+                                            : theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                      title: Text(w.name),
+                                      subtitle: Text('كود المستودع: ${w.code}'),
+                                      onTap: () => Navigator.of(ctx).pop(w),
+                                    )
+                                else
+                                  Padding(
+                                    padding: const EdgeInsets.all(AppSpacing.md),
+                                    child: Text(
+                                      'لا توجد مستودعات متاحة',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(height: AppSpacing.sm),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                      if (selected != null) {
+                        onWarehouseChanged(selected.id);
+                      }
+                    },
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),

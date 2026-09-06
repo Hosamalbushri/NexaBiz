@@ -104,14 +104,13 @@ void main() {
         containsAll([
           'currency',
           'costing_policy',
-          'warehouse',
           'account_requirements',
         ]),
       );
 
       final currencySection = setup.sections.firstWhere((s) => s.id == 'currency');
       expect(currencySection.fields.first.key, equals('inventoryValuationCurrencyId'));
-      expect(currencySection.fields.first.defaultValue, equals('SAR'));
+      expect(currencySection.fields.first.defaultValue, equals('YER'));
 
       final costingSection = setup.sections.firstWhere((s) => s.id == 'costing_policy');
       expect(

@@ -79,39 +79,12 @@ class PostingCoordinatorImpl implements PostingCoordinator {
     required InventoryDocumentRef document,
     String? userId,
   }) async {
-    try {
-      await _initializationGuard?.assertInitialized();
-    } on UninitializedCompanyException catch (e) {
-      final mappedRequirements = e.missingRequirements.map((req) {
-        if (req.contains('Company profile has not been created')) {
-          return 'لم يتم إنشاء ملف بيانات الشركة';
-        }
-        if (req.contains('Default primary warehouse is not configured')) {
-          return 'لم يتم تهيئة المستودع الرئيسي';
-        }
-        if (req.contains('Initialization completion flag is not finalized')) {
-          return 'لم يتم إنهاء واعتمد التهيئة الأولية';
-        }
-        if (req.contains('Inventory base currency is not configured')) {
-          return 'لم يتم تحديد العملة الأساسية للمخزون';
-        }
-        if (req.contains('System chart of accounts mappings are incomplete')) {
-          return 'إعدادات وربط الحسابات غير مكتملة';
-        }
-        if (req.contains('Inventory operational settings are not configured')) {
-          return 'لم يتم ضبط إعدادات المخزون التشغيلية';
-        }
-        return req;
-      }).toList();
-
-      final primaryMissing = mappedRequirements.isNotEmpty
-          ? mappedRequirements.first
-          : 'التهيئة الأولية للنظام غير مكتملة';
-
-      return PostInvalidStatus(
-        reason: 'فشل الترحيل: $primaryMissing. يرجى إكمال إعدادات التهيئة أولاً.',
-      );
-    }
+    // TEMPORARY BYPASS: Initialization guard requirement bypassed upon user request during posting.
+    // try {
+    //   await _initializationGuard?.assertInitialized();
+    // } on UninitializedCompanyException catch (e) {
+    //   ...
+    // }
 
     final requiredPostPermissions = switch (document.documentType) {
       InventoryDocumentType.stockReceipt => InventoryPermissions.receiptsPost,
@@ -141,6 +114,21 @@ class PostingCoordinatorImpl implements PostingCoordinator {
       final dbCompanyId = await _getDatabaseCompanyId(document);
       if (dbCompanyId != null && dbCompanyId != _currentCompanyId) {
         return const PostInvalidStatus(reason: 'مستند تابع لشركة أخرى');
+      }
+
+      if (document.warehouseId == null || document.warehouseId!.trim().isEmpty) {
+        return const PostInvalidStatus(
+          reason: 'فشل الترحيل: يرجى تحديد المستودع الخاص بالمستند أولاً.',
+        );
+      }
+
+      try {
+        await _stockValidationService.validateWarehouseAccess(
+          warehouseId: document.warehouseId,
+          companyId: _currentCompanyId,
+        );
+      } catch (e) {
+        return PostInvalidStatus(reason: 'فشل الترحيل: ${e.toString().replaceAll('StateError: ', '')}');
       }
 
 
@@ -230,12 +218,14 @@ class PostingCoordinatorImpl implements PostingCoordinator {
             }
           }
 
-          // 4. Validate unit cost
-          for (final l in dbLines) {
-            if (l.unitCost <= 0 || l.totalCost <= 0) {
-              return PostInvalidStatus(
-                reason: 'لا يمكن ترحيل المستند بتكلفة صفرية للصنف (${l.itemName}). يرجى إدخال التكلفة أولاً.',
-              );
+          // 4. Validate unit cost (inbound receipts only; outbound COGS is computed dynamically by the costing engine)
+          if (document.documentType == InventoryDocumentType.stockReceipt) {
+            for (final l in dbLines) {
+              if (l.unitCost <= 0 || l.totalCost <= 0) {
+                return PostInvalidStatus(
+                  reason: 'لا يمكن ترحيل المستند بتكلفة صفرية للصنف (${l.itemName}). يرجى إدخال التكلفة أولاً.',
+                );
+              }
             }
           }
 

@@ -8,8 +8,12 @@ import 'package:stock_count/core/utils/id_generator.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 
+import 'package:stock_count/core/tenancy/tenant_context.dart';
+import 'package:stock_count/core/widgets/app_account_search_picker.dart';
+import 'package:stock_count/modules/accounting/chart_of_accounts/domain/entities/account_type.dart';
 import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_valuation_method.dart';
 import '../../domain/entities/warehouse.dart';
+import '../../domain/entities/warehouse_accounting_binding.dart';
 import '../providers/warehouse_providers.dart';
 
 class WarehousesSettingsPage extends ConsumerWidget {
@@ -180,7 +184,7 @@ class WarehousesSettingsPage extends ConsumerWidget {
     );
   }
 
-  void _openWarehouseDialog(BuildContext context, WidgetRef ref, {Warehouse? warehouse}) {
+  void _openWarehouseDialog(BuildContext context, WidgetRef ref, {Warehouse? warehouse}) async {
     final codeCtrl = TextEditingController(text: warehouse?.code ?? '');
     final nameCtrl = TextEditingController(text: warehouse?.name ?? '');
     final addressCtrl = TextEditingController(text: warehouse?.address ?? '');
@@ -189,6 +193,22 @@ class WarehousesSettingsPage extends ConsumerWidget {
     bool isDefault = warehouse?.isDefault ?? false;
     CostValuationMethod? costValuationMethod = warehouse?.costValuationMethod;
     final isEditing = warehouse != null;
+
+    String? inventoryAssetAccountId;
+    String? cogsAccountId;
+    String? adjustmentAccountId;
+
+    if (warehouse != null) {
+      final bindingRepo = ref.read(warehouseAccountingBindingRepositoryProvider);
+      final binding = await bindingRepo.getBindingForWarehouse(warehouse.id);
+      if (binding != null) {
+        inventoryAssetAccountId = binding.inventoryAssetAccountId;
+        cogsAccountId = binding.cogsAccountId;
+        adjustmentAccountId = binding.inventoryAdjustmentAccountId;
+      }
+    }
+
+    if (!context.mounted) return;
 
     showDialog(
       context: context,
@@ -205,7 +225,7 @@ class WarehousesSettingsPage extends ConsumerWidget {
               borderRadius: BorderRadius.circular(24),
             ),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
+              constraints: const BoxConstraints(maxWidth: 540),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -243,8 +263,8 @@ class WarehousesSettingsPage extends ConsumerWidget {
                               const SizedBox(height: 2),
                               Text(
                                 isAr
-                                    ? 'أدخل بيانات وإعدادات التكلفة للمستودع'
-                                    : 'Specify details and cost valuation rules',
+                                    ? 'أدخل البيانات الأساسية وسياسات التكلفة والربط المحاسبي'
+                                    : 'Specify details, cost policy and account bindings',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: colorScheme.onSurfaceVariant,
                                 ),
@@ -393,6 +413,94 @@ class WarehousesSettingsPage extends ConsumerWidget {
                             ],
                             onChanged: (val) => setStateDialog(() => costValuationMethod = val),
                           ),
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Accounting Binding Section
+                          Text(
+                            isAr ? 'الربط المحاسبي بالدليل (مخصص للمستودع)' : 'Chart of Accounts Binding (Custom)',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerLow,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                            ),
+                            child: Column(
+                              children: [
+                                ListTile(
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: const Icon(Icons.account_balance_outlined),
+                                  title: Text(isAr ? 'حساب أصل المخزون' : 'Inventory Asset Account', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  subtitle: Text(inventoryAssetAccountId ?? (isAr ? 'لم يحدد (استخدام افتراضي الشركة)' : 'Not set (Uses company default)')),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.search_rounded),
+                                    onPressed: () async {
+                                      final acc = await showAppAccountPicker(
+                                        context,
+                                        title: isAr ? 'اختر حساب أصل المخزون' : 'Select Inventory Asset Account',
+                                        initialTypeFilter: AccountType.asset,
+                                        selectedUuid: inventoryAssetAccountId,
+                                      );
+                                      if (acc != null) {
+                                        setStateDialog(() => inventoryAssetAccountId = acc.uuid);
+                                      }
+                                    },
+                                  ),
+                                ),
+                                const Divider(height: 8),
+                                ListTile(
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: const Icon(Icons.shopping_cart_outlined),
+                                  title: Text(isAr ? 'حساب تكلفة البضاعة المباعة (COGS)' : 'Cost of Goods Sold Account', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  subtitle: Text(cogsAccountId ?? (isAr ? 'لم يحدد (استخدام افتراضي الشركة)' : 'Not set (Uses company default)')),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.search_rounded),
+                                    onPressed: () async {
+                                      final acc = await showAppAccountPicker(
+                                        context,
+                                        title: isAr ? 'اختر حساب تكلفة المبيعات' : 'Select COGS Account',
+                                        initialTypeFilter: AccountType.expense,
+                                        selectedUuid: cogsAccountId,
+                                      );
+                                      if (acc != null) {
+                                        setStateDialog(() => cogsAccountId = acc.uuid);
+                                      }
+                                    },
+                                  ),
+                                ),
+                                const Divider(height: 8),
+                                ListTile(
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: const Icon(Icons.tune_outlined),
+                                  title: Text(isAr ? 'حساب تسوية المخزون' : 'Inventory Adjustment Account', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  subtitle: Text(adjustmentAccountId ?? (isAr ? 'لم يحدد (استخدام افتراضي الشركة)' : 'Not set (Uses company default)')),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.search_rounded),
+                                    onPressed: () async {
+                                      final acc = await showAppAccountPicker(
+                                        context,
+                                        title: isAr ? 'اختر حساب تسوية المخزون' : 'Select Adjustment Account',
+                                        selectedUuid: adjustmentAccountId,
+                                      );
+                                      if (acc != null) {
+                                        setStateDialog(() => adjustmentAccountId = acc.uuid);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
                           const SizedBox(height: AppSpacing.sm),
                           Container(
                             decoration: BoxDecoration(
@@ -449,8 +557,9 @@ class WarehousesSettingsPage extends ConsumerWidget {
                               return;
                             }
 
+                            final targetWarehouseId = warehouse?.id ?? generateUuidV4();
                             final newWh = Warehouse(
-                              id: warehouse?.id ?? generateUuidV4(),
+                              id: targetWarehouseId,
                               code: codeCtrl.text.trim(),
                               name: nameCtrl.text.trim(),
                               isDefault: isDefault,
@@ -461,12 +570,24 @@ class WarehousesSettingsPage extends ConsumerWidget {
                               version: warehouse?.version ?? 1,
                             );
 
+                            final companyId = ref.read(currentCompanyIdProvider);
+                            final binding = WarehouseAccountingBinding(
+                              id: targetWarehouseId,
+                              warehouseId: targetWarehouseId,
+                              inventoryAssetAccountId: inventoryAssetAccountId,
+                              cogsAccountId: cogsAccountId,
+                              inventoryAdjustmentAccountId: adjustmentAccountId,
+                              companyId: companyId,
+                              createdAt: DateTime.now(),
+                              updatedAt: DateTime.now(),
+                            );
+
                             Navigator.of(ctx).pop();
-                            final success = await ref.read(warehouseControllerProvider.notifier).saveWarehouse(newWh);
+                            final success = await ref.read(warehouseControllerProvider.notifier).saveWarehouse(newWh, binding: binding);
                             if (context.mounted && success) {
                               showAppSnackBar(
                                 context,
-                                message: isAr ? 'تم حفظ المستودع بنجاح' : 'Warehouse saved successfully',
+                                message: isAr ? 'تم حفظ المستودع والربط المحاسبي بنجاح' : 'Warehouse and accounting binding saved successfully',
                                 isSuccess: true,
                               );
                             }

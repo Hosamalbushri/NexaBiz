@@ -21,14 +21,19 @@ void main() {
 
   setUp(() {
     db = InventoryDatabase.memory();
-    service = CostLayerServiceImpl(db: db);
+    service = CostLayerServiceImpl(
+      db: db,
+      readCompanyId: () => 'company_alpha',
+    );
     repo = StockMovementsRepositoryImpl(
       db: db,
+      readCompanyId: () => 'company_alpha',
     );
     returnsRepo = StockReturnsRepositoryImpl(
       db: db,
       costLayerService: service,
       valuationMethod: CostValuationMethod.fifo,
+      readCompanyId: () => 'company_alpha',
     );
   });
 

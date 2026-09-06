@@ -36,6 +36,7 @@ class SaleComposerState {
     this.currencyCode = 'SAR',
     this.baseCurrencyCode = 'SAR',
     this.exchangeRate = 1,
+    this.warehouseId,
   });
 
   final DateTime saleDate;
@@ -58,12 +59,16 @@ class SaleComposerState {
   final PaymentMethod paymentMethod;
   final String? notes;
   final int? editingSaleId;
+  final String? warehouseId;
 
   bool get isCredit => settlementType.isCredit;
   bool get isCash => settlementType.isCash;
 
   bool get canSave {
     if (voucherBook == null) {
+      return false;
+    }
+    if (warehouseId == null || warehouseId!.isEmpty) {
       return false;
     }
     if (items.isEmpty) {
@@ -136,6 +141,8 @@ class SaleComposerState {
     bool clearNotes = false,
     int? editingSaleId,
     bool clearEditingSaleId = false,
+    String? warehouseId,
+    bool clearWarehouseId = false,
   }) {
     return SaleComposerState(
       saleDate: saleDate ?? this.saleDate,
@@ -162,6 +169,7 @@ class SaleComposerState {
       editingSaleId: clearEditingSaleId
           ? null
           : (editingSaleId ?? this.editingSaleId),
+      warehouseId: clearWarehouseId ? null : (warehouseId ?? this.warehouseId),
     );
   }
 
@@ -170,6 +178,7 @@ class SaleComposerState {
       saleDate: saleDate,
       settlementType: settlementType,
       voucherBookId: voucherBook?.bookId,
+      warehouseId: warehouseId,
       customerId: customer?.customerId,
       customerCode: customer?.customerCode,
       customerName: resolvedCustomerName,
@@ -227,6 +236,7 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
       saleDate: draft.saleDate,
       settlementType: draft.settlementType,
       voucherBookId: draft.voucherBookId,
+      warehouseId: draft.warehouseId,
       customerId: draft.customerId,
       customerCode: draft.customerCode,
       customerName: draft.customerName,
@@ -308,6 +318,7 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
       paymentMethod: sale.paymentMethod,
       notes: sale.notes,
       editingSaleId: sale.id,
+      warehouseId: sale.warehouseId,
     );
   }
 
@@ -346,6 +357,13 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
       clearVoucherBook: book == null,
       previewSaleNumber: book?.previewNumber,
       clearPreviewSaleNumber: book == null,
+    );
+  }
+
+  void setWarehouse(String? id) {
+    state = state.copyWith(
+      warehouseId: id,
+      clearWarehouseId: id == null,
     );
   }
 

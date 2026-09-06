@@ -47,9 +47,6 @@ class CustomersSaleLookupAdapter implements SaleCustomerLookupPort {
     int limit = SaleAutocompleteDefaults.resultLimit,
   }) async {
     final normalized = query.trim();
-    if (normalized.isEmpty) {
-      return const [];
-    }
     final safeLimit =
         limit <= 0 ? SaleAutocompleteDefaults.resultLimit : limit;
     final results = await _repository.search(

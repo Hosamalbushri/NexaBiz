@@ -513,11 +513,11 @@ class $CustomersTable extends Customers
       isActive: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
-      ) ?? true,
+      )!,
       status: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}status'],
-      ) ?? 'active',
+      )!,
       creditLimit: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}credit_limit'],
@@ -541,19 +541,19 @@ class $CustomersTable extends Customers
       dataSource: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}data_source'],
-      ) ?? 'local',
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
-      ) ?? 0,
+      )!,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
-      ) ?? 0,
+      )!,
       syncStatus: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}sync_status'],
-      ) ?? 'synced',
+      )!,
       lastSyncedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}last_synced_at'],
@@ -561,7 +561,7 @@ class $CustomersTable extends Customers
       version: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}version'],
-      ) ?? 1,
+      )!,
       companyId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}company_id'],

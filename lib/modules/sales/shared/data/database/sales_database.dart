@@ -17,7 +17,7 @@ class SalesDatabase extends _$SalesDatabase {
   SalesDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -26,6 +26,9 @@ class SalesDatabase extends _$SalesDatabase {
       await _createIndexes();
     },
     onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 7) {
+        await m.addColumn(sales, sales.warehouseId);
+      }
       if (from < 2) {
         await m.addColumn(sales, sales.saleDate);
         await m.addColumn(sales, sales.settlementType);

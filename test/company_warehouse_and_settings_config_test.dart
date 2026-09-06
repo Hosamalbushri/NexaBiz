@@ -1,12 +1,34 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:stock_count/core/database/hive_boxes.dart';
+import 'package:stock_count/core/domain/ports/setup_warehouse_lookup_port.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/product_warehouse_stock.dart';
 
 import 'package:stock_count/modules/inventory/warehouses/domain/entities/warehouse.dart';
 import 'package:stock_count/modules/inventory/warehouses/domain/repositories/warehouse_repository.dart';
 import 'package:stock_count/modules/system_setup/data/repositories/company_initialization_repository_impl.dart';
 import 'package:stock_count/modules/system_setup/domain/services/company_warehouse_config_service.dart';
+
+class FakeWarehouseLookupPort implements SetupWarehouseLookupPort {
+  FakeWarehouseLookupPort(this.warehouses);
+
+  final List<Warehouse> warehouses;
+
+  @override
+  Future<SetupWarehouseData?> getWarehouseById(String warehouseId) async {
+    for (final w in warehouses) {
+      if (w.id == warehouseId) {
+        return SetupWarehouseData(
+          id: w.id,
+          companyId: w.companyId,
+          isActive: w.isActive,
+          isDeleted: w.deletedAt != null,
+        );
+      }
+    }
+    return null;
+  }
+}
 
 class FakeWarehouseRepository implements WarehouseRepository {
   FakeWarehouseRepository(this.warehouses);
@@ -28,12 +50,16 @@ class FakeWarehouseRepository implements WarehouseRepository {
   }
 
   @override
-  Future<Warehouse?> getDefaultWarehouse() async =>
-      warehouses.firstWhere((w) => w.isDefault, orElse: () => warehouses.first);
+  Future<Warehouse?> getDefaultWarehouse() async {
+    for (final w in warehouses) {
+      if (w.isDefault && w.deletedAt == null) return w;
+    }
+    return warehouses.isNotEmpty ? warehouses.first : null;
+  }
 
   @override
-  Future<Warehouse> ensureDefaultWarehouse() async =>
-      (await getDefaultWarehouse())!;
+  Future<Warehouse?> ensureDefaultWarehouse() async =>
+      await getDefaultWarehouse();
 
   @override
   Future<void> saveWarehouse(Warehouse warehouse) async {
@@ -108,7 +134,7 @@ void main() {
 
       fakeWarehouseRepo = FakeWarehouseRepository([validWarehouse]);
       warehouseConfigService = CompanyWarehouseConfigService(
-        warehouseRepository: fakeWarehouseRepo,
+        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
         initRepository: initRepository,
       );
 
@@ -134,7 +160,7 @@ void main() {
 
       fakeWarehouseRepo = FakeWarehouseRepository([foreignWarehouse]);
       warehouseConfigService = CompanyWarehouseConfigService(
-        warehouseRepository: fakeWarehouseRepo,
+        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
         initRepository: initRepository,
       );
 
@@ -161,7 +187,7 @@ void main() {
 
       fakeWarehouseRepo = FakeWarehouseRepository([inactiveWarehouse]);
       warehouseConfigService = CompanyWarehouseConfigService(
-        warehouseRepository: fakeWarehouseRepo,
+        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
         initRepository: initRepository,
       );
 
@@ -180,7 +206,7 @@ void main() {
     test('4. Non-Existent Warehouse Selection Rejection', () async {
       fakeWarehouseRepo = FakeWarehouseRepository([]);
       warehouseConfigService = CompanyWarehouseConfigService(
-        warehouseRepository: fakeWarehouseRepo,
+        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
         initRepository: initRepository,
       );
 
@@ -208,7 +234,7 @@ void main() {
 
       fakeWarehouseRepo = FakeWarehouseRepository([deletedWarehouse]);
       warehouseConfigService = CompanyWarehouseConfigService(
-        warehouseRepository: fakeWarehouseRepo,
+        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
         initRepository: initRepository,
       );
 
@@ -227,7 +253,7 @@ void main() {
     test('6. Inventory Operational Settings Persistence', () async {
       fakeWarehouseRepo = FakeWarehouseRepository([]);
       warehouseConfigService = CompanyWarehouseConfigService(
-        warehouseRepository: fakeWarehouseRepo,
+        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
         initRepository: initRepository,
       );
 
@@ -252,7 +278,7 @@ void main() {
         readCompanyId: () => 'company-alpha',
       );
       final serviceAlpha = CompanyWarehouseConfigService(
-        warehouseRepository: fakeWarehouseRepo,
+        warehouseLookupPort: FakeWarehouseLookupPort(fakeWarehouseRepo.warehouses),
         initRepository: repoAlpha,
       );
 

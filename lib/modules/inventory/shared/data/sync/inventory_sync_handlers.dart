@@ -403,6 +403,7 @@ class InventoryDocumentSyncHandler implements SyncEntityHandler {
         accountName: Value(payload['accountName']?.toString() ?? payload['account_name']?.toString()),
         currencyCode: Value(payload['currencyCode']?.toString() ?? payload['currency_code']?.toString() ?? 'YER'),
         exchangeRate: Value((payload['exchangeRate'] as num?)?.toDouble() ?? (payload['exchange_rate'] as num?)?.toDouble() ?? 1.0),
+        warehouse: Value(payload['warehouse']?.toString() ?? payload['warehouseId']?.toString() ?? payload['warehouse_id']?.toString()),
         notes: Value(payload['notes']?.toString()),
         receiptDate: Value((payload['receiptDate'] as int?) ?? (payload['receipt_date'] as int?) ?? change.updatedAt.millisecondsSinceEpoch),
         createdAt: Value(existing?.createdAt ?? change.updatedAt.millisecondsSinceEpoch),

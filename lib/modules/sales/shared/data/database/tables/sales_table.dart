@@ -18,6 +18,9 @@ class Sales extends Table {
   /// VoucherBook.uuid used for numbering.
   TextColumn get voucherBookId => text().nullable()();
 
+  /// Warehouse.uuid source warehouse context for inventory deduction.
+  TextColumn get warehouseId => text().nullable()();
+
   /// Customer.uuid — opaque FK.
   TextColumn get customerId => text().nullable()();
 

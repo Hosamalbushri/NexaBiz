@@ -1134,6 +1134,17 @@ class $StockReceiptsTable extends StockReceipts
     requiredDuringInsert: false,
     defaultValue: const Constant(1.0),
   );
+  static const VerificationMeta _warehouseMeta = const VerificationMeta(
+    'warehouse',
+  );
+  @override
+  late final GeneratedColumn<String> warehouse = GeneratedColumn<String>(
+    'warehouse',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -1264,6 +1275,7 @@ class $StockReceiptsTable extends StockReceipts
     accountName,
     currencyCode,
     exchangeRate,
+    warehouse,
     notes,
     receiptDate,
     createdAt,
@@ -1347,6 +1359,12 @@ class $StockReceiptsTable extends StockReceipts
           data['exchange_rate']!,
           _exchangeRateMeta,
         ),
+      );
+    }
+    if (data.containsKey('warehouse')) {
+      context.handle(
+        _warehouseMeta,
+        warehouse.isAcceptableOrUnknown(data['warehouse']!, _warehouseMeta),
       );
     }
     if (data.containsKey('notes')) {
@@ -1468,6 +1486,10 @@ class $StockReceiptsTable extends StockReceipts
         DriftSqlType.double,
         data['${effectivePrefix}exchange_rate'],
       )!,
+      warehouse: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}warehouse'],
+      ),
       notes: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
@@ -1532,6 +1554,7 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
   final String? accountName;
   final String currencyCode;
   final double exchangeRate;
+  final String? warehouse;
   final String? notes;
   final int receiptDate;
   final int createdAt;
@@ -1562,6 +1585,7 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     this.accountName,
     required this.currencyCode,
     required this.exchangeRate,
+    this.warehouse,
     this.notes,
     required this.receiptDate,
     required this.createdAt,
@@ -1591,6 +1615,9 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     }
     map['currency_code'] = Variable<String>(currencyCode);
     map['exchange_rate'] = Variable<double>(exchangeRate);
+    if (!nullToAbsent || warehouse != null) {
+      map['warehouse'] = Variable<String>(warehouse);
+    }
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
@@ -1631,6 +1658,9 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
           : Value(accountName),
       currencyCode: Value(currencyCode),
       exchangeRate: Value(exchangeRate),
+      warehouse: warehouse == null && nullToAbsent
+          ? const Value.absent()
+          : Value(warehouse),
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
@@ -1669,6 +1699,7 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
       accountName: serializer.fromJson<String?>(json['accountName']),
       currencyCode: serializer.fromJson<String>(json['currencyCode']),
       exchangeRate: serializer.fromJson<double>(json['exchangeRate']),
+      warehouse: serializer.fromJson<String?>(json['warehouse']),
       notes: serializer.fromJson<String?>(json['notes']),
       receiptDate: serializer.fromJson<int>(json['receiptDate']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
@@ -1694,6 +1725,7 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
       'accountName': serializer.toJson<String?>(accountName),
       'currencyCode': serializer.toJson<String>(currencyCode),
       'exchangeRate': serializer.toJson<double>(exchangeRate),
+      'warehouse': serializer.toJson<String?>(warehouse),
       'notes': serializer.toJson<String?>(notes),
       'receiptDate': serializer.toJson<int>(receiptDate),
       'createdAt': serializer.toJson<int>(createdAt),
@@ -1717,6 +1749,7 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     Value<String?> accountName = const Value.absent(),
     String? currencyCode,
     double? exchangeRate,
+    Value<String?> warehouse = const Value.absent(),
     Value<String?> notes = const Value.absent(),
     int? receiptDate,
     int? createdAt,
@@ -1737,6 +1770,7 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     accountName: accountName.present ? accountName.value : this.accountName,
     currencyCode: currencyCode ?? this.currencyCode,
     exchangeRate: exchangeRate ?? this.exchangeRate,
+    warehouse: warehouse.present ? warehouse.value : this.warehouse,
     notes: notes.present ? notes.value : this.notes,
     receiptDate: receiptDate ?? this.receiptDate,
     createdAt: createdAt ?? this.createdAt,
@@ -1767,6 +1801,7 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
       exchangeRate: data.exchangeRate.present
           ? data.exchangeRate.value
           : this.exchangeRate,
+      warehouse: data.warehouse.present ? data.warehouse.value : this.warehouse,
       notes: data.notes.present ? data.notes.value : this.notes,
       receiptDate: data.receiptDate.present
           ? data.receiptDate.value
@@ -1798,6 +1833,7 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
           ..write('accountName: $accountName, ')
           ..write('currencyCode: $currencyCode, ')
           ..write('exchangeRate: $exchangeRate, ')
+          ..write('warehouse: $warehouse, ')
           ..write('notes: $notes, ')
           ..write('receiptDate: $receiptDate, ')
           ..write('createdAt: $createdAt, ')
@@ -1823,6 +1859,7 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
     accountName,
     currencyCode,
     exchangeRate,
+    warehouse,
     notes,
     receiptDate,
     createdAt,
@@ -1847,6 +1884,7 @@ class StockReceiptRow extends DataClass implements Insertable<StockReceiptRow> {
           other.accountName == this.accountName &&
           other.currencyCode == this.currencyCode &&
           other.exchangeRate == this.exchangeRate &&
+          other.warehouse == this.warehouse &&
           other.notes == this.notes &&
           other.receiptDate == this.receiptDate &&
           other.createdAt == this.createdAt &&
@@ -1869,6 +1907,7 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
   final Value<String?> accountName;
   final Value<String> currencyCode;
   final Value<double> exchangeRate;
+  final Value<String?> warehouse;
   final Value<String?> notes;
   final Value<int> receiptDate;
   final Value<int> createdAt;
@@ -1889,6 +1928,7 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     this.accountName = const Value.absent(),
     this.currencyCode = const Value.absent(),
     this.exchangeRate = const Value.absent(),
+    this.warehouse = const Value.absent(),
     this.notes = const Value.absent(),
     this.receiptDate = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1910,6 +1950,7 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     this.accountName = const Value.absent(),
     this.currencyCode = const Value.absent(),
     this.exchangeRate = const Value.absent(),
+    this.warehouse = const Value.absent(),
     this.notes = const Value.absent(),
     required int receiptDate,
     required int createdAt,
@@ -1935,6 +1976,7 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     Expression<String>? accountName,
     Expression<String>? currencyCode,
     Expression<double>? exchangeRate,
+    Expression<String>? warehouse,
     Expression<String>? notes,
     Expression<int>? receiptDate,
     Expression<int>? createdAt,
@@ -1956,6 +1998,7 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
       if (accountName != null) 'account_name': accountName,
       if (currencyCode != null) 'currency_code': currencyCode,
       if (exchangeRate != null) 'exchange_rate': exchangeRate,
+      if (warehouse != null) 'warehouse': warehouse,
       if (notes != null) 'notes': notes,
       if (receiptDate != null) 'receipt_date': receiptDate,
       if (createdAt != null) 'created_at': createdAt,
@@ -1979,6 +2022,7 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     Value<String?>? accountName,
     Value<String>? currencyCode,
     Value<double>? exchangeRate,
+    Value<String?>? warehouse,
     Value<String?>? notes,
     Value<int>? receiptDate,
     Value<int>? createdAt,
@@ -2000,6 +2044,7 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
       accountName: accountName ?? this.accountName,
       currencyCode: currencyCode ?? this.currencyCode,
       exchangeRate: exchangeRate ?? this.exchangeRate,
+      warehouse: warehouse ?? this.warehouse,
       notes: notes ?? this.notes,
       receiptDate: receiptDate ?? this.receiptDate,
       createdAt: createdAt ?? this.createdAt,
@@ -2040,6 +2085,9 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
     }
     if (exchangeRate.present) {
       map['exchange_rate'] = Variable<double>(exchangeRate.value);
+    }
+    if (warehouse.present) {
+      map['warehouse'] = Variable<String>(warehouse.value);
     }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
@@ -2088,6 +2136,7 @@ class StockReceiptsCompanion extends UpdateCompanion<StockReceiptRow> {
           ..write('accountName: $accountName, ')
           ..write('currencyCode: $currencyCode, ')
           ..write('exchangeRate: $exchangeRate, ')
+          ..write('warehouse: $warehouse, ')
           ..write('notes: $notes, ')
           ..write('receiptDate: $receiptDate, ')
           ..write('createdAt: $createdAt, ')
@@ -4219,6 +4268,101 @@ class $InventoryCostLayersTable extends InventoryCostLayers
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _inventoryCurrencyIdMeta =
+      const VerificationMeta('inventoryCurrencyId');
+  @override
+  late final GeneratedColumn<String> inventoryCurrencyId =
+      GeneratedColumn<String>(
+        'inventory_currency_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('YER'),
+      );
+  static const VerificationMeta _unitCostInventoryCurrencyMeta =
+      const VerificationMeta('unitCostInventoryCurrency');
+  @override
+  late final GeneratedColumn<double> unitCostInventoryCurrency =
+      GeneratedColumn<double>(
+        'unit_cost_inventory_currency',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _totalCostInventoryCurrencyMeta =
+      const VerificationMeta('totalCostInventoryCurrency');
+  @override
+  late final GeneratedColumn<double> totalCostInventoryCurrency =
+      GeneratedColumn<double>(
+        'total_cost_inventory_currency',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _documentCurrencyIdMeta =
+      const VerificationMeta('documentCurrencyId');
+  @override
+  late final GeneratedColumn<String> documentCurrencyId =
+      GeneratedColumn<String>(
+        'document_currency_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('YER'),
+      );
+  static const VerificationMeta _unitCostDocumentCurrencyMeta =
+      const VerificationMeta('unitCostDocumentCurrency');
+  @override
+  late final GeneratedColumn<double> unitCostDocumentCurrency =
+      GeneratedColumn<double>(
+        'unit_cost_document_currency',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _totalCostDocumentCurrencyMeta =
+      const VerificationMeta('totalCostDocumentCurrency');
+  @override
+  late final GeneratedColumn<double> totalCostDocumentCurrency =
+      GeneratedColumn<double>(
+        'total_cost_document_currency',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _exchangeRateMeta = const VerificationMeta(
+    'exchangeRate',
+  );
+  @override
+  late final GeneratedColumn<double> exchangeRate = GeneratedColumn<double>(
+    'exchange_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
+  static const VerificationMeta _exchangeRateDateMeta = const VerificationMeta(
+    'exchangeRateDate',
+  );
+  @override
+  late final GeneratedColumn<int> exchangeRateDate = GeneratedColumn<int>(
+    'exchange_rate_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _closedMeta = const VerificationMeta('closed');
   @override
   late final GeneratedColumn<int> closed = GeneratedColumn<int>(
@@ -4321,6 +4465,14 @@ class $InventoryCostLayersTable extends InventoryCostLayers
     remainingQty,
     unitCost,
     totalCost,
+    inventoryCurrencyId,
+    unitCostInventoryCurrency,
+    totalCostInventoryCurrency,
+    documentCurrencyId,
+    unitCostDocumentCurrency,
+    totalCostDocumentCurrency,
+    exchangeRate,
+    exchangeRateDate,
     closed,
     createdAt,
     updatedAt,
@@ -4433,6 +4585,78 @@ class $InventoryCostLayersTable extends InventoryCostLayers
         totalCost.isAcceptableOrUnknown(data['total_cost']!, _totalCostMeta),
       );
     }
+    if (data.containsKey('inventory_currency_id')) {
+      context.handle(
+        _inventoryCurrencyIdMeta,
+        inventoryCurrencyId.isAcceptableOrUnknown(
+          data['inventory_currency_id']!,
+          _inventoryCurrencyIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('unit_cost_inventory_currency')) {
+      context.handle(
+        _unitCostInventoryCurrencyMeta,
+        unitCostInventoryCurrency.isAcceptableOrUnknown(
+          data['unit_cost_inventory_currency']!,
+          _unitCostInventoryCurrencyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_cost_inventory_currency')) {
+      context.handle(
+        _totalCostInventoryCurrencyMeta,
+        totalCostInventoryCurrency.isAcceptableOrUnknown(
+          data['total_cost_inventory_currency']!,
+          _totalCostInventoryCurrencyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('document_currency_id')) {
+      context.handle(
+        _documentCurrencyIdMeta,
+        documentCurrencyId.isAcceptableOrUnknown(
+          data['document_currency_id']!,
+          _documentCurrencyIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('unit_cost_document_currency')) {
+      context.handle(
+        _unitCostDocumentCurrencyMeta,
+        unitCostDocumentCurrency.isAcceptableOrUnknown(
+          data['unit_cost_document_currency']!,
+          _unitCostDocumentCurrencyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_cost_document_currency')) {
+      context.handle(
+        _totalCostDocumentCurrencyMeta,
+        totalCostDocumentCurrency.isAcceptableOrUnknown(
+          data['total_cost_document_currency']!,
+          _totalCostDocumentCurrencyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('exchange_rate')) {
+      context.handle(
+        _exchangeRateMeta,
+        exchangeRate.isAcceptableOrUnknown(
+          data['exchange_rate']!,
+          _exchangeRateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('exchange_rate_date')) {
+      context.handle(
+        _exchangeRateDateMeta,
+        exchangeRateDate.isAcceptableOrUnknown(
+          data['exchange_rate_date']!,
+          _exchangeRateDateMeta,
+        ),
+      );
+    }
     if (data.containsKey('closed')) {
       context.handle(
         _closedMeta,
@@ -4541,6 +4765,38 @@ class $InventoryCostLayersTable extends InventoryCostLayers
         DriftSqlType.double,
         data['${effectivePrefix}total_cost'],
       )!,
+      inventoryCurrencyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}inventory_currency_id'],
+      )!,
+      unitCostInventoryCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}unit_cost_inventory_currency'],
+      )!,
+      totalCostInventoryCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_cost_inventory_currency'],
+      )!,
+      documentCurrencyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_currency_id'],
+      )!,
+      unitCostDocumentCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}unit_cost_document_currency'],
+      )!,
+      totalCostDocumentCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_cost_document_currency'],
+      )!,
+      exchangeRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}exchange_rate'],
+      )!,
+      exchangeRateDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}exchange_rate_date'],
+      ),
       closed: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}closed'],
@@ -4610,11 +4866,35 @@ class InventoryCostLayerRow extends DataClass
   /// Remaining quantity available in this layer (decremented on issue/sale).
   final double remainingQty;
 
-  /// Unit cost for this layer in company base currency.
+  /// Unit cost for this layer in inventory valuation currency.
   final double unitCost;
 
-  /// Total original cost (`receivedQty * unitCost`).
+  /// Total original cost (`receivedQty * unitCost`) in inventory valuation currency.
   final double totalCost;
+
+  /// Explicit inventory valuation currency code (e.g. 'YER').
+  final String inventoryCurrencyId;
+
+  /// Unit cost explicitly in inventory valuation currency.
+  final double unitCostInventoryCurrency;
+
+  /// Total cost explicitly in inventory valuation currency.
+  final double totalCostInventoryCurrency;
+
+  /// Original document currency code (e.g. 'SAR', 'USD').
+  final String documentCurrencyId;
+
+  /// Unit cost in original document currency.
+  final double unitCostDocumentCurrency;
+
+  /// Total cost in original document currency.
+  final double totalCostDocumentCurrency;
+
+  /// Applied exchange rate (Inventory Currency / Document Currency).
+  final double exchangeRate;
+
+  /// Timestamp (epoch ms UTC) when FX rate was applied.
+  final int? exchangeRateDate;
 
   /// 0 = open (remainingQty > 0), 1 = fully consumed (remainingQty == 0).
   final int closed;
@@ -4651,6 +4931,14 @@ class InventoryCostLayerRow extends DataClass
     required this.remainingQty,
     required this.unitCost,
     required this.totalCost,
+    required this.inventoryCurrencyId,
+    required this.unitCostInventoryCurrency,
+    required this.totalCostInventoryCurrency,
+    required this.documentCurrencyId,
+    required this.unitCostDocumentCurrency,
+    required this.totalCostDocumentCurrency,
+    required this.exchangeRate,
+    this.exchangeRateDate,
     required this.closed,
     required this.createdAt,
     required this.updatedAt,
@@ -4676,6 +4964,24 @@ class InventoryCostLayerRow extends DataClass
     map['remaining_qty'] = Variable<double>(remainingQty);
     map['unit_cost'] = Variable<double>(unitCost);
     map['total_cost'] = Variable<double>(totalCost);
+    map['inventory_currency_id'] = Variable<String>(inventoryCurrencyId);
+    map['unit_cost_inventory_currency'] = Variable<double>(
+      unitCostInventoryCurrency,
+    );
+    map['total_cost_inventory_currency'] = Variable<double>(
+      totalCostInventoryCurrency,
+    );
+    map['document_currency_id'] = Variable<String>(documentCurrencyId);
+    map['unit_cost_document_currency'] = Variable<double>(
+      unitCostDocumentCurrency,
+    );
+    map['total_cost_document_currency'] = Variable<double>(
+      totalCostDocumentCurrency,
+    );
+    map['exchange_rate'] = Variable<double>(exchangeRate);
+    if (!nullToAbsent || exchangeRateDate != null) {
+      map['exchange_rate_date'] = Variable<int>(exchangeRateDate);
+    }
     map['closed'] = Variable<int>(closed);
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
@@ -4708,6 +5014,16 @@ class InventoryCostLayerRow extends DataClass
       remainingQty: Value(remainingQty),
       unitCost: Value(unitCost),
       totalCost: Value(totalCost),
+      inventoryCurrencyId: Value(inventoryCurrencyId),
+      unitCostInventoryCurrency: Value(unitCostInventoryCurrency),
+      totalCostInventoryCurrency: Value(totalCostInventoryCurrency),
+      documentCurrencyId: Value(documentCurrencyId),
+      unitCostDocumentCurrency: Value(unitCostDocumentCurrency),
+      totalCostDocumentCurrency: Value(totalCostDocumentCurrency),
+      exchangeRate: Value(exchangeRate),
+      exchangeRateDate: exchangeRateDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exchangeRateDate),
       closed: Value(closed),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -4742,6 +5058,26 @@ class InventoryCostLayerRow extends DataClass
       remainingQty: serializer.fromJson<double>(json['remainingQty']),
       unitCost: serializer.fromJson<double>(json['unitCost']),
       totalCost: serializer.fromJson<double>(json['totalCost']),
+      inventoryCurrencyId: serializer.fromJson<String>(
+        json['inventoryCurrencyId'],
+      ),
+      unitCostInventoryCurrency: serializer.fromJson<double>(
+        json['unitCostInventoryCurrency'],
+      ),
+      totalCostInventoryCurrency: serializer.fromJson<double>(
+        json['totalCostInventoryCurrency'],
+      ),
+      documentCurrencyId: serializer.fromJson<String>(
+        json['documentCurrencyId'],
+      ),
+      unitCostDocumentCurrency: serializer.fromJson<double>(
+        json['unitCostDocumentCurrency'],
+      ),
+      totalCostDocumentCurrency: serializer.fromJson<double>(
+        json['totalCostDocumentCurrency'],
+      ),
+      exchangeRate: serializer.fromJson<double>(json['exchangeRate']),
+      exchangeRateDate: serializer.fromJson<int?>(json['exchangeRateDate']),
       closed: serializer.fromJson<int>(json['closed']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
@@ -4767,6 +5103,22 @@ class InventoryCostLayerRow extends DataClass
       'remainingQty': serializer.toJson<double>(remainingQty),
       'unitCost': serializer.toJson<double>(unitCost),
       'totalCost': serializer.toJson<double>(totalCost),
+      'inventoryCurrencyId': serializer.toJson<String>(inventoryCurrencyId),
+      'unitCostInventoryCurrency': serializer.toJson<double>(
+        unitCostInventoryCurrency,
+      ),
+      'totalCostInventoryCurrency': serializer.toJson<double>(
+        totalCostInventoryCurrency,
+      ),
+      'documentCurrencyId': serializer.toJson<String>(documentCurrencyId),
+      'unitCostDocumentCurrency': serializer.toJson<double>(
+        unitCostDocumentCurrency,
+      ),
+      'totalCostDocumentCurrency': serializer.toJson<double>(
+        totalCostDocumentCurrency,
+      ),
+      'exchangeRate': serializer.toJson<double>(exchangeRate),
+      'exchangeRateDate': serializer.toJson<int?>(exchangeRateDate),
       'closed': serializer.toJson<int>(closed),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
@@ -4790,6 +5142,14 @@ class InventoryCostLayerRow extends DataClass
     double? remainingQty,
     double? unitCost,
     double? totalCost,
+    String? inventoryCurrencyId,
+    double? unitCostInventoryCurrency,
+    double? totalCostInventoryCurrency,
+    String? documentCurrencyId,
+    double? unitCostDocumentCurrency,
+    double? totalCostDocumentCurrency,
+    double? exchangeRate,
+    Value<int?> exchangeRateDate = const Value.absent(),
     int? closed,
     int? createdAt,
     int? updatedAt,
@@ -4810,6 +5170,20 @@ class InventoryCostLayerRow extends DataClass
     remainingQty: remainingQty ?? this.remainingQty,
     unitCost: unitCost ?? this.unitCost,
     totalCost: totalCost ?? this.totalCost,
+    inventoryCurrencyId: inventoryCurrencyId ?? this.inventoryCurrencyId,
+    unitCostInventoryCurrency:
+        unitCostInventoryCurrency ?? this.unitCostInventoryCurrency,
+    totalCostInventoryCurrency:
+        totalCostInventoryCurrency ?? this.totalCostInventoryCurrency,
+    documentCurrencyId: documentCurrencyId ?? this.documentCurrencyId,
+    unitCostDocumentCurrency:
+        unitCostDocumentCurrency ?? this.unitCostDocumentCurrency,
+    totalCostDocumentCurrency:
+        totalCostDocumentCurrency ?? this.totalCostDocumentCurrency,
+    exchangeRate: exchangeRate ?? this.exchangeRate,
+    exchangeRateDate: exchangeRateDate.present
+        ? exchangeRateDate.value
+        : this.exchangeRateDate,
     closed: closed ?? this.closed,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -4844,6 +5218,30 @@ class InventoryCostLayerRow extends DataClass
           : this.remainingQty,
       unitCost: data.unitCost.present ? data.unitCost.value : this.unitCost,
       totalCost: data.totalCost.present ? data.totalCost.value : this.totalCost,
+      inventoryCurrencyId: data.inventoryCurrencyId.present
+          ? data.inventoryCurrencyId.value
+          : this.inventoryCurrencyId,
+      unitCostInventoryCurrency: data.unitCostInventoryCurrency.present
+          ? data.unitCostInventoryCurrency.value
+          : this.unitCostInventoryCurrency,
+      totalCostInventoryCurrency: data.totalCostInventoryCurrency.present
+          ? data.totalCostInventoryCurrency.value
+          : this.totalCostInventoryCurrency,
+      documentCurrencyId: data.documentCurrencyId.present
+          ? data.documentCurrencyId.value
+          : this.documentCurrencyId,
+      unitCostDocumentCurrency: data.unitCostDocumentCurrency.present
+          ? data.unitCostDocumentCurrency.value
+          : this.unitCostDocumentCurrency,
+      totalCostDocumentCurrency: data.totalCostDocumentCurrency.present
+          ? data.totalCostDocumentCurrency.value
+          : this.totalCostDocumentCurrency,
+      exchangeRate: data.exchangeRate.present
+          ? data.exchangeRate.value
+          : this.exchangeRate,
+      exchangeRateDate: data.exchangeRateDate.present
+          ? data.exchangeRateDate.value
+          : this.exchangeRateDate,
       closed: data.closed.present ? data.closed.value : this.closed,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -4873,6 +5271,14 @@ class InventoryCostLayerRow extends DataClass
           ..write('remainingQty: $remainingQty, ')
           ..write('unitCost: $unitCost, ')
           ..write('totalCost: $totalCost, ')
+          ..write('inventoryCurrencyId: $inventoryCurrencyId, ')
+          ..write('unitCostInventoryCurrency: $unitCostInventoryCurrency, ')
+          ..write('totalCostInventoryCurrency: $totalCostInventoryCurrency, ')
+          ..write('documentCurrencyId: $documentCurrencyId, ')
+          ..write('unitCostDocumentCurrency: $unitCostDocumentCurrency, ')
+          ..write('totalCostDocumentCurrency: $totalCostDocumentCurrency, ')
+          ..write('exchangeRate: $exchangeRate, ')
+          ..write('exchangeRateDate: $exchangeRateDate, ')
           ..write('closed: $closed, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -4886,7 +5292,7 @@ class InventoryCostLayerRow extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     uuid,
     itemCode,
@@ -4898,6 +5304,14 @@ class InventoryCostLayerRow extends DataClass
     remainingQty,
     unitCost,
     totalCost,
+    inventoryCurrencyId,
+    unitCostInventoryCurrency,
+    totalCostInventoryCurrency,
+    documentCurrencyId,
+    unitCostDocumentCurrency,
+    totalCostDocumentCurrency,
+    exchangeRate,
+    exchangeRateDate,
     closed,
     createdAt,
     updatedAt,
@@ -4906,7 +5320,7 @@ class InventoryCostLayerRow extends DataClass
     version,
     companyId,
     deletedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4922,6 +5336,14 @@ class InventoryCostLayerRow extends DataClass
           other.remainingQty == this.remainingQty &&
           other.unitCost == this.unitCost &&
           other.totalCost == this.totalCost &&
+          other.inventoryCurrencyId == this.inventoryCurrencyId &&
+          other.unitCostInventoryCurrency == this.unitCostInventoryCurrency &&
+          other.totalCostInventoryCurrency == this.totalCostInventoryCurrency &&
+          other.documentCurrencyId == this.documentCurrencyId &&
+          other.unitCostDocumentCurrency == this.unitCostDocumentCurrency &&
+          other.totalCostDocumentCurrency == this.totalCostDocumentCurrency &&
+          other.exchangeRate == this.exchangeRate &&
+          other.exchangeRateDate == this.exchangeRateDate &&
           other.closed == this.closed &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -4945,6 +5367,14 @@ class InventoryCostLayersCompanion
   final Value<double> remainingQty;
   final Value<double> unitCost;
   final Value<double> totalCost;
+  final Value<String> inventoryCurrencyId;
+  final Value<double> unitCostInventoryCurrency;
+  final Value<double> totalCostInventoryCurrency;
+  final Value<String> documentCurrencyId;
+  final Value<double> unitCostDocumentCurrency;
+  final Value<double> totalCostDocumentCurrency;
+  final Value<double> exchangeRate;
+  final Value<int?> exchangeRateDate;
   final Value<int> closed;
   final Value<int> createdAt;
   final Value<int> updatedAt;
@@ -4965,6 +5395,14 @@ class InventoryCostLayersCompanion
     this.remainingQty = const Value.absent(),
     this.unitCost = const Value.absent(),
     this.totalCost = const Value.absent(),
+    this.inventoryCurrencyId = const Value.absent(),
+    this.unitCostInventoryCurrency = const Value.absent(),
+    this.totalCostInventoryCurrency = const Value.absent(),
+    this.documentCurrencyId = const Value.absent(),
+    this.unitCostDocumentCurrency = const Value.absent(),
+    this.totalCostDocumentCurrency = const Value.absent(),
+    this.exchangeRate = const Value.absent(),
+    this.exchangeRateDate = const Value.absent(),
     this.closed = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -4986,6 +5424,14 @@ class InventoryCostLayersCompanion
     this.remainingQty = const Value.absent(),
     this.unitCost = const Value.absent(),
     this.totalCost = const Value.absent(),
+    this.inventoryCurrencyId = const Value.absent(),
+    this.unitCostInventoryCurrency = const Value.absent(),
+    this.totalCostInventoryCurrency = const Value.absent(),
+    this.documentCurrencyId = const Value.absent(),
+    this.unitCostDocumentCurrency = const Value.absent(),
+    this.totalCostDocumentCurrency = const Value.absent(),
+    this.exchangeRate = const Value.absent(),
+    this.exchangeRateDate = const Value.absent(),
     this.closed = const Value.absent(),
     required int createdAt,
     required int updatedAt,
@@ -5013,6 +5459,14 @@ class InventoryCostLayersCompanion
     Expression<double>? remainingQty,
     Expression<double>? unitCost,
     Expression<double>? totalCost,
+    Expression<String>? inventoryCurrencyId,
+    Expression<double>? unitCostInventoryCurrency,
+    Expression<double>? totalCostInventoryCurrency,
+    Expression<String>? documentCurrencyId,
+    Expression<double>? unitCostDocumentCurrency,
+    Expression<double>? totalCostDocumentCurrency,
+    Expression<double>? exchangeRate,
+    Expression<int>? exchangeRateDate,
     Expression<int>? closed,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
@@ -5034,6 +5488,20 @@ class InventoryCostLayersCompanion
       if (remainingQty != null) 'remaining_qty': remainingQty,
       if (unitCost != null) 'unit_cost': unitCost,
       if (totalCost != null) 'total_cost': totalCost,
+      if (inventoryCurrencyId != null)
+        'inventory_currency_id': inventoryCurrencyId,
+      if (unitCostInventoryCurrency != null)
+        'unit_cost_inventory_currency': unitCostInventoryCurrency,
+      if (totalCostInventoryCurrency != null)
+        'total_cost_inventory_currency': totalCostInventoryCurrency,
+      if (documentCurrencyId != null)
+        'document_currency_id': documentCurrencyId,
+      if (unitCostDocumentCurrency != null)
+        'unit_cost_document_currency': unitCostDocumentCurrency,
+      if (totalCostDocumentCurrency != null)
+        'total_cost_document_currency': totalCostDocumentCurrency,
+      if (exchangeRate != null) 'exchange_rate': exchangeRate,
+      if (exchangeRateDate != null) 'exchange_rate_date': exchangeRateDate,
       if (closed != null) 'closed': closed,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -5057,6 +5525,14 @@ class InventoryCostLayersCompanion
     Value<double>? remainingQty,
     Value<double>? unitCost,
     Value<double>? totalCost,
+    Value<String>? inventoryCurrencyId,
+    Value<double>? unitCostInventoryCurrency,
+    Value<double>? totalCostInventoryCurrency,
+    Value<String>? documentCurrencyId,
+    Value<double>? unitCostDocumentCurrency,
+    Value<double>? totalCostDocumentCurrency,
+    Value<double>? exchangeRate,
+    Value<int?>? exchangeRateDate,
     Value<int>? closed,
     Value<int>? createdAt,
     Value<int>? updatedAt,
@@ -5078,6 +5554,18 @@ class InventoryCostLayersCompanion
       remainingQty: remainingQty ?? this.remainingQty,
       unitCost: unitCost ?? this.unitCost,
       totalCost: totalCost ?? this.totalCost,
+      inventoryCurrencyId: inventoryCurrencyId ?? this.inventoryCurrencyId,
+      unitCostInventoryCurrency:
+          unitCostInventoryCurrency ?? this.unitCostInventoryCurrency,
+      totalCostInventoryCurrency:
+          totalCostInventoryCurrency ?? this.totalCostInventoryCurrency,
+      documentCurrencyId: documentCurrencyId ?? this.documentCurrencyId,
+      unitCostDocumentCurrency:
+          unitCostDocumentCurrency ?? this.unitCostDocumentCurrency,
+      totalCostDocumentCurrency:
+          totalCostDocumentCurrency ?? this.totalCostDocumentCurrency,
+      exchangeRate: exchangeRate ?? this.exchangeRate,
+      exchangeRateDate: exchangeRateDate ?? this.exchangeRateDate,
       closed: closed ?? this.closed,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -5125,6 +5613,40 @@ class InventoryCostLayersCompanion
     if (totalCost.present) {
       map['total_cost'] = Variable<double>(totalCost.value);
     }
+    if (inventoryCurrencyId.present) {
+      map['inventory_currency_id'] = Variable<String>(
+        inventoryCurrencyId.value,
+      );
+    }
+    if (unitCostInventoryCurrency.present) {
+      map['unit_cost_inventory_currency'] = Variable<double>(
+        unitCostInventoryCurrency.value,
+      );
+    }
+    if (totalCostInventoryCurrency.present) {
+      map['total_cost_inventory_currency'] = Variable<double>(
+        totalCostInventoryCurrency.value,
+      );
+    }
+    if (documentCurrencyId.present) {
+      map['document_currency_id'] = Variable<String>(documentCurrencyId.value);
+    }
+    if (unitCostDocumentCurrency.present) {
+      map['unit_cost_document_currency'] = Variable<double>(
+        unitCostDocumentCurrency.value,
+      );
+    }
+    if (totalCostDocumentCurrency.present) {
+      map['total_cost_document_currency'] = Variable<double>(
+        totalCostDocumentCurrency.value,
+      );
+    }
+    if (exchangeRate.present) {
+      map['exchange_rate'] = Variable<double>(exchangeRate.value);
+    }
+    if (exchangeRateDate.present) {
+      map['exchange_rate_date'] = Variable<int>(exchangeRateDate.value);
+    }
     if (closed.present) {
       map['closed'] = Variable<int>(closed.value);
     }
@@ -5166,6 +5688,14 @@ class InventoryCostLayersCompanion
           ..write('remainingQty: $remainingQty, ')
           ..write('unitCost: $unitCost, ')
           ..write('totalCost: $totalCost, ')
+          ..write('inventoryCurrencyId: $inventoryCurrencyId, ')
+          ..write('unitCostInventoryCurrency: $unitCostInventoryCurrency, ')
+          ..write('totalCostInventoryCurrency: $totalCostInventoryCurrency, ')
+          ..write('documentCurrencyId: $documentCurrencyId, ')
+          ..write('unitCostDocumentCurrency: $unitCostDocumentCurrency, ')
+          ..write('totalCostDocumentCurrency: $totalCostDocumentCurrency, ')
+          ..write('exchangeRate: $exchangeRate, ')
+          ..write('exchangeRateDate: $exchangeRateDate, ')
           ..write('closed: $closed, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -10776,6 +11306,2291 @@ class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
   }
 }
 
+class $WarehouseAccountingBindingsTable extends WarehouseAccountingBindings
+    with
+        TableInfo<
+          $WarehouseAccountingBindingsTable,
+          WarehouseAccountingBindingRow
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WarehouseAccountingBindingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _warehouseIdMeta = const VerificationMeta(
+    'warehouseId',
+  );
+  @override
+  late final GeneratedColumn<String> warehouseId = GeneratedColumn<String>(
+    'warehouse_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _inventoryAssetAccountIdMeta =
+      const VerificationMeta('inventoryAssetAccountId');
+  @override
+  late final GeneratedColumn<String> inventoryAssetAccountId =
+      GeneratedColumn<String>(
+        'inventory_asset_account_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _cogsAccountIdMeta = const VerificationMeta(
+    'cogsAccountId',
+  );
+  @override
+  late final GeneratedColumn<String> cogsAccountId = GeneratedColumn<String>(
+    'cogs_account_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _inventoryAdjustmentAccountIdMeta =
+      const VerificationMeta('inventoryAdjustmentAccountId');
+  @override
+  late final GeneratedColumn<String> inventoryAdjustmentAccountId =
+      GeneratedColumn<String>(
+        'inventory_adjustment_account_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _stockTransferClearingAccountIdMeta =
+      const VerificationMeta('stockTransferClearingAccountId');
+  @override
+  late final GeneratedColumn<String> stockTransferClearingAccountId =
+      GeneratedColumn<String>(
+        'stock_transfer_clearing_account_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    uuid,
+    warehouseId,
+    inventoryAssetAccountId,
+    cogsAccountId,
+    inventoryAdjustmentAccountId,
+    stockTransferClearingAccountId,
+    createdAt,
+    updatedAt,
+    syncStatus,
+    version,
+    companyId,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'warehouse_accounting_bindings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WarehouseAccountingBindingRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('warehouse_id')) {
+      context.handle(
+        _warehouseIdMeta,
+        warehouseId.isAcceptableOrUnknown(
+          data['warehouse_id']!,
+          _warehouseIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_warehouseIdMeta);
+    }
+    if (data.containsKey('inventory_asset_account_id')) {
+      context.handle(
+        _inventoryAssetAccountIdMeta,
+        inventoryAssetAccountId.isAcceptableOrUnknown(
+          data['inventory_asset_account_id']!,
+          _inventoryAssetAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cogs_account_id')) {
+      context.handle(
+        _cogsAccountIdMeta,
+        cogsAccountId.isAcceptableOrUnknown(
+          data['cogs_account_id']!,
+          _cogsAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('inventory_adjustment_account_id')) {
+      context.handle(
+        _inventoryAdjustmentAccountIdMeta,
+        inventoryAdjustmentAccountId.isAcceptableOrUnknown(
+          data['inventory_adjustment_account_id']!,
+          _inventoryAdjustmentAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('stock_transfer_clearing_account_id')) {
+      context.handle(
+        _stockTransferClearingAccountIdMeta,
+        stockTransferClearingAccountId.isAcceptableOrUnknown(
+          data['stock_transfer_clearing_account_id']!,
+          _stockTransferClearingAccountIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {companyId, warehouseId},
+  ];
+  @override
+  WarehouseAccountingBindingRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WarehouseAccountingBindingRow(
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      warehouseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}warehouse_id'],
+      )!,
+      inventoryAssetAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}inventory_asset_account_id'],
+      ),
+      cogsAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cogs_account_id'],
+      ),
+      inventoryAdjustmentAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}inventory_adjustment_account_id'],
+      ),
+      stockTransferClearingAccountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}stock_transfer_clearing_account_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $WarehouseAccountingBindingsTable createAlias(String alias) {
+    return $WarehouseAccountingBindingsTable(attachedDatabase, alias);
+  }
+}
+
+class WarehouseAccountingBindingRow extends DataClass
+    implements Insertable<WarehouseAccountingBindingRow> {
+  final String uuid;
+  final String warehouseId;
+  final String? inventoryAssetAccountId;
+  final String? cogsAccountId;
+  final String? inventoryAdjustmentAccountId;
+  final String? stockTransferClearingAccountId;
+  final int createdAt;
+  final int updatedAt;
+  final String syncStatus;
+  final int version;
+  final String companyId;
+  final int? deletedAt;
+  const WarehouseAccountingBindingRow({
+    required this.uuid,
+    required this.warehouseId,
+    this.inventoryAssetAccountId,
+    this.cogsAccountId,
+    this.inventoryAdjustmentAccountId,
+    this.stockTransferClearingAccountId,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.syncStatus,
+    required this.version,
+    required this.companyId,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['warehouse_id'] = Variable<String>(warehouseId);
+    if (!nullToAbsent || inventoryAssetAccountId != null) {
+      map['inventory_asset_account_id'] = Variable<String>(
+        inventoryAssetAccountId,
+      );
+    }
+    if (!nullToAbsent || cogsAccountId != null) {
+      map['cogs_account_id'] = Variable<String>(cogsAccountId);
+    }
+    if (!nullToAbsent || inventoryAdjustmentAccountId != null) {
+      map['inventory_adjustment_account_id'] = Variable<String>(
+        inventoryAdjustmentAccountId,
+      );
+    }
+    if (!nullToAbsent || stockTransferClearingAccountId != null) {
+      map['stock_transfer_clearing_account_id'] = Variable<String>(
+        stockTransferClearingAccountId,
+      );
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    map['sync_status'] = Variable<String>(syncStatus);
+    map['version'] = Variable<int>(version);
+    map['company_id'] = Variable<String>(companyId);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
+    return map;
+  }
+
+  WarehouseAccountingBindingsCompanion toCompanion(bool nullToAbsent) {
+    return WarehouseAccountingBindingsCompanion(
+      uuid: Value(uuid),
+      warehouseId: Value(warehouseId),
+      inventoryAssetAccountId: inventoryAssetAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(inventoryAssetAccountId),
+      cogsAccountId: cogsAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cogsAccountId),
+      inventoryAdjustmentAccountId:
+          inventoryAdjustmentAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(inventoryAdjustmentAccountId),
+      stockTransferClearingAccountId:
+          stockTransferClearingAccountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(stockTransferClearingAccountId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      syncStatus: Value(syncStatus),
+      version: Value(version),
+      companyId: Value(companyId),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory WarehouseAccountingBindingRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WarehouseAccountingBindingRow(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      warehouseId: serializer.fromJson<String>(json['warehouseId']),
+      inventoryAssetAccountId: serializer.fromJson<String?>(
+        json['inventoryAssetAccountId'],
+      ),
+      cogsAccountId: serializer.fromJson<String?>(json['cogsAccountId']),
+      inventoryAdjustmentAccountId: serializer.fromJson<String?>(
+        json['inventoryAdjustmentAccountId'],
+      ),
+      stockTransferClearingAccountId: serializer.fromJson<String?>(
+        json['stockTransferClearingAccountId'],
+      ),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      version: serializer.fromJson<int>(json['version']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'warehouseId': serializer.toJson<String>(warehouseId),
+      'inventoryAssetAccountId': serializer.toJson<String?>(
+        inventoryAssetAccountId,
+      ),
+      'cogsAccountId': serializer.toJson<String?>(cogsAccountId),
+      'inventoryAdjustmentAccountId': serializer.toJson<String?>(
+        inventoryAdjustmentAccountId,
+      ),
+      'stockTransferClearingAccountId': serializer.toJson<String?>(
+        stockTransferClearingAccountId,
+      ),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'version': serializer.toJson<int>(version),
+      'companyId': serializer.toJson<String>(companyId),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
+    };
+  }
+
+  WarehouseAccountingBindingRow copyWith({
+    String? uuid,
+    String? warehouseId,
+    Value<String?> inventoryAssetAccountId = const Value.absent(),
+    Value<String?> cogsAccountId = const Value.absent(),
+    Value<String?> inventoryAdjustmentAccountId = const Value.absent(),
+    Value<String?> stockTransferClearingAccountId = const Value.absent(),
+    int? createdAt,
+    int? updatedAt,
+    String? syncStatus,
+    int? version,
+    String? companyId,
+    Value<int?> deletedAt = const Value.absent(),
+  }) => WarehouseAccountingBindingRow(
+    uuid: uuid ?? this.uuid,
+    warehouseId: warehouseId ?? this.warehouseId,
+    inventoryAssetAccountId: inventoryAssetAccountId.present
+        ? inventoryAssetAccountId.value
+        : this.inventoryAssetAccountId,
+    cogsAccountId: cogsAccountId.present
+        ? cogsAccountId.value
+        : this.cogsAccountId,
+    inventoryAdjustmentAccountId: inventoryAdjustmentAccountId.present
+        ? inventoryAdjustmentAccountId.value
+        : this.inventoryAdjustmentAccountId,
+    stockTransferClearingAccountId: stockTransferClearingAccountId.present
+        ? stockTransferClearingAccountId.value
+        : this.stockTransferClearingAccountId,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    syncStatus: syncStatus ?? this.syncStatus,
+    version: version ?? this.version,
+    companyId: companyId ?? this.companyId,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  WarehouseAccountingBindingRow copyWithCompanion(
+    WarehouseAccountingBindingsCompanion data,
+  ) {
+    return WarehouseAccountingBindingRow(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      warehouseId: data.warehouseId.present
+          ? data.warehouseId.value
+          : this.warehouseId,
+      inventoryAssetAccountId: data.inventoryAssetAccountId.present
+          ? data.inventoryAssetAccountId.value
+          : this.inventoryAssetAccountId,
+      cogsAccountId: data.cogsAccountId.present
+          ? data.cogsAccountId.value
+          : this.cogsAccountId,
+      inventoryAdjustmentAccountId: data.inventoryAdjustmentAccountId.present
+          ? data.inventoryAdjustmentAccountId.value
+          : this.inventoryAdjustmentAccountId,
+      stockTransferClearingAccountId:
+          data.stockTransferClearingAccountId.present
+          ? data.stockTransferClearingAccountId.value
+          : this.stockTransferClearingAccountId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      version: data.version.present ? data.version.value : this.version,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WarehouseAccountingBindingRow(')
+          ..write('uuid: $uuid, ')
+          ..write('warehouseId: $warehouseId, ')
+          ..write('inventoryAssetAccountId: $inventoryAssetAccountId, ')
+          ..write('cogsAccountId: $cogsAccountId, ')
+          ..write(
+            'inventoryAdjustmentAccountId: $inventoryAdjustmentAccountId, ',
+          )
+          ..write(
+            'stockTransferClearingAccountId: $stockTransferClearingAccountId, ',
+          )
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('version: $version, ')
+          ..write('companyId: $companyId, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    uuid,
+    warehouseId,
+    inventoryAssetAccountId,
+    cogsAccountId,
+    inventoryAdjustmentAccountId,
+    stockTransferClearingAccountId,
+    createdAt,
+    updatedAt,
+    syncStatus,
+    version,
+    companyId,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WarehouseAccountingBindingRow &&
+          other.uuid == this.uuid &&
+          other.warehouseId == this.warehouseId &&
+          other.inventoryAssetAccountId == this.inventoryAssetAccountId &&
+          other.cogsAccountId == this.cogsAccountId &&
+          other.inventoryAdjustmentAccountId ==
+              this.inventoryAdjustmentAccountId &&
+          other.stockTransferClearingAccountId ==
+              this.stockTransferClearingAccountId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.version == this.version &&
+          other.companyId == this.companyId &&
+          other.deletedAt == this.deletedAt);
+}
+
+class WarehouseAccountingBindingsCompanion
+    extends UpdateCompanion<WarehouseAccountingBindingRow> {
+  final Value<String> uuid;
+  final Value<String> warehouseId;
+  final Value<String?> inventoryAssetAccountId;
+  final Value<String?> cogsAccountId;
+  final Value<String?> inventoryAdjustmentAccountId;
+  final Value<String?> stockTransferClearingAccountId;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<String> syncStatus;
+  final Value<int> version;
+  final Value<String> companyId;
+  final Value<int?> deletedAt;
+  final Value<int> rowid;
+  const WarehouseAccountingBindingsCompanion({
+    this.uuid = const Value.absent(),
+    this.warehouseId = const Value.absent(),
+    this.inventoryAssetAccountId = const Value.absent(),
+    this.cogsAccountId = const Value.absent(),
+    this.inventoryAdjustmentAccountId = const Value.absent(),
+    this.stockTransferClearingAccountId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.version = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  WarehouseAccountingBindingsCompanion.insert({
+    required String uuid,
+    required String warehouseId,
+    this.inventoryAssetAccountId = const Value.absent(),
+    this.cogsAccountId = const Value.absent(),
+    this.inventoryAdjustmentAccountId = const Value.absent(),
+    this.stockTransferClearingAccountId = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.syncStatus = const Value.absent(),
+    this.version = const Value.absent(),
+    required String companyId,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : uuid = Value(uuid),
+       warehouseId = Value(warehouseId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt),
+       companyId = Value(companyId);
+  static Insertable<WarehouseAccountingBindingRow> custom({
+    Expression<String>? uuid,
+    Expression<String>? warehouseId,
+    Expression<String>? inventoryAssetAccountId,
+    Expression<String>? cogsAccountId,
+    Expression<String>? inventoryAdjustmentAccountId,
+    Expression<String>? stockTransferClearingAccountId,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<String>? syncStatus,
+    Expression<int>? version,
+    Expression<String>? companyId,
+    Expression<int>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (warehouseId != null) 'warehouse_id': warehouseId,
+      if (inventoryAssetAccountId != null)
+        'inventory_asset_account_id': inventoryAssetAccountId,
+      if (cogsAccountId != null) 'cogs_account_id': cogsAccountId,
+      if (inventoryAdjustmentAccountId != null)
+        'inventory_adjustment_account_id': inventoryAdjustmentAccountId,
+      if (stockTransferClearingAccountId != null)
+        'stock_transfer_clearing_account_id': stockTransferClearingAccountId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (version != null) 'version': version,
+      if (companyId != null) 'company_id': companyId,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  WarehouseAccountingBindingsCompanion copyWith({
+    Value<String>? uuid,
+    Value<String>? warehouseId,
+    Value<String?>? inventoryAssetAccountId,
+    Value<String?>? cogsAccountId,
+    Value<String?>? inventoryAdjustmentAccountId,
+    Value<String?>? stockTransferClearingAccountId,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+    Value<String>? syncStatus,
+    Value<int>? version,
+    Value<String>? companyId,
+    Value<int?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return WarehouseAccountingBindingsCompanion(
+      uuid: uuid ?? this.uuid,
+      warehouseId: warehouseId ?? this.warehouseId,
+      inventoryAssetAccountId:
+          inventoryAssetAccountId ?? this.inventoryAssetAccountId,
+      cogsAccountId: cogsAccountId ?? this.cogsAccountId,
+      inventoryAdjustmentAccountId:
+          inventoryAdjustmentAccountId ?? this.inventoryAdjustmentAccountId,
+      stockTransferClearingAccountId:
+          stockTransferClearingAccountId ?? this.stockTransferClearingAccountId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      version: version ?? this.version,
+      companyId: companyId ?? this.companyId,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (warehouseId.present) {
+      map['warehouse_id'] = Variable<String>(warehouseId.value);
+    }
+    if (inventoryAssetAccountId.present) {
+      map['inventory_asset_account_id'] = Variable<String>(
+        inventoryAssetAccountId.value,
+      );
+    }
+    if (cogsAccountId.present) {
+      map['cogs_account_id'] = Variable<String>(cogsAccountId.value);
+    }
+    if (inventoryAdjustmentAccountId.present) {
+      map['inventory_adjustment_account_id'] = Variable<String>(
+        inventoryAdjustmentAccountId.value,
+      );
+    }
+    if (stockTransferClearingAccountId.present) {
+      map['stock_transfer_clearing_account_id'] = Variable<String>(
+        stockTransferClearingAccountId.value,
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WarehouseAccountingBindingsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('warehouseId: $warehouseId, ')
+          ..write('inventoryAssetAccountId: $inventoryAssetAccountId, ')
+          ..write('cogsAccountId: $cogsAccountId, ')
+          ..write(
+            'inventoryAdjustmentAccountId: $inventoryAdjustmentAccountId, ',
+          )
+          ..write(
+            'stockTransferClearingAccountId: $stockTransferClearingAccountId, ',
+          )
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('version: $version, ')
+          ..write('companyId: $companyId, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $StockMovementLedgersTable extends StockMovementLedgers
+    with TableInfo<$StockMovementLedgersTable, StockMovementLedgerRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StockMovementLedgersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _companyIdMeta = const VerificationMeta(
+    'companyId',
+  );
+  @override
+  late final GeneratedColumn<String> companyId = GeneratedColumn<String>(
+    'company_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _warehouseIdMeta = const VerificationMeta(
+    'warehouseId',
+  );
+  @override
+  late final GeneratedColumn<String> warehouseId = GeneratedColumn<String>(
+    'warehouse_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemCodeMeta = const VerificationMeta(
+    'itemCode',
+  );
+  @override
+  late final GeneratedColumn<String> itemCode = GeneratedColumn<String>(
+    'item_code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 128,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<double> quantity = GeneratedColumn<double>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _directionMeta = const VerificationMeta(
+    'direction',
+  );
+  @override
+  late final GeneratedColumn<String> direction = GeneratedColumn<String>(
+    'direction',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _movementTypeMeta = const VerificationMeta(
+    'movementType',
+  );
+  @override
+  late final GeneratedColumn<String> movementType = GeneratedColumn<String>(
+    'movement_type',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _postingDateMeta = const VerificationMeta(
+    'postingDate',
+  );
+  @override
+  late final GeneratedColumn<int> postingDate = GeneratedColumn<int>(
+    'posting_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceDocumentIdMeta = const VerificationMeta(
+    'sourceDocumentId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceDocumentId = GeneratedColumn<String>(
+    'source_document_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceDocumentTypeMeta =
+      const VerificationMeta('sourceDocumentType');
+  @override
+  late final GeneratedColumn<String> sourceDocumentType =
+      GeneratedColumn<String>(
+        'source_document_type',
+        aliasedName,
+        false,
+        additionalChecks: GeneratedColumn.checkTextLength(
+          minTextLength: 1,
+          maxTextLength: 64,
+        ),
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _sourceLineUuidMeta = const VerificationMeta(
+    'sourceLineUuid',
+  );
+  @override
+  late final GeneratedColumn<String> sourceLineUuid = GeneratedColumn<String>(
+    'source_line_uuid',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 36,
+      maxTextLength: 36,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitCostMeta = const VerificationMeta(
+    'unitCost',
+  );
+  @override
+  late final GeneratedColumn<double> unitCost = GeneratedColumn<double>(
+    'unit_cost',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _totalCostMeta = const VerificationMeta(
+    'totalCost',
+  );
+  @override
+  late final GeneratedColumn<double> totalCost = GeneratedColumn<double>(
+    'total_cost',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _inventoryCurrencyIdMeta =
+      const VerificationMeta('inventoryCurrencyId');
+  @override
+  late final GeneratedColumn<String> inventoryCurrencyId =
+      GeneratedColumn<String>(
+        'inventory_currency_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('YER'),
+      );
+  static const VerificationMeta _documentCurrencyIdMeta =
+      const VerificationMeta('documentCurrencyId');
+  @override
+  late final GeneratedColumn<String> documentCurrencyId =
+      GeneratedColumn<String>(
+        'document_currency_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('YER'),
+      );
+  static const VerificationMeta _unitCostDocumentCurrencyMeta =
+      const VerificationMeta('unitCostDocumentCurrency');
+  @override
+  late final GeneratedColumn<double> unitCostDocumentCurrency =
+      GeneratedColumn<double>(
+        'unit_cost_document_currency',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _totalCostDocumentCurrencyMeta =
+      const VerificationMeta('totalCostDocumentCurrency');
+  @override
+  late final GeneratedColumn<double> totalCostDocumentCurrency =
+      GeneratedColumn<double>(
+        'total_cost_document_currency',
+        aliasedName,
+        false,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _exchangeRateMeta = const VerificationMeta(
+    'exchangeRate',
+  );
+  @override
+  late final GeneratedColumn<double> exchangeRate = GeneratedColumn<double>(
+    'exchange_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
+  static const VerificationMeta _costingMethodUsedMeta = const VerificationMeta(
+    'costingMethodUsed',
+  );
+  @override
+  late final GeneratedColumn<String> costingMethodUsed =
+      GeneratedColumn<String>(
+        'costing_method_used',
+        aliasedName,
+        false,
+        additionalChecks: GeneratedColumn.checkTextLength(
+          minTextLength: 1,
+          maxTextLength: 64,
+        ),
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('synced'),
+  );
+  static const VerificationMeta _lastSyncedAtMeta = const VerificationMeta(
+    'lastSyncedAt',
+  );
+  @override
+  late final GeneratedColumn<int> lastSyncedAt = GeneratedColumn<int>(
+    'last_synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    uuid,
+    companyId,
+    warehouseId,
+    itemCode,
+    quantity,
+    direction,
+    movementType,
+    postingDate,
+    sourceDocumentId,
+    sourceDocumentType,
+    sourceLineUuid,
+    unitCost,
+    totalCost,
+    inventoryCurrencyId,
+    documentCurrencyId,
+    unitCostDocumentCurrency,
+    totalCostDocumentCurrency,
+    exchangeRate,
+    costingMethodUsed,
+    createdAt,
+    version,
+    syncStatus,
+    lastSyncedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'stock_movement_ledgers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StockMovementLedgerRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('company_id')) {
+      context.handle(
+        _companyIdMeta,
+        companyId.isAcceptableOrUnknown(data['company_id']!, _companyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_companyIdMeta);
+    }
+    if (data.containsKey('warehouse_id')) {
+      context.handle(
+        _warehouseIdMeta,
+        warehouseId.isAcceptableOrUnknown(
+          data['warehouse_id']!,
+          _warehouseIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_warehouseIdMeta);
+    }
+    if (data.containsKey('item_code')) {
+      context.handle(
+        _itemCodeMeta,
+        itemCode.isAcceptableOrUnknown(data['item_code']!, _itemCodeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemCodeMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    }
+    if (data.containsKey('direction')) {
+      context.handle(
+        _directionMeta,
+        direction.isAcceptableOrUnknown(data['direction']!, _directionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_directionMeta);
+    }
+    if (data.containsKey('movement_type')) {
+      context.handle(
+        _movementTypeMeta,
+        movementType.isAcceptableOrUnknown(
+          data['movement_type']!,
+          _movementTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_movementTypeMeta);
+    }
+    if (data.containsKey('posting_date')) {
+      context.handle(
+        _postingDateMeta,
+        postingDate.isAcceptableOrUnknown(
+          data['posting_date']!,
+          _postingDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_postingDateMeta);
+    }
+    if (data.containsKey('source_document_id')) {
+      context.handle(
+        _sourceDocumentIdMeta,
+        sourceDocumentId.isAcceptableOrUnknown(
+          data['source_document_id']!,
+          _sourceDocumentIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceDocumentIdMeta);
+    }
+    if (data.containsKey('source_document_type')) {
+      context.handle(
+        _sourceDocumentTypeMeta,
+        sourceDocumentType.isAcceptableOrUnknown(
+          data['source_document_type']!,
+          _sourceDocumentTypeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceDocumentTypeMeta);
+    }
+    if (data.containsKey('source_line_uuid')) {
+      context.handle(
+        _sourceLineUuidMeta,
+        sourceLineUuid.isAcceptableOrUnknown(
+          data['source_line_uuid']!,
+          _sourceLineUuidMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceLineUuidMeta);
+    }
+    if (data.containsKey('unit_cost')) {
+      context.handle(
+        _unitCostMeta,
+        unitCost.isAcceptableOrUnknown(data['unit_cost']!, _unitCostMeta),
+      );
+    }
+    if (data.containsKey('total_cost')) {
+      context.handle(
+        _totalCostMeta,
+        totalCost.isAcceptableOrUnknown(data['total_cost']!, _totalCostMeta),
+      );
+    }
+    if (data.containsKey('inventory_currency_id')) {
+      context.handle(
+        _inventoryCurrencyIdMeta,
+        inventoryCurrencyId.isAcceptableOrUnknown(
+          data['inventory_currency_id']!,
+          _inventoryCurrencyIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('document_currency_id')) {
+      context.handle(
+        _documentCurrencyIdMeta,
+        documentCurrencyId.isAcceptableOrUnknown(
+          data['document_currency_id']!,
+          _documentCurrencyIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('unit_cost_document_currency')) {
+      context.handle(
+        _unitCostDocumentCurrencyMeta,
+        unitCostDocumentCurrency.isAcceptableOrUnknown(
+          data['unit_cost_document_currency']!,
+          _unitCostDocumentCurrencyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_cost_document_currency')) {
+      context.handle(
+        _totalCostDocumentCurrencyMeta,
+        totalCostDocumentCurrency.isAcceptableOrUnknown(
+          data['total_cost_document_currency']!,
+          _totalCostDocumentCurrencyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('exchange_rate')) {
+      context.handle(
+        _exchangeRateMeta,
+        exchangeRate.isAcceptableOrUnknown(
+          data['exchange_rate']!,
+          _exchangeRateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('costing_method_used')) {
+      context.handle(
+        _costingMethodUsedMeta,
+        costingMethodUsed.isAcceptableOrUnknown(
+          data['costing_method_used']!,
+          _costingMethodUsedMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_costingMethodUsedMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+        _lastSyncedAtMeta,
+        lastSyncedAt.isAcceptableOrUnknown(
+          data['last_synced_at']!,
+          _lastSyncedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StockMovementLedgerRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StockMovementLedgerRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      companyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}company_id'],
+      )!,
+      warehouseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}warehouse_id'],
+      )!,
+      itemCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_code'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}quantity'],
+      )!,
+      direction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}direction'],
+      )!,
+      movementType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}movement_type'],
+      )!,
+      postingDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}posting_date'],
+      )!,
+      sourceDocumentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_document_id'],
+      )!,
+      sourceDocumentType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_document_type'],
+      )!,
+      sourceLineUuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_line_uuid'],
+      )!,
+      unitCost: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}unit_cost'],
+      )!,
+      totalCost: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_cost'],
+      )!,
+      inventoryCurrencyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}inventory_currency_id'],
+      )!,
+      documentCurrencyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_currency_id'],
+      )!,
+      unitCostDocumentCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}unit_cost_document_currency'],
+      )!,
+      totalCostDocumentCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_cost_document_currency'],
+      )!,
+      exchangeRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}exchange_rate'],
+      )!,
+      costingMethodUsed: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}costing_method_used'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      )!,
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_synced_at'],
+      ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $StockMovementLedgersTable createAlias(String alias) {
+    return $StockMovementLedgersTable(attachedDatabase, alias);
+  }
+}
+
+class StockMovementLedgerRow extends DataClass
+    implements Insertable<StockMovementLedgerRow> {
+  final int id;
+
+  /// Client-generated UUID for offline-safe identity / sync.
+  final String uuid;
+
+  /// Company / Tenant owner ID for local multi-tenant data isolation.
+  final String companyId;
+
+  /// Warehouse identifier where this stock movement occurred.
+  final String warehouseId;
+
+  /// Product item code associated with this movement.
+  final String itemCode;
+
+  /// Absolute quantity of the movement (always positive).
+  final double quantity;
+
+  /// 'inbound' or 'outbound'
+  final String direction;
+
+  /// Movement type ('opening', 'receipt', 'issue', 'sale', 'purchase_return', 'sales_return',
+  /// 'transfer_out', 'transfer_in', 'adjustment_increase', 'adjustment_decrease',
+  /// 'stock_count_adjustment', 'write_off', 'reversal').
+  final String movementType;
+
+  /// Official document posting date timestamp (UTC epoch ms).
+  final int postingDate;
+
+  /// Source document header UUID (e.g. StockReceipt.uuid, SalesInvoice.uuid).
+  final String sourceDocumentId;
+
+  /// Source document type ('stock_receipt', 'stock_issue', 'sales_invoice', etc.).
+  final String sourceDocumentType;
+
+  /// Source line item UUID.
+  final String sourceLineUuid;
+
+  /// Unit cost for this movement in inventory valuation currency.
+  final double unitCost;
+
+  /// Total cost (`quantity * unitCost`) in inventory valuation currency.
+  final double totalCost;
+
+  /// Inventory valuation currency code (e.g. 'YER').
+  final String inventoryCurrencyId;
+
+  /// Original document currency code (e.g. 'SAR', 'USD').
+  final String documentCurrencyId;
+
+  /// Unit cost in original document currency.
+  final double unitCostDocumentCurrency;
+
+  /// Total cost in original document currency.
+  final double totalCostDocumentCurrency;
+
+  /// Applied exchange rate (Inventory Currency / Document Currency).
+  final double exchangeRate;
+
+  /// Costing method applied ('fifo', 'lifo', 'weighted_average').
+  final String costingMethodUsed;
+
+  /// Movement creation timestamp (UTC epoch ms).
+  final int createdAt;
+
+  /// Version / Sync metadata
+  final int version;
+
+  /// Sync status ('synced', 'pending', etc.).
+  final String syncStatus;
+
+  /// Last synced timestamp (UTC epoch ms).
+  final int? lastSyncedAt;
+
+  /// Soft-delete tombstone (UTC epoch ms). Null = active.
+  final int? deletedAt;
+  const StockMovementLedgerRow({
+    required this.id,
+    required this.uuid,
+    required this.companyId,
+    required this.warehouseId,
+    required this.itemCode,
+    required this.quantity,
+    required this.direction,
+    required this.movementType,
+    required this.postingDate,
+    required this.sourceDocumentId,
+    required this.sourceDocumentType,
+    required this.sourceLineUuid,
+    required this.unitCost,
+    required this.totalCost,
+    required this.inventoryCurrencyId,
+    required this.documentCurrencyId,
+    required this.unitCostDocumentCurrency,
+    required this.totalCostDocumentCurrency,
+    required this.exchangeRate,
+    required this.costingMethodUsed,
+    required this.createdAt,
+    required this.version,
+    required this.syncStatus,
+    this.lastSyncedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
+    map['company_id'] = Variable<String>(companyId);
+    map['warehouse_id'] = Variable<String>(warehouseId);
+    map['item_code'] = Variable<String>(itemCode);
+    map['quantity'] = Variable<double>(quantity);
+    map['direction'] = Variable<String>(direction);
+    map['movement_type'] = Variable<String>(movementType);
+    map['posting_date'] = Variable<int>(postingDate);
+    map['source_document_id'] = Variable<String>(sourceDocumentId);
+    map['source_document_type'] = Variable<String>(sourceDocumentType);
+    map['source_line_uuid'] = Variable<String>(sourceLineUuid);
+    map['unit_cost'] = Variable<double>(unitCost);
+    map['total_cost'] = Variable<double>(totalCost);
+    map['inventory_currency_id'] = Variable<String>(inventoryCurrencyId);
+    map['document_currency_id'] = Variable<String>(documentCurrencyId);
+    map['unit_cost_document_currency'] = Variable<double>(
+      unitCostDocumentCurrency,
+    );
+    map['total_cost_document_currency'] = Variable<double>(
+      totalCostDocumentCurrency,
+    );
+    map['exchange_rate'] = Variable<double>(exchangeRate);
+    map['costing_method_used'] = Variable<String>(costingMethodUsed);
+    map['created_at'] = Variable<int>(createdAt);
+    map['version'] = Variable<int>(version);
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<int>(lastSyncedAt);
+    }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
+    return map;
+  }
+
+  StockMovementLedgersCompanion toCompanion(bool nullToAbsent) {
+    return StockMovementLedgersCompanion(
+      id: Value(id),
+      uuid: Value(uuid),
+      companyId: Value(companyId),
+      warehouseId: Value(warehouseId),
+      itemCode: Value(itemCode),
+      quantity: Value(quantity),
+      direction: Value(direction),
+      movementType: Value(movementType),
+      postingDate: Value(postingDate),
+      sourceDocumentId: Value(sourceDocumentId),
+      sourceDocumentType: Value(sourceDocumentType),
+      sourceLineUuid: Value(sourceLineUuid),
+      unitCost: Value(unitCost),
+      totalCost: Value(totalCost),
+      inventoryCurrencyId: Value(inventoryCurrencyId),
+      documentCurrencyId: Value(documentCurrencyId),
+      unitCostDocumentCurrency: Value(unitCostDocumentCurrency),
+      totalCostDocumentCurrency: Value(totalCostDocumentCurrency),
+      exchangeRate: Value(exchangeRate),
+      costingMethodUsed: Value(costingMethodUsed),
+      createdAt: Value(createdAt),
+      version: Value(version),
+      syncStatus: Value(syncStatus),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory StockMovementLedgerRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StockMovementLedgerRow(
+      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      companyId: serializer.fromJson<String>(json['companyId']),
+      warehouseId: serializer.fromJson<String>(json['warehouseId']),
+      itemCode: serializer.fromJson<String>(json['itemCode']),
+      quantity: serializer.fromJson<double>(json['quantity']),
+      direction: serializer.fromJson<String>(json['direction']),
+      movementType: serializer.fromJson<String>(json['movementType']),
+      postingDate: serializer.fromJson<int>(json['postingDate']),
+      sourceDocumentId: serializer.fromJson<String>(json['sourceDocumentId']),
+      sourceDocumentType: serializer.fromJson<String>(
+        json['sourceDocumentType'],
+      ),
+      sourceLineUuid: serializer.fromJson<String>(json['sourceLineUuid']),
+      unitCost: serializer.fromJson<double>(json['unitCost']),
+      totalCost: serializer.fromJson<double>(json['totalCost']),
+      inventoryCurrencyId: serializer.fromJson<String>(
+        json['inventoryCurrencyId'],
+      ),
+      documentCurrencyId: serializer.fromJson<String>(
+        json['documentCurrencyId'],
+      ),
+      unitCostDocumentCurrency: serializer.fromJson<double>(
+        json['unitCostDocumentCurrency'],
+      ),
+      totalCostDocumentCurrency: serializer.fromJson<double>(
+        json['totalCostDocumentCurrency'],
+      ),
+      exchangeRate: serializer.fromJson<double>(json['exchangeRate']),
+      costingMethodUsed: serializer.fromJson<String>(json['costingMethodUsed']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      version: serializer.fromJson<int>(json['version']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      lastSyncedAt: serializer.fromJson<int?>(json['lastSyncedAt']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
+      'companyId': serializer.toJson<String>(companyId),
+      'warehouseId': serializer.toJson<String>(warehouseId),
+      'itemCode': serializer.toJson<String>(itemCode),
+      'quantity': serializer.toJson<double>(quantity),
+      'direction': serializer.toJson<String>(direction),
+      'movementType': serializer.toJson<String>(movementType),
+      'postingDate': serializer.toJson<int>(postingDate),
+      'sourceDocumentId': serializer.toJson<String>(sourceDocumentId),
+      'sourceDocumentType': serializer.toJson<String>(sourceDocumentType),
+      'sourceLineUuid': serializer.toJson<String>(sourceLineUuid),
+      'unitCost': serializer.toJson<double>(unitCost),
+      'totalCost': serializer.toJson<double>(totalCost),
+      'inventoryCurrencyId': serializer.toJson<String>(inventoryCurrencyId),
+      'documentCurrencyId': serializer.toJson<String>(documentCurrencyId),
+      'unitCostDocumentCurrency': serializer.toJson<double>(
+        unitCostDocumentCurrency,
+      ),
+      'totalCostDocumentCurrency': serializer.toJson<double>(
+        totalCostDocumentCurrency,
+      ),
+      'exchangeRate': serializer.toJson<double>(exchangeRate),
+      'costingMethodUsed': serializer.toJson<String>(costingMethodUsed),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'version': serializer.toJson<int>(version),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'lastSyncedAt': serializer.toJson<int?>(lastSyncedAt),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
+    };
+  }
+
+  StockMovementLedgerRow copyWith({
+    int? id,
+    String? uuid,
+    String? companyId,
+    String? warehouseId,
+    String? itemCode,
+    double? quantity,
+    String? direction,
+    String? movementType,
+    int? postingDate,
+    String? sourceDocumentId,
+    String? sourceDocumentType,
+    String? sourceLineUuid,
+    double? unitCost,
+    double? totalCost,
+    String? inventoryCurrencyId,
+    String? documentCurrencyId,
+    double? unitCostDocumentCurrency,
+    double? totalCostDocumentCurrency,
+    double? exchangeRate,
+    String? costingMethodUsed,
+    int? createdAt,
+    int? version,
+    String? syncStatus,
+    Value<int?> lastSyncedAt = const Value.absent(),
+    Value<int?> deletedAt = const Value.absent(),
+  }) => StockMovementLedgerRow(
+    id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
+    companyId: companyId ?? this.companyId,
+    warehouseId: warehouseId ?? this.warehouseId,
+    itemCode: itemCode ?? this.itemCode,
+    quantity: quantity ?? this.quantity,
+    direction: direction ?? this.direction,
+    movementType: movementType ?? this.movementType,
+    postingDate: postingDate ?? this.postingDate,
+    sourceDocumentId: sourceDocumentId ?? this.sourceDocumentId,
+    sourceDocumentType: sourceDocumentType ?? this.sourceDocumentType,
+    sourceLineUuid: sourceLineUuid ?? this.sourceLineUuid,
+    unitCost: unitCost ?? this.unitCost,
+    totalCost: totalCost ?? this.totalCost,
+    inventoryCurrencyId: inventoryCurrencyId ?? this.inventoryCurrencyId,
+    documentCurrencyId: documentCurrencyId ?? this.documentCurrencyId,
+    unitCostDocumentCurrency:
+        unitCostDocumentCurrency ?? this.unitCostDocumentCurrency,
+    totalCostDocumentCurrency:
+        totalCostDocumentCurrency ?? this.totalCostDocumentCurrency,
+    exchangeRate: exchangeRate ?? this.exchangeRate,
+    costingMethodUsed: costingMethodUsed ?? this.costingMethodUsed,
+    createdAt: createdAt ?? this.createdAt,
+    version: version ?? this.version,
+    syncStatus: syncStatus ?? this.syncStatus,
+    lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  StockMovementLedgerRow copyWithCompanion(StockMovementLedgersCompanion data) {
+    return StockMovementLedgerRow(
+      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      companyId: data.companyId.present ? data.companyId.value : this.companyId,
+      warehouseId: data.warehouseId.present
+          ? data.warehouseId.value
+          : this.warehouseId,
+      itemCode: data.itemCode.present ? data.itemCode.value : this.itemCode,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      direction: data.direction.present ? data.direction.value : this.direction,
+      movementType: data.movementType.present
+          ? data.movementType.value
+          : this.movementType,
+      postingDate: data.postingDate.present
+          ? data.postingDate.value
+          : this.postingDate,
+      sourceDocumentId: data.sourceDocumentId.present
+          ? data.sourceDocumentId.value
+          : this.sourceDocumentId,
+      sourceDocumentType: data.sourceDocumentType.present
+          ? data.sourceDocumentType.value
+          : this.sourceDocumentType,
+      sourceLineUuid: data.sourceLineUuid.present
+          ? data.sourceLineUuid.value
+          : this.sourceLineUuid,
+      unitCost: data.unitCost.present ? data.unitCost.value : this.unitCost,
+      totalCost: data.totalCost.present ? data.totalCost.value : this.totalCost,
+      inventoryCurrencyId: data.inventoryCurrencyId.present
+          ? data.inventoryCurrencyId.value
+          : this.inventoryCurrencyId,
+      documentCurrencyId: data.documentCurrencyId.present
+          ? data.documentCurrencyId.value
+          : this.documentCurrencyId,
+      unitCostDocumentCurrency: data.unitCostDocumentCurrency.present
+          ? data.unitCostDocumentCurrency.value
+          : this.unitCostDocumentCurrency,
+      totalCostDocumentCurrency: data.totalCostDocumentCurrency.present
+          ? data.totalCostDocumentCurrency.value
+          : this.totalCostDocumentCurrency,
+      exchangeRate: data.exchangeRate.present
+          ? data.exchangeRate.value
+          : this.exchangeRate,
+      costingMethodUsed: data.costingMethodUsed.present
+          ? data.costingMethodUsed.value
+          : this.costingMethodUsed,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      version: data.version.present ? data.version.value : this.version,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StockMovementLedgerRow(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('companyId: $companyId, ')
+          ..write('warehouseId: $warehouseId, ')
+          ..write('itemCode: $itemCode, ')
+          ..write('quantity: $quantity, ')
+          ..write('direction: $direction, ')
+          ..write('movementType: $movementType, ')
+          ..write('postingDate: $postingDate, ')
+          ..write('sourceDocumentId: $sourceDocumentId, ')
+          ..write('sourceDocumentType: $sourceDocumentType, ')
+          ..write('sourceLineUuid: $sourceLineUuid, ')
+          ..write('unitCost: $unitCost, ')
+          ..write('totalCost: $totalCost, ')
+          ..write('inventoryCurrencyId: $inventoryCurrencyId, ')
+          ..write('documentCurrencyId: $documentCurrencyId, ')
+          ..write('unitCostDocumentCurrency: $unitCostDocumentCurrency, ')
+          ..write('totalCostDocumentCurrency: $totalCostDocumentCurrency, ')
+          ..write('exchangeRate: $exchangeRate, ')
+          ..write('costingMethodUsed: $costingMethodUsed, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('version: $version, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+    id,
+    uuid,
+    companyId,
+    warehouseId,
+    itemCode,
+    quantity,
+    direction,
+    movementType,
+    postingDate,
+    sourceDocumentId,
+    sourceDocumentType,
+    sourceLineUuid,
+    unitCost,
+    totalCost,
+    inventoryCurrencyId,
+    documentCurrencyId,
+    unitCostDocumentCurrency,
+    totalCostDocumentCurrency,
+    exchangeRate,
+    costingMethodUsed,
+    createdAt,
+    version,
+    syncStatus,
+    lastSyncedAt,
+    deletedAt,
+  ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StockMovementLedgerRow &&
+          other.id == this.id &&
+          other.uuid == this.uuid &&
+          other.companyId == this.companyId &&
+          other.warehouseId == this.warehouseId &&
+          other.itemCode == this.itemCode &&
+          other.quantity == this.quantity &&
+          other.direction == this.direction &&
+          other.movementType == this.movementType &&
+          other.postingDate == this.postingDate &&
+          other.sourceDocumentId == this.sourceDocumentId &&
+          other.sourceDocumentType == this.sourceDocumentType &&
+          other.sourceLineUuid == this.sourceLineUuid &&
+          other.unitCost == this.unitCost &&
+          other.totalCost == this.totalCost &&
+          other.inventoryCurrencyId == this.inventoryCurrencyId &&
+          other.documentCurrencyId == this.documentCurrencyId &&
+          other.unitCostDocumentCurrency == this.unitCostDocumentCurrency &&
+          other.totalCostDocumentCurrency == this.totalCostDocumentCurrency &&
+          other.exchangeRate == this.exchangeRate &&
+          other.costingMethodUsed == this.costingMethodUsed &&
+          other.createdAt == this.createdAt &&
+          other.version == this.version &&
+          other.syncStatus == this.syncStatus &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class StockMovementLedgersCompanion
+    extends UpdateCompanion<StockMovementLedgerRow> {
+  final Value<int> id;
+  final Value<String> uuid;
+  final Value<String> companyId;
+  final Value<String> warehouseId;
+  final Value<String> itemCode;
+  final Value<double> quantity;
+  final Value<String> direction;
+  final Value<String> movementType;
+  final Value<int> postingDate;
+  final Value<String> sourceDocumentId;
+  final Value<String> sourceDocumentType;
+  final Value<String> sourceLineUuid;
+  final Value<double> unitCost;
+  final Value<double> totalCost;
+  final Value<String> inventoryCurrencyId;
+  final Value<String> documentCurrencyId;
+  final Value<double> unitCostDocumentCurrency;
+  final Value<double> totalCostDocumentCurrency;
+  final Value<double> exchangeRate;
+  final Value<String> costingMethodUsed;
+  final Value<int> createdAt;
+  final Value<int> version;
+  final Value<String> syncStatus;
+  final Value<int?> lastSyncedAt;
+  final Value<int?> deletedAt;
+  const StockMovementLedgersCompanion({
+    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.companyId = const Value.absent(),
+    this.warehouseId = const Value.absent(),
+    this.itemCode = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.direction = const Value.absent(),
+    this.movementType = const Value.absent(),
+    this.postingDate = const Value.absent(),
+    this.sourceDocumentId = const Value.absent(),
+    this.sourceDocumentType = const Value.absent(),
+    this.sourceLineUuid = const Value.absent(),
+    this.unitCost = const Value.absent(),
+    this.totalCost = const Value.absent(),
+    this.inventoryCurrencyId = const Value.absent(),
+    this.documentCurrencyId = const Value.absent(),
+    this.unitCostDocumentCurrency = const Value.absent(),
+    this.totalCostDocumentCurrency = const Value.absent(),
+    this.exchangeRate = const Value.absent(),
+    this.costingMethodUsed = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+  });
+  StockMovementLedgersCompanion.insert({
+    this.id = const Value.absent(),
+    required String uuid,
+    required String companyId,
+    required String warehouseId,
+    required String itemCode,
+    this.quantity = const Value.absent(),
+    required String direction,
+    required String movementType,
+    required int postingDate,
+    required String sourceDocumentId,
+    required String sourceDocumentType,
+    required String sourceLineUuid,
+    this.unitCost = const Value.absent(),
+    this.totalCost = const Value.absent(),
+    this.inventoryCurrencyId = const Value.absent(),
+    this.documentCurrencyId = const Value.absent(),
+    this.unitCostDocumentCurrency = const Value.absent(),
+    this.totalCostDocumentCurrency = const Value.absent(),
+    this.exchangeRate = const Value.absent(),
+    required String costingMethodUsed,
+    required int createdAt,
+    this.version = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+  }) : uuid = Value(uuid),
+       companyId = Value(companyId),
+       warehouseId = Value(warehouseId),
+       itemCode = Value(itemCode),
+       direction = Value(direction),
+       movementType = Value(movementType),
+       postingDate = Value(postingDate),
+       sourceDocumentId = Value(sourceDocumentId),
+       sourceDocumentType = Value(sourceDocumentType),
+       sourceLineUuid = Value(sourceLineUuid),
+       costingMethodUsed = Value(costingMethodUsed),
+       createdAt = Value(createdAt);
+  static Insertable<StockMovementLedgerRow> custom({
+    Expression<int>? id,
+    Expression<String>? uuid,
+    Expression<String>? companyId,
+    Expression<String>? warehouseId,
+    Expression<String>? itemCode,
+    Expression<double>? quantity,
+    Expression<String>? direction,
+    Expression<String>? movementType,
+    Expression<int>? postingDate,
+    Expression<String>? sourceDocumentId,
+    Expression<String>? sourceDocumentType,
+    Expression<String>? sourceLineUuid,
+    Expression<double>? unitCost,
+    Expression<double>? totalCost,
+    Expression<String>? inventoryCurrencyId,
+    Expression<String>? documentCurrencyId,
+    Expression<double>? unitCostDocumentCurrency,
+    Expression<double>? totalCostDocumentCurrency,
+    Expression<double>? exchangeRate,
+    Expression<String>? costingMethodUsed,
+    Expression<int>? createdAt,
+    Expression<int>? version,
+    Expression<String>? syncStatus,
+    Expression<int>? lastSyncedAt,
+    Expression<int>? deletedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
+      if (companyId != null) 'company_id': companyId,
+      if (warehouseId != null) 'warehouse_id': warehouseId,
+      if (itemCode != null) 'item_code': itemCode,
+      if (quantity != null) 'quantity': quantity,
+      if (direction != null) 'direction': direction,
+      if (movementType != null) 'movement_type': movementType,
+      if (postingDate != null) 'posting_date': postingDate,
+      if (sourceDocumentId != null) 'source_document_id': sourceDocumentId,
+      if (sourceDocumentType != null)
+        'source_document_type': sourceDocumentType,
+      if (sourceLineUuid != null) 'source_line_uuid': sourceLineUuid,
+      if (unitCost != null) 'unit_cost': unitCost,
+      if (totalCost != null) 'total_cost': totalCost,
+      if (inventoryCurrencyId != null)
+        'inventory_currency_id': inventoryCurrencyId,
+      if (documentCurrencyId != null)
+        'document_currency_id': documentCurrencyId,
+      if (unitCostDocumentCurrency != null)
+        'unit_cost_document_currency': unitCostDocumentCurrency,
+      if (totalCostDocumentCurrency != null)
+        'total_cost_document_currency': totalCostDocumentCurrency,
+      if (exchangeRate != null) 'exchange_rate': exchangeRate,
+      if (costingMethodUsed != null) 'costing_method_used': costingMethodUsed,
+      if (createdAt != null) 'created_at': createdAt,
+      if (version != null) 'version': version,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+    });
+  }
+
+  StockMovementLedgersCompanion copyWith({
+    Value<int>? id,
+    Value<String>? uuid,
+    Value<String>? companyId,
+    Value<String>? warehouseId,
+    Value<String>? itemCode,
+    Value<double>? quantity,
+    Value<String>? direction,
+    Value<String>? movementType,
+    Value<int>? postingDate,
+    Value<String>? sourceDocumentId,
+    Value<String>? sourceDocumentType,
+    Value<String>? sourceLineUuid,
+    Value<double>? unitCost,
+    Value<double>? totalCost,
+    Value<String>? inventoryCurrencyId,
+    Value<String>? documentCurrencyId,
+    Value<double>? unitCostDocumentCurrency,
+    Value<double>? totalCostDocumentCurrency,
+    Value<double>? exchangeRate,
+    Value<String>? costingMethodUsed,
+    Value<int>? createdAt,
+    Value<int>? version,
+    Value<String>? syncStatus,
+    Value<int?>? lastSyncedAt,
+    Value<int?>? deletedAt,
+  }) {
+    return StockMovementLedgersCompanion(
+      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
+      companyId: companyId ?? this.companyId,
+      warehouseId: warehouseId ?? this.warehouseId,
+      itemCode: itemCode ?? this.itemCode,
+      quantity: quantity ?? this.quantity,
+      direction: direction ?? this.direction,
+      movementType: movementType ?? this.movementType,
+      postingDate: postingDate ?? this.postingDate,
+      sourceDocumentId: sourceDocumentId ?? this.sourceDocumentId,
+      sourceDocumentType: sourceDocumentType ?? this.sourceDocumentType,
+      sourceLineUuid: sourceLineUuid ?? this.sourceLineUuid,
+      unitCost: unitCost ?? this.unitCost,
+      totalCost: totalCost ?? this.totalCost,
+      inventoryCurrencyId: inventoryCurrencyId ?? this.inventoryCurrencyId,
+      documentCurrencyId: documentCurrencyId ?? this.documentCurrencyId,
+      unitCostDocumentCurrency:
+          unitCostDocumentCurrency ?? this.unitCostDocumentCurrency,
+      totalCostDocumentCurrency:
+          totalCostDocumentCurrency ?? this.totalCostDocumentCurrency,
+      exchangeRate: exchangeRate ?? this.exchangeRate,
+      costingMethodUsed: costingMethodUsed ?? this.costingMethodUsed,
+      createdAt: createdAt ?? this.createdAt,
+      version: version ?? this.version,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (companyId.present) {
+      map['company_id'] = Variable<String>(companyId.value);
+    }
+    if (warehouseId.present) {
+      map['warehouse_id'] = Variable<String>(warehouseId.value);
+    }
+    if (itemCode.present) {
+      map['item_code'] = Variable<String>(itemCode.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<double>(quantity.value);
+    }
+    if (direction.present) {
+      map['direction'] = Variable<String>(direction.value);
+    }
+    if (movementType.present) {
+      map['movement_type'] = Variable<String>(movementType.value);
+    }
+    if (postingDate.present) {
+      map['posting_date'] = Variable<int>(postingDate.value);
+    }
+    if (sourceDocumentId.present) {
+      map['source_document_id'] = Variable<String>(sourceDocumentId.value);
+    }
+    if (sourceDocumentType.present) {
+      map['source_document_type'] = Variable<String>(sourceDocumentType.value);
+    }
+    if (sourceLineUuid.present) {
+      map['source_line_uuid'] = Variable<String>(sourceLineUuid.value);
+    }
+    if (unitCost.present) {
+      map['unit_cost'] = Variable<double>(unitCost.value);
+    }
+    if (totalCost.present) {
+      map['total_cost'] = Variable<double>(totalCost.value);
+    }
+    if (inventoryCurrencyId.present) {
+      map['inventory_currency_id'] = Variable<String>(
+        inventoryCurrencyId.value,
+      );
+    }
+    if (documentCurrencyId.present) {
+      map['document_currency_id'] = Variable<String>(documentCurrencyId.value);
+    }
+    if (unitCostDocumentCurrency.present) {
+      map['unit_cost_document_currency'] = Variable<double>(
+        unitCostDocumentCurrency.value,
+      );
+    }
+    if (totalCostDocumentCurrency.present) {
+      map['total_cost_document_currency'] = Variable<double>(
+        totalCostDocumentCurrency.value,
+      );
+    }
+    if (exchangeRate.present) {
+      map['exchange_rate'] = Variable<double>(exchangeRate.value);
+    }
+    if (costingMethodUsed.present) {
+      map['costing_method_used'] = Variable<String>(costingMethodUsed.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<int>(lastSyncedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StockMovementLedgersCompanion(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('companyId: $companyId, ')
+          ..write('warehouseId: $warehouseId, ')
+          ..write('itemCode: $itemCode, ')
+          ..write('quantity: $quantity, ')
+          ..write('direction: $direction, ')
+          ..write('movementType: $movementType, ')
+          ..write('postingDate: $postingDate, ')
+          ..write('sourceDocumentId: $sourceDocumentId, ')
+          ..write('sourceDocumentType: $sourceDocumentType, ')
+          ..write('sourceLineUuid: $sourceLineUuid, ')
+          ..write('unitCost: $unitCost, ')
+          ..write('totalCost: $totalCost, ')
+          ..write('inventoryCurrencyId: $inventoryCurrencyId, ')
+          ..write('documentCurrencyId: $documentCurrencyId, ')
+          ..write('unitCostDocumentCurrency: $unitCostDocumentCurrency, ')
+          ..write('totalCostDocumentCurrency: $totalCostDocumentCurrency, ')
+          ..write('exchangeRate: $exchangeRate, ')
+          ..write('costingMethodUsed: $costingMethodUsed, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('version: $version, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$InventoryDatabase extends GeneratedDatabase {
   _$InventoryDatabase(QueryExecutor e) : super(e);
   $InventoryDatabaseManager get managers => $InventoryDatabaseManager(this);
@@ -10796,6 +13611,10 @@ abstract class _$InventoryDatabase extends GeneratedDatabase {
   late final $InventoryAuditTrailTable inventoryAuditTrail =
       $InventoryAuditTrailTable(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
+  late final $WarehouseAccountingBindingsTable warehouseAccountingBindings =
+      $WarehouseAccountingBindingsTable(this);
+  late final $StockMovementLedgersTable stockMovementLedgers =
+      $StockMovementLedgersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -10813,6 +13632,8 @@ abstract class _$InventoryDatabase extends GeneratedDatabase {
     stockTransfers,
     inventoryAuditTrail,
     categories,
+    warehouseAccountingBindings,
+    stockMovementLedgers,
   ];
 }
 
@@ -11275,6 +14096,7 @@ typedef $$StockReceiptsTableCreateCompanionBuilder =
       Value<String?> accountName,
       Value<String> currencyCode,
       Value<double> exchangeRate,
+      Value<String?> warehouse,
       Value<String?> notes,
       required int receiptDate,
       required int createdAt,
@@ -11297,6 +14119,7 @@ typedef $$StockReceiptsTableUpdateCompanionBuilder =
       Value<String?> accountName,
       Value<String> currencyCode,
       Value<double> exchangeRate,
+      Value<String?> warehouse,
       Value<String?> notes,
       Value<int> receiptDate,
       Value<int> createdAt,
@@ -11356,6 +14179,11 @@ class $$StockReceiptsTableFilterComposer
 
   ColumnFilters<double> get exchangeRate => $composableBuilder(
     column: $table.exchangeRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get warehouse => $composableBuilder(
+    column: $table.warehouse,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11464,6 +14292,11 @@ class $$StockReceiptsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get warehouse => $composableBuilder(
+    column: $table.warehouse,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get notes => $composableBuilder(
     column: $table.notes,
     builder: (column) => ColumnOrderings(column),
@@ -11561,6 +14394,9 @@ class $$StockReceiptsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get warehouse =>
+      $composableBuilder(column: $table.warehouse, builder: (column) => column);
+
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
 
@@ -11646,6 +14482,7 @@ class $$StockReceiptsTableTableManager
                 Value<String?> accountName = const Value.absent(),
                 Value<String> currencyCode = const Value.absent(),
                 Value<double> exchangeRate = const Value.absent(),
+                Value<String?> warehouse = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<int> receiptDate = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
@@ -11666,6 +14503,7 @@ class $$StockReceiptsTableTableManager
                 accountName: accountName,
                 currencyCode: currencyCode,
                 exchangeRate: exchangeRate,
+                warehouse: warehouse,
                 notes: notes,
                 receiptDate: receiptDate,
                 createdAt: createdAt,
@@ -11688,6 +14526,7 @@ class $$StockReceiptsTableTableManager
                 Value<String?> accountName = const Value.absent(),
                 Value<String> currencyCode = const Value.absent(),
                 Value<double> exchangeRate = const Value.absent(),
+                Value<String?> warehouse = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 required int receiptDate,
                 required int createdAt,
@@ -11708,6 +14547,7 @@ class $$StockReceiptsTableTableManager
                 accountName: accountName,
                 currencyCode: currencyCode,
                 exchangeRate: exchangeRate,
+                warehouse: warehouse,
                 notes: notes,
                 receiptDate: receiptDate,
                 createdAt: createdAt,
@@ -12651,6 +15491,14 @@ typedef $$InventoryCostLayersTableCreateCompanionBuilder =
       Value<double> remainingQty,
       Value<double> unitCost,
       Value<double> totalCost,
+      Value<String> inventoryCurrencyId,
+      Value<double> unitCostInventoryCurrency,
+      Value<double> totalCostInventoryCurrency,
+      Value<String> documentCurrencyId,
+      Value<double> unitCostDocumentCurrency,
+      Value<double> totalCostDocumentCurrency,
+      Value<double> exchangeRate,
+      Value<int?> exchangeRateDate,
       Value<int> closed,
       required int createdAt,
       required int updatedAt,
@@ -12673,6 +15521,14 @@ typedef $$InventoryCostLayersTableUpdateCompanionBuilder =
       Value<double> remainingQty,
       Value<double> unitCost,
       Value<double> totalCost,
+      Value<String> inventoryCurrencyId,
+      Value<double> unitCostInventoryCurrency,
+      Value<double> totalCostInventoryCurrency,
+      Value<String> documentCurrencyId,
+      Value<double> unitCostDocumentCurrency,
+      Value<double> totalCostDocumentCurrency,
+      Value<double> exchangeRate,
+      Value<int?> exchangeRateDate,
       Value<int> closed,
       Value<int> createdAt,
       Value<int> updatedAt,
@@ -12744,6 +15600,46 @@ class $$InventoryCostLayersTableFilterComposer
 
   ColumnFilters<double> get totalCost => $composableBuilder(
     column: $table.totalCost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get inventoryCurrencyId => $composableBuilder(
+    column: $table.inventoryCurrencyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get unitCostInventoryCurrency => $composableBuilder(
+    column: $table.unitCostInventoryCurrency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalCostInventoryCurrency => $composableBuilder(
+    column: $table.totalCostInventoryCurrency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentCurrencyId => $composableBuilder(
+    column: $table.documentCurrencyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get unitCostDocumentCurrency => $composableBuilder(
+    column: $table.unitCostDocumentCurrency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalCostDocumentCurrency => $composableBuilder(
+    column: $table.totalCostDocumentCurrency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get exchangeRate => $composableBuilder(
+    column: $table.exchangeRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get exchangeRateDate => $composableBuilder(
+    column: $table.exchangeRateDate,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -12852,6 +15748,46 @@ class $$InventoryCostLayersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get inventoryCurrencyId => $composableBuilder(
+    column: $table.inventoryCurrencyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get unitCostInventoryCurrency => $composableBuilder(
+    column: $table.unitCostInventoryCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalCostInventoryCurrency => $composableBuilder(
+    column: $table.totalCostInventoryCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentCurrencyId => $composableBuilder(
+    column: $table.documentCurrencyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get unitCostDocumentCurrency => $composableBuilder(
+    column: $table.unitCostDocumentCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalCostDocumentCurrency => $composableBuilder(
+    column: $table.totalCostDocumentCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get exchangeRate => $composableBuilder(
+    column: $table.exchangeRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get exchangeRateDate => $composableBuilder(
+    column: $table.exchangeRateDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get closed => $composableBuilder(
     column: $table.closed,
     builder: (column) => ColumnOrderings(column),
@@ -12947,6 +15883,46 @@ class $$InventoryCostLayersTableAnnotationComposer
   GeneratedColumn<double> get totalCost =>
       $composableBuilder(column: $table.totalCost, builder: (column) => column);
 
+  GeneratedColumn<String> get inventoryCurrencyId => $composableBuilder(
+    column: $table.inventoryCurrencyId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get unitCostInventoryCurrency => $composableBuilder(
+    column: $table.unitCostInventoryCurrency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get totalCostInventoryCurrency => $composableBuilder(
+    column: $table.totalCostInventoryCurrency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentCurrencyId => $composableBuilder(
+    column: $table.documentCurrencyId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get unitCostDocumentCurrency => $composableBuilder(
+    column: $table.unitCostDocumentCurrency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get totalCostDocumentCurrency => $composableBuilder(
+    column: $table.totalCostDocumentCurrency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get exchangeRate => $composableBuilder(
+    column: $table.exchangeRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get exchangeRateDate => $composableBuilder(
+    column: $table.exchangeRateDate,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get closed =>
       $composableBuilder(column: $table.closed, builder: (column) => column);
 
@@ -13030,6 +16006,14 @@ class $$InventoryCostLayersTableTableManager
                 Value<double> remainingQty = const Value.absent(),
                 Value<double> unitCost = const Value.absent(),
                 Value<double> totalCost = const Value.absent(),
+                Value<String> inventoryCurrencyId = const Value.absent(),
+                Value<double> unitCostInventoryCurrency = const Value.absent(),
+                Value<double> totalCostInventoryCurrency = const Value.absent(),
+                Value<String> documentCurrencyId = const Value.absent(),
+                Value<double> unitCostDocumentCurrency = const Value.absent(),
+                Value<double> totalCostDocumentCurrency = const Value.absent(),
+                Value<double> exchangeRate = const Value.absent(),
+                Value<int?> exchangeRateDate = const Value.absent(),
                 Value<int> closed = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
@@ -13050,6 +16034,14 @@ class $$InventoryCostLayersTableTableManager
                 remainingQty: remainingQty,
                 unitCost: unitCost,
                 totalCost: totalCost,
+                inventoryCurrencyId: inventoryCurrencyId,
+                unitCostInventoryCurrency: unitCostInventoryCurrency,
+                totalCostInventoryCurrency: totalCostInventoryCurrency,
+                documentCurrencyId: documentCurrencyId,
+                unitCostDocumentCurrency: unitCostDocumentCurrency,
+                totalCostDocumentCurrency: totalCostDocumentCurrency,
+                exchangeRate: exchangeRate,
+                exchangeRateDate: exchangeRateDate,
                 closed: closed,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -13072,6 +16064,14 @@ class $$InventoryCostLayersTableTableManager
                 Value<double> remainingQty = const Value.absent(),
                 Value<double> unitCost = const Value.absent(),
                 Value<double> totalCost = const Value.absent(),
+                Value<String> inventoryCurrencyId = const Value.absent(),
+                Value<double> unitCostInventoryCurrency = const Value.absent(),
+                Value<double> totalCostInventoryCurrency = const Value.absent(),
+                Value<String> documentCurrencyId = const Value.absent(),
+                Value<double> unitCostDocumentCurrency = const Value.absent(),
+                Value<double> totalCostDocumentCurrency = const Value.absent(),
+                Value<double> exchangeRate = const Value.absent(),
+                Value<int?> exchangeRateDate = const Value.absent(),
                 Value<int> closed = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
@@ -13092,6 +16092,14 @@ class $$InventoryCostLayersTableTableManager
                 remainingQty: remainingQty,
                 unitCost: unitCost,
                 totalCost: totalCost,
+                inventoryCurrencyId: inventoryCurrencyId,
+                unitCostInventoryCurrency: unitCostInventoryCurrency,
+                totalCostInventoryCurrency: totalCostInventoryCurrency,
+                documentCurrencyId: documentCurrencyId,
+                unitCostDocumentCurrency: unitCostDocumentCurrency,
+                totalCostDocumentCurrency: totalCostDocumentCurrency,
+                exchangeRate: exchangeRate,
+                exchangeRateDate: exchangeRateDate,
                 closed: closed,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -15755,6 +18763,997 @@ typedef $$CategoriesTableProcessedTableManager =
       CategoryRow,
       PrefetchHooks Function()
     >;
+typedef $$WarehouseAccountingBindingsTableCreateCompanionBuilder =
+    WarehouseAccountingBindingsCompanion Function({
+      required String uuid,
+      required String warehouseId,
+      Value<String?> inventoryAssetAccountId,
+      Value<String?> cogsAccountId,
+      Value<String?> inventoryAdjustmentAccountId,
+      Value<String?> stockTransferClearingAccountId,
+      required int createdAt,
+      required int updatedAt,
+      Value<String> syncStatus,
+      Value<int> version,
+      required String companyId,
+      Value<int?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$WarehouseAccountingBindingsTableUpdateCompanionBuilder =
+    WarehouseAccountingBindingsCompanion Function({
+      Value<String> uuid,
+      Value<String> warehouseId,
+      Value<String?> inventoryAssetAccountId,
+      Value<String?> cogsAccountId,
+      Value<String?> inventoryAdjustmentAccountId,
+      Value<String?> stockTransferClearingAccountId,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+      Value<String> syncStatus,
+      Value<int> version,
+      Value<String> companyId,
+      Value<int?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$WarehouseAccountingBindingsTableFilterComposer
+    extends Composer<_$InventoryDatabase, $WarehouseAccountingBindingsTable> {
+  $$WarehouseAccountingBindingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get warehouseId => $composableBuilder(
+    column: $table.warehouseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get inventoryAssetAccountId => $composableBuilder(
+    column: $table.inventoryAssetAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cogsAccountId => $composableBuilder(
+    column: $table.cogsAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get inventoryAdjustmentAccountId => $composableBuilder(
+    column: $table.inventoryAdjustmentAccountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stockTransferClearingAccountId =>
+      $composableBuilder(
+        column: $table.stockTransferClearingAccountId,
+        builder: (column) => ColumnFilters(column),
+      );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$WarehouseAccountingBindingsTableOrderingComposer
+    extends Composer<_$InventoryDatabase, $WarehouseAccountingBindingsTable> {
+  $$WarehouseAccountingBindingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get warehouseId => $composableBuilder(
+    column: $table.warehouseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get inventoryAssetAccountId => $composableBuilder(
+    column: $table.inventoryAssetAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cogsAccountId => $composableBuilder(
+    column: $table.cogsAccountId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get inventoryAdjustmentAccountId =>
+      $composableBuilder(
+        column: $table.inventoryAdjustmentAccountId,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<String> get stockTransferClearingAccountId =>
+      $composableBuilder(
+        column: $table.stockTransferClearingAccountId,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$WarehouseAccountingBindingsTableAnnotationComposer
+    extends Composer<_$InventoryDatabase, $WarehouseAccountingBindingsTable> {
+  $$WarehouseAccountingBindingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get warehouseId => $composableBuilder(
+    column: $table.warehouseId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get inventoryAssetAccountId => $composableBuilder(
+    column: $table.inventoryAssetAccountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get cogsAccountId => $composableBuilder(
+    column: $table.cogsAccountId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get inventoryAdjustmentAccountId =>
+      $composableBuilder(
+        column: $table.inventoryAdjustmentAccountId,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<String> get stockTransferClearingAccountId =>
+      $composableBuilder(
+        column: $table.stockTransferClearingAccountId,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$WarehouseAccountingBindingsTableTableManager
+    extends
+        RootTableManager<
+          _$InventoryDatabase,
+          $WarehouseAccountingBindingsTable,
+          WarehouseAccountingBindingRow,
+          $$WarehouseAccountingBindingsTableFilterComposer,
+          $$WarehouseAccountingBindingsTableOrderingComposer,
+          $$WarehouseAccountingBindingsTableAnnotationComposer,
+          $$WarehouseAccountingBindingsTableCreateCompanionBuilder,
+          $$WarehouseAccountingBindingsTableUpdateCompanionBuilder,
+          (
+            WarehouseAccountingBindingRow,
+            BaseReferences<
+              _$InventoryDatabase,
+              $WarehouseAccountingBindingsTable,
+              WarehouseAccountingBindingRow
+            >,
+          ),
+          WarehouseAccountingBindingRow,
+          PrefetchHooks Function()
+        > {
+  $$WarehouseAccountingBindingsTableTableManager(
+    _$InventoryDatabase db,
+    $WarehouseAccountingBindingsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WarehouseAccountingBindingsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$WarehouseAccountingBindingsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$WarehouseAccountingBindingsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> uuid = const Value.absent(),
+                Value<String> warehouseId = const Value.absent(),
+                Value<String?> inventoryAssetAccountId = const Value.absent(),
+                Value<String?> cogsAccountId = const Value.absent(),
+                Value<String?> inventoryAdjustmentAccountId =
+                    const Value.absent(),
+                Value<String?> stockTransferClearingAccountId =
+                    const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WarehouseAccountingBindingsCompanion(
+                uuid: uuid,
+                warehouseId: warehouseId,
+                inventoryAssetAccountId: inventoryAssetAccountId,
+                cogsAccountId: cogsAccountId,
+                inventoryAdjustmentAccountId: inventoryAdjustmentAccountId,
+                stockTransferClearingAccountId: stockTransferClearingAccountId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                version: version,
+                companyId: companyId,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String uuid,
+                required String warehouseId,
+                Value<String?> inventoryAssetAccountId = const Value.absent(),
+                Value<String?> cogsAccountId = const Value.absent(),
+                Value<String?> inventoryAdjustmentAccountId =
+                    const Value.absent(),
+                Value<String?> stockTransferClearingAccountId =
+                    const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+                Value<String> syncStatus = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                required String companyId,
+                Value<int?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => WarehouseAccountingBindingsCompanion.insert(
+                uuid: uuid,
+                warehouseId: warehouseId,
+                inventoryAssetAccountId: inventoryAssetAccountId,
+                cogsAccountId: cogsAccountId,
+                inventoryAdjustmentAccountId: inventoryAdjustmentAccountId,
+                stockTransferClearingAccountId: stockTransferClearingAccountId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                syncStatus: syncStatus,
+                version: version,
+                companyId: companyId,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$WarehouseAccountingBindingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$InventoryDatabase,
+      $WarehouseAccountingBindingsTable,
+      WarehouseAccountingBindingRow,
+      $$WarehouseAccountingBindingsTableFilterComposer,
+      $$WarehouseAccountingBindingsTableOrderingComposer,
+      $$WarehouseAccountingBindingsTableAnnotationComposer,
+      $$WarehouseAccountingBindingsTableCreateCompanionBuilder,
+      $$WarehouseAccountingBindingsTableUpdateCompanionBuilder,
+      (
+        WarehouseAccountingBindingRow,
+        BaseReferences<
+          _$InventoryDatabase,
+          $WarehouseAccountingBindingsTable,
+          WarehouseAccountingBindingRow
+        >,
+      ),
+      WarehouseAccountingBindingRow,
+      PrefetchHooks Function()
+    >;
+typedef $$StockMovementLedgersTableCreateCompanionBuilder =
+    StockMovementLedgersCompanion Function({
+      Value<int> id,
+      required String uuid,
+      required String companyId,
+      required String warehouseId,
+      required String itemCode,
+      Value<double> quantity,
+      required String direction,
+      required String movementType,
+      required int postingDate,
+      required String sourceDocumentId,
+      required String sourceDocumentType,
+      required String sourceLineUuid,
+      Value<double> unitCost,
+      Value<double> totalCost,
+      Value<String> inventoryCurrencyId,
+      Value<String> documentCurrencyId,
+      Value<double> unitCostDocumentCurrency,
+      Value<double> totalCostDocumentCurrency,
+      Value<double> exchangeRate,
+      required String costingMethodUsed,
+      required int createdAt,
+      Value<int> version,
+      Value<String> syncStatus,
+      Value<int?> lastSyncedAt,
+      Value<int?> deletedAt,
+    });
+typedef $$StockMovementLedgersTableUpdateCompanionBuilder =
+    StockMovementLedgersCompanion Function({
+      Value<int> id,
+      Value<String> uuid,
+      Value<String> companyId,
+      Value<String> warehouseId,
+      Value<String> itemCode,
+      Value<double> quantity,
+      Value<String> direction,
+      Value<String> movementType,
+      Value<int> postingDate,
+      Value<String> sourceDocumentId,
+      Value<String> sourceDocumentType,
+      Value<String> sourceLineUuid,
+      Value<double> unitCost,
+      Value<double> totalCost,
+      Value<String> inventoryCurrencyId,
+      Value<String> documentCurrencyId,
+      Value<double> unitCostDocumentCurrency,
+      Value<double> totalCostDocumentCurrency,
+      Value<double> exchangeRate,
+      Value<String> costingMethodUsed,
+      Value<int> createdAt,
+      Value<int> version,
+      Value<String> syncStatus,
+      Value<int?> lastSyncedAt,
+      Value<int?> deletedAt,
+    });
+
+class $$StockMovementLedgersTableFilterComposer
+    extends Composer<_$InventoryDatabase, $StockMovementLedgersTable> {
+  $$StockMovementLedgersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get warehouseId => $composableBuilder(
+    column: $table.warehouseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemCode => $composableBuilder(
+    column: $table.itemCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get movementType => $composableBuilder(
+    column: $table.movementType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get postingDate => $composableBuilder(
+    column: $table.postingDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceDocumentId => $composableBuilder(
+    column: $table.sourceDocumentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceDocumentType => $composableBuilder(
+    column: $table.sourceDocumentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceLineUuid => $composableBuilder(
+    column: $table.sourceLineUuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get unitCost => $composableBuilder(
+    column: $table.unitCost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalCost => $composableBuilder(
+    column: $table.totalCost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get inventoryCurrencyId => $composableBuilder(
+    column: $table.inventoryCurrencyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentCurrencyId => $composableBuilder(
+    column: $table.documentCurrencyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get unitCostDocumentCurrency => $composableBuilder(
+    column: $table.unitCostDocumentCurrency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalCostDocumentCurrency => $composableBuilder(
+    column: $table.totalCostDocumentCurrency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get exchangeRate => $composableBuilder(
+    column: $table.exchangeRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get costingMethodUsed => $composableBuilder(
+    column: $table.costingMethodUsed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StockMovementLedgersTableOrderingComposer
+    extends Composer<_$InventoryDatabase, $StockMovementLedgersTable> {
+  $$StockMovementLedgersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get companyId => $composableBuilder(
+    column: $table.companyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get warehouseId => $composableBuilder(
+    column: $table.warehouseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemCode => $composableBuilder(
+    column: $table.itemCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get movementType => $composableBuilder(
+    column: $table.movementType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get postingDate => $composableBuilder(
+    column: $table.postingDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceDocumentId => $composableBuilder(
+    column: $table.sourceDocumentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceDocumentType => $composableBuilder(
+    column: $table.sourceDocumentType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceLineUuid => $composableBuilder(
+    column: $table.sourceLineUuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get unitCost => $composableBuilder(
+    column: $table.unitCost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalCost => $composableBuilder(
+    column: $table.totalCost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get inventoryCurrencyId => $composableBuilder(
+    column: $table.inventoryCurrencyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentCurrencyId => $composableBuilder(
+    column: $table.documentCurrencyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get unitCostDocumentCurrency => $composableBuilder(
+    column: $table.unitCostDocumentCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalCostDocumentCurrency => $composableBuilder(
+    column: $table.totalCostDocumentCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get exchangeRate => $composableBuilder(
+    column: $table.exchangeRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get costingMethodUsed => $composableBuilder(
+    column: $table.costingMethodUsed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StockMovementLedgersTableAnnotationComposer
+    extends Composer<_$InventoryDatabase, $StockMovementLedgersTable> {
+  $$StockMovementLedgersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get companyId =>
+      $composableBuilder(column: $table.companyId, builder: (column) => column);
+
+  GeneratedColumn<String> get warehouseId => $composableBuilder(
+    column: $table.warehouseId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get itemCode =>
+      $composableBuilder(column: $table.itemCode, builder: (column) => column);
+
+  GeneratedColumn<double> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => column);
+
+  GeneratedColumn<String> get movementType => $composableBuilder(
+    column: $table.movementType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get postingDate => $composableBuilder(
+    column: $table.postingDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceDocumentId => $composableBuilder(
+    column: $table.sourceDocumentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceDocumentType => $composableBuilder(
+    column: $table.sourceDocumentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceLineUuid => $composableBuilder(
+    column: $table.sourceLineUuid,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get unitCost =>
+      $composableBuilder(column: $table.unitCost, builder: (column) => column);
+
+  GeneratedColumn<double> get totalCost =>
+      $composableBuilder(column: $table.totalCost, builder: (column) => column);
+
+  GeneratedColumn<String> get inventoryCurrencyId => $composableBuilder(
+    column: $table.inventoryCurrencyId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get documentCurrencyId => $composableBuilder(
+    column: $table.documentCurrencyId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get unitCostDocumentCurrency => $composableBuilder(
+    column: $table.unitCostDocumentCurrency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get totalCostDocumentCurrency => $composableBuilder(
+    column: $table.totalCostDocumentCurrency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get exchangeRate => $composableBuilder(
+    column: $table.exchangeRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get costingMethodUsed => $composableBuilder(
+    column: $table.costingMethodUsed,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$StockMovementLedgersTableTableManager
+    extends
+        RootTableManager<
+          _$InventoryDatabase,
+          $StockMovementLedgersTable,
+          StockMovementLedgerRow,
+          $$StockMovementLedgersTableFilterComposer,
+          $$StockMovementLedgersTableOrderingComposer,
+          $$StockMovementLedgersTableAnnotationComposer,
+          $$StockMovementLedgersTableCreateCompanionBuilder,
+          $$StockMovementLedgersTableUpdateCompanionBuilder,
+          (
+            StockMovementLedgerRow,
+            BaseReferences<
+              _$InventoryDatabase,
+              $StockMovementLedgersTable,
+              StockMovementLedgerRow
+            >,
+          ),
+          StockMovementLedgerRow,
+          PrefetchHooks Function()
+        > {
+  $$StockMovementLedgersTableTableManager(
+    _$InventoryDatabase db,
+    $StockMovementLedgersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StockMovementLedgersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StockMovementLedgersTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$StockMovementLedgersTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
+                Value<String> companyId = const Value.absent(),
+                Value<String> warehouseId = const Value.absent(),
+                Value<String> itemCode = const Value.absent(),
+                Value<double> quantity = const Value.absent(),
+                Value<String> direction = const Value.absent(),
+                Value<String> movementType = const Value.absent(),
+                Value<int> postingDate = const Value.absent(),
+                Value<String> sourceDocumentId = const Value.absent(),
+                Value<String> sourceDocumentType = const Value.absent(),
+                Value<String> sourceLineUuid = const Value.absent(),
+                Value<double> unitCost = const Value.absent(),
+                Value<double> totalCost = const Value.absent(),
+                Value<String> inventoryCurrencyId = const Value.absent(),
+                Value<String> documentCurrencyId = const Value.absent(),
+                Value<double> unitCostDocumentCurrency = const Value.absent(),
+                Value<double> totalCostDocumentCurrency = const Value.absent(),
+                Value<double> exchangeRate = const Value.absent(),
+                Value<String> costingMethodUsed = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
+              }) => StockMovementLedgersCompanion(
+                id: id,
+                uuid: uuid,
+                companyId: companyId,
+                warehouseId: warehouseId,
+                itemCode: itemCode,
+                quantity: quantity,
+                direction: direction,
+                movementType: movementType,
+                postingDate: postingDate,
+                sourceDocumentId: sourceDocumentId,
+                sourceDocumentType: sourceDocumentType,
+                sourceLineUuid: sourceLineUuid,
+                unitCost: unitCost,
+                totalCost: totalCost,
+                inventoryCurrencyId: inventoryCurrencyId,
+                documentCurrencyId: documentCurrencyId,
+                unitCostDocumentCurrency: unitCostDocumentCurrency,
+                totalCostDocumentCurrency: totalCostDocumentCurrency,
+                exchangeRate: exchangeRate,
+                costingMethodUsed: costingMethodUsed,
+                createdAt: createdAt,
+                version: version,
+                syncStatus: syncStatus,
+                lastSyncedAt: lastSyncedAt,
+                deletedAt: deletedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String uuid,
+                required String companyId,
+                required String warehouseId,
+                required String itemCode,
+                Value<double> quantity = const Value.absent(),
+                required String direction,
+                required String movementType,
+                required int postingDate,
+                required String sourceDocumentId,
+                required String sourceDocumentType,
+                required String sourceLineUuid,
+                Value<double> unitCost = const Value.absent(),
+                Value<double> totalCost = const Value.absent(),
+                Value<String> inventoryCurrencyId = const Value.absent(),
+                Value<String> documentCurrencyId = const Value.absent(),
+                Value<double> unitCostDocumentCurrency = const Value.absent(),
+                Value<double> totalCostDocumentCurrency = const Value.absent(),
+                Value<double> exchangeRate = const Value.absent(),
+                required String costingMethodUsed,
+                required int createdAt,
+                Value<int> version = const Value.absent(),
+                Value<String> syncStatus = const Value.absent(),
+                Value<int?> lastSyncedAt = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
+              }) => StockMovementLedgersCompanion.insert(
+                id: id,
+                uuid: uuid,
+                companyId: companyId,
+                warehouseId: warehouseId,
+                itemCode: itemCode,
+                quantity: quantity,
+                direction: direction,
+                movementType: movementType,
+                postingDate: postingDate,
+                sourceDocumentId: sourceDocumentId,
+                sourceDocumentType: sourceDocumentType,
+                sourceLineUuid: sourceLineUuid,
+                unitCost: unitCost,
+                totalCost: totalCost,
+                inventoryCurrencyId: inventoryCurrencyId,
+                documentCurrencyId: documentCurrencyId,
+                unitCostDocumentCurrency: unitCostDocumentCurrency,
+                totalCostDocumentCurrency: totalCostDocumentCurrency,
+                exchangeRate: exchangeRate,
+                costingMethodUsed: costingMethodUsed,
+                createdAt: createdAt,
+                version: version,
+                syncStatus: syncStatus,
+                lastSyncedAt: lastSyncedAt,
+                deletedAt: deletedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StockMovementLedgersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$InventoryDatabase,
+      $StockMovementLedgersTable,
+      StockMovementLedgerRow,
+      $$StockMovementLedgersTableFilterComposer,
+      $$StockMovementLedgersTableOrderingComposer,
+      $$StockMovementLedgersTableAnnotationComposer,
+      $$StockMovementLedgersTableCreateCompanionBuilder,
+      $$StockMovementLedgersTableUpdateCompanionBuilder,
+      (
+        StockMovementLedgerRow,
+        BaseReferences<
+          _$InventoryDatabase,
+          $StockMovementLedgersTable,
+          StockMovementLedgerRow
+        >,
+      ),
+      StockMovementLedgerRow,
+      PrefetchHooks Function()
+    >;
 
 class $InventoryDatabaseManager {
   final _$InventoryDatabase _db;
@@ -15789,4 +19788,12 @@ class $InventoryDatabaseManager {
       $$InventoryAuditTrailTableTableManager(_db, _db.inventoryAuditTrail);
   $$CategoriesTableTableManager get categories =>
       $$CategoriesTableTableManager(_db, _db.categories);
+  $$WarehouseAccountingBindingsTableTableManager
+  get warehouseAccountingBindings =>
+      $$WarehouseAccountingBindingsTableTableManager(
+        _db,
+        _db.warehouseAccountingBindings,
+      );
+  $$StockMovementLedgersTableTableManager get stockMovementLedgers =>
+      $$StockMovementLedgersTableTableManager(_db, _db.stockMovementLedgers);
 }

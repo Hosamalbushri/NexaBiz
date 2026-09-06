@@ -41,6 +41,7 @@ class Sale {
     required this.createdAt,
     required this.updatedAt,
     this.voucherBookId,
+    this.warehouseId,
     this.customerId,
     this.customerCode,
     this.customerName,
@@ -68,6 +69,9 @@ class Sale {
 
   /// VoucherBook.uuid used for numbering.
   final String? voucherBookId;
+
+  /// Warehouse.uuid source warehouse context for inventory deduction.
+  final String? warehouseId;
 
   final String? customerId;
   final String? customerCode;
@@ -258,6 +262,7 @@ class SaleDraft {
     required this.baseCurrencyCode,
     required this.exchangeRate,
     this.voucherBookId,
+    this.warehouseId,
     this.customerId,
     this.customerCode,
     this.customerName,
@@ -280,6 +285,7 @@ class SaleDraft {
   final DateTime saleDate;
   final SaleSettlementType settlementType;
   final String? voucherBookId;
+  final String? warehouseId;
   final String? customerId;
   final String? customerCode;
   final String? customerName;

@@ -47,4 +47,11 @@ abstract class StockValidationService {
     required List<OutboundLineRequest> lines,
     String? warehouseId,
   });
+
+  /// Validates that [warehouseId] exists, belongs to [companyId], and is active.
+  /// Throws [StateError] if missing, non-existent, cross-tenant, or inactive.
+  Future<void> validateWarehouseAccess({
+    required String? warehouseId,
+    String? companyId,
+  });
 }

@@ -87,6 +87,7 @@ class DocumentRef {
     required this.documentType,
     required this.documentDate,
     this.warehouseId,
+    this.destinationWarehouseId,
     this.status = DocumentStatus.draft,
     this.currencyCode = 'SAR',
     this.exchangeRate = 1.0,
@@ -97,6 +98,7 @@ class DocumentRef {
   final DocumentType documentType;
   final DateTime documentDate;
   final String? warehouseId;
+  final String? destinationWarehouseId;
   final DocumentStatus status;
   final String currencyCode;
   final double exchangeRate;

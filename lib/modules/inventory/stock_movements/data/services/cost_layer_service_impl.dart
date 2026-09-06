@@ -9,14 +9,18 @@ import '../../domain/entities/cost_layer.dart';
 import '../../domain/enums/cost_valuation_method.dart';
 import '../../domain/services/cost_layer_service.dart';
 
+import 'package:stock_count/modules/system_setup/domain/repositories/company_initialization_repository.dart';
+
 class CostLayerServiceImpl implements CostLayerService {
   CostLayerServiceImpl({
     required this._db,
     this._readCompanyId,
+    this._initRepository,
   });
 
   final InventoryDatabase _db;
   final String Function()? _readCompanyId;
+  final CompanyInitializationRepository? _initRepository;
 
   String get _currentCompanyId {
     final cid = _readCompanyId?.call().trim();
@@ -41,6 +45,14 @@ class CostLayerServiceImpl implements CostLayerService {
       return;
     }
 
+    var invCurrency = layer.inventoryCurrencyId;
+    if (_initRepository != null && (invCurrency.isEmpty || invCurrency == 'YER')) {
+      final invConfig = await _initRepository!.getInventoryConfig();
+      if (invConfig != null && invConfig.inventoryBaseCurrencyId.isNotEmpty) {
+        invCurrency = invConfig.inventoryBaseCurrencyId.toUpperCase();
+      }
+    }
+
     final sanitizedReceivedQty = layer.receivedQty < 0 ? 0.0 : layer.receivedQty;
     final sanitizedRemainingQty = layer.remainingQty.clamp(0.0, sanitizedReceivedQty);
     final isClosed = layer.closed || sanitizedRemainingQty <= 0.000001;
@@ -57,6 +69,14 @@ class CostLayerServiceImpl implements CostLayerService {
             remainingQty: Value(sanitizedRemainingQty),
             unitCost: Value(layer.unitCost < 0 ? 0.0 : layer.unitCost),
             totalCost: Value(sanitizedReceivedQty * (layer.unitCost < 0 ? 0.0 : layer.unitCost)),
+            inventoryCurrencyId: Value(invCurrency),
+            unitCostInventoryCurrency: Value(layer.unitCostInventoryCurrency < 0 ? 0.0 : layer.unitCostInventoryCurrency),
+            totalCostInventoryCurrency: Value(sanitizedReceivedQty * (layer.unitCostInventoryCurrency < 0 ? 0.0 : layer.unitCostInventoryCurrency)),
+            documentCurrencyId: Value(layer.documentCurrencyId),
+            unitCostDocumentCurrency: Value(layer.unitCostDocumentCurrency < 0 ? 0.0 : layer.unitCostDocumentCurrency),
+            totalCostDocumentCurrency: Value(sanitizedReceivedQty * (layer.unitCostDocumentCurrency < 0 ? 0.0 : layer.unitCostDocumentCurrency)),
+            exchangeRate: Value(layer.exchangeRate <= 0 ? 1.0 : layer.exchangeRate),
+            exchangeRateDate: Value(layer.exchangeRateDate.millisecondsSinceEpoch),
             closed: Value(isClosed ? 1 : 0),
             createdAt: Value(layer.createdAt.millisecondsSinceEpoch),
             updatedAt: Value(layer.updatedAt.millisecondsSinceEpoch),
@@ -203,7 +223,8 @@ class CostLayerServiceImpl implements CostLayerService {
           continue;
         }
 
-        final lineCost = takeQty * topLayer.unitCost;
+        final layerUnitCost = topLayer.unitCostInventoryCurrency > 0 ? topLayer.unitCostInventoryCurrency : topLayer.unitCost;
+        final lineCost = takeQty * layerUnitCost;
         accumulatedTotalCost += lineCost;
         remainingNeeded -= takeQty;
 
@@ -216,7 +237,7 @@ class CostLayerServiceImpl implements CostLayerService {
                 issueLineUuid: Value(issueLineUuid),
                 movementType: Value(movementType),
                 consumedQty: Value(takeQty),
-                unitCost: Value(topLayer.unitCost),
+                unitCost: Value(layerUnitCost),
                 totalCost: Value(lineCost),
                 createdAt: Value(now.millisecondsSinceEpoch),
                 companyId: Value(effectiveCompanyId),
@@ -505,7 +526,8 @@ class CostLayerServiceImpl implements CostLayerService {
     for (final row in layers) {
       if (row.remainingQty > 0) {
         totalQty += row.remainingQty;
-        totalValue += (row.remainingQty * row.unitCost);
+        final costToUse = row.unitCostInventoryCurrency > 0 ? row.unitCostInventoryCurrency : row.unitCost;
+        totalValue += (row.remainingQty * costToUse);
       }
     }
 
@@ -550,6 +572,16 @@ class CostLayerServiceImpl implements CostLayerService {
             remainingQty: row.remainingQty,
             unitCost: row.unitCost,
             totalCost: row.totalCost,
+            inventoryCurrencyId: row.inventoryCurrencyId,
+            unitCostInventoryCurrency: row.unitCostInventoryCurrency > 0 ? row.unitCostInventoryCurrency : row.unitCost,
+            totalCostInventoryCurrency: row.totalCostInventoryCurrency > 0 ? row.totalCostInventoryCurrency : row.totalCost,
+            documentCurrencyId: row.documentCurrencyId,
+            unitCostDocumentCurrency: row.unitCostDocumentCurrency > 0 ? row.unitCostDocumentCurrency : row.unitCost,
+            totalCostDocumentCurrency: row.totalCostDocumentCurrency > 0 ? row.totalCostDocumentCurrency : row.totalCost,
+            exchangeRate: row.exchangeRate > 0 ? row.exchangeRate : 1.0,
+            exchangeRateDate: row.exchangeRateDate == null
+                ? DateTime.fromMillisecondsSinceEpoch(row.receivedDate, isUtc: true)
+                : DateTime.fromMillisecondsSinceEpoch(row.exchangeRateDate!, isUtc: true),
             closed: row.closed == 1,
             createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt, isUtc: true),
             updatedAt: DateTime.fromMillisecondsSinceEpoch(row.updatedAt, isUtc: true),
@@ -598,7 +630,8 @@ class CostLayerServiceImpl implements CostLayerService {
         for (final layer in layers) {
           if (layer.remainingQty > 0) {
             totalQty += layer.remainingQty;
-            totalValue += (layer.remainingQty * layer.unitCost);
+            final costToUse = layer.unitCostInventoryCurrency > 0 ? layer.unitCostInventoryCurrency : layer.unitCost;
+            totalValue += (layer.remainingQty * costToUse);
           }
         }
         if (totalQty > 0) {
@@ -607,8 +640,9 @@ class CostLayerServiceImpl implements CostLayerService {
       } else {
         // FIFO or LIFO: pick cost from the first active layer with remainingQty > 0
         for (final layer in layers) {
-          if (layer.remainingQty > 0 && layer.unitCost > 0) {
-            resolvedCost = layer.unitCost;
+          final costToUse = layer.unitCostInventoryCurrency > 0 ? layer.unitCostInventoryCurrency : layer.unitCost;
+          if (layer.remainingQty > 0 && costToUse > 0) {
+            resolvedCost = costToUse;
             break;
           }
         }

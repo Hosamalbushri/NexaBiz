@@ -6,12 +6,25 @@ import '../../domain/services/cost_method_inheritance_resolver.dart';
 class CostMethodInheritanceResolverImpl
     implements CostMethodInheritanceResolver {
   CostMethodInheritanceResolverImpl({
-    required this._db,
-    this._systemDefaultMethod = CostValuationMethod.fifo,
-  });
+    required InventoryDatabase db,
+    CostValuationMethod systemDefaultMethod = CostValuationMethod.fifo,
+    Map<String, CostValuationMethod>? productWarehouseOverrides,
+  })  : _db = db,
+        _systemDefaultMethod = systemDefaultMethod,
+        _productWarehouseOverrides = productWarehouseOverrides ?? {};
 
   final InventoryDatabase _db;
   final CostValuationMethod _systemDefaultMethod;
+  final Map<String, CostValuationMethod> _productWarehouseOverrides;
+
+  /// Register an explicit Product + Warehouse costing method override (Tier 1).
+  void registerProductWarehouseOverride({
+    required String itemCode,
+    required String warehouseId,
+    required CostValuationMethod method,
+  }) {
+    _productWarehouseOverrides['$itemCode:$warehouseId'] = method;
+  }
 
   @override
   CostValuationMethod getSystemDefaultCostMethod() => _systemDefaultMethod;
@@ -20,10 +33,31 @@ class CostMethodInheritanceResolverImpl
   Future<EffectiveCostMethodResult> resolveForProduct({
     required String itemCode,
     required String? warehouseId,
+    String? companyId,
   }) async {
-    // 1. Level 1: Product Override
+    // 1. Tier 1: Product + Warehouse explicit override check (Highest Priority)
+    if (warehouseId != null && warehouseId.isNotEmpty) {
+      final overrideKey = '$itemCode:$warehouseId';
+      if (_productWarehouseOverrides.containsKey(overrideKey)) {
+        final overrideMethod = _productWarehouseOverrides[overrideKey]!;
+        return EffectiveCostMethodResult(
+          effectiveMethod: overrideMethod,
+          source: CostMethodSource.productWarehouse,
+          resolvedEntityId: overrideKey,
+          resolvedEntityName: 'Product $itemCode @ Warehouse $warehouseId',
+        );
+      }
+    }
+
+    // 2. Tier 2: Product Master Override
     final prodQuery = _db.select(_db.products)
-      ..where((p) => p.itemCode.equals(itemCode) & p.deletedAt.isNull());
+      ..where((p) {
+        var expr = p.itemCode.equals(itemCode) & p.deletedAt.isNull();
+        if (companyId != null && companyId.isNotEmpty) {
+          expr = expr & (p.companyId.equals(companyId) | p.companyId.isNull());
+        }
+        return expr;
+      });
     final product = await prodQuery.getSingleOrNull();
 
     if (product != null) {
@@ -40,25 +74,30 @@ class CostMethodInheritanceResolverImpl
         }
       }
 
-      // 2. Level 2 & Level 3: Category Tree Overrides (Product -> Category -> Parent Categories)
+      // 3. Tier 3: Category Tree Overrides (Product -> Category -> Parent Categories)
       if (product.categoryId != null && product.categoryId!.isNotEmpty) {
-        final catResult =
-            await resolveForCategory(categoryId: product.categoryId!);
+        final catResult = await resolveForCategory(
+          categoryId: product.categoryId!,
+          companyId: companyId,
+        );
         if (catResult.source == CostMethodSource.category) {
           return catResult;
         }
       }
     }
 
-    // 3. Level 4: Warehouse Override
+    // 4. Tier 4: Warehouse Override
     if (warehouseId != null && warehouseId.isNotEmpty) {
-      final whResult = await resolveForWarehouse(warehouseId: warehouseId);
+      final whResult = await resolveForWarehouse(
+        warehouseId: warehouseId,
+        companyId: companyId,
+      );
       if (whResult.source == CostMethodSource.warehouse) {
         return whResult;
       }
     }
 
-    // 4. Level 5: System Default
+    // 5. Tier 5: System / Company Default Fallback
     return EffectiveCostMethodResult(
       effectiveMethod: _systemDefaultMethod,
       source: CostMethodSource.system,
@@ -68,19 +107,26 @@ class CostMethodInheritanceResolverImpl
   @override
   Future<EffectiveCostMethodResult> resolveForCategory({
     required String categoryId,
+    String? companyId,
   }) async {
     var currentCatId = categoryId;
     final visited = <String>{};
 
     while (currentCatId.isNotEmpty) {
       if (visited.contains(currentCatId)) {
-        // Cycle detected in category hierarchy tree! Break loop to avoid infinite recursion.
+        // Cycle detected in category hierarchy tree! Break loop.
         break;
       }
       visited.add(currentCatId);
 
       final query = _db.select(_db.categories)
-        ..where((c) => c.uuid.equals(currentCatId) & c.deletedAt.isNull());
+        ..where((c) {
+          var expr = c.uuid.equals(currentCatId) & c.deletedAt.isNull();
+          if (companyId != null && companyId.isNotEmpty) {
+            expr = expr & (c.companyId.equals(companyId) | c.companyId.isNull());
+          }
+          return expr;
+        });
       final cat = await query.getSingleOrNull();
 
       if (cat == null) break;
@@ -103,10 +149,11 @@ class CostMethodInheritanceResolverImpl
       if (cat.parentId != null && cat.parentId!.isNotEmpty) {
         currentCatId = cat.parentId!;
       } else {
-        // Reached root category, check warehouse override if parent category had no override
         if (cat.warehouseId.isNotEmpty) {
-          final whResult =
-              await resolveForWarehouse(warehouseId: cat.warehouseId);
+          final whResult = await resolveForWarehouse(
+            warehouseId: cat.warehouseId,
+            companyId: companyId,
+          );
           if (whResult.source == CostMethodSource.warehouse) {
             return whResult;
           }
@@ -115,7 +162,6 @@ class CostMethodInheritanceResolverImpl
       }
     }
 
-    // Fallback to System Default if no override was found up the category tree
     return EffectiveCostMethodResult(
       effectiveMethod: _systemDefaultMethod,
       source: CostMethodSource.system,
@@ -125,9 +171,16 @@ class CostMethodInheritanceResolverImpl
   @override
   Future<EffectiveCostMethodResult> resolveForWarehouse({
     required String warehouseId,
+    String? companyId,
   }) async {
     final query = _db.select(_db.warehouses)
-      ..where((w) => w.uuid.equals(warehouseId) & w.deletedAt.isNull());
+      ..where((w) {
+        var expr = w.uuid.equals(warehouseId) & w.deletedAt.isNull();
+        if (companyId != null && companyId.isNotEmpty) {
+          expr = expr & (w.companyId.equals(companyId) | w.companyId.isNull());
+        }
+        return expr;
+      });
     final wh = await query.getSingleOrNull();
 
     if (wh != null &&
@@ -152,8 +205,9 @@ class CostMethodInheritanceResolverImpl
 
   CostValuationMethod? _parseMethod(String? raw) {
     if (raw == null || raw.isEmpty) return null;
+    final normalized = raw.trim().toLowerCase().replaceAll('_', '');
     for (final method in CostValuationMethod.values) {
-      if (method.name.toLowerCase() == raw.toLowerCase()) {
+      if (method.name.toLowerCase().replaceAll('_', '') == normalized) {
         return method;
       }
     }

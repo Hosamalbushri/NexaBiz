@@ -13,6 +13,16 @@ class FakeSetupAccountLookupPort implements SetupAccountLookupPort {
   Future<SetupAccountData?> findAccount(String codeOrUuidOrId) async {
     return accounts[codeOrUuidOrId.trim()];
   }
+
+  @override
+  Future<List<SetupAccountData>> getChildren(String parentUuid, {String? companyId}) async {
+    return const [];
+  }
+
+  @override
+  Future<List<SetupAccountData>> getDescendants(String parentUuid, {String? companyId}) async {
+    return const [];
+  }
 }
 
 void main() {

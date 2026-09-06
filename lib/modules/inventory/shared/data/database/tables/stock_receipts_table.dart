@@ -23,6 +23,8 @@ class StockReceipts extends Table {
   RealColumn get exchangeRate =>
       real().withDefault(const Constant(1.0))();
 
+  TextColumn get warehouse => text().nullable()();
+
   TextColumn get notes => text().nullable()();
 
   IntColumn get receiptDate => integer()();

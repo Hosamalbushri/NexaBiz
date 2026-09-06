@@ -3,7 +3,8 @@ import 'package:drift/drift.dart';
 /// Inventory Cost Layers table (Perpetual inventory cost tracking).
 ///
 /// Each incoming stock movement (receipt, return receipt, opening stock)
-/// creates a cost layer record to track batch/unit costs and remaining quantities.
+/// creates a cost layer record to track batch/unit costs and remaining quantities
+/// in both inventory valuation currency and original document currency.
 @DataClassName('InventoryCostLayerRow')
 class InventoryCostLayers extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -32,11 +33,41 @@ class InventoryCostLayers extends Table {
   /// Remaining quantity available in this layer (decremented on issue/sale).
   RealColumn get remainingQty => real().withDefault(const Constant(0))();
 
-  /// Unit cost for this layer in company base currency.
+  /// Unit cost for this layer in inventory valuation currency.
   RealColumn get unitCost => real().withDefault(const Constant(0))();
 
-  /// Total original cost (`receivedQty * unitCost`).
+  /// Total original cost (`receivedQty * unitCost`) in inventory valuation currency.
   RealColumn get totalCost => real().withDefault(const Constant(0))();
+
+  /// Explicit inventory valuation currency code (e.g. 'YER').
+  TextColumn get inventoryCurrencyId =>
+      text().withDefault(const Constant('YER'))();
+
+  /// Unit cost explicitly in inventory valuation currency.
+  RealColumn get unitCostInventoryCurrency =>
+      real().withDefault(const Constant(0))();
+
+  /// Total cost explicitly in inventory valuation currency.
+  RealColumn get totalCostInventoryCurrency =>
+      real().withDefault(const Constant(0))();
+
+  /// Original document currency code (e.g. 'SAR', 'USD').
+  TextColumn get documentCurrencyId =>
+      text().withDefault(const Constant('YER'))();
+
+  /// Unit cost in original document currency.
+  RealColumn get unitCostDocumentCurrency =>
+      real().withDefault(const Constant(0))();
+
+  /// Total cost in original document currency.
+  RealColumn get totalCostDocumentCurrency =>
+      real().withDefault(const Constant(0))();
+
+  /// Applied exchange rate (Inventory Currency / Document Currency).
+  RealColumn get exchangeRate => real().withDefault(const Constant(1.0))();
+
+  /// Timestamp (epoch ms UTC) when FX rate was applied.
+  IntColumn get exchangeRateDate => integer().nullable()();
 
   /// 0 = open (remainingQty > 0), 1 = fully consumed (remainingQty == 0).
   IntColumn get closed => integer().withDefault(const Constant(0))();

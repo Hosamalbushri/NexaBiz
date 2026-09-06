@@ -110,27 +110,7 @@ final inventoryPackageSetupDefinition = PackageSetupDefinition(
         ),
       ],
     ),
-    SetupSection(
-      id: 'warehouse',
-      packageId: 'inventory',
-      titleAr: 'المستودع الافتراضي',
-      titleEn: 'Default Warehouse',
-      descriptionAr: 'تحديد المستودع الافتراضي لحركات المخزون الرئيسية',
-      descriptionEn: 'Select default primary warehouse location for stock movements',
-      fields: [
-        SetupField(
-          id: 'defaultWarehouseId',
-          sectionId: 'warehouse',
-          key: 'defaultWarehouseId',
-          labelAr: 'المستودع الرئيسي',
-          labelEn: 'Default Primary Warehouse',
-          fieldType: SetupFieldType.reference,
-          allowedValues: ['wh_main', 'wh_sales', 'wh_central'],
-          defaultValue: 'wh_main',
-          isRequired: true,
-        ),
-      ],
-    ),
+
     SetupSection(
       id: 'account_requirements',
       packageId: 'inventory',

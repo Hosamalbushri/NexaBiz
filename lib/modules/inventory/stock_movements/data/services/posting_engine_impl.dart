@@ -10,6 +10,8 @@ import 'package:stock_count/modules/inventory/stock_movements/domain/enums/cost_
 import 'package:stock_count/modules/inventory/stock_movements/domain/services/cost_layer_service.dart';
 import 'package:stock_count/modules/inventory/cost_valuation/domain/services/cost_method_inheritance_resolver.dart';
 import 'package:stock_count/modules/system_setup/domain/services/initialization_guard.dart';
+import 'package:stock_count/modules/inventory/stock_movements/data/services/stock_validation_service_impl.dart';
+import 'package:stock_count/modules/inventory/stock_movements/domain/services/stock_validation_service.dart';
 import '../../domain/services/posting_engine.dart';
 
 class PostingEngineImpl implements PostingEngine {
@@ -19,14 +21,21 @@ class PostingEngineImpl implements PostingEngine {
     this._inheritanceResolver,
     String Function()? readCompanyId,
     InitializationGuard? initializationGuard,
+    StockValidationService? stockValidationService,
   ])  : _readCompanyId = readCompanyId,
-        _initializationGuard = initializationGuard;
+        _initializationGuard = initializationGuard,
+        _stockValidationService = stockValidationService;
 
   final InventoryDatabase _db;
   final CostLayerService _costLayerService;
   final CostMethodInheritanceResolver? _inheritanceResolver;
   final String Function()? _readCompanyId;
   final InitializationGuard? _initializationGuard;
+  final StockValidationService? _stockValidationService;
+
+  StockValidationService get _effectiveStockValidation =>
+      _stockValidationService ??
+      StockValidationServiceImpl(_db, _readCompanyId);
 
   String get _currentCompanyId =>
       _readCompanyId?.call() ?? LocalAuthDefaults.companyId;
@@ -39,6 +48,16 @@ class PostingEngineImpl implements PostingEngine {
     required DateTime documentDate,
   }) async {
     await _initializationGuard?.assertInitialized();
+
+    final targetWh = (warehouseId != null && warehouseId.trim().isNotEmpty)
+        ? warehouseId
+        : document.warehouseId;
+
+    await _effectiveStockValidation.validateWarehouseAccess(
+      warehouseId: targetWh,
+      companyId: _currentCompanyId,
+    );
+
     final nowEpoch = DateTime.now().millisecondsSinceEpoch;
     final rate = (document.exchangeRate > 0) ? document.exchangeRate : 1.0;
     double totalValue = 0.0;
@@ -61,7 +80,7 @@ class PostingEngineImpl implements PostingEngine {
         final layer = CostLayer(
           id: generateUuidV4(),
           itemCode: line.itemCode,
-          warehouseId: warehouseId,
+          warehouseId: targetWh,
           movementUuid: document.documentId,
           movementType: document.documentType.storageValue,
           receivedDate: documentDate,
@@ -76,7 +95,24 @@ class PostingEngineImpl implements PostingEngine {
         );
 
         await _costLayerService.createLayer(layer);
-        await _adjustProductQty(line.itemCode, warehouseId, line.quantity);
+        await _adjustProductQty(line.itemCode, targetWh, line.quantity);
+
+        // Record immutable inventory ledger entry
+        await _recordLedgerEntry(
+          warehouseId: targetWh ?? '',
+          itemCode: line.itemCode,
+          quantity: line.quantity,
+          direction: 'inbound',
+          movementType: document.documentType.storageValue,
+          postingDate: documentDate,
+          sourceDocumentId: document.documentId,
+          sourceDocumentType: document.documentType.storageValue,
+          sourceLineUuid: line.lineUuid,
+          unitCost: baseUnitCost,
+          totalCost: lineTotalCost,
+          costingMethodUsed: 'actual_receipt',
+          companyId: _currentCompanyId,
+        );
 
         // Update line posted details
         await (_db.update(_db.stockMovementLines)
@@ -106,6 +142,16 @@ class PostingEngineImpl implements PostingEngine {
     required CostValuationMethod valuationMethod,
   }) async {
     await _initializationGuard?.assertInitialized();
+
+    final targetWh = (warehouseId != null && warehouseId.trim().isNotEmpty)
+        ? warehouseId
+        : document.warehouseId;
+
+    await _effectiveStockValidation.validateWarehouseAccess(
+      warehouseId: targetWh,
+      companyId: _currentCompanyId,
+    );
+
     final nowEpoch = DateTime.now().millisecondsSinceEpoch;
     double totalCogs = 0.0;
 
@@ -124,7 +170,7 @@ class PostingEngineImpl implements PostingEngine {
         final effectiveValuationMethod = _inheritanceResolver != null
             ? (await _inheritanceResolver.resolveForProduct(
                 itemCode: line.itemCode,
-                warehouseId: warehouseId,
+                warehouseId: targetWh,
               )).effectiveMethod
             : valuationMethod;
 
@@ -134,7 +180,7 @@ class PostingEngineImpl implements PostingEngine {
           method: effectiveValuationMethod,
           issueLineUuid: line.lineUuid,
           movementType: document.documentType.storageValue,
-          warehouseId: warehouseId,
+          warehouseId: targetWh,
         );
 
         if (consumptionResult.isShortage) {
@@ -144,7 +190,24 @@ class PostingEngineImpl implements PostingEngine {
           );
         }
 
-        await _adjustProductQty(line.itemCode, warehouseId, -line.quantity);
+        await _adjustProductQty(line.itemCode, targetWh, -line.quantity);
+
+        // Record immutable inventory ledger entry
+        await _recordLedgerEntry(
+          warehouseId: targetWh ?? '',
+          itemCode: line.itemCode,
+          quantity: line.quantity,
+          direction: 'outbound',
+          movementType: document.documentType.storageValue,
+          postingDate: document.documentDate,
+          sourceDocumentId: document.documentId,
+          sourceDocumentType: document.documentType.storageValue,
+          sourceLineUuid: line.lineUuid,
+          unitCost: consumptionResult.effectiveUnitCost,
+          totalCost: consumptionResult.totalCost,
+          costingMethodUsed: effectiveValuationMethod.name,
+          companyId: _currentCompanyId,
+        );
 
         // Update line posted details
         await (_db.update(_db.stockMovementLines)
@@ -175,6 +238,24 @@ class PostingEngineImpl implements PostingEngine {
     required CostValuationMethod valuationMethod,
   }) async {
     await _initializationGuard?.assertInitialized();
+
+    if (fromWarehouseId.trim().isEmpty || toWarehouseId.trim().isEmpty) {
+      throw StateError('Stock transfer requires both source and destination warehouses');
+    }
+
+    if (fromWarehouseId == toWarehouseId) {
+      throw StateError('Source and destination warehouse cannot be the same for stock transfer');
+    }
+
+    await _effectiveStockValidation.validateWarehouseAccess(
+      warehouseId: fromWarehouseId,
+      companyId: _currentCompanyId,
+    );
+
+    await _effectiveStockValidation.validateWarehouseAccess(
+      warehouseId: toWarehouseId,
+      companyId: _currentCompanyId,
+    );
     final nowEpoch = DateTime.now().millisecondsSinceEpoch;
     double totalTransferredValue = 0.0;
 
@@ -218,6 +299,23 @@ class PostingEngineImpl implements PostingEngine {
 
         final effectiveCost = consumptionResult.effectiveUnitCost;
 
+        // Record transfer out ledger entry (source warehouse outbound)
+        await _recordLedgerEntry(
+          warehouseId: fromWarehouseId,
+          itemCode: line.itemCode,
+          quantity: line.quantity,
+          direction: 'outbound',
+          movementType: 'transfer_out',
+          postingDate: document.documentDate,
+          sourceDocumentId: document.documentId,
+          sourceDocumentType: document.documentType.storageValue,
+          sourceLineUuid: line.lineUuid,
+          unitCost: effectiveCost,
+          totalCost: line.quantity * effectiveCost,
+          costingMethodUsed: effectiveValuationMethod.name,
+          companyId: _currentCompanyId,
+        );
+
         // 2. Create cost layer in destination warehouse
         final destLayer = CostLayer(
           id: generateUuidV4(),
@@ -238,6 +336,23 @@ class PostingEngineImpl implements PostingEngine {
 
         await _costLayerService.createLayer(destLayer);
         await _adjustProductQty(line.itemCode, toWarehouseId, line.quantity);
+
+        // Record transfer in ledger entry (destination warehouse inbound)
+        await _recordLedgerEntry(
+          warehouseId: toWarehouseId,
+          itemCode: line.itemCode,
+          quantity: line.quantity,
+          direction: 'inbound',
+          movementType: 'transfer_in',
+          postingDate: document.documentDate,
+          sourceDocumentId: document.documentId,
+          sourceDocumentType: document.documentType.storageValue,
+          sourceLineUuid: line.lineUuid,
+          unitCost: effectiveCost,
+          totalCost: line.quantity * effectiveCost,
+          costingMethodUsed: 'transfer_in',
+          companyId: _currentCompanyId,
+        );
 
         totalTransferredValue += (line.quantity * effectiveCost);
       }
@@ -263,6 +378,23 @@ class PostingEngineImpl implements PostingEngine {
 
           for (final line in lines) {
             await _adjustProductQty(line.itemCode, document.warehouseId, -line.quantity);
+
+            // Record reversing outbound ledger entry for receipt reversal
+            await _recordLedgerEntry(
+              warehouseId: document.warehouseId ?? '',
+              itemCode: line.itemCode,
+              quantity: line.quantity,
+              direction: 'outbound',
+              movementType: 'reversal',
+              postingDate: document.documentDate,
+              sourceDocumentId: document.documentId,
+              sourceDocumentType: document.documentType.storageValue,
+              sourceLineUuid: line.uuid,
+              unitCost: line.postedCost ?? line.unitCost,
+              totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
+              costingMethodUsed: 'reversal',
+              companyId: _currentCompanyId,
+            );
           }
 
           await _costLayerService.reverseLayer(document.documentId);
@@ -277,6 +409,23 @@ class PostingEngineImpl implements PostingEngine {
           for (final line in lines) {
             await _costLayerService.reverseConsumptions(line.uuid);
             await _adjustProductQty(line.itemCode, document.warehouseId, line.quantity);
+
+            // Record reversing inbound ledger entry for issue reversal
+            await _recordLedgerEntry(
+              warehouseId: document.warehouseId ?? '',
+              itemCode: line.itemCode,
+              quantity: line.quantity,
+              direction: 'inbound',
+              movementType: 'reversal',
+              postingDate: document.documentDate,
+              sourceDocumentId: document.documentId,
+              sourceDocumentType: document.documentType.storageValue,
+              sourceLineUuid: line.uuid,
+              unitCost: line.postedCost ?? line.unitCost,
+              totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
+              costingMethodUsed: 'reversal',
+              companyId: _currentCompanyId,
+            );
           }
 
           await _setDocumentStatus(document, InventoryDocumentStatus.draft, null);
@@ -300,9 +449,41 @@ class PostingEngineImpl implements PostingEngine {
                 // Outbound return: reverse consumption, increase stock
                 await _costLayerService.reverseConsumptions(line.uuid);
                 await _adjustProductQty(line.itemCode, document.warehouseId, line.quantity);
+
+                await _recordLedgerEntry(
+                  warehouseId: document.warehouseId ?? '',
+                  itemCode: line.itemCode,
+                  quantity: line.quantity,
+                  direction: 'inbound',
+                  movementType: 'reversal',
+                  postingDate: document.documentDate,
+                  sourceDocumentId: document.documentId,
+                  sourceDocumentType: document.documentType.storageValue,
+                  sourceLineUuid: line.uuid,
+                  unitCost: line.postedCost ?? line.unitCost,
+                  totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
+                  costingMethodUsed: 'reversal',
+                  companyId: _currentCompanyId,
+                );
               } else {
                 // Inbound return: reverse layer, decrease stock
                 await _adjustProductQty(line.itemCode, document.warehouseId, -line.quantity);
+
+                await _recordLedgerEntry(
+                  warehouseId: document.warehouseId ?? '',
+                  itemCode: line.itemCode,
+                  quantity: line.quantity,
+                  direction: 'outbound',
+                  movementType: 'reversal',
+                  postingDate: document.documentDate,
+                  sourceDocumentId: document.documentId,
+                  sourceDocumentType: document.documentType.storageValue,
+                  sourceLineUuid: line.uuid,
+                  unitCost: line.postedCost ?? line.unitCost,
+                  totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
+                  costingMethodUsed: 'reversal',
+                  companyId: _currentCompanyId,
+                );
               }
             }
 
@@ -328,9 +509,40 @@ class PostingEngineImpl implements PostingEngine {
             for (final line in lines) {
               // Reverse inbound in destination warehouse
               await _adjustProductQty(line.itemCode, tr.toWarehouseId, -line.quantity);
+              await _recordLedgerEntry(
+                warehouseId: tr.toWarehouseId,
+                itemCode: line.itemCode,
+                quantity: line.quantity,
+                direction: 'outbound',
+                movementType: 'reversal',
+                postingDate: document.documentDate,
+                sourceDocumentId: document.documentId,
+                sourceDocumentType: document.documentType.storageValue,
+                sourceLineUuid: line.uuid,
+                unitCost: line.postedCost ?? line.unitCost,
+                totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
+                costingMethodUsed: 'reversal',
+                companyId: _currentCompanyId,
+              );
+
               // Reverse outbound consumptions in source warehouse
               await _costLayerService.reverseConsumptions(line.uuid);
               await _adjustProductQty(line.itemCode, tr.fromWarehouseId, line.quantity);
+              await _recordLedgerEntry(
+                warehouseId: tr.fromWarehouseId,
+                itemCode: line.itemCode,
+                quantity: line.quantity,
+                direction: 'inbound',
+                movementType: 'reversal',
+                postingDate: document.documentDate,
+                sourceDocumentId: document.documentId,
+                sourceDocumentType: document.documentType.storageValue,
+                sourceLineUuid: line.uuid,
+                unitCost: line.postedCost ?? line.unitCost,
+                totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
+                costingMethodUsed: 'reversal',
+                companyId: _currentCompanyId,
+              );
             }
 
             await _costLayerService.reverseLayer(document.documentId);
@@ -346,6 +558,22 @@ class PostingEngineImpl implements PostingEngine {
           for (final line in lines) {
             await _costLayerService.reverseConsumptions(line.uuid);
             await _adjustProductQty(line.itemCode, document.warehouseId, line.quantity);
+
+            await _recordLedgerEntry(
+              warehouseId: document.warehouseId ?? '',
+              itemCode: line.itemCode,
+              quantity: line.quantity,
+              direction: 'inbound',
+              movementType: 'reversal',
+              postingDate: document.documentDate,
+              sourceDocumentId: document.documentId,
+              sourceDocumentType: document.documentType.storageValue,
+              sourceLineUuid: line.uuid,
+              unitCost: line.postedCost ?? line.unitCost,
+              totalCost: (line.postedCost ?? line.unitCost) * line.quantity,
+              costingMethodUsed: 'reversal',
+              companyId: _currentCompanyId,
+            );
           }
 
           await _setDocumentStatus(document, InventoryDocumentStatus.draft, null);
@@ -589,5 +817,41 @@ class PostingEngineImpl implements PostingEngine {
       default:
         break;
     }
+  }
+
+  Future<void> _recordLedgerEntry({
+    required String warehouseId,
+    required String itemCode,
+    required double quantity,
+    required String direction,
+    required String movementType,
+    required DateTime postingDate,
+    required String sourceDocumentId,
+    required String sourceDocumentType,
+    required String sourceLineUuid,
+    required double unitCost,
+    required double totalCost,
+    required String costingMethodUsed,
+    required String companyId,
+  }) async {
+    await _db.into(_db.stockMovementLedgers).insert(
+      StockMovementLedgersCompanion(
+        uuid: Value(generateUuidV4()),
+        companyId: Value(companyId),
+        warehouseId: Value(warehouseId),
+        itemCode: Value(itemCode),
+        quantity: Value(quantity.abs()),
+        direction: Value(direction),
+        movementType: Value(movementType),
+        postingDate: Value(postingDate.millisecondsSinceEpoch),
+        sourceDocumentId: Value(sourceDocumentId),
+        sourceDocumentType: Value(sourceDocumentType),
+        sourceLineUuid: Value(sourceLineUuid),
+        unitCost: Value(unitCost),
+        totalCost: Value(totalCost),
+        costingMethodUsed: Value(costingMethodUsed),
+        createdAt: Value(DateTime.now().toUtc().millisecondsSinceEpoch),
+      ),
+    );
   }
 }
