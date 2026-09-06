@@ -29,112 +29,118 @@ class ReceiptsPaymentsHomePage extends ConsumerWidget {
       body: ListView(
         padding: AppConstants.pageInsets(context),
         children: [
-            Text(
-              l10n.servicesTitle,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.2,
-              ),
+          Text(
+            l10n.servicesTitle,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.2,
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              l10n.moduleReceiptsPaymentsDescription,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.4,
-              ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.moduleReceiptsPaymentsDescription,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.4,
             ),
-            const SizedBox(height: AppSpacing.lg),
-            PermissionGate(
-              anyOf: ReceiptsPaymentsPermissions.receiptsView,
-              child: AppModuleHubCard(
-                    icon: Icons.call_received_outlined,
-                    title: l10n.rpServiceReceiptsTitle,
-                    subtitle: l10n.rpServiceReceiptsSubtitle,
-                    onTap: () => ReceiptsPaymentsRoutes.pushReceiptsMenu(context),
-                  )
-                  .animate()
-                  .fadeIn(duration: 280.ms)
-                  .slideY(begin: 0.04, end: 0, duration: 280.ms),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            PermissionGate(
-              anyOf: ReceiptsPaymentsPermissions.paymentsView,
-              child: AppModuleHubCard(
-                    icon: Icons.call_made_outlined,
-                    title: l10n.rpServicePaymentsTitle,
-                    subtitle: l10n.rpServicePaymentsSubtitle,
-                    onTap: () => ReceiptsPaymentsRoutes.pushPaymentsMenu(context),
-                  )
-                  .animate()
-                  .fadeIn(delay: 60.ms, duration: 280.ms)
-                  .slideY(
-                    begin: 0.04,
-                    end: 0,
-                    delay: 60.ms,
-                    duration: 280.ms,
-                  ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            PermissionGate(
-              anyOf: ReceiptsPaymentsPermissions.transfersView,
-              child: AppModuleHubCard(
-                    icon: Icons.swap_horiz_outlined,
-                    title: l10n.rpServiceTransfersTitle,
-                    subtitle: l10n.rpServiceTransfersSubtitle,
-                    onTap: () =>
-                        ReceiptsPaymentsRoutes.pushTransfersMenu(context),
-                  )
-                  .animate()
-                  .fadeIn(delay: 120.ms, duration: 280.ms)
-                  .slideY(
-                    begin: 0.04,
-                    end: 0,
-                    delay: 120.ms,
-                    duration: 280.ms,
-                  ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            PermissionGate(
-              anyOf: ReceiptsPaymentsPermissions.exchangesView,
-              child: AppModuleHubCard(
-                    icon: Icons.currency_exchange_outlined,
-                    title: l10n.rpServiceExchangesTitle,
-                    subtitle: l10n.rpServiceExchangesSubtitle,
-                    onTap: () =>
-                        ReceiptsPaymentsRoutes.pushExchangesMenu(context),
-                  )
-                  .animate()
-                  .fadeIn(delay: 180.ms, duration: 280.ms)
-                  .slideY(
-                    begin: 0.04,
-                    end: 0,
-                    delay: 180.ms,
-                    duration: 280.ms,
-                  ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            PermissionGate(
-              anyOf: ReceiptsPaymentsPermissions.anyPost,
-              child: AppModuleHubCard(
-                    icon: Icons.fact_check_outlined,
-                    title: l10n.rpPostingServiceTitle,
-                    subtitle: l10n.rpPostingServiceHubSubtitle,
-                    onTap: () =>
-                        ReceiptsPaymentsRoutes.pushPostingService(context),
-                  )
-                  .animate()
-                  .fadeIn(delay: 240.ms, duration: 280.ms)
-                  .slideY(
-                    begin: 0.04,
-                    end: 0,
-                    delay: 240.ms,
-                    duration: 280.ms,
-                  ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          PermissionGate(
+            anyOf: ReceiptsPaymentsPermissions.receiptsView,
+            child:
+                AppModuleHubCard(
+                      icon: Icons.call_received_outlined,
+                      title: l10n.rpServiceReceiptsTitle,
+                      subtitle: l10n.rpServiceReceiptsSubtitle,
+                      onTap: () =>
+                          ReceiptsPaymentsRoutes.pushReceiptsMenu(context),
+                    )
+                    .animate()
+                    .fadeIn(duration: 280.ms)
+                    .slideY(begin: 0.04, end: 0, duration: 280.ms),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          PermissionGate(
+            anyOf: ReceiptsPaymentsPermissions.paymentsView,
+            child:
+                AppModuleHubCard(
+                      icon: Icons.call_made_outlined,
+                      title: l10n.rpServicePaymentsTitle,
+                      subtitle: l10n.rpServicePaymentsSubtitle,
+                      onTap: () =>
+                          ReceiptsPaymentsRoutes.pushPaymentsMenu(context),
+                    )
+                    .animate()
+                    .fadeIn(delay: 60.ms, duration: 280.ms)
+                    .slideY(
+                      begin: 0.04,
+                      end: 0,
+                      delay: 60.ms,
+                      duration: 280.ms,
+                    ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          PermissionGate(
+            anyOf: ReceiptsPaymentsPermissions.transfersView,
+            child:
+                AppModuleHubCard(
+                      icon: Icons.swap_horiz_outlined,
+                      title: l10n.rpServiceTransfersTitle,
+                      subtitle: l10n.rpServiceTransfersSubtitle,
+                      onTap: () =>
+                          ReceiptsPaymentsRoutes.pushTransfersMenu(context),
+                    )
+                    .animate()
+                    .fadeIn(delay: 120.ms, duration: 280.ms)
+                    .slideY(
+                      begin: 0.04,
+                      end: 0,
+                      delay: 120.ms,
+                      duration: 280.ms,
+                    ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          PermissionGate(
+            anyOf: ReceiptsPaymentsPermissions.exchangesView,
+            child:
+                AppModuleHubCard(
+                      icon: Icons.currency_exchange_outlined,
+                      title: l10n.rpServiceExchangesTitle,
+                      subtitle: l10n.rpServiceExchangesSubtitle,
+                      onTap: () =>
+                          ReceiptsPaymentsRoutes.pushExchangesMenu(context),
+                    )
+                    .animate()
+                    .fadeIn(delay: 180.ms, duration: 280.ms)
+                    .slideY(
+                      begin: 0.04,
+                      end: 0,
+                      delay: 180.ms,
+                      duration: 280.ms,
+                    ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          PermissionGate(
+            anyOf: ReceiptsPaymentsPermissions.anyPost,
+            child:
+                AppModuleHubCard(
+                      icon: Icons.fact_check_outlined,
+                      title: l10n.rpPostingServiceTitle,
+                      subtitle: l10n.rpPostingServiceHubSubtitle,
+                      onTap: () =>
+                          ReceiptsPaymentsRoutes.pushPostingService(context),
+                    )
+                    .animate()
+                    .fadeIn(delay: 240.ms, duration: 280.ms)
+                    .slideY(
+                      begin: 0.04,
+                      end: 0,
+                      delay: 240.ms,
+                      duration: 280.ms,
+                    ),
+          ),
+        ],
+      ),
     );
   }
 }
-

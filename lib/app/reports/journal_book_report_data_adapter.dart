@@ -1,3 +1,5 @@
+import 'package:stock_count/core/report_engine/domain/models/report_execution_context.dart';
+import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
 import 'package:stock_count/modules/accounting/journals/domain/repositories/journal_repository.dart';
 import 'package:stock_count/modules/reports/shared/domain/services/journal_book_report_data_port.dart';
 import '../settings/company/company_profile.dart';
@@ -70,6 +72,19 @@ class JournalBookReportDataAdapter implements JournalBookReportDataPort {
       fromDate: fromDate,
       toDate: toDate,
       emptyMessage: labels.emptyMessage,
+    );
+  }
+
+  @override
+  Future<JournalBookReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
+    required JournalBookReportLabels labels,
+  }) {
+    return load(
+      fromDate: filter.fromDate,
+      toDate: filter.toDate,
+      postedOnly: filter.postingScope == PostingScope.postedOnly,
+      labels: labels,
     );
   }
 

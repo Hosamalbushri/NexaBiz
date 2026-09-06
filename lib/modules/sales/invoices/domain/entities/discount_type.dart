@@ -12,7 +12,9 @@ extension DiscountTypeX on DiscountType {
     if (normalized == 'percent' || normalized == 'percentage') {
       return DiscountType.percentage;
     }
-    if (normalized == 'fixed' || normalized == 'amount' || normalized == 'value') {
+    if (normalized == 'fixed' ||
+        normalized == 'amount' ||
+        normalized == 'value') {
       return DiscountType.fixed;
     }
     return DiscountType.values.firstWhere(

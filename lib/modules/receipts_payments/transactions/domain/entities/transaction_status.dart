@@ -1,8 +1,5 @@
 /// Financial document lifecycle (separate from [SyncStatus]).
-enum TransactionStatus {
-  unposted,
-  posted,
-}
+enum TransactionStatus { unposted, posted }
 
 extension TransactionStatusX on TransactionStatus {
   String get storageValue => name;

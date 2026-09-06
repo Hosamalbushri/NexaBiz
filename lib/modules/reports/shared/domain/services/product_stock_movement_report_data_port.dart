@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
 
 /// Labels required for localized rendering of the Product Stock Movement Report.
 class ProductStockMovementReportLabels {
@@ -158,6 +159,7 @@ class ProductStockMovementReportPayload {
   final double totalOutgoingQty;
 }
 
+
 /// Port definition for loading product stock movement data.
 abstract class ProductStockMovementReportDataPort {
   Future<ProductStockMovementReportPayload> load({
@@ -165,6 +167,11 @@ abstract class ProductStockMovementReportDataPort {
     String? warehouseId,
     DateTime? fromDate,
     DateTime? toDate,
+    required ProductStockMovementReportLabels labels,
+  });
+
+  Future<ProductStockMovementReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
     required ProductStockMovementReportLabels labels,
   });
 }

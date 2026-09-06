@@ -57,7 +57,7 @@ class RpEntryLinesTable extends ConsumerStatefulWidget {
   final void Function(int index, double amount) onAmountChanged;
   final void Function(int index, double rate) onCrossRateChanged;
   final void Function(int index, String code, double rateToBase)
-      onCurrencyChanged;
+  onCurrencyChanged;
   final void Function(int index, String value) onLineDescriptionChanged;
   final ValueChanged<int> onRemoveLine;
 
@@ -179,9 +179,7 @@ class _SectionHeader extends StatelessWidget {
               ],
             ),
             borderRadius: BorderRadius.circular(AppRadius.sm),
-            border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.12),
-            ),
+            border: Border.all(color: scheme.primary.withValues(alpha: 0.12)),
           ),
           child: Icon(
             Icons.account_tree_outlined,
@@ -205,10 +203,7 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _TableActionsBar extends StatelessWidget {
-  const _TableActionsBar({
-    required this.onAdd,
-    required this.addLabel,
-  });
+  const _TableActionsBar({required this.onAdd, required this.addLabel});
 
   final VoidCallback onAdd;
   final String addLabel;
@@ -228,9 +223,7 @@ class _TableActionsBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface.withValues(alpha: 0.92),
         border: Border(
-          top: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.4),
-          ),
+          top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.4)),
         ),
       ),
       child: Align(
@@ -317,8 +310,6 @@ class _AddRowButton extends StatelessWidget {
   }
 }
 
-
-
 class _TableHeader extends StatelessWidget {
   const _TableHeader({
     required this.theme,
@@ -357,49 +348,46 @@ class _TableHeader extends StatelessWidget {
         width: _Cols.contentWidth,
         child: Row(
           children: [
-          SizedBox(
-            width: _Cols.index,
-            child: Text('#', style: style, textAlign: TextAlign.center),
-          ),
-          SizedBox(
-            width: _Cols.account,
-            child: Text(l10n.rpCounterAccount, style: style),
-          ),
-          SizedBox(
-            width: _Cols.amount,
-            child: Text(
-              amountColumnLabel,
-              style: style,
-              textAlign: TextAlign.center,
+            SizedBox(
+              width: _Cols.index,
+              child: Text('#', style: style, textAlign: TextAlign.center),
             ),
-          ),
-          SizedBox(
-            width: _Cols.currency,
-            child: Text(
-              l10n.rpCurrency,
-              style: style,
-              textAlign: TextAlign.center,
+            SizedBox(
+              width: _Cols.account,
+              child: Text(l10n.rpCounterAccount, style: style),
             ),
-          ),
-          SizedBox(
-            width: _Cols.rate,
-            child: Text(
-              l10n.rpManualExchangeRate,
-              style: style,
-              textAlign: TextAlign.center,
+            SizedBox(
+              width: _Cols.amount,
+              child: Text(
+                amountColumnLabel,
+                style: style,
+                textAlign: TextAlign.center,
+              ),
             ),
-          ),
-          SizedBox(
-            width: _Cols.narrative,
-            child: Text(
-              l10n.rpLineDescription,
-              style: style,
+            SizedBox(
+              width: _Cols.currency,
+              child: Text(
+                l10n.rpCurrency,
+                style: style,
+                textAlign: TextAlign.center,
+              ),
             ),
-          ),
-          const SizedBox(width: _Cols.actions),
-        ],
+            SizedBox(
+              width: _Cols.rate,
+              child: Text(
+                l10n.rpManualExchangeRate,
+                style: style,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            SizedBox(
+              width: _Cols.narrative,
+              child: Text(l10n.rpLineDescription, style: style),
+            ),
+            const SizedBox(width: _Cols.actions),
+          ],
+        ),
       ),
-    ),
     );
   }
 }
@@ -461,118 +449,120 @@ class _FilledLineRowState extends State<_FilledLineRow> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            SizedBox(
-              width: _Cols.index,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Center(
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: scheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '${widget.index + 1}',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: scheme.primary,
+              SizedBox(
+                width: _Cols.index,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Center(
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: scheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '${widget.index + 1}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: scheme.primary,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(
-              width: _Cols.account,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 12, right: 2),
-                child: Text(
-                  account.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    height: 1.25,
+              SizedBox(
+                width: _Cols.account,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 12, right: 2),
+                  child: Text(
+                    account.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      height: 1.25,
+                    ),
                   ),
                 ),
               ),
-            ),
-            SizedBox(
-              width: _Cols.amount,
-              child: Padding(
-                padding: const EdgeInsetsDirectional.only(start: 2, end: 4),
-                child: AppAmountField(
-                  value: widget.line.amount,
-                  emptyWhenZero: true,
-                  decimalPlaces: 0,
-                  variant: AppAmountFieldVariant.compact,
-                  skipTraversal: true,
-                  onChanged: widget.onAmountChanged,
-                ),
-              ),
-            ),
-            SizedBox(
-              width: _Cols.currency,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: _CompactCurrencyField(
-                  value: widget.line.currencyCode,
-                  currencies: widget.currencies,
-                  onChanged: widget.onCurrencyChanged,
-                ),
-              ),
-            ),
-            SizedBox(
-              width: _Cols.rate,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: AppAmountField(
-                  value: widget.line.crossRate,
-                  emptyWhenZero: false,
-                  decimalPlaces: 6,
-                  trimTrailingZeros: true,
-                  variant: AppAmountFieldVariant.compact,
-                  skipTraversal: true,
-                  onChanged: (rate) {
-                    if (rate > 0) widget.onCrossRateChanged(rate);
-                  },
-                ),
-              ),
-            ),
-            SizedBox(
-              width: _Cols.narrative,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: _CompactTextField(
-                  value: widget.line.resolvedDescription,
-                  onChanged: widget.onLineDescriptionChanged,
-                  maxLines: 2,
-                ),
-              ),
-            ),
-            SizedBox(
-              width: _Cols.actions,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: IconButton(
-                  tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
-                  onPressed: widget.onRemove,
-                  icon: Icon(
-                    Icons.delete_outline_rounded,
-                    size: 20,
-                    color: scheme.error.withValues(alpha: 0.85),
+              SizedBox(
+                width: _Cols.amount,
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 2, end: 4),
+                  child: AppAmountField(
+                    value: widget.line.amount,
+                    emptyWhenZero: true,
+                    decimalPlaces: 0,
+                    variant: AppAmountFieldVariant.compact,
+                    skipTraversal: true,
+                    onChanged: widget.onAmountChanged,
                   ),
-                  visualDensity: VisualDensity.compact,
                 ),
               ),
-            ),
-          ],
+              SizedBox(
+                width: _Cols.currency,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: _CompactCurrencyField(
+                    value: widget.line.currencyCode,
+                    currencies: widget.currencies,
+                    onChanged: widget.onCurrencyChanged,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: _Cols.rate,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: AppAmountField(
+                    value: widget.line.crossRate,
+                    emptyWhenZero: false,
+                    decimalPlaces: 6,
+                    trimTrailingZeros: true,
+                    variant: AppAmountFieldVariant.compact,
+                    skipTraversal: true,
+                    onChanged: (rate) {
+                      if (rate > 0) widget.onCrossRateChanged(rate);
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: _Cols.narrative,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: _CompactTextField(
+                    value: widget.line.resolvedDescription,
+                    onChanged: widget.onLineDescriptionChanged,
+                    maxLines: 2,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: _Cols.actions,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: IconButton(
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).deleteButtonTooltip,
+                    onPressed: widget.onRemove,
+                    icon: Icon(
+                      Icons.delete_outline_rounded,
+                      size: 20,
+                      color: scheme.error.withValues(alpha: 0.85),
+                    ),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
@@ -657,11 +647,7 @@ class _DraftAccountRowState extends ConsumerState<_DraftAccountRow> {
       final languageCode = Localizations.localeOf(context).languageCode;
       final results = await ref
           .read(rpTreasuryAccountPortProvider)
-          .searchPostingAccounts(
-            query,
-            limit: 50,
-            languageCode: languageCode,
-          );
+          .searchPostingAccounts(query, limit: 50, languageCode: languageCode);
       if (!mounted || !_session.isCurrent(token)) {
         return;
       }
@@ -732,8 +718,9 @@ class _DraftAccountRowState extends ConsumerState<_DraftAccountRow> {
                             ),
                           )
                         : IconButton(
-                            tooltip: MaterialLocalizations.of(context)
-                                .cancelButtonLabel,
+                            tooltip: MaterialLocalizations.of(
+                              context,
+                            ).cancelButtonLabel,
                             onPressed: widget.onCancel,
                             icon: Icon(
                               Icons.close_rounded,
@@ -752,10 +739,7 @@ class _DraftAccountRowState extends ConsumerState<_DraftAccountRow> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppRadius.sm),
-                      borderSide: BorderSide(
-                        color: scheme.primary,
-                        width: 1.4,
-                      ),
+                      borderSide: BorderSide(color: scheme.primary, width: 1.4),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.sm,
@@ -793,82 +777,86 @@ class _DraftAccountRowState extends ConsumerState<_DraftAccountRow> {
                                 child: SizedBox(
                                   width: 22,
                                   height: 22,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 ),
                               ),
                             )
                           : _searchFailed
-                              ? Padding(
-                                  padding: const EdgeInsets.all(AppSpacing.md),
-                                  child: Text(
-                                    l10n.somethingWentWrong,
-                                    textAlign: TextAlign.center,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: scheme.error,
+                          ? Padding(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              child: Text(
+                                l10n.somethingWentWrong,
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: scheme.error,
+                                ),
+                              ),
+                            )
+                          : _results.isEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              child: Text(
+                                l10n.rpLinesEmpty,
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero,
+                              itemCount: _results.length,
+                              itemBuilder: (ctx, idx) {
+                                final account = _results[idx];
+                                final code = account.code.trim();
+                                return InkWell(
+                                  onTap: () =>
+                                      widget.onAccountSelected(account),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.md,
+                                      vertical: AppSpacing.sm + 2,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                account.name,
+                                                style: theme
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                              ),
+                                              if (code.isNotEmpty)
+                                                Text(
+                                                  code,
+                                                  style: theme
+                                                      .textTheme
+                                                      .labelSmall
+                                                      ?.copyWith(
+                                                        color: scheme
+                                                            .onSurfaceVariant,
+                                                      ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                )
-                              : _results.isEmpty
-                                  ? Padding(
-                                      padding: const EdgeInsets.all(AppSpacing.md),
-                                      child: Text(
-                                        l10n.rpLinesEmpty,
-                                        textAlign: TextAlign.center,
-                                        style: theme.textTheme.bodyMedium?.copyWith(
-                                          color: scheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                    )
-                                  : ListView.builder(
-                                      shrinkWrap: true,
-                                      padding: EdgeInsets.zero,
-                                      itemCount: _results.length,
-                                      itemBuilder: (ctx, idx) {
-                                        final account = _results[idx];
-                                        final code = account.code.trim();
-                                        return InkWell(
-                                          onTap: () =>
-                                              widget.onAccountSelected(account),
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: AppSpacing.md,
-                                              vertical: AppSpacing.sm + 2,
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment.start,
-                                                    children: [
-                                                      Text(
-                                                        account.name,
-                                                        style: theme
-                                                            .textTheme.bodyMedium
-                                                            ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                                      ),
-                                                      if (code.isNotEmpty)
-                                                        Text(
-                                                          code,
-                                                          style: theme
-                                                              .textTheme.labelSmall
-                                                              ?.copyWith(
-                                                            color: scheme
-                                                                .onSurfaceVariant,
-                                                          ),
-                                                        ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ),
+                                );
+                              },
+                            ),
                     ),
                   ),
                 ),
@@ -953,9 +941,7 @@ class _CompactTextFieldState extends State<_CompactTextField> {
       focusNode: _focusNode,
       maxLines: widget.maxLines,
       minLines: widget.maxLines > 1 ? widget.maxLines : 1,
-      style: theme.textTheme.bodyMedium?.copyWith(
-        fontWeight: FontWeight.w600,
-      ),
+      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
       decoration: InputDecoration(
         isDense: true,
         filled: true,

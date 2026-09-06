@@ -175,8 +175,9 @@ class RpPostingServiceNotifier extends StateNotifier<RpPostingServiceState> {
         state = state.copyWith(error: 'date_required');
         return;
       }
-      if (BusinessDate.utcDay(state.fromDate!)
-          .isAfter(BusinessDate.utcDay(state.toDate!))) {
+      if (BusinessDate.utcDay(
+        state.fromDate!,
+      ).isAfter(BusinessDate.utcDay(state.toDate!))) {
         state = state.copyWith(error: 'date_range_invalid');
         return;
       }

@@ -26,10 +26,7 @@ class SaleQuantityMath {
     }
     final wholePacks = subQuantity ~/ pack;
     final remainder = subQuantity % pack;
-    return (
-      mainQuantity: mainQuantity + wholePacks,
-      subQuantity: remainder,
-    );
+    return (mainQuantity: mainQuantity + wholePacks, subQuantity: remainder);
   }
 
   /// Prefer stored main/sub; fall back to [quantity] as main for legacy rows.

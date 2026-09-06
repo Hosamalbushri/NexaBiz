@@ -49,7 +49,8 @@ final salesPackageSetupDefinition = PackageSetupDefinition(
       titleAr: 'سياسات فواتير المبيعات',
       titleEn: 'Sales Invoice Policies',
       descriptionAr: 'نسبة الضريبة الافتراضية وصلاحيات الخصم والتعديل',
-      descriptionEn: 'Default tax rate, discount rules, and price modification rules',
+      descriptionEn:
+          'Default tax rate, discount rules, and price modification rules',
       fields: [
         SetupField(
           id: 'defaultTaxRate',
@@ -86,7 +87,8 @@ final salesPackageSetupDefinition = PackageSetupDefinition(
       titleAr: 'ربط حسابات المبيعات',
       titleEn: 'Sales Account Bindings',
       descriptionAr: 'ربط حساب الإيرادات وخصم المبيعات من دليل الحسابات',
-      descriptionEn: 'Bind sales revenue and sales discount accounts from Chart of Accounts',
+      descriptionEn:
+          'Bind sales revenue and sales discount accounts from Chart of Accounts',
       fields: [
         SetupField(
           id: 'sales_account',

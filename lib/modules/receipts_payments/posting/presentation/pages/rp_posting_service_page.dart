@@ -97,221 +97,240 @@ class _RpPostingServicePageState extends ConsumerState<RpPostingServicePage> {
                     children: [
                       const SizedBox(height: AppSpacing.sm),
                       _CriteriaPanel(
-                        accent: accent,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _StepBlock(
-                              index: 1,
-                              title: l10n.rpPostingServiceDocumentType,
-                              child: _TypeGrid(
-                                types: allowedTypes,
-                                selected: selectedType,
-                                enabled: !state.isApplying,
-                                onChanged: notifier.setTransactionType,
-                              ),
-                            ),
-                            const _Hairline(),
-                            _StepBlock(
-                              index: 2,
-                              title: l10n.rpPostingServiceOperation,
-                              child: _SegmentedToggle<RpPostingOperation>(
-                                left: _SegItem(
-                                  value: RpPostingOperation.post,
-                                  label: l10n.rpPost,
-                                  icon: Icons.check_circle_rounded,
+                            accent: accent,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _StepBlock(
+                                  index: 1,
+                                  title: l10n.rpPostingServiceDocumentType,
+                                  child: _TypeGrid(
+                                    types: allowedTypes,
+                                    selected: selectedType,
+                                    enabled: !state.isApplying,
+                                    onChanged: notifier.setTransactionType,
+                                  ),
                                 ),
-                                right: _SegItem(
-                                  value: RpPostingOperation.unpost,
-                                  label: l10n.rpUnpost,
-                                  icon: Icons.undo_rounded,
-                                ),
-                                selected: state.operation,
-                                enabled: !state.isApplying,
-                                activeColor: accent,
-                                onChanged: notifier.setOperation,
-                              ),
-                            ),
-                            const _Hairline(),
-                            _StepBlock(
-                              index: 3,
-                              title: l10n.rpPostingServiceLookup,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  _SegmentedToggle<RpPostingLookupMode>(
+                                const _Hairline(),
+                                _StepBlock(
+                                  index: 2,
+                                  title: l10n.rpPostingServiceOperation,
+                                  child: _SegmentedToggle<RpPostingOperation>(
                                     left: _SegItem(
-                                      value: RpPostingLookupMode.byDate,
-                                      label: l10n.rpDate,
-                                      icon: Icons.calendar_month_rounded,
+                                      value: RpPostingOperation.post,
+                                      label: l10n.rpPost,
+                                      icon: Icons.check_circle_rounded,
                                     ),
                                     right: _SegItem(
-                                      value: RpPostingLookupMode.byNumber,
-                                      label: l10n.rpTransactionNumber,
-                                      icon: Icons.tag_rounded,
+                                      value: RpPostingOperation.unpost,
+                                      label: l10n.rpUnpost,
+                                      icon: Icons.undo_rounded,
                                     ),
-                                    selected: state.lookupMode,
+                                    selected: state.operation,
                                     enabled: !state.isApplying,
-                                    activeColor: scheme.primary,
-                                    onChanged: (mode) {
-                                      notifier.setLookupMode(mode);
-                                      if (mode ==
-                                          RpPostingLookupMode.byNumber) {
-                                        _numberFromController.text =
-                                            state.numberFrom;
-                                        _numberToController.text =
-                                            state.numberTo;
-                                      }
-                                    },
-                                  ),
-                                  const SizedBox(height: AppSpacing.md),
-                                  if (state.lookupMode ==
-                                      RpPostingLookupMode.byDate)
-                                    _RangeRow(
-                                      start: _DateField(
-                                        label: l10n.rpPostingServiceFromDate,
-                                        value: state.fromDate,
-                                        placeholder:
-                                            l10n.rpPostingServicePickDate,
-                                        enabled: !state.isApplying,
-                                        onTap: () => _pickDate(isFrom: true),
-                                      ),
-                                      end: _DateField(
-                                        label: l10n.rpPostingServiceToDate,
-                                        value: state.toDate,
-                                        placeholder:
-                                            l10n.rpPostingServicePickDate,
-                                        enabled: !state.isApplying,
-                                        onTap: () => _pickDate(isFrom: false),
-                                      ),
-                                    )
-                                  else
-                                    _RangeRow(
-                                      start: TextField(
-                                        controller: _numberFromController,
-                                        enabled: !state.isApplying,
-                                        keyboardType: TextInputType.number,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter
-                                              .digitsOnly,
-                                        ],
-        style: theme.textTheme.bodySmall?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-        decoration: _fieldDecoration(
-          context,
-          label: l10n.rpPostingServiceFromNumber,
-          hint: l10n.rpPostingServiceNumberHint,
-        ),
-        onChanged: notifier.setNumberFrom,
-        textInputAction: TextInputAction.next,
-      ),
-      end: TextField(
-        controller: _numberToController,
-        enabled: !state.isApplying,
-        keyboardType: TextInputType.number,
-        inputFormatters: [
-          FilteringTextInputFormatter.digitsOnly,
-        ],
-        style: theme.textTheme.bodySmall?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-        decoration: _fieldDecoration(
-          context,
-          label: l10n.rpPostingServiceToNumber,
-          hint: l10n.rpPostingServiceNumberHint,
-        ),
-        onChanged: notifier.setNumberTo,
-        textInputAction: TextInputAction.search,
-        onSubmitted: (_) => _search(),
-      ),
-    ),
-                                  if (filterError != null) ...[
-                                    const SizedBox(height: AppSpacing.sm),
-                                    _InlineError(message: filterError),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.md),
-                            FilledButton(
-                              onPressed: state.isLoading || state.isApplying
-                                  ? null
-                                  : _search,
-                              style: FilledButton.styleFrom(
-                                minimumSize: const Size.fromHeight(52),
-                                backgroundColor: scheme.primary,
-                                foregroundColor: scheme.onPrimary,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppRadius.control,
+                                    activeColor: accent,
+                                    onChanged: notifier.setOperation,
                                   ),
                                 ),
-                              ),
-                              child: state.isLoading
-                                  ? SizedBox(
-                                      width: 22,
-                                      height: 22,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.4,
-                                        color: scheme.onPrimary,
+                                const _Hairline(),
+                                _StepBlock(
+                                  index: 3,
+                                  title: l10n.rpPostingServiceLookup,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      _SegmentedToggle<RpPostingLookupMode>(
+                                        left: _SegItem(
+                                          value: RpPostingLookupMode.byDate,
+                                          label: l10n.rpDate,
+                                          icon: Icons.calendar_month_rounded,
+                                        ),
+                                        right: _SegItem(
+                                          value: RpPostingLookupMode.byNumber,
+                                          label: l10n.rpTransactionNumber,
+                                          icon: Icons.tag_rounded,
+                                        ),
+                                        selected: state.lookupMode,
+                                        enabled: !state.isApplying,
+                                        activeColor: scheme.primary,
+                                        onChanged: (mode) {
+                                          notifier.setLookupMode(mode);
+                                          if (mode ==
+                                              RpPostingLookupMode.byNumber) {
+                                            _numberFromController.text =
+                                                state.numberFrom;
+                                            _numberToController.text =
+                                                state.numberTo;
+                                          }
+                                        },
                                       ),
-                                    )
-                                  : Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(Icons.search_rounded),
-                                        const SizedBox(width: AppSpacing.xs),
-                                        Text(
-                                          l10n.rpPostingServiceSearch,
-                                          style: theme.textTheme.titleSmall
-                                              ?.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                            color: scheme.onPrimary,
+                                      const SizedBox(height: AppSpacing.md),
+                                      if (state.lookupMode ==
+                                          RpPostingLookupMode.byDate)
+                                        _RangeRow(
+                                          start: _DateField(
+                                            label:
+                                                l10n.rpPostingServiceFromDate,
+                                            value: state.fromDate,
+                                            placeholder:
+                                                l10n.rpPostingServicePickDate,
+                                            enabled: !state.isApplying,
+                                            onTap: () =>
+                                                _pickDate(isFrom: true),
+                                          ),
+                                          end: _DateField(
+                                            label: l10n.rpPostingServiceToDate,
+                                            value: state.toDate,
+                                            placeholder:
+                                                l10n.rpPostingServicePickDate,
+                                            enabled: !state.isApplying,
+                                            onTap: () =>
+                                                _pickDate(isFrom: false),
+                                          ),
+                                        )
+                                      else
+                                        _RangeRow(
+                                          start: TextField(
+                                            controller: _numberFromController,
+                                            enabled: !state.isApplying,
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter
+                                                  .digitsOnly,
+                                            ],
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                            decoration: _fieldDecoration(
+                                              context,
+                                              label: l10n
+                                                  .rpPostingServiceFromNumber,
+                                              hint: l10n
+                                                  .rpPostingServiceNumberHint,
+                                            ),
+                                            onChanged: notifier.setNumberFrom,
+                                            textInputAction:
+                                                TextInputAction.next,
+                                          ),
+                                          end: TextField(
+                                            controller: _numberToController,
+                                            enabled: !state.isApplying,
+                                            keyboardType: TextInputType.number,
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter
+                                                  .digitsOnly,
+                                            ],
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                            decoration: _fieldDecoration(
+                                              context,
+                                              label:
+                                                  l10n.rpPostingServiceToNumber,
+                                              hint: l10n
+                                                  .rpPostingServiceNumberHint,
+                                            ),
+                                            onChanged: notifier.setNumberTo,
+                                            textInputAction:
+                                                TextInputAction.search,
+                                            onSubmitted: (_) => _search(),
                                           ),
                                         ),
+                                      if (filterError != null) ...[
+                                        const SizedBox(height: AppSpacing.sm),
+                                        _InlineError(message: filterError),
                                       ],
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                FilledButton(
+                                  onPressed: state.isLoading || state.isApplying
+                                      ? null
+                                      : _search,
+                                  style: FilledButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(52),
+                                    backgroundColor: scheme.primary,
+                                    foregroundColor: scheme.onPrimary,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.control,
+                                      ),
                                     ),
+                                  ),
+                                  child: state.isLoading
+                                      ? SizedBox(
+                                          width: 22,
+                                          height: 22,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.4,
+                                            color: scheme.onPrimary,
+                                          ),
+                                        )
+                                      : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(Icons.search_rounded),
+                                            const SizedBox(
+                                              width: AppSpacing.xs,
+                                            ),
+                                            Text(
+                                              l10n.rpPostingServiceSearch,
+                                              style: theme.textTheme.titleSmall
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w800,
+                                                    color: scheme.onPrimary,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      )
+                          )
                           .animate()
                           .fadeIn(duration: 260.ms)
                           .slideY(begin: 0.02, end: 0, duration: 260.ms),
                       if (state.hasSearched) ...[
                         const SizedBox(height: AppSpacing.lg),
                         _ResultsShell(
-                          title: l10n.rpPostingServiceResultsCount(
-                            state.items.length,
-                          ),
-                          badge: isPost ? l10n.rpPost : l10n.rpUnpost,
-                          badgeColor: accent,
-                          child: state.items.isEmpty
-                              ? _EmptyResults(
-                                  message: l10n.rpPostingServiceEmpty,
-                                )
-                              : Column(
-                                  children: [
-                                    for (var i = 0;
-                                        i < state.items.length;
-                                        i++) ...[
-                                      if (i > 0) const _Hairline(indent: 16),
-                                      _LedgerRow(
-                                        item: state.items[i],
-                                        selected: state.selectedId ==
-                                            state.items[i].id,
-                                        enabled: !state.isApplying,
-                                        accent: accent,
-                                        onTap: () => notifier.selectItem(
-                                          state.items[i].id,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                        )
+                              title: l10n.rpPostingServiceResultsCount(
+                                state.items.length,
+                              ),
+                              badge: isPost ? l10n.rpPost : l10n.rpUnpost,
+                              badgeColor: accent,
+                              child: state.items.isEmpty
+                                  ? _EmptyResults(
+                                      message: l10n.rpPostingServiceEmpty,
+                                    )
+                                  : Column(
+                                      children: [
+                                        for (
+                                          var i = 0;
+                                          i < state.items.length;
+                                          i++
+                                        ) ...[
+                                          if (i > 0)
+                                            const _Hairline(indent: 16),
+                                          _LedgerRow(
+                                            item: state.items[i],
+                                            selected:
+                                                state.selectedId ==
+                                                state.items[i].id,
+                                            enabled: !state.isApplying,
+                                            accent: accent,
+                                            onTap: () => notifier.selectItem(
+                                              state.items[i].id,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                            )
                             .animate()
                             .fadeIn(delay: 60.ms, duration: 260.ms)
                             .slideY(
@@ -650,9 +669,7 @@ class _CriteriaPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
         boxShadow: AppShadows.card(brightness),
       ),
       child: Column(
@@ -756,10 +773,9 @@ class _Hairline extends StatelessWidget {
       child: Divider(
         height: 1,
         thickness: 1,
-        color: Theme.of(context)
-            .colorScheme
-            .outlineVariant
-            .withValues(alpha: 0.45),
+        color: Theme.of(
+          context,
+        ).colorScheme.outlineVariant.withValues(alpha: 0.45),
       ),
     );
   }
@@ -779,11 +795,11 @@ class _TypeGrid extends StatelessWidget {
   final ValueChanged<TransactionType> onChanged;
 
   IconData _icon(TransactionType type) => switch (type) {
-        TransactionType.receipt => Icons.call_received_rounded,
-        TransactionType.payment => Icons.call_made_rounded,
-        TransactionType.transfer => Icons.swap_horiz_rounded,
-        TransactionType.currencyExchange => Icons.currency_exchange_rounded,
-      };
+    TransactionType.receipt => Icons.call_received_rounded,
+    TransactionType.payment => Icons.call_made_rounded,
+    TransactionType.transfer => Icons.swap_horiz_rounded,
+    TransactionType.currencyExchange => Icons.currency_exchange_rounded,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -988,8 +1004,7 @@ class _SegButton<T> extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight:
-                          selected ? FontWeight.w800 : FontWeight.w600,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                       color: selected ? activeColor : scheme.onSurfaceVariant,
                     ),
                   ),
@@ -1126,7 +1141,11 @@ class _InlineError extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.error),
+          const Icon(
+            Icons.info_outline_rounded,
+            size: 18,
+            color: AppColors.error,
+          ),
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
@@ -1166,9 +1185,7 @@ class _ResultsShell extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
         boxShadow: AppShadows.card(brightness),
       ),
       clipBehavior: Clip.antiAlias,
@@ -1248,8 +1265,8 @@ class _LedgerRow extends StatelessWidget {
     final description = (item.description ?? '').trim();
     final amount = NumberFormat('#,##0.##').format(item.amount);
     final showParty = item.transactionType.isReceipt && party.isNotEmpty;
-    final showDescription = !item.transactionType.isReceipt &&
-        description.isNotEmpty;
+    final showDescription =
+        !item.transactionType.isReceipt && description.isNotEmpty;
 
     return Material(
       color: selected ? accent.withValues(alpha: 0.07) : Colors.transparent,
@@ -1299,8 +1316,9 @@ class _LedgerRow extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              DateFormat('d/M/yyyy')
-                                  .format(item.transactionDate),
+                              DateFormat(
+                                'd/M/yyyy',
+                              ).format(item.transactionDate),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
                               ),
@@ -1415,9 +1433,7 @@ class _ActionDock extends StatelessWidget {
           ),
         ],
         border: Border(
-          top: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.45),
-          ),
+          top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.45)),
         ),
       ),
       child: SafeArea(
@@ -1465,12 +1481,14 @@ class _ActionDock extends StatelessWidget {
                       style: FilledButton.styleFrom(
                         backgroundColor: accent,
                         foregroundColor: Colors.white,
-                        disabledBackgroundColor:
-                            scheme.onSurface.withValues(alpha: 0.12),
+                        disabledBackgroundColor: scheme.onSurface.withValues(
+                          alpha: 0.12,
+                        ),
                         minimumSize: const Size.fromHeight(50),
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppRadius.control),
+                          borderRadius: BorderRadius.circular(
+                            AppRadius.control,
+                          ),
                         ),
                       ),
                       child: Text(
@@ -1493,8 +1511,9 @@ class _ActionDock extends StatelessWidget {
                         side: BorderSide(color: accent.withValues(alpha: 0.55)),
                         minimumSize: const Size.fromHeight(50),
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppRadius.control),
+                          borderRadius: BorderRadius.circular(
+                            AppRadius.control,
+                          ),
                         ),
                       ),
                       child: Text(

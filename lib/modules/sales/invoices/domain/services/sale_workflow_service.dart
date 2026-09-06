@@ -32,7 +32,7 @@ class SaleWorkflowService {
 
   void assertCanEdit(Sale sale) {
     if (!sale.saleStatus.isEditable) {
-      throw const SaleException(SaleException.invalidStatusTransition);
+      throw const SaleException(SaleException.postedImmutable);
     }
   }
 }

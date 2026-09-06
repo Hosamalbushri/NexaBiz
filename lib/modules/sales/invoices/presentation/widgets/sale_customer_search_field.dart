@@ -88,10 +88,7 @@ class _SaleCustomerSearchFieldState
         fontWeight: FontWeight.w600,
         color: scheme.onSurface.withValues(alpha: 0.45),
       ),
-      prefixIcon: Icon(
-        Icons.search_rounded,
-        color: scheme.primary,
-      ),
+      prefixIcon: Icon(Icons.search_rounded, color: scheme.primary),
       suffixIcon: IconButton(
         tooltip: widget.onCancel != null
             ? MaterialLocalizations.of(context).cancelButtonLabel
@@ -104,10 +101,7 @@ class _SaleCustomerSearchFieldState
           _controller.clear();
           widget.onQueryChanged?.call('');
         },
-        icon: Icon(
-          Icons.close_rounded,
-          color: scheme.onSurfaceVariant,
-        ),
+        icon: Icon(Icons.close_rounded, color: scheme.onSurfaceVariant),
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -121,10 +115,7 @@ class _SaleCustomerSearchFieldState
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        borderSide: BorderSide(
-          color: scheme.primary,
-          width: 1.4,
-        ),
+        borderSide: BorderSide(color: scheme.primary, width: 1.4),
       ),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
@@ -201,4 +192,3 @@ class _SaleCustomerSearchFieldState
     );
   }
 }
-

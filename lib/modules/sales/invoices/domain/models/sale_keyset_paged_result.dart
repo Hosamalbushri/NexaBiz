@@ -3,10 +3,7 @@ import 'package:flutter/foundation.dart';
 /// Cursor token representing deterministic position in keyset-ordered sales queries (`saleDate DESC, id DESC`).
 @immutable
 class SaleCursor {
-  const SaleCursor({
-    required this.saleDateMs,
-    required this.id,
-  });
+  const SaleCursor({required this.saleDateMs, required this.id});
 
   final int saleDateMs;
   final int id;

@@ -81,10 +81,7 @@ class RpServiceMenuPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: title,
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: title, showBackButton: true),
       body: ListView(
         padding: AppConstants.pageInsets(context),
         children: [
@@ -98,45 +95,47 @@ class RpServiceMenuPage extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           PermissionGate(
             anyOf: viewPermissions,
-            child: _MenuCard(
-                  icon: Icons.list_alt_outlined,
-                  title: viewTitle,
-                  subtitle: viewSubtitle,
-                  onTap: () =>
-                      ReceiptsPaymentsRoutes.pushList(context, type: type),
-                )
-                .animate()
-                .fadeIn(duration: 260.ms)
-                .slideY(begin: 0.04, end: 0, duration: 260.ms),
+            child:
+                _MenuCard(
+                      icon: Icons.list_alt_outlined,
+                      title: viewTitle,
+                      subtitle: viewSubtitle,
+                      onTap: () =>
+                          ReceiptsPaymentsRoutes.pushList(context, type: type),
+                    )
+                    .animate()
+                    .fadeIn(duration: 260.ms)
+                    .slideY(begin: 0.04, end: 0, duration: 260.ms),
           ),
           const SizedBox(height: AppSpacing.md),
           PermissionGate(
             anyOf: createPermissions,
-            child: _MenuCard(
-                  icon: createIcon,
-                  title: createTitle,
-                  subtitle: createSubtitle,
-                  onTap: () {
-                    switch (type) {
-                      case TransactionType.receipt:
-                        ReceiptsPaymentsRoutes.pushCreateReceipt(context);
-                      case TransactionType.payment:
-                        ReceiptsPaymentsRoutes.pushCreatePayment(context);
-                      case TransactionType.transfer:
-                        ReceiptsPaymentsRoutes.pushCreateTransfer(context);
-                      case TransactionType.currencyExchange:
-                        ReceiptsPaymentsRoutes.pushCreateExchange(context);
-                    }
-                  },
-                )
-                .animate()
-                .fadeIn(delay: 50.ms, duration: 260.ms)
-                .slideY(
-                  begin: 0.04,
-                  end: 0,
-                  delay: 50.ms,
-                  duration: 260.ms,
-                ),
+            child:
+                _MenuCard(
+                      icon: createIcon,
+                      title: createTitle,
+                      subtitle: createSubtitle,
+                      onTap: () {
+                        switch (type) {
+                          case TransactionType.receipt:
+                            ReceiptsPaymentsRoutes.pushCreateReceipt(context);
+                          case TransactionType.payment:
+                            ReceiptsPaymentsRoutes.pushCreatePayment(context);
+                          case TransactionType.transfer:
+                            ReceiptsPaymentsRoutes.pushCreateTransfer(context);
+                          case TransactionType.currencyExchange:
+                            ReceiptsPaymentsRoutes.pushCreateExchange(context);
+                        }
+                      },
+                    )
+                    .animate()
+                    .fadeIn(delay: 50.ms, duration: 260.ms)
+                    .slideY(
+                      begin: 0.04,
+                      end: 0,
+                      delay: 50.ms,
+                      duration: 260.ms,
+                    ),
           ),
         ],
       ),

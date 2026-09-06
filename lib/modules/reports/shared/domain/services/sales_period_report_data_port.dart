@@ -1,3 +1,5 @@
+import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
+
 /// Opaque sales-period report rows prepared outside the PDF layer.
 class SalesPeriodReportRow {
   const SalesPeriodReportRow({
@@ -67,6 +69,11 @@ abstract class SalesPeriodReportDataPort {
     DateTime? fromDate,
     DateTime? toDate,
     String? statusStorageValue,
+    required SalesPeriodReportLabels labels,
+  });
+
+  Future<SalesPeriodReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
     required SalesPeriodReportLabels labels,
   });
 }
@@ -147,4 +154,16 @@ class NoOpSalesPeriodReportDataPort implements SalesPeriodReportDataPort {
       emptyMessage: labels.emptyMessage,
     );
   }
+
+  @override
+  Future<SalesPeriodReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
+    required SalesPeriodReportLabels labels,
+  }) =>
+      load(
+        fromDate: filter.fromDate,
+        toDate: filter.toDate,
+        statusStorageValue: filter.customFilters['statusStorageValue'] as String?,
+        labels: labels,
+      );
 }

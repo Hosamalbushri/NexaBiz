@@ -13,6 +13,18 @@ class FakeSetupAccountLookupPort implements SetupAccountLookupPort {
   Future<SetupAccountData?> findAccount(String codeOrUuidOrId) async {
     return accounts[codeOrUuidOrId.trim()];
   }
+
+  @override
+  Future<List<SetupAccountData>> getChildren(
+    String parentUuid, {
+    String? companyId,
+  }) async => const [];
+
+  @override
+  Future<List<SetupAccountData>> getDescendants(
+    String parentUuid, {
+    String? companyId,
+  }) async => const [];
 }
 
 void main() {
@@ -60,71 +72,91 @@ void main() {
       );
     });
 
-    test('1. CentralSetupRegistry discovers Receipts & Payments setup via module registration', () {
-      ReceiptsPaymentsModule.register(setupRegistry: registry);
+    test(
+      '1. CentralSetupRegistry discovers Receipts & Payments setup via module registration',
+      () {
+        ReceiptsPaymentsModule.register(setupRegistry: registry);
 
-      expect(registry.isRegistered('receipts_payments'), isTrue);
+        expect(registry.isRegistered('receipts_payments'), isTrue);
 
-      final setup = registry.get('receipts_payments');
-      expect(setup, isNotNull);
-      expect(setup!.packageId, equals('receipts_payments'));
-      expect(setup.displayName('ar'), equals('إعدادات السندات والخزينة'));
-      expect(setup.displayName('en'), equals('Receipts & Payments Setup'));
-      expect(setup.sortOrder, equals(50));
-    });
+        final setup = registry.get('receipts_payments');
+        expect(setup, isNotNull);
+        expect(setup!.packageId, equals('receipts_payments'));
+        expect(setup.displayName('ar'), equals('إعدادات السندات والخزينة'));
+        expect(setup.displayName('en'), equals('Receipts & Payments Setup'));
+        expect(setup.sortOrder, equals(50));
+      },
+    );
 
-    test('2. Setup definition exposes treasury_defaults and account_requirements sections', () {
-      registerReceiptsPaymentsSetup(registry);
+    test(
+      '2. Setup definition exposes treasury_defaults and account_requirements sections',
+      () {
+        registerReceiptsPaymentsSetup(registry);
 
-      final setup = registry.get('receipts_payments')!;
-      final sectionIds = setup.sections.map((s) => s.id).toList();
+        final setup = registry.get('receipts_payments')!;
+        final sectionIds = setup.sections.map((s) => s.id).toList();
 
-      expect(sectionIds, containsAll(['treasury_defaults', 'account_requirements']));
+        expect(
+          sectionIds,
+          containsAll(['treasury_defaults', 'account_requirements']),
+        );
 
-      final treasurySection = setup.sections.firstWhere((s) => s.id == 'treasury_defaults');
-      expect(
-        treasurySection.fields.map((f) => f.key),
-        containsAll(['requireCheckNumber', 'allowNegativeTreasuryBalance']),
-      );
-    });
+        final treasurySection = setup.sections.firstWhere(
+          (s) => s.id == 'treasury_defaults',
+        );
+        expect(
+          treasurySection.fields.map((f) => f.key),
+          containsAll(['requireCheckNumber', 'allowNegativeTreasuryBalance']),
+        );
+      },
+    );
 
-    test('3. Binds Cash account requirement successfully with UUID reference', () async {
-      final binding = await resolver.bindAccount(
-        companyId: companyA,
-        requirement: rpCashAccountRequirement,
-        accountUuid: validCashAccount.uuid,
-      );
-
-      expect(binding.status, equals(AccountBindingStatus.bound));
-      expect(binding.accountUuid, equals('uuid_cash_1010'));
-    });
-
-    test('4. Missing account invariant — safe init; controlled exception on transaction attempt', () async {
-      final result = await resolver.resolveRequirement(
-        companyId: companyA,
-        requirement: rpCashAccountRequirement,
-      );
-
-      expect(result.isUnbound, isTrue);
-
-      expect(
-        () async => resolver.resolveAccountForTransaction(
+    test(
+      '3. Binds Cash account requirement successfully with UUID reference',
+      () async {
+        final binding = await resolver.bindAccount(
           companyId: companyA,
           requirement: rpCashAccountRequirement,
-        ),
-        throwsA(isA<AccountBindingException>()),
-      );
-    });
+          accountUuid: validCashAccount.uuid,
+        );
 
-    test('5. Multi-tenant company isolation rejects cross-company account assignment', () async {
-      expect(
-        () async => resolver.bindAccount(
+        expect(binding.status, equals(AccountBindingStatus.bound));
+        expect(binding.accountUuid, equals('uuid_cash_1010'));
+      },
+    );
+
+    test(
+      '4. Missing account invariant — safe init; controlled exception on transaction attempt',
+      () async {
+        final result = await resolver.resolveRequirement(
           companyId: companyA,
           requirement: rpCashAccountRequirement,
-          accountUuid: crossCompanyAccount.uuid,
-        ),
-        throwsA(isA<CrossCompanyAccountBindingException>()),
-      );
-    });
+        );
+
+        expect(result.isUnbound, isTrue);
+
+        expect(
+          () async => resolver.resolveAccountForTransaction(
+            companyId: companyA,
+            requirement: rpCashAccountRequirement,
+          ),
+          throwsA(isA<AccountBindingException>()),
+        );
+      },
+    );
+
+    test(
+      '5. Multi-tenant company isolation rejects cross-company account assignment',
+      () async {
+        expect(
+          () async => resolver.bindAccount(
+            companyId: companyA,
+            requirement: rpCashAccountRequirement,
+            accountUuid: crossCompanyAccount.uuid,
+          ),
+          throwsA(isA<CrossCompanyAccountBindingException>()),
+        );
+      },
+    );
   });
 }

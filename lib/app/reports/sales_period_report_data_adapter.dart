@@ -1,3 +1,4 @@
+import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
 import 'package:stock_count/modules/reports/shared/domain/services/sales_period_report_data_port.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_list_item.dart';
 import 'package:stock_count/modules/sales/invoices/domain/entities/sale_settlement_type.dart';
@@ -13,6 +14,19 @@ class SalesPeriodReportDataAdapter implements SalesPeriodReportDataPort {
 
   static const int _pageSize = 200;
   static const int _maxRows = 5000;
+
+  @override
+  Future<SalesPeriodReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
+    required SalesPeriodReportLabels labels,
+  }) {
+    return load(
+      fromDate: filter.fromDate,
+      toDate: filter.toDate,
+      statusStorageValue: filter.customFilters['statusStorageValue'] as String?,
+      labels: labels,
+    );
+  }
 
   @override
   Future<SalesPeriodReportPayload> load({

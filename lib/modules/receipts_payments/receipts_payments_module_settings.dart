@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../core/modules/module_settings_definition.dart';
 import 'shared/presentation/pages/receipts_payments_routes.dart';
 
-List<ModuleSettingsCategoryDefinition> buildReceiptsPaymentsSettingsCategories(String moduleId) {
+List<ModuleSettingsCategoryDefinition> buildReceiptsPaymentsSettingsCategories(
+  String moduleId,
+) {
   return [
     ModuleSettingsCategoryDefinition(
       id: 'rp_settings_cat',

@@ -15,12 +15,18 @@ class FakeSetupAccountLookupPort implements SetupAccountLookupPort {
   }
 
   @override
-  Future<List<SetupAccountData>> getChildren(String parentUuid, {String? companyId}) async {
+  Future<List<SetupAccountData>> getChildren(
+    String parentUuid, {
+    String? companyId,
+  }) async {
     return const [];
   }
 
   @override
-  Future<List<SetupAccountData>> getDescendants(String parentUuid, {String? companyId}) async {
+  Future<List<SetupAccountData>> getDescendants(
+    String parentUuid, {
+    String? companyId,
+  }) async {
     return const [];
   }
 }
@@ -70,71 +76,92 @@ void main() {
       );
     });
 
-    test('1. CentralSetupRegistry discovers Sales setup via module registration', () {
-      SalesModule.register(setupRegistry: registry);
+    test(
+      '1. CentralSetupRegistry discovers Sales setup via module registration',
+      () {
+        SalesModule.register(setupRegistry: registry);
 
-      expect(registry.isRegistered('sales'), isTrue);
+        expect(registry.isRegistered('sales'), isTrue);
 
-      final setup = registry.get('sales');
-      expect(setup, isNotNull);
-      expect(setup!.packageId, equals('sales'));
-      expect(setup.displayName('ar'), equals('إعدادات المبيعات'));
-      expect(setup.displayName('en'), equals('Sales Setup'));
-      expect(setup.sortOrder, equals(30));
-    });
+        final setup = registry.get('sales');
+        expect(setup, isNotNull);
+        expect(setup!.packageId, equals('sales'));
+        expect(setup.displayName('ar'), equals('إعدادات المبيعات'));
+        expect(setup.displayName('en'), equals('Sales Setup'));
+        expect(setup.sortOrder, equals(30));
+      },
+    );
 
-    test('2. Sales setup definition exposes policies and account_requirements sections', () {
-      registerSalesSetup(registry);
+    test(
+      '2. Sales setup definition exposes policies and account_requirements sections',
+      () {
+        registerSalesSetup(registry);
 
-      final setup = registry.get('sales')!;
-      final sectionIds = setup.sections.map((s) => s.id).toList();
+        final setup = registry.get('sales')!;
+        final sectionIds = setup.sections.map((s) => s.id).toList();
 
-      expect(sectionIds, containsAll(['policies', 'account_requirements']));
+        expect(sectionIds, containsAll(['policies', 'account_requirements']));
 
-      final policiesSection = setup.sections.firstWhere((s) => s.id == 'policies');
-      expect(
-        policiesSection.fields.map((f) => f.key),
-        containsAll(['defaultTaxRate', 'allowPriceOverride', 'allowInvoiceDiscount']),
-      );
-    });
+        final policiesSection = setup.sections.firstWhere(
+          (s) => s.id == 'policies',
+        );
+        expect(
+          policiesSection.fields.map((f) => f.key),
+          containsAll([
+            'defaultTaxRate',
+            'allowPriceOverride',
+            'allowInvoiceDiscount',
+          ]),
+        );
+      },
+    );
 
-    test('3. Binds Sales account requirement successfully with UUID reference', () async {
-      final binding = await resolver.bindAccount(
-        companyId: companyA,
-        requirement: salesAccountRequirement,
-        accountUuid: validSalesAccount.uuid,
-      );
-
-      expect(binding.status, equals(AccountBindingStatus.bound));
-      expect(binding.accountUuid, equals('uuid_sales_400'));
-    });
-
-    test('4. Missing account invariant — safe init; controlled exception on transaction attempt', () async {
-      final result = await resolver.resolveRequirement(
-        companyId: companyA,
-        requirement: salesAccountRequirement,
-      );
-
-      expect(result.isUnbound, isTrue);
-
-      expect(
-        () async => resolver.resolveAccountForTransaction(
+    test(
+      '3. Binds Sales account requirement successfully with UUID reference',
+      () async {
+        final binding = await resolver.bindAccount(
           companyId: companyA,
           requirement: salesAccountRequirement,
-        ),
-        throwsA(isA<AccountBindingException>()),
-      );
-    });
+          accountUuid: validSalesAccount.uuid,
+        );
 
-    test('5. Multi-tenant company isolation rejects cross-company account assignment', () async {
-      expect(
-        () async => resolver.bindAccount(
+        expect(binding.status, equals(AccountBindingStatus.bound));
+        expect(binding.accountUuid, equals('uuid_sales_400'));
+      },
+    );
+
+    test(
+      '4. Missing account invariant — safe init; controlled exception on transaction attempt',
+      () async {
+        final result = await resolver.resolveRequirement(
           companyId: companyA,
           requirement: salesAccountRequirement,
-          accountUuid: crossCompanyAccount.uuid,
-        ),
-        throwsA(isA<CrossCompanyAccountBindingException>()),
-      );
-    });
+        );
+
+        expect(result.isUnbound, isTrue);
+
+        expect(
+          () async => resolver.resolveAccountForTransaction(
+            companyId: companyA,
+            requirement: salesAccountRequirement,
+          ),
+          throwsA(isA<AccountBindingException>()),
+        );
+      },
+    );
+
+    test(
+      '5. Multi-tenant company isolation rejects cross-company account assignment',
+      () async {
+        expect(
+          () async => resolver.bindAccount(
+            companyId: companyA,
+            requirement: salesAccountRequirement,
+            accountUuid: crossCompanyAccount.uuid,
+          ),
+          throwsA(isA<CrossCompanyAccountBindingException>()),
+        );
+      },
+    );
   });
 }

@@ -1,3 +1,4 @@
+import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_status.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/models/transaction_list_filter.dart';
@@ -32,6 +33,22 @@ class RpReportDataAdapter implements RpReportDataPort {
       case RpReportKind.periodSummary:
         return base;
     }
+  }
+
+  @override
+  Future<RpReportData> loadFromFilter({
+    required ReportQueryFilter filter,
+    required RpReportKind kind,
+  }) {
+    return load(
+      RpReportQuery(
+        kind: kind,
+        from: filter.fromDate ?? DateTime(2000),
+        to: filter.toDate ?? DateTime(2100),
+        customerId: filter.customerUuid,
+        rowLimit: filter.pageSize,
+      ),
+    );
   }
 
   @override

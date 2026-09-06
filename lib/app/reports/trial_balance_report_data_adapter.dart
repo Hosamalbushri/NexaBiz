@@ -1,3 +1,5 @@
+import 'package:stock_count/core/report_engine/domain/models/report_execution_context.dart';
+import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
 import 'package:stock_count/modules/accounting/journals/domain/repositories/journal_repository.dart';
 import 'package:stock_count/modules/reports/shared/domain/services/trial_balance_report_data_port.dart';
 import '../settings/company/company_profile.dart';
@@ -16,6 +18,7 @@ class TrialBalanceReportDataAdapter implements TrialBalanceReportDataPort {
 
   @override
   Future<TrialBalanceReportPayload> load({
+    String? companyId,
     DateTime? fromDate,
     DateTime? toDate,
     required bool postedOnly,
@@ -23,6 +26,7 @@ class TrialBalanceReportDataAdapter implements TrialBalanceReportDataPort {
   }) async {
     final profile = await loadCompanyProfile();
     final rows = await journals.listTrialBalance(
+      companyId: companyId,
       fromDate: fromDate,
       toDate: toDate,
       isPosted: postedOnly ? true : null,
@@ -70,6 +74,20 @@ class TrialBalanceReportDataAdapter implements TrialBalanceReportDataPort {
       fromDate: fromDate,
       toDate: toDate,
       emptyMessage: labels.emptyMessage,
+    );
+  }
+
+  @override
+  Future<TrialBalanceReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
+    required TrialBalanceReportLabels labels,
+  }) {
+    return load(
+      companyId: filter.companyId,
+      fromDate: filter.fromDate,
+      toDate: filter.toDate,
+      postedOnly: filter.postingScope == PostingScope.postedOnly,
+      labels: labels,
     );
   }
 

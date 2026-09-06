@@ -207,7 +207,7 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
     this._converter = const SaleCurrencyConverter(),
     double defaultTaxRate = 0,
     required String baseCurrencyCode,
-  })  : super(
+  }) : super(
          SaleComposerState(
            saleDate: DateTime(
              DateTime.now().year,
@@ -282,8 +282,7 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
               name: sale.customerName ?? '',
               accountId: sale.customerAccountId,
             ),
-      walkInCustomerName:
-          sale.customerId == null ? sale.customerName : null,
+      walkInCustomerName: sale.customerId == null ? sale.customerName : null,
       cashAccount: sale.cashAccountId == null
           ? null
           : SaleAccountRef(
@@ -346,10 +345,7 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
     // Edit mode keeps the allocated invoice number; only create mode
     // previews the book's next sequence.
     if (state.editingSaleId != null) {
-      state = state.copyWith(
-        voucherBook: book,
-        clearVoucherBook: book == null,
-      );
+      state = state.copyWith(voucherBook: book, clearVoucherBook: book == null);
       return;
     }
     state = state.copyWith(
@@ -361,10 +357,7 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
   }
 
   void setWarehouse(String? id) {
-    state = state.copyWith(
-      warehouseId: id,
-      clearWarehouseId: id == null,
-    );
+    state = state.copyWith(warehouseId: id, clearWarehouseId: id == null);
   }
 
   void setCustomer(SaleCustomerRef? customer) {
@@ -477,10 +470,7 @@ class SaleComposerController extends StateNotifier<SaleComposerState> {
     final item = state.items[index];
     updateItemAt(
       index,
-      item.copyWith(
-        mainQuantity: mainQuantity,
-        subQuantity: subQuantity,
-      ),
+      item.copyWith(mainQuantity: mainQuantity, subQuantity: subQuantity),
     );
   }
 

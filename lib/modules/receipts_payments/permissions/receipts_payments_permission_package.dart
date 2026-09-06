@@ -5,7 +5,8 @@ import '../../../core/permissions/permission_defs.dart';
 import '../../../shared/permissions/standard_permission_ops.dart';
 import 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart';
 
-export 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart' show TransactionType;
+export 'package:stock_count/modules/receipts_payments/transactions/domain/entities/transaction_type.dart'
+    show TransactionType;
 
 abstract final class ReceiptsPaymentsPermissions {
   static const receiptsView = ['receipts.view'];
@@ -49,32 +50,32 @@ abstract final class ReceiptsPaymentsPermissions {
   static const sync = ['receipts_payments.sync'];
 
   static List<String> createFor(TransactionType type) => switch (type) {
-        TransactionType.receipt => receiptsCreate,
-        TransactionType.payment => paymentsCreate,
-        TransactionType.transfer => transfersCreate,
-        TransactionType.currencyExchange => exchangesCreate,
-      };
+    TransactionType.receipt => receiptsCreate,
+    TransactionType.payment => paymentsCreate,
+    TransactionType.transfer => transfersCreate,
+    TransactionType.currencyExchange => exchangesCreate,
+  };
 
   static List<String> updateFor(TransactionType type) => switch (type) {
-        TransactionType.receipt => receiptsUpdate,
-        TransactionType.payment => paymentsUpdate,
-        TransactionType.transfer => transfersUpdate,
-        TransactionType.currencyExchange => exchangesUpdate,
-      };
+    TransactionType.receipt => receiptsUpdate,
+    TransactionType.payment => paymentsUpdate,
+    TransactionType.transfer => transfersUpdate,
+    TransactionType.currencyExchange => exchangesUpdate,
+  };
 
   static List<String> postFor(TransactionType type) => switch (type) {
-        TransactionType.receipt => receiptsPost,
-        TransactionType.payment => paymentsPost,
-        TransactionType.transfer => transfersPost,
-        TransactionType.currencyExchange => exchangesPost,
-      };
+    TransactionType.receipt => receiptsPost,
+    TransactionType.payment => paymentsPost,
+    TransactionType.transfer => transfersPost,
+    TransactionType.currencyExchange => exchangesPost,
+  };
 
   static List<String> cancelFor(TransactionType type) => switch (type) {
-        TransactionType.receipt => receiptsCancel,
-        TransactionType.payment => paymentsCancel,
-        TransactionType.transfer => transfersCancel,
-        TransactionType.currencyExchange => exchangesCancel,
-      };
+    TransactionType.receipt => receiptsCancel,
+    TransactionType.payment => paymentsCancel,
+    TransactionType.transfer => transfersCancel,
+    TransactionType.currencyExchange => exchangesCancel,
+  };
 }
 
 PermissionPackageDef receiptsPaymentsPermissionPackage() {

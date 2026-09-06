@@ -1,10 +1,5 @@
 /// Primary financial document type for Receipts & Payments.
-enum TransactionType {
-  receipt,
-  payment,
-  transfer,
-  currencyExchange,
-}
+enum TransactionType { receipt, payment, transfer, currencyExchange }
 
 extension TransactionTypeX on TransactionType {
   String get storageValue => name;

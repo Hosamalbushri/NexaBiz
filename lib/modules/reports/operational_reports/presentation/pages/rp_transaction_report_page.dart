@@ -7,17 +7,16 @@ import 'package:stock_count/app/constants/app_constants.dart';
 import 'package:stock_count/app/localization/app_localizations.dart';
 import 'package:stock_count/app/settings/company/company_profile.dart';
 import 'package:stock_count/app/settings/company/company_profile_providers.dart';
-import 'package:stock_count/app/theme/app_spacing.dart';
 import 'package:stock_count/core/reporting/pdf_document_preview_page.dart';
 import 'package:stock_count/core/reporting/report_exception.dart';
 import 'package:stock_count/core/reporting/report_page_format.dart';
 import 'package:stock_count/core/reporting/report_pdf_theme.dart';
-import 'package:stock_count/core/widgets/app_button.dart';
 import 'package:stock_count/core/widgets/app_snackbar.dart';
 import 'package:stock_count/core/widgets/custom_app_bar.dart';
 import 'package:stock_count/modules/reports/shared/domain/services/rp_report_data_port.dart';
 import 'package:stock_count/modules/reports/shared/presentation/providers/reports_providers.dart';
 import 'package:stock_count/modules/reports/shared/presentation/pages/reports_routes.dart';
+import 'package:stock_count/modules/reports/shared/presentation/widgets/app_report_query_filter_panel.dart';
 
 class RpTransactionReportPage extends ConsumerStatefulWidget {
   const RpTransactionReportPage({required this.kind, super.key});
@@ -175,36 +174,28 @@ class _RpTransactionReportPageState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final dateFmt = DateFormat.yMMMd(Localizations.localeOf(context).toString());
     return Scaffold(
       appBar: CustomAppBar(title: _title(l10n), showBackButton: true),
       body: ListView(
         padding: AppConstants.pageInsets(context),
         children: [
-          ListTile(
-            title: Text(l10n.reportsAccountStatementFromDate),
-            subtitle: Text(_from == null ? '—' : dateFmt.format(_from!)),
-            trailing: const Icon(Icons.calendar_today_outlined),
-            onTap: _pickFrom,
-          ),
-          ListTile(
-            title: Text(l10n.reportsAccountStatementToDate),
-            subtitle: Text(_to == null ? '—' : dateFmt.format(_to!)),
-            trailing: const Icon(Icons.calendar_today_outlined),
-            onTap: _pickTo,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppButton(
-            label: _generating
-                ? l10n.rpLoading
-                : l10n.reportsGeneratePreview,
-            icon: Icons.picture_as_pdf_outlined,
-            expand: true,
-            isLoading: _generating,
-            onPressed: _generating ? null : _generate,
+          AppReportQueryFilterPanel(
+            title: _title(l10n),
+            subtitle: 'حدد نطاق التاريخ لاستخراج تقرير المقبوضات والمدفوعات',
+            fromDate: _from,
+            toDate: _to,
+            onPickFromDate: _pickFrom,
+            onPickToDate: _pickTo,
+            onClearDates: () => setState(() {
+              _from = null;
+              _to = null;
+            }),
+            isGenerating: _generating,
+            onGenerate: _generate,
           ),
         ],
       ),
     );
   }
 }
+

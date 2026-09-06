@@ -22,10 +22,7 @@ class SalesHomePage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      appBar: CustomAppBar(
-        title: l10n.moduleSales,
-        showBackButton: true,
-      ),
+      appBar: CustomAppBar(title: l10n.moduleSales, showBackButton: true),
       body: AppContentConstraint(
         child: ListView(
           padding: AppConstants.pageInsets(context),
@@ -58,20 +55,21 @@ class SalesHomePage extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
             PermissionGate(
               anyOf: SalesPermissions.create,
-              child: AppModuleHubCard(
-                    icon: Icons.add_shopping_cart_outlined,
-                    title: l10n.salesCreateTitle,
-                    subtitle: l10n.salesCreateCardSubtitle,
-                    onTap: () => SalesRoutes.pushCreate(context),
-                  )
-                  .animate()
-                  .fadeIn(delay: 60.ms, duration: 280.ms)
-                  .slideY(
-                    begin: 0.04,
-                    end: 0,
-                    delay: 60.ms,
-                    duration: 280.ms,
-                  ),
+              child:
+                  AppModuleHubCard(
+                        icon: Icons.add_shopping_cart_outlined,
+                        title: l10n.salesCreateTitle,
+                        subtitle: l10n.salesCreateCardSubtitle,
+                        onTap: () => SalesRoutes.pushCreate(context),
+                      )
+                      .animate()
+                      .fadeIn(delay: 60.ms, duration: 280.ms)
+                      .slideY(
+                        begin: 0.04,
+                        end: 0,
+                        delay: 60.ms,
+                        duration: 280.ms,
+                      ),
             ),
           ],
         ),
@@ -79,4 +77,3 @@ class SalesHomePage extends ConsumerWidget {
     );
   }
 }
-

@@ -3,9 +3,9 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:stock_count/core/reporting/report_exception.dart';
 import 'package:stock_count/core/reporting/report_page_format.dart';
 import 'package:stock_count/core/reporting/report_table.dart';
-import 'package:stock_count/modules/reports/domain/services/report_runner.dart';
-import 'package:stock_count/modules/reports/domain/services/sales_period_report_data_port.dart';
-import 'package:stock_count/modules/reports/domain/services/sales_period_report_definition.dart';
+import 'package:stock_count/modules/reports/shared/domain/services/report_runner.dart';
+import 'package:stock_count/modules/reports/shared/domain/services/sales_period_report_data_port.dart';
+import 'package:stock_count/modules/reports/shared/domain/services/sales_period_report_definition.dart';
 import 'package:stock_count/core/reporting/report_pdf_theme.dart';
 import 'package:pdf/pdf.dart';
 

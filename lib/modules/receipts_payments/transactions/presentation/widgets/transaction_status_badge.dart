@@ -39,10 +39,6 @@ class RpMoneyText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppMoneyText(
-      value,
-      decimalDigits: 0,
-      style: style,
-    );
+    return AppMoneyText(value, decimalDigits: 0, style: style);
   }
 }

@@ -62,42 +62,43 @@ class GetTransactionDashboard {
 
 class CreateFinancialTransaction {
   CreateFinancialTransaction({
-    required this._repository,
+    required this.repository,
     required PermissionGuard permissionGuard,
-    this._voucherBookPort = const NoOpRpVoucherBookPort(),
-    this._ledgerPosting = const NoOpRpLedgerPostingPort(),
-    this._validator =
-        const FinancialTransactionValidator(),
+    this.voucherBookPort = const NoOpRpVoucherBookPort(),
+    this.ledgerPosting = const NoOpRpLedgerPostingPort(),
+    this.validator = const FinancialTransactionValidator(),
   }) : _guard = permissionGuard;
 
-  final FinancialTransactionRepository _repository;
+  final FinancialTransactionRepository repository;
   final PermissionGuard _guard;
-  final RpVoucherBookPort _voucherBookPort;
-  final RpLedgerPostingPort _ledgerPosting;
-  final FinancialTransactionValidator _validator;
+  final RpVoucherBookPort voucherBookPort;
+  final RpLedgerPostingPort ledgerPosting;
+  final FinancialTransactionValidator validator;
 
   Future<FinancialTransaction> call(FinancialTransactionDraft draft) async {
     final merged = normalizeFinancialTransactionDraft(draft);
-    _guard.requireAny(ReceiptsPaymentsPermissions.createFor(merged.transactionType));
-    _validator.validate(merged);
+    _guard.requireAny(
+      ReceiptsPaymentsPermissions.createFor(merged.transactionType),
+    );
+    validator.validate(merged);
     final bookId = merged.voucherBookId?.trim();
     if (bookId == null || bookId.isEmpty) {
       throw const FinancialTransactionException(
         FinancialTransactionException.voucherBookRequired,
       );
     }
-    final number = await _voucherBookPort.allocateNumber(
+    final number = await voucherBookPort.allocateNumber(
       bookId: bookId,
       type: merged.transactionType,
     );
-    final created = await _repository.insert(merged, transactionNumber: number);
+    final created = await repository.insert(merged, transactionNumber: number);
     try {
-      await _ledgerPosting.syncTransaction(created);
+      await ledgerPosting.syncTransaction(created);
     } on JournalException {
-      await _repository.softDelete(created.id);
+      await repository.softDelete(created.id);
       rethrow;
     } catch (_) {
-      await _repository.softDelete(created.id);
+      await repository.softDelete(created.id);
       throw const FinancialTransactionException(
         FinancialTransactionException.ledgerPostingFailed,
       );
@@ -108,30 +109,28 @@ class CreateFinancialTransaction {
 
 class UpdateFinancialTransaction {
   UpdateFinancialTransaction({
-    required this._repository,
-    this._validator =
-        const FinancialTransactionValidator(),
-    this._workflow =
-        const FinancialTransactionWorkflow(),
-    this._ledgerPosting = const NoOpRpLedgerPostingPort(),
+    required this.repository,
+    this.validator = const FinancialTransactionValidator(),
+    this.workflow = const FinancialTransactionWorkflow(),
+    this.ledgerPosting = const NoOpRpLedgerPostingPort(),
   });
 
-  final FinancialTransactionRepository _repository;
-  final FinancialTransactionValidator _validator;
-  final FinancialTransactionWorkflow _workflow;
-  final RpLedgerPostingPort _ledgerPosting;
+  final FinancialTransactionRepository repository;
+  final FinancialTransactionValidator validator;
+  final FinancialTransactionWorkflow workflow;
+  final RpLedgerPostingPort ledgerPosting;
 
   Future<FinancialTransaction> call(
     int id,
     FinancialTransactionDraft draft,
   ) async {
-    final existing = await _repository.getById(id);
+    final existing = await repository.getById(id);
     if (existing == null) {
       throw const FinancialTransactionException(
         FinancialTransactionException.notFound,
       );
     }
-    _workflow.assertCanEdit(existing);
+    workflow.assertCanEdit(existing);
     final merged = normalizeFinancialTransactionDraft(
       FinancialTransactionDraft(
         transactionType: existing.transactionType,
@@ -165,10 +164,10 @@ class UpdateFinancialTransaction {
         lines: draft.lines,
       ),
     );
-    _validator.validate(merged);
-    final updated = await _repository.update(id, merged);
+    validator.validate(merged);
+    final updated = await repository.update(id, merged);
     try {
-      await _ledgerPosting.syncTransaction(updated);
+      await ledgerPosting.syncTransaction(updated);
     } on JournalException {
       rethrow;
     } catch (_) {
@@ -182,20 +181,19 @@ class UpdateFinancialTransaction {
 
 class PostFinancialTransaction {
   PostFinancialTransaction({
-    required this._repository,
+    required this.repository,
     required PermissionGuard permissionGuard,
-    this._workflow =
-        const FinancialTransactionWorkflow(),
-    this._ledgerPosting = const NoOpRpLedgerPostingPort(),
+    this.workflow = const FinancialTransactionWorkflow(),
+    this.ledgerPosting = const NoOpRpLedgerPostingPort(),
   }) : _guard = permissionGuard;
 
-  final FinancialTransactionRepository _repository;
+  final FinancialTransactionRepository repository;
   final PermissionGuard _guard;
-  final FinancialTransactionWorkflow _workflow;
-  final RpLedgerPostingPort _ledgerPosting;
+  final FinancialTransactionWorkflow workflow;
+  final RpLedgerPostingPort ledgerPosting;
 
   Future<FinancialTransaction> call(int id) async {
-    final existing = await _repository.getById(id);
+    final existing = await repository.getById(id);
     if (existing == null) {
       throw const FinancialTransactionException(
         FinancialTransactionException.notFound,
@@ -204,12 +202,12 @@ class PostFinancialTransaction {
     _guard.requireAny(
       ReceiptsPaymentsPermissions.postFor(existing.transactionType),
     );
-    _workflow.assertCanPost(existing);
-    final posted = await _repository.markPosted(id);
+    workflow.assertCanPost(existing);
+    final posted = await repository.markPosted(id);
     try {
-      await _ledgerPosting.syncTransaction(posted);
+      await ledgerPosting.syncTransaction(posted);
     } catch (e) {
-      await _repository.update(
+      await repository.update(
         id,
         FinancialTransactionDraft(
           transactionType: existing.transactionType,
@@ -262,32 +260,31 @@ class PostFinancialTransaction {
 
 class UnpostFinancialTransaction {
   UnpostFinancialTransaction({
-    required this._repository,
-    this._workflow =
-        const FinancialTransactionWorkflow(),
-    this._ledgerPosting = const NoOpRpLedgerPostingPort(),
+    required this.repository,
+    this.workflow = const FinancialTransactionWorkflow(),
+    this.ledgerPosting = const NoOpRpLedgerPostingPort(),
   });
 
-  final FinancialTransactionRepository _repository;
-  final FinancialTransactionWorkflow _workflow;
-  final RpLedgerPostingPort _ledgerPosting;
+  final FinancialTransactionRepository repository;
+  final FinancialTransactionWorkflow workflow;
+  final RpLedgerPostingPort ledgerPosting;
 
   Future<FinancialTransaction> call(int id) async {
-    final existing = await _repository.getById(id);
+    final existing = await repository.getById(id);
     if (existing == null) {
       throw const FinancialTransactionException(
         FinancialTransactionException.notFound,
       );
     }
-    _workflow.assertCanUnpost(existing);
-    final unposted = await _repository.markUnposted(id);
+    workflow.assertCanUnpost(existing);
+    final unposted = await repository.markUnposted(id);
     try {
-      await _ledgerPosting.syncTransaction(unposted);
+      await ledgerPosting.syncTransaction(unposted);
     } on JournalException {
-      await _repository.markPosted(id);
+      await repository.markPosted(id);
       rethrow;
     } catch (_) {
-      await _repository.markPosted(id);
+      await repository.markPosted(id);
       throw const FinancialTransactionException(
         FinancialTransactionException.ledgerPostingFailed,
       );
@@ -298,20 +295,19 @@ class UnpostFinancialTransaction {
 
 class CancelFinancialTransaction {
   CancelFinancialTransaction({
-    required this._repository,
+    required this.repository,
     required PermissionGuard permissionGuard,
-    this._workflow =
-        const FinancialTransactionWorkflow(),
-    this._ledgerPosting = const NoOpRpLedgerPostingPort(),
+    this.workflow = const FinancialTransactionWorkflow(),
+    this.ledgerPosting = const NoOpRpLedgerPostingPort(),
   }) : _guard = permissionGuard;
 
-  final FinancialTransactionRepository _repository;
+  final FinancialTransactionRepository repository;
   final PermissionGuard _guard;
-  final FinancialTransactionWorkflow _workflow;
-  final RpLedgerPostingPort _ledgerPosting;
+  final FinancialTransactionWorkflow workflow;
+  final RpLedgerPostingPort ledgerPosting;
 
   Future<FinancialTransaction> call(int id) async {
-    final existing = await _repository.getById(id);
+    final existing = await repository.getById(id);
     if (existing == null) {
       throw const FinancialTransactionException(
         FinancialTransactionException.notFound,
@@ -320,8 +316,8 @@ class CancelFinancialTransaction {
     _guard.requireAny(
       ReceiptsPaymentsPermissions.cancelFor(existing.transactionType),
     );
-    _workflow.assertCanCancel(existing);
-    await _ledgerPosting.voidTransaction(existing);
-    return _repository.markCancelled(id);
+    workflow.assertCanCancel(existing);
+    await ledgerPosting.voidTransaction(existing);
+    return repository.markCancelled(id);
   }
 }

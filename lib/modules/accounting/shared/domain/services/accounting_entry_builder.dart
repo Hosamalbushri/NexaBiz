@@ -201,26 +201,43 @@ class AccountingEntryBuilder {
         );
       }
 
-      if (discountAmount > 0) {
-        final discountRef = mapping.getRole(AccountRole.discount);
-        if (discountRef != null) {
-          lines.add(
-            JournalLineDraft(
-              accountUuid: discountRef.accountUuid,
-              debit: discountAmount,
-              credit: 0.0,
-              currencyCode: sale.currencyCode,
-              exchangeRateToBase: rate,
-              lineDescription: 'خصم مبيعات فاتورة ${sale.saleNumber}',
-              sortOrder: sortOrder++,
-            ),
-          );
-        }
+      final taxRef = mapping.getRole(AccountRole.tax);
+      final taxAmount = (taxRef != null && sale.taxAmount > 0) ? sale.taxAmount : 0.0;
+
+      if (taxAmount > 0 && taxRef != null) {
+        await _validationService.assertCanPost(taxRef.accountUuid);
+        lines.add(
+          JournalLineDraft(
+            accountUuid: taxRef.accountUuid,
+            debit: 0.0,
+            credit: taxAmount,
+            currencyCode: sale.currencyCode,
+            exchangeRateToBase: rate,
+            lineDescription: 'ضريبة مبيعات فاتورة ${sale.saleNumber}',
+            sortOrder: sortOrder++,
+          ),
+        );
       }
 
+      final discountRef = mapping.getRole(AccountRole.discount);
+      final hasDiscountAccount = discountRef != null && discountAmount > 0;
+      if (hasDiscountAccount) {
+        await _validationService.assertCanPost(discountRef.accountUuid);
+        lines.add(
+          JournalLineDraft(
+            accountUuid: discountRef.accountUuid,
+            debit: discountAmount,
+            credit: 0.0,
+            currencyCode: sale.currencyCode,
+            exchangeRateToBase: rate,
+            lineDescription: 'خصم مبيعات فاتورة ${sale.saleNumber}',
+            sortOrder: sortOrder++,
+          ),
+        );
+      }
 
       final grossRevenue =
-          netAmount + (discountAmount > 0 ? discountAmount : 0.0);
+          (netAmount - taxAmount) + (hasDiscountAccount ? discountAmount : 0.0);
       lines.add(
         JournalLineDraft(
           accountUuid: revenueRef.accountUuid,

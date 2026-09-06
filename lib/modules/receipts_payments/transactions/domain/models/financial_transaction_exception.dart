@@ -20,6 +20,7 @@ class FinancialTransactionException implements Exception {
   static const currencyRequired = 'currency_required';
   static const unbalanced = 'unbalanced';
   static const savingInProgress = 'saving_in_progress';
+  static const invalidAllocation = 'invalid_allocation';
 
   final String code;
   final String? message;

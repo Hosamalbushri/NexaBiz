@@ -148,9 +148,7 @@ class _SectionHeader extends StatelessWidget {
               ],
             ),
             borderRadius: BorderRadius.circular(AppRadius.sm),
-            border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.12),
-            ),
+            border: Border.all(color: scheme.primary.withValues(alpha: 0.12)),
           ),
           child: Icon(
             Icons.account_tree_outlined,

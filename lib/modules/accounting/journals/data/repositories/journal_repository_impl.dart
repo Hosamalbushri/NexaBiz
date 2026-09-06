@@ -1167,12 +1167,16 @@ class JournalRepositoryImpl implements JournalRepository {
 
   @override
   Future<List<TrialBalanceRow>> listTrialBalance({
+    String? companyId,
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,
   }) async {
+    final targetCompanyId = (companyId != null && companyId.trim().isNotEmpty)
+        ? companyId.trim()
+        : _currentCompanyId;
     final variables = <Variable<Object>>[
-      Variable.withString(_currentCompanyId),
+      Variable.withString(targetCompanyId),
     ];
     final sql = StringBuffer('''
       SELECT a.uuid AS account_uuid,
@@ -1227,12 +1231,16 @@ class JournalRepositoryImpl implements JournalRepository {
 
   @override
   Future<List<JournalBookLineRow>> listJournalBookLines({
+    String? companyId,
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,
   }) async {
+    final targetCompanyId = (companyId != null && companyId.trim().isNotEmpty)
+        ? companyId.trim()
+        : _currentCompanyId;
     final variables = <Variable<Object>>[
-      Variable.withString(_currentCompanyId),
+      Variable.withString(targetCompanyId),
     ];
     final sql = StringBuffer('''
       SELECT je.entry_date AS entry_date,

@@ -219,9 +219,7 @@ class _ProductsSectionHeader extends StatelessWidget {
               ],
             ),
             borderRadius: BorderRadius.circular(AppRadius.sm),
-            border: Border.all(
-              color: scheme.primary.withValues(alpha: 0.12),
-            ),
+            border: Border.all(color: scheme.primary.withValues(alpha: 0.12)),
           ),
           child: Icon(
             Icons.inventory_2_outlined,
@@ -272,9 +270,7 @@ class _TableActionsBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface.withValues(alpha: 0.92),
         border: Border(
-          top: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.4),
-          ),
+          top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.4)),
         ),
       ),
       child: Row(
@@ -388,9 +384,7 @@ class _ScanIconButton extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppRadius.sm),
               color: scheme.primaryContainer.withValues(alpha: 0.55),
-              border: Border.all(
-                color: scheme.primary.withValues(alpha: 0.22),
-              ),
+              border: Border.all(color: scheme.primary.withValues(alpha: 0.22)),
             ),
             child: Icon(
               Icons.qr_code_scanner_rounded,
@@ -506,7 +500,8 @@ class _TableFooter extends StatelessWidget {
       (sum, i) => sum + const SaleCalculationService().calculateLine(i).total,
     );
 
-    String fmtQty(double v) => v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(2);
+    String fmtQty(double v) =>
+        v % 1 == 0 ? v.toInt().toString() : v.toStringAsFixed(2);
 
     final style = theme.textTheme.labelSmall?.copyWith(
       fontWeight: FontWeight.w800,
@@ -527,9 +522,7 @@ class _TableFooter extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.55),
         border: Border(
-          top: BorderSide(
-            color: scheme.outlineVariant.withValues(alpha: 0.45),
-          ),
+          top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.45)),
         ),
       ),
       child: Row(
@@ -540,10 +533,7 @@ class _TableFooter extends StatelessWidget {
           ),
           SizedBox(
             width: _Cols.product,
-            child: Text(
-              'المجموع الإجمالي (${items.length})',
-              style: style,
-            ),
+            child: Text('المجموع الإجمالي (${items.length})', style: style),
           ),
           SizedBox(
             width: _Cols.main,
@@ -563,11 +553,7 @@ class _TableFooter extends StatelessWidget {
           ),
           SizedBox(
             width: _Cols.price,
-            child: Text(
-              '—',
-              style: style,
-              textAlign: TextAlign.center,
-            ),
+            child: Text('—', style: style, textAlign: TextAlign.center),
           ),
           SizedBox(
             width: _Cols.total,
@@ -622,10 +608,7 @@ class _DashedBorderPainter extends CustomPainter {
 }
 
 class _TableHeader extends StatelessWidget {
-  const _TableHeader({
-    required this.theme,
-    required this.l10n,
-  });
+  const _TableHeader({required this.theme, required this.l10n});
 
   final ThemeData theme;
   final AppLocalizations l10n;
@@ -849,10 +832,8 @@ class _FilledProductRowState extends State<_FilledProductRow> {
                   variant: AppAmountFieldVariant.compact,
                   skipTraversal: true,
                   keepFocusOnSubmit: true,
-                  onChanged: (main) => onQuantitiesChangedSafe(
-                    main,
-                    widget.item.subQuantity,
-                  ),
+                  onChanged: (main) =>
+                      onQuantitiesChangedSafe(main, widget.item.subQuantity),
                 ),
               ),
             ),
@@ -867,10 +848,8 @@ class _FilledProductRowState extends State<_FilledProductRow> {
                   variant: AppAmountFieldVariant.compact,
                   skipTraversal: true,
                   keepFocusOnSubmit: true,
-                  onChanged: (sub) => onQuantitiesChangedSafe(
-                    widget.item.mainQuantity,
-                    sub,
-                  ),
+                  onChanged: (sub) =>
+                      onQuantitiesChangedSafe(widget.item.mainQuantity, sub),
                 ),
               ),
             ),
@@ -982,17 +961,11 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
       filled: true,
       fillColor: scheme.surface,
       hintText: l10n.salesSearchProductHint,
-      prefixIcon: Icon(
-        Icons.search_rounded,
-        color: scheme.primary,
-      ),
+      prefixIcon: Icon(Icons.search_rounded, color: scheme.primary),
       suffixIcon: IconButton(
         tooltip: MaterialLocalizations.of(context).cancelButtonLabel,
         onPressed: widget.onCancel,
-        icon: Icon(
-          Icons.close_rounded,
-          color: scheme.onSurfaceVariant,
-        ),
+        icon: Icon(Icons.close_rounded, color: scheme.onSurfaceVariant),
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -1006,10 +979,7 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        borderSide: BorderSide(
-          color: scheme.primary,
-          width: 1.4,
-        ),
+        borderSide: BorderSide(color: scheme.primary, width: 1.4),
       ),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
@@ -1063,9 +1033,7 @@ class _DraftProductRowState extends ConsumerState<_DraftProductRow> {
                     ),
                     decoration: BoxDecoration(
                       color: scheme.primaryContainer.withValues(alpha: 0.45),
-                      borderRadius: BorderRadius.circular(
-                        AppRadius.pill,
-                      ),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
                     child: SaleMoneyText(
                       product.unitPrice,

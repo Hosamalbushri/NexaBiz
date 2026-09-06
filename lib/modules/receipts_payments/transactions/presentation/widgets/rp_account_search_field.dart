@@ -59,8 +59,7 @@ class RpCashAccountDropdown extends ConsumerStatefulWidget {
       _RpCashAccountDropdownState();
 }
 
-class _RpCashAccountDropdownState
-    extends ConsumerState<RpCashAccountDropdown> {
+class _RpCashAccountDropdownState extends ConsumerState<RpCashAccountDropdown> {
   var _loading = true;
   List<RpAccountRef> _accounts = const [];
 
@@ -160,9 +159,9 @@ class _RpCashAccountDropdownState
         ),
         child: Text(
           l10n.salesCashAccountEmpty,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
         ),
       );
     }
@@ -182,10 +181,7 @@ class _RpCashAccountDropdownState
         for (final account in items)
           DropdownMenuItem<RpAccountRef>(
             value: account,
-            child: Text(
-              _cashAccountLabel(l10n, account),
-              softWrap: true,
-            ),
+            child: Text(_cashAccountLabel(l10n, account), softWrap: true),
           ),
       ],
       selectedItemBuilder: (context) {
@@ -196,8 +192,8 @@ class _RpCashAccountDropdownState
               child: Text(
                 widget.showSelectedNameBelow
                     ? (account.code.trim().isEmpty
-                        ? rpCashAccountDisplayName(l10n, account)
-                        : account.code.trim())
+                          ? rpCashAccountDisplayName(l10n, account)
+                          : account.code.trim())
                     : _cashAccountLabel(l10n, account),
                 softWrap: true,
               ),
@@ -292,7 +288,9 @@ class _RpCounterAccountSearchFieldState
 
   Future<List<RpAccountRef>> _search(String query) async {
     final languageCode = Localizations.localeOf(context).languageCode;
-    return ref.read(rpTreasuryAccountPortProvider).searchPostingAccounts(
+    return ref
+        .read(rpTreasuryAccountPortProvider)
+        .searchPostingAccounts(
           query,
           limit: _kResultLimit,
           languageCode: languageCode,
@@ -321,12 +319,8 @@ class _RpCounterAccountSearchFieldState
         }
       },
       itemBuilder: (context, account) {
-        return ListTile(
-          dense: true,
-          title: Text(_display(account)),
-        );
+        return ListTile(dense: true, title: Text(_display(account)));
       },
     );
   }
 }
-

@@ -121,8 +121,9 @@ class _CurrencyExchangeFormPageState
           final nonBase = _currencies.where((c) => !c.isBase).toList();
           if (nonBase.isNotEmpty) {
             _toCurrency = nonBase.first.code;
-            _toRate =
-                nonBase.first.rateToBase <= 0 ? 1 : nonBase.first.rateToBase;
+            _toRate = nonBase.first.rateToBase <= 0
+                ? 1
+                : nonBase.first.rateToBase;
           } else if (_currencies.length > 1) {
             _toCurrency = _currencies[1].code;
             _toRate = _currencies[1].rateToBase <= 0
@@ -145,8 +146,9 @@ class _CurrencyExchangeFormPageState
             return;
           }
           final dateLabel = DateFormat('d/M/yyyy').format(_date);
-          _descriptionController.text =
-              l10n.rpDefaultExchangeDescription(dateLabel);
+          _descriptionController.text = l10n.rpDefaultExchangeDescription(
+            dateLabel,
+          );
 
           final treasury = ref.read(rpTreasuryAccountPortProvider);
           final languageCode = Localizations.localeOf(context).languageCode;
@@ -239,8 +241,9 @@ class _CurrencyExchangeFormPageState
     setState(() => _date = picked);
     if (currentDescription.isEmpty || currentDescription == autoPrevious) {
       final nextLabel = DateFormat('d/M/yyyy').format(picked);
-      _descriptionController.text =
-          l10n.rpDefaultExchangeDescription(nextLabel);
+      _descriptionController.text = l10n.rpDefaultExchangeDescription(
+        nextLabel,
+      );
     }
   }
 
@@ -427,8 +430,9 @@ class _CurrencyExchangeFormPageState
         ref.invalidate(transactionListProvider);
         ReceiptsPaymentsRoutes.pushDetails(context, widget.transactionId!);
       } else {
-        final created =
-            await ref.read(createFinancialTransactionProvider).call(_toDraft());
+        final created = await ref
+            .read(createFinancialTransactionProvider)
+            .call(_toDraft());
         if (!mounted) {
           return;
         }
@@ -464,8 +468,8 @@ class _CurrencyExchangeFormPageState
     final numberLabel = _isEdit
         ? formatSaleNumberPrimary(_previewNumber ?? '—')
         : (_previewNumber ??
-            _voucherBook?.previewNumber ??
-            l10n.rpVoucherBookEmpty);
+              _voucherBook?.previewNumber ??
+              l10n.rpVoucherBookEmpty);
     final dateLabel = DateFormat('d/M/yyyy').format(_date);
 
     if (_loading) {
@@ -518,145 +522,150 @@ class _CurrencyExchangeFormPageState
         padding: AppConstants.pageInsets(context),
         children: [
           _SurfaceCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: _MetaTile(
-                        icon: Icons.tag_rounded,
-                        label: l10n.rpTransactionNumber,
-                        value: numberLabel,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _MetaTile(
+                            icon: Icons.tag_rounded,
+                            label: l10n.rpTransactionNumber,
+                            value: numberLabel,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: _MetaTile(
+                            icon: Icons.calendar_month_outlined,
+                            label: l10n.rpDate,
+                            value: dateLabel,
+                            onTap: _pickDate,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: _MetaTile(
-                        icon: Icons.calendar_month_outlined,
-                        label: l10n.rpDate,
-                        value: dateLabel,
-                        onTap: _pickDate,
+                    if (!_isEdit && _voucherBooks.length > 1) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      DropdownButtonFormField<String>(
+                        initialValue: _voucherBook?.bookId,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: l10n.rpVoucherBook,
+                        ),
+                        items: [
+                          for (final book in _voucherBooks)
+                            DropdownMenuItem(
+                              value: book.bookId,
+                              child: Text(book.name, softWrap: true),
+                            ),
+                        ],
+                        onChanged: (bookId) {
+                          if (bookId == null) {
+                            return;
+                          }
+                          RpVoucherBookRef? selected;
+                          for (final book in _voucherBooks) {
+                            if (book.bookId == bookId) {
+                              selected = book;
+                              break;
+                            }
+                          }
+                          setState(() {
+                            _voucherBook = selected;
+                            _previewNumber = selected?.previewNumber;
+                          });
+                        },
                       ),
-                    ),
+                    ],
                   ],
                 ),
-                if (!_isEdit && _voucherBooks.length > 1) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  DropdownButtonFormField<String>(
-                    initialValue: _voucherBook?.bookId,
-                    isExpanded: true,
-                    decoration: InputDecoration(labelText: l10n.rpVoucherBook),
-                    items: [
-                      for (final book in _voucherBooks)
-                        DropdownMenuItem(
-                          value: book.bookId,
-                          child: Text(book.name, softWrap: true),
-                        ),
-                    ],
-                    onChanged: (bookId) {
-                      if (bookId == null) {
-                        return;
-                      }
-                      RpVoucherBookRef? selected;
-                      for (final book in _voucherBooks) {
-                        if (book.bookId == bookId) {
-                          selected = book;
-                          break;
-                        }
-                      }
-                      setState(() {
-                        _voucherBook = selected;
-                        _previewNumber = selected?.previewNumber;
-                      });
-                    },
-                  ),
-                ],
-              ],
-            ),
-          )
+              )
               .animate()
               .fadeIn(duration: 240.ms)
               .slideY(begin: 0.02, end: 0, duration: 240.ms),
           const SizedBox(height: AppSpacing.md),
           _SurfaceCard(
-            child: RpCashAccountDropdown(
-              label: l10n.rpExchangeCashAccount,
-              selected: _cashAccount,
-              showSelectedNameBelow: true,
-              onSelected: (account) => setState(() => _cashAccount = account),
-            ),
-          )
+                child: RpCashAccountDropdown(
+                  label: l10n.rpExchangeCashAccount,
+                  selected: _cashAccount,
+                  showSelectedNameBelow: true,
+                  onSelected: (account) =>
+                      setState(() => _cashAccount = account),
+                ),
+              )
               .animate()
               .fadeIn(delay: 40.ms, duration: 240.ms)
               .slideY(begin: 0.02, end: 0, delay: 40.ms, duration: 240.ms),
           const SizedBox(height: AppSpacing.md),
           _SurfaceCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _CurrencyLeg(
-                  tone: scheme.error,
-                  amountLabel: l10n.rpExchangeFromAmount,
-                  currencyLabel: l10n.rpExchangeFromCurrency,
-                  amount: _fromAmount,
-                  onAmountChanged: _setFromAmount,
-                  currencyCode: _fromCurrency,
-                  onPickCurrency: () => _pickCurrency(fromSide: true),
-                  rate: _safeFromRate,
-                  onRateChanged: _setFromRate,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                  child: Center(
-                    child: Icon(
-                      Icons.currency_exchange_outlined,
-                      color: scheme.primary,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _CurrencyLeg(
+                      tone: scheme.error,
+                      amountLabel: l10n.rpExchangeFromAmount,
+                      currencyLabel: l10n.rpExchangeFromCurrency,
+                      amount: _fromAmount,
+                      onAmountChanged: _setFromAmount,
+                      currencyCode: _fromCurrency,
+                      onPickCurrency: () => _pickCurrency(fromSide: true),
+                      rate: _safeFromRate,
+                      onRateChanged: _setFromRate,
                     ),
-                  ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.sm,
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.currency_exchange_outlined,
+                          color: scheme.primary,
+                        ),
+                      ),
+                    ),
+                    _CurrencyLeg(
+                      tone: scheme.tertiary,
+                      amountLabel: l10n.rpExchangeToAmount,
+                      currencyLabel: l10n.rpExchangeToCurrency,
+                      amount: _toAmount,
+                      onAmountChanged: _setToAmount,
+                      currencyCode: _toCurrency,
+                      onPickCurrency: () => _pickCurrency(fromSide: false),
+                      rate: _safeToRate,
+                      onRateChanged: _setToRate,
+                    ),
+                  ],
                 ),
-                _CurrencyLeg(
-                  tone: scheme.tertiary,
-                  amountLabel: l10n.rpExchangeToAmount,
-                  currencyLabel: l10n.rpExchangeToCurrency,
-                  amount: _toAmount,
-                  onAmountChanged: _setToAmount,
-                  currencyCode: _toCurrency,
-                  onPickCurrency: () => _pickCurrency(fromSide: false),
-                  rate: _safeToRate,
-                  onRateChanged: _setToRate,
-                ),
-              ],
-            ),
-          )
+              )
               .animate()
               .fadeIn(delay: 80.ms, duration: 240.ms)
               .slideY(begin: 0.02, end: 0, delay: 80.ms, duration: 240.ms),
           const SizedBox(height: AppSpacing.md),
           _ExchangeBalanceCard(
-            debitLabel: l10n.rpTotalsDebit,
-            creditLabel: l10n.rpTotalsCredit,
-            differenceLabel: l10n.rpTotalsDifference,
-            baseCurrencyCode: _baseCurrencyCode,
-            debit: _debitBase,
-            credit: _creditBase,
-            difference: _balanceDifference,
-            isBalanced: _isBalanced,
-          )
+                debitLabel: l10n.rpTotalsDebit,
+                creditLabel: l10n.rpTotalsCredit,
+                differenceLabel: l10n.rpTotalsDifference,
+                baseCurrencyCode: _baseCurrencyCode,
+                debit: _debitBase,
+                credit: _creditBase,
+                difference: _balanceDifference,
+                isBalanced: _isBalanced,
+              )
               .animate()
               .fadeIn(delay: 100.ms, duration: 240.ms)
               .slideY(begin: 0.02, end: 0, delay: 100.ms, duration: 240.ms),
           const SizedBox(height: AppSpacing.md),
           _SurfaceCard(
-            child: TextField(
-              controller: _descriptionController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: l10n.rpGeneralDescription,
-                alignLabelWithHint: true,
-              ),
-            ),
-          )
+                child: TextField(
+                  controller: _descriptionController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText: l10n.rpGeneralDescription,
+                    alignLabelWithHint: true,
+                  ),
+                ),
+              )
               .animate()
               .fadeIn(delay: 120.ms, duration: 240.ms)
               .slideY(begin: 0.02, end: 0, delay: 120.ms, duration: 240.ms),
@@ -976,17 +985,11 @@ class _ExchangeBalanceCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _BalanceTile(
-                    label: debitLabel,
-                    value: _fmt(debit),
-                  ),
+                  child: _BalanceTile(label: debitLabel, value: _fmt(debit)),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: _BalanceTile(
-                    label: creditLabel,
-                    value: _fmt(credit),
-                  ),
+                  child: _BalanceTile(label: creditLabel, value: _fmt(credit)),
                 ),
               ],
             ),

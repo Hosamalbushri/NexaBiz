@@ -134,8 +134,9 @@ class FinancialTransaction {
       currencyCode: counterCurrencyCode.trim().isEmpty
           ? currencyCode
           : counterCurrencyCode,
-      exchangeRate:
-          counterExchangeRate <= 0 ? exchangeRate : counterExchangeRate,
+      exchangeRate: counterExchangeRate <= 0
+          ? exchangeRate
+          : counterExchangeRate,
       description: description,
     );
   }
@@ -215,8 +216,9 @@ class FinancialTransactionDraft {
       currencyCode: counterCurrencyCode.trim().isEmpty
           ? currencyCode
           : counterCurrencyCode,
-      exchangeRate:
-          counterExchangeRate <= 0 ? exchangeRate : counterExchangeRate,
+      exchangeRate: counterExchangeRate <= 0
+          ? exchangeRate
+          : counterExchangeRate,
       description: description,
     );
   }

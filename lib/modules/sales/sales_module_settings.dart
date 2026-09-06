@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../core/modules/module_settings_definition.dart';
 import 'shared/presentation/pages/sales_routes.dart';
 
-List<ModuleSettingsCategoryDefinition> buildSalesSettingsCategories(String moduleId) {
+List<ModuleSettingsCategoryDefinition> buildSalesSettingsCategories(
+  String moduleId,
+) {
   return [
     ModuleSettingsCategoryDefinition(
       id: 'sales_settings_cat',

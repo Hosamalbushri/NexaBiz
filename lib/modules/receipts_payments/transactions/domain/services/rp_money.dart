@@ -14,4 +14,3 @@ abstract final class RpMoney {
     return JournalMoney.fromCents(cents, decimalPlaces: decimalPlaces);
   }
 }
-

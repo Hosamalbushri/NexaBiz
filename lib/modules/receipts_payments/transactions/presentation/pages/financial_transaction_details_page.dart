@@ -24,7 +24,10 @@ import '../widgets/transaction_status_badge.dart';
 import 'package:stock_count/modules/receipts_payments/shared/presentation/pages/receipts_payments_routes.dart';
 
 class FinancialTransactionDetailsPage extends ConsumerWidget {
-  const FinancialTransactionDetailsPage({super.key, required this.transactionId});
+  const FinancialTransactionDetailsPage({
+    super.key,
+    required this.transactionId,
+  });
 
   final int transactionId;
 
@@ -48,8 +51,7 @@ class FinancialTransactionDetailsPage extends ConsumerWidget {
 
     return asyncTxn.when(
       loading: () => Scaffold(
-        backgroundColor:
-            Theme.of(context).colorScheme.surfaceContainerLowest,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         appBar: CustomAppBar(
           title: l10n.rpDetailsTitle,
           showBackButton: true,
@@ -96,31 +98,29 @@ class _TransactionDetailsBody extends ConsumerWidget {
 
   final FinancialTransaction transaction;
 
-  List<String> get _updatePermissions =>
-      switch (transaction.transactionType) {
-        TransactionType.receipt => ReceiptsPaymentsPermissions.receiptsUpdate,
-        TransactionType.payment => ReceiptsPaymentsPermissions.paymentsUpdate,
-        TransactionType.transfer => ReceiptsPaymentsPermissions.transfersUpdate,
-        TransactionType.currencyExchange =>
-          ReceiptsPaymentsPermissions.exchangesUpdate,
-      };
+  List<String> get _updatePermissions => switch (transaction.transactionType) {
+    TransactionType.receipt => ReceiptsPaymentsPermissions.receiptsUpdate,
+    TransactionType.payment => ReceiptsPaymentsPermissions.paymentsUpdate,
+    TransactionType.transfer => ReceiptsPaymentsPermissions.transfersUpdate,
+    TransactionType.currencyExchange =>
+      ReceiptsPaymentsPermissions.exchangesUpdate,
+  };
 
   List<String> get _postPermissions => switch (transaction.transactionType) {
-        TransactionType.receipt => ReceiptsPaymentsPermissions.receiptsPost,
-        TransactionType.payment => ReceiptsPaymentsPermissions.paymentsPost,
-        TransactionType.transfer => ReceiptsPaymentsPermissions.transfersPost,
-        TransactionType.currencyExchange =>
-          ReceiptsPaymentsPermissions.exchangesPost,
-      };
+    TransactionType.receipt => ReceiptsPaymentsPermissions.receiptsPost,
+    TransactionType.payment => ReceiptsPaymentsPermissions.paymentsPost,
+    TransactionType.transfer => ReceiptsPaymentsPermissions.transfersPost,
+    TransactionType.currencyExchange =>
+      ReceiptsPaymentsPermissions.exchangesPost,
+  };
 
-  List<String> get _cancelPermissions =>
-      switch (transaction.transactionType) {
-        TransactionType.receipt => ReceiptsPaymentsPermissions.receiptsCancel,
-        TransactionType.payment => ReceiptsPaymentsPermissions.paymentsCancel,
-        TransactionType.transfer => ReceiptsPaymentsPermissions.transfersCancel,
-        TransactionType.currencyExchange =>
-          ReceiptsPaymentsPermissions.exchangesCancel,
-      };
+  List<String> get _cancelPermissions => switch (transaction.transactionType) {
+    TransactionType.receipt => ReceiptsPaymentsPermissions.receiptsCancel,
+    TransactionType.payment => ReceiptsPaymentsPermissions.paymentsCancel,
+    TransactionType.transfer => ReceiptsPaymentsPermissions.transfersCancel,
+    TransactionType.currencyExchange =>
+      ReceiptsPaymentsPermissions.exchangesCancel,
+  };
 
   Future<void> _runAction(
     BuildContext context,
@@ -178,11 +178,13 @@ class _TransactionDetailsBody extends ConsumerWidget {
     final canUpdate = auth.hasAnyPermission(_updatePermissions);
     final canPost = auth.hasAnyPermission(_postPermissions);
     final canCancel = auth.hasAnyPermission(_cancelPermissions);
-    final showPost = transaction.documentStatus.canPost && !transaction.isCancelled;
+    final showPost =
+        transaction.documentStatus.canPost && !transaction.isCancelled;
     final showUnpost =
         transaction.documentStatus.canUnpost && !transaction.isCancelled;
-    final dateLabel =
-        DateFormat('d/M/yyyy').format(transaction.transactionDate.toLocal());
+    final dateLabel = DateFormat(
+      'd/M/yyyy',
+    ).format(transaction.transactionDate.toLocal());
     final showParty = transaction.transactionType.isReceipt;
     final party = transaction.partyDisplayName.trim().isNotEmpty
         ? transaction.partyDisplayName
@@ -200,263 +202,261 @@ class _TransactionDetailsBody extends ConsumerWidget {
         title: formatSaleNumberPrimary(transaction.transactionNumber),
         showBackButton: true,
         actions: [
-            if (transaction.documentStatus.isEditable &&
-                canUpdate &&
-                !transaction.isCancelled)
-              CustomAppBarAction(
-                icon: Icons.edit_outlined,
-                tooltip: l10n.rpEditTitle,
-                onPressed: () {
-                  if (transaction.transactionType.isTransfer) {
-                    ReceiptsPaymentsRoutes.pushEditTransfer(
+          if (transaction.documentStatus.isEditable &&
+              canUpdate &&
+              !transaction.isCancelled)
+            CustomAppBarAction(
+              icon: Icons.edit_outlined,
+              tooltip: l10n.rpEditTitle,
+              onPressed: () {
+                if (transaction.transactionType.isTransfer) {
+                  ReceiptsPaymentsRoutes.pushEditTransfer(
+                    context,
+                    transaction.id,
+                  );
+                } else if (transaction.transactionType.isCurrencyExchange) {
+                  ReceiptsPaymentsRoutes.pushEditExchange(
+                    context,
+                    transaction.id,
+                  );
+                } else {
+                  ReceiptsPaymentsRoutes.pushEdit(context, transaction.id);
+                }
+              },
+            ),
+          if ((showPost && canPost) ||
+              (showUnpost && canPost) ||
+              (transaction.documentStatus.canCancel &&
+                  canCancel &&
+                  !transaction.isCancelled))
+            PopupMenuButton<String>(
+              tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
+              onSelected: (value) async {
+                switch (value) {
+                  case 'post':
+                    await _runAction(
                       context,
-                      transaction.id,
+                      ref,
+                      loadingMessage: l10n.rpPosting,
+                      action: () async {
+                        await ref
+                            .read(postFinancialTransactionProvider)
+                            .call(transaction.id);
+                      },
+                      successMessage: l10n.rpPosted,
                     );
-                  } else if (transaction.transactionType.isCurrencyExchange) {
-                    ReceiptsPaymentsRoutes.pushEditExchange(
+                  case 'unpost':
+                    await _runAction(
                       context,
-                      transaction.id,
+                      ref,
+                      loadingMessage: l10n.rpUnposting,
+                      action: () async {
+                        await ref
+                            .read(unpostFinancialTransactionProvider)
+                            .call(transaction.id);
+                      },
+                      successMessage: l10n.rpUnposted,
                     );
-                  } else {
-                    ReceiptsPaymentsRoutes.pushEdit(context, transaction.id);
-                  }
-                },
-              ),
-            if ((showPost && canPost) ||
-                (showUnpost && canPost) ||
-                (transaction.documentStatus.canCancel &&
-                    canCancel &&
-                    !transaction.isCancelled))
-              PopupMenuButton<String>(
-                tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
-                onSelected: (value) async {
-                  switch (value) {
-                    case 'post':
-                      await _runAction(
-                        context,
-                        ref,
-                        loadingMessage: l10n.rpPosting,
-                        action: () async {
-                          await ref
-                              .read(postFinancialTransactionProvider)
-                              .call(transaction.id);
-                        },
-                        successMessage: l10n.rpPosted,
-                      );
-                    case 'unpost':
-                      await _runAction(
-                        context,
-                        ref,
-                        loadingMessage: l10n.rpUnposting,
-                        action: () async {
-                          await ref
-                              .read(unpostFinancialTransactionProvider)
-                              .call(transaction.id);
-                        },
-                        successMessage: l10n.rpUnposted,
-                      );
-                    case 'cancel':
-                      final ok = await showAppDialog(
-                        context: context,
-                        title: l10n.rpCancelTitle,
-                        message: l10n.rpCancelMessage(
-                          formatSaleNumberPrimary(transaction.transactionNumber),
-                        ),
-                        confirmLabel: l10n.rpCancelAction,
-                        cancelLabel: l10n.cancel,
-                        isDestructive: true,
-                      );
-                      if (!ok || !context.mounted) {
-                        return;
-                      }
-                      await _runAction(
-                        context,
-                        ref,
-                        loadingMessage: l10n.rpSaving,
-                        action: () async {
-                          await ref
-                              .read(cancelFinancialTransactionProvider)
-                              .call(transaction.id);
-                        },
-                        successMessage: l10n.rpCancelled,
-                        afterSuccess: () {
-                          if (context.mounted) {
-                            _backToTypedList(context);
-                          }
-                        },
-                      );
-                  }
-                },
-                itemBuilder: (context) => [
-                  if (showPost && canPost)
-                    PopupMenuItem(value: 'post', child: Text(l10n.rpPost)),
-                  if (showUnpost && canPost)
-                    PopupMenuItem(value: 'unpost', child: Text(l10n.rpUnpost)),
-                  if (transaction.documentStatus.canCancel &&
-                      canCancel &&
-                      !transaction.isCancelled)
-                    PopupMenuItem(
-                      value: 'cancel',
-                      child: Text(l10n.rpCancelAction),
-                    ),
-                ],
-                child: Material(
-                  color: scheme.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                  child: SizedBox(
-                    width: 42,
-                    height: 42,
-                    child: Icon(
-                      Icons.more_vert_rounded,
-                      size: 22,
-                      color: scheme.primary,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-        bottomNavigationBar: (showPost && canPost) || (showUnpost && canPost)
-            ? Material(
-                color: scheme.surface,
-                elevation: 8,
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      AppSpacing.sm,
-                      AppSpacing.md,
-                      AppSpacing.sm,
-                    ),
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        if (showPost) {
-                          _runAction(
-                            context,
-                            ref,
-                            loadingMessage: l10n.rpPosting,
-                            action: () async {
-                              await ref
-                                  .read(postFinancialTransactionProvider)
-                                  .call(transaction.id);
-                            },
-                            successMessage: l10n.rpPosted,
-                          );
-                        } else {
-                          _runAction(
-                            context,
-                            ref,
-                            loadingMessage: l10n.rpUnposting,
-                            action: () async {
-                              await ref
-                                  .read(unpostFinancialTransactionProvider)
-                                  .call(transaction.id);
-                            },
-                            successMessage: l10n.rpUnposted,
-                          );
+                  case 'cancel':
+                    final ok = await showAppDialog(
+                      context: context,
+                      title: l10n.rpCancelTitle,
+                      message: l10n.rpCancelMessage(
+                        formatSaleNumberPrimary(transaction.transactionNumber),
+                      ),
+                      confirmLabel: l10n.rpCancelAction,
+                      cancelLabel: l10n.cancel,
+                      isDestructive: true,
+                    );
+                    if (!ok || !context.mounted) {
+                      return;
+                    }
+                    await _runAction(
+                      context,
+                      ref,
+                      loadingMessage: l10n.rpSaving,
+                      action: () async {
+                        await ref
+                            .read(cancelFinancialTransactionProvider)
+                            .call(transaction.id);
+                      },
+                      successMessage: l10n.rpCancelled,
+                      afterSuccess: () {
+                        if (context.mounted) {
+                          _backToTypedList(context);
                         }
                       },
-                      icon: Icon(
-                        showPost
-                            ? Icons.check_circle_outline
-                            : Icons.undo_outlined,
-                      ),
-                      label: Text(showPost ? l10n.rpPost : l10n.rpUnpost),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48),
-                      ),
-                    ),
-                  ),
-                ),
-              )
-            : null,
-        body: ListView(
-          padding: AppConstants.pageInsets(context),
-          children: [
-            _HeroCard(transaction: transaction),
-            const SizedBox(height: AppSpacing.md),
-            _MetaCard(
-              children: [
-                AppDetailInfoRow(label: l10n.rpDate, value: dateLabel),
-                AppDetailInfoRow(
-                  label: l10n.rpSource,
-                  value: rpTransactionSourceLabel(l10n, transaction.source),
-                ),
-                AppDetailInfoRow(
-                  label: l10n.rpPaymentMethod,
-                  value: rpPaymentMethodLabel(l10n, transaction.paymentMethod),
-                ),
-                if (transaction.cashAccountName != null)
-                  AppDetailInfoRow(
-                    label: transaction.transactionType.isTransfer
-                        ? l10n.rpTransferFromAccount
-                        : (transaction.transactionType.isCurrencyExchange
-                            ? l10n.rpExchangeCashAccount
-                            : l10n.rpCashAccount),
-                    value: [
-                      if ((transaction.cashAccountCode ?? '').trim().isNotEmpty)
-                        transaction.cashAccountCode!.trim(),
-                      transaction.cashAccountName!.trim(),
-                    ].join(' — '),
-                  ),
-                if (transaction.transactionType.isTransfer &&
-                    (transaction.counterAccountName?.trim().isNotEmpty ??
-                        false))
-                  AppDetailInfoRow(
-                    label: l10n.rpTransferToAccount,
-                    value: [
-                      if ((transaction.counterAccountCode ?? '')
-                          .trim()
-                          .isNotEmpty)
-                        transaction.counterAccountCode!.trim(),
-                      transaction.counterAccountName!.trim(),
-                    ].join(' — '),
-                  ),
-                if (transaction.transactionType.isCurrencyExchange) ...[
-                  AppDetailInfoRow(
-                    label: l10n.rpExchangeFromCurrency,
-                    value: transaction.currencyCode,
-                  ),
-                  if (transaction.counterCurrencyCode.trim().isNotEmpty)
-                    AppDetailInfoRow(
-                      label: l10n.rpExchangeToCurrency,
-                      value: transaction.counterCurrencyCode,
-                    ),
-                ] else
-                  AppDetailInfoRow(
-                    label: l10n.rpCurrency,
-                    value: transaction.currencyCode,
-                  ),
-                if (transaction.exchangeRate > 0 &&
-                    transaction.exchangeRate != 1)
-                  AppDetailInfoRow(
-                    label: l10n.rpExchangeRate,
-                    value: transaction.exchangeRate.toStringAsFixed(4),
-                  ),
-                if (transaction.reference?.trim().isNotEmpty ?? false)
-                  AppDetailInfoRow(
-                    label: l10n.rpReference,
-                    value: transaction.reference!,
-                  ),
-                if (transaction.description?.trim().isNotEmpty ?? false)
-                  AppDetailInfoRow(
-                    label: l10n.rpDescription,
-                    value: transaction.description!,
+                    );
+                }
+              },
+              itemBuilder: (context) => [
+                if (showPost && canPost)
+                  PopupMenuItem(value: 'post', child: Text(l10n.rpPost)),
+                if (showUnpost && canPost)
+                  PopupMenuItem(value: 'unpost', child: Text(l10n.rpUnpost)),
+                if (transaction.documentStatus.canCancel &&
+                    canCancel &&
+                    !transaction.isCancelled)
+                  PopupMenuItem(
+                    value: 'cancel',
+                    child: Text(l10n.rpCancelAction),
                   ),
               ],
+              child: Material(
+                color: scheme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+                child: SizedBox(
+                  width: 42,
+                  height: 42,
+                  child: Icon(
+                    Icons.more_vert_rounded,
+                    size: 22,
+                    color: scheme.primary,
+                  ),
+                ),
+              ),
             ),
-            if (showParty) ...[
-              const SizedBox(height: AppSpacing.md),
-              _PartyCard(partyName: party),
+        ],
+      ),
+      bottomNavigationBar: (showPost && canPost) || (showUnpost && canPost)
+          ? Material(
+              color: scheme.surface,
+              elevation: 8,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                  ),
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      if (showPost) {
+                        _runAction(
+                          context,
+                          ref,
+                          loadingMessage: l10n.rpPosting,
+                          action: () async {
+                            await ref
+                                .read(postFinancialTransactionProvider)
+                                .call(transaction.id);
+                          },
+                          successMessage: l10n.rpPosted,
+                        );
+                      } else {
+                        _runAction(
+                          context,
+                          ref,
+                          loadingMessage: l10n.rpUnposting,
+                          action: () async {
+                            await ref
+                                .read(unpostFinancialTransactionProvider)
+                                .call(transaction.id);
+                          },
+                          successMessage: l10n.rpUnposted,
+                        );
+                      }
+                    },
+                    icon: Icon(
+                      showPost
+                          ? Icons.check_circle_outline
+                          : Icons.undo_outlined,
+                    ),
+                    label: Text(showPost ? l10n.rpPost : l10n.rpUnpost),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
+      body: ListView(
+        padding: AppConstants.pageInsets(context),
+        children: [
+          _HeroCard(transaction: transaction),
+          const SizedBox(height: AppSpacing.md),
+          _MetaCard(
+            children: [
+              AppDetailInfoRow(label: l10n.rpDate, value: dateLabel),
+              AppDetailInfoRow(
+                label: l10n.rpSource,
+                value: rpTransactionSourceLabel(l10n, transaction.source),
+              ),
+              AppDetailInfoRow(
+                label: l10n.rpPaymentMethod,
+                value: rpPaymentMethodLabel(l10n, transaction.paymentMethod),
+              ),
+              if (transaction.cashAccountName != null)
+                AppDetailInfoRow(
+                  label: transaction.transactionType.isTransfer
+                      ? l10n.rpTransferFromAccount
+                      : (transaction.transactionType.isCurrencyExchange
+                            ? l10n.rpExchangeCashAccount
+                            : l10n.rpCashAccount),
+                  value: [
+                    if ((transaction.cashAccountCode ?? '').trim().isNotEmpty)
+                      transaction.cashAccountCode!.trim(),
+                    transaction.cashAccountName!.trim(),
+                  ].join(' — '),
+                ),
+              if (transaction.transactionType.isTransfer &&
+                  (transaction.counterAccountName?.trim().isNotEmpty ?? false))
+                AppDetailInfoRow(
+                  label: l10n.rpTransferToAccount,
+                  value: [
+                    if ((transaction.counterAccountCode ?? '')
+                        .trim()
+                        .isNotEmpty)
+                      transaction.counterAccountCode!.trim(),
+                    transaction.counterAccountName!.trim(),
+                  ].join(' — '),
+                ),
+              if (transaction.transactionType.isCurrencyExchange) ...[
+                AppDetailInfoRow(
+                  label: l10n.rpExchangeFromCurrency,
+                  value: transaction.currencyCode,
+                ),
+                if (transaction.counterCurrencyCode.trim().isNotEmpty)
+                  AppDetailInfoRow(
+                    label: l10n.rpExchangeToCurrency,
+                    value: transaction.counterCurrencyCode,
+                  ),
+              ] else
+                AppDetailInfoRow(
+                  label: l10n.rpCurrency,
+                  value: transaction.currencyCode,
+                ),
+              if (transaction.exchangeRate > 0 && transaction.exchangeRate != 1)
+                AppDetailInfoRow(
+                  label: l10n.rpExchangeRate,
+                  value: transaction.exchangeRate.toStringAsFixed(4),
+                ),
+              if (transaction.reference?.trim().isNotEmpty ?? false)
+                AppDetailInfoRow(
+                  label: l10n.rpReference,
+                  value: transaction.reference!,
+                ),
+              if (transaction.description?.trim().isNotEmpty ?? false)
+                AppDetailInfoRow(
+                  label: l10n.rpDescription,
+                  value: transaction.description!,
+                ),
             ],
+          ),
+          if (showParty) ...[
             const SizedBox(height: AppSpacing.md),
-            RpEntryLinesReadonlyTable(
-              lines: transaction.resolvedLines,
-              amountColumnLabel: amountColumnLabel,
-            ),
-            const SizedBox(height: AppSpacing.xl),
+            _PartyCard(partyName: party),
           ],
-        ),
+          const SizedBox(height: AppSpacing.md),
+          RpEntryLinesReadonlyTable(
+            lines: transaction.resolvedLines,
+            amountColumnLabel: amountColumnLabel,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+        ],
+      ),
     );
   }
 }
@@ -476,9 +476,7 @@ class _PartyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
@@ -497,11 +495,7 @@ class _PartyCard extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
-            child: Icon(
-              Icons.person_rounded,
-              color: scheme.primary,
-              size: 24,
-            ),
+            child: Icon(Icons.person_rounded, color: scheme.primary, size: 24),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -545,9 +539,7 @@ class _MetaCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
@@ -573,9 +565,7 @@ class _HeroCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -673,5 +663,3 @@ class _HeroCard extends StatelessWidget {
     );
   }
 }
-
-

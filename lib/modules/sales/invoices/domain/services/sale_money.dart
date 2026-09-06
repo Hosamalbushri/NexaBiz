@@ -28,8 +28,10 @@ class SaleMoney {
     return cents / scale;
   }
 
-  static double round(double value, {int decimalPlaces = 2}) =>
-      fromCents(toCents(value, decimalPlaces: decimalPlaces), decimalPlaces: decimalPlaces);
+  static double round(double value, {int decimalPlaces = 2}) => fromCents(
+    toCents(value, decimalPlaces: decimalPlaces),
+    decimalPlaces: decimalPlaces,
+  );
 
   static double clampNonNegative(double value, {int decimalPlaces = 2}) {
     final rounded = round(value, decimalPlaces: decimalPlaces);

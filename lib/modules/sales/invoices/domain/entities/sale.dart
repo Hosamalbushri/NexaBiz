@@ -16,6 +16,7 @@ class Sale {
   const Sale({
     required this.id,
     required this.uuid,
+    required this.companyId,
     required this.saleNumber,
     required this.saleDate,
     required this.settlementType,
@@ -63,6 +64,7 @@ class Sale {
 
   final int id;
   final String uuid;
+  final String companyId;
   final String saleNumber;
   final DateTime saleDate;
   final SaleSettlementType settlementType;
@@ -128,11 +130,14 @@ class Sale {
   Sale copyWith({
     int? id,
     String? uuid,
+    String? companyId,
     String? saleNumber,
     DateTime? saleDate,
     SaleSettlementType? settlementType,
     String? voucherBookId,
     bool clearVoucherBookId = false,
+    String? warehouseId,
+    bool clearWarehouseId = false,
     String? customerId,
     bool clearCustomerId = false,
     String? customerCode,
@@ -190,12 +195,14 @@ class Sale {
     return Sale(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
+      companyId: companyId ?? this.companyId,
       saleNumber: saleNumber ?? this.saleNumber,
       saleDate: saleDate ?? this.saleDate,
       settlementType: settlementType ?? this.settlementType,
       voucherBookId: clearVoucherBookId
           ? null
           : (voucherBookId ?? this.voucherBookId),
+      warehouseId: clearWarehouseId ? null : (warehouseId ?? this.warehouseId),
       customerId: clearCustomerId ? null : (customerId ?? this.customerId),
       customerCode: clearCustomerCode
           ? null
@@ -261,6 +268,7 @@ class SaleDraft {
     required this.currencyCode,
     required this.baseCurrencyCode,
     required this.exchangeRate,
+    this.companyId,
     this.voucherBookId,
     this.warehouseId,
     this.customerId,
@@ -282,6 +290,7 @@ class SaleDraft {
     this.payments = const [],
   });
 
+  final String? companyId;
   final DateTime saleDate;
   final SaleSettlementType settlementType;
   final String? voucherBookId;

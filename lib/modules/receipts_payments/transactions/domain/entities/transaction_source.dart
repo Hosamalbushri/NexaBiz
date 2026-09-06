@@ -20,20 +20,20 @@ extension TransactionSourceX on TransactionSource {
   bool get requiresCustomer => this == TransactionSource.customerReceipt;
 
   bool get isReceiptSource => switch (this) {
-        TransactionSource.manualReceipt ||
-        TransactionSource.customerReceipt ||
-        TransactionSource.otherReceipt ||
-        TransactionSource.salesRelatedReceipt => true,
-        _ => false,
-      };
+    TransactionSource.manualReceipt ||
+    TransactionSource.customerReceipt ||
+    TransactionSource.otherReceipt ||
+    TransactionSource.salesRelatedReceipt => true,
+    _ => false,
+  };
 
   bool get isPaymentSource => switch (this) {
-        TransactionSource.manualPayment ||
-        TransactionSource.expensePayment ||
-        TransactionSource.otherPayment ||
-        TransactionSource.purchaseRelatedPayment => true,
-        _ => false,
-      };
+    TransactionSource.manualPayment ||
+    TransactionSource.expensePayment ||
+    TransactionSource.otherPayment ||
+    TransactionSource.purchaseRelatedPayment => true,
+    _ => false,
+  };
 
   bool get isTransferSource => this == TransactionSource.cashBoxTransfer;
 

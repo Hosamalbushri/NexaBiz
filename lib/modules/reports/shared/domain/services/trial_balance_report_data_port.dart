@@ -1,3 +1,6 @@
+import 'package:stock_count/core/report_engine/domain/models/report_execution_context.dart';
+import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
+
 /// One trial-balance line prepared outside the PDF layer.
 class TrialBalanceReportRow {
   const TrialBalanceReportRow({
@@ -98,6 +101,11 @@ abstract class TrialBalanceReportDataPort {
     required bool postedOnly,
     required TrialBalanceReportLabels labels,
   });
+
+  Future<TrialBalanceReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
+    required TrialBalanceReportLabels labels,
+  });
 }
 
 class NoOpTrialBalanceReportDataPort implements TrialBalanceReportDataPort {
@@ -131,4 +139,16 @@ class NoOpTrialBalanceReportDataPort implements TrialBalanceReportDataPort {
       emptyMessage: labels.emptyMessage,
     );
   }
+
+  @override
+  Future<TrialBalanceReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
+    required TrialBalanceReportLabels labels,
+  }) =>
+      load(
+        fromDate: filter.fromDate,
+        toDate: filter.toDate,
+        postedOnly: filter.postingScope == PostingScope.postedOnly,
+        labels: labels,
+      );
 }

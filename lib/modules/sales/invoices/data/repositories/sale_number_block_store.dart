@@ -52,12 +52,7 @@ class SaleNumberBlock {
         next == null) {
       return null;
     }
-    return SaleNumberBlock(
-      bookId: bookId,
-      start: start,
-      end: end,
-      next: next,
-    );
+    return SaleNumberBlock(bookId: bookId, start: start, end: end, next: next);
   }
 }
 

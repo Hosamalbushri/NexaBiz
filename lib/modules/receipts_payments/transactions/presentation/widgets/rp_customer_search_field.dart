@@ -31,8 +31,7 @@ class RpCustomerSearchField extends ConsumerStatefulWidget {
       _RpCustomerSearchFieldState();
 }
 
-class _RpCustomerSearchFieldState
-    extends ConsumerState<RpCustomerSearchField> {
+class _RpCustomerSearchFieldState extends ConsumerState<RpCustomerSearchField> {
   late final TextEditingController _controller;
   final _focusNode = FocusNode(skipTraversal: true);
 
@@ -91,10 +90,7 @@ class _RpCustomerSearchFieldState
         final hasPhone = phone != null && phone.isNotEmpty;
         return ListTile(
           dense: true,
-          leading: Icon(
-            Icons.person_outline_rounded,
-            color: scheme.primary,
-          ),
+          leading: Icon(Icons.person_outline_rounded, color: scheme.primary),
           title: Text(customer.name),
           subtitle: hasPhone ? Text(phone) : null,
         );
@@ -102,4 +98,3 @@ class _RpCustomerSearchFieldState
     );
   }
 }
-

@@ -37,8 +37,10 @@ final receiptsPaymentsPackageSetupDefinition = PackageSetupDefinition(
       packageId: 'receipts_payments',
       titleAr: 'إعدادات وقواعد المقبوضات والمقبوضات',
       titleEn: 'Treasury & Transaction Controls',
-      descriptionAr: 'اشتراط أرقام الشيكات، التحكم بالسحب المكشوف، وقواعد الصرف',
-      descriptionEn: 'Check number requirement, negative treasury balance policy, and disbursement rules',
+      descriptionAr:
+          'اشتراط أرقام الشيكات، التحكم بالسحب المكشوف، وقواعد الصرف',
+      descriptionEn:
+          'Check number requirement, negative treasury balance policy, and disbursement rules',
       fields: [
         SetupField(
           id: 'requireCheckNumber',
@@ -66,7 +68,8 @@ final receiptsPaymentsPackageSetupDefinition = PackageSetupDefinition(
       titleAr: 'ربط حسابات الخزينة والبنك',
       titleEn: 'Cash & Bank Account Bindings',
       descriptionAr: 'ربط حسابات الصندوق والبنك الافتراضية من دليل الحسابات',
-      descriptionEn: 'Bind default cash and bank accounts from Chart of Accounts',
+      descriptionEn:
+          'Bind default cash and bank accounts from Chart of Accounts',
       fields: [
         SetupField(
           id: 'cash_account',

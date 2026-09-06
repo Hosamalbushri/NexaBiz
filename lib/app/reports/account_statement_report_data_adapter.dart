@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import '../../core/report_engine/domain/models/report_query_filter.dart';
 import '../../core/reporting/arabic_amount_words.dart';
 import '../../core/report_engine/domain/models/report_cursor.dart';
 import '../../core/report_engine/domain/models/report_dataset.dart';
@@ -188,6 +189,27 @@ class AccountStatementReportDataAdapter
           displayName: AppCurrencies.byCode(code).localizedName(isArabic),
         ),
     ];
+  }
+
+  @override
+  Future<AccountStatementReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
+    required AccountStatementType statementType,
+    required AccountStatementReportLabels labels,
+  }) {
+    return load(
+      accountUuid: filter.accountUuid ?? '',
+      currencyCode: filter.currencyCode == 'ALL' ? null : filter.currencyCode,
+      fromDate: filter.fromDate,
+      toDate: filter.toDate,
+      statementType: statementType,
+      postingFilter: filter.postingScope == PostingScope.postedOnly
+          ? AccountStatementPostingFilter.posted
+          : (filter.postingScope == PostingScope.unpostedOnly
+              ? AccountStatementPostingFilter.unposted
+              : AccountStatementPostingFilter.all),
+      labels: labels,
+    );
   }
 
   @override

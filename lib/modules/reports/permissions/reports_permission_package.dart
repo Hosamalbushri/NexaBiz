@@ -73,6 +73,71 @@ PermissionPackageDef reportsPermissionPackage() {
           StandardPermissionOps.exportOp('reports.journal_book.export'),
         ],
       ),
+      PermissionServiceDef(
+        id: 'general_ledger',
+        icon: Icons.book_outlined,
+        titleBuilder: (context) => 'الأستاذ العام',
+        subtitleBuilder: (context) => 'صلاحية عرض ودفتر الأستاذ العام',
+        operations: [
+          StandardPermissionOps.view(
+            'reports.general_ledger.view',
+            legacyCodes: const ['reports.view', 'financial_reports.view'],
+          ),
+          StandardPermissionOps.exportOp('reports.general_ledger.export'),
+        ],
+      ),
+      PermissionServiceDef(
+        id: 'income_statement',
+        icon: Icons.trending_up_outlined,
+        titleBuilder: (context) => 'قائمة الدخل',
+        subtitleBuilder: (context) => 'صلاحية عرض الأرباح والخسائر',
+        operations: [
+          StandardPermissionOps.view(
+            'reports.income_statement.view',
+            legacyCodes: const ['reports.view', 'financial_reports.view'],
+          ),
+          StandardPermissionOps.exportOp('reports.income_statement.export'),
+        ],
+      ),
+      PermissionServiceDef(
+        id: 'balance_sheet',
+        icon: Icons.account_balance_outlined,
+        titleBuilder: (context) => 'الميزانية العمومية',
+        subtitleBuilder: (context) => 'صلاحية عرض الميزانية العمومية',
+        operations: [
+          StandardPermissionOps.view(
+            'reports.balance_sheet.view',
+            legacyCodes: const ['reports.view', 'financial_reports.view'],
+          ),
+          StandardPermissionOps.exportOp('reports.balance_sheet.export'),
+        ],
+      ),
+      PermissionServiceDef(
+        id: 'receivables_payables',
+        icon: Icons.swap_horiz_outlined,
+        titleBuilder: (context) => 'كشف الذمم',
+        subtitleBuilder: (context) => 'صلاحية عرض ذمم العملاء والموردين',
+        operations: [
+          StandardPermissionOps.view(
+            'reports.receivables_payables.view',
+            legacyCodes: const ['reports.view', 'financial_reports.view'],
+          ),
+          StandardPermissionOps.exportOp('reports.receivables_payables.export'),
+        ],
+      ),
+      PermissionServiceDef(
+        id: 'cash_flow',
+        icon: Icons.water_drop_outlined,
+        titleBuilder: (context) => 'التدفقات النقدية',
+        subtitleBuilder: (context) => 'صلاحية عرض التدفقات النقدية',
+        operations: [
+          StandardPermissionOps.view(
+            'reports.cash_flow.view',
+            legacyCodes: const ['reports.view', 'financial_reports.view'],
+          ),
+          StandardPermissionOps.exportOp('reports.cash_flow.export'),
+        ],
+      ),
     ],
   );
 }

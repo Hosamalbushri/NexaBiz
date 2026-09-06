@@ -11,6 +11,9 @@ class SaleValidator {
   const SaleValidator();
 
   void validate(SaleDraft draft) {
+    if (draft.warehouseId == null || draft.warehouseId!.trim().isEmpty) {
+      throw const SaleException(SaleException.warehouseRequired);
+    }
     if (draft.voucherBookId == null || draft.voucherBookId!.trim().isEmpty) {
       throw const SaleException(SaleException.voucherBookRequired);
     }

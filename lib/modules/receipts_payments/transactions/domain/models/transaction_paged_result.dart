@@ -15,7 +15,6 @@ class TransactionPagedResult<T> {
 
   bool get hasNext => hasMore;
 
-  int get totalPages => pageSize <= 0
-      ? 0
-      : ((totalCount + pageSize - 1) / pageSize).floor();
+  int get totalPages =>
+      pageSize <= 0 ? 0 : ((totalCount + pageSize - 1) / pageSize).floor();
 }

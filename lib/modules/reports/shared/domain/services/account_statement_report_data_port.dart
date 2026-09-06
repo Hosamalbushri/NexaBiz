@@ -1,4 +1,6 @@
 import 'dart:typed_data';
+import 'package:stock_count/core/report_engine/domain/models/report_execution_context.dart';
+import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
 
 /// Statement layout variants (classic Soft2-style titles).
 enum AccountStatementType {
@@ -330,6 +332,12 @@ abstract class AccountStatementReportDataPort {
     required AccountStatementPostingFilter postingFilter,
     required AccountStatementReportLabels labels,
   });
+
+  Future<AccountStatementReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
+    required AccountStatementType statementType,
+    required AccountStatementReportLabels labels,
+  });
 }
 
 class NoOpAccountStatementReportDataPort
@@ -397,6 +405,26 @@ class NoOpAccountStatementReportDataPort
       emptyMessage: labels.emptyMessage,
     );
   }
+
+  @override
+  Future<AccountStatementReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
+    required AccountStatementType statementType,
+    required AccountStatementReportLabels labels,
+  }) =>
+      load(
+        accountUuid: filter.accountUuid ?? '',
+        currencyCode: filter.currencyCode == 'ALL' ? null : filter.currencyCode,
+        fromDate: filter.fromDate,
+        toDate: filter.toDate,
+        statementType: statementType,
+        postingFilter: filter.postingScope == PostingScope.postedOnly
+            ? AccountStatementPostingFilter.posted
+            : (filter.postingScope == PostingScope.unpostedOnly
+                ? AccountStatementPostingFilter.unposted
+                : AccountStatementPostingFilter.all),
+        labels: labels,
+      );
 }
 
 /// Unused import guard for typed_data in payload consumers.

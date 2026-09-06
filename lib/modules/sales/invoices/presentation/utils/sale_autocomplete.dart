@@ -37,4 +37,3 @@ final class AutocompleteSearchSession {
     _debounce?.cancel();
   }
 }
-

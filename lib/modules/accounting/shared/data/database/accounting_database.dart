@@ -37,7 +37,7 @@ class AccountingDatabase extends _$AccountingDatabase {
   AccountingDatabase.memory() : super(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -204,6 +204,18 @@ class AccountingDatabase extends _$AccountingDatabase {
       if (from < 16) {
         await m.createTable(cashRegisters);
       }
+      if (from < 17) {
+        await customStatement(
+          'DROP INDEX IF EXISTS idx_journal_entries_tenant_voucher',
+        );
+        await customStatement(
+          'CREATE UNIQUE INDEX IF NOT EXISTS idx_journal_entries_tenant_voucher '
+          'ON journal_entries (company_id, voucher_type, voucher_number) '
+          'WHERE deleted_at IS NULL '
+          'AND voucher_number IS NOT NULL '
+          'AND voucher_number != \'\'',
+        );
+      }
     },
   );
 
@@ -341,8 +353,11 @@ class AccountingDatabase extends _$AccountingDatabase {
       'ON journal_entries (entry_date)',
     );
     await customStatement(
+      'DROP INDEX IF EXISTS idx_journal_entries_tenant_voucher',
+    );
+    await customStatement(
       'CREATE UNIQUE INDEX IF NOT EXISTS idx_journal_entries_tenant_voucher '
-      'ON journal_entries (company_id, voucher_number) '
+      'ON journal_entries (company_id, voucher_type, voucher_number) '
       'WHERE deleted_at IS NULL '
       'AND voucher_number IS NOT NULL '
       'AND voucher_number != \'\'',

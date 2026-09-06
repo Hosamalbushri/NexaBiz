@@ -10,12 +10,18 @@ import '../../core/modules/report_category_definition.dart';
 import '../../core/modules/route_access_rule.dart';
 import '../../core/permissions/permission_defs.dart';
 import 'financial_reports/presentation/pages/account_statement_report_page.dart';
+import 'financial_reports/presentation/pages/balance_sheet_report_page.dart';
+import 'financial_reports/presentation/pages/cash_flow_report_page.dart';
+import 'financial_reports/presentation/pages/general_ledger_report_page.dart';
+import 'financial_reports/presentation/pages/income_statement_report_page.dart';
 import 'financial_reports/presentation/pages/journal_book_report_page.dart';
+import 'financial_reports/presentation/pages/receivables_payables_report_page.dart';
 import 'financial_reports/presentation/pages/trial_balance_report_page.dart';
 import 'operational_reports/presentation/pages/product_stock_movement_report_page.dart';
 import 'operational_reports/presentation/pages/rp_transaction_report_page.dart';
 import 'operational_reports/presentation/pages/sales_period_report_page.dart';
 import 'permissions/reports_permission_package.dart';
+import 'shared/domain/services/receivables_payables_report_data_port.dart';
 import 'shared/domain/services/rp_report_data_port.dart';
 import 'shared/presentation/pages/report_pdf_preview_page.dart';
 import 'shared/presentation/pages/reports_home_page.dart';
@@ -145,6 +151,54 @@ class ReportsModule extends AppModule {
               path: ReportsRoutes.journalBook,
               titleBuilder: (l10n) => l10n.reportsJournalBookTitle,
               subtitleBuilder: (l10n) => l10n.reportsJournalBookSubtitle,
+            ),
+            ReportItemDefinition(
+              id: 'reports_general_ledger',
+              moduleId: 'accounting',
+              icon: Icons.book_outlined,
+              path: ReportsRoutes.generalLedger,
+              titleBuilder: (l10n) => 'الأستاذ العام',
+              subtitleBuilder: (l10n) => 'دفتر الأستاذ العام وتفاصيل الحسابات',
+            ),
+            ReportItemDefinition(
+              id: 'reports_income_statement',
+              moduleId: 'accounting',
+              icon: Icons.trending_up_outlined,
+              path: ReportsRoutes.incomeStatement,
+              titleBuilder: (l10n) => 'قائمة الدخل (الأرباح والخسائر)',
+              subtitleBuilder: (l10n) => 'الإيرادات والتكاليف والمصروفات وصافي الربح',
+            ),
+            ReportItemDefinition(
+              id: 'reports_balance_sheet',
+              moduleId: 'accounting',
+              icon: Icons.account_balance_outlined,
+              path: ReportsRoutes.balanceSheet,
+              titleBuilder: (l10n) => 'الميزانية العمومية',
+              subtitleBuilder: (l10n) => 'الأصول والالتزامات وحقوق الملكية',
+            ),
+            ReportItemDefinition(
+              id: 'reports_receivables',
+              moduleId: 'accounting',
+              icon: Icons.call_received_outlined,
+              path: ReportsRoutes.receivables,
+              titleBuilder: (l10n) => 'ذمم العملاء',
+              subtitleBuilder: (l10n) => 'كشف مديونيات العملاء والمقبوضات',
+            ),
+            ReportItemDefinition(
+              id: 'reports_payables',
+              moduleId: 'accounting',
+              icon: Icons.call_made_outlined,
+              path: ReportsRoutes.payables,
+              titleBuilder: (l10n) => 'ذمم الموردين',
+              subtitleBuilder: (l10n) => 'كشف المستحقات للموردين والمدفوعات',
+            ),
+            ReportItemDefinition(
+              id: 'reports_cash_flow',
+              moduleId: 'accounting',
+              icon: Icons.water_drop_outlined,
+              path: ReportsRoutes.cashFlow,
+              titleBuilder: (l10n) => 'التدفقات النقدية',
+              subtitleBuilder: (l10n) => 'حركة الصناديق والبنوك',
             ),
           ],
         ),
@@ -316,6 +370,40 @@ class ReportsModule extends AppModule {
           path: 'journal-book',
           name: 'reportsJournalBook',
           builder: (context, state) => const JournalBookReportPage(),
+        ),
+        GoRoute(
+          path: 'general-ledger',
+          name: 'reportsGeneralLedger',
+          builder: (context, state) => const GeneralLedgerReportPage(),
+        ),
+        GoRoute(
+          path: 'income-statement',
+          name: 'reportsIncomeStatement',
+          builder: (context, state) => const IncomeStatementReportPage(),
+        ),
+        GoRoute(
+          path: 'balance-sheet',
+          name: 'reportsBalanceSheet',
+          builder: (context, state) => const BalanceSheetReportPage(),
+        ),
+        GoRoute(
+          path: 'receivables',
+          name: 'reportsReceivables',
+          builder: (context, state) => const ReceivablesPayablesReportPage(
+            type: ReceivablesPayablesType.receivables,
+          ),
+        ),
+        GoRoute(
+          path: 'payables',
+          name: 'reportsPayables',
+          builder: (context, state) => const ReceivablesPayablesReportPage(
+            type: ReceivablesPayablesType.payables,
+          ),
+        ),
+        GoRoute(
+          path: 'cash-flow',
+          name: 'reportsCashFlow',
+          builder: (context, state) => const CashFlowReportPage(),
         ),
         GoRoute(
           path: 'rp-receipts',

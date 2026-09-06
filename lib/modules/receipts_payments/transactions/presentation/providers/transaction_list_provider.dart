@@ -46,7 +46,8 @@ class TransactionListState {
   }
 }
 
-class TransactionListNotifier extends StateNotifier<AsyncValue<TransactionListState>> {
+class TransactionListNotifier
+    extends StateNotifier<AsyncValue<TransactionListState>> {
   TransactionListNotifier(this._ref) : super(const AsyncLoading()) {
     _filter = _ref.read(transactionListFilterProvider);
     _listenFilter();
@@ -151,7 +152,8 @@ class TransactionListNotifier extends StateNotifier<AsyncValue<TransactionListSt
   }
 }
 
-final transactionListProvider = StateNotifierProvider.autoDispose<
-    TransactionListNotifier, AsyncValue<TransactionListState>>(
-  (ref) => TransactionListNotifier(ref),
-);
+final transactionListProvider =
+    StateNotifierProvider.autoDispose<
+      TransactionListNotifier,
+      AsyncValue<TransactionListState>
+    >((ref) => TransactionListNotifier(ref));

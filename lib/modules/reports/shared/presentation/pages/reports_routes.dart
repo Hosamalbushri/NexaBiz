@@ -10,6 +10,12 @@ class ReportsRoutes {
   static const String accountStatement = '/module-reports/account-statement';
   static const String trialBalance = '/module-reports/trial-balance';
   static const String journalBook = '/module-reports/journal-book';
+  static const String generalLedger = '/module-reports/general-ledger';
+  static const String incomeStatement = '/module-reports/income-statement';
+  static const String balanceSheet = '/module-reports/balance-sheet';
+  static const String receivables = '/module-reports/receivables';
+  static const String payables = '/module-reports/payables';
+  static const String cashFlow = '/module-reports/cash-flow';
   static const String rpReceipts = '/module-reports/rp-receipts';
   static const String rpPayments = '/module-reports/rp-payments';
   static const String rpCashMovement = '/module-reports/rp-cash-movement';
@@ -38,6 +44,24 @@ class ReportsRoutes {
 
   static void pushJournalBook(BuildContext context) =>
       context.push(journalBook);
+
+  static void pushGeneralLedger(BuildContext context) =>
+      context.push(generalLedger);
+
+  static void pushIncomeStatement(BuildContext context) =>
+      context.push(incomeStatement);
+
+  static void pushBalanceSheet(BuildContext context) =>
+      context.push(balanceSheet);
+
+  static void pushReceivables(BuildContext context) =>
+      context.push(receivables);
+
+  static void pushPayables(BuildContext context) =>
+      context.push(payables);
+
+  static void pushCashFlow(BuildContext context) =>
+      context.push(cashFlow);
 
   static void pushPreview(BuildContext context) => context.push(preview);
 }

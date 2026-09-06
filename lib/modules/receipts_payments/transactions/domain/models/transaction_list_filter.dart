@@ -87,8 +87,9 @@ class TransactionListFilter {
       syncStatus: clearSyncStatus ? null : (syncStatus ?? this.syncStatus),
       source: clearSource ? null : (source ?? this.source),
       customerId: clearCustomerId ? null : (customerId ?? this.customerId),
-      cashAccountId:
-          clearCashAccountId ? null : (cashAccountId ?? this.cashAccountId),
+      cashAccountId: clearCashAccountId
+          ? null
+          : (cashAccountId ?? this.cashAccountId),
       counterAccountId: clearCounterAccountId
           ? null
           : (counterAccountId ?? this.counterAccountId),

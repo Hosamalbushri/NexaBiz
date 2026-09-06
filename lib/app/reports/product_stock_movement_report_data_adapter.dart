@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:stock_count/app/settings/company/company_profile.dart';
+import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
 import 'package:stock_count/modules/inventory/shared/data/database/inventory_database.dart';
 import 'package:stock_count/modules/reports/shared/domain/services/product_stock_movement_report_data_port.dart';
 import 'package:stock_count/modules/sales/shared/data/database/sales_database.dart';
@@ -17,6 +18,20 @@ class ProductStockMovementReportDataAdapter
   final InventoryDatabase db;
   final SalesDatabase? salesDb;
   final Future<CompanyProfile> Function() loadCompanyProfile;
+
+  @override
+  Future<ProductStockMovementReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
+    required ProductStockMovementReportLabels labels,
+  }) {
+    return load(
+      productId: filter.productUuid ?? '',
+      warehouseId: filter.warehouseUuid,
+      fromDate: filter.fromDate,
+      toDate: filter.toDate,
+      labels: labels,
+    );
+  }
 
   @override
   Future<ProductStockMovementReportPayload> load({
@@ -72,30 +87,38 @@ class ProductStockMovementReportDataAdapter
           ..where((tbl) => tbl.itemCode.equals(productCode) | tbl.movementUuid.equals(productId)))
         .get();
 
-    // Fetch Receipts
+    // Fetch Receipts (tenant scoped)
     final receiptsMap = <String, StockReceiptRow>{};
-    final receipts = await (db.select(db.stockReceipts)..where((tbl) => tbl.deletedAt.isNull())).get();
+    final receipts = await (db.select(db.stockReceipts)
+          ..where((tbl) => tbl.deletedAt.isNull()))
+        .get();
     for (final r in receipts) {
       receiptsMap[r.uuid] = r;
     }
 
-    // Fetch Issues
+    // Fetch Issues (tenant scoped)
     final issuesMap = <String, StockIssueRow>{};
-    final issues = await (db.select(db.stockIssues)..where((tbl) => tbl.deletedAt.isNull())).get();
+    final issues = await (db.select(db.stockIssues)
+          ..where((tbl) => tbl.deletedAt.isNull()))
+        .get();
     for (final i in issues) {
       issuesMap[i.uuid] = i;
     }
 
-    // Fetch Transfers
+    // Fetch Transfers (tenant scoped)
     final transfersMap = <String, StockTransferRow>{};
-    final transfers = await (db.select(db.stockTransfers)..where((tbl) => tbl.deletedAt.isNull())).get();
+    final transfers = await (db.select(db.stockTransfers)
+          ..where((tbl) => tbl.deletedAt.isNull()))
+        .get();
     for (final t in transfers) {
       transfersMap[t.uuid] = t;
     }
 
-    // Fetch Returns
+    // Fetch Returns (tenant scoped)
     final returnsMap = <String, StockReturnRow>{};
-    final returns = await (db.select(db.stockReturns)..where((tbl) => tbl.deletedAt.isNull())).get();
+    final returns = await (db.select(db.stockReturns)
+          ..where((tbl) => tbl.deletedAt.isNull()))
+        .get();
     for (final ret in returns) {
       returnsMap[ret.uuid] = ret;
     }

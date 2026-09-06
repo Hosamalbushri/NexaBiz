@@ -225,8 +225,8 @@ class TransactionComposerState {
       final narrative = line.descriptionLocked
           ? line.resolvedDescription
           : (line.resolvedDescription.isNotEmpty
-              ? line.resolvedDescription
-              : (description?.trim() ?? ''));
+                ? line.resolvedDescription
+                : (description?.trim() ?? ''));
       allocated.add(
         FinancialTransactionLine(
           accountId: account.accountId,
@@ -280,13 +280,13 @@ class TransactionComposerState {
 class TransactionComposerController
     extends StateNotifier<TransactionComposerState> {
   TransactionComposerController(this._ref)
-      : super(
-          TransactionComposerState(
-            transactionType: TransactionType.receipt,
-            source: TransactionSource.manualReceipt,
-            transactionDate: _today(),
-          ),
-        );
+    : super(
+        TransactionComposerState(
+          transactionType: TransactionType.receipt,
+          source: TransactionSource.manualReceipt,
+          transactionDate: _today(),
+        ),
+      );
 
   final Ref _ref;
   var _lineSeq = 0;
@@ -326,12 +326,12 @@ class TransactionComposerController
     final defaultSource = sources.isNotEmpty
         ? sources.first
         : (type.isTransfer
-            ? TransactionSource.cashBoxTransfer
-            : (type.isCurrencyExchange
-                ? TransactionSource.currencyExchange
-                : (type.isReceipt
-                    ? TransactionSource.manualReceipt
-                    : TransactionSource.manualPayment)));
+              ? TransactionSource.cashBoxTransfer
+              : (type.isCurrencyExchange
+                    ? TransactionSource.currencyExchange
+                    : (type.isReceipt
+                          ? TransactionSource.manualReceipt
+                          : TransactionSource.manualPayment)));
 
     final currencyPort = _ref.read(rpCurrencyPortProvider);
     final base = await currencyPort.baseCurrencyCode;
@@ -389,7 +389,8 @@ class TransactionComposerController
           crossRate: cross <= 0 ? 1 : cross,
           amountAuto: false,
           description: line.description,
-          descriptionLocked: (line.description?.trim() ?? '') !=
+          descriptionLocked:
+              (line.description?.trim() ?? '') !=
               (txn.description?.trim() ?? ''),
         ),
       );
@@ -449,10 +450,7 @@ class TransactionComposerController
     final line = state.lines.first;
     if (!line.amountAuto) return;
     final rate = line.crossRate <= 0 ? 1.0 : line.crossRate;
-    _replaceLine(
-      0,
-      line.copyWith(amount: RpMoney.round(state.amount * rate)),
-    );
+    _replaceLine(0, line.copyWith(amount: RpMoney.round(state.amount * rate)));
   }
 
   void setAmount(double amount) {
@@ -502,18 +500,14 @@ class TransactionComposerController
         : (partyRate <= 0 ? 1.0 : RpMoney.round(cashRate / partyRate));
     final rate = cross <= 0 ? 1.0 : cross;
     final amountAuto = state.lines.isEmpty;
-    final amount =
-        amountAuto ? RpMoney.round(state.amount * rate) : 0.0;
+    final amount = amountAuto ? RpMoney.round(state.amount * rate) : 0.0;
     final line = _newLine(
       currencyCode: currency,
       exchangeRate: partyRate,
       crossRate: rate,
       description: state.description,
       amountAuto: amountAuto,
-    ).copyWith(
-      account: account,
-      amount: amount,
-    );
+    ).copyWith(account: account, amount: amount);
     state = state.copyWith(lines: [...state.lines, line]);
     if ((state.partyName == null || state.partyName!.trim().isEmpty) &&
         state.customer == null) {
@@ -532,10 +526,7 @@ class TransactionComposerController
     final line = state.lines[index];
     _replaceLine(
       index,
-      line.copyWith(
-        account: account,
-        clearAccount: account == null,
-      ),
+      line.copyWith(account: account, clearAccount: account == null),
     );
     if (account != null &&
         (state.partyName == null || state.partyName!.trim().isEmpty) &&
@@ -690,10 +681,7 @@ class TransactionComposerController
   void setDescription(String? description) {
     final trimmed = description?.trim() ?? '';
     final clear = trimmed.isEmpty;
-    state = state.copyWith(
-      description: description,
-      clearDescription: clear,
-    );
+    state = state.copyWith(description: description, clearDescription: clear);
     if (state.lines.isEmpty) return;
     final next = <ComposerEntryLine>[];
     for (final line in state.lines) {
@@ -753,10 +741,7 @@ class TransactionComposerController
 
   void setVoucherBook(RpVoucherBookRef? book) {
     if (state.editingTransactionId != null) {
-      state = state.copyWith(
-        voucherBook: book,
-        clearVoucherBook: book == null,
-      );
+      state = state.copyWith(voucherBook: book, clearVoucherBook: book == null);
       return;
     }
     state = state.copyWith(
@@ -768,7 +753,8 @@ class TransactionComposerController
   }
 }
 
-final transactionComposerProvider = StateNotifierProvider.autoDispose<
-    TransactionComposerController, TransactionComposerState>(
-  (ref) => TransactionComposerController(ref),
-);
+final transactionComposerProvider =
+    StateNotifierProvider.autoDispose<
+      TransactionComposerController,
+      TransactionComposerState
+    >((ref) => TransactionComposerController(ref));

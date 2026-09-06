@@ -36,9 +36,7 @@ class _SummaryAmountRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
-          Expanded(
-            child: Text(label, style: labelStyle),
-          ),
+          Expanded(child: Text(label, style: labelStyle)),
           SaleMoneyText(value, style: valueStyle),
         ],
       ),
@@ -48,9 +46,7 @@ class _SummaryAmountRow extends StatelessWidget {
 
 /// Standardized total breakdown lines (subtotal, discount, tax, total).
 class _SummaryLines extends StatelessWidget {
-  const _SummaryLines({
-    required this.summary,
-  });
+  const _SummaryLines({required this.summary});
 
   final SaleSummary summary;
 
@@ -65,10 +61,7 @@ class _SummaryLines extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SummaryAmountRow(
-          label: l10n.salesSubtotal,
-          value: summary.subtotal,
-        ),
+        _SummaryAmountRow(label: l10n.salesSubtotal, value: summary.subtotal),
         if (discountTotal > 0)
           _SummaryAmountRow(
             label: l10n.salesDiscount,
@@ -76,10 +69,7 @@ class _SummaryLines extends StatelessWidget {
             negative: true,
           ),
         if (summary.tax > 0)
-          _SummaryAmountRow(
-            label: l10n.salesTax,
-            value: summary.tax,
-          ),
+          _SummaryAmountRow(label: l10n.salesTax, value: summary.tax),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           child: Divider(
@@ -248,11 +238,7 @@ class SaleStickySummary extends StatelessWidget {
 
 /// Read-only totals panel for details screens.
 class SaleSummaryPanel extends StatelessWidget {
-  const SaleSummaryPanel({
-    super.key,
-    required this.summary,
-    this.currencyCode,
-  });
+  const SaleSummaryPanel({super.key, required this.summary, this.currencyCode});
 
   final SaleSummary summary;
   final String? currencyCode;

@@ -136,7 +136,9 @@ class _SalesListPageState extends ConsumerState<SalesListPage> {
       onFilterTap: _openFilters,
       activeFilterCount: hasFilters ? 1 : 0,
       isLoading: asyncList.isLoading && !asyncList.hasValue,
-      error: asyncList.error != null ? saleErrorMessage(l10n, asyncList.error!) : null,
+      error: asyncList.error != null
+          ? saleErrorMessage(l10n, asyncList.error!)
+          : null,
       onRetry: () => ref.read(salesListProvider.notifier).reload(),
       onRefresh: () async {
         await ref.read(salesListProvider.notifier).reload();

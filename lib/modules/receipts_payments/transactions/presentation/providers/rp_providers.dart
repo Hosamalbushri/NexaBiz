@@ -57,8 +57,6 @@ final rpCustomerLookupPortProvider = Provider<RpCustomerLookupPort>((ref) {
   return const NoOpRpCustomerLookupPort();
 });
 
-
-
 final rpLedgerPostingPortProvider = Provider<RpLedgerPostingPort>((ref) {
   return const NoOpRpLedgerPostingPort();
 });

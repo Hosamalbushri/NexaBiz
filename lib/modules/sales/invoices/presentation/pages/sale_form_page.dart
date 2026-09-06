@@ -447,10 +447,7 @@ class _SaleFormPageState extends ConsumerState<SaleFormPage> {
       },
       onDiscountChanged: (value) {
         final discountType = ref.read(saleComposerProvider).discountType;
-        composer.setDiscount(
-          type: discountType,
-          value: value,
-        );
+        composer.setDiscount(type: discountType, value: value);
         setState(() => _dirty = true);
       },
     );
@@ -529,7 +526,7 @@ class _SaleProductsSection extends ConsumerWidget {
   final ValueChanged<SaleProductRef> onProductSelected;
   final VoidCallback onScan;
   final void Function(int index, double mainQuantity, double subQuantity)
-      onQuantitiesChanged;
+  onQuantitiesChanged;
   final bool Function(int index, double unitPrice) onUnitPriceChanged;
   final double Function(SaleItemDraft item) minUnitPriceOf;
   final VoidCallback onUnitPriceBelowMin;
@@ -568,9 +565,7 @@ class _SaleStickySummarySection extends ConsumerWidget {
     final currencyCode = ref.watch(
       saleComposerProvider.select((s) => s.currencyCode),
     );
-    final canSave = ref.watch(
-      saleComposerProvider.select((s) => s.canSave),
-    );
+    final canSave = ref.watch(saleComposerProvider.select((s) => s.canSave));
 
     return SaleStickySummary(
       summary: summary,
@@ -626,8 +621,6 @@ class _InvoiceMetaRow extends StatelessWidget {
   }
 }
 
-
-
 class _CustomerPartyCard extends ConsumerStatefulWidget {
   const _CustomerPartyCard({
     required this.customerNameController,
@@ -671,7 +664,8 @@ class _CustomerPartyCardState extends ConsumerState<_CustomerPartyCard> {
     final isCash = ref.watch(saleComposerProvider.select((s) => s.isCash));
     final phone = customer?.phone?.trim();
     final hasPhone = phone != null && phone.isNotEmpty;
-    final hasValue = customer != null ||
+    final hasValue =
+        customer != null ||
         widget.customerNameController.text.trim().isNotEmpty;
 
     return Material(
@@ -689,8 +683,7 @@ class _CustomerPartyCardState extends ConsumerState<_CustomerPartyCard> {
             ? SaleCustomerSearchField(
                 key: ValueKey('customer-search-$isCash'),
                 autofocus: true,
-                initialQuery:
-                    isCash ? widget.customerNameController.text : '',
+                initialQuery: isCash ? widget.customerNameController.text : '',
                 hintText: isCash
                     ? l10n.salesCashCustomerHint
                     : l10n.salesSearchCustomerHint,
@@ -746,12 +739,13 @@ class _CustomerPartyCardState extends ConsumerState<_CustomerPartyCard> {
                                   focusedBorder: InputBorder.none,
                                   contentPadding: EdgeInsets.zero,
                                   hintText: l10n.salesCashCustomerHint,
-                                  hintStyle:
-                                      theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: scheme.onSurface
-                                        .withValues(alpha: 0.45),
-                                  ),
+                                  hintStyle: theme.textTheme.titleSmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: scheme.onSurface.withValues(
+                                          alpha: 0.45,
+                                        ),
+                                      ),
                                 ),
                                 onChanged: widget.onWalkInCustomerNameChanged,
                               ),
@@ -765,42 +759,38 @@ class _CustomerPartyCardState extends ConsumerState<_CustomerPartyCard> {
                             ],
                           )
                         : customer == null
-                            ? Text(
-                                l10n.salesSelectCustomer,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: scheme.onSurface
-                                      .withValues(alpha: 0.7),
+                        ? Text(
+                            l10n.salesSelectCustomer,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: scheme.onSurface.withValues(alpha: 0.7),
+                            ),
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                l10n.salesCustomer,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                              )
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.salesCustomer,
-                                    style:
-                                        theme.textTheme.labelSmall?.copyWith(
-                                      color: scheme.onSurfaceVariant,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  Text(
-                                    customer.name,
-                                    style:
-                                        theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  if (hasPhone)
-                                    Text(
-                                      phone,
-                                      style:
-                                          theme.textTheme.bodySmall?.copyWith(
-                                        color: scheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                ],
                               ),
+                              Text(
+                                customer.name,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              if (hasPhone)
+                                Text(
+                                  phone,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                            ],
+                          ),
                   ),
                   if (hasValue)
                     Material(
@@ -998,9 +988,10 @@ class _InvoiceHeaderCard extends ConsumerWidget {
                                       l10n.salesCashAccount,
                                       style: theme.textTheme.labelSmall
                                           ?.copyWith(
-                                        color:
-                                            theme.colorScheme.onSurfaceVariant,
-                                      ),
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
                                     ),
                                     Text(
                                       SaleAccountLabels.displayName(
@@ -1009,8 +1000,8 @@ class _InvoiceHeaderCard extends ConsumerWidget {
                                       ),
                                       style: theme.textTheme.titleSmall
                                           ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -1042,7 +1033,9 @@ class _InvoiceHeaderCard extends ConsumerWidget {
                   child: AppDocumentOptionCard(
                     icon: Icons.store_outlined,
                     label: 'المستودع',
-                    value: warehouseDisplay.isNotEmpty ? warehouseDisplay : null,
+                    value: warehouseDisplay.isNotEmpty
+                        ? warehouseDisplay
+                        : null,
                     placeholder: 'اختر المستودع',
                     onTap: () async {
                       final selected = await showModalBottomSheet<Warehouse>(
@@ -1057,9 +1050,8 @@ class _InvoiceHeaderCard extends ConsumerWidget {
                                   padding: const EdgeInsets.all(AppSpacing.md),
                                   child: Text(
                                     'اختر المستودع',
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w800,
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.w800),
                                   ),
                                 ),
                                 if (warehouses.isNotEmpty)
@@ -1071,7 +1063,9 @@ class _InvoiceHeaderCard extends ConsumerWidget {
                                             : Icons.store_outlined,
                                         color: w.id == warehouseId
                                             ? theme.colorScheme.primary
-                                            : theme.colorScheme.onSurfaceVariant,
+                                            : theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
                                       ),
                                       title: Text(w.name),
                                       subtitle: Text('كود المستودع: ${w.code}'),
@@ -1079,12 +1073,17 @@ class _InvoiceHeaderCard extends ConsumerWidget {
                                     )
                                 else
                                   Padding(
-                                    padding: const EdgeInsets.all(AppSpacing.md),
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
+                                    ),
                                     child: Text(
                                       'لا توجد مستودعات متاحة',
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
                                     ),
                                   ),
                                 const SizedBox(height: AppSpacing.sm),
@@ -1112,52 +1111,53 @@ class _InvoiceHeaderCard extends ConsumerWidget {
                       }
                       final selected =
                           await showModalBottomSheet<SaleCurrencyRef>(
-                        context: context,
-                        useSafeArea: true,
-                        builder: (ctx) {
-                          return SafeArea(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(AppSpacing.md),
-                                  child: Text(
-                                    l10n.salesCurrency,
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(
-                                      fontWeight: FontWeight.w800,
+                            context: context,
+                            useSafeArea: true,
+                            builder: (ctx) {
+                              return SafeArea(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(
+                                        AppSpacing.md,
+                                      ),
+                                      child: Text(
+                                        l10n.salesCurrency,
+                                        style: theme.textTheme.titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                      ),
                                     ),
-                                  ),
+                                    for (final c in currencies)
+                                      ListTile(
+                                        leading: Icon(
+                                          c.code == currencyCode
+                                              ? Icons.check_circle
+                                              : Icons.circle_outlined,
+                                          color: c.code == currencyCode
+                                              ? theme.colorScheme.primary
+                                              : theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                        ),
+                                        title: Text(c.code),
+                                        subtitle: c.isBase
+                                            ? null
+                                            : Text(
+                                                c.rateToBase.toStringAsFixed(4),
+                                              ),
+                                        onTap: () => Navigator.of(ctx).pop(c),
+                                      ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                  ],
                                 ),
-                                for (final c in currencies)
-                                  ListTile(
-                                    leading: Icon(
-                                      c.code == currencyCode
-                                          ? Icons.check_circle
-                                          : Icons.circle_outlined,
-                                      color: c.code == currencyCode
-                                          ? theme.colorScheme.primary
-                                          : theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                    title: Text(c.code),
-                                    subtitle: c.isBase
-                                        ? null
-                                        : Text(
-                                            c.rateToBase.toStringAsFixed(4),
-                                          ),
-                                    onTap: () => Navigator.of(ctx).pop(c),
-                                  ),
-                                const SizedBox(height: AppSpacing.sm),
-                              ],
-                            ),
+                              );
+                            },
                           );
-                        },
-                      );
                       if (selected != null) {
-                        onCurrencyChanged(
-                          selected.code,
-                          selected.rateToBase,
-                        );
+                        onCurrencyChanged(selected.code, selected.rateToBase);
                       }
                     },
                   ),
@@ -1178,7 +1178,9 @@ class _InvoiceHeaderCard extends ConsumerWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.12,
+                        ),
                         borderRadius: BorderRadius.circular(AppRadius.sm),
                       ),
                       child: Icon(
@@ -1220,7 +1222,9 @@ class _InvoiceHeaderCard extends ConsumerWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surface.withValues(alpha: 0.75),
+                        color: theme.colorScheme.surface.withValues(
+                          alpha: 0.75,
+                        ),
                         borderRadius: BorderRadius.circular(AppRadius.sm),
                         border: Border.all(
                           color: theme.colorScheme.outlineVariant.withValues(
@@ -1246,8 +1250,6 @@ class _InvoiceHeaderCard extends ConsumerWidget {
     );
   }
 }
-
-
 
 class _SaleLoadNotFound implements Exception {
   const _SaleLoadNotFound();

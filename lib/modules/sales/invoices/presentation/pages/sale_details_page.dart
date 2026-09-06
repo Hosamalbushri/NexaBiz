@@ -149,9 +149,10 @@ class _SaleDetailsBody extends ConsumerWidget {
         message: l10n.salesPrintingInvoice,
         action: () async {
           final company = ref.read(companyProfileProvider).asData?.value;
-          final currencyNameAr =
-              AppCurrencies.byCode(sale.currencyCode).nameAr;
-          return ref.read(saleInvoicePdfPrinterProvider).prepareSale(
+          final currencyNameAr = AppCurrencies.byCode(sale.currencyCode).nameAr;
+          return ref
+              .read(saleInvoicePdfPrinterProvider)
+              .prepareSale(
                 sale: sale,
                 logoPath: company?.logoPath,
                 headerRightText: company?.invoiceHeaderRight,
@@ -258,109 +259,104 @@ class _SaleDetailsBody extends ConsumerWidget {
               canDuplicate ||
               (sale.saleStatus.canCancel && canCancel))
             PopupMenuButton<String>(
-            tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
-            position: PopupMenuPosition.under,
-            offset: const Offset(0, 8),
-            onSelected: (value) async {
-              switch (value) {
-                case 'post':
-                  if (!postingEnabled) {
-                    showAppSnackBar(
+              tooltip: MaterialLocalizations.of(context).moreButtonTooltip,
+              position: PopupMenuPosition.under,
+              offset: const Offset(0, 8),
+              onSelected: (value) async {
+                switch (value) {
+                  case 'post':
+                    if (!postingEnabled) {
+                      showAppSnackBar(
+                        context,
+                        message: l10n.salesPostRequiresInventory,
+                        isSuccess: false,
+                      );
+                      return;
+                    }
+                    await _runAction(
                       context,
-                      message: l10n.salesPostRequiresInventory,
-                      isSuccess: false,
+                      ref,
+                      loadingMessage: l10n.salesPosting,
+                      action: () async {
+                        await ref
+                            .read(confirmSaleUseCaseProvider)
+                            .call(sale.id);
+                      },
+                      successMessage: l10n.salesPosted,
                     );
-                    return;
-                  }
-                  await _runAction(
-                    context,
-                    ref,
-                    loadingMessage: l10n.salesPosting,
-                    action: () async {
-                      await ref
-                          .read(confirmSaleUseCaseProvider)
-                          .call(sale.id);
-                    },
-                    successMessage: l10n.salesPosted,
-                  );
-                case 'duplicate':
-                  await _runAction(
-                    context,
-                    ref,
-                    loadingMessage: l10n.salesSaving,
-                    action: () async {
-                      final copy = await ref
-                          .read(duplicateSaleUseCaseProvider)
-                          .call(sale.id);
-                      if (context.mounted) {
-                        SalesRoutes.pushDetails(context, copy.id);
-                      }
-                    },
-                    successMessage: l10n.salesDuplicated,
-                  );
-                case 'cancel':
-                  final ok = await showAppDialog(
-                    context: context,
-                    title: l10n.salesCancelTitle,
-                    message: l10n.salesCancelMessage(
-                      formatSaleNumberPrimary(sale.saleNumber),
-                    ),
-                    confirmLabel: l10n.salesCancelSale,
-                    cancelLabel: l10n.cancel,
-                    isDestructive: true,
-                  );
-                  if (!ok || !context.mounted) {
-                    return;
-                  }
-                  await _runAction(
-                    context,
-                    ref,
-                    loadingMessage: l10n.salesSaving,
-                    action: () async {
-                      await ref
-                          .read(cancelSaleUseCaseProvider)
-                          .call(sale.id);
-                    },
-                    successMessage: l10n.salesCancelled,
-                    afterSuccess: () {
-                      if (context.mounted) {
-                        SalesRoutes.backToList(context);
-                      }
-                    },
-                  );
-              }
-            },
-            itemBuilder: (context) => [
-              if (showPost && canPost)
-                PopupMenuItem(
-                  value: 'post',
-                  child: Text(l10n.salesPostSale),
-                ),
-              if (canDuplicate)
-                PopupMenuItem(
-                  value: 'duplicate',
-                  child: Text(l10n.salesDuplicate),
-                ),
-              if (sale.saleStatus.canCancel && canCancel)
-                PopupMenuItem(
-                  value: 'cancel',
-                  child: Text(l10n.salesCancelSale),
-                ),
-            ],
-            child: Material(
-              color: scheme.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
-              child: SizedBox(
-                width: 42,
-                height: 42,
-                child: Icon(
-                  Icons.more_vert_rounded,
-                  size: 22,
-                  color: scheme.primary,
+                  case 'duplicate':
+                    await _runAction(
+                      context,
+                      ref,
+                      loadingMessage: l10n.salesSaving,
+                      action: () async {
+                        final copy = await ref
+                            .read(duplicateSaleUseCaseProvider)
+                            .call(sale.id);
+                        if (context.mounted) {
+                          SalesRoutes.pushDetails(context, copy.id);
+                        }
+                      },
+                      successMessage: l10n.salesDuplicated,
+                    );
+                  case 'cancel':
+                    final ok = await showAppDialog(
+                      context: context,
+                      title: l10n.salesCancelTitle,
+                      message: l10n.salesCancelMessage(
+                        formatSaleNumberPrimary(sale.saleNumber),
+                      ),
+                      confirmLabel: l10n.salesCancelSale,
+                      cancelLabel: l10n.cancel,
+                      isDestructive: true,
+                    );
+                    if (!ok || !context.mounted) {
+                      return;
+                    }
+                    await _runAction(
+                      context,
+                      ref,
+                      loadingMessage: l10n.salesSaving,
+                      action: () async {
+                        await ref.read(cancelSaleUseCaseProvider).call(sale.id);
+                      },
+                      successMessage: l10n.salesCancelled,
+                      afterSuccess: () {
+                        if (context.mounted) {
+                          SalesRoutes.backToList(context);
+                        }
+                      },
+                    );
+                }
+              },
+              itemBuilder: (context) => [
+                if (showPost && canPost)
+                  PopupMenuItem(value: 'post', child: Text(l10n.salesPostSale)),
+                if (canDuplicate)
+                  PopupMenuItem(
+                    value: 'duplicate',
+                    child: Text(l10n.salesDuplicate),
+                  ),
+                if (sale.saleStatus.canCancel && canCancel)
+                  PopupMenuItem(
+                    value: 'cancel',
+                    child: Text(l10n.salesCancelSale),
+                  ),
+              ],
+              child: Material(
+                color: scheme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+                child: SizedBox(
+                  width: 42,
+                  height: 42,
+                  child: Icon(
+                    Icons.more_vert_rounded,
+                    size: 22,
+                    color: scheme.primary,
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
       bottomNavigationBar: (showPost && canPost)
@@ -538,10 +534,7 @@ class _SaleDetailsBody extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  AppExpandableText(
-                    text: sale.notes!,
-                    maxCollapsedLines: 3,
-                  ),
+                  AppExpandableText(text: sale.notes!, maxCollapsedLines: 3),
                 ],
               ),
             ),
@@ -645,10 +638,7 @@ class _DocumentActionTile extends StatelessWidget {
     } else {
       iconColor = scheme.primary;
       labelColor = scheme.onSurface;
-      fill = [
-        scheme.surface,
-        scheme.surfaceContainerLow,
-      ];
+      fill = [scheme.surface, scheme.surfaceContainerLow];
     }
 
     return Material(
@@ -752,9 +742,7 @@ class _InvoiceHero extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.4),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -915,14 +903,17 @@ class _MetaTile extends StatelessWidget {
                   value,
                   maxLines: compact ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
-                  style: (compact
-                          ? theme.textTheme.labelLarge
-                          : theme.textTheme.titleSmall)
-                      ?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: emphasized ? scheme.primary : scheme.onSurface,
-                    height: 1.15,
-                  ),
+                  style:
+                      (compact
+                              ? theme.textTheme.labelLarge
+                              : theme.textTheme.titleSmall)
+                          ?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: emphasized
+                                ? scheme.primary
+                                : scheme.onSurface,
+                            height: 1.15,
+                          ),
                 ),
               ],
             ),

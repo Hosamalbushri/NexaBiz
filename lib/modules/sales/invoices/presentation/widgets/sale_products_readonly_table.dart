@@ -168,10 +168,7 @@ class _ReadonlyTableHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = theme.colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: _Cols.hPad,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: _Cols.hPad, vertical: 12),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
         border: Border(
@@ -223,10 +220,7 @@ class _ReadonlyProductRow extends StatelessWidget {
     final rowTotal = item.total;
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: _Cols.hPad,
-        vertical: 10,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: _Cols.hPad, vertical: 10),
       decoration: BoxDecoration(
         color: striped
             ? scheme.surfaceContainerHighest.withValues(alpha: 0.2)
@@ -275,10 +269,7 @@ class _ReadonlyProductRow extends StatelessWidget {
             alignment: Alignment.centerRight,
           ),
           _cell(
-            SaleMoneyText(
-              item.unitPrice,
-              style: theme.textTheme.bodyMedium,
-            ),
+            SaleMoneyText(item.unitPrice, style: theme.textTheme.bodyMedium),
             _Cols.price,
             alignment: Alignment.centerRight,
           ),

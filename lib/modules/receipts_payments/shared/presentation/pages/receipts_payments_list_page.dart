@@ -58,8 +58,9 @@ class _ReceiptsPaymentsListPageState
     if (current.transactionType == widget.transactionType) {
       return;
     }
-    ref.read(transactionListFilterProvider.notifier).state =
-        current.copyWith(transactionType: widget.transactionType);
+    ref.read(transactionListFilterProvider.notifier).state = current.copyWith(
+      transactionType: widget.transactionType,
+    );
   }
 
   @override
@@ -124,11 +125,13 @@ class _ReceiptsPaymentsListPageState
       searchHint: l10n.salesSearchHint,
       onSearchChanged: (val) {
         final current = ref.read(transactionListFilterProvider);
-        ref.read(transactionListFilterProvider.notifier).state =
-            current.copyWith(query: val.trim());
+        ref.read(transactionListFilterProvider.notifier).state = current
+            .copyWith(query: val.trim());
       },
       isLoading: asyncList.isLoading && !asyncList.hasValue,
-      error: asyncList.error != null ? rpErrorMessage(l10n, asyncList.error!) : null,
+      error: asyncList.error != null
+          ? rpErrorMessage(l10n, asyncList.error!)
+          : null,
       onRetry: () => ref.read(transactionListProvider.notifier).reload(),
       onRefresh: () async {
         await ref.read(transactionListProvider.notifier).reload();

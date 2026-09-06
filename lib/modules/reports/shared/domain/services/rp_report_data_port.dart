@@ -1,3 +1,5 @@
+import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
+
 /// Receipts & Payments report kinds (Reports module — no R&P imports).
 enum RpReportKind {
   receipts,
@@ -98,6 +100,11 @@ class RpReportData {
 /// App wires to Receipts & Payments repository (modules ↛ modules).
 abstract class RpReportDataPort {
   Future<RpReportData> load(RpReportQuery query);
+
+  Future<RpReportData> loadFromFilter({
+    required ReportQueryFilter filter,
+    required RpReportKind kind,
+  });
 }
 
 class NoOpRpReportDataPort implements RpReportDataPort {
@@ -107,4 +114,19 @@ class NoOpRpReportDataPort implements RpReportDataPort {
   Future<RpReportData> load(RpReportQuery query) async {
     return const RpReportData(totalAmount: 0, totalCount: 0, rows: []);
   }
+
+  @override
+  Future<RpReportData> loadFromFilter({
+    required ReportQueryFilter filter,
+    required RpReportKind kind,
+  }) =>
+      load(
+        RpReportQuery(
+          kind: kind,
+          from: filter.fromDate ?? DateTime(2000),
+          to: filter.toDate ?? DateTime(2100),
+          customerId: filter.customerUuid,
+          rowLimit: filter.pageSize,
+        ),
+      );
 }

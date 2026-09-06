@@ -26,8 +26,9 @@ class _TransactionFilterBarState extends ConsumerState<TransactionFilterBar> {
   void _onQueryChanged(String value) {
     widget.onQueryChanged?.call(value);
     final current = ref.read(transactionListFilterProvider);
-    ref.read(transactionListFilterProvider.notifier).state =
-        current.copyWith(query: value.trim());
+    ref.read(transactionListFilterProvider.notifier).state = current.copyWith(
+      query: value.trim(),
+    );
   }
 
   void _setStatus(TransactionStatus? status) {

@@ -160,7 +160,8 @@ class SaleInvoicePdfPrinter {
         ? sale.customerName!.trim()
         : 'عميل_عابر';
     final date = DateFormat('dd-MM-yyyy').format(sale.saleDate.toLocal());
-    final raw = '${customer}_${formatSaleNumberPrimary(sale.saleNumber)}_$date.pdf';
+    final raw =
+        '${customer}_${formatSaleNumberPrimary(sale.saleNumber)}_$date.pdf';
     return _sanitizeFileName(raw);
   }
 
@@ -252,7 +253,9 @@ class SaleInvoicePdfPrinter {
               pw.SizedBox(height: 10),
               _metaTable(
                 invoiceNumber: formatSaleNumberPrimary(sale.saleNumber),
-                invoiceReference: saleNumberView(sale.saleNumber).referenceLabel,
+                invoiceReference: saleNumberView(
+                  sale.saleNumber,
+                ).referenceLabel,
                 customerName: customer,
                 invoiceDate: dateText,
                 currencyLabel: currencyLabel,
@@ -281,10 +284,7 @@ class SaleInvoicePdfPrinter {
         },
         build: (context) {
           return [
-            ..._itemsSection(
-              items: sale.items,
-              money: money,
-            ),
+            ..._itemsSection(items: sale.items, money: money),
             pw.SizedBox(height: 8),
             _totalsBlock(
               money: money,
@@ -298,10 +298,7 @@ class SaleInvoicePdfPrinter {
             pw.SizedBox(height: 14),
             pw.Text(
               'ملاحظة: البضاعة المباعة لاترد بعد خروجها من المحل',
-              style: pw.TextStyle(
-                fontSize: 9,
-                fontWeight: pw.FontWeight.bold,
-              ),
+              style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 22),
             // Row flips under RTL: first child on the right.
@@ -409,9 +406,13 @@ class SaleInvoicePdfPrinter {
     required String currencyLabel,
     String? invoiceReference,
   }) {
-    final labelStyle = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
+    final labelStyle = pw.TextStyle(
+      fontSize: 8,
+      fontWeight: pw.FontWeight.bold,
+    );
     const valueStyle = pw.TextStyle(fontSize: 10);
-    final invoiceDisplay = invoiceReference == null ||
+    final invoiceDisplay =
+        invoiceReference == null ||
             invoiceReference.isEmpty ||
             invoiceReference == invoiceNumber
         ? invoiceNumber
@@ -484,7 +485,8 @@ class SaleInvoicePdfPrinter {
             'رقم الفاتورة',
             invoiceDisplay,
             width: 88,
-            wrap: invoiceReference != null &&
+            wrap:
+                invoiceReference != null &&
                 invoiceReference.isNotEmpty &&
                 invoiceReference != invoiceNumber,
           ),
@@ -518,10 +520,7 @@ class SaleInvoicePdfPrinter {
     return [
       _itemsTable(items: items, money: money),
       pw.SizedBox(height: 2),
-      _qtyTotalsRow(
-        mainQtyTotal: mainQtyTotal,
-        subQtyTotal: subQtyTotal,
-      ),
+      _qtyTotalsRow(mainQtyTotal: mainQtyTotal, subQtyTotal: subQtyTotal),
     ];
   }
 
@@ -594,13 +593,13 @@ class SaleInvoicePdfPrinter {
     };
 
     pw.Widget headerCell(String text) => pw.Padding(
-          padding: const pw.EdgeInsets.symmetric(horizontal: 2, vertical: 5),
-          child: pw.Text(
-            text,
-            textAlign: pw.TextAlign.center,
-            style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
-          ),
-        );
+      padding: const pw.EdgeInsets.symmetric(horizontal: 2, vertical: 5),
+      child: pw.Text(
+        text,
+        textAlign: pw.TextAlign.center,
+        style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
+      ),
+    );
 
     pw.Widget cell(
       String text, {
@@ -624,9 +623,7 @@ class SaleInvoicePdfPrinter {
     final rows = <pw.TableRow>[
       pw.TableRow(
         repeat: true,
-        decoration: const pw.BoxDecoration(
-          border: pw.Border(bottom: _border),
-        ),
+        decoration: const pw.BoxDecoration(border: pw.Border(bottom: _border)),
         children: [for (final h in headers) headerCell(h)],
       ),
     ];
@@ -670,11 +667,7 @@ class SaleInvoicePdfPrinter {
     required String currencyLabel,
     required bool showBalance,
   }) {
-    pw.Widget cell(
-      String text, {
-      bool bold = false,
-      bool wrap = false,
-    }) {
+    pw.Widget cell(String text, {bool bold = false, bool wrap = false}) {
       return pw.Padding(
         padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 5),
         child: pw.Text(

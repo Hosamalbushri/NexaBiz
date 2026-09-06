@@ -1,3 +1,6 @@
+import 'package:stock_count/core/report_engine/domain/models/report_execution_context.dart';
+import 'package:stock_count/core/report_engine/domain/models/report_query_filter.dart';
+
 /// One journal-book line prepared outside the PDF layer.
 class JournalBookReportRow {
   const JournalBookReportRow({
@@ -108,6 +111,11 @@ abstract class JournalBookReportDataPort {
     required bool postedOnly,
     required JournalBookReportLabels labels,
   });
+
+  Future<JournalBookReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
+    required JournalBookReportLabels labels,
+  });
 }
 
 class NoOpJournalBookReportDataPort implements JournalBookReportDataPort {
@@ -141,4 +149,16 @@ class NoOpJournalBookReportDataPort implements JournalBookReportDataPort {
       emptyMessage: labels.emptyMessage,
     );
   }
+
+  @override
+  Future<JournalBookReportPayload> loadFromFilter({
+    required ReportQueryFilter filter,
+    required JournalBookReportLabels labels,
+  }) =>
+      load(
+        fromDate: filter.fromDate,
+        toDate: filter.toDate,
+        postedOnly: filter.postingScope == PostingScope.postedOnly,
+        labels: labels,
+      );
 }

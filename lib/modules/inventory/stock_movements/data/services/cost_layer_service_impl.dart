@@ -47,7 +47,7 @@ class CostLayerServiceImpl implements CostLayerService {
 
     var invCurrency = layer.inventoryCurrencyId;
     if (_initRepository != null && (invCurrency.isEmpty || invCurrency == 'YER')) {
-      final invConfig = await _initRepository!.getInventoryConfig();
+      final invConfig = await _initRepository.getInventoryConfig();
       if (invConfig != null && invConfig.inventoryBaseCurrencyId.isNotEmpty) {
         invCurrency = invConfig.inventoryBaseCurrencyId.toUpperCase();
       }

@@ -25,11 +25,11 @@ abstract final class ReceiptsPaymentsRoutes {
   static String editExchange(int id) => '/receipts-payments/exchanges/$id/edit';
 
   static String listFor(TransactionType type) => switch (type) {
-        TransactionType.receipt => receiptsList,
-        TransactionType.payment => paymentsList,
-        TransactionType.transfer => transfersList,
-        TransactionType.currencyExchange => exchangesList,
-      };
+    TransactionType.receipt => receiptsList,
+    TransactionType.payment => paymentsList,
+    TransactionType.transfer => transfersList,
+    TransactionType.currencyExchange => exchangesList,
+  };
 
   static void goRoot(BuildContext context) => context.go(root);
 
@@ -77,6 +77,8 @@ abstract final class ReceiptsPaymentsRoutes {
   static void pushEditExchange(BuildContext context, int id) =>
       context.push(editExchange(id));
 
-  static void backToList(BuildContext context, {required TransactionType type}) =>
-      goList(context, type: type);
+  static void backToList(
+    BuildContext context, {
+    required TransactionType type,
+  }) => goList(context, type: type);
 }

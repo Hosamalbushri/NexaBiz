@@ -32,9 +32,7 @@ class NoOpRpCurrencyPort implements RpCurrencyPort {
 
   @override
   Future<List<RpCurrencyRef>> listEnabledCurrencies() async {
-    return [
-      RpCurrencyRef(code: fallbackCode, rateToBase: 1, isBase: true),
-    ];
+    return [RpCurrencyRef(code: fallbackCode, rateToBase: 1, isBase: true)];
   }
 
   @override

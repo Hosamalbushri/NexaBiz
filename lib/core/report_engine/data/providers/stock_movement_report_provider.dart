@@ -346,6 +346,19 @@ class StockMovementReportDataProvider
     int? fromMs,
     int? toMs,
   }) {
+    query.where(
+      inventoryDb.stockMovementLines.movementUuid.isInQuery(
+        inventoryDb.selectOnly(inventoryDb.stockReceipts)
+          ..addColumns([inventoryDb.stockReceipts.uuid])
+          ..where(inventoryDb.stockReceipts.companyId.equals(context.companyId) & inventoryDb.stockReceipts.deletedAt.isNull()),
+      ) |
+          inventoryDb.stockMovementLines.movementUuid.isInQuery(
+            inventoryDb.selectOnly(inventoryDb.stockIssues)
+              ..addColumns([inventoryDb.stockIssues.uuid])
+              ..where(inventoryDb.stockIssues.companyId.equals(context.companyId) & inventoryDb.stockIssues.deletedAt.isNull()),
+          ),
+    );
+
     if (productCode != null && productCode.isNotEmpty) {
       query.where(
         inventoryDb.stockMovementLines.itemCode.equals(productCode) |
@@ -378,6 +391,19 @@ class StockMovementReportDataProvider
     int? fromMs,
     int? toMs,
   }) {
+    final receiptUuidsQuery = inventoryDb.selectOnly(inventoryDb.stockReceipts)
+      ..addColumns([inventoryDb.stockReceipts.uuid])
+      ..where(inventoryDb.stockReceipts.companyId.equals(context.companyId) & inventoryDb.stockReceipts.deletedAt.isNull());
+    final issueUuidsQuery = inventoryDb.selectOnly(inventoryDb.stockIssues)
+      ..addColumns([inventoryDb.stockIssues.uuid])
+      ..where(inventoryDb.stockIssues.companyId.equals(context.companyId) & inventoryDb.stockIssues.deletedAt.isNull());
+
+    query.where(
+      (tbl) =>
+          tbl.movementUuid.isInQuery(receiptUuidsQuery) |
+          tbl.movementUuid.isInQuery(issueUuidsQuery),
+    );
+
     if (productCode != null && productCode.isNotEmpty) {
       query.where(
         (tbl) =>

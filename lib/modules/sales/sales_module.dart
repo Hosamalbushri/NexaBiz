@@ -66,7 +66,6 @@ class SalesModule extends AppModule {
   @override
   bool get isEnabled => true;
 
-
   @override
   List<ModuleSetupStepDefinition> get setupSteps => salesSetupSteps;
 

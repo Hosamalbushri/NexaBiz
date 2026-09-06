@@ -94,7 +94,9 @@ class SaleCalculationService {
       (sum, line) => sum + SaleMoney.toCents(line.discountAmount),
     );
     final afterItemsCents = subtotalCents - itemDiscountCents;
-    final afterItems = SaleMoney.fromCents(afterItemsCents < 0 ? 0 : afterItemsCents);
+    final afterItems = SaleMoney.fromCents(
+      afterItemsCents < 0 ? 0 : afterItemsCents,
+    );
 
     final saleDiscount = SaleMoney.applyDiscount(
       base: afterItems,

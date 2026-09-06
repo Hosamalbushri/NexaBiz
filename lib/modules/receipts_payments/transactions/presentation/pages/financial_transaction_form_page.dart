@@ -109,8 +109,7 @@ class _FinancialTransactionFormPageState
             composer.loadFromTransaction(txn);
             _syncControllersFromState();
             final treasury = ref.read(rpTreasuryAccountPortProvider);
-            final languageCode =
-                Localizations.localeOf(context).languageCode;
+            final languageCode = Localizations.localeOf(context).languageCode;
             final cash = await treasury.findById(
               txn.cashAccountId,
               languageCode: languageCode,
@@ -233,9 +232,7 @@ class _FinancialTransactionFormPageState
         for (final c in _currencies)
           ListTile(
             leading: Icon(
-              c.code == current
-                  ? Icons.check_circle
-                  : Icons.circle_outlined,
+              c.code == current ? Icons.check_circle : Icons.circle_outlined,
               color: c.code == current
                   ? theme.colorScheme.primary
                   : theme.colorScheme.onSurfaceVariant,
@@ -255,7 +252,9 @@ class _FinancialTransactionFormPageState
     );
 
     if (selectedCurrency != null) {
-      ref.read(transactionComposerProvider.notifier).setCurrency(
+      ref
+          .read(transactionComposerProvider.notifier)
+          .setCurrency(
             code: selectedCurrency!.code,
             rateToBase: selectedCurrency!.rateToBase,
           );
@@ -293,8 +292,9 @@ class _FinancialTransactionFormPageState
         ref.invalidate(transactionListProvider);
         ReceiptsPaymentsRoutes.pushDetails(context, widget.transactionId!);
       } else {
-        final created =
-            await ref.read(createFinancialTransactionProvider).call(draft);
+        final created = await ref
+            .read(createFinancialTransactionProvider)
+            .call(draft);
         if (!mounted) {
           return;
         }
@@ -328,7 +328,9 @@ class _FinancialTransactionFormPageState
     }
     // New transaction — dirty if composer has any meaningful content.
     final state = ref.read(transactionComposerProvider);
-    return state.amount != 0 || state.lines.isNotEmpty || (state.description?.trim().isNotEmpty ?? false);
+    return state.amount != 0 ||
+        state.lines.isNotEmpty ||
+        (state.description?.trim().isNotEmpty ?? false);
   }
 
   @override
@@ -360,8 +362,9 @@ class _FinancialTransactionFormPageState
     final number = formatSaleNumberPrimary(
       state.previewTransactionNumber ?? state.voucherBook?.previewNumber ?? '—',
     );
-    final dateLabel =
-        DateFormat('d/M/yyyy').format(state.transactionDate.toLocal());
+    final dateLabel = DateFormat(
+      'd/M/yyyy',
+    ).format(state.transactionDate.toLocal());
     final equivalentLabel =
         '${state.baseEquivalent.toStringAsFixed(2)} ${state.baseCurrencyCode}';
 
@@ -436,7 +439,9 @@ class _FinancialTransactionFormPageState
                 setState(() => _dirty = true);
               },
               onCurrencyChanged: (index, code, rate) {
-                ref.read(transactionComposerProvider.notifier).setLineCurrency(
+                ref
+                    .read(transactionComposerProvider.notifier)
+                    .setLineCurrency(
                       index: index,
                       code: code,
                       rateToBase: rate,
@@ -504,8 +509,7 @@ class _BalanceSummaryCard extends StatelessWidget {
   final double difference;
   final bool isBalanced;
 
-  String _fmt(double value) =>
-      '${value.toStringAsFixed(2)} $baseCurrencyCode';
+  String _fmt(double value) => '${value.toStringAsFixed(2)} $baseCurrencyCode';
 
   @override
   Widget build(BuildContext context) {
@@ -517,9 +521,7 @@ class _BalanceSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(
-          color: scheme.outlineVariant.withValues(alpha: 0.5),
-        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
             color: scheme.shadow.withValues(alpha: 0.04),
@@ -535,17 +537,11 @@ class _BalanceSummaryCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: AppKpiTile(
-                    label: debitLabel,
-                    value: _fmt(debit),
-                  ),
+                  child: AppKpiTile(label: debitLabel, value: _fmt(debit)),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: AppKpiTile(
-                    label: creditLabel,
-                    value: _fmt(credit),
-                  ),
+                  child: AppKpiTile(label: creditLabel, value: _fmt(credit)),
                 ),
               ],
             ),

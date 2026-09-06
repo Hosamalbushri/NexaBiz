@@ -38,8 +38,7 @@ String saleErrorMessage(AppLocalizations l10n, Object error) {
       SaleException.notFound => l10n.salesNotFound,
       SaleException.duplicateSaleNumber => l10n.salesErrorInvalidStatus,
       SaleException.insufficientStock => l10n.salesErrorInvalidQuantity,
-      SaleException.postingRequiresInventory =>
-        l10n.salesPostRequiresInventory,
+      SaleException.postingRequiresInventory => l10n.salesPostRequiresInventory,
       _ => null,
     };
     if (localized != null) {

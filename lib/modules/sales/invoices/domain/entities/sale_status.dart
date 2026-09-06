@@ -1,8 +1,5 @@
 /// Lifecycle status of a sale document.
-enum SaleStatus {
-  unposted,
-  posted,
-}
+enum SaleStatus { unposted, posted }
 
 extension SaleStatusX on SaleStatus {
   String get storageValue => name;

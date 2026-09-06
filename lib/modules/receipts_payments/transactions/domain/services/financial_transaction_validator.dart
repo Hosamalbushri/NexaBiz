@@ -192,7 +192,9 @@ class FinancialTransactionValidator {
           : ExchangeRateValidator.validate(
               currencyCode: lineCurrency,
               baseCurrencyCode: baseCurrency,
-              exchangeRate: line.exchangeRate > 0 ? line.exchangeRate : cashRate,
+              exchangeRate: line.exchangeRate > 0
+                  ? line.exchangeRate
+                  : cashRate,
             );
       counterBase += line.amount * rate;
     }
@@ -223,10 +225,10 @@ FinancialTransactionDraft normalizeFinancialTransactionDraft(
   final cashRate = cashCurrency == baseCurrency || baseCurrency.isEmpty
       ? 1.0
       : (draft.exchangeRate > 0 &&
-              !draft.exchangeRate.isNaN &&
-              !draft.exchangeRate.isInfinite
-          ? draft.exchangeRate
-          : 1.0);
+                !draft.exchangeRate.isNaN &&
+                !draft.exchangeRate.isInfinite
+            ? draft.exchangeRate
+            : 1.0);
   final rawLines = draft.resolvedLines;
   final lines = <FinancialTransactionLine>[];
   for (var i = 0; i < rawLines.length; i++) {
@@ -239,10 +241,10 @@ FinancialTransactionDraft normalizeFinancialTransactionDraft(
     final lineRate = lineCurrency == baseCurrency || baseCurrency.isEmpty
         ? 1.0
         : (line.exchangeRate > 0 &&
-                !line.exchangeRate.isNaN &&
-                !line.exchangeRate.isInfinite
-            ? line.exchangeRate
-            : cashRate);
+                  !line.exchangeRate.isNaN &&
+                  !line.exchangeRate.isInfinite
+              ? line.exchangeRate
+              : cashRate);
     lines.add(
       FinancialTransactionLine(
         accountId: accountId,
@@ -258,7 +260,9 @@ FinancialTransactionDraft normalizeFinancialTransactionDraft(
   }
   final first = lines.isNotEmpty ? lines.first : null;
   final rollupAmount = lines.isEmpty
-      ? RpMoney.round(draft.counterAmount > 0 ? draft.counterAmount : draft.amount)
+      ? RpMoney.round(
+          draft.counterAmount > 0 ? draft.counterAmount : draft.amount,
+        )
       : RpMoney.round(lines.fold<double>(0, (sum, line) => sum + line.amount));
 
   return FinancialTransactionDraft(
@@ -270,8 +274,9 @@ FinancialTransactionDraft normalizeFinancialTransactionDraft(
     baseCurrencyCode: baseCurrency,
     exchangeRate: cashRate,
     counterAmount: rollupAmount,
-    counterCurrencyCode:
-        (first?.currencyCode ?? draft.counterCurrencyCode).trim().toUpperCase(),
+    counterCurrencyCode: (first?.currencyCode ?? draft.counterCurrencyCode)
+        .trim()
+        .toUpperCase(),
     counterExchangeRate: first?.exchangeRate ?? cashRate,
     voucherBookId: draft.voucherBookId,
     cashAccountId: draft.cashAccountId.trim(),

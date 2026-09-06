@@ -6,14 +6,15 @@ import 'package:stock_count/modules/sales/invoices/presentation/providers/sale_c
 
 void main() {
   group('Sales Warehouse Selection Tests', () {
-    test('SaleComposerState default warehouseId is null and canSave returns false', () {
-      final state = SaleComposerState(
-        saleDate: DateTime.now(),
-      );
+    test(
+      'SaleComposerState default warehouseId is null and canSave returns false',
+      () {
+        final state = SaleComposerState(saleDate: DateTime.now());
 
-      expect(state.warehouseId, isNull);
-      expect(state.canSave, isFalse);
-    });
+        expect(state.warehouseId, isNull);
+        expect(state.canSave, isFalse);
+      },
+    );
 
     test('SaleComposerState copyWith and setWarehouse updates warehouseId', () {
       final state = SaleComposerState(

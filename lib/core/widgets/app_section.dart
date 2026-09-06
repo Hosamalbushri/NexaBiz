@@ -32,7 +32,7 @@ class AppSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: AppRadii.radiusSurface,
-        border: AppBorders.subtle(scheme),
+        border: Border.fromBorderSide(AppBorders.subtle(scheme)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

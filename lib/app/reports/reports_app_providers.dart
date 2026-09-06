@@ -12,11 +12,21 @@ import '../../modules/reports/shared/presentation/providers/reports_providers.da
 import '../../modules/sales/invoices/presentation/providers/sale_providers.dart';
 import '../presentation/providers/dashboard_services_provider.dart';
 import 'account_statement_report_data_adapter.dart';
+import 'balance_sheet_report_data_adapter.dart';
+import 'cash_flow_report_data_adapter.dart';
+import 'general_ledger_report_data_adapter.dart';
+import 'income_statement_report_data_adapter.dart';
 import 'journal_book_report_data_adapter.dart';
 import 'product_stock_movement_report_data_adapter.dart';
+import 'receivables_payables_report_data_adapter.dart';
 import 'rp_report_data_adapter.dart';
 import 'sales_period_report_data_adapter.dart';
 import 'trial_balance_report_data_adapter.dart';
+import '../../modules/reports/shared/domain/services/balance_sheet_report_data_port.dart';
+import '../../modules/reports/shared/domain/services/cash_flow_report_data_port.dart';
+import '../../modules/reports/shared/domain/services/general_ledger_report_data_port.dart';
+import '../../modules/reports/shared/domain/services/income_statement_report_data_port.dart';
+import '../../modules/reports/shared/domain/services/receivables_payables_report_data_port.dart';
 
 /// App-level bridge provider overrides for [ReportsModule].
 ///
@@ -82,6 +92,45 @@ List<Override> buildReportsAppProviderOverrides() {
       return ProductStockMovementReportDataAdapter(
         db: ref.watch(inventoryDatabaseProvider),
         salesDb: ref.watch(salesDatabaseProvider),
+        loadCompanyProfile: () =>
+            ref.read(settingsRepositoryProvider).loadCompanyProfile(),
+      );
+    }),
+    generalLedgerReportDataPortProvider.overrideWith((ref) {
+      return GeneralLedgerReportDataAdapter(
+        journals: ref.watch(journalRepositoryProvider),
+        loadCompanyProfile: () =>
+            ref.read(settingsRepositoryProvider).loadCompanyProfile(),
+      );
+    }),
+    incomeStatementReportDataPortProvider.overrideWith((ref) {
+      return IncomeStatementReportDataAdapter(
+        journals: ref.watch(journalRepositoryProvider),
+        accounts: ref.watch(accountRepositoryProvider),
+        loadCompanyProfile: () =>
+            ref.read(settingsRepositoryProvider).loadCompanyProfile(),
+      );
+    }),
+    balanceSheetReportDataPortProvider.overrideWith((ref) {
+      return BalanceSheetReportDataAdapter(
+        journals: ref.watch(journalRepositoryProvider),
+        accounts: ref.watch(accountRepositoryProvider),
+        loadCompanyProfile: () =>
+            ref.read(settingsRepositoryProvider).loadCompanyProfile(),
+      );
+    }),
+    receivablesPayablesReportDataPortProvider.overrideWith((ref) {
+      return ReceivablesPayablesReportDataAdapter(
+        journals: ref.watch(journalRepositoryProvider),
+        accounts: ref.watch(accountRepositoryProvider),
+        loadCompanyProfile: () =>
+            ref.read(settingsRepositoryProvider).loadCompanyProfile(),
+      );
+    }),
+    cashFlowReportDataPortProvider.overrideWith((ref) {
+      return CashFlowReportDataAdapter(
+        journals: ref.watch(journalRepositoryProvider),
+        accounts: ref.watch(accountRepositoryProvider),
         loadCompanyProfile: () =>
             ref.read(settingsRepositoryProvider).loadCompanyProfile(),
       );

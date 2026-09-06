@@ -25,15 +25,15 @@ class FinancialTransactionLine {
   final int lineOrder;
 
   Map<String, dynamic> toJson() => {
-        'accountId': accountId,
-        'accountCode': accountCode,
-        'accountName': accountName,
-        'amount': amount,
-        'currencyCode': currencyCode,
-        'exchangeRate': exchangeRate,
-        'description': description,
-        'lineOrder': lineOrder,
-      };
+    'accountId': accountId,
+    'accountCode': accountCode,
+    'accountName': accountName,
+    'amount': amount,
+    'currencyCode': currencyCode,
+    'exchangeRate': exchangeRate,
+    'description': description,
+    'lineOrder': lineOrder,
+  };
 
   factory FinancialTransactionLine.fromJson(Map<String, dynamic> json) {
     return FinancialTransactionLine(
@@ -43,8 +43,8 @@ class FinancialTransactionLine {
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
       currencyCode:
           ((json['currencyCode'] as String?)?.trim().isNotEmpty ?? false)
-              ? (json['currencyCode'] as String).trim().toUpperCase()
-              : 'SAR',
+          ? (json['currencyCode'] as String).trim().toUpperCase()
+          : 'SAR',
       exchangeRate: (json['exchangeRate'] as num?)?.toDouble() ?? 1,
       description: (json['description'] as String?)?.trim(),
       lineOrder: (json['lineOrder'] as num?)?.toInt() ?? 0,

@@ -122,6 +122,7 @@ class SaleInvoicePostingData {
     required this.itemDiscountTotal,
     required this.discountAmount,
     required this.settlementType,
+    this.taxAmount = 0.0,
     this.currencyCode = 'SAR',
     this.baseCurrencyCode = 'SAR',
     this.exchangeRate = 1.0,
@@ -135,6 +136,7 @@ class SaleInvoicePostingData {
   final double total;
   final double itemDiscountTotal;
   final double discountAmount;
+  final double taxAmount;
   final PostingSettlementType settlementType;
   final String currencyCode;
   final String baseCurrencyCode;

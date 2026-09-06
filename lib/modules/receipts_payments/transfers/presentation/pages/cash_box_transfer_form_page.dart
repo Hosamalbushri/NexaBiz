@@ -119,8 +119,9 @@ class _CashBoxTransferFormPageState
             return;
           }
           final dateLabel = DateFormat('d/M/yyyy').format(_date);
-          _descriptionController.text =
-              l10n.rpDefaultTransferDescription(dateLabel);
+          _descriptionController.text = l10n.rpDefaultTransferDescription(
+            dateLabel,
+          );
 
           final treasury = ref.read(rpTreasuryAccountPortProvider);
           final languageCode = Localizations.localeOf(context).languageCode;
@@ -212,8 +213,9 @@ class _CashBoxTransferFormPageState
     setState(() => _date = picked);
     if (currentDescription.isEmpty || currentDescription == autoPrevious) {
       final nextLabel = DateFormat('d/M/yyyy').format(picked);
-      _descriptionController.text =
-          l10n.rpDefaultTransferDescription(nextLabel);
+      _descriptionController.text = l10n.rpDefaultTransferDescription(
+        nextLabel,
+      );
     }
   }
 
@@ -340,8 +342,9 @@ class _CashBoxTransferFormPageState
         ref.invalidate(transactionListProvider);
         ReceiptsPaymentsRoutes.pushDetails(context, widget.transactionId!);
       } else {
-        final created =
-            await ref.read(createFinancialTransactionProvider).call(_toDraft());
+        final created = await ref
+            .read(createFinancialTransactionProvider)
+            .call(_toDraft());
         if (!mounted) {
           return;
         }
@@ -377,8 +380,8 @@ class _CashBoxTransferFormPageState
     final numberLabel = _isEdit
         ? formatSaleNumberPrimary(_previewNumber ?? '—')
         : (_previewNumber ??
-            _voucherBook?.previewNumber ??
-            l10n.rpVoucherBookEmpty);
+              _voucherBook?.previewNumber ??
+              l10n.rpVoucherBookEmpty);
     final dateLabel = DateFormat('d/M/yyyy').format(_date);
     final rate = _safeRate;
     final equivalent = _baseEquivalent;
@@ -438,245 +441,251 @@ class _CashBoxTransferFormPageState
         padding: AppConstants.pageInsets(context),
         children: [
           Material(
-            color: scheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
+                color: scheme.surface,
                 borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(
-                  color: scheme.outlineVariant.withValues(alpha: 0.5),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    border: Border.all(
+                      color: scheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        child: _MetaTile(
-                          icon: Icons.tag_rounded,
-                          label: l10n.rpTransactionNumber,
-                          value: numberLabel,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _MetaTile(
+                              icon: Icons.tag_rounded,
+                              label: l10n.rpTransactionNumber,
+                              value: numberLabel,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: _MetaTile(
+                              icon: Icons.calendar_month_outlined,
+                              label: l10n.rpDate,
+                              value: dateLabel,
+                              onTap: _pickDate,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: _MetaTile(
-                          icon: Icons.calendar_month_outlined,
-                          label: l10n.rpDate,
-                          value: dateLabel,
-                          onTap: _pickDate,
+                      if (!_isEdit && _voucherBooks.length > 1) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        DropdownButtonFormField<String>(
+                          initialValue: _voucherBook?.bookId,
+                          isExpanded: true,
+                          decoration: InputDecoration(
+                            labelText: l10n.rpVoucherBook,
+                          ),
+                          items: [
+                            for (final book in _voucherBooks)
+                              DropdownMenuItem(
+                                value: book.bookId,
+                                child: Text(book.name, softWrap: true),
+                              ),
+                          ],
+                          onChanged: (bookId) {
+                            if (bookId == null) {
+                              return;
+                            }
+                            RpVoucherBookRef? selected;
+                            for (final book in _voucherBooks) {
+                              if (book.bookId == bookId) {
+                                selected = book;
+                                break;
+                              }
+                            }
+                            setState(() {
+                              _voucherBook = selected;
+                              _previewNumber = selected?.previewNumber;
+                            });
+                          },
                         ),
-                      ),
+                      ],
                     ],
                   ),
-                  if (!_isEdit && _voucherBooks.length > 1) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    DropdownButtonFormField<String>(
-                      initialValue: _voucherBook?.bookId,
-                      isExpanded: true,
-                      decoration:
-                          InputDecoration(labelText: l10n.rpVoucherBook),
-                      items: [
-                        for (final book in _voucherBooks)
-                          DropdownMenuItem(
-                            value: book.bookId,
-                            child: Text(book.name, softWrap: true),
-                          ),
-                      ],
-                      onChanged: (bookId) {
-                        if (bookId == null) {
-                          return;
-                        }
-                        RpVoucherBookRef? selected;
-                        for (final book in _voucherBooks) {
-                          if (book.bookId == bookId) {
-                            selected = book;
-                            break;
-                          }
-                        }
-                        setState(() {
-                          _voucherBook = selected;
-                          _previewNumber = selected?.previewNumber;
-                        });
-                      },
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          )
+                ),
+              )
               .animate()
               .fadeIn(duration: 240.ms)
               .slideY(begin: 0.02, end: 0, duration: 240.ms),
           const SizedBox(height: AppSpacing.md),
           Material(
-            color: scheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
+                color: scheme.surface,
                 borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(
-                  color: scheme.outlineVariant.withValues(alpha: 0.5),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _CashBoxLane(
-                    tone: scheme.error,
-                    child: RpCashAccountDropdown(
-                      label: l10n.rpTransferFromAccount,
-                      selected: _fromAccount,
-                      showSelectedNameBelow: true,
-                      onSelected: (account) {
-                        setState(() {
-                          _fromAccount = account;
-                          if (_toAccount?.accountId == account?.accountId) {
-                            _toAccount = null;
-                          }
-                        });
-                      },
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    border: Border.all(
+                      color: scheme.outlineVariant.withValues(alpha: 0.5),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Divider(
-                            color:
-                                scheme.outlineVariant.withValues(alpha: 0.5),
-                          ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _CashBoxLane(
+                        tone: scheme.error,
+                        child: RpCashAccountDropdown(
+                          label: l10n.rpTransferFromAccount,
+                          selected: _fromAccount,
+                          showSelectedNameBelow: true,
+                          onSelected: (account) {
+                            setState(() {
+                              _fromAccount = account;
+                              if (_toAccount?.accountId == account?.accountId) {
+                                _toAccount = null;
+                              }
+                            });
+                          },
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Material(
-                          color: scheme.primary.withValues(alpha: 0.12),
-                          shape: const CircleBorder(),
-                          child: InkWell(
-                            customBorder: const CircleBorder(),
-                            onTap: (_fromAccount != null || _toAccount != null)
-                                ? _swapAccounts
-                                : null,
-                            child: SizedBox(
-                              width: 40,
-                              height: 40,
-                              child: Icon(
-                                Icons.swap_vert_rounded,
-                                color: scheme.primary,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.sm,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Divider(
+                                color: scheme.outlineVariant.withValues(
+                                  alpha: 0.5,
+                                ),
                               ),
                             ),
-                          ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Material(
+                              color: scheme.primary.withValues(alpha: 0.12),
+                              shape: const CircleBorder(),
+                              child: InkWell(
+                                customBorder: const CircleBorder(),
+                                onTap:
+                                    (_fromAccount != null || _toAccount != null)
+                                    ? _swapAccounts
+                                    : null,
+                                child: SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: Icon(
+                                    Icons.swap_vert_rounded,
+                                    color: scheme.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: Divider(
+                                color: scheme.outlineVariant.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: Divider(
-                            color:
-                                scheme.outlineVariant.withValues(alpha: 0.5),
-                          ),
+                      ),
+                      _CashBoxLane(
+                        tone: scheme.tertiary,
+                        child: RpCashAccountDropdown(
+                          label: l10n.rpTransferToAccount,
+                          selected: _toAccount,
+                          showSelectedNameBelow: true,
+                          onSelected: (account) =>
+                              setState(() => _toAccount = account),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  _CashBoxLane(
-                    tone: scheme.tertiary,
-                    child: RpCashAccountDropdown(
-                      label: l10n.rpTransferToAccount,
-                      selected: _toAccount,
-                      showSelectedNameBelow: true,
-                      onSelected: (account) =>
-                          setState(() => _toAccount = account),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
+                ),
+              )
               .animate()
               .fadeIn(delay: 40.ms, duration: 240.ms)
               .slideY(begin: 0.02, end: 0, delay: 40.ms, duration: 240.ms),
           const SizedBox(height: AppSpacing.md),
           Material(
-            color: scheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
+                color: scheme.surface,
                 borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(
-                  color: scheme.outlineVariant.withValues(alpha: 0.5),
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    border: Border.all(
+                      color: scheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AppAmountField(
+                        value: _amount,
+                        onChanged: (value) {
+                          setState(() => _amount = value < 0 ? 0 : value);
+                        },
+                        decimalPlaces: 2,
+                        emptyWhenZero: true,
+                        label: l10n.rpAmount,
+                        suffixText: _currencyCode,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _MetaTile(
+                        icon: Icons.payments_outlined,
+                        label: l10n.rpCurrency,
+                        value: _currencyCode,
+                        onTap: _pickCurrency,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _ExchangeRateField(
+                        value: rate,
+                        onChanged: (value) {
+                          if (value <= 0) {
+                            return;
+                          }
+                          setState(() => _exchangeRate = value);
+                        },
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _EquivalentReadonly(
+                        label: l10n.rpCurrencyEquivalent,
+                        valueText: equivalentText,
+                        currencyCode: _baseCurrencyCode,
+                        rateHint: _currencyCode == _baseCurrencyCode
+                            ? null
+                            : '1 $_currencyCode = ${rate.toStringAsFixed(4)} $_baseCurrencyCode',
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  AppAmountField(
-                    value: _amount,
-                    onChanged: (value) {
-                      setState(() => _amount = value < 0 ? 0 : value);
-                    },
-                    decimalPlaces: 2,
-                    emptyWhenZero: true,
-                    label: l10n.rpAmount,
-                    suffixText: _currencyCode,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _MetaTile(
-                    icon: Icons.payments_outlined,
-                    label: l10n.rpCurrency,
-                    value: _currencyCode,
-                    onTap: _pickCurrency,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _ExchangeRateField(
-                    value: rate,
-                    onChanged: (value) {
-                      if (value <= 0) {
-                        return;
-                      }
-                      setState(() => _exchangeRate = value);
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _EquivalentReadonly(
-                    label: l10n.rpCurrencyEquivalent,
-                    valueText: equivalentText,
-                    currencyCode: _baseCurrencyCode,
-                    rateHint: _currencyCode == _baseCurrencyCode
-                        ? null
-                        : '1 $_currencyCode = ${rate.toStringAsFixed(4)} $_baseCurrencyCode',
-                  ),
-                ],
-              ),
-            ),
-          )
+              )
               .animate()
               .fadeIn(delay: 80.ms, duration: 240.ms)
               .slideY(begin: 0.02, end: 0, delay: 80.ms, duration: 240.ms),
           const SizedBox(height: AppSpacing.md),
           Material(
-            color: scheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
+                color: scheme.surface,
                 borderRadius: BorderRadius.circular(AppRadius.lg),
-                border: Border.all(
-                  color: scheme.outlineVariant.withValues(alpha: 0.5),
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                    border: Border.all(
+                      color: scheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: TextField(
+                    controller: _descriptionController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      labelText: l10n.rpGeneralDescription,
+                      alignLabelWithHint: true,
+                    ),
+                  ),
                 ),
-              ),
-              child: TextField(
-                controller: _descriptionController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: l10n.rpGeneralDescription,
-                  alignLabelWithHint: true,
-                ),
-              ),
-            ),
-          )
+              )
               .animate()
               .fadeIn(delay: 120.ms, duration: 240.ms)
               .slideY(begin: 0.02, end: 0, delay: 120.ms, duration: 240.ms),
@@ -688,10 +697,7 @@ class _CashBoxTransferFormPageState
 }
 
 class _CashBoxLane extends StatelessWidget {
-  const _CashBoxLane({
-    required this.tone,
-    required this.child,
-  });
+  const _CashBoxLane({required this.tone, required this.child});
 
   final Color tone;
   final Widget child;
@@ -716,10 +722,7 @@ class _CashBoxLane extends StatelessWidget {
 }
 
 class _ExchangeRateField extends StatelessWidget {
-  const _ExchangeRateField({
-    required this.value,
-    required this.onChanged,
-  });
+  const _ExchangeRateField({required this.value, required this.onChanged});
 
   final double value;
   final ValueChanged<double> onChanged;

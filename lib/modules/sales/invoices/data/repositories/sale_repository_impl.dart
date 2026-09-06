@@ -44,11 +44,9 @@ class SaleRepositoryImpl implements SaleRepository {
   final PermissionGuard _permissionGuard;
   final String Function()? _readCompanyId;
 
-
   static const entityType = 'sale';
 
-  String get _currentCompanyId =>
-      _readCompanyId?.call() ?? 'default_company';
+  String get _currentCompanyId => _readCompanyId?.call() ?? 'default_company';
 
   Expression<bool> _tenantScoped($SalesTable t) =>
       t.companyId.equals(_currentCompanyId);
@@ -133,6 +131,7 @@ class SaleRepositoryImpl implements SaleRepository {
     return Sale(
       id: row.id,
       uuid: row.uuid,
+      companyId: row.companyId ?? _currentCompanyId,
       saleNumber: row.saleNumber,
       saleDate: saleDate,
       settlementType: SaleSettlementTypeX.fromStorage(row.settlementType),
@@ -202,7 +201,8 @@ class SaleRepositoryImpl implements SaleRepository {
     if (filter.saleStatus != null) {
       final status = filter.saleStatus!;
       if (status == SaleStatus.unposted) {
-        expr = expr &
+        expr =
+            expr &
             t.saleStatus.isIn(const [
               'unposted',
               'draft',
@@ -211,7 +211,8 @@ class SaleRepositoryImpl implements SaleRepository {
               'rejected',
             ]);
       } else {
-        expr = expr &
+        expr =
+            expr &
             t.saleStatus.isIn(const ['posted', 'confirmed', 'completed']);
       }
     }
@@ -274,14 +275,13 @@ class SaleRepositoryImpl implements SaleRepository {
           t.saleNumber.equals(normalized);
     }
     final itemMatch = existsQuery(
-      _db.select(_db.saleItems)
-        ..where(
-          (i) =>
-              i.saleUuid.equalsExp(t.uuid) &
-              (i.productName.collate(Collate.noCase).like(contains) |
-                  i.productCode.collate(Collate.noCase).like(contains) |
-                  i.barcode.collate(Collate.noCase).like(contains)),
-        ),
+      _db.select(_db.saleItems)..where(
+        (i) =>
+            i.saleUuid.equalsExp(t.uuid) &
+            (i.productName.collate(Collate.noCase).like(contains) |
+                i.productCode.collate(Collate.noCase).like(contains) |
+                i.barcode.collate(Collate.noCase).like(contains)),
+      ),
     );
     return header | itemMatch;
   }
@@ -525,10 +525,9 @@ class SaleRepositoryImpl implements SaleRepository {
     if (code.isEmpty) {
       return null;
     }
-    final row =
-        await (_db.select(_db.sales)
-              ..where((t) => t.saleNumber.equals(code) & _scoped(t)))
-            .getSingleOrNull();
+    final row = await (_db.select(
+      _db.sales,
+    )..where((t) => t.saleNumber.equals(code) & _scoped(t))).getSingleOrNull();
     return row == null ? null : _mapSale(row);
   }
 
@@ -604,7 +603,8 @@ class SaleRepositoryImpl implements SaleRepository {
       ..where((t) {
         var expr = _matchesFilter(t, filter);
         if (cursor != null) {
-          expr = expr &
+          expr =
+              expr &
               (t.saleDate.isSmallerThanValue(cursor.saleDateMs) |
                   (t.saleDate.equals(cursor.saleDateMs) &
                       t.id.isSmallerThanValue(cursor.id)));
@@ -624,9 +624,7 @@ class SaleRepositoryImpl implements SaleRepository {
     SaleCursor? nextCursor;
     if (hasMore && pageRows.isNotEmpty) {
       final last = pageRows.last;
-      final lastDateMs = last.saleDate <= 0
-          ? last.createdAt
-          : last.saleDate;
+      final lastDateMs = last.saleDate <= 0 ? last.createdAt : last.saleDate;
       nextCursor = SaleCursor(saleDateMs: lastDateMs, id: last.id);
     }
 
@@ -656,10 +654,11 @@ class SaleRepositoryImpl implements SaleRepository {
 
   @override
   Future<int> nextLocalSequence({int? minExclusive}) async {
-    final rows = await (_db.selectOnly(_db.sales)
-          ..addColumns([_db.sales.saleNumber])
-          ..where(_scoped(_db.sales)))
-        .get();
+    final rows =
+        await (_db.selectOnly(_db.sales)
+              ..addColumns([_db.sales.saleNumber])
+              ..where(_scoped(_db.sales)))
+            .get();
     var maxSeq = minExclusive ?? 0;
     for (final row in rows) {
       final raw = (row.read(_db.sales.saleNumber) ?? '').trim();
@@ -741,7 +740,11 @@ class SaleRepositoryImpl implements SaleRepository {
               externalStatus: Value(draft.externalStatus),
               dataSource: Value(draft.dataSource.storageValue),
               syncStatus: const Value('pending'),
-              companyId: Value(_currentCompanyId),
+              companyId: Value(
+                draft.companyId != null && draft.companyId!.trim().isNotEmpty
+                    ? draft.companyId!
+                    : _currentCompanyId,
+              ),
             ),
           );
       await _replaceChildren(
@@ -787,7 +790,9 @@ class SaleRepositoryImpl implements SaleRepository {
 
     final now = DateTime.now().toUtc();
     await _db.transaction(() async {
-      await (_db.update(_db.sales)..where((t) => t.id.equals(id) & _scoped(t))).write(
+      await (_db.update(
+        _db.sales,
+      )..where((t) => t.id.equals(id) & _scoped(t))).write(
         SalesCompanion(
           saleDate: Value(BusinessDate.utcDayMs(draft.saleDate)),
           settlementType: Value(draft.settlementType.storageValue),
@@ -965,7 +970,9 @@ class SaleRepositoryImpl implements SaleRepository {
     DateTime? syncedAt,
   }) async {
     final at = syncedAt ?? DateTime.now().toUtc();
-    await (_db.update(_db.sales)..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
+    await (_db.update(
+      _db.sales,
+    )..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
       SalesCompanion(
         syncStatus: const Value('synced'),
         lastSyncedAt: Value(at.millisecondsSinceEpoch),
@@ -975,9 +982,9 @@ class SaleRepositoryImpl implements SaleRepository {
   }
 
   Future<void> markConflict(String uuid) async {
-    await (_db.update(_db.sales)..where((t) => t.uuid.equals(uuid) & _tenantScoped(t))).write(
-      const SalesCompanion(syncStatus: Value('conflict')),
-    );
+    await (_db.update(_db.sales)
+          ..where((t) => t.uuid.equals(uuid) & _tenantScoped(t)))
+        .write(const SalesCompanion(syncStatus: Value('conflict')));
   }
 
   Future<void> applyRemotePayload(Map<String, dynamic> payload) async {
@@ -1087,11 +1094,15 @@ class SaleRepositoryImpl implements SaleRepository {
                 lastSyncedAt: Value(now),
                 version: Value((payload['version'] as int?) ?? 1),
                 deletedAt: Value(deletedAt),
-                companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
+                companyId: Value(
+                  payload['companyId']?.toString() ?? _currentCompanyId,
+                ),
               ),
             );
       } else {
-        await (_db.update(_db.sales)..where((t) => t.uuid.equals(uuid) & _scoped(t))).write(
+        await (_db.update(
+          _db.sales,
+        )..where((t) => t.uuid.equals(uuid) & _scoped(t))).write(
           SalesCompanion(
             saleNumber: Value(
               (payload['saleNumber'] as String?) ?? existing.saleNumber,
@@ -1166,7 +1177,9 @@ class SaleRepositoryImpl implements SaleRepository {
             lastSyncedAt: Value(now),
             version: Value((payload['version'] as int?) ?? existing.version),
             deletedAt: Value(deletedAt),
-            companyId: Value(payload['companyId']?.toString() ?? _currentCompanyId),
+            companyId: Value(
+              payload['companyId']?.toString() ?? _currentCompanyId,
+            ),
           ),
         );
         await (_db.delete(

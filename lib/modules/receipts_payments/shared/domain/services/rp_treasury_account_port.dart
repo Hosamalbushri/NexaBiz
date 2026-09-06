@@ -32,10 +32,7 @@ abstract class RpTreasuryAccountPort {
     String? languageCode,
   });
 
-  Future<RpAccountRef?> findById(
-    String accountId, {
-    String? languageCode,
-  });
+  Future<RpAccountRef?> findById(String accountId, {String? languageCode});
 
   Future<RpAccountRef?> findDefaultCashBox({String? languageCode});
 }
@@ -46,27 +43,22 @@ class NoOpRpTreasuryAccountPort implements RpTreasuryAccountPort {
   @override
   Future<List<RpAccountRef>> listCashBoxAccounts({
     String? languageCode,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<List<RpAccountRef>> searchPostingAccounts(
     String query, {
     int limit = 40,
     String? languageCode,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<RpAccountRef?> findById(
     String accountId, {
     String? languageCode,
-  }) async =>
-      null;
+  }) async => null;
 
   @override
-  Future<RpAccountRef?> findDefaultCashBox({
-    String? languageCode,
-  }) async =>
+  Future<RpAccountRef?> findDefaultCashBox({String? languageCode}) async =>
       null;
 }

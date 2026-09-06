@@ -100,10 +100,7 @@ class _SettlementOptionCard extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.sm),
-            border: Border.all(
-              color: borderColor,
-              width: selected ? 1.5 : 1,
-            ),
+            border: Border.all(color: borderColor, width: selected ? 1.5 : 1),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

@@ -108,6 +108,7 @@ abstract class JournalRepository {
 
   /// Trial balance rows: SUM(base_debit) / SUM(base_credit) per posting account.
   Future<List<TrialBalanceRow>> listTrialBalance({
+    String? companyId,
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,
@@ -115,6 +116,7 @@ abstract class JournalRepository {
 
   /// Journal book (دفتر اليومية) lines in entry order, base currency amounts.
   Future<List<JournalBookLineRow>> listJournalBookLines({
+    String? companyId,
     DateTime? fromDate,
     DateTime? toDate,
     bool? isPosted,

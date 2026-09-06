@@ -32,9 +32,7 @@ class NoOpSaleCurrencyPort implements SaleCurrencyPort {
 
   @override
   Future<List<SaleCurrencyRef>> listEnabledCurrencies() async {
-    return [
-      SaleCurrencyRef(code: fallbackCode, rateToBase: 1, isBase: true),
-    ];
+    return [SaleCurrencyRef(code: fallbackCode, rateToBase: 1, isBase: true)];
   }
 
   @override

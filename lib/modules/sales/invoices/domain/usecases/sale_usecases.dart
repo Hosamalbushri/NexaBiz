@@ -41,8 +41,7 @@ class CreateSale {
     required PermissionGuard permissionGuard,
     this._voucherBookPort = const NoOpSaleVoucherBookPort(),
     this._ledgerPosting = const NoOpSaleLedgerPostingPort(),
-    this._accountingBridge =
-        const NoOpSaleAccountingBridgePort(),
+    this._accountingBridge = const NoOpSaleAccountingBridgePort(),
     this._validator = const SaleValidator(),
     this._calculator = const SaleCalculationService(),
   }) : _guard = permissionGuard;
@@ -106,7 +105,9 @@ class CreateSale {
     return SaleDraft(
       saleDate: draft.saleDate,
       settlementType: draft.settlementType,
+      companyId: draft.companyId,
       voucherBookId: draft.voucherBookId,
+      warehouseId: draft.warehouseId,
       customerId: draft.customerId,
       customerCode: draft.customerCode,
       customerName: draft.customerName,
@@ -115,9 +116,7 @@ class CreateSale {
       currencyCode: draft.currencyCode,
       baseCurrencyCode: draft.baseCurrencyCode,
       exchangeRate: draft.exchangeRate,
-      items: [
-        for (final item in draft.items) item.withNormalizedQuantities(),
-      ],
+      items: [for (final item in draft.items) item.withNormalizedQuantities()],
       discountType: draft.discountType,
       discountValue: draft.discountValue,
       taxRate: draft.taxRate,
@@ -141,8 +140,7 @@ class UpdateSale {
     this._calculator = const SaleCalculationService(),
     this._workflow = const SaleWorkflowService(),
     this._ledgerPosting = const NoOpSaleLedgerPostingPort(),
-    this._accountingBridge =
-        const NoOpSaleAccountingBridgePort(),
+    this._accountingBridge = const NoOpSaleAccountingBridgePort(),
   });
 
   final SaleRepository _repository;
@@ -168,7 +166,9 @@ class UpdateSale {
       final merged = SaleDraft(
         saleDate: draft.saleDate,
         settlementType: draft.settlementType,
+        companyId: draft.companyId ?? existing.companyId,
         voucherBookId: draft.voucherBookId,
+        warehouseId: draft.warehouseId ?? existing.warehouseId,
         customerId: draft.customerId,
         customerCode: draft.customerCode,
         customerName: draft.customerName,
@@ -251,6 +251,12 @@ class ConfirmSale {
       final sale = await _repository.getById(id);
       if (sale == null) {
         throw const SaleException(SaleException.notFound);
+      }
+      if (sale.saleStatus == SaleStatus.posted) {
+        return sale;
+      }
+      if (sale.warehouseId == null || sale.warehouseId!.trim().isEmpty) {
+        throw const SaleException(SaleException.warehouseRequired);
       }
       _workflow.assertCanPost(sale);
       final integrated = await _accountingBridge.isIntegratedMode;
@@ -360,6 +366,12 @@ class CancelSale {
       await _inventoryEffect.onCancelled(sale);
     }
 
+    final now = DateTime.now().toUtc();
+    await _repository.updateStatus(
+      id,
+      SaleStatusUpdate(saleStatus: SaleStatus.unposted, cancelledAt: now),
+    );
+
     await _repository.softDelete(id);
   }
 }
@@ -378,10 +390,7 @@ class CompleteSale {
 }
 
 class DuplicateSale {
-  DuplicateSale({
-    required this._repository,
-    required this._createSale,
-  });
+  DuplicateSale({required this._repository, required this._createSale});
 
   final SaleRepository _repository;
   final CreateSale _createSale;
